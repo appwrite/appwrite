@@ -68,7 +68,6 @@ class Deletes extends Action
             ->inject('deviceForFunctions')
             ->inject('deviceForSites')
             ->inject('deviceForBuilds')
-            ->inject('deviceForCache')
             ->inject('certificates')
             ->inject('executor')
             ->inject('executionRetention')
@@ -98,7 +97,6 @@ class Deletes extends Action
         Device $deviceForFunctions,
         Device $deviceForSites,
         Device $deviceForBuilds,
-        Device $deviceForCache,
         Provider $certificates,
         Executor $executor,
         string $executionRetention,
@@ -131,7 +129,6 @@ class Deletes extends Action
             $deviceForFunctions,
             $deviceForSites,
             $deviceForBuilds,
-            $deviceForCache,
             $certificates,
             $executor,
             $executionRetention,
@@ -224,7 +221,6 @@ class Deletes extends Action
         Device $deviceForFunctions,
         Device $deviceForSites,
         Device $deviceForBuilds,
-        Device $deviceForCache,
         Provider $certificates,
         Executor $executor,
         string $executionRetention,
@@ -254,7 +250,7 @@ class Deletes extends Action
             case DELETE_TYPE_DOCUMENT:
                 switch ($document->getCollection()) {
                     case DELETE_TYPE_PROJECTS:
-                        $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $document, $bus, $executionStore);
+                        $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $certificates, $document, $bus, $executionStore);
                         break;
                     case DELETE_TYPE_SITES:
                         $this->deleteSite($dbForPlatform, $getProjectDB, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project, $bus, $executionStore);
@@ -764,13 +760,7 @@ class Deletes extends Action
         ]);
 
         foreach ($projects as $project) {
-            $deviceForFiles = getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
-            $deviceForSites = getDevice(APP_STORAGE_SITES . '/app-' . $project->getId());
-            $deviceForFunctions = getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
-            $deviceForBuilds = getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
-            $deviceForCache = getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
-
-            $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $project, $bus, $executionStore);
+            $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $certificates, $project, $bus, $executionStore);
             $dbForPlatform->deleteDocument('projects', $project->getId());
         }
     }
@@ -778,19 +768,20 @@ class Deletes extends Action
     /**
      * @param Database $dbForPlatform
      * @param callable $getProjectDB
-     * @param Device $deviceForFiles
-     * @param Device $deviceForFunctions
-     * @param Device $deviceForBuilds
-     * @param Device $deviceForCache
      * @param Document $document
      * @return void
      * @throws Exception
      * @throws DatabaseException
      */
-    protected function deleteProject(Database $dbForPlatform, callable $getProjectDB, callable $getDatabasesDB, Device $deviceForFiles, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, Provider $certificates, Document $document, Bus $bus, ?Store $executionStore = null): void
+    protected function deleteProject(Database $dbForPlatform, callable $getProjectDB, callable $getDatabasesDB, Provider $certificates, Document $document, Bus $bus, ?Store $executionStore = null): void
     {
-        $projectInternalId = $document->getSequence();
         $projectId = $document->getId();
+
+        if ($projectId === '') {
+            throw new \Exception('Missing project ID');
+        }
+
+        $projectInternalId = $document->getSequence();
 
         $executionStore?->deleteProject($projectId);
 
@@ -1015,30 +1006,35 @@ class Deletes extends Action
 
             // Delete all storage directories
             try {
+                $deviceForFiles = getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
                 $deviceForFiles->delete($deviceForFiles->getRoot(), true);
             } catch (Throwable $th) {
                 Console::error('Failed to delete files storage directory: ' . $th->getMessage());
             }
 
             try {
+                $deviceForSites = getDevice(APP_STORAGE_SITES . '/app-' . $projectId);
                 $deviceForSites->delete($deviceForSites->getRoot(), true);
             } catch (Throwable $th) {
                 Console::error('Failed to delete sites storage directory: ' . $th->getMessage());
             }
 
             try {
+                $deviceForFunctions = getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
                 $deviceForFunctions->delete($deviceForFunctions->getRoot(), true);
             } catch (Throwable $th) {
                 Console::error('Failed to delete functions storage directory: ' . $th->getMessage());
             }
 
             try {
+                $deviceForBuilds = getDevice(APP_STORAGE_BUILDS . '/app-' . $projectId);
                 $deviceForBuilds->delete($deviceForBuilds->getRoot(), true);
             } catch (Throwable $th) {
                 Console::error('Failed to delete builds storage directory: ' . $th->getMessage());
             }
 
             try {
+                $deviceForCache = getDevice(APP_STORAGE_CACHE . '/app-' . $projectId);
                 $deviceForCache->delete($deviceForCache->getRoot(), true);
             } catch (Throwable $th) {
                 Console::error('Failed to delete cache storage directory: ' . $th->getMessage());
