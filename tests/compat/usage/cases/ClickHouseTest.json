@@ -17791,7 +17791,7 @@
             }
           },
           "expect": {
-            "request_count": 39,
+            "request_count": 41,
             "async_inserts": false,
             "async_insert_wait": true
           }
@@ -18010,7 +18010,7 @@
             }
           },
           "expect": {
-            "request_count": 39,
+            "request_count": 41,
             "async_inserts": false,
             "async_insert_wait": true
           }
@@ -20494,7 +20494,7 @@
             }
           },
           "expect": {
-            "request_count": 33,
+            "request_count": 35,
             "async_inserts": false,
             "async_insert_wait": true
           }
@@ -20605,7 +20605,7 @@
             }
           },
           "expect": {
-            "request_count": 36,
+            "request_count": 38,
             "async_inserts": false,
             "async_insert_wait": true
           }
@@ -20770,7 +20770,7 @@
             }
           },
           "expect": {
-            "request_count": 33,
+            "request_count": 35,
             "async_inserts": true,
             "async_insert_wait": true
           }

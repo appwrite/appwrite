@@ -875,6 +875,112 @@
       }
     },
     {
+      "name": "chunked delivery counts its bytes and finishes once",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "chunk": [
+              "first-",
+              false
+            ]
+          },
+          {
+            "chunk": [
+              "last",
+              true
+            ]
+          },
+          {
+            "chunk": [
+              "ignored",
+              true
+            ]
+          },
+          {
+            "get": "is_sent"
+          },
+          {
+            "get": "size"
+          }
+        ]
+      },
+      "mask": {
+        "paths": [
+          "/out/1"
+        ],
+        "reason": "getSize() counts the X-Debug-Speed header, whose value is the elapsed time"
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>"
+          },
+          "order": [
+            "x-debug-speed"
+          ],
+          "cookies": [],
+          "body": "first-last",
+          "writes": 2,
+          "ended": true
+        },
+        "out": [
+          true,
+          "<masked>"
+        ],
+        "error": null
+      }
+    },
+    {
+      "name": "an empty terminal chunk writes nothing",
+      "op": "response.run",
+      "args": {
+        "steps": [
+          {
+            "chunk": [
+              "first-",
+              false
+            ]
+          },
+          {
+            "chunk": [
+              "last",
+              false
+            ]
+          },
+          {
+            "chunk": [
+              "",
+              true
+            ]
+          },
+          {
+            "get": "is_sent"
+          }
+        ]
+      },
+      "expect": {
+        "wire": {
+          "status": 200,
+          "headers": {
+            "x-debug-speed": "<masked>"
+          },
+          "order": [
+            "x-debug-speed"
+          ],
+          "cookies": [],
+          "body": "first-last",
+          "writes": 2,
+          "ended": true
+        },
+        "out": [
+          true
+        ],
+        "error": null
+      }
+    },
+    {
       "name": "payload switches",
       "op": "response.run",
       "args": {

@@ -296,6 +296,9 @@ pub struct Wire {
     pub writes: usize,
     /// Whether `end()` was called.
     pub ended: bool,
+    /// Whether the response was aborted: the connection closed without the
+    /// terminal chunk, so the client sees the body as incomplete.
+    pub aborted: bool,
 }
 
 impl Wire {
@@ -340,11 +343,25 @@ pub(crate) struct Head {
 #[derive(Debug)]
 pub(crate) struct Stream {
     pub head: Option<utopia_async::sync::oneshot::Sender<Head>>,
-    pub body: Option<utopia_async::sync::mpsc::UnboundedSender<Bytes>>,
+    pub body: Option<utopia_async::sync::mpsc::UnboundedSender<Result<Bytes, Aborted>>>,
 }
 
-/// A hyper response body: a buffer, or the frames a streamed response sends.
-pub type Body = http_body_util::combinators::BoxBody<Bytes, std::convert::Infallible>;
+/// The error a streamed body ends with when the response is aborted: the
+/// server closes the connection instead of sending the terminal chunk.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Aborted;
+
+impl std::fmt::Display for Aborted {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("response aborted")
+    }
+}
+
+impl std::error::Error for Aborted {}
+
+/// A hyper response body: a buffer, or the frames a streamed response
+/// sends (which end in [`Aborted`] when the response is aborted).
+pub type Body = http_body_util::combinators::BoxBody<Bytes, Aborted>;
 
 /// An outgoing response.
 ///
@@ -744,7 +761,7 @@ impl Response {
         self.wire.writes += 1;
         self.stream_head(None);
         match self.stream.as_ref().and_then(|s| s.body.as_ref()) {
-            Some(body) => body.send(Bytes::copy_from_slice(content)).is_ok(),
+            Some(body) => body.send(Ok(Bytes::copy_from_slice(content))).is_ok(),
             None => false,
         }
     }
@@ -769,7 +786,7 @@ impl Response {
             && !whole
             && let Some(c) = content.filter(|c| !c.is_empty())
         {
-            let _ = body.send(Bytes::copy_from_slice(c));
+            let _ = body.send(Ok(Bytes::copy_from_slice(c)));
         }
     }
 
@@ -863,15 +880,7 @@ impl Response {
             return;
         }
 
-        let mut headers_size = 0usize;
-        for (name, values) in self.headers.iter() {
-            for v in values {
-                headers_size += name.len() + 2 + v.len();
-            }
-            headers_size += (values.len().max(1) - 1) * 2;
-        }
-        headers_size += (self.headers.len().max(1) - 1) * 2;
-        self.size += headers_size + body.len();
+        self.size += self.headers_size() + body.len();
 
         if body.len() <= CHUNK_SIZE {
             self.out_end(Some(body));
@@ -885,31 +894,74 @@ impl Response {
         self.disable_payload = true;
     }
 
+    /// The bytes the headers take, as the response size counts them.
+    fn headers_size(&self) -> usize {
+        let mut size = 0usize;
+        for (name, values) in self.headers.iter() {
+            for v in values {
+                size += name.len() + 2 + v.len();
+            }
+            size += (values.len().max(1) - 1) * 2;
+        }
+        size + (self.headers.len().max(1) - 1) * 2
+    }
+
     /// Streams a part of the body, uncompressed; the status, headers and
-    /// cookies go with the first chunk, and `end` closes the response.
+    /// cookies go with the first chunk, and `end` closes the response. The
+    /// headers and every chunk written count toward the response size.
+    ///
+    /// Fails when the transport rejects a chunk (the client went away): the
+    /// response is left open, so the caller stops instead of streaming the
+    /// rest into nothing.
     ///
     /// PHP: `chunk($body, $end)`.
-    pub fn chunk(&mut self, body: &[u8], end: bool) {
+    pub fn chunk(&mut self, body: &[u8], end: bool) -> Result<()> {
         if self.sent {
-            return;
-        }
-        if end {
-            self.sent = true;
+            return Ok(());
         }
         self.debug_speed();
         if !self.headers_sent {
             self.append_cookies();
             self.append_headers();
+            self.size += self.headers_size();
             self.headers_sent = true;
         }
         if !self.disable_payload {
-            self.out_write(body);
+            if !body.is_empty() && !self.out_write(body) {
+                return Err(Error::custom("RuntimeException", "Failed to write response chunk.", 0));
+            }
+            self.size += body.len();
             if end {
+                self.sent = true;
                 self.disable_payload = true;
                 self.out_end(None);
             }
         } else {
+            self.sent = true;
             self.out_end(None);
+        }
+        Ok(())
+    }
+
+    /// Aborts a partial response without sending its terminal chunk: the
+    /// connection is closed, so the client sees the body as incomplete
+    /// rather than whole. Later sends and chunks are ignored; nothing
+    /// happens once the response was sent.
+    ///
+    /// PHP: `Adapter\Swoole\Response::abort()`.
+    pub fn abort(&mut self) {
+        if self.sent {
+            return;
+        }
+        self.sent = true;
+        self.disable_payload = true;
+        self.wire.aborted = true;
+        if self.stream.is_some() && !self.wire.ended {
+            // The head goes out first: hyper can only cut a response it began.
+            self.stream_head(None);
+            if let Some(body) = self.stream.as_mut().and_then(|s| s.body.take()) {
+                let _ = body.send(Err(Aborted));
+            }
         }
     }
 
@@ -996,7 +1048,7 @@ impl Response {
         use http_body_util::BodyExt;
         self.flush();
         let wire = self.wire;
-        let body = http_body_util::Full::new(Bytes::from(wire.body)).boxed();
+        let body = http_body_util::Full::new(Bytes::from(wire.body)).map_err(|never| match never {}).boxed();
         head_response(wire.status.unwrap_or(200), &wire.headers, &wire.cookies, body)
     }
 }
@@ -1032,7 +1084,7 @@ pub(crate) fn head_response(
         }
         builder.body(body).unwrap_or_else(|_| {
             use http_body_util::BodyExt;
-            let mut r = http::Response::new(http_body_util::Empty::new().boxed());
+            let mut r = http::Response::new(http_body_util::Empty::new().map_err(|never| match never {}).boxed());
             *r.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
             r
         })

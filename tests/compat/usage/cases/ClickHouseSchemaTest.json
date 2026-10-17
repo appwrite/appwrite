@@ -876,6 +876,398 @@
       ]
     },
     {
+      "name": "migrate realigns skip indexes whose expression or type drifted",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_schema_index_drift",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.migrate",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "ALTER TABLE `${ns}`.`utopia_usage_schema_index_drift_usage_gauges` DROP INDEX `index-resourceType`, DROP INDEX `index-resourceId`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "ALTER TABLE `${ns}`.`utopia_usage_schema_index_drift_usage_gauges` ADD INDEX `index-resourceType` (`service`) TYPE set(0) GRANULARITY 1, ADD INDEX `index-resourceId` (`resourceId`) TYPE set(0) GRANULARITY 1"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT name, expr, type_full FROM system.data_skipping_indices WHERE database = '${ns}' AND table = 'utopia_usage_schema_index_drift_usage_gauges' ORDER BY name"
+          },
+          "expect": "index-ordinal\tordinal\tset(0)\nindex-resourceId\tresourceId\tset(0)\nindex-resourceInternalId\tresourceInternalId\tbloom_filter\nindex-resourceType\tservice\tset(0)\nindex-service\tservice\tset(0)\nindex-teamId\tteamId\tbloom_filter\nindex-teamInternalId\tteamInternalId\tbloom_filter\n"
+        },
+        {
+          "op": "usage.migrate",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT name, expr, type_full FROM system.data_skipping_indices WHERE database = '${ns}' AND table = 'utopia_usage_schema_index_drift_usage_gauges' ORDER BY name"
+          },
+          "expect": "index-ordinal\tordinal\tset(0)\nindex-resourceId\tresourceId\tbloom_filter\nindex-resourceInternalId\tresourceInternalId\tbloom_filter\nindex-resourceType\tresourceType\tset(0)\nindex-service\tservice\tset(0)\nindex-teamId\tteamId\tbloom_filter\nindex-teamInternalId\tteamInternalId\tbloom_filter\n"
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT command FROM system.mutations WHERE database = '${ns}' AND table = 'utopia_usage_schema_index_drift_usage_gauges' AND command LIKE '%MATERIALIZE INDEX%' ORDER BY command"
+          },
+          "expect": "(MATERIALIZE INDEX `index-resourceId`)\n(MATERIALIZE INDEX `index-resourceType`)\n"
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT count() FROM system.mutations WHERE database = '${ns}' AND table = 'utopia_usage_schema_index_drift_usage_gauges'"
+          },
+          "expect": "6\n"
+        },
+        {
+          "op": "usage.migrate",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT count() FROM system.mutations WHERE database = '${ns}' AND table = 'utopia_usage_schema_index_drift_usage_gauges'"
+          },
+          "expect": "6\n"
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT name, expr, type_full FROM system.data_skipping_indices WHERE database = '${ns}' AND table = 'utopia_usage_schema_index_drift_usage_gauges' ORDER BY name"
+          },
+          "expect": "index-ordinal\tordinal\tset(0)\nindex-resourceId\tresourceId\tbloom_filter\nindex-resourceInternalId\tresourceInternalId\tbloom_filter\nindex-resourceType\tresourceType\tset(0)\nindex-service\tservice\tset(0)\nindex-teamId\tteamId\tbloom_filter\nindex-teamInternalId\tteamInternalId\tbloom_filter\n"
+        }
+      ]
+    },
+    {
+      "name": "migrate drops an index that duplicates a defined index under another name",
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "default"
+          },
+          "bind": "admin",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "admin"
+            },
+            "sql": "CREATE DATABASE IF NOT EXISTS `${ns}`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.new",
+          "args": {
+            "database": "${ns}",
+            "namespace": "utopia_usage_schema_index_renamed",
+            "shared_tables": true
+          },
+          "bind": "ch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.new",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            }
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "usage.migrate",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "ALTER TABLE `${ns}`.`utopia_usage_schema_index_renamed_usage_gauges` DROP INDEX `index-resourceType`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "ALTER TABLE `${ns}`.`utopia_usage_schema_index_renamed_usage_gauges` ADD INDEX `index-resource` (`resourceType`) TYPE set(0) GRANULARITY 1, ADD INDEX `index-custom` (`metric`) TYPE bloom_filter GRANULARITY 1"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT name, expr, type_full FROM system.data_skipping_indices WHERE database = '${ns}' AND table = 'utopia_usage_schema_index_renamed_usage_gauges' ORDER BY name"
+          },
+          "expect": "index-custom\tmetric\tbloom_filter\nindex-ordinal\tordinal\tset(0)\nindex-resource\tresourceType\tset(0)\nindex-resourceId\tresourceId\tbloom_filter\nindex-resourceInternalId\tresourceInternalId\tbloom_filter\nindex-service\tservice\tset(0)\nindex-teamId\tteamId\tbloom_filter\nindex-teamInternalId\tteamInternalId\tbloom_filter\n"
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "ALTER TABLE `${ns}`.`utopia_usage_schema_index_renamed_usage_events` DROP INDEX `index-resourceType`"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "ALTER TABLE `${ns}`.`utopia_usage_schema_index_renamed_usage_events` ADD INDEX `index-resource` (`resourceType`) TYPE bloom_filter GRANULARITY 1, ADD INDEX `index-custom` (`metric`) TYPE bloom_filter GRANULARITY 1"
+          },
+          "expect": ""
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT name, expr, type_full FROM system.data_skipping_indices WHERE database = '${ns}' AND table = 'utopia_usage_schema_index_renamed_usage_events' ORDER BY name"
+          },
+          "expect": "index-accept\taccept\tbloom_filter\nindex-acceptLanguage\tacceptLanguage\tbloom_filter\nindex-clientName\tclientName\tbloom_filter\nindex-clientType\tclientType\tset(0)\nindex-country\tcountry\tset(0)\nindex-custom\tmetric\tbloom_filter\nindex-deviceName\tdeviceName\tbloom_filter\nindex-hostname\thostname\tbloom_filter\nindex-ip\tip\tbloom_filter\nindex-ipReputation\tipReputation\tset(0)\nindex-method\tmethod\tset(0)\nindex-ordinal\tordinal\tset(0)\nindex-osName\tosName\tset(0)\nindex-path\tpath\tbloom_filter\nindex-postalCode\tpostalCode\tbloom_filter\nindex-protocol\tprotocol\tset(0)\nindex-queryKeys\tqueryKeys\tbloom_filter\nindex-region\tregion\tbloom_filter\nindex-resource\tresourceType\tbloom_filter\nindex-resourceId\tresourceId\tbloom_filter\nindex-resourceInternalId\tresourceInternalId\tbloom_filter\nindex-service\tservice\tset(0)\nindex-status\tstatus\tset(0)\nindex-teamId\tteamId\tbloom_filter\nindex-teamInternalId\tteamInternalId\tbloom_filter\nindex-timeZone\ttimeZone\tset(0)\nindex-weatherCode\tweatherCode\tset(0)\n"
+        },
+        {
+          "op": "usage.migrate",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT name, expr, type_full FROM system.data_skipping_indices WHERE database = '${ns}' AND table = 'utopia_usage_schema_index_renamed_usage_gauges' ORDER BY name"
+          },
+          "expect": "index-custom\tmetric\tbloom_filter\nindex-ordinal\tordinal\tset(0)\nindex-resourceId\tresourceId\tbloom_filter\nindex-resourceInternalId\tresourceInternalId\tbloom_filter\nindex-resourceType\tresourceType\tset(0)\nindex-service\tservice\tset(0)\nindex-teamId\tteamId\tbloom_filter\nindex-teamInternalId\tteamInternalId\tbloom_filter\n"
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT command FROM system.mutations WHERE database = '${ns}' AND table = 'utopia_usage_schema_index_renamed_usage_gauges' AND command LIKE '%MATERIALIZE INDEX%' ORDER BY command"
+          },
+          "expect": "(MATERIALIZE INDEX `index-resourceType`)\n"
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT count() FROM system.mutations WHERE database = '${ns}' AND table = 'utopia_usage_schema_index_renamed_usage_gauges'"
+          },
+          "expect": "3\n"
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT name, expr, type_full FROM system.data_skipping_indices WHERE database = '${ns}' AND table = 'utopia_usage_schema_index_renamed_usage_events' ORDER BY name"
+          },
+          "expect": "index-accept\taccept\tbloom_filter\nindex-acceptLanguage\tacceptLanguage\tbloom_filter\nindex-clientName\tclientName\tbloom_filter\nindex-clientType\tclientType\tset(0)\nindex-country\tcountry\tset(0)\nindex-custom\tmetric\tbloom_filter\nindex-deviceName\tdeviceName\tbloom_filter\nindex-hostname\thostname\tbloom_filter\nindex-ip\tip\tbloom_filter\nindex-ipReputation\tipReputation\tset(0)\nindex-method\tmethod\tset(0)\nindex-ordinal\tordinal\tset(0)\nindex-osName\tosName\tset(0)\nindex-path\tpath\tbloom_filter\nindex-postalCode\tpostalCode\tbloom_filter\nindex-protocol\tprotocol\tset(0)\nindex-queryKeys\tqueryKeys\tbloom_filter\nindex-region\tregion\tbloom_filter\nindex-resourceId\tresourceId\tbloom_filter\nindex-resourceInternalId\tresourceInternalId\tbloom_filter\nindex-resourceType\tresourceType\tbloom_filter\nindex-service\tservice\tset(0)\nindex-status\tstatus\tset(0)\nindex-teamId\tteamId\tbloom_filter\nindex-teamInternalId\tteamInternalId\tbloom_filter\nindex-timeZone\ttimeZone\tset(0)\nindex-weatherCode\tweatherCode\tset(0)\n"
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT command FROM system.mutations WHERE database = '${ns}' AND table = 'utopia_usage_schema_index_renamed_usage_events' AND command LIKE '%MATERIALIZE INDEX%' ORDER BY command"
+          },
+          "expect": "(MATERIALIZE INDEX `index-resourceType`)\n"
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT count() FROM system.mutations WHERE database = '${ns}' AND table = 'utopia_usage_schema_index_renamed_usage_events'"
+          },
+          "expect": "3\n"
+        },
+        {
+          "op": "usage.migrate",
+          "args": {
+            "usage": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT count() FROM system.mutations WHERE database = '${ns}' AND table = 'utopia_usage_schema_index_renamed_usage_gauges'"
+          },
+          "expect": "3\n"
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT name, expr, type_full FROM system.data_skipping_indices WHERE database = '${ns}' AND table = 'utopia_usage_schema_index_renamed_usage_gauges' ORDER BY name"
+          },
+          "expect": "index-custom\tmetric\tbloom_filter\nindex-ordinal\tordinal\tset(0)\nindex-resourceId\tresourceId\tbloom_filter\nindex-resourceInternalId\tresourceInternalId\tbloom_filter\nindex-resourceType\tresourceType\tset(0)\nindex-service\tservice\tset(0)\nindex-teamId\tteamId\tbloom_filter\nindex-teamInternalId\tteamInternalId\tbloom_filter\n"
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT count() FROM system.mutations WHERE database = '${ns}' AND table = 'utopia_usage_schema_index_renamed_usage_events'"
+          },
+          "expect": "3\n"
+        },
+        {
+          "op": "clickhouse.query",
+          "args": {
+            "adapter": {
+              "$ref": "ch"
+            },
+            "sql": "SELECT name, expr, type_full FROM system.data_skipping_indices WHERE database = '${ns}' AND table = 'utopia_usage_schema_index_renamed_usage_events' ORDER BY name"
+          },
+          "expect": "index-accept\taccept\tbloom_filter\nindex-acceptLanguage\tacceptLanguage\tbloom_filter\nindex-clientName\tclientName\tbloom_filter\nindex-clientType\tclientType\tset(0)\nindex-country\tcountry\tset(0)\nindex-custom\tmetric\tbloom_filter\nindex-deviceName\tdeviceName\tbloom_filter\nindex-hostname\thostname\tbloom_filter\nindex-ip\tip\tbloom_filter\nindex-ipReputation\tipReputation\tset(0)\nindex-method\tmethod\tset(0)\nindex-ordinal\tordinal\tset(0)\nindex-osName\tosName\tset(0)\nindex-path\tpath\tbloom_filter\nindex-postalCode\tpostalCode\tbloom_filter\nindex-protocol\tprotocol\tset(0)\nindex-queryKeys\tqueryKeys\tbloom_filter\nindex-region\tregion\tbloom_filter\nindex-resourceId\tresourceId\tbloom_filter\nindex-resourceInternalId\tresourceInternalId\tbloom_filter\nindex-resourceType\tresourceType\tbloom_filter\nindex-service\tservice\tset(0)\nindex-status\tstatus\tset(0)\nindex-teamId\tteamId\tbloom_filter\nindex-teamInternalId\tteamInternalId\tbloom_filter\nindex-timeZone\ttimeZone\tset(0)\nindex-weatherCode\tweatherCode\tset(0)\n"
+        }
+      ]
+    },
+    {
       "name": "migrate creates new tables with the retention",
       "steps": [
         {

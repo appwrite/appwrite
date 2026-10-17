@@ -17,7 +17,7 @@
   "state": [],
   "ops": {
     "http.run": {
-      "doc": "Builds an application from `app` (mode, allow_override, compression, resources, files, init/shutdown/options/error/start/request hooks, routes with methods, aliases, groups, params, injections and action statements, wildcard) and dispatches each of `requests` (parsed by Swoole on PHP) through run() or execute(). Returns route registration results and, per request, what the server adapter was asked to send (status, headers, cookies as Set-Cookie lines, body), the values actions emitted and the error run() raised. With `telemetry`, the server metrics run() recorded through a test telemetry adapter (counts for the time-dependent ones).",
+      "doc": "Builds an application from `app` (mode, allow_override, compression, resources, files, init/shutdown/options/error/start/request hooks, routes with methods, aliases, groups, params, injections and action statements, wildcard) and dispatches each of `requests` (parsed by Swoole on PHP) through run() or execute(). Returns route registration results and, per request, what the server adapter was asked to send (status, headers, cookies as Set-Cookie lines, body, and whether the response was aborted), the values actions emitted and the error run() raised. With `telemetry`, the server metrics run() recorded through a test telemetry adapter (counts for the time-dependent ones).",
       "covers": [
         "Utopia\\Http\\Http::__construct",
         "Utopia\\Http\\Http::get",
@@ -48,7 +48,8 @@
         "Utopia\\Http\\Route::hook",
         "Utopia\\Http\\Adapter\\Swoole\\Request::__construct",
         "Utopia\\Http\\Http::setTelemetry",
-        "Utopia\\Http\\Adapter::setTelemetry"
+        "Utopia\\Http\\Adapter::setTelemetry",
+        "Utopia\\Http\\Adapter\\Swoole\\Response::abort"
       ],
       "mask": {
         "paths": [

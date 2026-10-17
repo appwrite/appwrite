@@ -1138,7 +1138,2216 @@
       ]
     },
     {
-      "name": "testConditionedJoinRequiresAlias with data set \"join\"",
+      "name": "testConditionedJoinWithoutAliasIsReadUnderItsCollection with data set \"join\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "static": "join",
+            "class": "Query",
+            "args": [
+              "orders",
+              "",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getJoinOnQueries",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Join"
+        },
+        "orders",
+        "orders",
+        true,
+        [
+          {
+            "$value": "Query",
+            "id": 4,
+            "props": {
+              "method": {
+                "$enum": "Method::On"
+              },
+              "attribute": "",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ]
+      ]
+    },
+    {
+      "name": "testConditionedJoinWithoutAliasIsReadUnderItsCollection with data set \"leftJoin\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "static": "leftJoin",
+            "class": "Query",
+            "args": [
+              "orders",
+              "",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getJoinOnQueries",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::LeftJoin"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::LeftJoin"
+        },
+        "orders",
+        "orders",
+        true,
+        [
+          {
+            "$value": "Query",
+            "id": 4,
+            "props": {
+              "method": {
+                "$enum": "Method::On"
+              },
+              "attribute": "",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ]
+      ]
+    },
+    {
+      "name": "testConditionedJoinWithoutAliasIsReadUnderItsCollection with data set \"rightJoin\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "static": "rightJoin",
+            "class": "Query",
+            "args": [
+              "orders",
+              "",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getJoinOnQueries",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::RightJoin"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::RightJoin"
+        },
+        "orders",
+        "orders",
+        true,
+        [
+          {
+            "$value": "Query",
+            "id": 4,
+            "props": {
+              "method": {
+                "$enum": "Method::On"
+              },
+              "attribute": "",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ]
+      ]
+    },
+    {
+      "name": "testConditionedJoinWithoutAliasIsReadUnderItsCollection with data set \"fullOuterJoin\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "static": "fullOuterJoin",
+            "class": "Query",
+            "args": [
+              "orders",
+              "",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getJoinOnQueries",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::FullOuterJoin"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::FullOuterJoin"
+        },
+        "orders",
+        "orders",
+        true,
+        [
+          {
+            "$value": "Query",
+            "id": 4,
+            "props": {
+              "method": {
+                "$enum": "Method::On"
+              },
+              "attribute": "",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ]
+      ]
+    },
+    {
+      "name": "testUnconditionedJoinWithoutAliasIsReadUnderItsCollection with data set \"crossJoin\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "crossJoin",
+            "class": "Query",
+            "args": [
+              "colors",
+              ""
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::CrossJoin"
+            },
+            "attribute": "colors",
+            "values": [],
+            "alias": "colors",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::CrossJoin"
+        },
+        "colors",
+        true,
+        []
+      ]
+    },
+    {
+      "name": "testUnconditionedJoinWithoutAliasIsReadUnderItsCollection with data set \"naturalJoin\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "naturalJoin",
+            "class": "Query",
+            "args": [
+              "colors",
+              ""
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::NaturalJoin"
+            },
+            "attribute": "colors",
+            "values": [],
+            "alias": "colors",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::NaturalJoin"
+        },
+        "colors",
+        true,
+        []
+      ]
+    },
+    {
+      "name": "testConditionedJoinWithAliasIsNotDefaulted with data set \"join\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "ord.user_id"
+            ]
+          },
+          {
+            "static": "join",
+            "class": "Query",
+            "args": [
+              "orders",
+              "ord",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "ord.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "ord.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "ord",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        false
+      ]
+    },
+    {
+      "name": "testConditionedJoinWithAliasIsNotDefaulted with data set \"leftJoin\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "ord.user_id"
+            ]
+          },
+          {
+            "static": "leftJoin",
+            "class": "Query",
+            "args": [
+              "orders",
+              "ord",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "ord.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::LeftJoin"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "ord.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "ord",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        false
+      ]
+    },
+    {
+      "name": "testConditionedJoinWithAliasIsNotDefaulted with data set \"rightJoin\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "ord.user_id"
+            ]
+          },
+          {
+            "static": "rightJoin",
+            "class": "Query",
+            "args": [
+              "orders",
+              "ord",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "ord.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::RightJoin"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "ord.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "ord",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        false
+      ]
+    },
+    {
+      "name": "testConditionedJoinWithAliasIsNotDefaulted with data set \"fullOuterJoin\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "ord.user_id"
+            ]
+          },
+          {
+            "static": "fullOuterJoin",
+            "class": "Query",
+            "args": [
+              "orders",
+              "ord",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "ord.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::FullOuterJoin"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "ord.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "ord",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        false
+      ]
+    },
+    {
+      "name": "testUnconditionedJoinWithAliasIsNotDefaulted with data set \"crossJoin\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "crossJoin",
+            "class": "Query",
+            "args": [
+              "colors",
+              "c"
+            ]
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::CrossJoin"
+            },
+            "attribute": "colors",
+            "values": [],
+            "alias": "c",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        false
+      ]
+    },
+    {
+      "name": "testUnconditionedJoinWithAliasIsNotDefaulted with data set \"naturalJoin\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "naturalJoin",
+            "class": "Query",
+            "args": [
+              "colors",
+              "c"
+            ]
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::NaturalJoin"
+            },
+            "attribute": "colors",
+            "values": [],
+            "alias": "c",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        false
+      ]
+    },
+    {
+      "name": "testJoinAliasedAsItsCollectionCountsAsDefaulted",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "static": "join",
+            "class": "Query",
+            "args": [
+              "orders",
+              "orders",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        true
+      ]
+    },
+    {
+      "name": "testQueriesOtherThanJoinsAreNeverDefaulted",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "count",
+            "class": "Query",
+            "args": [
+              "total",
+              "total"
+            ]
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "new": "Query",
+            "args": [
+              {
+                "$enum": "Method::Equal"
+              },
+              "status",
+              [
+                "paid"
+              ],
+              "status"
+            ]
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Count"
+            },
+            "attribute": "total",
+            "values": [],
+            "alias": "total",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        false,
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "status",
+            "values": [
+              "paid"
+            ],
+            "alias": "status",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        false
+      ]
+    },
+    {
+      "name": "testBuilderJoinWithoutAliasStaysUnaliased",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "new": "Query",
+            "args": [
+              {
+                "$enum": "Method::Join"
+              },
+              "orders",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "compile",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              {
+                "$o": 4
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "",
+        false,
+        {
+          "$object": "Builder\\MySQL",
+          "id": 4
+        },
+        "JOIN `orders` ON `users`.`id` = `orders`.`user_id`"
+      ]
+    },
+    {
+      "name": "testDefaultedJoinCompilesUnderItsCollection",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "static": "join",
+            "class": "Query",
+            "args": [
+              "orders",
+              "",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "compile",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              {
+                "$o": 4
+              }
+            ]
+          },
+          {
+            "static": "crossJoin",
+            "class": "Query",
+            "args": [
+              "colors",
+              ""
+            ]
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "compile",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              {
+                "$o": 6
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 4
+        },
+        "JOIN `orders` AS `orders` ON `users`.`id` = `orders`.`user_id`",
+        {
+          "$value": "Query",
+          "id": 5,
+          "props": {
+            "method": {
+              "$enum": "Method::CrossJoin"
+            },
+            "attribute": "colors",
+            "values": [],
+            "alias": "colors",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 6
+        },
+        "CROSS JOIN `colors` AS `colors`"
+      ]
+    },
+    {
+      "name": "testDefaultedAliasSurvivesRenamingTheCollection",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "static": "join",
+            "class": "Query",
+            "args": [
+              "orders",
+              "",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "clone": {
+              "$o": 2
+            }
+          },
+          {
+            "call": "setAttribute",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "database_1_collection_7"
+            ]
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 6,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "database_1_collection_7",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 7,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "orders",
+        true,
+        {
+          "method": "join",
+          "attribute": "database_1_collection_7",
+          "alias": "orders",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testRenamedJoinSerializesItsAliasExplicitly",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "static": "join",
+            "class": "Query",
+            "args": [
+              "orders",
+              "",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "clone": {
+              "$o": 2
+            }
+          },
+          {
+            "call": "setAttribute",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "database_1_collection_7"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "join",
+                "attribute": "database_1_collection_7",
+                "alias": "orders",
+                "values": [
+                  {
+                    "method": "on",
+                    "values": [
+                      "users.id",
+                      "=",
+                      "orders.user_id"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 8
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 8
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 8
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 6,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "database_1_collection_7",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 7,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "join",
+          "attribute": "database_1_collection_7",
+          "alias": "orders",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ]
+            }
+          ]
+        },
+        {
+          "$value": "Query",
+          "id": 8,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "database_1_collection_7",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 9,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "database_1_collection_7",
+        "orders",
+        false
+      ]
+    },
+    {
+      "name": "testBuilderJoinWithoutAliasParsesUnderItsCollection",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "new": "Query",
+            "args": [
+              {
+                "$enum": "Method::Join"
+              },
+              "orders",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "join",
+                "attribute": "orders",
+                "values": [
+                  {
+                    "method": "on",
+                    "values": [
+                      "users.id",
+                      "=",
+                      "orders.user_id"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "join",
+          "attribute": "orders",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ]
+            }
+          ]
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "orders",
+        true
+      ]
+    },
+    {
+      "name": "testConditionedJoinWithoutAliasOrCollectionIsRejected with data set \"join\"",
       "op": "query",
       "args": {
         "program": [
@@ -1160,7 +3369,7 @@
             "static": "join",
             "class": "Query",
             "args": [
-              "orders",
+              "",
               "",
               [
                 {
@@ -1194,14 +3403,14 @@
         {
           "$error": {
             "class": "Utopia\\Query\\Exception\\ValidationException",
-            "message": "Join alias is required: join orders"
+            "message": "Join alias is required: join "
           },
           "id": 2
         }
       ]
     },
     {
-      "name": "testConditionedJoinRequiresAlias with data set \"leftJoin\"",
+      "name": "testConditionedJoinWithoutAliasOrCollectionIsRejected with data set \"leftJoin\"",
       "op": "query",
       "args": {
         "program": [
@@ -1223,7 +3432,7 @@
             "static": "leftJoin",
             "class": "Query",
             "args": [
-              "orders",
+              "",
               "",
               [
                 {
@@ -1257,14 +3466,14 @@
         {
           "$error": {
             "class": "Utopia\\Query\\Exception\\ValidationException",
-            "message": "Join alias is required: leftJoin orders"
+            "message": "Join alias is required: leftJoin "
           },
           "id": 2
         }
       ]
     },
     {
-      "name": "testConditionedJoinRequiresAlias with data set \"rightJoin\"",
+      "name": "testConditionedJoinWithoutAliasOrCollectionIsRejected with data set \"rightJoin\"",
       "op": "query",
       "args": {
         "program": [
@@ -1286,7 +3495,7 @@
             "static": "rightJoin",
             "class": "Query",
             "args": [
-              "orders",
+              "",
               "",
               [
                 {
@@ -1320,14 +3529,14 @@
         {
           "$error": {
             "class": "Utopia\\Query\\Exception\\ValidationException",
-            "message": "Join alias is required: rightJoin orders"
+            "message": "Join alias is required: rightJoin "
           },
           "id": 2
         }
       ]
     },
     {
-      "name": "testConditionedJoinRequiresAlias with data set \"fullOuterJoin\"",
+      "name": "testConditionedJoinWithoutAliasOrCollectionIsRejected with data set \"fullOuterJoin\"",
       "op": "query",
       "args": {
         "program": [
@@ -1349,7 +3558,7 @@
             "static": "fullOuterJoin",
             "class": "Query",
             "args": [
-              "orders",
+              "",
               "",
               [
                 {
@@ -1383,14 +3592,14 @@
         {
           "$error": {
             "class": "Utopia\\Query\\Exception\\ValidationException",
-            "message": "Join alias is required: fullOuterJoin orders"
+            "message": "Join alias is required: fullOuterJoin "
           },
           "id": 2
         }
       ]
     },
     {
-      "name": "testUnconditionedJoinRequiresAlias with data set \"crossJoin\"",
+      "name": "testUnconditionedJoinWithoutAliasOrCollectionIsRejected with data set \"crossJoin\"",
       "op": "query",
       "args": {
         "program": [
@@ -1404,7 +3613,7 @@
             "static": "crossJoin",
             "class": "Query",
             "args": [
-              "colors",
+              "",
               ""
             ]
           }
@@ -1415,14 +3624,14 @@
         {
           "$error": {
             "class": "Utopia\\Query\\Exception\\ValidationException",
-            "message": "Join alias is required: crossJoin colors"
+            "message": "Join alias is required: crossJoin "
           },
           "id": 1
         }
       ]
     },
     {
-      "name": "testUnconditionedJoinRequiresAlias with data set \"naturalJoin\"",
+      "name": "testUnconditionedJoinWithoutAliasOrCollectionIsRejected with data set \"naturalJoin\"",
       "op": "query",
       "args": {
         "program": [
@@ -1436,7 +3645,7 @@
             "static": "naturalJoin",
             "class": "Query",
             "args": [
-              "colors",
+              "",
               ""
             ]
           }
@@ -1447,7 +3656,7 @@
         {
           "$error": {
             "class": "Utopia\\Query\\Exception\\ValidationException",
-            "message": "Join alias is required: naturalJoin colors"
+            "message": "Join alias is required: naturalJoin "
           },
           "id": 1
         }
@@ -54232,10 +56441,507 @@
       ]
     },
     {
-      "name": "testParseRejectsJoinWithoutAlias",
+      "name": "testParsedJoinWithoutAliasIsReadUnderItsCollection with data set \"nested ON form\"",
       "op": "query",
       "args": {
         "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "join",
+                "attribute": "orders",
+                "values": [
+                  {
+                    "method": "on",
+                    "values": [
+                      "users.id",
+                      "=",
+                      "orders.user_id"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "on",
+          "values": [
+            "users.id",
+            "=",
+            "orders.user_id"
+          ]
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Join"
+        },
+        "orders",
+        "orders",
+        true,
+        {
+          "method": "join",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testParsedJoinWithoutAliasIsReadUnderItsCollection with data set \"empty alias property\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "leftJoin",
+                "attribute": "orders",
+                "alias": "",
+                "values": [
+                  {
+                    "method": "on",
+                    "values": [
+                      "users.id",
+                      "=",
+                      "orders.user_id"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "on",
+          "values": [
+            "users.id",
+            "=",
+            "orders.user_id"
+          ]
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::LeftJoin"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::LeftJoin"
+        },
+        "orders",
+        "orders",
+        true,
+        {
+          "method": "leftJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testParsedJoinWithoutAliasIsReadUnderItsCollection with data set \"empty legacy alias first\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "rightJoin",
+                "attribute": "orders",
+                "values": [
+                  "",
+                  {
+                    "method": "on",
+                    "values": [
+                      "users.id",
+                      "=",
+                      "orders.user_id"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "on",
+          "values": [
+            "users.id",
+            "=",
+            "orders.user_id"
+          ]
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::RightJoin"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::RightJoin"
+        },
+        "orders",
+        "orders",
+        true,
+        {
+          "method": "rightJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testParsedJoinWithoutAliasIsReadUnderItsCollection with data set \"column form\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
           {
             "static": "parseQuery",
             "class": "Query",
@@ -54250,6 +56956,2809 @@
                 ]
               }
             ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "on",
+          "values": [
+            "users.id",
+            "=",
+            "orders.user_id"
+          ]
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Join"
+        },
+        "orders",
+        "orders",
+        true,
+        {
+          "method": "join",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testParsedJoinWithoutAliasIsReadUnderItsCollection with data set \"column form with an empty alias\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "fullOuterJoin",
+                "attribute": "orders",
+                "values": [
+                  "users.id",
+                  "=",
+                  "orders.user_id",
+                  ""
+                ]
+              }
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "on",
+          "values": [
+            "users.id",
+            "=",
+            "orders.user_id"
+          ]
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::FullOuterJoin"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::FullOuterJoin"
+        },
+        "orders",
+        "orders",
+        true,
+        {
+          "method": "fullOuterJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testParsedJoinWithoutAliasIsReadUnderItsCollection with data set \"crossJoin\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "crossJoin",
+                "attribute": "orders",
+                "values": []
+              }
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "on",
+          "values": [
+            "users.id",
+            "=",
+            "orders.user_id"
+          ]
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::CrossJoin"
+            },
+            "attribute": "orders",
+            "values": [],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::CrossJoin"
+        },
+        "orders",
+        "orders",
+        true,
+        {
+          "method": "crossJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": []
+        }
+      ]
+    },
+    {
+      "name": "testParsedJoinWithoutAliasIsReadUnderItsCollection with data set \"crossJoin with an empty legacy alias\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "crossJoin",
+                "attribute": "orders",
+                "values": [
+                  ""
+                ]
+              }
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "on",
+          "values": [
+            "users.id",
+            "=",
+            "orders.user_id"
+          ]
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::CrossJoin"
+            },
+            "attribute": "orders",
+            "values": [],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::CrossJoin"
+        },
+        "orders",
+        "orders",
+        true,
+        {
+          "method": "crossJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": []
+        }
+      ]
+    },
+    {
+      "name": "testParsedJoinWithoutAliasIsReadUnderItsCollection with data set \"naturalJoin\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "naturalJoin",
+                "attribute": "orders"
+              }
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "on",
+          "values": [
+            "users.id",
+            "=",
+            "orders.user_id"
+          ]
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::NaturalJoin"
+            },
+            "attribute": "orders",
+            "values": [],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::NaturalJoin"
+        },
+        "orders",
+        "orders",
+        true,
+        {
+          "method": "naturalJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": []
+        }
+      ]
+    },
+    {
+      "name": "testParsedJoinWithoutAliasRoundTrips with data set \"nested ON form\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "join",
+                "attribute": "orders",
+                "values": [
+                  {
+                    "method": "on",
+                    "values": [
+                      "users.id",
+                      "=",
+                      "orders.user_id"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "join",
+                "attribute": "orders",
+                "alias": "orders",
+                "values": [
+                  {
+                    "method": "on",
+                    "values": [
+                      "users.id",
+                      "=",
+                      "orders.user_id"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"join\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[{\"method\":\"on\",\"values\":[\"users.id\",\"=\",\"orders.user_id\"]}]}"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "on",
+          "values": [
+            "users.id",
+            "=",
+            "orders.user_id"
+          ]
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "join",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ]
+            }
+          ]
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "join",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ]
+            }
+          ]
+        },
+        true,
+        "{\"method\":\"join\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[{\"method\":\"on\",\"values\":[\"users.id\",\"=\",\"orders.user_id\"]}]}",
+        {
+          "$value": "Query",
+          "id": 6,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 7,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "join",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ]
+            }
+          ]
+        },
+        true
+      ]
+    },
+    {
+      "name": "testParsedJoinWithoutAliasRoundTrips with data set \"empty alias property\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "leftJoin",
+                "attribute": "orders",
+                "alias": "",
+                "values": [
+                  {
+                    "method": "on",
+                    "values": [
+                      "users.id",
+                      "=",
+                      "orders.user_id"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "leftJoin",
+                "attribute": "orders",
+                "alias": "orders",
+                "values": [
+                  {
+                    "method": "on",
+                    "values": [
+                      "users.id",
+                      "=",
+                      "orders.user_id"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"leftJoin\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[{\"method\":\"on\",\"values\":[\"users.id\",\"=\",\"orders.user_id\"]}]}"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "on",
+          "values": [
+            "users.id",
+            "=",
+            "orders.user_id"
+          ]
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::LeftJoin"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "leftJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ]
+            }
+          ]
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::LeftJoin"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "leftJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ]
+            }
+          ]
+        },
+        true,
+        "{\"method\":\"leftJoin\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[{\"method\":\"on\",\"values\":[\"users.id\",\"=\",\"orders.user_id\"]}]}",
+        {
+          "$value": "Query",
+          "id": 6,
+          "props": {
+            "method": {
+              "$enum": "Method::LeftJoin"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 7,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "leftJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ]
+            }
+          ]
+        },
+        true
+      ]
+    },
+    {
+      "name": "testParsedJoinWithoutAliasRoundTrips with data set \"empty legacy alias first\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "rightJoin",
+                "attribute": "orders",
+                "values": [
+                  "",
+                  {
+                    "method": "on",
+                    "values": [
+                      "users.id",
+                      "=",
+                      "orders.user_id"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "rightJoin",
+                "attribute": "orders",
+                "alias": "orders",
+                "values": [
+                  {
+                    "method": "on",
+                    "values": [
+                      "users.id",
+                      "=",
+                      "orders.user_id"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"rightJoin\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[{\"method\":\"on\",\"values\":[\"users.id\",\"=\",\"orders.user_id\"]}]}"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "on",
+          "values": [
+            "users.id",
+            "=",
+            "orders.user_id"
+          ]
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::RightJoin"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "rightJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ]
+            }
+          ]
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::RightJoin"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "rightJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ]
+            }
+          ]
+        },
+        true,
+        "{\"method\":\"rightJoin\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[{\"method\":\"on\",\"values\":[\"users.id\",\"=\",\"orders.user_id\"]}]}",
+        {
+          "$value": "Query",
+          "id": 6,
+          "props": {
+            "method": {
+              "$enum": "Method::RightJoin"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 7,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "rightJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ]
+            }
+          ]
+        },
+        true
+      ]
+    },
+    {
+      "name": "testParsedJoinWithoutAliasRoundTrips with data set \"column form\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "join",
+                "attribute": "orders",
+                "values": [
+                  "users.id",
+                  "=",
+                  "orders.user_id"
+                ]
+              }
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "join",
+                "attribute": "orders",
+                "alias": "orders",
+                "values": [
+                  {
+                    "method": "on",
+                    "values": [
+                      "users.id",
+                      "=",
+                      "orders.user_id"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"join\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[{\"method\":\"on\",\"values\":[\"users.id\",\"=\",\"orders.user_id\"]}]}"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "on",
+          "values": [
+            "users.id",
+            "=",
+            "orders.user_id"
+          ]
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "join",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ]
+            }
+          ]
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "join",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ]
+            }
+          ]
+        },
+        true,
+        "{\"method\":\"join\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[{\"method\":\"on\",\"values\":[\"users.id\",\"=\",\"orders.user_id\"]}]}",
+        {
+          "$value": "Query",
+          "id": 6,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 7,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "join",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ]
+            }
+          ]
+        },
+        true
+      ]
+    },
+    {
+      "name": "testParsedJoinWithoutAliasRoundTrips with data set \"column form with an empty alias\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "fullOuterJoin",
+                "attribute": "orders",
+                "values": [
+                  "users.id",
+                  "=",
+                  "orders.user_id",
+                  ""
+                ]
+              }
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "fullOuterJoin",
+                "attribute": "orders",
+                "alias": "orders",
+                "values": [
+                  {
+                    "method": "on",
+                    "values": [
+                      "users.id",
+                      "=",
+                      "orders.user_id"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"fullOuterJoin\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[{\"method\":\"on\",\"values\":[\"users.id\",\"=\",\"orders.user_id\"]}]}"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "on",
+          "values": [
+            "users.id",
+            "=",
+            "orders.user_id"
+          ]
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::FullOuterJoin"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "fullOuterJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ]
+            }
+          ]
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::FullOuterJoin"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "fullOuterJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ]
+            }
+          ]
+        },
+        true,
+        "{\"method\":\"fullOuterJoin\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[{\"method\":\"on\",\"values\":[\"users.id\",\"=\",\"orders.user_id\"]}]}",
+        {
+          "$value": "Query",
+          "id": 6,
+          "props": {
+            "method": {
+              "$enum": "Method::FullOuterJoin"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 7,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "orders.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "fullOuterJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": [
+            {
+              "method": "on",
+              "values": [
+                "users.id",
+                "=",
+                "orders.user_id"
+              ]
+            }
+          ]
+        },
+        true
+      ]
+    },
+    {
+      "name": "testParsedJoinWithoutAliasRoundTrips with data set \"crossJoin\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "crossJoin",
+                "attribute": "orders",
+                "values": []
+              }
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "crossJoin",
+                "attribute": "orders",
+                "alias": "orders",
+                "values": []
+              }
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"crossJoin\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[]}"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "on",
+          "values": [
+            "users.id",
+            "=",
+            "orders.user_id"
+          ]
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::CrossJoin"
+            },
+            "attribute": "orders",
+            "values": [],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "crossJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": []
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::CrossJoin"
+            },
+            "attribute": "orders",
+            "values": [],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "crossJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": []
+        },
+        true,
+        "{\"method\":\"crossJoin\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[]}",
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::CrossJoin"
+            },
+            "attribute": "orders",
+            "values": [],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "crossJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": []
+        },
+        true
+      ]
+    },
+    {
+      "name": "testParsedJoinWithoutAliasRoundTrips with data set \"crossJoin with an empty legacy alias\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "crossJoin",
+                "attribute": "orders",
+                "values": [
+                  ""
+                ]
+              }
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "crossJoin",
+                "attribute": "orders",
+                "alias": "orders",
+                "values": []
+              }
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"crossJoin\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[]}"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "on",
+          "values": [
+            "users.id",
+            "=",
+            "orders.user_id"
+          ]
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::CrossJoin"
+            },
+            "attribute": "orders",
+            "values": [],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "crossJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": []
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::CrossJoin"
+            },
+            "attribute": "orders",
+            "values": [],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "crossJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": []
+        },
+        true,
+        "{\"method\":\"crossJoin\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[]}",
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::CrossJoin"
+            },
+            "attribute": "orders",
+            "values": [],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "crossJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": []
+        },
+        true
+      ]
+    },
+    {
+      "name": "testParsedJoinWithoutAliasRoundTrips with data set \"naturalJoin\"",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "naturalJoin",
+                "attribute": "orders"
+              }
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "naturalJoin",
+                "attribute": "orders",
+                "alias": "orders",
+                "values": []
+              }
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"naturalJoin\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[]}"
+            ]
+          },
+          {
+            "call": "toArray",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "orders.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "on",
+          "values": [
+            "users.id",
+            "=",
+            "orders.user_id"
+          ]
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::NaturalJoin"
+            },
+            "attribute": "orders",
+            "values": [],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "naturalJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": []
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::NaturalJoin"
+            },
+            "attribute": "orders",
+            "values": [],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "naturalJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": []
+        },
+        true,
+        "{\"method\":\"naturalJoin\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[]}",
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::NaturalJoin"
+            },
+            "attribute": "orders",
+            "values": [],
+            "alias": "orders",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "method": "naturalJoin",
+          "attribute": "orders",
+          "alias": "orders",
+          "values": []
+        },
+        true
+      ]
+    },
+    {
+      "name": "testParsedJoinWithAliasRoundTripsAsNotDefaulted",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "on",
+            "class": "Query",
+            "args": [
+              "users.id",
+              "ord.user_id"
+            ]
+          },
+          {
+            "static": "join",
+            "class": "Query",
+            "args": [
+              "orders",
+              "ord",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "toString",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "static": "parse",
+            "class": "Query",
+            "args": [
+              "{\"method\":\"join\",\"attribute\":\"orders\",\"alias\":\"ord\",\"values\":[{\"method\":\"on\",\"values\":[\"users.id\",\"=\",\"ord.user_id\"]}]}"
+            ]
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "isAliasDefaulted",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::On"
+            },
+            "attribute": "",
+            "values": [
+              "users.id",
+              "=",
+              "ord.user_id"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "ord.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "ord",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "{\"method\":\"join\",\"attribute\":\"orders\",\"alias\":\"ord\",\"values\":[{\"method\":\"on\",\"values\":[\"users.id\",\"=\",\"ord.user_id\"]}]}",
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Join"
+            },
+            "attribute": "orders",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::On"
+                  },
+                  "attribute": "",
+                  "values": [
+                    "users.id",
+                    "=",
+                    "ord.user_id"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "ord",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "ord",
+        false
+      ]
+    },
+    {
+      "name": "testParseRejectsJoinWithoutAliasOrCollection",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "join",
+                "values": [
+                  "users.id",
+                  "=",
+                  "orders.user_id"
+                ]
+              }
+            ]
           }
         ]
       },
@@ -54257,7 +59766,7 @@
         {
           "$error": {
             "class": "Utopia\\Query\\Exception\\ValidationException",
-            "message": "Join alias is required: join orders"
+            "message": "Join alias is required: join "
           },
           "id": 1
         }
@@ -54880,6 +60389,13 @@
           {
             "call": "isJoin",
             "on": {
+              "$enum": "Method::Relationship"
+            },
+            "args": []
+          },
+          {
+            "call": "isJoin",
+            "on": {
               "$enum": "Method::Count"
             },
             "args": []
@@ -55419,6 +60935,7 @@
             "$enum": "Method::Raw"
           }
         ],
+        false,
         false,
         false,
         false,

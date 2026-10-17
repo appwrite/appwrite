@@ -69,6 +69,17 @@ fn identifiers(expression: &[u8]) -> Vec<&[u8]> {
     expression.split(|b| !IDENTIFIER_CHARACTERS.contains(b)).filter(|part| !part.is_empty()).collect()
 }
 
+/// Whether a live skip index has the defined attributes and type, compared
+/// by identifiers so the quoting and spacing ClickHouse stores are not drift.
+///
+/// PHP: `hasIndexShape()` (private).
+fn has_index_shape(index: &SkipIndex, attributes: &[&str], kind: &str) -> bool {
+    let ids = identifiers(index.expression.as_bytes());
+    ids.len() == attributes.len()
+        && ids.iter().zip(attributes).all(|(id, a)| *id == a.as_bytes())
+        && without_spaces(index.kind.as_bytes()) == without_spaces(kind.as_bytes())
+}
+
 /// `str_replace(' ', '', $codec)`.
 fn without_spaces(codec: &[u8]) -> Vec<u8> {
     codec.iter().copied().filter(|b| *b != b' ').collect()
@@ -470,6 +481,21 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
     ///
     /// PHP: `getSkipIndexesCovering()` (private).
     async fn skip_indexes_covering(&self, table: &str, columns: &[&str]) -> Result<Vec<SkipIndex>> {
+        Ok(self
+            .skip_indexes(table)
+            .await?
+            .into_iter()
+            .filter(|index| {
+                identifiers(index.expression.as_bytes()).iter().any(|id| columns.iter().any(|c| c.as_bytes() == *id))
+            })
+            .collect())
+    }
+
+    /// The skip indexes of `table`, one per name in the order ClickHouse
+    /// first lists them.
+    ///
+    /// PHP: `getSkipIndexes()` (private).
+    async fn skip_indexes(&self, table: &str) -> Result<Vec<SkipIndex>> {
         let body = self
             .query(
                 "SELECT name, expr, type_full, granularity FROM system.data_skipping_indices WHERE database = {database:String} AND table = {table:String} FORMAT JSON",
@@ -477,26 +503,27 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
             )
             .await?;
         let text = |s: &php_std::Str| String::from_utf8_lossy(s.as_bytes()).into_owned();
-        let mut indexes = Vec::new();
+        let mut indexes: Vec<SkipIndex> = Vec::new();
         for row in decode_rows(&body) {
             let (Value::Str(name), Value::Str(expression), Value::Str(kind)) =
                 (field(&row, "name"), field(&row, "expr"), field(&row, "type_full"))
             else {
                 continue;
             };
-            if !identifiers(expression.as_bytes()).iter().any(|id| columns.iter().any(|c| c.as_bytes() == *id)) {
-                continue;
-            }
             let granularity = match field(&row, "granularity") {
                 Value::Null => 1,
                 v => php::to_int(v),
             };
-            indexes.push(SkipIndex {
+            let index = SkipIndex {
                 name: text(name),
                 expression: text(expression),
                 kind: text(kind),
                 granularity: if granularity == 0 { 1 } else { granularity },
-            });
+            };
+            match indexes.iter_mut().find(|existing| existing.name == index.name) {
+                Some(existing) => *existing = index,
+                None => indexes.push(index),
+            }
         }
         Ok(indexes)
     }
@@ -536,27 +563,74 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         ]
     }
 
-    /// Adds the skip indexes a table created before them lacks, such as the
-    /// events ordinal index. Parts written before stay unindexed until
-    /// merged.
+    /// Adds the skip indexes a table lacks, and realigns a defined name
+    /// whose expression or type differs, or another name duplicating a
+    /// defined index: the index is dropped and the defined one
+    /// materialized. Parts written before an added index stay unindexed
+    /// until merged, which is also where an interrupted realignment leaves
+    /// them.
     ///
     /// PHP: `ensureIndexes()` (private).
     async fn ensure_indexes(&self, table: &str, indexes: &[Index]) -> Result<()> {
-        let adds = indexes
-            .iter()
-            .map(|index| {
-                let attributes = index.attributes.iter().map(|a| escape(a)).collect::<Vec<_>>().join(", ");
-                format!(
-                    "ADD INDEX IF NOT EXISTS {} ({attributes}) TYPE {} GRANULARITY 1",
-                    escape(&index.id),
-                    index.index_type.unwrap_or("bloom_filter")
-                )
-            })
-            .collect::<Vec<_>>();
-        if adds.is_empty() {
+        if indexes.is_empty() {
             return Ok(());
         }
-        self.query(&format!("ALTER TABLE {} {}", self.reference(table), adds.join(", ")), &[]).await?;
+        let reference = self.reference(table);
+        let live = self.skip_indexes(table).await?;
+        let alter = |clauses: Vec<String>| format!("ALTER TABLE {reference} {}", clauses.join(", "));
+
+        let mut adds = Vec::new();
+        let mut drops: Vec<&str> = Vec::new();
+        let mut materializes: Vec<&str> = Vec::new();
+        for index in indexes {
+            let attributes = index.attributes.iter().map(|a| escape(a)).collect::<Vec<_>>().join(", ");
+            let kind = index.index_type.unwrap_or("bloom_filter");
+            adds.push(format!(
+                "ADD INDEX IF NOT EXISTS {} ({attributes}) TYPE {kind} GRANULARITY 1",
+                escape(&index.id)
+            ));
+            if let Some(existing) = live.iter().find(|l| l.name == index.id)
+                && !has_index_shape(existing, &index.attributes, kind)
+            {
+                drops.push(&index.id);
+                materializes.push(&index.id);
+            }
+        }
+
+        for existing in &live {
+            if indexes.iter().any(|index| index.id == existing.name) {
+                continue;
+            }
+            if let Some(index) = indexes
+                .iter()
+                .find(|index| has_index_shape(existing, &index.attributes, index.index_type.unwrap_or("bloom_filter")))
+            {
+                drops.push(&existing.name);
+                materializes.push(&index.id);
+            }
+        }
+
+        if !drops.is_empty() {
+            self.query(
+                &alter(drops.iter().map(|name| format!("DROP INDEX IF EXISTS {}", escape(name))).collect()),
+                &[],
+            )
+            .await?;
+        }
+
+        self.query(&alter(adds), &[]).await?;
+
+        if materializes.is_empty() {
+            return Ok(());
+        }
+        let mut unique: Vec<&str> = Vec::new();
+        for name in materializes {
+            if !unique.contains(&name) {
+                unique.push(name);
+            }
+        }
+        self.query(&alter(unique.iter().map(|name| format!("MATERIALIZE INDEX {}", escape(name))).collect()), &[])
+            .await?;
         Ok(())
     }
 

@@ -666,18 +666,32 @@ fn test_parsed_column_form_join_becomes_an_on_condition() {
 }
 
 #[test]
-fn test_parsed_join_without_an_alias_is_a_query_exception() {
+fn test_parsed_join_without_an_alias_is_read_under_its_collection() {
+    // utopia-php/query reads a join given no alias under the collection it joins.
+    let parsed = Query::parse_query(
+        &qarr(arr! {
+            "method" => "join",
+            "attribute" => "orders",
+            "values" => list![arr! {"method" => "on", "values" => list!["$id", "=", "user"]}],
+        }),
+        false,
+    )
+    .unwrap();
+    assert_eq!(parsed.alias(), "orders");
+}
+
+#[test]
+fn test_parsed_join_without_an_alias_or_a_collection_is_a_query_exception() {
     assert_error(
         Query::parse_query(
             &qarr(arr! {
                 "method" => "join",
-                "attribute" => "orders",
                 "values" => list![arr! {"method" => "on", "values" => list!["$id", "=", "user"]}],
             }),
             false,
         ),
         Kind::Query,
-        "Join alias is required: join orders",
+        "Join alias is required: join ",
     );
 }
 

@@ -23,9 +23,18 @@ fn app() -> Http {
             s.response.send(v.as_bytes());
         });
     let _ = http.get("/chunked").unwrap().inject("response").action(async |s| {
-        s.response.chunk(b"Hello ", false);
+        let _ = s.response.chunk(b"Hello ", false);
         utopia_async::sleep(Duration::from_millis(50)).await;
-        s.response.chunk(b"World!", true);
+        let _ = s.response.chunk(b"World!", true);
+    });
+    let _ = http.get("/aborted").unwrap().inject("response").action(async |s| {
+        let _ = s.response.chunk(b"prefix", false);
+        s.response.abort();
+        let _ = s.response.chunk(b"ignored", true);
+    });
+    let _ = http.get("/empty-final").unwrap().inject("response").action(async |s| {
+        let _ = s.response.chunk(b"prefix", false);
+        let _ = s.response.chunk(b"", true);
     });
     let _ = http.get("/slow").unwrap().inject("response").action(async |s| {
         utopia_async::sleep(Duration::from_millis(300)).await;
@@ -40,7 +49,14 @@ async fn request(port: u16, raw: impl AsRef<str>) -> String {
     let mut stream = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
     stream.write_all(raw.as_bytes()).await.unwrap();
     let mut out = Vec::new();
-    stream.read_to_end(&mut out).await.unwrap();
+    // An aborted response may end in a reset: what arrived before it counts.
+    let mut buffer = [0u8; 4096];
+    while let Ok(read) = stream.read(&mut buffer).await {
+        if read == 0 {
+            break;
+        }
+        out.extend_from_slice(&buffer[..read]);
+    }
     String::from_utf8_lossy(&out).into_owned()
 }
 
@@ -69,6 +85,13 @@ async fn serves_an_application() {
     let chunked = request(port, &get("/chunked")).await;
     assert!(chunked.contains("Transfer-Encoding: chunked\r\n"), "{chunked}");
     assert!(chunked.contains("6\r\nHello \r\n6\r\nWorld!\r\n0\r\n\r\n"), "{chunked}");
+
+    let aborted = request(port, &get("/aborted")).await;
+    assert!(aborted.contains("6\r\nprefix\r\n"), "{aborted}");
+    assert!(!aborted.contains("0\r\n\r\n") && !aborted.contains("ignored"), "no terminal chunk: {aborted}");
+
+    let empty_final = request(port, &get("/empty-final")).await;
+    assert!(empty_final.contains("6\r\nprefix\r\n0\r\n\r\n"), "{empty_final}");
 
     let head = request(port, "HEAD / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n").await;
     assert!(head.starts_with("HTTP/1.1 200 OK\r\n") && !head.contains("Hello"), "{head}");
