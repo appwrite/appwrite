@@ -36,6 +36,9 @@ pub struct State {
     pub geo: Geo,
     pub pwned: Pwned,
     pub hooks: Arc<dyn Hooks>,
+    /// The hostnames whose certificate this process has seen to, or found
+    /// it need not (PHP's `certifiedDomains` table).
+    pub certified: std::sync::Mutex<HashSet<String>>,
 }
 
 pub type BootError = Box<dyn std::error::Error + Send + Sync>;
@@ -111,6 +114,7 @@ impl State {
             geo,
             pwned,
             hooks,
+            certified: std::sync::Mutex::default(),
             config,
         })
     }
