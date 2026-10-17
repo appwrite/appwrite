@@ -1,6 +1,14 @@
 {
-  "updated": "2026-10-17T17:45:00Z",
+  "updated": "2026-10-17T19:12:00Z",
   "tasks": [
+    {
+      "id": "audit-fuzz",
+      "title": "audit: one ClickHouse batch fuzz input differs",
+      "area": "Libraries",
+      "status": "todo",
+      "updated": "2026-10-17T19:12:00Z",
+      "note": "bin/compat fuzz audit --op clickhouse.call --seed 11509, input 600: createBatch with a log whose data is {\"userId\": false, \"projectId\": \"\"} and userId \"\" builds a different request body in PHP and Rust. Reproducible locally; the legacy-name renaming, isset checks and column filling read the same, so the difference is in a part the truncated diff does not show."
+    },
     {
       "id": "db838",
       "title": "database: main's 8.3.8 not yet ported",
@@ -392,6 +400,14 @@
       "status": "done",
       "note": "Every library proven with bin/compat check; utopia-php/async is not converted, by design.",
       "updated": "2026-10-13T00:00:00Z"
+    },
+    {
+      "id": "audit-migration-sync",
+      "title": "Sync audit and migration with PHP",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-10-17T19:30:00Z",
+      "note": "Both crates showed as behind on composer.json changes only: audit's utopia-php/database floor ^8.3 → ^8.3.4, migration's ^8.1.2 → ^8.3.4. migration's destinations policy (b1de3c2eba) was already ported. Cases re-run against PHP (audit all match; migration 284/284 with its services up) and php-sync moved to 2ca9a38d36."
     }
   ]
 }
