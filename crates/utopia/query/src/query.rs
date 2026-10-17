@@ -44,6 +44,7 @@ pub struct Query {
     on_array: bool,
     values: Array,
     alias: String,
+    alias_defaulted: bool,
 }
 
 /// The queries grouped by what they do, as builders compile them.
@@ -193,14 +194,10 @@ impl Query {
     ///
     /// PHP: `new Query($method, $attribute, $values, $alias)`.
     pub fn new(method: Method, attribute: impl Into<String>, values: Array, alias: impl Into<String>) -> Self {
-        Query {
-            method,
-            attribute: attribute.into(),
-            attribute_type: String::new(),
-            on_array: false,
-            values,
-            alias: alias.into(),
-        }
+        let attribute = attribute.into();
+        let alias = alias.into();
+        let alias_defaulted = method.is_join() && !alias.is_empty() && alias == attribute;
+        Query { method, attribute, attribute_type: String::new(), on_array: false, values, alias, alias_defaulted }
     }
 
     fn of(method: Method, attribute: impl Into<String>, values: Vec<Value>) -> Self {
@@ -240,6 +237,15 @@ impl Query {
     /// PHP: `getAlias()`.
     pub fn alias(&self) -> &str {
         &self.alias
+    }
+
+    /// Whether a join is read under the name of the collection it joins, as
+    /// a join given no alias is. It is decided when the query is built, so it
+    /// holds after the collection is renamed.
+    ///
+    /// PHP: `isAliasDefaulted()`.
+    pub fn is_alias_defaulted(&self) -> bool {
+        self.alias_defaulted
     }
 
     /// Whether the attribute holds arrays (set by the database layer).
@@ -1316,7 +1322,7 @@ impl Query {
     ) -> Result<Self> {
         let mut conditions = Vec::with_capacity(on.len());
         let collection = collection.into();
-        let alias = alias.into();
+        let alias = Query::join_alias(&collection, alias.into());
         Query::check_join_alias(method, &collection, &alias, on.is_empty())?;
         for value in on.values() {
             match value {
@@ -1341,7 +1347,14 @@ impl Query {
         Ok(())
     }
 
+    /// The alias a join is read under: its own, or the collection it joins
+    /// when it is given none (PHP 0.7.2 `createJoin()`).
+    fn join_alias(collection: &str, alias: String) -> String {
+        if alias.is_empty() { collection.to_owned() } else { alias }
+    }
+
     fn create_join(method: Method, collection: String, alias: String, on: Vec<Query>) -> Result<Self> {
+        let alias = Query::join_alias(&collection, alias);
         Query::check_join_alias(method, &collection, &alias, on.is_empty())?;
         for condition in &on {
             Query::assert_join_condition(condition)?;
@@ -1614,4 +1627,59 @@ pub(crate) fn compare_strings(a: &str, b: &str) -> Ordering {
 
 fn lossy(bytes: &[u8]) -> String {
     String::from_utf8_lossy(bytes).into_owned()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// packages/query/src/Query.php:1464 (0.7.2): a join given no alias is
+    /// read under the collection it joins, and Query.php:53 marks it.
+    #[test]
+    fn a_join_without_an_alias_is_read_under_its_collection() {
+        let join = Query::join("orders", "", vec![Query::on("$id", "orders.user", "=")]).unwrap();
+        assert_eq!(join.alias(), "orders");
+        assert!(join.is_alias_defaulted());
+        let cross = Query::cross_join("tags", "").unwrap();
+        assert_eq!(cross.alias(), "tags");
+        assert!(cross.is_alias_defaulted());
+    }
+
+    /// Query.php:53: an explicit alias equal to the collection reads as a
+    /// defaulted one; any other alias, and any query that is not a join, is
+    /// not defaulted.
+    #[test]
+    fn only_a_join_read_under_its_collection_is_defaulted() {
+        assert!(Query::cross_join("tags", "tags").unwrap().is_alias_defaulted());
+        assert!(!Query::cross_join("tags", "t").unwrap().is_alias_defaulted());
+        assert!(!Query::new(Method::Sum, "total", Array::new(), "total").is_alias_defaulted());
+        assert!(!Query::new(Method::Join, "orders", Array::new(), "").is_alias_defaulted());
+    }
+
+    /// Query.php:53 is decided at construction, so renaming the collection
+    /// keeps the flag and the alias.
+    #[test]
+    fn a_defaulted_alias_survives_renaming_the_collection() {
+        let mut join = Query::cross_join("tags", "").unwrap();
+        join.set_attribute("_42_tags");
+        assert_eq!(join.alias(), "tags");
+        assert!(join.is_alias_defaulted());
+    }
+
+    /// Query.php:1465: only a join with neither a collection nor an alias
+    /// still throws.
+    #[test]
+    fn a_join_without_an_alias_or_a_collection_is_refused() {
+        let error = Query::cross_join("", "").unwrap_err();
+        assert_eq!(error.to_string(), "Join alias is required: crossJoin ");
+    }
+
+    /// Query.php:330: parse() reads a join without an alias under its
+    /// collection too.
+    #[test]
+    fn a_parsed_join_without_an_alias_is_read_under_its_collection() {
+        let join = Query::parse(r#"{"method":"crossJoin","attribute":"tags","values":[]}"#, false).unwrap();
+        assert_eq!(join.alias(), "tags");
+        assert!(join.is_alias_defaulted());
+    }
 }

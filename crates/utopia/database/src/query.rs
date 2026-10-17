@@ -105,6 +105,12 @@ fn with_default_order(mut query: utopia_query::Query) -> utopia_query::Query {
     if query.attribute().is_empty() && matches!(query.method(), Method::OrderAsc | Method::OrderDesc) {
         query.set_attribute(document::SEQUENCE);
     }
+    // A join given no alias is read under the collection it joins (8.3.6).
+    if query.alias().is_empty() && query.method().is_join() && !query.attribute().is_empty() {
+        let (method, attribute) = (query.method(), query.attribute().to_owned());
+        let values = query.values().clone();
+        query = utopia_query::Query::new(method, attribute.clone(), values, attribute);
+    }
     query
 }
 

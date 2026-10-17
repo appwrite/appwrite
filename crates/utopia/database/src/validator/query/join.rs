@@ -111,21 +111,42 @@ impl Join {
     }
 
     /// Why a join alias cannot be used, or `None` when it can
-    /// (`describeInvalidAlias()`).
-    pub fn describe_invalid_alias(alias: &str) -> Option<String> {
+    /// (`describeInvalidAlias()`). A defaulted alias is the table ID the join
+    /// names ([`utopia_query::Query::is_alias_defaulted`]), so the reason says
+    /// that ID cannot serve as the alias and asks for one.
+    pub fn describe_invalid_alias(alias: &str, defaulted: bool) -> Option<String> {
         if alias.is_empty() {
             return Some("Join alias is required".to_owned());
         }
         if !is_alias_identifier(alias) {
-            return Some(
+            return Some(if defaulted {
+                unusable_table(
+                    alias,
+                    "an alias must start with a letter or an underscore and contain only letters, digits and underscores",
+                )
+            } else {
                 "Join alias must start with a letter or an underscore and contain only letters, digits and underscores"
-                    .to_owned(),
-            );
+                    .to_owned()
+            });
         }
         if alias.eq_ignore_ascii_case(DEFAULT_ALIAS) {
-            return Some(format!("Join alias \"{alias}\" is reserved for the main collection"));
+            return Some(if defaulted {
+                unusable_table(alias, "it is reserved for the main collection")
+            } else {
+                format!("Join alias \"{alias}\" is reserved for the main collection")
+            });
         }
         None
+    }
+
+    /// Why a join alias another join of the same query set already declared
+    /// cannot be used (`describeDuplicateAlias()`).
+    pub fn describe_duplicate_alias(alias: &str, defaulted: bool) -> String {
+        if defaulted {
+            unusable_table(alias, "another join of the query already uses it as its alias")
+        } else {
+            format!("Join alias \"{alias}\" is declared more than once")
+        }
     }
 
     /// Whether one query set may declare `count` joins (`isValidCount()`).
@@ -147,13 +168,18 @@ impl Join {
             return self.fail("Join requires a table name");
         }
         let alias = query.alias();
-        if let Some(message) = Join::describe_invalid_alias(alias) {
+        let defaulted = query.is_alias_defaulted();
+        if let Some(message) = Join::describe_invalid_alias(alias, defaulted) {
             return self.fail(message);
         }
         if self.relationships.contains(alias) {
-            return self.fail(format!(
-                "Join alias \"{alias}\" is the key of the relationship attribute \"{alias}\": give the join another alias"
-            ));
+            return self.fail(if defaulted {
+                unusable_table(alias, &format!("it is the key of the relationship attribute \"{alias}\""))
+            } else {
+                format!(
+                    "Join alias \"{alias}\" is the key of the relationship attribute \"{alias}\": give the join another alias"
+                )
+            });
         }
         let mut state = self.state();
         let join = state.joins.iter().find(|j| j.collection == table && j.alias == alias).cloned();
@@ -290,3 +316,8 @@ impl Columns<'_> {
 
 base_is_valid!(Join);
 query_validator!(Join, MethodType::Join);
+
+/// `describeUnusableTable()`: a join read under its table ID that cannot be.
+fn unusable_table(table: &str, reason: &str) -> String {
+    format!("Table ID \"{table}\" cannot be used as the join alias: {reason}. Pass an alias for the join")
+}

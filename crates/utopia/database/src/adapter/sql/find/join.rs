@@ -671,12 +671,13 @@ fn assert_join_aliases(queries: &[Query]) -> Result<()> {
     let mut declared: Vec<String> = Vec::new();
     for query in queries.iter().filter(|q| q.method().is_join()) {
         let alias = query.alias();
-        if let Some(invalid) = JoinValidator::describe_invalid_alias(alias) {
+        let defaulted = query.is_alias_defaulted();
+        if let Some(invalid) = JoinValidator::describe_invalid_alias(alias, defaulted) {
             return Err(Error::query(invalid));
         }
         let lower = alias.to_ascii_lowercase();
         if declared.contains(&lower) {
-            return Err(Error::query(format!("Join alias \"{alias}\" is declared more than once")));
+            return Err(Error::query(JoinValidator::describe_duplicate_alias(alias, defaulted)));
         }
         declared.push(lower);
     }

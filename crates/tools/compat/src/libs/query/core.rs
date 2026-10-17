@@ -553,6 +553,7 @@ impl Object for Query {
                     None => Ret::Value(a.value(0, "default")?),
                 },
                 "getAlias" => Ret::str(self.alias()),
+                "isAliasDefaulted" => Ret::bool(self.is_alias_defaulted()),
                 "isNestedJoin" => Ret::bool(self.is_nested_join()),
                 "getJoinOnQueries" => queries_ret(self.join_on_queries().into_iter().cloned().collect()),
                 "setMethod" => {

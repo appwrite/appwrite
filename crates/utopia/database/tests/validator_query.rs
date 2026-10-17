@@ -630,6 +630,10 @@ mod join_alias {
             Query::left_join("orders", "_order_2", on()).unwrap(),
             Query::cross_join("orders", "ord").unwrap(),
             Query::right_join("orders", "ord", on()).unwrap(),
+            // 8.3.6: a join without an alias is read under its table ID.
+            Query::join("orders", "", on()).unwrap(),
+            Query::cross_join("orders", "").unwrap(),
+            q_nested(Method::Join, "orders", vec![nested(Query::on("$id", "customerId", "="))], ""),
         ] {
             let v = Join::default();
             assert!(v.check(&join), "{}", v.description());
@@ -643,10 +647,6 @@ mod join_alias {
         let invalid =
             "Join alias must start with a letter or an underscore and contain only letters, digits and underscores";
         for (join, message) in [
-            (
-                q_nested(Method::Join, "orders", vec![nested(Query::on("$id", "customerId", "="))], ""),
-                "Join alias is required".to_owned(),
-            ),
             (
                 Query::join("orders", main, on()).unwrap(),
                 format!("Join alias \"{main}\" is reserved for the main collection"),

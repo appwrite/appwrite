@@ -529,6 +529,7 @@ fn query_method(q: &mut utopia_query::Query, method: &str, a: &Args) -> R<Option
             None => a.value("default")?.into(),
         },
         "getAlias" => q.alias().into(),
+        "isAliasDefaulted" => q.is_alias_defaulted().into(),
         "isNestedJoin" => q.is_nested_join().into(),
         "getJoinOnQueries" => q.join_on_queries().into_iter().cloned().map(Query::from).collect::<Vec<_>>().into(),
         "setMethod" => {
