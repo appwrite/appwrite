@@ -4025,7 +4025,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Index",
-              "message": "Index length 701 is larger than the size for title1: 700\""
+              "message": "Index length 701 is larger than the size for title1: 700"
             }
           }
         },
@@ -11059,7 +11059,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Index",
-              "message": "Index length 701 is larger than the size for title1: 700\""
+              "message": "Index length 701 is larger than the size for title1: 700"
             }
           }
         },

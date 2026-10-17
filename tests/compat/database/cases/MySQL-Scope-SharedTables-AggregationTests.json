@@ -86950,33 +86950,21 @@
               "$document": {
                 "name": "beta",
                 "score": 1,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_order",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_order"
               }
             },
             {
               "$document": {
                 "name": "gamma",
                 "score": 2,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_order",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_order"
               }
             },
             {
               "$document": {
                 "name": "alpha",
                 "score": 3,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_order",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_order"
               }
             }
           ]
@@ -95918,22 +95906,14 @@
           "expect": [
             {
               "$document": {
-                "category": "electronics",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_search_relevance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "category": "clothing",
+                "$collection": "distinct_search_relevance"
               }
             },
             {
               "$document": {
-                "category": "clothing",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_search_relevance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "category": "electronics",
+                "$collection": "distinct_search_relevance"
               }
             }
           ],
@@ -95988,21 +95968,13 @@
             {
               "$document": {
                 "category": "clothing",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_search_relevance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_search_relevance"
               }
             },
             {
               "$document": {
                 "category": "electronics",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_search_relevance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_search_relevance"
               }
             }
           ]
@@ -96050,21 +96022,13 @@
             {
               "$document": {
                 "category": "electronics",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_search_relevance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_search_relevance"
               }
             },
             {
               "$document": {
                 "category": "clothing",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "distinct_search_relevance",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "distinct_search_relevance"
               }
             }
           ]

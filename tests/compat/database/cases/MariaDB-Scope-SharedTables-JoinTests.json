@@ -74519,11 +74519,7 @@
             {
               "$document": {
                 "b.category": "q",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "foja_main",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "foja_main"
               }
             }
           ]
@@ -254621,24 +254617,6 @@
             },
             {
               "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
                 "name": "a2",
                 "score": 2,
                 "n.author": "a2",
@@ -254654,6 +254632,24 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
+                "$collection": "jcur_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": null,
+                "score": null,
+                "n.author": "zz",
+                "n.score": 9,
+                "n.label": "z",
+                "n.$id": "n5",
+                "n.$createdAt": "<now>",
+                "$id": "",
+                "$sequence": null,
+                "$tenant": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
                 "$collection": "jcur_authors"
               }
             },
@@ -255086,21 +255082,19 @@
           "expect": [
             {
               "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
+                "name": null,
+                "score": null,
+                "n.author": "zz",
+                "n.score": 9,
+                "n.label": "z",
+                "n.$id": "n5",
                 "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
+                "$id": "",
+                "$sequence": null,
+                "$tenant": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
                 "$collection": "jcur_authors"
               }
             },
@@ -255201,21 +255195,19 @@
           "expect": [
             {
               "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
+                "name": null,
+                "score": null,
+                "n.author": "zz",
+                "n.score": 9,
+                "n.label": "z",
+                "n.$id": "n5",
                 "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
+                "$id": "",
+                "$sequence": null,
+                "$tenant": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
                 "$collection": "jcur_authors"
               }
             },
@@ -255324,21 +255316,19 @@
           "expect": [
             {
               "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
+                "name": null,
+                "score": null,
+                "n.author": "zz",
+                "n.score": 9,
+                "n.label": "z",
+                "n.$id": "n5",
                 "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
+                "$id": "",
+                "$sequence": null,
+                "$tenant": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
                 "$collection": "jcur_authors"
               }
             },
@@ -255462,24 +255452,6 @@
             },
             {
               "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
                 "name": "a2",
                 "score": 2,
                 "n.author": "a2",
@@ -255495,6 +255467,24 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
+                "$collection": "jcur_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": null,
+                "score": null,
+                "n.author": "zz",
+                "n.score": 9,
+                "n.label": "z",
+                "n.$id": "n5",
+                "n.$createdAt": "<now>",
+                "$id": "",
+                "$sequence": null,
+                "$tenant": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
                 "$collection": "jcur_authors"
               }
             },
@@ -255635,24 +255625,6 @@
             },
             {
               "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
                 "name": "a2",
                 "score": 2,
                 "n.author": "a2",
@@ -255668,6 +255640,24 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
+                "$collection": "jcur_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": null,
+                "score": null,
+                "n.author": "zz",
+                "n.score": 9,
+                "n.label": "z",
+                "n.$id": "n5",
+                "n.$createdAt": "<now>",
+                "$id": "",
+                "$sequence": null,
+                "$tenant": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
                 "$collection": "jcur_authors"
               }
             },
@@ -256145,21 +256135,19 @@
           "expect": [
             {
               "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
+                "name": null,
+                "score": null,
+                "n.author": "zz",
+                "n.score": 9,
+                "n.label": "z",
+                "n.$id": "n5",
                 "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
+                "$id": "",
+                "$sequence": null,
+                "$tenant": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
                 "$collection": "jcur_authors"
               }
             },
@@ -256269,21 +256257,19 @@
           "expect": [
             {
               "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
+                "name": null,
+                "score": null,
+                "n.author": "zz",
+                "n.score": 9,
+                "n.label": "z",
+                "n.$id": "n5",
                 "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
+                "$id": "",
+                "$sequence": null,
+                "$tenant": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
                 "$collection": "jcur_authors"
               }
             },
@@ -256401,21 +256387,19 @@
           "expect": [
             {
               "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
+                "name": null,
+                "score": null,
+                "n.author": "zz",
+                "n.score": 9,
+                "n.label": "z",
+                "n.$id": "n5",
                 "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
+                "$id": "",
+                "$sequence": null,
+                "$tenant": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
                 "$collection": "jcur_authors"
               }
             },
@@ -256548,24 +256532,6 @@
             },
             {
               "$document": {
-                "name": null,
-                "score": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$createdAt": "<now>",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
                 "name": "a2",
                 "score": 2,
                 "n.author": "a2",
@@ -256581,6 +256547,24 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
+                "$collection": "jcur_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": null,
+                "score": null,
+                "n.author": "zz",
+                "n.score": 9,
+                "n.label": "z",
+                "n.$id": "n5",
+                "n.$createdAt": "<now>",
+                "$id": "",
+                "$sequence": null,
+                "$tenant": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
                 "$collection": "jcur_authors"
               }
             },
@@ -256727,26 +256711,6 @@
             },
             {
               "$document": {
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
                 "n.author": "a2",
                 "n.score": 1,
                 "n.label": "y",
@@ -256764,6 +256728,26 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
+                "$collection": "jcur_authors"
+              }
+            },
+            {
+              "$document": {
+                "n.author": "zz",
+                "n.score": 9,
+                "n.label": "z",
+                "n.$id": "n5",
+                "n.$sequence": "5",
+                "n.$createdAt": "<now>",
+                "n.$updatedAt": "<now>",
+                "n.$permissions": [
+                  "read(\"any\")"
+                ],
+                "$id": "",
+                "$sequence": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
                 "$collection": "jcur_authors"
               }
             },
@@ -257267,23 +257251,21 @@
           "expect": [
             {
               "$document": {
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "n.$sequence": "4",
+                "n.author": "zz",
+                "n.score": 9,
+                "n.label": "z",
+                "n.$id": "n5",
+                "n.$sequence": "5",
                 "n.$createdAt": "<now>",
                 "n.$updatedAt": "<now>",
                 "n.$permissions": [
                   "read(\"any\")"
                 ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
+                "$id": "",
+                "$sequence": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
                 "$collection": "jcur_authors"
               }
             },
@@ -257400,23 +257382,21 @@
           "expect": [
             {
               "$document": {
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "n.$sequence": "4",
+                "n.author": "zz",
+                "n.score": 9,
+                "n.label": "z",
+                "n.$id": "n5",
+                "n.$sequence": "5",
                 "n.$createdAt": "<now>",
                 "n.$updatedAt": "<now>",
                 "n.$permissions": [
                   "read(\"any\")"
                 ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
+                "$id": "",
+                "$sequence": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
                 "$collection": "jcur_authors"
               }
             },
@@ -257541,23 +257521,21 @@
           "expect": [
             {
               "$document": {
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "n.$sequence": "4",
+                "n.author": "zz",
+                "n.score": 9,
+                "n.label": "z",
+                "n.$id": "n5",
+                "n.$sequence": "5",
                 "n.$createdAt": "<now>",
                 "n.$updatedAt": "<now>",
                 "n.$permissions": [
                   "read(\"any\")"
                 ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
+                "$id": "",
+                "$sequence": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
                 "$collection": "jcur_authors"
               }
             },
@@ -257698,26 +257676,6 @@
             },
             {
               "$document": {
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
                 "n.author": "a2",
                 "n.score": 1,
                 "n.label": "y",
@@ -257735,6 +257693,26 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
+                "$collection": "jcur_authors"
+              }
+            },
+            {
+              "$document": {
+                "n.author": "zz",
+                "n.score": 9,
+                "n.label": "z",
+                "n.$id": "n5",
+                "n.$sequence": "5",
+                "n.$createdAt": "<now>",
+                "n.$updatedAt": "<now>",
+                "n.$permissions": [
+                  "read(\"any\")"
+                ],
+                "$id": "",
+                "$sequence": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
                 "$collection": "jcur_authors"
               }
             },
@@ -257887,27 +257865,6 @@
             },
             {
               "$document": {
-                "name": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
                 "name": "a2",
                 "n.author": "a2",
                 "n.score": 1,
@@ -257926,6 +257883,27 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
+                "$collection": "jcur_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": null,
+                "n.author": "zz",
+                "n.score": 9,
+                "n.label": "z",
+                "n.$id": "n5",
+                "n.$sequence": "5",
+                "n.$createdAt": "<now>",
+                "n.$updatedAt": "<now>",
+                "n.$permissions": [
+                  "read(\"any\")"
+                ],
+                "$id": "",
+                "$sequence": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
                 "$collection": "jcur_authors"
               }
             },
@@ -258441,24 +258419,22 @@
           "expect": [
             {
               "$document": {
-                "name": "a2",
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "n.$sequence": "4",
+                "name": null,
+                "n.author": "zz",
+                "n.score": 9,
+                "n.label": "z",
+                "n.$id": "n5",
+                "n.$sequence": "5",
                 "n.$createdAt": "<now>",
                 "n.$updatedAt": "<now>",
                 "n.$permissions": [
                   "read(\"any\")"
                 ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
+                "$id": "",
+                "$sequence": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
                 "$collection": "jcur_authors"
               }
             },
@@ -258578,24 +258554,22 @@
           "expect": [
             {
               "$document": {
-                "name": "a2",
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "n.$sequence": "4",
+                "name": null,
+                "n.author": "zz",
+                "n.score": 9,
+                "n.label": "z",
+                "n.$id": "n5",
+                "n.$sequence": "5",
                 "n.$createdAt": "<now>",
                 "n.$updatedAt": "<now>",
                 "n.$permissions": [
                   "read(\"any\")"
                 ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
+                "$id": "",
+                "$sequence": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
                 "$collection": "jcur_authors"
               }
             },
@@ -258723,24 +258697,22 @@
           "expect": [
             {
               "$document": {
-                "name": "a2",
-                "n.author": "a2",
-                "n.score": 1,
-                "n.label": "y",
-                "n.$id": "n4",
-                "n.$sequence": "4",
+                "name": null,
+                "n.author": "zz",
+                "n.score": 9,
+                "n.label": "z",
+                "n.$id": "n5",
+                "n.$sequence": "5",
                 "n.$createdAt": "<now>",
                 "n.$updatedAt": "<now>",
                 "n.$permissions": [
                   "read(\"any\")"
                 ],
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
+                "$id": "",
+                "$sequence": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
                 "$collection": "jcur_authors"
               }
             },
@@ -258886,27 +258858,6 @@
             },
             {
               "$document": {
-                "name": null,
-                "n.author": "zz",
-                "n.score": 9,
-                "n.label": "z",
-                "n.$id": "n5",
-                "n.$sequence": "5",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
                 "name": "a2",
                 "n.author": "a2",
                 "n.score": 1,
@@ -258925,6 +258876,27 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
+                "$collection": "jcur_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": null,
+                "n.author": "zz",
+                "n.score": 9,
+                "n.label": "z",
+                "n.$id": "n5",
+                "n.$sequence": "5",
+                "n.$createdAt": "<now>",
+                "n.$updatedAt": "<now>",
+                "n.$permissions": [
+                  "read(\"any\")"
+                ],
+                "$id": "",
+                "$sequence": null,
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [],
                 "$collection": "jcur_authors"
               }
             },

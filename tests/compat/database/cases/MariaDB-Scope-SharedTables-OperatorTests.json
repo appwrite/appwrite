@@ -95085,7 +95085,7 @@
           },
           "expect": {
             "$document": {
-              "value": 2.9999999999999667,
+              "value": 3.0,
               "$id": "frac_power_doc",
               "$sequence": "1",
               "$tenant": "999",
@@ -100341,7 +100341,7 @@
           },
           "expect": {
             "$document": {
-              "value": 5.8598744820488005,
+              "value": 5.859874482048838,
               "$id": "precise_doc",
               "$sequence": "1",
               "$tenant": "999",
@@ -100376,7 +100376,7 @@
           },
           "expect": {
             "$document": {
-              "value": 4.4456609196757,
+              "value": 4.445660919675743,
               "$id": "precise_doc",
               "$sequence": "1",
               "$tenant": "999",

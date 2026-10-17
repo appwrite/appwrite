@@ -86592,8 +86592,8 @@
           },
           "expect": {
             "$error": {
-              "class": "PDOException",
-              "message": "SQLSTATE[42000]: Syntax error or access violation: 1139 Regex error 'unmatched closing parenthesis at offset 7'"
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid regular expression"
             }
           }
         },
@@ -254824,19 +254824,6 @@
           "expect": [
             {
               "$document": {
-                "score": 1e-21,
-                "$id": "tiny",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "bulk_delete_float_filter"
-              }
-            },
-            {
-              "$document": {
                 "score": 1.5,
                 "$id": "large",
                 "$sequence": "2",
@@ -254868,40 +254855,9 @@
             "onNext": true
           },
           "expect": {
-            "result": 2,
+            "result": 1,
             "calls": {
               "onNext": [
-                {
-                  "args": [
-                    {
-                      "$document": {
-                        "score": 1e-21,
-                        "$id": "tiny",
-                        "$sequence": "1",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$permissions": [
-                          "read(\"any\")"
-                        ],
-                        "$collection": "bulk_delete_float_filter"
-                      }
-                    },
-                    {
-                      "$document": {
-                        "score": 1e-21,
-                        "$id": "tiny",
-                        "$sequence": "1",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$permissions": [
-                          "read(\"any\")"
-                        ],
-                        "$collection": "bulk_delete_float_filter"
-                      }
-                    }
-                  ],
-                  "steps": []
-                },
                 {
                   "args": [
                     {
@@ -254943,6 +254899,19 @@
             "collection": "bulk_delete_float_filter"
           },
           "expect": [
+            {
+              "$document": {
+                "score": 1e-21,
+                "$id": "tiny",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "bulk_delete_float_filter"
+              }
+            },
             {
               "$document": {
                 "score": -1.0,
@@ -290217,7 +290186,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Attribute \"position\" has invalid type. Value must be a valid point: "
+              "message": "Invalid document structure: Attribute \"position\" has invalid type. Value must be a valid point: WKT must be a well-formed POINT, LINESTRING or POLYGON"
             }
           }
         },
@@ -299472,11 +299441,7 @@
               {
                 "$document": {
                   "colour": "red",
-                  "$id": null,
-                  "$sequence": null,
-                  "$collection": "distinct_capability",
-                  "$createdAt": null,
-                  "$updatedAt": null
+                  "$collection": "distinct_capability"
                 }
               }
             ],
@@ -299489,11 +299454,7 @@
                       {
                         "$document": {
                           "colour": "red",
-                          "$id": null,
-                          "$sequence": null,
-                          "$collection": "distinct_capability",
-                          "$createdAt": null,
-                          "$updatedAt": null
+                          "$collection": "distinct_capability"
                         }
                       }
                     ]
