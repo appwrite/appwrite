@@ -765,14 +765,6 @@ class Deletes extends Action
         }
     }
 
-    /**
-     * @param Database $dbForPlatform
-     * @param callable $getProjectDB
-     * @param Document $document
-     * @return void
-     * @throws Exception
-     * @throws DatabaseException
-     */
     protected function deleteProject(Database $dbForPlatform, callable $getProjectDB, callable $getDatabasesDB, Provider $certificates, Document $document, Bus $bus, ?Store $executionStore = null): void
     {
         $projectId = $document->getId();
@@ -1552,7 +1544,7 @@ class Deletes extends Action
             $path = $file->getAttribute('path', '');
 
             try {
-                if ($deviceForFiles->delete($path, true)) {
+                if ($deviceForFiles->delete($path)) {
                     Console::success('Deleted deployment screenshot: ' . $path);
                 } else {
                     Console::error('Failed to delete deployment screenshot: ' . $path);
@@ -1585,7 +1577,7 @@ class Deletes extends Action
         Console::info("Deleting deployment files for deployment " . $deploymentId);
 
         try {
-            if ($device->delete($deploymentPath, true)) {
+            if ($device->delete($deploymentPath)) {
                 Console::success('Deleted deployment files: ' . $deploymentPath);
             } else {
                 Console::error('Failed to delete deployment files: ' . $deploymentPath);
@@ -1624,7 +1616,7 @@ class Deletes extends Action
         }
 
         try {
-            if ($device->delete($buildPath, true)) {
+            if ($device->delete($buildPath)) {
                 Console::success('Deleted build files: ' . $buildPath);
             } else {
                 Console::error('Failed to delete build files: ' . $buildPath);
