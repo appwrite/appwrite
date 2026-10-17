@@ -61,8 +61,8 @@
       "description": "After a session is created, deletes the user's oldest sessions beyond the project's `maxSessions` and purges the cached user.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "maxSessions" },
       "rust": {
-        "status": "partial",
-        "note": "Runs after every Account route in the `session` group (the session's user from the response); no scenario exceeds `maxSessions` (10), so the deletion itself is unproved.",
+        "status": "done",
+        "note": "Runs after every route in the `session` group (the session's user from the response). The diff's `account.sessions.email.limit` signs `s2` in at the project's `maxSessions` (10): both runtimes delete the same oldest session. PHP runs it after the `api` group's shutdowns, so the deleted sessions are not in the usage message; Rust leaves them out the same way (its own database, without listeners).",
         "where": [
           { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn session_limit" }
         ]
@@ -88,10 +88,10 @@
       "description": "Resets the route's abuse counters when the response status is one of its `abuse-reset` codes.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "abuse-reset" },
       "rust": {
-        "status": "partial",
-        "note": "Account's session routes carry `abuse-reset` (201) like PHP; unproved while `_APP_OPTIONS_ABUSE=disabled` on the shared stack (the hook returns early).",
+        "status": "done",
+        "note": "Account's session routes carry `abuse-reset` (201) like PHP. Unit tests (`abuse_reset_tests`) prove a listed status zeroes the request's keys in the current window and leaves other statuses, keys and routes alone. The parity diff cannot cover it: `_APP_OPTIONS_ABUSE` is read per process by both runtimes and the shared stack runs with it `disabled`.",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "async fn abuse_reset" }
+          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "async fn reset_limits" }
         ]
       }
     },
