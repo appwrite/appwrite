@@ -4,12 +4,13 @@
 //! authority for this runtime (services `client-http`, `client-https`);
 //! results carry them back in place of that authority, as Adapter.php does.
 
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
 use serde_json::{Value, json};
 use utopia_client::{
     Adapter, Anywhere, Backoff, Body, Client, Destinations, Error, Http, IpRange, Outcome as Attempt, Pool,
-    PublicInternet, Request, Response, Retry, Sleep, Strategy, Tls, Uri, redirect,
+    PublicInternet, Request, Response, Retry, Sink, Sleep, Strategy, Tls, Uri, redirect,
 };
 use utopia_pools::{Pool as Connections, Stack};
 
@@ -31,6 +32,8 @@ pub const OPS: &[&str] = &[
     "client.new",
     "client.send",
     "client.stream",
+    "client.supports_response_streaming",
+    "client.record",
     "pool.send",
 ];
 
@@ -129,11 +132,86 @@ impl Sleep for Recorder {
     }
 }
 
-type Retrying = Retry<Http, Backoff, Recorder>;
+/// The transport under a client: the cURL adapter's twin, or a legacy
+/// adapter without response streaming that counts the requests it sends
+/// (`Legacy` in Adapter.php).
+#[derive(Clone)]
+enum Inner {
+    Http(Http),
+    Legacy(Http, Arc<AtomicUsize>),
+}
+
+impl Adapter for Inner {
+    async fn send(&self, request: Request) -> Result<Response, Error> {
+        match self {
+            Inner::Http(http) => http.send(request).await,
+            Inner::Legacy(http, calls) => {
+                calls.fetch_add(1, Ordering::SeqCst);
+                http.send(request).await
+            }
+        }
+    }
+
+    async fn stream<S: Sink>(&self, request: Request, sink: &mut S) -> Result<Response, Error> {
+        match self {
+            Inner::Http(http) => http.stream(request, sink).await,
+            Inner::Legacy(http, calls) => {
+                calls.fetch_add(1, Ordering::SeqCst);
+                http.stream(request, sink).await
+            }
+        }
+    }
+
+    fn supports_response_streaming(&self) -> bool {
+        matches!(self, Inner::Http(_))
+    }
+
+    async fn stream_with_response<S, R>(
+        &self,
+        request: Request,
+        sink: &mut S,
+        on_response: &mut R,
+    ) -> Result<Response, Error>
+    where
+        S: Sink,
+        R: FnMut(&Response) -> Result<(), Error> + Send,
+    {
+        match self {
+            Inner::Http(http) => http.stream_with_response(request, sink, on_response).await,
+            Inner::Legacy(..) => {
+                Err(Error::AdapterPrecondition("This adapter cannot expose response headers before streaming.".into()))
+            }
+        }
+    }
+
+    fn options(&self) -> &utopia_client::Options {
+        match self {
+            Inner::Http(http) | Inner::Legacy(http, _) => http.options(),
+        }
+    }
+
+    fn with_options(&self, options: utopia_client::Options) -> Inner {
+        match self {
+            Inner::Http(http) => Inner::Http(http.with_options(options)),
+            Inner::Legacy(http, calls) => Inner::Legacy(http.with_options(options), calls.clone()),
+        }
+    }
+}
+
+impl Inner {
+    fn calls(&self) -> Option<usize> {
+        match self {
+            Inner::Http(_) => None,
+            Inner::Legacy(_, calls) => Some(calls.load(Ordering::SeqCst)),
+        }
+    }
+}
+
+type Retrying = Retry<Inner, Backoff, Recorder>;
 
 /// A configured client: plain or retrying, plus the retry's recorded sleeps.
 enum Handle {
-    Plain(Client<Http>),
+    Plain(Client<Inner>),
     Retrying(Client<Retrying>, Recorder),
 }
 
@@ -278,6 +356,20 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             let created = *created.lock().unwrap();
             Outcome::ok(json!({"responses": responses, "created": created}))
         }
+        "client.supports_response_streaming" => Outcome::ok(match session.get::<Handle>(a.value("client")?)? {
+            Handle::Plain(c) => c.supports_response_streaming(),
+            Handle::Retrying(c, _) => c.supports_response_streaming(),
+        }),
+        "client.record" => {
+            let (sleeps, calls) = match session.get::<Handle>(a.value("client")?)? {
+                Handle::Plain(c) => (Vec::new(), c.adapter().calls()),
+                Handle::Retrying(c, recorder) => (recorder.0.lock().unwrap().clone(), c.adapter().inner().calls()),
+            };
+            Outcome::ok(json!({
+                "sleeps": sleeps.into_iter().map(float_value).collect::<Vec<_>>(),
+                "calls": calls,
+            }))
+        }
         _ => return Err(Fault::new(format!("client: unknown op `{op}`"))),
     })
 }
@@ -288,21 +380,50 @@ async fn send(stream: bool, a: &Args<'_>, session: &mut Session) -> OpResult {
     let handle = match a.opt("client") {
         Some(client) => session.get::<Handle>(client)?,
         None => {
-            fresh = Handle::Plain(Client::new(Http::new()));
+            fresh = Handle::Plain(Client::new(Inner::Http(Http::new())));
             &fresh
         }
     };
+    let notifying = stream && a.opt_bool("on_response")?.unwrap_or(false);
+    let notified: Mutex<Vec<Response>> = Mutex::default();
+    let ordered = AtomicBool::new(true);
     let mut streamed = Vec::new();
-    let mut sink = |chunk: &[u8]| streamed.extend_from_slice(chunk);
-    let (sent, sleeps) = match handle {
-        Handle::Plain(c) => (if stream { c.stream(req, &mut sink).await } else { c.send(req).await }, None),
-        Handle::Retrying(c, recorder) => {
-            (if stream { c.stream(req, &mut sink).await } else { c.send(req).await }, Some(recorder.clone()))
+    let mut sink = |chunk: &[u8]| {
+        if notified.lock().unwrap().is_empty() {
+            ordered.store(false, Ordering::SeqCst);
         }
+        streamed.extend_from_slice(chunk);
+    };
+    let mut on_response = |response: &Response| {
+        notified.lock().unwrap().push(response.clone());
+        Ok(())
+    };
+    let (sent, sleeps) = match handle {
+        Handle::Plain(c) => (
+            match (stream, notifying) {
+                (true, true) => c.stream_with_response(req, &mut sink, &mut on_response).await,
+                (true, false) => c.stream(req, &mut sink).await,
+                _ => c.send(req).await,
+            },
+            None,
+        ),
+        Handle::Retrying(c, recorder) => (
+            match (stream, notifying) {
+                (true, true) => c.stream_with_response(req, &mut sink, &mut on_response).await,
+                (true, false) => c.stream(req, &mut sink).await,
+                _ => c.send(req).await,
+            },
+            Some(recorder.clone()),
+        ),
     };
     let mut out = result(&tri!(sent), session);
     if stream {
         out["streamed"] = localize(&streamed, session);
+    }
+    if notifying {
+        let notified = notified.into_inner().unwrap();
+        out["notified"] = Value::Array(notified.iter().map(|r| result(r, session)).collect());
+        out["ordered"] = Value::Bool(ordered.load(Ordering::SeqCst));
     }
     if let Some(sleeps) = sleeps {
         let list = sleeps.0.lock().unwrap().clone();
@@ -334,13 +455,17 @@ fn client(args: &Value, session: &Session) -> Result<Result<Handle, Error>, Faul
         },
         None => None,
     };
+    let inner = match a.opt_bool("legacy")? {
+        Some(true) => Inner::Legacy(Http::new(), Arc::default()),
+        _ => Inner::Http(Http::new()),
+    };
     Ok(match a.opt("retry") {
         Some(strategy) => {
             let recorder = Recorder::default();
-            let adapter = Retry::new(Http::new(), backoff(strategy)).with_sleep(recorder.clone());
+            let adapter = Retry::new(inner, backoff(strategy)).with_sleep(recorder.clone());
             configure(Client::new(adapter), initial, &settings, session)?.map(|c| Handle::Retrying(c, recorder))
         }
-        None => configure(Client::new(Http::new()), initial, &settings, session)?.map(Handle::Plain),
+        None => configure(Client::new(inner), initial, &settings, session)?.map(Handle::Plain),
     })
 }
 
