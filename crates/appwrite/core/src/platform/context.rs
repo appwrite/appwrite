@@ -121,6 +121,8 @@ pub struct Context {
     /// before the action, `isSent()` after): the action is skipped, and an
     /// error a later hook throws is not sent.
     pub sent: Option<Response>,
+    /// Whether the security headers were set when [`Context::send`] sent.
+    pub sent_secured: bool,
     db: Option<Database>,
     platform_db: OnceLock<Database>,
 }
@@ -156,6 +158,7 @@ impl Context {
             failed: false,
             store: Store::default(),
             sent: None,
+            sent_secured: false,
             mode: Mode::Default,
             locale,
             format: None,
@@ -357,6 +360,16 @@ impl Context {
 
     pub fn created<T: Serialize>(&self, model: &T) -> Response {
         self.json(StatusCode::CREATED, model)
+    }
+
+    /// Sends `response` from an init hook (`$response->send()`): with the
+    /// headers added so far, and no action after it.
+    pub fn send(&mut self, mut response: Response) {
+        for (k, v) in &self.response_headers {
+            response.add(k, v);
+        }
+        self.sent_secured = self.secured;
+        self.sent = Some(response);
     }
 
     pub fn no_content(&self) -> Response {

@@ -136,6 +136,10 @@ error_types! {
     ProjectProviderUnsupported => ("project_provider_unsupported", 400, "The chosen OAuth provider is unsupported. Please check the <a href=\"/docs/client/account?sdk=web-default#accountCreateOAuth2Session\">Create OAuth2 Session docs</a> for the complete list of supported OAuth providers."),
     ProjectInvalidSuccessUrl => ("project_invalid_success_url", 400, "Invalid redirect URL for OAuth success."),
     ProjectInvalidFailureUrl => ("project_invalid_failure_url", 400, "Invalid redirect URL for OAuth failure."),
+    StorageFileNotFound => ("storage_file_not_found", 404, "The requested file could not be found."),
+    StorageBucketNotFound => ("storage_bucket_not_found", 404, "Storage bucket with the requested ID could not be found."),
+    StorageBucketTransformationsDisabled => ("storage_bucket_transformations_disabled", 403, "Image transformations are disabled for the requested bucket."),
+    TokenResourceTypeInvalid => ("token_resource_type_invalid", 400, "The resource type for the token is invalid."),
 }
 
 /// Status codes that pass through to clients; everything else becomes 500.

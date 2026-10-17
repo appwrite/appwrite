@@ -416,11 +416,8 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
             }
             let url = format!("https://{}{}", ctx.request.hostname(), ctx.request.uri());
             let mut response = Response::with_body(StatusCode::MOVED_PERMANENTLY, "text/html", Bytes::new());
-            for (k, v) in &ctx.response_headers {
-                response.add(k, v);
-            }
             response.add("location", &url);
-            ctx.sent = Some(response);
+            ctx.send(response);
         }
     }
 
@@ -642,6 +639,7 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
 
     // The hooks routes opt into, in PHP's order.
     guards::abuse(ctx).await?;
+    guards::context(ctx).await?;
     guards::session_active(ctx)?;
     guards::mfa_fresh(ctx)?;
     guards::recent_session(ctx)?;
@@ -1107,14 +1105,6 @@ async fn track_access(ctx: &mut Context) {
 /// Builds the final response (success or error) and schedules shutdown work.
 pub(super) fn finalize(mut ctx: Context, result: Result<Response>) -> Response {
     let state = ctx.state.clone();
-    // A response a hook sent stays as it was sent; an error after it only
-    // skips the shutdown hooks.
-    if let Some(mut sent) = ctx.sent.take() {
-        ctx.failed |= result.is_err();
-        // Sent before the security headers: Swoole's own `Server`.
-        sent.set("server", "swoole-http-server");
-        return send(ctx, sent, true);
-    }
     let allowed = allowed_hostnames(&state, &ctx.project, ctx.project_found, &ctx.request, ctx.rule_domain.as_deref());
     let cors = network::cors_headers(ctx.request.header_or_empty("origin"), &allowed);
     let https = ctx
@@ -1122,6 +1112,26 @@ pub(super) fn finalize(mut ctx: Context, result: Result<Response>) -> Response {
         .header("x-forwarded-proto")
         .map(|p| p.split(',').next().unwrap_or("").trim().eq_ignore_ascii_case("https"))
         .unwrap_or(false);
+
+    // A response a hook sent stays as it was sent (with the CORS and
+    // security headers when they came before it); an error after it only
+    // skips the shutdown hooks.
+    if let Some(mut sent) = ctx.sent.take() {
+        ctx.failed |= result.is_err();
+        if ctx.sent_secured {
+            for (k, v) in &cors {
+                sent.add(k, v);
+            }
+            sent.set("server", "Appwrite");
+            sent.set("x-content-type-options", "nosniff");
+            if https {
+                sent.set("strict-transport-security", "max-age=10886400");
+            }
+        } else {
+            sent.set("server", "swoole-http-server");
+        }
+        return send(ctx, sent, true);
+    }
 
     let mut response = match result {
         Ok(response) => response,

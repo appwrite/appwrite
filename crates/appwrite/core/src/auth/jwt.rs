@@ -29,6 +29,13 @@ pub fn encode(key: &str, mut claims: Map<String, Value>, max_age: i64) -> String
 
 /// Decodes and verifies a token; errors carry adhocore's messages.
 pub fn decode(key: &str, token: &str, max_age: i64) -> Result<Map<String, Value>, String> {
+    decode_with_leeway(key, token, max_age, 0)
+}
+
+/// [`decode`] with adhocore's `leeway` (`new JWT($key, $algo, $maxAge,
+/// $leeway)`): a token stays valid `leeway` seconds past its `exp`, and its
+/// `iat` expires at `iat + max_age - leeway`.
+pub fn decode_with_leeway(key: &str, token: &str, max_age: i64, leeway: i64) -> Result<Map<String, Value>, String> {
     let parts: Vec<&str> = token.split('.').collect();
     if parts.len() != 3 {
         return Err("Invalid token: Incomplete segments".to_owned());
@@ -57,12 +64,12 @@ pub fn decode(key: &str, token: &str, max_age: i64) -> Result<Map<String, Value>
     };
     let t = now();
     if let Some(exp) = claims.get("exp").and_then(Value::as_i64)
-        && t >= exp
+        && t >= exp + leeway
     {
         return Err("Invalid token: Expired".to_owned());
     }
     if let Some(iat) = claims.get("iat").and_then(Value::as_i64)
-        && t >= iat + max_age
+        && t >= iat + max_age - leeway
     {
         return Err("Invalid token: Expired".to_owned());
     }
@@ -90,5 +97,15 @@ mod tests {
         assert!(decoded.get("exp").is_some());
         assert_eq!(decode("other", &token, 3600).unwrap_err(), "Invalid token: Signature failed");
         assert_eq!(decode("secret", "a.b", 3600).unwrap_err(), "Invalid token: Incomplete segments");
+    }
+
+    #[test]
+    fn leeway_extends_expiry() {
+        let mut claims = Map::new();
+        claims.insert("tokenId".into(), "t1".into());
+        claims.insert("exp".into(), Value::from(now() - 5));
+        let token = encode("secret", claims, 0);
+        assert_eq!(decode("secret", &token, 3600).unwrap_err(), "Invalid token: Expired");
+        assert!(decode_with_leeway("secret", &token, 3600, 10).is_ok());
     }
 }

@@ -93,6 +93,11 @@ pub struct Labels {
     pub error_page: bool,
     /// `origin` = `*`: any origin may call the route.
     pub any_origin: bool,
+    /// `cache`: the response is served from, and stored in, the project's
+    /// file cache (storage previews, avatars).
+    pub cache: bool,
+    /// `cache.params`: the parameters the cache key reads (all, when `None`).
+    pub cache_params: Option<&'static [&'static str]>,
 }
 
 impl Labels {
@@ -107,6 +112,8 @@ impl Labels {
         impersonation: "",
         error_page: false,
         any_origin: false,
+        cache: false,
+        cache_params: None,
     };
 }
 
