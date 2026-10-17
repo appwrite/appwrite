@@ -268,6 +268,44 @@ fn find_checks_the_cursor() {
     });
 }
 
+// 8.3.6 Trait/Documents.php:4377, 5513-5528 (`assertCursorOrdersAreComparable()`): a cursor cannot page along an
+// array, object, spatial or vector order; ordering by one without a cursor still reads.
+#[test]
+fn find_refuses_a_cursor_along_an_order_with_no_comparable_value() {
+    block_on(async {
+        let attributes =
+            vec![Attribute::string("tags", 32).array(true), Attribute::point("spot"), Attribute::integer("age")];
+        let db = uncached(stub(vec![collection("testCol", attributes, Vec::new(), None, true)], &BASE, none()));
+        let cursor = doc(vec![
+            ("$id", string("cursor1")),
+            ("$collection", string("testCol")),
+            ("$sequence", string("1")),
+            ("tags", Value::Null),
+            ("spot", Value::Null),
+        ]);
+        for order in ["tags", "spot"] {
+            let err = db
+                .skip_validation(db.find(
+                    "testCol",
+                    vec![Query::order_asc(order, None), Query::cursor_after(&cursor)],
+                    PermissionType::Read,
+                ))
+                .await
+                .unwrap_err();
+            assert_eq!(err.kind(), Kind::Query);
+            assert_eq!(
+                err.message(),
+                format!(
+                    "Cannot page with a cursor along the order of '{order}': an array, object, spatial or vector attribute has no value a cursor can compare"
+                )
+            );
+        }
+        db.skip_validation(db.find("testCol", vec![Query::order_asc("tags", None)], PermissionType::Read))
+            .await
+            .unwrap();
+    });
+}
+
 #[test]
 fn find_encodes_the_cursor_and_passes_its_direction() {
     block_on(async {

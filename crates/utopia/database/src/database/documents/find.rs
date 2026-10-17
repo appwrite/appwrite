@@ -222,6 +222,7 @@ impl Database {
             if is_aggregation {
                 return Err(Error::query("Cursor pagination is not supported with aggregation queries"));
             }
+            assert_cursor_orders_are_comparable(collection, &order_attributes, &joined_collections)?;
             if joins.is_empty() && !distinct && self.is_validating() && c.id().is_empty() {
                 return Err(Error::query(format!(
                     "Invalid query: Invalid cursor: {}",
@@ -275,7 +276,7 @@ impl Database {
             &outer_ids,
         )?;
 
-        let selections = self.validate_selections(collection, &selects)?;
+        let selections = self.validate_selections(collection, &selects, distinct)?;
 
         let hook = self.relationship_hook();
         let nested = match &hook {
@@ -1395,4 +1396,40 @@ fn assert_cursor_has_order_values(cursor: &Document, order_attributes: &[String]
 /// `(string) $value` of a sequence.
 pub(crate) fn sequence_text(value: &Value) -> String {
     to_text(value)
+}
+
+/// The types a cursor cannot page along: no value of theirs compares as the
+/// order does (`UNCOMPARABLE_TYPES`).
+const UNCOMPARABLE_TYPES: [utopia_query::schema::ColumnType; 6] = [
+    utopia_query::schema::ColumnType::Json,
+    utopia_query::schema::ColumnType::Object,
+    utopia_query::schema::ColumnType::Point,
+    utopia_query::schema::ColumnType::Linestring,
+    utopia_query::schema::ColumnType::Polygon,
+    utopia_query::schema::ColumnType::Vector,
+];
+
+/// `assertCursorOrdersAreComparable()` (8.3.4): a cursor pages along the
+/// values of a read's order, which the engine compares with the cursor's;
+/// an array, object, spatial or vector attribute holds no value it can
+/// compare, so a read ordered by one cannot be paged by a cursor, under a
+/// join alias too.
+///
+/// Fails ([`crate::Kind::Query`]) for such an order.
+fn assert_cursor_orders_are_comparable(collection: &Collection, orders: &[String], joined: &Joined) -> Result<()> {
+    for order in orders {
+        let (owner, key) = match order.split_once('.') {
+            None => (Some(collection), order.as_str()),
+            Some((alias, key)) => (joined.iter().find(|(a, _)| a == alias).map(|(_, c)| c), key),
+        };
+        let Some(owner) = owner else { continue };
+        for attribute in owner.attributes()? {
+            if attribute.key == key && (attribute.array || UNCOMPARABLE_TYPES.contains(&attribute.kind)) {
+                return Err(Error::query(format!(
+                    "Cannot page with a cursor along the order of '{order}': an array, object, spatial or vector attribute has no value a cursor can compare"
+                )));
+            }
+        }
+    }
+    Ok(())
 }

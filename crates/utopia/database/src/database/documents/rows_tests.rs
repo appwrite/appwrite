@@ -138,6 +138,36 @@ fn count_is_the_number_of_rows_the_read_returns() {
     });
 }
 
+// 8.3.6 Trait/Documents.php:4420, 6117-6119 (`validateSelections($collection, $selects, $distinct)`): a distinct row
+// carries only the attributes it selects, never a null `$id`.
+#[test]
+fn a_distinct_row_carries_only_what_it_selects() {
+    block_on(async {
+        let db = rows().await;
+        act_as(&db, "admin");
+        let rows = db
+            .find(
+                PRODUCTS,
+                vec![Query::distinct(), Query::select(["category"])],
+                crate::permission::PermissionType::Read,
+            )
+            .await
+            .unwrap();
+        assert!(!rows.is_empty());
+        for row in &rows {
+            let keys: Vec<String> = row
+                .array_copy()
+                .keys()
+                .map(|k| match k {
+                    php_std::types::KeyRef::Str(s) => String::from_utf8_lossy(s).into_owned(),
+                    php_std::types::KeyRef::Int(i) => i.to_string(),
+                })
+                .collect();
+            assert_eq!(keys, ["category", "$collection"], "{row:?}");
+        }
+    });
+}
+
 // PHP: RowCountTest::testSumAddsUpTheGroupedOrDistinctRows,
 // `$this->assertSame($distinct, $database->sum(self::REVIEWS, 'score', [Query::count('*', 'n'), Query::groupBy(['score'])]), $role)`.
 #[test]

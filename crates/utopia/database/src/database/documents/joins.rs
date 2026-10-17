@@ -421,7 +421,12 @@ impl Database {
     /// Fails ([`crate::Kind::Query`]) for a select value that is not a
     /// string, and for unknown attributes on an adapter that defines them
     /// (`Cannot select attributes: <keys>`).
-    pub(crate) fn validate_selections(&self, collection: &Collection, queries: &[Query]) -> Result<Vec<String>> {
+    pub(crate) fn validate_selections(
+        &self,
+        collection: &Collection,
+        queries: &[Query],
+        distinct: bool,
+    ) -> Result<Vec<String>> {
         if queries.is_empty() {
             return Ok(Vec::new());
         }
@@ -460,6 +465,17 @@ impl Database {
             }
         }
         selections.extend(relationship_selections);
+        // A distinct row is not a stored document: it carries only the
+        // attributes it selects (8.3.4).
+        if distinct {
+            let mut unique: Vec<String> = Vec::with_capacity(selections.len());
+            for s in selections {
+                if !unique.contains(&s) {
+                    unique.push(s);
+                }
+            }
+            return Ok(unique);
+        }
         for internal in [
             document::ID,
             document::SEQUENCE,

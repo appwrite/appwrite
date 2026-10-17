@@ -135,7 +135,7 @@ impl Database {
         if !outer_ids.is_empty() {
             queries.push(Query::select(outer_ids.clone()));
         }
-        let selections = self.validate_selections(collection, &selects)?;
+        let selections = self.validate_selections(collection, &selects, false)?;
         let hook = self.relationship_hook();
         let nested = match &hook {
             Some(h) => h.process_queries(&relationships, &mut queries)?,

@@ -488,7 +488,7 @@ impl Database {
 
         let has_operators = updates.iter().any(|(_, v)| Operator::is_operator(v));
         let adapter_data = updates.as_array().clone();
-        let selections = self.validate_selections(&collection, &parsed.selections)?;
+        let selections = self.validate_selections(&collection, &parsed.selections, false)?;
         let decoded_keys: Vec<String> = if selections.is_empty() {
             Vec::new()
         } else {
