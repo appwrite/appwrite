@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Project;
 
+use CURLFile;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Database\Id;
+use Utopia\Storage\Device;
 use Utopia\System\System;
 
 final class ProjectConsoleClientTest extends Scope
@@ -51,6 +56,119 @@ final class ProjectConsoleClientTest extends Scope
         $getProject = $this->getConsoleProject($project['body']['$id']);
 
         $this->assertSame(404, $getProject['headers']['status-code']);
+    }
+
+    #[Group('s3')]
+    public function testDeleteProjectStorage(): void
+    {
+        $team = $this->createTeam('Delete Project Storage Team');
+        $project = $this->createProject($team['body']['$id'], 'Delete Project Storage');
+        $projectId = $project['body']['$id'];
+        $headers = [
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->createProjectKey($projectId, [
+                'buckets.write',
+                'files.write',
+                'functions.read',
+                'functions.write',
+            ]),
+        ];
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            ...$headers,
+        ], [
+            'bucketId' => Id::unique(),
+            'name' => 'Delete Project Storage',
+        ]);
+
+        $this->assertSame(201, $bucket['headers']['status-code']);
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket['body']['$id'] . '/files', [
+            'content-type' => 'multipart/form-data',
+            ...$headers,
+        ], [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+
+        $this->assertSame(201, $file['headers']['status-code']);
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', [
+            'content-type' => 'application/json',
+            ...$headers,
+        ], [
+            'functionId' => Id::unique(),
+            'name' => 'Delete Project Storage',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+        ]);
+
+        $this->assertSame(201, $function['headers']['status-code']);
+
+        $functionId = $function['body']['$id'];
+        $code = \sys_get_temp_dir() . '/appwrite-function-' . Id::unique() . '.tar.gz';
+        $stdout = '';
+        $stderr = '';
+
+        try {
+            $tar = new Command('tar')
+                ->flag('-czf')
+                ->argument($code)
+                ->option('-C', realpath(__DIR__ . '/../../../resources/functions/basic'))
+                ->argument('.');
+
+            $this->assertSame(0, Console::execute($tar, '', $stdout, $stderr), $stderr);
+
+            $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', [
+                'content-type' => 'multipart/form-data',
+                ...$headers,
+            ], [
+                'code' => new CURLFile($code, 'application/x-gzip', 'code.tar.gz'),
+                'activate' => true,
+            ]);
+        } finally {
+            if (\is_file($code)) {
+                \unlink($code);
+            }
+        }
+
+        $this->assertSame(202, $deployment['headers']['status-code'], \json_encode($deployment['body']));
+
+        $deploymentId = $deployment['body']['$id'];
+
+        // Let the build finish so nothing writes into the project's storage while it is deleted.
+        $this->assertEventually(function () use ($functionId, $deploymentId, $headers): void {
+            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
+                'content-type' => 'application/json',
+                ...$headers,
+            ]);
+
+            $this->assertSame(200, $deployment['headers']['status-code']);
+            $this->assertContains($deployment['body']['status'], ['ready', 'failed']);
+        }, 120000, 1000);
+
+        $uploads = getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
+        $functions = getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
+        $builds = getDevice(APP_STORAGE_BUILDS . '/app-' . $projectId);
+        $stored = fn (Device $device): array => $device->listFiles($device->getRoot() . '/', 1)->files;
+
+        $this->assertNotEmpty($stored($uploads), 'The uploaded file is not visible under ' . $uploads->getRoot());
+        $this->assertNotEmpty($stored($functions), 'The deployment code is not visible under ' . $functions->getRoot());
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/project', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $this->assertSame(204, $response['headers']['status-code']);
+
+        // A build that failed leaves nothing under builds, so only its absence afterwards is asserted.
+        $this->assertEventually(function () use ($uploads, $functions, $builds, $stored): void {
+            $this->assertSame([], $stored($uploads), 'Files remain under ' . $uploads->getRoot());
+            $this->assertSame([], $stored($functions), 'Deployments remain under ' . $functions->getRoot());
+            $this->assertSame([], $stored($builds), 'Builds remain under ' . $builds->getRoot());
+        }, 120000, 1000);
     }
 
     public function testGetProject(): void

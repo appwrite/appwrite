@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Storage\Tests\Device;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
@@ -30,6 +31,7 @@ use Utopia\Storage\Exception\RemoteException;
 use Utopia\Storage\Exception\StorageException;
 use Utopia\Storage\Exception\TransportException;
 use Utopia\Storage\Exception\UploadException;
+use Utopia\Storage\FileInfo;
 
 /**
  * Testable S3 subclass that exposes protected helpers.
@@ -327,6 +329,41 @@ final class S3Test extends TestCase
             host: 'https://s3.example.com',
             region: 'us-east-1',
             client: new Retry($client, new RetryStrategy(delay: 0.0)),
+        );
+    }
+
+    private function objectListing(string ...$keys): Response
+    {
+        $body = '<?xml version="1.0" encoding="UTF-8"?><ListBucketResult><KeyCount>' . \count($keys) . '</KeyCount><IsTruncated>false</IsTruncated>';
+        foreach ($keys as $key) {
+            $body .= '<Contents><Key>' . htmlspecialchars($key, ENT_XML1) . '</Key><Size>1</Size></Contents>';
+        }
+        $body .= '</ListBucketResult>';
+
+        return new Response(200, body: new Stream($body))->withHeader('content-type', 'application/xml');
+    }
+
+    /**
+     * @return array<int|string, mixed>
+     */
+    private function queryOf(RequestInterface $request): array
+    {
+        parse_str($request->getUri()->getQuery(), $parameters);
+
+        return $parameters;
+    }
+
+    private function pathStyleDevice(ScriptedClient $client, string $root = 'appwrite/storage/uploads/app-p'): S3
+    {
+        return new S3(
+            root: $root,
+            accessKey: 'test-key',
+            secretKey: 'test-secret',
+            host: 'http://minio:9000',
+            region: 'us-east-1',
+            client: $client,
+            bucket: 'appwrite',
+            pathStyle: true,
         );
     }
 
@@ -721,6 +758,169 @@ final class S3Test extends TestCase
         $this->assertNull($list->cursor);
     }
 
+    public function testRecursiveDeleteRemovesEveryObjectUnderThePrefix(): void
+    {
+        $client = new ScriptedClient([
+            new Response(204),
+            $this->objectListing('root/a/1.txt', 'root/a/x&y.txt'),
+            new Response(200),
+        ]);
+
+        $this->assertTrue($this->device($client)->delete('/root/a', true));
+        $this->assertCount(3, $client->requests);
+
+        [$delete, $list, $batch] = $client->requests;
+        $this->assertSame('DELETE', $delete->getMethod());
+        $this->assertSame('/root/a', $delete->getUri()->getPath());
+
+        $this->assertSame('GET', $list->getMethod());
+        $this->assertSame('root/a/', $this->queryOf($list)['prefix'] ?? null, 'a sibling such as root/a-b/ must not match');
+
+        $this->assertSame('POST', $batch->getMethod());
+        $this->assertArrayHasKey('delete', $this->queryOf($batch));
+        $xml = simplexml_load_string((string) $batch->getBody(), options: LIBXML_NOERROR | LIBXML_NOWARNING);
+        $this->assertNotFalse($xml, 'the DeleteObjects body must be well-formed XML');
+        $keys = [];
+        foreach ($xml->Object as $object) {
+            $keys[] = (string) $object->Key;
+        }
+        $this->assertSame(['root/a/1.txt', 'root/a/x&y.txt'], $keys);
+    }
+
+    public function testDeletePathListsOnlyTheDirectory(): void
+    {
+        $client = new ScriptedClient([$this->objectListing(), $this->objectListing()]);
+        $device = $this->device($client);
+
+        $this->assertTrue($device->deletePath('img'));
+        $this->assertTrue($device->deletePath('img/'));
+
+        $this->assertCount(2, $client->requests);
+        $this->assertSame('root/img/', $this->queryOf($client->requests[0])['prefix'] ?? null, 'root/img2/ must not match');
+        $this->assertSame('root/img/', $this->queryOf($client->requests[1])['prefix'] ?? null);
+    }
+
+    /**
+     * @return \Iterator<string, array{string, \Closure(S3): mixed}>
+     */
+    public static function wholeBucketDeletes(): \Iterator
+    {
+        yield 'delete of an empty path' => ['', static fn (S3 $device): bool => $device->delete('')];
+        yield 'delete of a slash' => ['', static fn (S3 $device): bool => $device->delete('/')];
+        yield 'delete of a path that resolves to nothing' => ['', static fn (S3 $device): bool => $device->delete('a/..')];
+        yield 'recursive delete of an empty path' => ['', static fn (S3 $device): bool => $device->delete('', true)];
+        yield 'recursive delete of a slash' => ['', static fn (S3 $device): bool => $device->delete('/', true)];
+        yield 'deletePath of an empty path under an empty root' => ['', static fn (S3 $device): bool => $device->deletePath('')];
+        yield 'deletePath of an empty path' => ['/root', static fn (S3 $device): bool => $device->deletePath('')];
+        yield 'deletePath of a slash' => ['/root', static fn (S3 $device): bool => $device->deletePath('/')];
+    }
+
+    /**
+     * @param  \Closure(S3): mixed  $attempt
+     */
+    #[DataProvider('wholeBucketDeletes')]
+    public function testDeleteOfTheWholeBucketOrRootIsRefused(string $root, \Closure $attempt): void
+    {
+        $client = new ScriptedClient([]);
+        $device = new S3(
+            root: $root,
+            accessKey: 'test-key',
+            secretKey: 'test-secret',
+            host: 'https://s3.example.com',
+            region: 'us-east-1',
+            client: $client,
+        );
+
+        try {
+            $attempt($device);
+            self::fail('Deleting the whole bucket or root must be refused');
+        } catch (\InvalidArgumentException) {
+        }
+
+        $this->assertCount(0, $client->requests, 'no DeleteBucket and no listing may be sent before the path is validated');
+    }
+
+    public function testRecursiveDeleteFollowsTheContinuationToken(): void
+    {
+        $page = '<?xml version="1.0" encoding="UTF-8"?><ListBucketResult><KeyCount>1</KeyCount><IsTruncated>true</IsTruncated><NextContinuationToken>page-2</NextContinuationToken>'
+            . '<Contents><Key>root/a/1.txt</Key><Size>1</Size></Contents></ListBucketResult>';
+        $client = new ScriptedClient([
+            new Response(204),
+            new Response(200, body: new Stream($page))->withHeader('content-type', 'application/xml'),
+            new Response(200),
+            $this->objectListing('root/a/2.txt'),
+            new Response(200),
+        ]);
+
+        $this->assertTrue($this->device($client)->delete('/root/a', true));
+
+        $this->assertCount(5, $client->requests);
+        [, $first, $firstBatch, $second, $secondBatch] = $client->requests;
+        $this->assertSame('GET', $first->getMethod());
+        $this->assertArrayNotHasKey('continuation-token', $this->queryOf($first));
+        $this->assertSame('GET', $second->getMethod());
+        $this->assertSame('page-2', $this->queryOf($second)['continuation-token'] ?? null);
+        $this->assertSame('root/a/', $this->queryOf($second)['prefix'] ?? null);
+
+        foreach ([[$firstBatch, ['root/a/1.txt']], [$secondBatch, ['root/a/2.txt']]] as [$batch, $expected]) {
+            $this->assertSame('POST', $batch->getMethod());
+            $xml = simplexml_load_string((string) $batch->getBody());
+            $this->assertNotFalse($xml);
+            $keys = [];
+            foreach ($xml->Object as $object) {
+                $keys[] = (string) $object->Key;
+            }
+            $this->assertSame($expected, $keys, 'each batch deletes the keys of its own page');
+        }
+    }
+
+    /**
+     * @return \Iterator<string, array{string, int}>
+     */
+    public static function failedBatchDeletes(): \Iterator
+    {
+        yield 'one key' => ['<Error><Key>root/a/1.txt</Key><Code>AccessDenied</Code><Message>Access Denied</Message></Error>', 1];
+        yield 'two keys' => [
+            '<Error><Key>root/a/1.txt</Key><Code>AccessDenied</Code><Message>Access Denied</Message></Error>'
+            . '<Error><Key>root/a/2.txt</Key><Code>InternalError</Code><Message>Internal Error</Message></Error>',
+            2,
+        ];
+    }
+
+    #[DataProvider('failedBatchDeletes')]
+    public function testKeysTheServiceFailedToDeleteAreAnError(string $errors, int $count): void
+    {
+        $page = '<?xml version="1.0" encoding="UTF-8"?><ListBucketResult><KeyCount>2</KeyCount><IsTruncated>true</IsTruncated><NextContinuationToken>page-2</NextContinuationToken>'
+            . '<Contents><Key>root/a/1.txt</Key><Size>1</Size></Contents><Contents><Key>root/a/2.txt</Key><Size>1</Size></Contents></ListBucketResult>';
+        $result = '<?xml version="1.0" encoding="UTF-8"?><DeleteResult>' . $errors . '</DeleteResult>';
+        $client = new ScriptedClient([
+            new Response(200, body: new Stream($page))->withHeader('content-type', 'application/xml'),
+            new Response(200, body: new Stream($result))->withHeader('content-type', 'application/xml'),
+            $this->objectListing(),
+        ]);
+
+        try {
+            $this->device($client)->deletePath('a');
+            self::fail('Keys the service could not delete must not be reported as deleted');
+        } catch (RemoteException $error) {
+            $this->assertSame('Failed to delete ' . $count . ' objects under root/a/', $error->getMessage());
+            $this->assertSame('AccessDenied', $error->errorCode);
+        }
+
+        $this->assertCount(2, $client->requests, 'no further page is listed once a batch failed');
+    }
+
+    public function testDeleteWithoutRecursionSendsOneRequest(): void
+    {
+        $client = new ScriptedClient([new Response(204)]);
+
+        $this->assertTrue($this->device($client)->delete('/root/a'));
+
+        $this->assertCount(1, $client->requests);
+        $this->assertSame('DELETE', $client->requests[0]->getMethod());
+        $this->assertSame('/root/a', $client->requests[0]->getUri()->getPath());
+    }
+
     public function testFinalizeCompletesOverAnExistingObject(): void
     {
         // The upload replaces whatever is at the path; an object already there is no reason to skip completion.
@@ -983,5 +1183,163 @@ final class S3Test extends TestCase
 
         $this->expectException(\InvalidArgumentException::class);
         $this->device($client)->listUploads('/root/', 10, 'next-token');
+    }
+
+    public function testPathStyleListFilesReturnsDevicePaths(): void
+    {
+        $client = new ScriptedClient([$this->objectListing('storage/uploads/app-p/a.txt', 'storage/uploads/app-p/b/c.txt')]);
+
+        $list = $this->pathStyleDevice($client)->listFiles('appwrite/storage/uploads/app-p/');
+
+        $this->assertCount(1, $client->requests);
+        $request = $client->requests[0];
+        $this->assertSame('GET', $request->getMethod());
+        $this->assertSame('minio', $request->getUri()->getHost());
+        $this->assertSame('/appwrite', $request->getUri()->getPath());
+        $this->assertSame('storage/uploads/app-p/', $this->queryOf($request)['prefix'] ?? null);
+        $this->assertSame(
+            ['appwrite/storage/uploads/app-p/a.txt', 'appwrite/storage/uploads/app-p/b/c.txt'],
+            array_map(static fn (FileInfo $file): string => $file->path, $list->files),
+            'listed paths are device paths, which begin with the bucket',
+        );
+    }
+
+    /**
+     * @return \Iterator<string, array{\Closure(S3): mixed}>
+     */
+    public static function pathsOutsideTheBucket(): \Iterator
+    {
+        yield 'listFiles' => [static fn (S3 $device): mixed => $device->listFiles('other/storage/')];
+        yield 'listFiles sharing the bucket name as a prefix' => [static fn (S3 $device): mixed => $device->listFiles('appwrite-old/storage/')];
+        yield 'listFiles escaping the bucket' => [static fn (S3 $device): mixed => $device->listFiles('appwrite/../other/')];
+        yield 'listUploads' => [static fn (S3 $device): mixed => $device->listUploads('other/storage/a.bin')];
+        yield 'copy source' => [static fn (S3 $device): mixed => $device->copy('other/storage/a.txt', 'appwrite/storage/b.txt')];
+        yield 'copy target' => [static fn (S3 $device): mixed => $device->copy('appwrite/a', 'other/b')];
+        yield 'delete' => [static fn (S3 $device): mixed => $device->delete('other/x')];
+        yield 'recursive delete' => [static fn (S3 $device): mixed => $device->delete('other/x', true)];
+    }
+
+    /**
+     * @param  \Closure(S3): mixed  $attempt
+     */
+    #[DataProvider('pathsOutsideTheBucket')]
+    public function testPathStyleRejectsPathsOutsideTheBucket(\Closure $attempt): void
+    {
+        $client = new ScriptedClient([]);
+
+        try {
+            $attempt($this->pathStyleDevice($client));
+            self::fail('A path outside the bucket must be refused');
+        } catch (\InvalidArgumentException) {
+        }
+
+        $this->assertCount(0, $client->requests, 'nothing outside the bucket is ever addressed');
+    }
+
+    public function testPathStyleCopySourceIsNotDoubled(): void
+    {
+        $client = new ScriptedClient([
+            new Response(200)->withHeader('content-length', '5'),
+            new Response(200, body: new Stream('<?xml version="1.0" encoding="UTF-8"?><CopyObjectResult><ETag>"abc"</ETag></CopyObjectResult>'))->withHeader('content-type', 'application/xml'),
+        ]);
+
+        $this->assertTrue($this->pathStyleDevice($client, 'appwrite/storage')->copy('appwrite/storage/a.txt', 'appwrite/storage/b.txt'));
+
+        $this->assertCount(2, $client->requests);
+        $copy = $client->requests[1];
+        $this->assertSame('PUT', $copy->getMethod());
+        $this->assertSame('/appwrite/storage/b.txt', $copy->getUri()->getPath());
+        $this->assertSame('/appwrite/storage/a.txt', $copy->getHeaderLine('x-amz-copy-source'));
+    }
+
+    public function testPathStyleRequiresABucket(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new S3(
+            root: 'appwrite/storage',
+            accessKey: 'test-key',
+            secretKey: 'test-secret',
+            host: 'http://minio:9000',
+            region: 'us-east-1',
+            client: new ScriptedClient([]),
+            pathStyle: true,
+        );
+    }
+
+    public function testPathStyleDeletePathAddressesTheBucket(): void
+    {
+        $keys = ['storage/uploads/app-p/b/1.txt', 'storage/uploads/app-p/b/c/2.txt'];
+        $client = new ScriptedClient([
+            $this->objectListing(...$keys),
+            new Response(200, body: new Stream('<?xml version="1.0" encoding="UTF-8"?><DeleteResult></DeleteResult>'))->withHeader('content-type', 'application/xml'),
+        ]);
+
+        $this->assertTrue($this->pathStyleDevice($client)->deletePath('b'));
+
+        $this->assertCount(2, $client->requests);
+        [$list, $delete] = $client->requests;
+        $this->assertSame('GET', $list->getMethod());
+        $this->assertSame('/appwrite', $list->getUri()->getPath());
+        $this->assertSame('storage/uploads/app-p/b/', $this->queryOf($list)['prefix'] ?? null);
+
+        $this->assertSame('POST', $delete->getMethod());
+        $this->assertSame('/appwrite', $delete->getUri()->getPath());
+        $this->assertArrayHasKey('delete', $this->queryOf($delete));
+        $xml = simplexml_load_string((string) $delete->getBody());
+        $this->assertNotFalse($xml);
+        $deleted = [];
+        foreach ($xml->Object as $object) {
+            $deleted[] = (string) $object->Key;
+        }
+        $this->assertSame($keys, $deleted);
+    }
+
+    /**
+     * @return \Iterator<string, array{string, bool}>
+     */
+    public static function pathStyleBucketPaths(): \Iterator
+    {
+        foreach (['bucket' => 'appwrite', 'bucket with a trailing slash' => 'appwrite/', 'bucket with a leading slash' => '/appwrite', 'empty' => '', 'slash' => '/'] as $name => $path) {
+            yield $name => [$path, false];
+            yield $name . ', recursive' => [$path, true];
+        }
+    }
+
+    #[DataProvider('pathStyleBucketPaths')]
+    public function testPathStyleDeleteOfTheBucketIsRefused(string $path, bool $recursive): void
+    {
+        $client = new ScriptedClient([]);
+
+        try {
+            $this->pathStyleDevice($client, 'appwrite/storage')->delete($path, $recursive);
+            self::fail('A delete of the whole bucket must be refused');
+        } catch (\InvalidArgumentException) {
+        }
+
+        $this->assertCount(0, $client->requests, 'no DeleteBucket, no listing of the whole bucket');
+    }
+
+    /**
+     * @return \Iterator<string, array{string}>
+     */
+    public static function rootPaths(): \Iterator
+    {
+        yield 'empty' => [''];
+        yield 'slash' => ['/'];
+    }
+
+    #[DataProvider('rootPaths')]
+    public function testPathStyleDeletePathOfTheRootIsRefusedWhenTheRootIsTheBucket(string $path): void
+    {
+        $client = new ScriptedClient([]);
+
+        try {
+            $this->pathStyleDevice($client, 'appwrite')->deletePath($path);
+            self::fail('Deleting the root that is the whole bucket must be refused');
+        } catch (\InvalidArgumentException) {
+        }
+
+        $this->assertCount(0, $client->requests);
     }
 }

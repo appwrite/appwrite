@@ -22,6 +22,8 @@ final class S3Test extends S3Base
 
     private string $secretKey;
 
+    private string $host;
+
     private ?string $pathHost = null;
 
     private string $pathBucket;
@@ -49,9 +51,26 @@ final class S3Test extends S3Base
         $this->region = $this->env('S3_REGION', 'us-east-1');
         $this->pathHost = $this->configured('S3_PATH_HOST');
         $this->pathBucket = $this->env('S3_PATH_BUCKET', $this->bucket);
-        $host = $this->env('S3_HOST', "http://{$this->bucket}.localhost:9805");
+        $this->host = $this->env('S3_HOST', "http://{$this->bucket}.localhost:9805");
 
-        $this->object = new S3($this->root, $this->accessKey, $this->secretKey, $host, $this->region, Acl::Private, bucket: $this->bucket);
+        $this->object = new S3($this->root, $this->accessKey, $this->secretKey, $this->host, $this->region, Acl::Private, bucket: $this->bucket);
+    }
+
+    protected function withRoot(string $root): S3
+    {
+        return new S3($root, $this->accessKey, $this->secretKey, $this->host, $this->region, Acl::Private, bucket: $this->bucket);
+    }
+
+    /**
+     * The endpoint that addresses the service rather than the bucket. Overriding one MinIO endpoint without the other would compare unrelated services.
+     */
+    private function pathHost(): string
+    {
+        if (($this->pathHost === null) !== ($this->configured('S3_HOST') === null)) {
+            self::markTestSkipped('S3_HOST and S3_PATH_HOST must both be configured when overriding the local MinIO endpoints');
+        }
+
+        return $this->pathHost ?? 'http://localhost:9805';
     }
 
     protected function getAdapterType(): DeviceType
@@ -101,15 +120,7 @@ final class S3Test extends S3Base
 
     public function testPathStyleEndpointSharesVirtualHostedBucket(): void
     {
-        $pathHost = $this->pathHost;
-        $virtualHost = $this->configured('S3_HOST');
-        if (($pathHost === null) !== ($virtualHost === null)) {
-            self::markTestSkipped('S3_HOST and S3_PATH_HOST must both be configured when overriding the local MinIO endpoints');
-        }
-
-        if ($pathHost === null) {
-            $pathHost = 'http://localhost:9805';
-        }
+        $pathHost = $this->pathHost();
 
         $this->assertSame($this->bucket, $this->pathBucket, 'S3_PATH_BUCKET and S3_BUCKET must identify the same bucket for cross-visibility');
 
@@ -249,7 +260,7 @@ final class S3Test extends S3Base
 
     public function testWritesWithoutAnAcl(): void
     {
-        $device = new S3($this->root, $this->accessKey, $this->secretKey, $this->env('S3_HOST', "http://{$this->bucket}.localhost:9805"), $this->region, null, bucket: $this->bucket);
+        $device = new S3($this->root, $this->accessKey, $this->secretKey, $this->host, $this->region, null, bucket: $this->bucket);
         $path = $device->getPath('no-acl/' . bin2hex(random_bytes(8)) . '.txt');
 
         try {
@@ -257,6 +268,79 @@ final class S3Test extends S3Base
             $this->assertSame('no acl', (string) $device->read($path));
         } finally {
             $device->delete($path);
+        }
+    }
+
+    private function pathStyleDevice(string $root): S3
+    {
+        return new S3(
+            root: $root,
+            accessKey: $this->accessKey,
+            secretKey: $this->secretKey,
+            host: $this->pathHost(),
+            region: $this->region,
+            bucket: $this->pathBucket,
+            pathStyle: true,
+        );
+    }
+
+    public function testPathStyleCopy(): void
+    {
+        $root = $this->pathBucket . '/ps-' . bin2hex(random_bytes(8));
+        $device = $this->pathStyleDevice($root);
+        $source = $device->getPath('source.txt');
+        $copy = $device->getPath('copy.txt');
+        $moved = $device->getPath('moved.txt');
+
+        try {
+            $device->write($source, new Stream('path-style copy'), 'text/plain');
+
+            $this->assertTrue($device->copy($source, $copy));
+            $this->assertSame('path-style copy', (string) $device->read($copy));
+
+            $this->assertTrue($device->move($copy, $moved));
+            $this->assertSame('path-style copy', (string) $device->read($moved));
+            $this->assertFalse($device->exists($copy));
+            $this->assertTrue($device->exists($source));
+        } finally {
+            foreach ([$source, $copy, $moved] as $path) {
+                $device->delete($path);
+            }
+        }
+    }
+
+    public function testPathStyleRecursiveDelete(): void
+    {
+        $directory = 'ps-' . bin2hex(random_bytes(8));
+        $root = $this->pathBucket . '/' . $directory;
+        $device = $this->pathStyleDevice($root);
+        $nested = [
+            $root . '/a.txt',
+            $root . '/dir/b.txt',
+            $root . '/dir/sub/c.txt',
+        ];
+        $sibling = $this->pathBucket . '/' . $directory . '-b/d.txt';
+
+        try {
+            foreach ([...$nested, $sibling] as $path) {
+                $device->write($path, new Stream($path), 'text/plain');
+            }
+
+            $listed = array_map(static fn (FileInfo $file): string => $file->path, $device->listFiles($root . '/')->files);
+            sort($listed);
+            $this->assertSame($nested, $listed, 'the listing sees every nested object and not the sibling');
+
+            $this->assertTrue($device->delete($root, true));
+
+            $this->assertSame([], $device->listFiles($root . '/')->files);
+            foreach ($nested as $path) {
+                $this->assertFalse($device->exists($path), $path . ' survived the recursive delete');
+            }
+            $this->assertSame($sibling, (string) $device->read($sibling), 'a sibling sharing the name as a prefix is kept');
+        } finally {
+            foreach ([...$nested, $sibling] as $path) {
+                $device->delete($path);
+            }
         }
     }
 }

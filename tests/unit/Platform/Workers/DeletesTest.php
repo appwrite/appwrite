@@ -73,7 +73,6 @@ final class DeletesTest extends TestCase
                     deviceForFunctions: $device,
                     deviceForSites: $device,
                     deviceForBuilds: $device,
-                    deviceForCache: $device,
                     certificates: $this->createStub(\Utopia\Cdn\Certificates\Provider::class),
                     executor: $this->createStub(\Executor\Executor::class),
                     executionRetention: '',

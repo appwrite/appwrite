@@ -60,6 +60,9 @@ class S3 extends Device
      * @param  Acl|null  $acl  Canned ACL applied to every object written, or null to write without one, which buckets that have ACLs disabled require
      * @param  (ClientInterface&StreamingClientInterface)|null  $client  PSR-18 client used for every request; defaults to `utopia-php/client` with the cURL adapter — no overall deadline (large transfers may take arbitrarily long), a stall watchdog that aborts once no bytes move for 60s, TCP keepalive, and transient-error retries via `S3\RetryStrategy`
      * @param  string|null  $bucket  Bucket name, required by the `x-amz-copy-source` header. When set, same-device `copy()` (and therefore `move()`) runs server side without moving bytes through PHP; when null it falls back to a streamed download and re-upload.
+     * @param  bool  $pathStyle  Paths begin with the bucket name and the endpoint addresses the service, not a bucket. Bucket-level requests (listing, batch deletes) go to `/{bucket}/` with the bucket stripped from the prefix, listed paths come back with `{bucket}/` prepended, and a server-side copy uses the source path as its copy source. Requires `$bucket`; never inferred.
+     *
+     * @throws \InvalidArgumentException When `$pathStyle` is set without a bucket
      */
     public function __construct(
         protected readonly string $root,
@@ -71,7 +74,12 @@ class S3 extends Device
         protected readonly ?Acl $acl = Acl::Private,
         (ClientInterface&StreamingClientInterface)|null $client = null,
         protected readonly ?string $bucket = null,
+        private readonly bool $pathStyle = false,
     ) {
+        if ($pathStyle && ($bucket === null || $bucket === '')) {
+            throw new \InvalidArgumentException('Path-style addressing requires a bucket');
+        }
+
         $endpoint = Uri::parse(rtrim(
             str_starts_with($host, 'http://') || str_starts_with($host, 'https://')
                 ? $host
@@ -464,17 +472,24 @@ class S3 extends Device
     }
 
     /**
-     * Delete file in given path, Return true on success and false on failure.
-     *
-     * @see http://php.net/manual/en/function.filesize.php
+     * Delete the object at the given path. When `$recursive` is true, also
+     * removes every object under `path/`.
      *
      * @throws StorageException
+     * @throws \InvalidArgumentException When the path names the whole bucket, or a path-style path is outside it
      */
     public function delete(string $path, bool $recursive = false): bool
     {
-        $uri = ($path !== '') ? '/' . str_replace('%2F', '/', rawurlencode($path)) : '/';
+        // Resolved first: an empty key would send DeleteBucket, so it is refused before any request.
+        $directory = $this->directory($path);
+
+        $uri = '/' . str_replace('%2F', '/', rawurlencode($path));
 
         $this->call(Method::DELETE, $uri);
+
+        if ($recursive) {
+            $this->deletePrefix(...$directory);
+        }
 
         return true;
     }
@@ -488,15 +503,27 @@ class S3 extends Device
      */
     protected function listObjects(string $prefix = '', int $maxKeys = self::MAX_PAGE_SIZE, string $continuationToken = ''): array
     {
+        [$uri, $key] = $this->prefix($prefix);
+
+        return $this->listBucket($uri, $key, $maxKeys, $continuationToken);
+    }
+
+    /**
+     * One page of the objects whose keys begin with the given key prefix.
+     *
+     * @return array<mixed>
+     *
+     * @throws StorageException
+     */
+    private function listBucket(string $uri, string $key, int $maxKeys = self::MAX_PAGE_SIZE, string $continuationToken = ''): array
+    {
         if ($maxKeys > self::MAX_PAGE_SIZE) {
             throw new \InvalidArgumentException('Cannot list more than ' . self::MAX_PAGE_SIZE . ' objects');
         }
 
-        $uri = '/';
-        $prefix = ltrim($prefix, '/'); /** S3 specific requirement that prefix should never contain a leading slash */
         $parameters = [
             'list-type' => 2,
-            'prefix' => $prefix,
+            'prefix' => $key,
             'max-keys' => $maxKeys,
         ];
 
@@ -539,10 +566,15 @@ class S3 extends Device
      */
     private function copyObject(string $source, string $target): bool
     {
+        // Refuses a source or target outside the bucket before anything is sent.
+        $this->prefix($source);
+        $this->prefix($target);
+
         $info = $this->getInfo($source);
         $size = (int) ($info['content-length'] ?? 0);
 
-        $copySource = '/' . $this->bucket . '/' . ltrim(str_replace('%2F', '/', rawurlencode($source)), '/');
+        $copySource = ltrim(str_replace('%2F', '/', rawurlencode($source)), '/');
+        $copySource = $this->pathStyle ? '/' . $copySource : '/' . $this->bucket . '/' . $copySource;
         $uri = $target !== '' ? '/' . str_replace(['%2F', '%3F'], ['/', '?'], rawurlencode($target)) : '/';
 
         if ($size <= self::MAX_COPY_OBJECT_SIZE) {
@@ -596,19 +628,52 @@ class S3 extends Device
     }
 
     /**
-     * Delete files in given path, path must be a directory. Return true on success and false on failure.
-     *
+     * Delete every object in the directory `path/` under the root. Objects
+     * that only share the directory name as a prefix are kept.
      *
      * @throws StorageException
+     * @throws \InvalidArgumentException When the path is empty or the directory is the whole bucket
      */
     public function deletePath(string $path): bool
     {
-        $path = $this->getRoot() . '/' . $path;
+        if (trim($path, '/') === '') {
+            throw new \InvalidArgumentException('Refusing to delete the whole root: ' . $this->getRoot());
+        }
 
-        $uri = '/';
+        $this->deletePrefix(...$this->directory($this->getRoot() . '/' . $path));
+
+        return true;
+    }
+
+    /**
+     * The request URI and the key prefix, ending in a slash, of the directory
+     * at the given path.
+     *
+     * @return array{string, string}
+     *
+     * @throws \InvalidArgumentException When the directory is the whole bucket
+     */
+    private function directory(string $path): array
+    {
+        [$uri, $key] = $this->prefix($path);
+        if ($key === '') {
+            throw new \InvalidArgumentException('Refusing to delete every object in the bucket: ' . $path);
+        }
+
+        return [$uri, str_ends_with($key, '/') ? $key : $key . '/'];
+    }
+
+    /**
+     * Delete every object whose key begins with the prefix, a page of keys per DeleteObjects request.
+     *
+     * @throws StorageException
+     * @throws RemoteException When the service reports keys it failed to delete
+     */
+    private function deletePrefix(string $uri, string $prefix): void
+    {
         $continuationToken = '';
         do {
-            $objects = $this->listObjects($path, continuationToken: $continuationToken);
+            $objects = $this->listBucket($uri, $prefix, continuationToken: $continuationToken);
             $token = $objects['NextContinuationToken'] ?? '';
             $continuationToken = \is_string($token) ? $token : '';
 
@@ -630,14 +695,22 @@ class S3 extends Device
 
             $body = '<Delete xmlns="http://s3.amazonaws.com/doc/2006-03-01/">';
             foreach ($keys as $key) {
-                $body .= "<Object><Key>{$key}</Key></Object>";
+                $body .= '<Object><Key>' . htmlspecialchars($key, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</Key></Object>';
             }
             $body .= '<Quiet>true</Quiet>';
             $body .= '</Delete>';
-            $this->call(Method::POST, $uri, $body, ['delete' => ''], headers: ['content-type' => 'application/xml']);
-        } while ($continuationToken !== '');
+            $response = $this->call(Method::POST, $uri, $body, ['delete' => ''], headers: ['content-type' => 'application/xml']);
 
-        return true;
+            // Quiet mode answers 200 and lists only the keys that failed, one associative entry or a list of them.
+            $errors = \is_array($response->body) ? ($response->body['Error'] ?? []) : [];
+            $errors = \is_array($errors) ? (isset($errors['Key']) || isset($errors['Code']) ? [$errors] : $errors) : [];
+            if ($errors !== []) {
+                $first = \is_array($errors[0] ?? null) ? $errors[0] : [];
+                $code = \is_string($first['Code'] ?? null) ? $first['Code'] : null;
+
+                throw new RemoteException('Failed to delete ' . \count($errors) . ' objects under ' . $prefix, $response->code, $code);
+            }
+        } while ($continuationToken !== '');
     }
 
     /**
@@ -714,6 +787,7 @@ class S3 extends Device
     public function listFiles(string $prefix = '', int $max = self::MAX_PAGE_SIZE, ?string $cursor = null): FileList
     {
         $data = $this->listObjects($prefix, $max, $cursor ?? '');
+        $bucket = $this->pathStyle ? $this->bucket . '/' : '';
 
         // A single object is returned as one associative entry, multiple objects as a list of them.
         $contents = $data['Contents'] ?? [];
@@ -731,7 +805,7 @@ class S3 extends Device
             $modified = $object['LastModified'] ?? null;
             $etag = $object['ETag'] ?? null;
             $files[] = new FileInfo(
-                path: $object['Key'],
+                path: $bucket . $object['Key'],
                 size: is_numeric($size) ? (int) $size : 0,
                 modifiedAt: \is_string($modified) ? new \DateTimeImmutable($modified) : null,
                 etag: \is_string($etag) ? trim($etag, '"') : null,
@@ -765,9 +839,10 @@ class S3 extends Device
             throw new \InvalidArgumentException('Cannot list more than ' . self::MAX_PAGE_SIZE . ' uploads');
         }
 
+        [$uri, $key] = $this->prefix($prefix);
         $parameters = [
             'uploads' => '',
-            'prefix' => ltrim($prefix, '/'),
+            'prefix' => $key,
             'max-uploads' => $max,
         ];
 
@@ -780,7 +855,7 @@ class S3 extends Device
             $parameters['upload-id-marker'] = $markers['upload'];
         }
 
-        $response = $this->call(Method::GET, '/', '', $parameters, headers: ['content-type' => 'text/plain']);
+        $response = $this->call(Method::GET, $uri, '', $parameters, headers: ['content-type' => 'text/plain']);
 
         if (! \is_array($response->body)) {
             throw new RemoteException('Unexpected S3 upload listing response');
@@ -803,7 +878,7 @@ class S3 extends Device
             }
             $initiated = $entry['Initiated'] ?? null;
             $uploads[] = new UploadInfo(
-                path: $entry['Key'],
+                path: ($this->pathStyle ? $this->bucket . '/' : '') . $entry['Key'],
                 uploadId: $entry['UploadId'],
                 initiatedAt: \is_string($initiated) ? new \DateTimeImmutable($initiated) : null,
             );
@@ -817,6 +892,39 @@ class S3 extends Device
             uploads: $uploads,
             cursor: $truncated ? (string) json_encode(['key' => $keyMarker, 'upload' => $uploadMarker]) : null,
         );
+    }
+
+    /**
+     * The request URI and key prefix a bucket-level request for the given path
+     * uses. In path-style the bucket leads the path: it moves into the URI and
+     * a path outside it is refused before anything is sent.
+     *
+     * @return array{string, string}
+     *
+     * @throws \InvalidArgumentException When a path-style path is outside the bucket
+     */
+    private function prefix(string $path): array
+    {
+        // S3 prefixes never begin with a slash; a trailing one is kept, so a directory never matches its siblings.
+        $key = ltrim($this->getAbsolutePath($path), '/');
+        if ($key !== '' && str_ends_with($path, '/')) {
+            $key .= '/';
+        }
+
+        $bucket = $this->bucket;
+        if (! $this->pathStyle || $bucket === null) {
+            return ['/', $key];
+        }
+
+        if ($key === $bucket) {
+            $key = '';
+        } elseif (str_starts_with($key, $bucket . '/')) {
+            $key = substr($key, \strlen($bucket) + 1);
+        } else {
+            throw new \InvalidArgumentException('Path is outside bucket ' . $bucket . ': ' . $path);
+        }
+
+        return ['/' . $bucket . '/', $key];
     }
 
     /**
