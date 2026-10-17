@@ -12,7 +12,7 @@ use utopia_database::value::to_text;
 use utopia_database::{Document, PermissionType, Query};
 use utopia_queue::{Publisher as _, Queue};
 
-use super::context::{Context, Mode};
+use super::context::{Context, Mode, UsageMetric};
 use super::{Route, State};
 use crate::auth::{KeyType, roles};
 use crate::database::documents::{Attributes, User};
@@ -65,7 +65,7 @@ struct Job {
     functions_changed: bool,
     deletes: Vec<Value>,
     queued: Vec<(String, Value)>,
-    metrics: Vec<(String, i64)>,
+    metrics: Vec<UsageMetric>,
     request: RequestInfo,
     status: StatusCode,
     response_size: usize,
@@ -531,7 +531,18 @@ impl Job {
             accept_language: self.request.accept_language.clone(),
             query_keys: String::new(),
         };
-        let mut metrics: Vec<Metric> = self.metrics.iter().map(|(k, v)| base(k, *v)).collect();
+        let mut metrics: Vec<Metric> = self
+            .metrics
+            .iter()
+            .map(|recorded| {
+                let mut metric = base(&recorded.key, recorded.value);
+                if let Some((kind, internal_id)) = &recorded.resource {
+                    metric.resource_type = kind.clone();
+                    metric.resource_internal_id = internal_id.clone();
+                }
+                metric
+            })
+            .collect();
         if !self.privileged {
             metrics.push(base("network.requests", 1));
             metrics.push(base("network.inbound", self.request.size as i64));

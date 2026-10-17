@@ -476,8 +476,8 @@
       "description": "Listeners on the project database: the `users.[userId].create` event for every user created, usage metrics for created and deleted documents (users, sessions, deployments ...), and purging the functions events cache.",
       "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('dbForProject'" },
       "rust": {
-        "status": "partial",
-        "note": "The project database registers PHP's listeners: `create-trigger-events` (every created user's `users.[userId].create`), `calculate-usage` (sessions and deployments, counted per event) and `purge-function-events-cache`. A deployment's usage resource (`setResource`/`setResourceInternalId`) is not applied yet: no route Rust serves writes deployments.",
+        "status": "done",
+        "note": "The project database registers PHP's listeners: `Usage` (sessions, and deployments per resource type counted against their function or site as `addResourceMetric()` does), `UserEvents` (every created user's `users.[userId].create`) and `FunctionCache` (the functions events cache purged). A unit test checks the recorded metrics against PHP's `Usage` hook on the oracle. The purge runs after the response rather than during the action; no Rust route writes functions.",
         "where": [
           { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "// Database listener" },
           { "file": "crates/appwrite/core/src/platform/context.rs", "anchor": "fn listen(" }
