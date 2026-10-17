@@ -1,5 +1,0 @@
-{
-  "reason": "The Rust migration PR (#14308): while it is a draft, its runs cover only the lanes the Rust code affects; marked ready for review, every lane runs. Delete this file before merging.",
-  "services": ["Users"],
-  "console": false
-}
