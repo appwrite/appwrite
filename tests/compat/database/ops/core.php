@@ -415,12 +415,7 @@ final class Core
             $state->pdos[$destination] = $destinationPdo;
         }
         $filters = array_map(fn ($name) => self::mirrorFilter((string) $name), Values::list($spec['filters'] ?? []));
-        $mirror = new Mirror($source, $destination, $filters);
-        // Replication errors are logged, not thrown: the runner still sees
-        // the PHP library give way under load.
-        $mirror->onError(function (Failure $failure) {
-            Session::$swallowed ??= $failure->error->getMessage();
-        });
+        $mirror = self::reporting(new Mirror($source, $destination, $filters));
         $state->mirrors[$mirror] = ['source' => $source, 'destination' => $destination];
 
         return $mirror;
@@ -1145,6 +1140,21 @@ final class Core
         $statement = $pdo->query($sql);
 
         return $statement === false ? [] : $statement->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * A Mirror whose replication errors (logged, not thrown) still reach
+     * the runner as `swallowed`, so a load failure retries the case. Kept
+     * at the end of the class: Rust names lines of this file (closure
+     * signatures, TypeError messages).
+     */
+    private static function reporting(Mirror $mirror): Mirror
+    {
+        $mirror->onError(function (Failure $failure) {
+            Session::$swallowed ??= $failure->error->getMessage();
+        });
+
+        return $mirror;
     }
 }
 
