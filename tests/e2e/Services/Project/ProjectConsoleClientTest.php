@@ -127,7 +127,9 @@ final class ProjectConsoleClientTest extends Scope
                 'code' => new CURLFile($code, 'application/x-gzip', 'code.tar.gz'),
             ]);
         } finally {
-            @\unlink($code);
+            if (\is_file($code)) {
+                \unlink($code);
+            }
         }
 
         $this->assertSame(202, $deployment['headers']['status-code']);
@@ -147,6 +149,7 @@ final class ProjectConsoleClientTest extends Scope
 
         $uploads = getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
         $functions = getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
+        $builds = getDevice(APP_STORAGE_BUILDS . '/app-' . $projectId);
         $stored = fn (Device $device): array => $device->listFiles($device->getRoot() . '/', 1)->files;
 
         $this->assertNotEmpty($stored($uploads), 'The uploaded file is not visible under ' . $uploads->getRoot());
@@ -159,9 +162,11 @@ final class ProjectConsoleClientTest extends Scope
 
         $this->assertSame(204, $response['headers']['status-code']);
 
-        $this->assertEventually(function () use ($uploads, $functions, $stored): void {
+        // A build that failed leaves nothing under builds, so only its absence afterwards is asserted.
+        $this->assertEventually(function () use ($uploads, $functions, $builds, $stored): void {
             $this->assertSame([], $stored($uploads), 'Files remain under ' . $uploads->getRoot());
             $this->assertSame([], $stored($functions), 'Deployments remain under ' . $functions->getRoot());
+            $this->assertSame([], $stored($builds), 'Builds remain under ' . $builds->getRoot());
         }, 120000, 1000);
     }
 
