@@ -9,7 +9,7 @@ use super::{refused, s};
 use crate::attribute::{Attribute, Format};
 use crate::database::Database;
 use crate::database::testing::block_on;
-use crate::database::testing_memory::{collection, doc, memory};
+use crate::database::testing_memory::{Tweaked, collection, database_on, doc, memory};
 use crate::error::Kind;
 use crate::permission::Permission;
 use crate::role::Role;
@@ -45,8 +45,22 @@ fn register() {
 }
 
 async fn database(b: i64, f: f64) -> Database {
+    database_on_engine(b, f, None).await
+}
+
+/// The race database on an engine that interleaves another connection's
+/// increase (`Interleaving\Memory`).
+async fn racing(b: i64, f: f64) -> (Database, Arc<Tweaked>) {
+    let engine = Arc::new(Tweaked::new());
+    (database_on_engine(b, f, Some(engine.clone())).await, engine)
+}
+
+async fn database_on_engine(b: i64, f: f64, engine: Option<Arc<Tweaked>>) -> Database {
     register();
-    let database = memory("counter_range").await;
+    let database = match engine {
+        Some(engine) => database_on(engine, "counter_race").await,
+        None => memory("counter_range").await,
+    };
     let any = Role::any();
     collection(
         &database,
@@ -138,5 +152,60 @@ fn an_increase_past_its_bound_in_the_write_answers_false() {
             .unwrap();
         assert!(!changed);
         assert_eq!(stored(&database, "n").await, Some(Value::Int(0)));
+    });
+}
+
+/// CounterRangeRaceTest::testAnIncreaseThatAnotherIncreaseCarriedPastTheColumnMaximumIsRefused
+/// (Documents.php:2878-2881): the write's own bound refuses an increase
+/// another one carried past the column maximum after the read.
+#[test]
+fn an_increase_another_carried_past_the_maximum_is_refused() {
+    block_on(async {
+        let (database, engine) = racing(9, 2.0).await;
+        engine.increase_before_next("b", Value::Int(1));
+        refused(
+            database.increase_document_attribute(COLLECTION, "row", "b", Value::Int(1), None).await,
+            Kind::Limit,
+            "Attribute value exceeds maximum limit: 10",
+        );
+    });
+}
+
+/// CounterRangeRaceTest::testADecreaseThatAnotherDecreaseCarriedPastTheColumnMinimumIsRefused.
+#[test]
+fn a_decrease_another_carried_past_the_minimum_is_refused() {
+    block_on(async {
+        let (database, engine) = racing(1, -1.0).await;
+        engine.increase_before_next("f", Value::Float(-0.5));
+        refused(
+            database.decrease_document_attribute(COLLECTION, "row", "f", Value::Float(0.25), None).await,
+            Kind::Limit,
+            "Attribute value exceeds minimum limit: -1.5",
+        );
+    });
+}
+
+/// CounterRangeRaceTest::testAnIncreaseThatAnotherIncreaseCarriedPastTheGivenMaximumIsRefused.
+#[test]
+fn an_increase_another_carried_past_the_given_maximum_is_refused() {
+    block_on(async {
+        let (database, engine) = racing(0, 0.0).await;
+        engine.increase_before_next("n", Value::Int(5));
+        refused(
+            database.increase_document_attribute(COLLECTION, "row", "n", Value::Int(3), Some(Value::Int(6))).await,
+            Kind::Limit,
+            "Attribute value exceeds maximum limit: 6",
+        );
+    });
+}
+
+/// CounterRangeRaceTest::testAnIncreaseThatStillFitsAfterAnotherIncreaseIsApplied.
+#[test]
+fn an_increase_that_still_fits_after_another_is_applied() {
+    block_on(async {
+        let (database, engine) = racing(7, 2.0).await;
+        engine.increase_before_next("b", Value::Int(1));
+        database.increase_document_attribute(COLLECTION, "row", "b", Value::Int(2), None).await.unwrap();
+        assert_eq!(stored(&database, "b").await, Some(Value::Int(10)));
     });
 }

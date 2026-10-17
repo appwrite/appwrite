@@ -48,7 +48,7 @@ const FILTERS: &[(&str, &str)] = &[
 pub const CANONICAL: [&str; 4] = ["encrypt", "subQueryProbe", "operator_double_decode", "joinedSeal"];
 
 /// The format fixtures (`Formats::get`).
-const FORMATS: [&str; 8] = [
+const FORMATS: [&str; 10] = [
     "priceRange",
     "priceRangeNew",
     "email",
@@ -57,6 +57,8 @@ const FORMATS: [&str; 8] = [
     "updateAttributeIntegerOnly",
     "storedRange",
     "storedEnum",
+    "raceIntegerRange",
+    "raceDoubleRange",
 ];
 
 /// Where `Core::callback` declares a callback's closure: the signature of
@@ -398,6 +400,22 @@ pub fn add_format(name: &str) -> R<()> {
             }),
             ColumnType::Integer,
         ),
+        "raceIntegerRange" | "raceDoubleRange" => {
+            let format = if name == "raceIntegerRange" { Type::Integer } else { Type::Float };
+            (
+                Arc::new(move |attribute: &Array| {
+                    let options = options_of(attribute);
+                    let bound = |k: &str, unbounded: f64| match options.get_str(k) {
+                        Some(Value::Int(i)) => utopia_validators::php::Number::Int(*i),
+                        Some(v @ Value::Float(_)) => utopia_validators::php::Number::Float(v.to_double()),
+                        _ => utopia_validators::php::Number::Float(unbounded),
+                    };
+                    Box::new(Range::with_format(bound("min", f64::NEG_INFINITY), bound("max", f64::INFINITY), format))
+                        as Box<dyn utopia_validators::Validator>
+                }),
+                if name == "raceIntegerRange" { ColumnType::Integer } else { ColumnType::Double },
+            )
+        }
         "storedEnum" => (
             Arc::new(|attribute: &Array| {
                 let elements: Vec<String> = match options_of(attribute).get_str("elements") {

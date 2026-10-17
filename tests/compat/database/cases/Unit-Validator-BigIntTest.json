@@ -69,6 +69,316 @@
       ]
     },
     {
+      "name": "BigIntTest::testWholeReadsTheIntegerAWholeDecimalNames#integer",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "whole",
+            "args": {
+              "value": "18446744073709551614"
+            }
+          },
+          "expect": "18446744073709551614"
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testWholeReadsTheIntegerAWholeDecimalNames#negative integer",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "whole",
+            "args": {
+              "value": "-9223372036854775809"
+            }
+          },
+          "expect": "-9223372036854775809"
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testWholeReadsTheIntegerAWholeDecimalNames#decimal with a zero fraction",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "whole",
+            "args": {
+              "value": "7.0000"
+            }
+          },
+          "expect": "7"
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testWholeReadsTheIntegerAWholeDecimalNames#negative decimal with a zero fraction",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "whole",
+            "args": {
+              "value": "-7.0"
+            }
+          },
+          "expect": "-7"
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testWholeReadsTheIntegerAWholeDecimalNames#decimal with an empty fraction",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "whole",
+            "args": {
+              "value": "7."
+            }
+          },
+          "expect": "7"
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testWholeReadsTheIntegerAWholeDecimalNames#decimal with a fraction",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "whole",
+            "args": {
+              "value": "7.0500"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testWholeReadsTheIntegerAWholeDecimalNames#exponent",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "whole",
+            "args": {
+              "value": "1.8446744073709552e19"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testWholeReadsTheIntegerAWholeDecimalNames#infinity",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "whole",
+            "args": {
+              "value": "INF"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testWholeReadsTheIntegerAWholeDecimalNames#empty",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "whole",
+            "args": {
+              "value": ""
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "BigIntTest::testWholeReadsTheIntegerAWholeDecimalNames#fraction alone",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\BigInt",
+            "method": "whole",
+            "args": {
+              "value": ".0"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
       "name": "BigIntTest::testNegatingZeroGivesTheIntegerZero",
       "state": [],
       "steps": [

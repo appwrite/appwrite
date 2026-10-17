@@ -10938,6 +10938,2219 @@
       ]
     },
     {
+      "name": "QueryShapeHavingTest::testHavingRejectsConditionsTheFilterRulesRefuse#numeric alias compared with infinity",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "price",
+              "alias": "total"
+            },
+            "as": "o5534"
+          },
+          "bind": "s9592",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "price",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "groupBy",
+            "args": {
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o5535"
+          },
+          "bind": "s9593",
+          "expect": {
+            "$query": {
+              "method": "groupBy",
+              "attribute": "",
+              "values": [
+                "name"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "greaterThan",
+            "args": {
+              "attribute": "total",
+              "value": {
+                "$float": "INF"
+              }
+            },
+            "as": "o5536"
+          },
+          "bind": "s9594",
+          "expect": {
+            "$query": {
+              "method": "greaterThan",
+              "attribute": "total",
+              "values": [
+                {
+                  "$float": "INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "having",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o5536"
+                }
+              ]
+            },
+            "as": "o5537"
+          },
+          "bind": "s9595",
+          "expect": {
+            "$query": {
+              "method": "having",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "greaterThan",
+                    "attribute": "total",
+                    "values": [
+                      {
+                        "$float": "INF"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o5693"
+          },
+          "bind": "s9763",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "body",
+                "key": "body",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o5694"
+          },
+          "bind": "s9764",
+          "expect": {
+            "$document": {
+              "$id": "body",
+              "key": "body",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "price",
+                "key": "price",
+                "type": "integer",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o5695"
+          },
+          "bind": "s9765",
+          "expect": {
+            "$document": {
+              "$id": "price",
+              "key": "price",
+              "type": "integer",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "stock",
+                "key": "stock",
+                "type": "biginteger",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o5696"
+          },
+          "bind": "s9766",
+          "expect": {
+            "$document": {
+              "$id": "stock",
+              "key": "stock",
+              "type": "biginteger",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "rating",
+                "key": "rating",
+                "type": "double",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o5697"
+          },
+          "bind": "s9767",
+          "expect": {
+            "$document": {
+              "$id": "rating",
+              "key": "rating",
+              "type": "double",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "active",
+                "key": "active",
+                "type": "boolean",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o5698"
+          },
+          "bind": "s9768",
+          "expect": {
+            "$document": {
+              "$id": "active",
+              "key": "active",
+              "type": "boolean",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "created",
+                "key": "created",
+                "type": "datetime",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o5699"
+          },
+          "bind": "s9769",
+          "expect": {
+            "$document": {
+              "$id": "created",
+              "key": "created",
+              "type": "datetime",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": true
+              }
+            },
+            "as": "o5700"
+          },
+          "bind": "s9770",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "scores",
+                "key": "scores",
+                "type": "integer",
+                "size": 0,
+                "signed": true,
+                "array": true
+              }
+            },
+            "as": "o5701"
+          },
+          "bind": "s9771",
+          "expect": {
+            "$document": {
+              "$id": "scores",
+              "key": "scores",
+              "type": "integer",
+              "size": 0,
+              "signed": true,
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Limit",
+            "args": {},
+            "as": "o5702"
+          },
+          "bind": "s9772",
+          "expect": {
+            "$value": "Validator\\Query\\Limit",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5693"
+                },
+                {
+                  "$obj": "o5694"
+                },
+                {
+                  "$obj": "o5695"
+                },
+                {
+                  "$obj": "o5696"
+                },
+                {
+                  "$obj": "o5697"
+                },
+                {
+                  "$obj": "o5698"
+                },
+                {
+                  "$obj": "o5699"
+                },
+                {
+                  "$obj": "o5700"
+                },
+                {
+                  "$obj": "o5701"
+                }
+              ],
+              "idAttributeType": "integer",
+              "maxValuesCount": 100
+            },
+            "as": "o5703"
+          },
+          "bind": "s9773",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Order",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5693"
+                },
+                {
+                  "$obj": "o5694"
+                },
+                {
+                  "$obj": "o5695"
+                },
+                {
+                  "$obj": "o5696"
+                },
+                {
+                  "$obj": "o5697"
+                },
+                {
+                  "$obj": "o5698"
+                },
+                {
+                  "$obj": "o5699"
+                },
+                {
+                  "$obj": "o5700"
+                },
+                {
+                  "$obj": "o5701"
+                }
+              ]
+            },
+            "as": "o5704"
+          },
+          "bind": "s9774",
+          "expect": {
+            "$value": "Validator\\Query\\Order",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Select",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5693"
+                },
+                {
+                  "$obj": "o5694"
+                },
+                {
+                  "$obj": "o5695"
+                },
+                {
+                  "$obj": "o5696"
+                },
+                {
+                  "$obj": "o5697"
+                },
+                {
+                  "$obj": "o5698"
+                },
+                {
+                  "$obj": "o5699"
+                },
+                {
+                  "$obj": "o5700"
+                },
+                {
+                  "$obj": "o5701"
+                }
+              ]
+            },
+            "as": "o5705"
+          },
+          "bind": "s9775",
+          "expect": {
+            "$value": "Validator\\Query\\Select",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o5706"
+          },
+          "bind": "s9776",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Aggregate",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5693"
+                },
+                {
+                  "$obj": "o5694"
+                },
+                {
+                  "$obj": "o5695"
+                },
+                {
+                  "$obj": "o5696"
+                },
+                {
+                  "$obj": "o5697"
+                },
+                {
+                  "$obj": "o5698"
+                },
+                {
+                  "$obj": "o5699"
+                },
+                {
+                  "$obj": "o5700"
+                },
+                {
+                  "$obj": "o5701"
+                }
+              ]
+            },
+            "as": "o5707"
+          },
+          "bind": "s9777",
+          "expect": {
+            "$value": "Validator\\Query\\Aggregate",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\GroupBy",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5693"
+                },
+                {
+                  "$obj": "o5694"
+                },
+                {
+                  "$obj": "o5695"
+                },
+                {
+                  "$obj": "o5696"
+                },
+                {
+                  "$obj": "o5697"
+                },
+                {
+                  "$obj": "o5698"
+                },
+                {
+                  "$obj": "o5699"
+                },
+                {
+                  "$obj": "o5700"
+                },
+                {
+                  "$obj": "o5701"
+                }
+              ]
+            },
+            "as": "o5708"
+          },
+          "bind": "s9778",
+          "expect": {
+            "$value": "Validator\\Query\\GroupBy",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Having",
+            "args": {},
+            "as": "o5709"
+          },
+          "bind": "s9779",
+          "expect": {
+            "$value": "Validator\\Query\\Having",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Indexed",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5693"
+                },
+                {
+                  "$obj": "o5694"
+                },
+                {
+                  "$obj": "o5695"
+                },
+                {
+                  "$obj": "o5696"
+                },
+                {
+                  "$obj": "o5697"
+                },
+                {
+                  "$obj": "o5698"
+                },
+                {
+                  "$obj": "o5699"
+                },
+                {
+                  "$obj": "o5700"
+                },
+                {
+                  "$obj": "o5701"
+                }
+              ],
+              "indexes": [],
+              "validators": [
+                {
+                  "$obj": "o5702"
+                },
+                {
+                  "$obj": "o5703"
+                },
+                {
+                  "$obj": "o5704"
+                },
+                {
+                  "$obj": "o5705"
+                },
+                {
+                  "$obj": "o5706"
+                },
+                {
+                  "$obj": "o5707"
+                },
+                {
+                  "$obj": "o5708"
+                },
+                {
+                  "$obj": "o5709"
+                }
+              ]
+            },
+            "as": "o5710"
+          },
+          "bind": "s9780",
+          "expect": {
+            "$value": "Validator\\Queries\\Indexed",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5710"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o5534"
+                },
+                {
+                  "$obj": "o5535"
+                },
+                {
+                  "$obj": "o5537"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5710"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: Query value is invalid for aggregate alias \"total\""
+        }
+      ]
+    },
+    {
+      "name": "QueryShapeHavingTest::testHavingRejectsConditionsTheFilterRulesRefuse#numeric alias compared with not a number",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "avg",
+            "args": {
+              "attribute": "rating",
+              "alias": "mean"
+            },
+            "as": "o5538"
+          },
+          "bind": "s9596",
+          "expect": {
+            "$query": {
+              "method": "avg",
+              "attribute": "rating",
+              "values": [],
+              "alias": "mean"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "groupBy",
+            "args": {
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o5539"
+          },
+          "bind": "s9597",
+          "expect": {
+            "$query": {
+              "method": "groupBy",
+              "attribute": "",
+              "values": [
+                "name"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "mean",
+              "values": [
+                {
+                  "$float": "NAN"
+                }
+              ]
+            },
+            "as": "o5540"
+          },
+          "bind": "s9598",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "mean",
+              "values": [
+                {
+                  "$float": "NAN"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "having",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o5540"
+                }
+              ]
+            },
+            "as": "o5541"
+          },
+          "bind": "s9599",
+          "expect": {
+            "$query": {
+              "method": "having",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "mean",
+                    "values": [
+                      {
+                        "$float": "NAN"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o5711"
+          },
+          "bind": "s9783",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "body",
+                "key": "body",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o5712"
+          },
+          "bind": "s9784",
+          "expect": {
+            "$document": {
+              "$id": "body",
+              "key": "body",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "price",
+                "key": "price",
+                "type": "integer",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o5713"
+          },
+          "bind": "s9785",
+          "expect": {
+            "$document": {
+              "$id": "price",
+              "key": "price",
+              "type": "integer",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "stock",
+                "key": "stock",
+                "type": "biginteger",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o5714"
+          },
+          "bind": "s9786",
+          "expect": {
+            "$document": {
+              "$id": "stock",
+              "key": "stock",
+              "type": "biginteger",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "rating",
+                "key": "rating",
+                "type": "double",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o5715"
+          },
+          "bind": "s9787",
+          "expect": {
+            "$document": {
+              "$id": "rating",
+              "key": "rating",
+              "type": "double",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "active",
+                "key": "active",
+                "type": "boolean",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o5716"
+          },
+          "bind": "s9788",
+          "expect": {
+            "$document": {
+              "$id": "active",
+              "key": "active",
+              "type": "boolean",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "created",
+                "key": "created",
+                "type": "datetime",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o5717"
+          },
+          "bind": "s9789",
+          "expect": {
+            "$document": {
+              "$id": "created",
+              "key": "created",
+              "type": "datetime",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": true
+              }
+            },
+            "as": "o5718"
+          },
+          "bind": "s9790",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "scores",
+                "key": "scores",
+                "type": "integer",
+                "size": 0,
+                "signed": true,
+                "array": true
+              }
+            },
+            "as": "o5719"
+          },
+          "bind": "s9791",
+          "expect": {
+            "$document": {
+              "$id": "scores",
+              "key": "scores",
+              "type": "integer",
+              "size": 0,
+              "signed": true,
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Limit",
+            "args": {},
+            "as": "o5720"
+          },
+          "bind": "s9792",
+          "expect": {
+            "$value": "Validator\\Query\\Limit",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5711"
+                },
+                {
+                  "$obj": "o5712"
+                },
+                {
+                  "$obj": "o5713"
+                },
+                {
+                  "$obj": "o5714"
+                },
+                {
+                  "$obj": "o5715"
+                },
+                {
+                  "$obj": "o5716"
+                },
+                {
+                  "$obj": "o5717"
+                },
+                {
+                  "$obj": "o5718"
+                },
+                {
+                  "$obj": "o5719"
+                }
+              ],
+              "idAttributeType": "integer",
+              "maxValuesCount": 100
+            },
+            "as": "o5721"
+          },
+          "bind": "s9793",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Order",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5711"
+                },
+                {
+                  "$obj": "o5712"
+                },
+                {
+                  "$obj": "o5713"
+                },
+                {
+                  "$obj": "o5714"
+                },
+                {
+                  "$obj": "o5715"
+                },
+                {
+                  "$obj": "o5716"
+                },
+                {
+                  "$obj": "o5717"
+                },
+                {
+                  "$obj": "o5718"
+                },
+                {
+                  "$obj": "o5719"
+                }
+              ]
+            },
+            "as": "o5722"
+          },
+          "bind": "s9794",
+          "expect": {
+            "$value": "Validator\\Query\\Order",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Select",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5711"
+                },
+                {
+                  "$obj": "o5712"
+                },
+                {
+                  "$obj": "o5713"
+                },
+                {
+                  "$obj": "o5714"
+                },
+                {
+                  "$obj": "o5715"
+                },
+                {
+                  "$obj": "o5716"
+                },
+                {
+                  "$obj": "o5717"
+                },
+                {
+                  "$obj": "o5718"
+                },
+                {
+                  "$obj": "o5719"
+                }
+              ]
+            },
+            "as": "o5723"
+          },
+          "bind": "s9795",
+          "expect": {
+            "$value": "Validator\\Query\\Select",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o5724"
+          },
+          "bind": "s9796",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Aggregate",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5711"
+                },
+                {
+                  "$obj": "o5712"
+                },
+                {
+                  "$obj": "o5713"
+                },
+                {
+                  "$obj": "o5714"
+                },
+                {
+                  "$obj": "o5715"
+                },
+                {
+                  "$obj": "o5716"
+                },
+                {
+                  "$obj": "o5717"
+                },
+                {
+                  "$obj": "o5718"
+                },
+                {
+                  "$obj": "o5719"
+                }
+              ]
+            },
+            "as": "o5725"
+          },
+          "bind": "s9797",
+          "expect": {
+            "$value": "Validator\\Query\\Aggregate",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\GroupBy",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5711"
+                },
+                {
+                  "$obj": "o5712"
+                },
+                {
+                  "$obj": "o5713"
+                },
+                {
+                  "$obj": "o5714"
+                },
+                {
+                  "$obj": "o5715"
+                },
+                {
+                  "$obj": "o5716"
+                },
+                {
+                  "$obj": "o5717"
+                },
+                {
+                  "$obj": "o5718"
+                },
+                {
+                  "$obj": "o5719"
+                }
+              ]
+            },
+            "as": "o5726"
+          },
+          "bind": "s9798",
+          "expect": {
+            "$value": "Validator\\Query\\GroupBy",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Having",
+            "args": {},
+            "as": "o5727"
+          },
+          "bind": "s9799",
+          "expect": {
+            "$value": "Validator\\Query\\Having",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Indexed",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5711"
+                },
+                {
+                  "$obj": "o5712"
+                },
+                {
+                  "$obj": "o5713"
+                },
+                {
+                  "$obj": "o5714"
+                },
+                {
+                  "$obj": "o5715"
+                },
+                {
+                  "$obj": "o5716"
+                },
+                {
+                  "$obj": "o5717"
+                },
+                {
+                  "$obj": "o5718"
+                },
+                {
+                  "$obj": "o5719"
+                }
+              ],
+              "indexes": [],
+              "validators": [
+                {
+                  "$obj": "o5720"
+                },
+                {
+                  "$obj": "o5721"
+                },
+                {
+                  "$obj": "o5722"
+                },
+                {
+                  "$obj": "o5723"
+                },
+                {
+                  "$obj": "o5724"
+                },
+                {
+                  "$obj": "o5725"
+                },
+                {
+                  "$obj": "o5726"
+                },
+                {
+                  "$obj": "o5727"
+                }
+              ]
+            },
+            "as": "o5728"
+          },
+          "bind": "s9800",
+          "expect": {
+            "$value": "Validator\\Queries\\Indexed",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5728"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o5538"
+                },
+                {
+                  "$obj": "o5539"
+                },
+                {
+                  "$obj": "o5541"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5728"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: Query value is invalid for aggregate alias \"mean\""
+        }
+      ]
+    },
+    {
+      "name": "QueryShapeHavingTest::testHavingRejectsConditionsTheFilterRulesRefuse#grouped double compared with infinity",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "count",
+            "args": {
+              "attribute": "*",
+              "alias": "rows"
+            },
+            "as": "o5542"
+          },
+          "bind": "s9600",
+          "expect": {
+            "$query": {
+              "method": "count",
+              "attribute": "*",
+              "values": [],
+              "alias": "rows"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "groupBy",
+            "args": {
+              "attributes": [
+                "rating"
+              ]
+            },
+            "as": "o5543"
+          },
+          "bind": "s9601",
+          "expect": {
+            "$query": {
+              "method": "groupBy",
+              "attribute": "",
+              "values": [
+                "rating"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "lessThan",
+            "args": {
+              "attribute": "rating",
+              "value": {
+                "$float": "-INF"
+              }
+            },
+            "as": "o5544"
+          },
+          "bind": "s9602",
+          "expect": {
+            "$query": {
+              "method": "lessThan",
+              "attribute": "rating",
+              "values": [
+                {
+                  "$float": "-INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "having",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o5544"
+                }
+              ]
+            },
+            "as": "o5545"
+          },
+          "bind": "s9603",
+          "expect": {
+            "$query": {
+              "method": "having",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "lessThan",
+                    "attribute": "rating",
+                    "values": [
+                      {
+                        "$float": "-INF"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o5729"
+          },
+          "bind": "s9803",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "body",
+                "key": "body",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o5730"
+          },
+          "bind": "s9804",
+          "expect": {
+            "$document": {
+              "$id": "body",
+              "key": "body",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "price",
+                "key": "price",
+                "type": "integer",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o5731"
+          },
+          "bind": "s9805",
+          "expect": {
+            "$document": {
+              "$id": "price",
+              "key": "price",
+              "type": "integer",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "stock",
+                "key": "stock",
+                "type": "biginteger",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o5732"
+          },
+          "bind": "s9806",
+          "expect": {
+            "$document": {
+              "$id": "stock",
+              "key": "stock",
+              "type": "biginteger",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "rating",
+                "key": "rating",
+                "type": "double",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o5733"
+          },
+          "bind": "s9807",
+          "expect": {
+            "$document": {
+              "$id": "rating",
+              "key": "rating",
+              "type": "double",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "active",
+                "key": "active",
+                "type": "boolean",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o5734"
+          },
+          "bind": "s9808",
+          "expect": {
+            "$document": {
+              "$id": "active",
+              "key": "active",
+              "type": "boolean",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "created",
+                "key": "created",
+                "type": "datetime",
+                "size": 0,
+                "signed": true,
+                "array": false
+              }
+            },
+            "as": "o5735"
+          },
+          "bind": "s9809",
+          "expect": {
+            "$document": {
+              "$id": "created",
+              "key": "created",
+              "type": "datetime",
+              "size": 0,
+              "signed": true,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "size": 1000,
+                "signed": true,
+                "array": true
+              }
+            },
+            "as": "o5736"
+          },
+          "bind": "s9810",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "size": 1000,
+              "signed": true,
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "scores",
+                "key": "scores",
+                "type": "integer",
+                "size": 0,
+                "signed": true,
+                "array": true
+              }
+            },
+            "as": "o5737"
+          },
+          "bind": "s9811",
+          "expect": {
+            "$document": {
+              "$id": "scores",
+              "key": "scores",
+              "type": "integer",
+              "size": 0,
+              "signed": true,
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Limit",
+            "args": {},
+            "as": "o5738"
+          },
+          "bind": "s9812",
+          "expect": {
+            "$value": "Validator\\Query\\Limit",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5729"
+                },
+                {
+                  "$obj": "o5730"
+                },
+                {
+                  "$obj": "o5731"
+                },
+                {
+                  "$obj": "o5732"
+                },
+                {
+                  "$obj": "o5733"
+                },
+                {
+                  "$obj": "o5734"
+                },
+                {
+                  "$obj": "o5735"
+                },
+                {
+                  "$obj": "o5736"
+                },
+                {
+                  "$obj": "o5737"
+                }
+              ],
+              "idAttributeType": "integer",
+              "maxValuesCount": 100
+            },
+            "as": "o5739"
+          },
+          "bind": "s9813",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Order",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5729"
+                },
+                {
+                  "$obj": "o5730"
+                },
+                {
+                  "$obj": "o5731"
+                },
+                {
+                  "$obj": "o5732"
+                },
+                {
+                  "$obj": "o5733"
+                },
+                {
+                  "$obj": "o5734"
+                },
+                {
+                  "$obj": "o5735"
+                },
+                {
+                  "$obj": "o5736"
+                },
+                {
+                  "$obj": "o5737"
+                }
+              ]
+            },
+            "as": "o5740"
+          },
+          "bind": "s9814",
+          "expect": {
+            "$value": "Validator\\Query\\Order",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Select",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5729"
+                },
+                {
+                  "$obj": "o5730"
+                },
+                {
+                  "$obj": "o5731"
+                },
+                {
+                  "$obj": "o5732"
+                },
+                {
+                  "$obj": "o5733"
+                },
+                {
+                  "$obj": "o5734"
+                },
+                {
+                  "$obj": "o5735"
+                },
+                {
+                  "$obj": "o5736"
+                },
+                {
+                  "$obj": "o5737"
+                }
+              ]
+            },
+            "as": "o5741"
+          },
+          "bind": "s9815",
+          "expect": {
+            "$value": "Validator\\Query\\Select",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o5742"
+          },
+          "bind": "s9816",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Aggregate",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5729"
+                },
+                {
+                  "$obj": "o5730"
+                },
+                {
+                  "$obj": "o5731"
+                },
+                {
+                  "$obj": "o5732"
+                },
+                {
+                  "$obj": "o5733"
+                },
+                {
+                  "$obj": "o5734"
+                },
+                {
+                  "$obj": "o5735"
+                },
+                {
+                  "$obj": "o5736"
+                },
+                {
+                  "$obj": "o5737"
+                }
+              ]
+            },
+            "as": "o5743"
+          },
+          "bind": "s9817",
+          "expect": {
+            "$value": "Validator\\Query\\Aggregate",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\GroupBy",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5729"
+                },
+                {
+                  "$obj": "o5730"
+                },
+                {
+                  "$obj": "o5731"
+                },
+                {
+                  "$obj": "o5732"
+                },
+                {
+                  "$obj": "o5733"
+                },
+                {
+                  "$obj": "o5734"
+                },
+                {
+                  "$obj": "o5735"
+                },
+                {
+                  "$obj": "o5736"
+                },
+                {
+                  "$obj": "o5737"
+                }
+              ]
+            },
+            "as": "o5744"
+          },
+          "bind": "s9818",
+          "expect": {
+            "$value": "Validator\\Query\\GroupBy",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Having",
+            "args": {},
+            "as": "o5745"
+          },
+          "bind": "s9819",
+          "expect": {
+            "$value": "Validator\\Query\\Having",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Indexed",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5729"
+                },
+                {
+                  "$obj": "o5730"
+                },
+                {
+                  "$obj": "o5731"
+                },
+                {
+                  "$obj": "o5732"
+                },
+                {
+                  "$obj": "o5733"
+                },
+                {
+                  "$obj": "o5734"
+                },
+                {
+                  "$obj": "o5735"
+                },
+                {
+                  "$obj": "o5736"
+                },
+                {
+                  "$obj": "o5737"
+                }
+              ],
+              "indexes": [],
+              "validators": [
+                {
+                  "$obj": "o5738"
+                },
+                {
+                  "$obj": "o5739"
+                },
+                {
+                  "$obj": "o5740"
+                },
+                {
+                  "$obj": "o5741"
+                },
+                {
+                  "$obj": "o5742"
+                },
+                {
+                  "$obj": "o5743"
+                },
+                {
+                  "$obj": "o5744"
+                },
+                {
+                  "$obj": "o5745"
+                }
+              ]
+            },
+            "as": "o5746"
+          },
+          "bind": "s9820",
+          "expect": {
+            "$value": "Validator\\Queries\\Indexed",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5746"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o5542"
+                },
+                {
+                  "$obj": "o5543"
+                },
+                {
+                  "$obj": "o5545"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5746"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: Query value is invalid for attribute \"rating\""
+        }
+      ]
+    },
+    {
       "name": "QueryShapeHavingTest::testHavingRejectsConditionsTheFilterRulesRefuse#numeric alias compared with a boolean",
       "state": [],
       "steps": [

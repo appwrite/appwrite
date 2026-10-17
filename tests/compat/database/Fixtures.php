@@ -253,6 +253,15 @@ namespace Tests\Compat\Database {
                     'callback' => static fn (mixed $attribute): Range => new Range($attribute['formatOptions']['min'] ?? 0, $attribute['formatOptions']['max'] ?? 0, Range::TYPE_INTEGER),
                     'type' => ColumnType::Integer,
                 ],
+                // Unit Documents\CounterRangeRaceTest::range(): a Range of `formatOptions` (unbounded where not given).
+                'raceIntegerRange' => [
+                    'callback' => static fn (array $attribute): Range => new Range($attribute['formatOptions']['min'] ?? -INF, $attribute['formatOptions']['max'] ?? INF, Range::TYPE_INTEGER),
+                    'type' => ColumnType::Integer,
+                ],
+                'raceDoubleRange' => [
+                    'callback' => static fn (array $attribute): Range => new Range($attribute['formatOptions']['min'] ?? -INF, $attribute['formatOptions']['max'] ?? INF, Range::TYPE_FLOAT),
+                    'type' => ColumnType::Double,
+                ],
                 'storedEnum' => [
                     'callback' => static fn (mixed $attribute): WhiteList => new WhiteList($attribute['formatOptions']['elements'] ?? [], true),
                     'type' => ColumnType::String,

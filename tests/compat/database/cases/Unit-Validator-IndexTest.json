@@ -7127,6 +7127,291 @@
       ]
     },
     {
+      "name": "IndexTest::testIndexLengthLargerThanTheAttributeNamesBothSizes",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o5012"
+          },
+          "bind": "s8877",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 768,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o5013"
+          },
+          "bind": "s8878",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 768,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o5013"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::IndexFulltextMultiple"
+                },
+                {
+                  "$enum": "Capability::IndexIdentical"
+                },
+                {
+                  "$enum": "Capability::IndexKey"
+                },
+                {
+                  "$enum": "Capability::IndexUnique"
+                },
+                {
+                  "$enum": "Capability::IndexFulltext"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o5014"
+          },
+          "bind": "s8879",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 768,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::IndexFulltextMultiple"
+                },
+                {
+                  "$enum": "Capability::IndexIdentical"
+                },
+                {
+                  "$enum": "Capability::IndexKey"
+                },
+                {
+                  "$enum": "Capability::IndexUnique"
+                },
+                {
+                  "$enum": "Capability::IndexFulltext"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\IndexDefinition",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o5012"
+                }
+              ],
+              "indexes": [],
+              "profile": {
+                "$obj": "o5014"
+              }
+            },
+            "as": "o5015"
+          },
+          "bind": "s8880",
+          "expect": {
+            "$value": "Validator\\IndexDefinition",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_title",
+              "attributes": [
+                "title"
+              ],
+              "lengths": [
+                65
+              ]
+            },
+            "as": "o5016"
+          },
+          "bind": "s8881",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_title",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [
+                65
+              ],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5015"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o5016"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o5015"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Index length 65 is larger than the size for title: 64"
+        }
+      ]
+    },
+    {
       "name": "IndexTest::testKeyAndUniqueIndexesAreRejectedWithoutAdapterSupport",
       "state": [],
       "steps": [

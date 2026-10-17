@@ -186,6 +186,18 @@ foreach ($files as $path) {
             fwrite(STDERR, sprintf("%-10s %s::%s %s\n", $recorded[$index]['status'], $path, $label, $recorded[$index]['status'] === 'passed' ? '' : substr($recorded[$index]['status'] === 'unportable' ? $unportable[$path][$label] : $test['message'], 0, 200)));
         }
     }
+    // What the class registered for its tests (formats, ...) is undone, as
+    // PHPUnit runs tearDownAfterClass, so later classes do not inherit it.
+    if ($reflection->hasMethod('tearDownAfterClass')) {
+        Recorder::$on = true;
+        Recorder::$test = -1;
+        try {
+            $class::tearDownAfterClass();
+        } catch (\Throwable $e) {
+            fwrite(STDERR, "tearDownAfterClass of {$path} failed: {$e->getMessage()}\n");
+        }
+        Recorder::$on = false;
+    }
 }
 
 $profile = new Profile('units', 'Tests\\Unit', '', 'Unit-', '', new \stdClass(), []);

@@ -147,6 +147,9 @@ pub(crate) struct Tweaked {
     /// A write run the first time a find of its collection returns its
     /// document: `(collection, id, attribute, value)`.
     refresh: Mutex<Option<(String, String, String, Value)>>,
+    /// A change another connection makes right before the next increase:
+    /// `(attribute, value)` (`Interleaves::$beforeIncrease`).
+    before_increase: Mutex<Option<(String, Value)>>,
     finds: AtomicI64,
     deletes: AtomicI64,
 }
@@ -164,6 +167,7 @@ impl Tweaked {
             cast_hook: None,
             updates: Mutex::new(Vec::new()),
             refresh: Mutex::new(None),
+            before_increase: Mutex::new(None),
             finds: AtomicI64::new(0),
             deletes: AtomicI64::new(0),
         }
@@ -175,6 +179,13 @@ impl Tweaked {
     /// (`Interleaving\Refresh` on `Interleaves::$afterFind`).
     pub(crate) fn refresh_once(&self, collection: &str, id: &str, attribute: &str, value: Value) {
         *self.refresh.lock().unwrap() = Some((collection.to_owned(), id.to_owned(), attribute.to_owned(), value));
+    }
+
+    /// Adds `value` to `attribute` of the document the next increase
+    /// changes, right before it, as another connection's increase landing
+    /// after the read would (`CounterRangeRaceTest::concurrently()`).
+    pub(crate) fn increase_before_next(&self, attribute: &str, value: Value) {
+        *self.before_increase.lock().unwrap() = Some((attribute.to_owned(), value));
     }
 
     /// The finds run (`Interleaves::$finds`).
@@ -453,6 +464,10 @@ impl Adapter for Tweaked {
         min: Option<Value>,
         max: Option<Value>,
     ) -> Result<bool> {
+        let concurrent = self.before_increase.lock().unwrap().take();
+        if let Some((other, change)) = concurrent {
+            self.inner.increase_document_attribute(collection, id, &other, change, updated_at, None, None).await?;
+        }
         self.inner.increase_document_attribute(collection, id, attribute, value, updated_at, min, max).await
     }
 

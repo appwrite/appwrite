@@ -1258,9 +1258,23 @@
       ]
     },
     {
-      "name": "QuerySerializationTest::testParsedJoinWithoutAnAliasIsAQueryException",
+      "name": "QuerySerializationTest::testParsedJoinWithoutAnAliasIsReadUnderItsCollection#the nested ON form",
       "state": [],
       "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
         {
           "op": "object.call",
           "args": {
@@ -1281,7 +1295,1378 @@
                   }
                 ]
               }
+            },
+            "as": "o4600"
+          },
+          "bind": "s8079",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "user"
+                    ]
+                  }
+                }
+              ],
+              "alias": "orders"
             }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4600"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Join"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4600"
+            },
+            "method": "getAlias",
+            "args": {}
+          },
+          "expect": "orders"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4600"
+            },
+            "method": "isAliasDefaulted",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4600"
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "method": "join",
+            "attribute": "orders",
+            "alias": "orders",
+            "values": [
+              {
+                "method": "on",
+                "values": [
+                  "$id",
+                  "=",
+                  "user"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parseQuery",
+            "args": {
+              "query": {
+                "method": "join",
+                "attribute": "orders",
+                "alias": "orders",
+                "values": [
+                  {
+                    "method": "on",
+                    "values": [
+                      "$id",
+                      "=",
+                      "user"
+                    ]
+                  }
+                ]
+              }
+            },
+            "as": "o4601"
+          },
+          "bind": "s8084",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "user"
+                    ]
+                  }
+                }
+              ],
+              "alias": "orders"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4601"
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "method": "join",
+            "attribute": "orders",
+            "alias": "orders",
+            "values": [
+              {
+                "method": "on",
+                "values": [
+                  "$id",
+                  "=",
+                  "user"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4600"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "{\"method\":\"join\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[{\"method\":\"on\",\"values\":[\"$id\",\"=\",\"user\"]}]}"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"join\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[{\"method\":\"on\",\"values\":[\"$id\",\"=\",\"user\"]}]}"
+            },
+            "as": "o4602"
+          },
+          "bind": "s8087",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "user"
+                    ]
+                  }
+                }
+              ],
+              "alias": "orders"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4602"
+            },
+            "method": "isAliasDefaulted",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testParsedJoinWithoutAnAliasIsReadUnderItsCollection#an empty alias property",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parseQuery",
+            "args": {
+              "query": {
+                "method": "leftJoin",
+                "attribute": "orders",
+                "alias": "",
+                "values": [
+                  {
+                    "method": "on",
+                    "values": [
+                      "$id",
+                      "=",
+                      "user"
+                    ]
+                  }
+                ]
+              }
+            },
+            "as": "o4603"
+          },
+          "bind": "s8089",
+          "expect": {
+            "$query": {
+              "method": "leftJoin",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "user"
+                    ]
+                  }
+                }
+              ],
+              "alias": "orders"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4603"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::LeftJoin"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4603"
+            },
+            "method": "getAlias",
+            "args": {}
+          },
+          "expect": "orders"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4603"
+            },
+            "method": "isAliasDefaulted",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4603"
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "method": "leftJoin",
+            "attribute": "orders",
+            "alias": "orders",
+            "values": [
+              {
+                "method": "on",
+                "values": [
+                  "$id",
+                  "=",
+                  "user"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parseQuery",
+            "args": {
+              "query": {
+                "method": "leftJoin",
+                "attribute": "orders",
+                "alias": "orders",
+                "values": [
+                  {
+                    "method": "on",
+                    "values": [
+                      "$id",
+                      "=",
+                      "user"
+                    ]
+                  }
+                ]
+              }
+            },
+            "as": "o4604"
+          },
+          "bind": "s8094",
+          "expect": {
+            "$query": {
+              "method": "leftJoin",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "user"
+                    ]
+                  }
+                }
+              ],
+              "alias": "orders"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4604"
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "method": "leftJoin",
+            "attribute": "orders",
+            "alias": "orders",
+            "values": [
+              {
+                "method": "on",
+                "values": [
+                  "$id",
+                  "=",
+                  "user"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4603"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "{\"method\":\"leftJoin\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[{\"method\":\"on\",\"values\":[\"$id\",\"=\",\"user\"]}]}"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"leftJoin\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[{\"method\":\"on\",\"values\":[\"$id\",\"=\",\"user\"]}]}"
+            },
+            "as": "o4605"
+          },
+          "bind": "s8097",
+          "expect": {
+            "$query": {
+              "method": "leftJoin",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "user"
+                    ]
+                  }
+                }
+              ],
+              "alias": "orders"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4605"
+            },
+            "method": "isAliasDefaulted",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testParsedJoinWithoutAnAliasIsReadUnderItsCollection#an empty legacy alias first",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parseQuery",
+            "args": {
+              "query": {
+                "method": "join",
+                "attribute": "orders",
+                "values": [
+                  "",
+                  {
+                    "method": "on",
+                    "values": [
+                      "$id",
+                      "=",
+                      "user"
+                    ]
+                  }
+                ]
+              }
+            },
+            "as": "o4606"
+          },
+          "bind": "s8099",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "user"
+                    ]
+                  }
+                }
+              ],
+              "alias": "orders"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4606"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Join"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4606"
+            },
+            "method": "getAlias",
+            "args": {}
+          },
+          "expect": "orders"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4606"
+            },
+            "method": "isAliasDefaulted",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4606"
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "method": "join",
+            "attribute": "orders",
+            "alias": "orders",
+            "values": [
+              {
+                "method": "on",
+                "values": [
+                  "$id",
+                  "=",
+                  "user"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parseQuery",
+            "args": {
+              "query": {
+                "method": "join",
+                "attribute": "orders",
+                "alias": "orders",
+                "values": [
+                  {
+                    "method": "on",
+                    "values": [
+                      "$id",
+                      "=",
+                      "user"
+                    ]
+                  }
+                ]
+              }
+            },
+            "as": "o4607"
+          },
+          "bind": "s8104",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "user"
+                    ]
+                  }
+                }
+              ],
+              "alias": "orders"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4607"
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "method": "join",
+            "attribute": "orders",
+            "alias": "orders",
+            "values": [
+              {
+                "method": "on",
+                "values": [
+                  "$id",
+                  "=",
+                  "user"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4606"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "{\"method\":\"join\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[{\"method\":\"on\",\"values\":[\"$id\",\"=\",\"user\"]}]}"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"join\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[{\"method\":\"on\",\"values\":[\"$id\",\"=\",\"user\"]}]}"
+            },
+            "as": "o4608"
+          },
+          "bind": "s8107",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "user"
+                    ]
+                  }
+                }
+              ],
+              "alias": "orders"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4608"
+            },
+            "method": "isAliasDefaulted",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testParsedJoinWithoutAnAliasIsReadUnderItsCollection#the column form",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parseQuery",
+            "args": {
+              "query": {
+                "method": "join",
+                "attribute": "orders",
+                "values": [
+                  "$id",
+                  "=",
+                  "user"
+                ]
+              }
+            },
+            "as": "o4609"
+          },
+          "bind": "s8109",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "user"
+                    ]
+                  }
+                }
+              ],
+              "alias": "orders"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4609"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Join"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4609"
+            },
+            "method": "getAlias",
+            "args": {}
+          },
+          "expect": "orders"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4609"
+            },
+            "method": "isAliasDefaulted",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4609"
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "method": "join",
+            "attribute": "orders",
+            "alias": "orders",
+            "values": [
+              {
+                "method": "on",
+                "values": [
+                  "$id",
+                  "=",
+                  "user"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parseQuery",
+            "args": {
+              "query": {
+                "method": "join",
+                "attribute": "orders",
+                "alias": "orders",
+                "values": [
+                  {
+                    "method": "on",
+                    "values": [
+                      "$id",
+                      "=",
+                      "user"
+                    ]
+                  }
+                ]
+              }
+            },
+            "as": "o4610"
+          },
+          "bind": "s8114",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "user"
+                    ]
+                  }
+                }
+              ],
+              "alias": "orders"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4610"
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "method": "join",
+            "attribute": "orders",
+            "alias": "orders",
+            "values": [
+              {
+                "method": "on",
+                "values": [
+                  "$id",
+                  "=",
+                  "user"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4609"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "{\"method\":\"join\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[{\"method\":\"on\",\"values\":[\"$id\",\"=\",\"user\"]}]}"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"join\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[{\"method\":\"on\",\"values\":[\"$id\",\"=\",\"user\"]}]}"
+            },
+            "as": "o4611"
+          },
+          "bind": "s8117",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "user"
+                    ]
+                  }
+                }
+              ],
+              "alias": "orders"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4611"
+            },
+            "method": "isAliasDefaulted",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testParsedJoinWithoutAnAliasIsReadUnderItsCollection#a cross join",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parseQuery",
+            "args": {
+              "query": {
+                "method": "crossJoin",
+                "attribute": "orders",
+                "values": []
+              }
+            },
+            "as": "o4612"
+          },
+          "bind": "s8119",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "orders",
+              "values": [],
+              "alias": "orders"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4612"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::CrossJoin"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4612"
+            },
+            "method": "getAlias",
+            "args": {}
+          },
+          "expect": "orders"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4612"
+            },
+            "method": "isAliasDefaulted",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4612"
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "method": "crossJoin",
+            "attribute": "orders",
+            "alias": "orders",
+            "values": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parseQuery",
+            "args": {
+              "query": {
+                "method": "crossJoin",
+                "attribute": "orders",
+                "alias": "orders",
+                "values": []
+              }
+            },
+            "as": "o4613"
+          },
+          "bind": "s8124",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "orders",
+              "values": [],
+              "alias": "orders"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4613"
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "method": "crossJoin",
+            "attribute": "orders",
+            "alias": "orders",
+            "values": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4612"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "{\"method\":\"crossJoin\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[]}"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"crossJoin\",\"attribute\":\"orders\",\"alias\":\"orders\",\"values\":[]}"
+            },
+            "as": "o4614"
+          },
+          "bind": "s8127",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "orders",
+              "values": [],
+              "alias": "orders"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4614"
+            },
+            "method": "isAliasDefaulted",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testAJoinBuiltWithoutAnAliasIsReadUnderItsCollection",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "user"
+            },
+            "as": "o4615"
+          },
+          "bind": "s8129",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "user"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Join"
+              },
+              "attribute": "orders",
+              "values": [
+                {
+                  "$obj": "o4615"
+                }
+              ]
+            },
+            "as": "o4616"
+          },
+          "bind": "s8130",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "user"
+                    ]
+                  }
+                }
+              ],
+              "alias": "orders"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4616"
+            },
+            "method": "getAlias",
+            "args": {}
+          },
+          "expect": "orders"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4616"
+            },
+            "method": "isAliasDefaulted",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "ord.user"
+            },
+            "as": "o4617"
+          },
+          "bind": "s8133",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "ord.user"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "orders",
+              "alias": "ord",
+              "on": [
+                {
+                  "$obj": "o4617"
+                }
+              ]
+            },
+            "as": "o4618"
+          },
+          "bind": "s8134",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "ord.user"
+                    ]
+                  }
+                }
+              ],
+              "alias": "ord"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4618"
+            },
+            "method": "isAliasDefaulted",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testADefaultedAliasSurvivesRenamingTheJoinedCollection",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "user"
+            },
+            "as": "o4619"
+          },
+          "bind": "s8136",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "user"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "orders",
+              "alias": "",
+              "on": [
+                {
+                  "$obj": "o4619"
+                }
+              ]
+            },
+            "as": "o4620"
           },
           "expect": {
             "$query": {
@@ -1301,6 +2686,127 @@
                 }
               ],
               "alias": "orders"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$query": {
+                "method": "join",
+                "attribute": "orders",
+                "values": [
+                  {
+                    "$query": {
+                      "method": "on",
+                      "attribute": "",
+                      "values": [
+                        "$id",
+                        "=",
+                        "user"
+                      ]
+                    }
+                  }
+                ],
+                "alias": "orders"
+              }
+            },
+            "method": "setAttribute",
+            "args": {
+              "attribute": "database_1_collection_2"
+            },
+            "as": "o4621"
+          },
+          "bind": "s8138",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "database_1_collection_2",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "user"
+                    ]
+                  }
+                }
+              ],
+              "alias": "orders"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4621"
+            },
+            "method": "getAlias",
+            "args": {}
+          },
+          "expect": "orders"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4621"
+            },
+            "method": "isAliasDefaulted",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testParsedJoinWithoutAnAliasOrCollectionIsAQueryException",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parseQuery",
+            "args": {
+              "query": {
+                "method": "join",
+                "values": [
+                  {
+                    "method": "on",
+                    "values": [
+                      "$id",
+                      "=",
+                      "user"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Join alias is required: join "
             }
           }
         }

@@ -51,6 +51,7 @@ use utopia_database::validator::query::filter::{Filter, FilterOptions};
 use utopia_database::validator::query::group_by::GroupBy;
 use utopia_database::validator::query::having::Having;
 use utopia_database::validator::query::join::Join;
+use utopia_database::validator::query::joined::collection::Collection as JoinedCollection;
 use utopia_database::validator::query::limit::Limit;
 use utopia_database::validator::query::offset::Offset;
 use utopia_database::validator::query::order::Order;
@@ -292,6 +293,76 @@ impl PhpObject for ValidatorObj {
 
     fn encode(&self) -> Json {
         values::object(self.0.class(), Vec::new())
+    }
+
+    fn clone_box(&self) -> Box<dyn PhpObject> {
+        Box::new(self.clone())
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+}
+
+/// A `Validator\Query\Joined\Collection` (`Collection::of()`), with the
+/// keys of the collection's attributes in their declared order, which its
+/// maps are encoded in.
+#[derive(Clone)]
+pub struct JoinedObj {
+    joined: Arc<JoinedCollection>,
+    order: Vec<String>,
+}
+
+impl PhpObject for JoinedObj {
+    fn class(&self) -> &str {
+        "Validator\\Query\\Joined\\Collection"
+    }
+
+    /// Its public properties: `alias`, `attributes`, `numeric`,
+    /// `encrypted`, `columns`, `collection` and `schema` (each attribute's
+    /// type, then the rest of its stored array).
+    fn encode(&self) -> Json {
+        let j = &self.joined;
+        let trues = |keys: &dyn Fn(&str) -> bool| -> Json {
+            let map: serde_json::Map<String, Json> =
+                self.order.iter().filter(|k| keys(k)).map(|k| (k.clone(), Json::Bool(true))).collect();
+            if map.is_empty() { json!([]) } else { Json::Object(map) }
+        };
+        let numeric: serde_json::Map<String, Json> =
+            self.order.iter().filter_map(|k| j.numeric.get(k).map(|t| (k.clone(), enums::encode(*t)))).collect();
+        let columns: serde_json::Map<String, Json> =
+            self.order.iter().filter_map(|k| j.columns.get(k).map(|c| (k.clone(), Json::Bool(*c)))).collect();
+        let mut schema = serde_json::Map::new();
+        for key in &self.order {
+            let Some(attribute) = j.schema.get(key) else { continue };
+            let mut entry = serde_json::Map::new();
+            entry.insert("type".to_owned(), enums::encode(attribute.kind));
+            if let Ok(document) = attribute.to_document()
+                && let Json::Object(stored) = codec::encode_array(&document.array_copy())
+            {
+                for (k, v) in stored {
+                    entry.entry(k).or_insert(v);
+                }
+            }
+            schema.insert(key.clone(), Json::Object(entry));
+        }
+        let map_or_list = |m: serde_json::Map<String, Json>| if m.is_empty() { json!([]) } else { Json::Object(m) };
+        values::object(
+            self.class(),
+            vec![
+                ("alias", json!(j.alias)),
+                ("attributes", trues(&|k| j.attributes.contains(k))),
+                ("numeric", map_or_list(numeric)),
+                ("encrypted", trues(&|k| j.encrypted.contains(k))),
+                ("columns", map_or_list(columns)),
+                ("collection", json!(j.collection)),
+                ("schema", map_or_list(schema)),
+            ],
+        )
     }
 
     fn clone_box(&self) -> Box<dyn PhpObject> {
@@ -713,6 +784,12 @@ pub async fn call_static(class: &str, method: &str, a: &Args) -> R<Option<Obj>> 
                 None => Obj::null(),
             }
         }
+        ("Query\\Joined\\Collection", "of") => {
+            let collection = a.collection("collection")?;
+            let order = collection.attributes().map_err(Fail::from)?.iter().map(|x| x.key.clone()).collect();
+            let joined = JoinedCollection::of(a.string("alias")?, &collection).map_err(Fail::from)?;
+            Obj::object(JoinedObj { joined: Arc::new(joined), order })
+        }
         ("Query\\Join", "describeInvalidAlias") => {
             Join::describe_invalid_alias(&a.string("alias")?, a.bool_or("defaulted", false)?).into_obj()
         }
@@ -762,6 +839,10 @@ fn big_int_static(method: &str, a: &Args) -> R<Obj> {
             BigInt::is_integer_string(text("value")?.as_bytes(), a.bool_or("signed", true)?).into_obj()
         }
         "fitsPhpInt" => BigInt::fits_php_int(text("value")?.as_bytes(), a.bool_or("signed", true)?).into_obj(),
+        "whole" => match BigInt::whole(text("value")?.as_bytes()) {
+            Some(whole) => String::from_utf8_lossy(whole).into_owned().into_obj(),
+            None => Obj::null(),
+        },
         "fitsBigIntRange" => BigInt::fits_big_int_range(
             text("value")?.as_bytes(),
             a.bool("signed")?,
@@ -978,6 +1059,17 @@ fn specific(v: &V, method: &str, a: &Args) -> R<Option<Obj>> {
         }
         (V::GroupBy(x), "resetJoinAliases") => {
             x.reset_join_aliases();
+            null()
+        }
+        (V::Join(x), "allowJoins") => {
+            let joins = items(a, "joins")?
+                .into_iter()
+                .map(|o| match o.downcast_ref::<JoinedObj>() {
+                    Some(j) => Ok(j.joined.clone()),
+                    None => fault(format!("`joins` holds a {o:?}, not a Joined\\Collection")),
+                })
+                .collect::<R<Vec<_>>>()?;
+            x.allow_joins(&joins);
             null()
         }
         (V::Join(x), "resetJoinAliases") => {

@@ -624,23 +624,9 @@
       ]
     },
     {
-      "name": "PostgresDistanceTest::testDistanceLessThanInMetersKeepsTheExactCheckOnlyWhenNoBoxHoldsTheRange#a distance that is not a number",
+      "name": "PostgresDistanceTest::testDistanceLessThanInMetersRefusesADistanceThatIsNotFinite#a distance that is not a number",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "updateAttributeIntegerOnly"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "updateAttributeIntegerOnly"
-          },
-          "expect": true
-        },
         {
           "op": "object.call",
           "args": {
@@ -657,9 +643,9 @@
               },
               "meters": true
             },
-            "as": "o1875"
+            "as": "o2406"
           },
-          "bind": "s5015",
+          "bind": "s4271",
           "expect": {
             "$query": {
               "method": "distanceLessThan",
@@ -684,9 +670,9 @@
           "args": {
             "class": "Builder\\Postgres",
             "args": {},
-            "as": "o1886"
+            "as": "o2409"
           },
-          "bind": "s5029",
+          "bind": "s4277",
           "expect": {
             "$builder": true
           }
@@ -695,17 +681,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1886"
+              "$obj": "o2409"
             },
             "method": "compileFilters",
             "args": {
               "filters": [
                 {
-                  "$obj": "o1875"
+                  "$obj": "o2406"
                 }
               ]
-            },
-            "as": "o1887"
+            }
           },
           "expect": {
             "$error": {
@@ -717,23 +702,9 @@
       ]
     },
     {
-      "name": "PostgresDistanceTest::testDistanceLessThanInMetersKeepsTheExactCheckOnlyWhenNoBoxHoldsTheRange#an infinite distance",
+      "name": "PostgresDistanceTest::testDistanceLessThanInMetersRefusesADistanceThatIsNotFinite#an infinite distance",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "updateAttributeIntegerOnly"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "updateAttributeIntegerOnly"
-          },
-          "expect": true
-        },
         {
           "op": "object.call",
           "args": {
@@ -750,9 +721,9 @@
               },
               "meters": true
             },
-            "as": "o1876"
+            "as": "o2407"
           },
-          "bind": "s5017",
+          "bind": "s4273",
           "expect": {
             "$query": {
               "method": "distanceLessThan",
@@ -777,9 +748,9 @@
           "args": {
             "class": "Builder\\Postgres",
             "args": {},
-            "as": "o1888"
+            "as": "o2410"
           },
-          "bind": "s5031",
+          "bind": "s4279",
           "expect": {
             "$builder": true
           }
@@ -788,17 +759,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1888"
+              "$obj": "o2410"
             },
             "method": "compileFilters",
             "args": {
               "filters": [
                 {
-                  "$obj": "o1876"
+                  "$obj": "o2407"
                 }
               ]
-            },
-            "as": "o1889"
+            }
           },
           "expect": {
             "$error": {
@@ -810,23 +780,9 @@
       ]
     },
     {
-      "name": "PostgresDistanceTest::testDistanceLessThanInMetersKeepsTheExactCheckOnlyWhenNoBoxHoldsTheRange#a negatively infinite distance",
+      "name": "PostgresDistanceTest::testDistanceLessThanInMetersRefusesADistanceThatIsNotFinite#a negatively infinite distance",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "updateAttributeIntegerOnly"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "updateAttributeIntegerOnly"
-          },
-          "expect": true
-        },
         {
           "op": "object.call",
           "args": {
@@ -843,9 +799,9 @@
               },
               "meters": true
             },
-            "as": "o1877"
+            "as": "o2408"
           },
-          "bind": "s5019",
+          "bind": "s4275",
           "expect": {
             "$query": {
               "method": "distanceLessThan",
@@ -870,9 +826,9 @@
           "args": {
             "class": "Builder\\Postgres",
             "args": {},
-            "as": "o1890"
+            "as": "o2411"
           },
-          "bind": "s5033",
+          "bind": "s4281",
           "expect": {
             "$builder": true
           }
@@ -881,17 +837,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1890"
+              "$obj": "o2411"
             },
             "method": "compileFilters",
             "args": {
               "filters": [
                 {
-                  "$obj": "o1877"
+                  "$obj": "o2408"
                 }
               ]
-            },
-            "as": "o1891"
+            }
           },
           "expect": {
             "$error": {

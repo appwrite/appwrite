@@ -287,7 +287,7 @@ impl Engine {
             }
             for case in &file.cases {
                 let name = label(lib, file, case);
-                if filter.is_some_and(|f| !name.contains(f)) {
+                if filter.is_some_and(|f| !cases::selected(f, &name)) {
                     continue;
                 }
                 if let Some(why) = cases::unmet(&case.requires) {
@@ -566,7 +566,7 @@ impl Engine {
             let mut results: Vec<Vec<Option<Value>>> = Vec::new();
             for case in &file.cases {
                 let name = label(lib, file, case);
-                if filter.is_some_and(|f| !name.contains(f)) || cases::unmet(&case.requires).is_some() {
+                if filter.is_some_and(|f| !cases::selected(f, &name)) || cases::unmet(&case.requires).is_some() {
                     results.push(vec![None; case.steps.len()]);
                     continue;
                 }

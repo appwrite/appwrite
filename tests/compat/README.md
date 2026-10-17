@@ -27,7 +27,7 @@ The standard it enforces is [crates/CONVERSION.md](../../crates/CONVERSION.md). 
 ## Commands
 
 ```bash
-bin/compat run [<lib>...] [--case <text>] [--fail-fast] [-v]   # every case on both runtimes
+bin/compat run [<lib>...] [--case <text>|@<file>] [--fail-fast] [-v]   # every case on both runtimes (`@<file>`: the case labels it lists, one per line)
 bin/compat fuzz <lib> [--op <op>] [--iterations <n>] [--seed <n>] [--save]
 bin/compat record <lib>          # store PHP's results as `expect` in the case files
 bin/compat coverage <lib>        # API coverage, adapter parity, ported tests, ported tasks

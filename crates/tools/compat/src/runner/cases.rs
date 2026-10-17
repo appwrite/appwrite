@@ -57,6 +57,24 @@ pub struct Case {
 /// file, so a misspelt requirement cannot quietly skip a case everywhere.
 const REQUIREMENTS: &[&str] = &["case-sensitive-files", "driver-process", "services"];
 
+/// Whether a case label is selected by `--case`: a label containing the
+/// text, or, for `@<file>`, one of the labels the file lists, one per line
+/// (a list of cases to re-record).
+pub fn selected(filter: &str, label: &str) -> bool {
+    static LISTS: std::sync::Mutex<Vec<(String, std::collections::HashSet<String>)>> =
+        std::sync::Mutex::new(Vec::new());
+    let Some(path) = filter.strip_prefix('@') else { return label.contains(filter) };
+    let mut lists = LISTS.lock().unwrap_or_else(|e| e.into_inner());
+    if !lists.iter().any(|(p, _)| p == path) {
+        let text = std::fs::read_to_string(path).unwrap_or_default();
+        lists.push((
+            path.to_owned(),
+            text.lines().map(str::trim).filter(|l| !l.is_empty()).map(str::to_owned).collect(),
+        ));
+    }
+    lists.iter().any(|(p, labels)| p == path && labels.contains(label))
+}
+
 /// Why this machine cannot run a case with these requirements, if it cannot.
 pub fn unmet(requires: &[String]) -> Option<String> {
     requires.iter().find_map(|r| match r.as_str() {

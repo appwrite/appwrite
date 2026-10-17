@@ -4831,7 +4831,7 @@
       ]
     },
     {
-      "name": "MemoryWritePathsTest::testIncrementIsANoOpWhenTheStoredValueAlreadyViolatesTheBound",
+      "name": "MemoryWritePathsTest::testIncrementChangesNothingAndSaysSoWhenTheStoredValueAlreadyViolatesTheBound",
       "state": [],
       "steps": [
         {
@@ -4839,9 +4839,9 @@
           "args": {
             "class": "Adapter\\Memory",
             "args": {},
-            "as": "o663"
+            "as": "o992"
           },
-          "bind": "s1269",
+          "bind": "s1983",
           "expect": {
             "$adapter": "Memory"
           }
@@ -4850,11 +4850,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o663"
+              "$obj": "o992"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "write_paths_u000000000019"
+              "namespace": "write_paths_u000000000009"
             }
           },
           "expect": {
@@ -4865,7 +4865,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o663"
+              "$obj": "o992"
             },
             "method": "createCollection",
             "args": {
@@ -4884,9 +4884,9 @@
               "size": 128,
               "required": true
             },
-            "as": "o664"
+            "as": "o993"
           },
-          "bind": "s1272",
+          "bind": "s1986",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -4910,13 +4910,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o663"
+              "$obj": "o992"
             },
             "method": "createAttribute",
             "args": {
               "collection": "addresses",
               "attribute": {
-                "$obj": "o664"
+                "$obj": "o993"
               }
             }
           },
@@ -4931,9 +4931,9 @@
               "key": "label",
               "size": 32
             },
-            "as": "o665"
+            "as": "o994"
           },
-          "bind": "s1274",
+          "bind": "s1988",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -4957,13 +4957,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o663"
+              "$obj": "o992"
             },
             "method": "createAttribute",
             "args": {
               "collection": "addresses",
               "attribute": {
-                "$obj": "o665"
+                "$obj": "o994"
               }
             }
           },
@@ -4977,9 +4977,9 @@
             "args": {
               "key": "visits"
             },
-            "as": "o666"
+            "as": "o995"
           },
-          "bind": "s1276",
+          "bind": "s1990",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -5003,13 +5003,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o663"
+              "$obj": "o992"
             },
             "method": "createAttribute",
             "args": {
               "collection": "addresses",
               "attribute": {
-                "$obj": "o666"
+                "$obj": "o995"
               }
             }
           },
@@ -5024,9 +5024,9 @@
                 "$id": "addresses"
               }
             },
-            "as": "o667"
+            "as": "o996"
           },
-          "bind": "s1278",
+          "bind": "s1992",
           "expect": {
             "$document": {
               "$id": "addresses"
@@ -5046,9 +5046,9 @@
                 "visits": 10
               }
             },
-            "as": "o668"
+            "as": "o997"
           },
-          "bind": "s1279",
+          "bind": "s1993",
           "expect": {
             "$document": {
               "$id": "whole",
@@ -5063,15 +5063,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o663"
+              "$obj": "o992"
             },
             "method": "createDocument",
             "args": {
               "collection": {
-                "$obj": "o667"
+                "$obj": "o996"
               },
               "document": {
-                "$obj": "o668"
+                "$obj": "o997"
               }
             }
           },
@@ -5095,9 +5095,9 @@
                 "$id": "addresses"
               }
             },
-            "as": "o669"
+            "as": "o998"
           },
-          "bind": "s1281",
+          "bind": "s1995",
           "expect": {
             "$document": {
               "$id": "addresses"
@@ -5117,9 +5117,9 @@
                 "visits": 10.5
               }
             },
-            "as": "o670"
+            "as": "o999"
           },
-          "bind": "s1282",
+          "bind": "s1996",
           "expect": {
             "$document": {
               "$id": "fraction",
@@ -5134,15 +5134,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o663"
+              "$obj": "o992"
             },
             "method": "createDocument",
             "args": {
               "collection": {
-                "$obj": "o669"
+                "$obj": "o998"
               },
               "document": {
-                "$obj": "o670"
+                "$obj": "o999"
               }
             }
           },
@@ -5166,9 +5166,9 @@
                 "$id": "addresses"
               }
             },
-            "as": "o671"
+            "as": "o1000"
           },
-          "bind": "s1284",
+          "bind": "s1998",
           "expect": {
             "$document": {
               "$id": "addresses"
@@ -5179,12 +5179,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o663"
+              "$obj": "o992"
             },
             "method": "increaseDocumentAttribute",
             "args": {
               "collection": {
-                "$obj": "o671"
+                "$obj": "o1000"
               },
               "id": "whole",
               "attribute": "visits",
@@ -5193,7 +5193,7 @@
               "max": 5
             }
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "object.new",
@@ -5204,9 +5204,9 @@
                 "$id": "addresses"
               }
             },
-            "as": "o672"
+            "as": "o1001"
           },
-          "bind": "s1286",
+          "bind": "s2000",
           "expect": {
             "$document": {
               "$id": "addresses"
@@ -5217,12 +5217,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o663"
+              "$obj": "o992"
             },
             "method": "increaseDocumentAttribute",
             "args": {
               "collection": {
-                "$obj": "o672"
+                "$obj": "o1001"
               },
               "id": "whole",
               "attribute": "visits",
@@ -5231,7 +5231,7 @@
               "min": 20
             }
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "object.new",
@@ -5242,9 +5242,9 @@
                 "$id": "addresses"
               }
             },
-            "as": "o673"
+            "as": "o1002"
           },
-          "bind": "s1288",
+          "bind": "s2002",
           "expect": {
             "$document": {
               "$id": "addresses"
@@ -5255,18 +5255,18 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o663"
+              "$obj": "o992"
             },
             "method": "getDocument",
             "args": {
               "collection": {
-                "$obj": "o673"
+                "$obj": "o1002"
               },
               "id": "whole"
             },
-            "as": "o674"
+            "as": "o1003"
           },
-          "bind": "s1289",
+          "bind": "s2003",
           "expect": {
             "$document": {
               "addr": "x",
@@ -5283,7 +5283,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o674"
+              "$obj": "o1003"
             },
             "method": "getAttribute",
             "args": {
@@ -5301,9 +5301,9 @@
                 "$id": "addresses"
               }
             },
-            "as": "o675"
+            "as": "o1004"
           },
-          "bind": "s1291",
+          "bind": "s2005",
           "expect": {
             "$document": {
               "$id": "addresses"
@@ -5314,12 +5314,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o663"
+              "$obj": "o992"
             },
             "method": "increaseDocumentAttribute",
             "args": {
               "collection": {
-                "$obj": "o675"
+                "$obj": "o1004"
               },
               "id": "fraction",
               "attribute": "visits",
@@ -5328,7 +5328,7 @@
               "max": 5
             }
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "object.new",
@@ -5339,9 +5339,9 @@
                 "$id": "addresses"
               }
             },
-            "as": "o676"
+            "as": "o1005"
           },
-          "bind": "s1293",
+          "bind": "s2007",
           "expect": {
             "$document": {
               "$id": "addresses"
@@ -5352,12 +5352,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o663"
+              "$obj": "o992"
             },
             "method": "increaseDocumentAttribute",
             "args": {
               "collection": {
-                "$obj": "o676"
+                "$obj": "o1005"
               },
               "id": "fraction",
               "attribute": "visits",
@@ -5366,7 +5366,7 @@
               "min": 20
             }
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "object.new",
@@ -5377,9 +5377,9 @@
                 "$id": "addresses"
               }
             },
-            "as": "o677"
+            "as": "o1006"
           },
-          "bind": "s1295",
+          "bind": "s2009",
           "expect": {
             "$document": {
               "$id": "addresses"
@@ -5390,18 +5390,18 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o663"
+              "$obj": "o992"
             },
             "method": "getDocument",
             "args": {
               "collection": {
-                "$obj": "o677"
+                "$obj": "o1006"
               },
               "id": "fraction"
             },
-            "as": "o678"
+            "as": "o1007"
           },
-          "bind": "s1296",
+          "bind": "s2010",
           "expect": {
             "$document": {
               "addr": "y",
@@ -5418,7 +5418,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o678"
+              "$obj": "o1007"
             },
             "method": "getAttribute",
             "args": {

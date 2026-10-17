@@ -525,6 +525,2372 @@
       ]
     },
     {
+      "name": "SpatialTest::test_malformed_wkt_is_refused#unclosed point",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "isWktString",
+            "args": {
+              "value": "POINT(1 2"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "parseWkt",
+            "args": {
+              "value": "POINT(1 2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "point"
+            },
+            "as": "o8980"
+          },
+          "bind": "s15058",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8980"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT(1 2"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "linestring"
+            },
+            "as": "o8981"
+          },
+          "bind": "s15060",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8981"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT(1 2"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "polygon"
+            },
+            "as": "o8982"
+          },
+          "bind": "s15062",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8982"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT(1 2"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTest::test_malformed_wkt_is_refused#point of one coordinate",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "isWktString",
+            "args": {
+              "value": "POINT(1)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "parseWkt",
+            "args": {
+              "value": "POINT(1)"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "point"
+            },
+            "as": "o8983"
+          },
+          "bind": "s15066",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8983"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT(1)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "linestring"
+            },
+            "as": "o8984"
+          },
+          "bind": "s15068",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8984"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT(1)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "polygon"
+            },
+            "as": "o8985"
+          },
+          "bind": "s15070",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8985"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT(1)"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTest::test_malformed_wkt_is_refused#point of three coordinates",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "isWktString",
+            "args": {
+              "value": "POINT(1 2 3)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "parseWkt",
+            "args": {
+              "value": "POINT(1 2 3)"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "point"
+            },
+            "as": "o8986"
+          },
+          "bind": "s15074",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8986"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT(1 2 3)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "linestring"
+            },
+            "as": "o8987"
+          },
+          "bind": "s15076",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8987"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT(1 2 3)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "polygon"
+            },
+            "as": "o8988"
+          },
+          "bind": "s15078",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8988"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT(1 2 3)"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTest::test_malformed_wkt_is_refused#point of a word",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "isWktString",
+            "args": {
+              "value": "POINT(a 2)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "parseWkt",
+            "args": {
+              "value": "POINT(a 2)"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "point"
+            },
+            "as": "o8989"
+          },
+          "bind": "s15082",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8989"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT(a 2)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "linestring"
+            },
+            "as": "o8990"
+          },
+          "bind": "s15084",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8990"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT(a 2)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "polygon"
+            },
+            "as": "o8991"
+          },
+          "bind": "s15086",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8991"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT(a 2)"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTest::test_malformed_wkt_is_refused#empty point",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "isWktString",
+            "args": {
+              "value": "POINT EMPTY"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "parseWkt",
+            "args": {
+              "value": "POINT EMPTY"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "point"
+            },
+            "as": "o8992"
+          },
+          "bind": "s15090",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8992"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT EMPTY"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "linestring"
+            },
+            "as": "o8993"
+          },
+          "bind": "s15092",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8993"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT EMPTY"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "polygon"
+            },
+            "as": "o8994"
+          },
+          "bind": "s15094",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8994"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT EMPTY"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTest::test_malformed_wkt_is_refused#empty parentheses",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "isWktString",
+            "args": {
+              "value": "POINT()"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "parseWkt",
+            "args": {
+              "value": "POINT()"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "point"
+            },
+            "as": "o8995"
+          },
+          "bind": "s15098",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8995"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT()"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "linestring"
+            },
+            "as": "o8996"
+          },
+          "bind": "s15100",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8996"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT()"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "polygon"
+            },
+            "as": "o8997"
+          },
+          "bind": "s15102",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8997"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT()"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTest::test_malformed_wkt_is_refused#trailing text",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "isWktString",
+            "args": {
+              "value": "POINT(1 2) junk"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "parseWkt",
+            "args": {
+              "value": "POINT(1 2) junk"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "point"
+            },
+            "as": "o8998"
+          },
+          "bind": "s15106",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8998"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT(1 2) junk"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "linestring"
+            },
+            "as": "o8999"
+          },
+          "bind": "s15108",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8999"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT(1 2) junk"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "polygon"
+            },
+            "as": "o9000"
+          },
+          "bind": "s15110",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9000"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT(1 2) junk"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTest::test_malformed_wkt_is_refused#nested point",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "isWktString",
+            "args": {
+              "value": "POINT((1 2))"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "parseWkt",
+            "args": {
+              "value": "POINT((1 2))"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "point"
+            },
+            "as": "o9001"
+          },
+          "bind": "s15114",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9001"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT((1 2))"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "linestring"
+            },
+            "as": "o9002"
+          },
+          "bind": "s15116",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9002"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT((1 2))"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "polygon"
+            },
+            "as": "o9003"
+          },
+          "bind": "s15118",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9003"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT((1 2))"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTest::test_malformed_wkt_is_refused#linestring with an empty point",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "isWktString",
+            "args": {
+              "value": "LINESTRING(0 0,,1 1)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "parseWkt",
+            "args": {
+              "value": "LINESTRING(0 0,,1 1)"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "point"
+            },
+            "as": "o9004"
+          },
+          "bind": "s15122",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9004"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "LINESTRING(0 0,,1 1)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "linestring"
+            },
+            "as": "o9005"
+          },
+          "bind": "s15124",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9005"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "LINESTRING(0 0,,1 1)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "polygon"
+            },
+            "as": "o9006"
+          },
+          "bind": "s15126",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9006"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "LINESTRING(0 0,,1 1)"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTest::test_malformed_wkt_is_refused#polygon without ring parentheses",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "isWktString",
+            "args": {
+              "value": "POLYGON(0 0,1 0,1 1,0 0)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "parseWkt",
+            "args": {
+              "value": "POLYGON(0 0,1 0,1 1,0 0)"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "point"
+            },
+            "as": "o9007"
+          },
+          "bind": "s15130",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9007"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POLYGON(0 0,1 0,1 1,0 0)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "linestring"
+            },
+            "as": "o9008"
+          },
+          "bind": "s15132",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9008"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POLYGON(0 0,1 0,1 1,0 0)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "polygon"
+            },
+            "as": "o9009"
+          },
+          "bind": "s15134",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9009"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POLYGON(0 0,1 0,1 1,0 0)"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTest::test_malformed_wkt_is_refused#polygon missing its closing parenthesis",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "isWktString",
+            "args": {
+              "value": "POLYGON((0 0,1 0,1 1,0 0)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "parseWkt",
+            "args": {
+              "value": "POLYGON((0 0,1 0,1 1,0 0)"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "point"
+            },
+            "as": "o9010"
+          },
+          "bind": "s15138",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9010"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POLYGON((0 0,1 0,1 1,0 0)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "linestring"
+            },
+            "as": "o9011"
+          },
+          "bind": "s15140",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9011"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POLYGON((0 0,1 0,1 1,0 0)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "polygon"
+            },
+            "as": "o9012"
+          },
+          "bind": "s15142",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9012"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POLYGON((0 0,1 0,1 1,0 0)"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTest::test_malformed_wkt_is_refused#polygon with a dangling comma",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "isWktString",
+            "args": {
+              "value": "POLYGON((0 0,1 0,1 1,0 0),)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "parseWkt",
+            "args": {
+              "value": "POLYGON((0 0,1 0,1 1,0 0),)"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "point"
+            },
+            "as": "o9013"
+          },
+          "bind": "s15146",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9013"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POLYGON((0 0,1 0,1 1,0 0),)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "linestring"
+            },
+            "as": "o9014"
+          },
+          "bind": "s15148",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9014"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POLYGON((0 0,1 0,1 1,0 0),)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "polygon"
+            },
+            "as": "o9015"
+          },
+          "bind": "s15150",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9015"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POLYGON((0 0,1 0,1 1,0 0),)"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTest::test_malformed_wkt_is_refused#polygon with rings not separated",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "isWktString",
+            "args": {
+              "value": "POLYGON((0 0,1 0,1 1,0 0)(0 0,1 0,1 1,0 0))"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "parseWkt",
+            "args": {
+              "value": "POLYGON((0 0,1 0,1 1,0 0)(0 0,1 0,1 1,0 0))"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "point"
+            },
+            "as": "o9016"
+          },
+          "bind": "s15154",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9016"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POLYGON((0 0,1 0,1 1,0 0)(0 0,1 0,1 1,0 0))"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "linestring"
+            },
+            "as": "o9017"
+          },
+          "bind": "s15156",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9017"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POLYGON((0 0,1 0,1 1,0 0)(0 0,1 0,1 1,0 0))"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "polygon"
+            },
+            "as": "o9018"
+          },
+          "bind": "s15158",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9018"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POLYGON((0 0,1 0,1 1,0 0)(0 0,1 0,1 1,0 0))"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTest::test_malformed_wkt_is_refused#unknown type",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "isWktString",
+            "args": {
+              "value": "CIRCLE(0 0,1)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "parseWkt",
+            "args": {
+              "value": "CIRCLE(0 0,1)"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "point"
+            },
+            "as": "o9019"
+          },
+          "bind": "s15162",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9019"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "CIRCLE(0 0,1)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "linestring"
+            },
+            "as": "o9020"
+          },
+          "bind": "s15164",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9020"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "CIRCLE(0 0,1)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "polygon"
+            },
+            "as": "o9021"
+          },
+          "bind": "s15166",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9021"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "CIRCLE(0 0,1)"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTest::test_malformed_wkt_is_refused#prefixed type",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "isWktString",
+            "args": {
+              "value": "POINT1(1 2)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "parseWkt",
+            "args": {
+              "value": "POINT1(1 2)"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "point"
+            },
+            "as": "o9022"
+          },
+          "bind": "s15170",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9022"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT1(1 2)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "linestring"
+            },
+            "as": "o9023"
+          },
+          "bind": "s15172",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9023"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT1(1 2)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "polygon"
+            },
+            "as": "o9024"
+          },
+          "bind": "s15174",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9024"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT1(1 2)"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTest::test_wkt_is_parsed_into_the_coordinates_of_its_type",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "parseWkt",
+            "args": {
+              "value": " point ( 1\t-2.5 ) "
+            }
+          },
+          "expect": [
+            {
+              "$enum": "Query\\Schema\\ColumnType::Point"
+            },
+            [
+              1.0,
+              -2.5
+            ]
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "parseWkt",
+            "args": {
+              "value": "LINESTRING(0 0, 1 1)"
+            }
+          },
+          "expect": [
+            {
+              "$enum": "Query\\Schema\\ColumnType::Linestring"
+            },
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                1.0,
+                1.0
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "parseWkt",
+            "args": {
+              "value": "POLYGON((0 0, 1 0, 1 1, 0 0), (0.1 0.1, 0.2 0.1, 0.2 0.2, 0.1 0.1))"
+            }
+          },
+          "expect": [
+            {
+              "$enum": "Query\\Schema\\ColumnType::Polygon"
+            },
+            [
+              [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.0,
+                  0.0
+                ],
+                [
+                  1.0,
+                  1.0
+                ],
+                [
+                  0.0,
+                  0.0
+                ]
+              ],
+              [
+                [
+                  0.1,
+                  0.1
+                ],
+                [
+                  0.2,
+                  0.1
+                ],
+                [
+                  0.2,
+                  0.2
+                ],
+                [
+                  0.1,
+                  0.1
+                ]
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SpatialTest::test_wkt_is_held_to_the_rules_of_its_type",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "point"
+            },
+            "as": "o9025"
+          },
+          "bind": "s15179",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9025"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT(180 -90)"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9025"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT(-180 90)"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9025"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT(180.0001 0)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9025"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT(0 -90.0001)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9025"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POINT(1e308 0)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9025"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "LINESTRING(0 0, 1 1)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9025"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a valid point: WKT must be a POINT, got a LINESTRING"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "linestring"
+            },
+            "as": "o9026"
+          },
+          "bind": "s15187",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9026"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "LINESTRING(0 0)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "polygon"
+            },
+            "as": "o9027"
+          },
+          "bind": "s15189",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9027"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POLYGON((0 0, 1 0, 1 1, 1 0))"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "polygon"
+            },
+            "as": "o9028"
+          },
+          "bind": "s15191",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9028"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "POLYGON((0 0, 1 0, 0 0))"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTest::test_coordinates_that_are_not_finite_are_refused",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "raceDoubleRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "point"
+            },
+            "as": "o9029"
+          },
+          "bind": "s15193",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9029"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$float": "INF"
+                },
+                0
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9029"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a valid point: Coordinates must be finite numbers"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9029"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                0,
+                {
+                  "$float": "-INF"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9029"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a valid point: Coordinates must be finite numbers"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9029"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$float": "NAN"
+                },
+                0
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9029"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a valid point: Coordinates must be finite numbers"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9029"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                0,
+                {
+                  "$float": "NAN"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9029"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a valid point: Coordinates must be finite numbers"
+        }
+      ]
+    },
+    {
       "name": "SpatialTest::test_invalid_coordinate",
       "state": [],
       "steps": [

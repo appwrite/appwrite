@@ -4,7 +4,7 @@
   ],
   "cases": [
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb sum",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mariadb sum",
       "state": [],
       "steps": [
         {
@@ -12,9 +12,9 @@
           "args": {
             "class": "Builder\\MariaDB",
             "args": {},
-            "as": "o1063"
+            "as": "o2348"
           },
-          "bind": "s1703",
+          "bind": "s4172",
           "expect": {
             "$builder": true
           }
@@ -28,9 +28,9 @@
               "attribute": "reading",
               "alias": "total"
             },
-            "as": "o1064"
+            "as": "o2349"
           },
-          "bind": "s1704",
+          "bind": "s4173",
           "expect": {
             "$query": {
               "method": "sum",
@@ -44,12 +44,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1063"
+              "$obj": "o2348"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1064"
+                "$obj": "o2349"
               }
             }
           },
@@ -58,7 +58,7 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb avg",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mariadb avg",
       "state": [],
       "steps": [
         {
@@ -66,9 +66,9 @@
           "args": {
             "class": "Builder\\MariaDB",
             "args": {},
-            "as": "o1063"
+            "as": "o2348"
           },
-          "bind": "s1703",
+          "bind": "s4172",
           "expect": {
             "$builder": true
           }
@@ -82,9 +82,9 @@
               "attribute": "reading",
               "alias": "total"
             },
-            "as": "o1065"
+            "as": "o2350"
           },
-          "bind": "s1705",
+          "bind": "s4174",
           "expect": {
             "$query": {
               "method": "avg",
@@ -98,12 +98,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1063"
+              "$obj": "o2348"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1065"
+                "$obj": "o2350"
               }
             }
           },
@@ -112,7 +112,7 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb variance",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mariadb variance",
       "state": [],
       "steps": [
         {
@@ -120,9 +120,9 @@
           "args": {
             "class": "Builder\\MariaDB",
             "args": {},
-            "as": "o1063"
+            "as": "o2348"
           },
-          "bind": "s1703",
+          "bind": "s4172",
           "expect": {
             "$builder": true
           }
@@ -136,9 +136,9 @@
               "attribute": "reading",
               "alias": "total"
             },
-            "as": "o1066"
+            "as": "o2351"
           },
-          "bind": "s1706",
+          "bind": "s4175",
           "expect": {
             "$query": {
               "method": "variance",
@@ -152,12 +152,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1063"
+              "$obj": "o2348"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1066"
+                "$obj": "o2351"
               }
             }
           },
@@ -166,7 +166,7 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb varPop",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mariadb varPop",
       "state": [],
       "steps": [
         {
@@ -174,9 +174,9 @@
           "args": {
             "class": "Builder\\MariaDB",
             "args": {},
-            "as": "o1063"
+            "as": "o2348"
           },
-          "bind": "s1703",
+          "bind": "s4172",
           "expect": {
             "$builder": true
           }
@@ -190,9 +190,9 @@
               "attribute": "reading",
               "alias": "total"
             },
-            "as": "o1067"
+            "as": "o2352"
           },
-          "bind": "s1707",
+          "bind": "s4176",
           "expect": {
             "$query": {
               "method": "varPop",
@@ -206,12 +206,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1063"
+              "$obj": "o2348"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1067"
+                "$obj": "o2352"
               }
             }
           },
@@ -220,7 +220,7 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb varSamp",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mariadb varSamp",
       "state": [],
       "steps": [
         {
@@ -228,9 +228,9 @@
           "args": {
             "class": "Builder\\MariaDB",
             "args": {},
-            "as": "o1063"
+            "as": "o2348"
           },
-          "bind": "s1703",
+          "bind": "s4172",
           "expect": {
             "$builder": true
           }
@@ -244,9 +244,9 @@
               "attribute": "reading",
               "alias": "total"
             },
-            "as": "o1068"
+            "as": "o2353"
           },
-          "bind": "s1708",
+          "bind": "s4177",
           "expect": {
             "$query": {
               "method": "varSamp",
@@ -260,12 +260,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1063"
+              "$obj": "o2348"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1068"
+                "$obj": "o2353"
               }
             }
           },
@@ -274,7 +274,7 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb stddev",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mariadb stddev",
       "state": [],
       "steps": [
         {
@@ -282,9 +282,9 @@
           "args": {
             "class": "Builder\\MariaDB",
             "args": {},
-            "as": "o1063"
+            "as": "o2348"
           },
-          "bind": "s1703",
+          "bind": "s4172",
           "expect": {
             "$builder": true
           }
@@ -298,9 +298,9 @@
               "attribute": "reading",
               "alias": "total"
             },
-            "as": "o1069"
+            "as": "o2354"
           },
-          "bind": "s1709",
+          "bind": "s4178",
           "expect": {
             "$query": {
               "method": "stddev",
@@ -314,12 +314,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1063"
+              "$obj": "o2348"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1069"
+                "$obj": "o2354"
               }
             }
           },
@@ -328,7 +328,7 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb stddevPop",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mariadb stddevPop",
       "state": [],
       "steps": [
         {
@@ -336,9 +336,9 @@
           "args": {
             "class": "Builder\\MariaDB",
             "args": {},
-            "as": "o1063"
+            "as": "o2348"
           },
-          "bind": "s1703",
+          "bind": "s4172",
           "expect": {
             "$builder": true
           }
@@ -352,9 +352,9 @@
               "attribute": "reading",
               "alias": "total"
             },
-            "as": "o1070"
+            "as": "o2355"
           },
-          "bind": "s1710",
+          "bind": "s4179",
           "expect": {
             "$query": {
               "method": "stddevPop",
@@ -368,12 +368,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1063"
+              "$obj": "o2348"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1070"
+                "$obj": "o2355"
               }
             }
           },
@@ -382,7 +382,7 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb stddevSamp",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mariadb stddevSamp",
       "state": [],
       "steps": [
         {
@@ -390,9 +390,9 @@
           "args": {
             "class": "Builder\\MariaDB",
             "args": {},
-            "as": "o1063"
+            "as": "o2348"
           },
-          "bind": "s1703",
+          "bind": "s4172",
           "expect": {
             "$builder": true
           }
@@ -406,9 +406,9 @@
               "attribute": "reading",
               "alias": "total"
             },
-            "as": "o1071"
+            "as": "o2356"
           },
-          "bind": "s1711",
+          "bind": "s4180",
           "expect": {
             "$query": {
               "method": "stddevSamp",
@@ -422,12 +422,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1063"
+              "$obj": "o2348"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1071"
+                "$obj": "o2356"
               }
             }
           },
@@ -436,7 +436,7 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb unaliased sum keeps the name the engine gives it",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mariadb unaliased sum keeps the name the engine gives it",
       "state": [],
       "steps": [
         {
@@ -444,9 +444,9 @@
           "args": {
             "class": "Builder\\MariaDB",
             "args": {},
-            "as": "o1063"
+            "as": "o2348"
           },
-          "bind": "s1703",
+          "bind": "s4172",
           "expect": {
             "$builder": true
           }
@@ -459,9 +459,9 @@
             "args": {
               "attribute": "reading"
             },
-            "as": "o1072"
+            "as": "o2357"
           },
-          "bind": "s1712",
+          "bind": "s4181",
           "expect": {
             "$query": {
               "method": "sum",
@@ -474,12 +474,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1063"
+              "$obj": "o2348"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1072"
+                "$obj": "o2357"
               }
             }
           },
@@ -488,7 +488,7 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb count is an integer",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mariadb count is an integer",
       "state": [],
       "steps": [
         {
@@ -496,9 +496,9 @@
           "args": {
             "class": "Builder\\MariaDB",
             "args": {},
-            "as": "o1063"
+            "as": "o2348"
           },
-          "bind": "s1703",
+          "bind": "s4172",
           "expect": {
             "$builder": true
           }
@@ -512,9 +512,9 @@
               "attribute": "*",
               "alias": "total"
             },
-            "as": "o1073"
+            "as": "o2358"
           },
-          "bind": "s1713",
+          "bind": "s4182",
           "expect": {
             "$query": {
               "method": "count",
@@ -528,12 +528,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1063"
+              "$obj": "o2348"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1073"
+                "$obj": "o2358"
               }
             }
           },
@@ -542,7 +542,7 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb min cannot overflow",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mariadb min cannot overflow",
       "state": [],
       "steps": [
         {
@@ -550,9 +550,9 @@
           "args": {
             "class": "Builder\\MariaDB",
             "args": {},
-            "as": "o1063"
+            "as": "o2348"
           },
-          "bind": "s1703",
+          "bind": "s4172",
           "expect": {
             "$builder": true
           }
@@ -566,9 +566,9 @@
               "attribute": "reading",
               "alias": "total"
             },
-            "as": "o1074"
+            "as": "o2359"
           },
-          "bind": "s1714",
+          "bind": "s4183",
           "expect": {
             "$query": {
               "method": "min",
@@ -582,12 +582,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1063"
+              "$obj": "o2348"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1074"
+                "$obj": "o2359"
               }
             }
           },
@@ -596,7 +596,7 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mariadb max cannot overflow",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mariadb max cannot overflow",
       "state": [],
       "steps": [
         {
@@ -604,9 +604,9 @@
           "args": {
             "class": "Builder\\MariaDB",
             "args": {},
-            "as": "o1063"
+            "as": "o2348"
           },
-          "bind": "s1703",
+          "bind": "s4172",
           "expect": {
             "$builder": true
           }
@@ -620,9 +620,9 @@
               "attribute": "reading",
               "alias": "total"
             },
-            "as": "o1075"
+            "as": "o2360"
           },
-          "bind": "s1715",
+          "bind": "s4184",
           "expect": {
             "$query": {
               "method": "max",
@@ -636,12 +636,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1063"
+              "$obj": "o2348"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1075"
+                "$obj": "o2360"
               }
             }
           },
@@ -650,7 +650,221 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql sum",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mariadb bitAnd is signed",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2348"
+          },
+          "bind": "s4172",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "bitAnd",
+            "args": {
+              "attribute": "flags",
+              "alias": "bits"
+            },
+            "as": "o2361"
+          },
+          "bind": "s4185",
+          "expect": {
+            "$query": {
+              "method": "bitAnd",
+              "attribute": "flags",
+              "values": [],
+              "alias": "bits"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2348"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o2361"
+              }
+            }
+          },
+          "expect": "CAST(BIT_AND(`flags`) AS SIGNED) AS `bits`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mariadb bitOr is signed",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2348"
+          },
+          "bind": "s4172",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "bitOr",
+            "args": {
+              "attribute": "flags",
+              "alias": "bits"
+            },
+            "as": "o2362"
+          },
+          "bind": "s4186",
+          "expect": {
+            "$query": {
+              "method": "bitOr",
+              "attribute": "flags",
+              "values": [],
+              "alias": "bits"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2348"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o2362"
+              }
+            }
+          },
+          "expect": "CAST(BIT_OR(`flags`) AS SIGNED) AS `bits`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mariadb bitXor is signed",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2348"
+          },
+          "bind": "s4172",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "bitXor",
+            "args": {
+              "attribute": "flags",
+              "alias": "bits"
+            },
+            "as": "o2363"
+          },
+          "bind": "s4187",
+          "expect": {
+            "$query": {
+              "method": "bitXor",
+              "attribute": "flags",
+              "values": [],
+              "alias": "bits"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2348"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o2363"
+              }
+            }
+          },
+          "expect": "CAST(BIT_XOR(`flags`) AS SIGNED) AS `bits`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mariadb unaliased bitOr keeps the name the engine gives it",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o2348"
+          },
+          "bind": "s4172",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "bitOr",
+            "args": {
+              "attribute": "flags"
+            },
+            "as": "o2364"
+          },
+          "bind": "s4188",
+          "expect": {
+            "$query": {
+              "method": "bitOr",
+              "attribute": "flags",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2348"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o2364"
+              }
+            }
+          },
+          "expect": "CAST(BIT_OR(`flags`) AS SIGNED) AS `BIT_OR(``flags``)`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mysql sum",
       "state": [],
       "steps": [
         {
@@ -658,9 +872,9 @@
           "args": {
             "class": "Builder\\MySQL",
             "args": {},
-            "as": "o1076"
+            "as": "o2365"
           },
-          "bind": "s1716",
+          "bind": "s4189",
           "expect": {
             "$builder": true
           }
@@ -674,9 +888,9 @@
               "attribute": "reading",
               "alias": "total"
             },
-            "as": "o1077"
+            "as": "o2366"
           },
-          "bind": "s1717",
+          "bind": "s4190",
           "expect": {
             "$query": {
               "method": "sum",
@@ -690,12 +904,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1076"
+              "$obj": "o2365"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1077"
+                "$obj": "o2366"
               }
             }
           },
@@ -704,7 +918,7 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql avg",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mysql avg",
       "state": [],
       "steps": [
         {
@@ -712,9 +926,9 @@
           "args": {
             "class": "Builder\\MySQL",
             "args": {},
-            "as": "o1076"
+            "as": "o2365"
           },
-          "bind": "s1716",
+          "bind": "s4189",
           "expect": {
             "$builder": true
           }
@@ -728,9 +942,9 @@
               "attribute": "reading",
               "alias": "total"
             },
-            "as": "o1078"
+            "as": "o2367"
           },
-          "bind": "s1718",
+          "bind": "s4191",
           "expect": {
             "$query": {
               "method": "avg",
@@ -744,12 +958,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1076"
+              "$obj": "o2365"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1078"
+                "$obj": "o2367"
               }
             }
           },
@@ -758,7 +972,7 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql variance",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mysql variance",
       "state": [],
       "steps": [
         {
@@ -766,9 +980,9 @@
           "args": {
             "class": "Builder\\MySQL",
             "args": {},
-            "as": "o1076"
+            "as": "o2365"
           },
-          "bind": "s1716",
+          "bind": "s4189",
           "expect": {
             "$builder": true
           }
@@ -782,9 +996,9 @@
               "attribute": "reading",
               "alias": "total"
             },
-            "as": "o1079"
+            "as": "o2368"
           },
-          "bind": "s1719",
+          "bind": "s4192",
           "expect": {
             "$query": {
               "method": "variance",
@@ -798,12 +1012,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1076"
+              "$obj": "o2365"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1079"
+                "$obj": "o2368"
               }
             }
           },
@@ -812,7 +1026,7 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql varPop",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mysql varPop",
       "state": [],
       "steps": [
         {
@@ -820,9 +1034,9 @@
           "args": {
             "class": "Builder\\MySQL",
             "args": {},
-            "as": "o1076"
+            "as": "o2365"
           },
-          "bind": "s1716",
+          "bind": "s4189",
           "expect": {
             "$builder": true
           }
@@ -836,9 +1050,9 @@
               "attribute": "reading",
               "alias": "total"
             },
-            "as": "o1080"
+            "as": "o2369"
           },
-          "bind": "s1720",
+          "bind": "s4193",
           "expect": {
             "$query": {
               "method": "varPop",
@@ -852,12 +1066,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1076"
+              "$obj": "o2365"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1080"
+                "$obj": "o2369"
               }
             }
           },
@@ -866,7 +1080,7 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql varSamp",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mysql varSamp",
       "state": [],
       "steps": [
         {
@@ -874,9 +1088,9 @@
           "args": {
             "class": "Builder\\MySQL",
             "args": {},
-            "as": "o1076"
+            "as": "o2365"
           },
-          "bind": "s1716",
+          "bind": "s4189",
           "expect": {
             "$builder": true
           }
@@ -890,9 +1104,9 @@
               "attribute": "reading",
               "alias": "total"
             },
-            "as": "o1081"
+            "as": "o2370"
           },
-          "bind": "s1721",
+          "bind": "s4194",
           "expect": {
             "$query": {
               "method": "varSamp",
@@ -906,12 +1120,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1076"
+              "$obj": "o2365"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1081"
+                "$obj": "o2370"
               }
             }
           },
@@ -920,7 +1134,7 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql stddev",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mysql stddev",
       "state": [],
       "steps": [
         {
@@ -928,9 +1142,9 @@
           "args": {
             "class": "Builder\\MySQL",
             "args": {},
-            "as": "o1076"
+            "as": "o2365"
           },
-          "bind": "s1716",
+          "bind": "s4189",
           "expect": {
             "$builder": true
           }
@@ -944,9 +1158,9 @@
               "attribute": "reading",
               "alias": "total"
             },
-            "as": "o1082"
+            "as": "o2371"
           },
-          "bind": "s1722",
+          "bind": "s4195",
           "expect": {
             "$query": {
               "method": "stddev",
@@ -960,12 +1174,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1076"
+              "$obj": "o2365"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1082"
+                "$obj": "o2371"
               }
             }
           },
@@ -974,7 +1188,7 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql stddevPop",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mysql stddevPop",
       "state": [],
       "steps": [
         {
@@ -982,9 +1196,9 @@
           "args": {
             "class": "Builder\\MySQL",
             "args": {},
-            "as": "o1076"
+            "as": "o2365"
           },
-          "bind": "s1716",
+          "bind": "s4189",
           "expect": {
             "$builder": true
           }
@@ -998,9 +1212,9 @@
               "attribute": "reading",
               "alias": "total"
             },
-            "as": "o1083"
+            "as": "o2372"
           },
-          "bind": "s1723",
+          "bind": "s4196",
           "expect": {
             "$query": {
               "method": "stddevPop",
@@ -1014,12 +1228,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1076"
+              "$obj": "o2365"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1083"
+                "$obj": "o2372"
               }
             }
           },
@@ -1028,7 +1242,7 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql stddevSamp",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mysql stddevSamp",
       "state": [],
       "steps": [
         {
@@ -1036,9 +1250,9 @@
           "args": {
             "class": "Builder\\MySQL",
             "args": {},
-            "as": "o1076"
+            "as": "o2365"
           },
-          "bind": "s1716",
+          "bind": "s4189",
           "expect": {
             "$builder": true
           }
@@ -1052,9 +1266,9 @@
               "attribute": "reading",
               "alias": "total"
             },
-            "as": "o1084"
+            "as": "o2373"
           },
-          "bind": "s1724",
+          "bind": "s4197",
           "expect": {
             "$query": {
               "method": "stddevSamp",
@@ -1068,12 +1282,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1076"
+              "$obj": "o2365"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1084"
+                "$obj": "o2373"
               }
             }
           },
@@ -1082,7 +1296,7 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql unaliased sum keeps the name the engine gives it",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mysql unaliased sum keeps the name the engine gives it",
       "state": [],
       "steps": [
         {
@@ -1090,9 +1304,9 @@
           "args": {
             "class": "Builder\\MySQL",
             "args": {},
-            "as": "o1076"
+            "as": "o2365"
           },
-          "bind": "s1716",
+          "bind": "s4189",
           "expect": {
             "$builder": true
           }
@@ -1105,9 +1319,9 @@
             "args": {
               "attribute": "reading"
             },
-            "as": "o1085"
+            "as": "o2374"
           },
-          "bind": "s1725",
+          "bind": "s4198",
           "expect": {
             "$query": {
               "method": "sum",
@@ -1120,12 +1334,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1076"
+              "$obj": "o2365"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1085"
+                "$obj": "o2374"
               }
             }
           },
@@ -1134,7 +1348,7 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql count is an integer",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mysql count is an integer",
       "state": [],
       "steps": [
         {
@@ -1142,9 +1356,9 @@
           "args": {
             "class": "Builder\\MySQL",
             "args": {},
-            "as": "o1076"
+            "as": "o2365"
           },
-          "bind": "s1716",
+          "bind": "s4189",
           "expect": {
             "$builder": true
           }
@@ -1158,9 +1372,9 @@
               "attribute": "*",
               "alias": "total"
             },
-            "as": "o1086"
+            "as": "o2375"
           },
-          "bind": "s1726",
+          "bind": "s4199",
           "expect": {
             "$query": {
               "method": "count",
@@ -1174,12 +1388,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1076"
+              "$obj": "o2365"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1086"
+                "$obj": "o2375"
               }
             }
           },
@@ -1188,7 +1402,7 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql min cannot overflow",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mysql min cannot overflow",
       "state": [],
       "steps": [
         {
@@ -1196,9 +1410,9 @@
           "args": {
             "class": "Builder\\MySQL",
             "args": {},
-            "as": "o1076"
+            "as": "o2365"
           },
-          "bind": "s1716",
+          "bind": "s4189",
           "expect": {
             "$builder": true
           }
@@ -1212,9 +1426,9 @@
               "attribute": "reading",
               "alias": "total"
             },
-            "as": "o1087"
+            "as": "o2376"
           },
-          "bind": "s1727",
+          "bind": "s4200",
           "expect": {
             "$query": {
               "method": "min",
@@ -1228,12 +1442,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1076"
+              "$obj": "o2365"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1087"
+                "$obj": "o2376"
               }
             }
           },
@@ -1242,7 +1456,7 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testAFloatingAggregateIsCompiledThroughTheEngineRangeCheck#mysql max cannot overflow",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mysql max cannot overflow",
       "state": [],
       "steps": [
         {
@@ -1250,9 +1464,9 @@
           "args": {
             "class": "Builder\\MySQL",
             "args": {},
-            "as": "o1076"
+            "as": "o2365"
           },
-          "bind": "s1716",
+          "bind": "s4189",
           "expect": {
             "$builder": true
           }
@@ -1266,9 +1480,9 @@
               "attribute": "reading",
               "alias": "total"
             },
-            "as": "o1088"
+            "as": "o2377"
           },
-          "bind": "s1728",
+          "bind": "s4201",
           "expect": {
             "$query": {
               "method": "max",
@@ -1282,12 +1496,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1076"
+              "$obj": "o2365"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1088"
+                "$obj": "o2377"
               }
             }
           },
@@ -1296,7 +1510,221 @@
       ]
     },
     {
-      "name": "FloatOverflowTest::testPostgresRaisesAnOverflowItselfSoItsAggregatesAreLeftAsTheyAre",
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mysql bitAnd is signed",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2365"
+          },
+          "bind": "s4189",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "bitAnd",
+            "args": {
+              "attribute": "flags",
+              "alias": "bits"
+            },
+            "as": "o2378"
+          },
+          "bind": "s4202",
+          "expect": {
+            "$query": {
+              "method": "bitAnd",
+              "attribute": "flags",
+              "values": [],
+              "alias": "bits"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2365"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o2378"
+              }
+            }
+          },
+          "expect": "CAST(BIT_AND(`flags`) AS SIGNED) AS `bits`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mysql bitOr is signed",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2365"
+          },
+          "bind": "s4189",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "bitOr",
+            "args": {
+              "attribute": "flags",
+              "alias": "bits"
+            },
+            "as": "o2379"
+          },
+          "bind": "s4203",
+          "expect": {
+            "$query": {
+              "method": "bitOr",
+              "attribute": "flags",
+              "values": [],
+              "alias": "bits"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2365"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o2379"
+              }
+            }
+          },
+          "expect": "CAST(BIT_OR(`flags`) AS SIGNED) AS `bits`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mysql bitXor is signed",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2365"
+          },
+          "bind": "s4189",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "bitXor",
+            "args": {
+              "attribute": "flags",
+              "alias": "bits"
+            },
+            "as": "o2380"
+          },
+          "bind": "s4204",
+          "expect": {
+            "$query": {
+              "method": "bitXor",
+              "attribute": "flags",
+              "values": [],
+              "alias": "bits"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2365"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o2380"
+              }
+            }
+          },
+          "expect": "CAST(BIT_XOR(`flags`) AS SIGNED) AS `bits`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testAnAggregateIsCompiledAsEveryEngineAnswersIt#mysql unaliased bitOr keeps the name the engine gives it",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o2365"
+          },
+          "bind": "s4189",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "bitOr",
+            "args": {
+              "attribute": "flags"
+            },
+            "as": "o2381"
+          },
+          "bind": "s4205",
+          "expect": {
+            "$query": {
+              "method": "bitOr",
+              "attribute": "flags",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2365"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o2381"
+              }
+            }
+          },
+          "expect": "CAST(BIT_OR(`flags`) AS SIGNED) AS `BIT_OR(``flags``)`"
+        }
+      ]
+    },
+    {
+      "name": "FloatOverflowTest::testPostgresRaisesAnOverflowItselfAndSignsBitwiseAggregatesSoItsAggregatesAreLeftAsTheyAre",
       "state": [],
       "steps": [
         {
@@ -1304,9 +1732,57 @@
           "args": {
             "class": "Builder\\Postgres",
             "args": {},
-            "as": "o1089"
+            "as": "o2382"
           },
-          "bind": "s1753",
+          "bind": "s4238",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "bitOr",
+            "args": {
+              "attribute": "flags",
+              "alias": "bits"
+            },
+            "as": "o2383"
+          },
+          "bind": "s4239",
+          "expect": {
+            "$query": {
+              "method": "bitOr",
+              "attribute": "flags",
+              "values": [],
+              "alias": "bits"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2382"
+            },
+            "method": "compileAggregate",
+            "args": {
+              "query": {
+                "$obj": "o2383"
+              }
+            }
+          },
+          "expect": "BIT_OR(\"flags\") AS \"bits\""
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o2384"
+          },
+          "bind": "s4241",
           "expect": {
             "$builder": true
           }
@@ -1320,9 +1796,9 @@
               "attribute": "reading",
               "alias": "total"
             },
-            "as": "o1090"
+            "as": "o2385"
           },
-          "bind": "s1754",
+          "bind": "s4242",
           "expect": {
             "$query": {
               "method": "sum",
@@ -1336,12 +1812,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1089"
+              "$obj": "o2384"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1090"
+                "$obj": "o2385"
               }
             }
           },
@@ -1352,9 +1828,9 @@
           "args": {
             "class": "Builder\\Postgres",
             "args": {},
-            "as": "o1091"
+            "as": "o2386"
           },
-          "bind": "s1756",
+          "bind": "s4244",
           "expect": {
             "$builder": true
           }
@@ -1368,9 +1844,9 @@
               "attribute": "reading",
               "alias": "total"
             },
-            "as": "o1092"
+            "as": "o2387"
           },
-          "bind": "s1757",
+          "bind": "s4245",
           "expect": {
             "$query": {
               "method": "stddevPop",
@@ -1384,12 +1860,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1091"
+              "$obj": "o2386"
             },
             "method": "compileAggregate",
             "args": {
               "query": {
-                "$obj": "o1092"
+                "$obj": "o2387"
               }
             }
           },
