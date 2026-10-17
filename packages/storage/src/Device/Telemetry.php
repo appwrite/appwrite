@@ -127,6 +127,11 @@ class Telemetry extends Device
         return $this->measure(__FUNCTION__, fn (): StreamInterface => $this->device->read($path, $offset, $length, $etag));
     }
 
+    public function stream(string $path, callable $sink, int $offset = 0, ?int $length = null, ?string $etag = null): void
+    {
+        $this->measure(__FUNCTION__, fn () => $this->device->stream($path, $sink, $offset, $length, $etag));
+    }
+
     #[\Override]
     public function copy(string $source, string $target, ?Device $to = null, int $chunkSize = self::COPY_CHUNK_SIZE): bool
     {

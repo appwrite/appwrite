@@ -466,7 +466,9 @@
       "paths": [
         "app/mqtt.php",
         "src/Appwrite/Mqtt/",
-        "src/Appwrite/Messaging/Adapter/Mqtt.php"
+        "src/Appwrite/Messaging/Adapter/Mqtt.php",
+        "src/Appwrite/Messaging/Adapter/Push/",
+        "src/Appwrite/Platform/Workers/Messaging.php"
       ]
     }
   ],

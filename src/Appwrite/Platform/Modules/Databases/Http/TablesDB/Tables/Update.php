@@ -62,6 +62,7 @@ class Update extends CollectionUpdate
             ->param('rowSecurity', false, new Boolean(true), 'Enables configuring permissions for individual rows. A user needs one of row or table-level permissions to access a row. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Boolean(), 'Is table enabled? When set to \'disabled\', users cannot access the table but Server SDKs with and API key can still read and write to the table. No data is lost when this is toggled.', true)
             ->param('purge', false, new Boolean(true), 'When true, purge all cached list responses for this table as part of the update. Use this to force readers to see fresh data immediately instead of waiting for the cache TTL to expire.', true)
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the table.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')

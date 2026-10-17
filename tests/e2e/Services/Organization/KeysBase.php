@@ -24,11 +24,13 @@ trait KeysBase
             Id::unique(),
             'My API Key',
             ['users.read', 'users.write'],
+            description: 'Used by the nightly backup job.',
         );
 
         $this->assertSame(201, $key['headers']['status-code']);
         $this->assertNotEmpty($key['body']['$id']);
         $this->assertSame('My API Key', $key['body']['name']);
+        $this->assertSame('Used by the nightly backup job.', $key['body']['description']);
         $this->assertSame(['users.read', 'users.write'], $key['body']['scopes']);
         $this->assertNotEmpty($key['body']['secret']);
         $this->assertSame('', $key['body']['expire']);
@@ -44,6 +46,7 @@ trait KeysBase
         $this->assertSame(200, $get['headers']['status-code']);
         $this->assertSame($key['body']['$id'], $get['body']['$id']);
         $this->assertSame('My API Key', $get['body']['name']);
+        $this->assertSame('Used by the nightly backup job.', $get['body']['description']);
         $this->assertSame(['users.read', 'users.write'], $get['body']['scopes']);
 
         // Verify via LIST
@@ -193,6 +196,19 @@ trait KeysBase
         );
 
         $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateKeyInvalidDescription(): void
+    {
+        $response = $this->createKey(
+            ID::unique(),
+            'Invalid Description Key',
+            ['users.read'],
+            description: \str_repeat('a', 1025),
+        );
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
     }
 
     public function testCreateKeyDuplicateId(): void
@@ -474,6 +490,41 @@ trait KeysBase
         $this->deleteKey($keyId);
     }
 
+    public function testUpdateKeyDescription(): void
+    {
+        $key = $this->createKey(
+            ID::unique(),
+            'Description Key',
+            ['users.read'],
+            description: 'Used by the nightly backup job.',
+        );
+
+        $this->assertSame(201, $key['headers']['status-code']);
+        $keyId = $key['body']['$id'];
+
+        $updated = $this->updateKey($keyId, 'Description Key Renamed', ['users.read']);
+
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame('Used by the nightly backup job.', $updated['body']['description']);
+
+        $updated = $this->updateKey($keyId, 'Description Key Renamed', ['users.read'], description: 'Rotated every quarter.');
+
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame('Rotated every quarter.', $updated['body']['description']);
+
+        $get = $this->getKey($keyId);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('Rotated every quarter.', $get['body']['description']);
+
+        $updated = $this->updateKey($keyId, 'Description Key Renamed', ['users.read'], description: '');
+
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame('', $updated['body']['description']);
+
+        // Cleanup
+        $this->deleteKey($keyId);
+    }
+
     public function testUpdateKeySetExpire(): void
     {
         $key = $this->createKey(
@@ -565,6 +616,26 @@ trait KeysBase
         $this->deleteKey($keyId);
     }
 
+    public function testUpdateKeyInvalidDescription(): void
+    {
+        $key = $this->createKey(
+            ID::unique(),
+            'Invalid Description Update',
+            ['users.read'],
+        );
+
+        $this->assertSame(201, $key['headers']['status-code']);
+        $keyId = $key['body']['$id'];
+
+        $updated = $this->updateKey($keyId, 'Invalid Description Update', ['users.read'], description: \str_repeat('a', 1025));
+
+        $this->assertSame(400, $updated['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $updated['body']['type']);
+
+        // Cleanup
+        $this->deleteKey($keyId);
+    }
+
     // =========================================================================
     // Get key tests
     // =========================================================================
@@ -585,6 +656,7 @@ trait KeysBase
         $this->assertSame(200, $get['headers']['status-code']);
         $this->assertSame($keyId, $get['body']['$id']);
         $this->assertSame('Get Test Key', $get['body']['name']);
+        $this->assertSame('', $get['body']['description']);
         $this->assertSame(['users.read', 'databases.read'], $get['body']['scopes']);
         $this->assertNotEmpty($get['body']['secret']);
         $this->assertSame('', $get['body']['expire']);
@@ -786,6 +858,61 @@ trait KeysBase
         ], true);
 
         $this->assertSame(400, $list['headers']['status-code']);
+    }
+
+    public function testGetKeySecretRequiresWriteScope(): void
+    {
+        $key = $this->createKey(Id::unique(), 'Secret Test Key', ['users.read']);
+        $this->assertSame(201, $key['headers']['status-code']);
+        $keyId = $key['body']['$id'];
+
+        $reader = $this->createEphemeralKey(['keys.read'], 900);
+        $this->assertSame(201, $reader['headers']['status-code']);
+
+        $writer = $this->createEphemeralKey(['keys.read', 'keys.write'], 900);
+        $this->assertSame(201, $writer['headers']['status-code']);
+
+        $headers = fn (string $secret) => [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $secret,
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        $get = $this->client->call(Client::METHOD_GET, $this->keysPath() . '/' . $keyId, $headers($writer['body']['secret']));
+
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame($key['body']['secret'], $get['body']['secret']);
+
+        // The suite's own caller (a console session or a server key) holds keys.write
+        $get = $this->getKey($keyId);
+
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame($key['body']['secret'], $get['body']['secret']);
+
+        $list = $this->listKeys(null, null);
+
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertNotContains('', \array_column($list['body']['keys'], 'secret'));
+
+        /**
+         * Test for FAILURE
+         */
+        $get = $this->client->call(Client::METHOD_GET, $this->keysPath() . '/' . $keyId, $headers($reader['body']['secret']));
+
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('', $get['body']['secret']);
+
+        $list = $this->client->call(Client::METHOD_GET, $this->keysPath(), $headers($reader['body']['secret']));
+
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertNotEmpty($list['body']['keys']);
+        $this->assertSame([''], \array_unique(\array_column($list['body']['keys'], 'secret')));
+
+        // Cleanup
+        $this->deleteKey($keyId);
     }
 
     // =========================================================================
@@ -1095,7 +1222,7 @@ trait KeysBase
     /**
      * @param array<string>|null $scopes
      */
-    protected function createKey(string $keyId, ?string $name, ?array $scopes = null, ?string $expire = null, bool $authenticated = true): mixed
+    protected function createKey(string $keyId, ?string $name, ?array $scopes = null, ?string $expire = null, bool $authenticated = true, ?string $description = null): mixed
     {
         $params = [
             'keyId' => $keyId,
@@ -1108,6 +1235,10 @@ trait KeysBase
 
         if ($expire !== null) {
             $params['expire'] = $expire;
+        }
+
+        if ($description !== null) {
+            $params['description'] = $description;
         }
 
         $headers = [
@@ -1130,7 +1261,7 @@ trait KeysBase
     /**
      * @param array<string>|null $scopes
      */
-    protected function updateKey(string $keyId, ?string $name = null, ?array $scopes = null, ?string $expire = null, bool $authenticated = true): mixed
+    protected function updateKey(string $keyId, ?string $name = null, ?array $scopes = null, ?string $expire = null, bool $authenticated = true, ?string $description = null): mixed
     {
         $params = [];
 
@@ -1144,6 +1275,10 @@ trait KeysBase
 
         if ($expire !== null) {
             $params['expire'] = $expire;
+        }
+
+        if ($description !== null) {
+            $params['description'] = $description;
         }
 
         $headers = [

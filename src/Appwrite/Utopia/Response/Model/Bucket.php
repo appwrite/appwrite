@@ -48,6 +48,12 @@ class Bucket extends Model
                 'default' => '',
                 'example' => 'Documents',
             ])
+            ->addRule('description', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Optional description for the bucket.',
+                'default' => '',
+                'example' => 'Invoices and receipts uploaded by customers.',
+            ])
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Bucket enabled.',

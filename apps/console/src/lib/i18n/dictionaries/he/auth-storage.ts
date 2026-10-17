@@ -1298,6 +1298,20 @@ export const heAuthStorageDictionary: Record<string, string> = {
     'הסיסמה לא נבדקה מול דליפות מידע ידועות',
   'breached password': 'סיסמה שדלפה',
 
+  // Periodic password change (rotation) policy
+  'Periodic password change': 'החלפת סיסמה תקופתית',
+  'Require users to set a new password once the one they have reaches the maximum age. An email/password sign-in with a password past that age is refused until the user resets it through password recovery. Sign-ins with other methods are not affected.':
+    'דרשו ממשתמשים להגדיר סיסמה חדשה כשהסיסמה הנוכחית שלהם מגיעה לגיל המקסימלי. התחברות עם אימייל/סיסמה שעברה את הגיל הזה נדחית עד שהמשתמש מאפס אותה דרך שחזור סיסמה. התחברות בשיטות אחרות אינה מושפעת.',
+  'Require a periodic password change': 'דרישת החלפת סיסמה תקופתית',
+  'Maximum password age': 'גיל סיסמה מקסימלי',
+  'Between 1 day and 10 years': 'בין יום אחד ל-10 שנים',
+  'Minimum is 1 day': 'המינימום הוא יום אחד',
+  'Maximum is 10 years': 'המקסימום הוא 10 שנים',
+  'Updated periodic password change policy':
+    'מדיניות החלפת הסיסמה התקופתית עודכנה',
+  'Failed to update periodic password change policy':
+    'עדכון מדיניות החלפת הסיסמה התקופתית נכשל',
+
   // Passkey relying party policy and auth method
   Passkey: 'מפתח גישה',
   Passkeys: 'מפתחות גישה',

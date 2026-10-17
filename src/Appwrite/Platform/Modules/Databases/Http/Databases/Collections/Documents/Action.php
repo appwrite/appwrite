@@ -11,13 +11,19 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction
 use Appwrite\Utopia\Database\Attribute;
 use Appwrite\Utopia\Database\Hook\UniqueId;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Throwable;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Query\Schema\ColumnType;
 
 abstract class Action extends DatabasesAction
 {
+    private const string BOUND_MAXIMUM = 'max';
+
+    private const string BOUND_MINIMUM = 'min';
+
     /**
      * @var string The current context (either 'row' or 'document')
      */
@@ -165,6 +171,87 @@ abstract class Action extends DatabasesAction
         return $this->isCollectionsAPI()
             ? Exception::DOCUMENT_ALREADY_EXISTS
             : Exception::ROW_ALREADY_EXISTS;
+    }
+
+    /**
+     * The maximum an increment was held to: the request's, floored on an integer, or the column's own when it is lower.
+     */
+    protected function getReachedMaximum(Document $collection, string $attribute, int|float|null $requested): int|float|null
+    {
+        [$column, $integer] = $this->getColumnBound($collection, $attribute, self::BOUND_MAXIMUM);
+        $requested = $requested !== null && $integer ? (int) \floor($requested) : $requested;
+
+        return match (true) {
+            $requested === null => $column,
+            $column === null => $requested,
+            default => \min($requested, $column),
+        };
+    }
+
+    /**
+     * The minimum a decrement was held to: the request's, ceiled on an integer, or the column's own when it is higher.
+     */
+    protected function getReachedMinimum(Document $collection, string $attribute, int|float|null $requested): int|float|null
+    {
+        [$column, $integer] = $this->getColumnBound($collection, $attribute, self::BOUND_MINIMUM);
+        $requested = $requested !== null && $integer ? (int) \ceil($requested) : $requested;
+
+        return match (true) {
+            $requested === null => $column,
+            $column === null => $requested,
+            default => \max($requested, $column),
+        };
+    }
+
+    /**
+     * @return array{int|float|null, bool} The column's bound under $key, and whether the column holds integers
+     */
+    private function getColumnBound(Document $collection, string $attribute, string $key): array
+    {
+        foreach ($collection->getAttribute('attributes', []) as $definition) {
+            if ($definition->getAttribute('key') !== $attribute) {
+                continue;
+            }
+
+            $bound = $definition->getAttribute('formatOptions', [])[$key] ?? null;
+            $integer = \in_array(Attribute::columnType((string) $definition->getAttribute('type')), [ColumnType::Integer, ColumnType::BigInteger], true);
+
+            return [\is_int($bound) || \is_float($bound) ? $bound : null, $integer];
+        }
+
+        return [null, false];
+    }
+
+    /**
+     * A batch write refused as a duplicate names the ID it repeats, else the first one already stored.
+     *
+     * @param array<Document> $documents
+     */
+    protected function getBatchDuplicateException(Database $dbForDatabases, string $collectionTableId, array $documents, Throwable $previous): Exception
+    {
+        $ids = [];
+        foreach ($documents as $document) {
+            $id = $document->getId();
+            if (isset($ids[$id])) {
+                return new Exception($this->getDuplicateException(), previous: $previous, params: [$id]);
+            }
+            $ids[$id] = true;
+        }
+
+        $stored = empty($ids) ? new Document() : $dbForDatabases->getAuthorization()->skip(fn (): Document => $dbForDatabases->findOne($collectionTableId, [
+            Query::equal('$id', \array_map(\strval(...), \array_keys($ids))),
+            Query::select(['$id']),
+        ]));
+
+        if (!$stored->isEmpty()) {
+            return new Exception($this->getDuplicateException(), previous: $previous, params: [$stored->getId()]);
+        }
+
+        return new Exception(
+            $this->getDuplicateException(),
+            ($this->isCollectionsAPI() ? 'Document' : 'Row') . ' with one of the requested IDs already exists. Try again with different IDs or use ID.unique() to generate unique IDs.',
+            previous: $previous,
+        );
     }
 
     /**
