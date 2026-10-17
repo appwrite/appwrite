@@ -1,0 +1,1226 @@
+{
+  "source": "packages/storage/tests/Device/S3StreamingTest.php",
+  "cases": [
+    {
+      "name": "bytes reach the sink through the telemetry decorator",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "response_streaming": true,
+            "responses": [
+              {
+                "status": 200,
+                "headers": [
+                  [
+                    "Content-Type",
+                    "application/octet-stream"
+                  ],
+                  [
+                    "Content-Length",
+                    "11"
+                  ]
+                ],
+                "body": "Hello World"
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "",
+            "host": "http://127.0.0.1:9000",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0.0
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.new",
+          "args": {
+            "device": {
+              "$ref": "s"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/object"
+          },
+          "expect": {
+            "received": "Hello World",
+            "result": null
+          }
+        },
+        {
+          "op": "telemetry.recorded",
+          "args": {
+            "device": {
+              "$ref": "d"
+            }
+          },
+          "expect": {
+            "storage.operation": 1
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "http://127.0.0.1:9000/object",
+              "headers": {
+                "accept-encoding": "identity",
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "127.0.0.1:9000",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "backend error bytes never reach the sink",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "response_streaming": true,
+            "responses": [
+              {
+                "status": 404,
+                "headers": [
+                  [
+                    "Content-Type",
+                    "application/octet-stream"
+                  ]
+                ],
+                "body": "<Error><Code>NoSuchKey</Code></Error>"
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "",
+            "host": "http://127.0.0.1:9000",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0.0
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.new",
+          "args": {
+            "device": {
+              "$ref": "s"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/missing",
+            "catch": true
+          },
+          "expect": {
+            "received": "",
+            "result": {
+              "class": "Utopia\\Storage\\Exception\\NotFoundException",
+              "message": "File not found",
+              "code": 404,
+              "error_code": null,
+              "previous": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an ignored range is refused before delivery",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "response_streaming": true,
+            "responses": [
+              {
+                "status": 200,
+                "headers": [
+                  [
+                    "Content-Length",
+                    "8"
+                  ]
+                ],
+                "body": "abcdefgh"
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "",
+            "host": "http://127.0.0.1:9000",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0.0
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.new",
+          "args": {
+            "device": {
+              "$ref": "s"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/ignores-range",
+            "offset": 2,
+            "length": 4,
+            "catch": true
+          },
+          "expect": {
+            "received": "",
+            "result": {
+              "class": "Utopia\\Storage\\Exception\\RemoteException",
+              "message": "Backend did not honor the requested byte range.",
+              "code": 0,
+              "error_code": null,
+              "previous": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a honoured range is delivered",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "response_streaming": true,
+            "responses": [
+              {
+                "status": 206,
+                "headers": [
+                  [
+                    "Content-Range",
+                    "bytes 2-5/8"
+                  ]
+                ],
+                "body": "cdef"
+              },
+              {
+                "status": 206,
+                "headers": [
+                  [
+                    "Content-Range",
+                    "bytes 3-7/8"
+                  ]
+                ],
+                "body": "defgh"
+              },
+              {
+                "status": 206,
+                "headers": [
+                  [
+                    "Content-Range",
+                    "bytes 6-7/8"
+                  ]
+                ],
+                "body": "gh"
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "",
+            "host": "http://127.0.0.1:9000",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0.0
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/object",
+            "offset": 2,
+            "length": 4
+          },
+          "expect": {
+            "received": "cdef",
+            "result": null
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/object",
+            "offset": 3
+          },
+          "expect": {
+            "received": "defgh",
+            "result": null
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/object",
+            "offset": 6,
+            "length": 4
+          },
+          "expect": {
+            "received": "gh",
+            "result": null
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "http://127.0.0.1:9000/object",
+              "headers": {
+                "accept-encoding": "identity",
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "127.0.0.1:9000",
+                "range": "bytes=2-5",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "url": "http://127.0.0.1:9000/object",
+              "headers": {
+                "accept-encoding": "identity",
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "127.0.0.1:9000",
+                "range": "bytes=3-",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "url": "http://127.0.0.1:9000/object",
+              "headers": {
+                "accept-encoding": "identity",
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "127.0.0.1:9000",
+                "range": "bytes=6-9",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a range the response does not match is refused",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "response_streaming": true,
+            "responses": [
+              {
+                "status": 206,
+                "headers": [
+                  [
+                    "Content-Range",
+                    "bytes 2-4/8"
+                  ]
+                ],
+                "body": "cde"
+              },
+              {
+                "status": 206,
+                "headers": [
+                  [
+                    "Content-Range",
+                    "bytes 1-4/8"
+                  ]
+                ],
+                "body": "bcde"
+              },
+              {
+                "status": 206,
+                "headers": [
+                  [
+                    "Content-Range",
+                    "bytes 2-5/5"
+                  ]
+                ],
+                "body": "cdef"
+              },
+              {
+                "status": 206,
+                "headers": [
+                  [
+                    "Content-Range",
+                    "bytes 2-5/*"
+                  ]
+                ],
+                "body": "cdef"
+              },
+              {
+                "status": 206,
+                "headers": [
+                  [
+                    "Content-Range",
+                    "items 2-5/8"
+                  ]
+                ],
+                "body": "cdef"
+              },
+              {
+                "status": 206,
+                "headers": [],
+                "body": "cdef"
+              },
+              {
+                "status": 206,
+                "headers": [
+                  [
+                    "Content-Range",
+                    "bytes 3-6/8"
+                  ]
+                ],
+                "body": "defg"
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "",
+            "host": "http://127.0.0.1:9000",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0.0
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/object",
+            "offset": 2,
+            "length": 4,
+            "catch": true
+          },
+          "expect": {
+            "received": "",
+            "result": {
+              "class": "Utopia\\Storage\\Exception\\RemoteException",
+              "message": "Backend did not honor the requested byte range.",
+              "code": 0,
+              "error_code": null,
+              "previous": false
+            }
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/object",
+            "offset": 2,
+            "length": 4,
+            "catch": true
+          },
+          "expect": {
+            "received": "",
+            "result": {
+              "class": "Utopia\\Storage\\Exception\\RemoteException",
+              "message": "Backend did not honor the requested byte range.",
+              "code": 0,
+              "error_code": null,
+              "previous": false
+            }
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/object",
+            "offset": 2,
+            "length": 4,
+            "catch": true
+          },
+          "expect": {
+            "received": "",
+            "result": {
+              "class": "Utopia\\Storage\\Exception\\RemoteException",
+              "message": "Backend did not honor the requested byte range.",
+              "code": 0,
+              "error_code": null,
+              "previous": false
+            }
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/object",
+            "offset": 2,
+            "length": 4,
+            "catch": true
+          },
+          "expect": {
+            "received": "",
+            "result": {
+              "class": "Utopia\\Storage\\Exception\\RemoteException",
+              "message": "Backend did not honor the requested byte range.",
+              "code": 0,
+              "error_code": null,
+              "previous": false
+            }
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/object",
+            "offset": 2,
+            "length": 4,
+            "catch": true
+          },
+          "expect": {
+            "received": "",
+            "result": {
+              "class": "Utopia\\Storage\\Exception\\RemoteException",
+              "message": "Backend did not honor the requested byte range.",
+              "code": 0,
+              "error_code": null,
+              "previous": false
+            }
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/object",
+            "offset": 2,
+            "length": 4,
+            "catch": true
+          },
+          "expect": {
+            "received": "",
+            "result": {
+              "class": "Utopia\\Storage\\Exception\\RemoteException",
+              "message": "Backend did not honor the requested byte range.",
+              "code": 0,
+              "error_code": null,
+              "previous": false
+            }
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/object",
+            "offset": 3,
+            "catch": true
+          },
+          "expect": {
+            "received": "",
+            "result": {
+              "class": "Utopia\\Storage\\Exception\\RemoteException",
+              "message": "Backend did not honor the requested byte range.",
+              "code": 0,
+              "error_code": null,
+              "previous": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an unexpected status delivers nothing",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "response_streaming": true,
+            "responses": [
+              {
+                "status": 206,
+                "headers": [
+                  [
+                    "Content-Range",
+                    "bytes 0-3/8"
+                  ]
+                ],
+                "body": "abcd"
+              },
+              {
+                "status": 204,
+                "headers": [],
+                "body": ""
+              },
+              {
+                "status": 302,
+                "headers": [
+                  [
+                    "Location",
+                    "/elsewhere"
+                  ]
+                ],
+                "body": "moved"
+              },
+              {
+                "status": 304,
+                "headers": [],
+                "body": ""
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "",
+            "host": "http://127.0.0.1:9000",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0.0
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/object",
+            "catch": true
+          },
+          "expect": {
+            "received": "",
+            "result": {
+              "class": "Utopia\\Storage\\Exception\\RemoteException",
+              "message": "Backend returned an unexpected object response.",
+              "code": 0,
+              "error_code": null,
+              "previous": false
+            }
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/object",
+            "catch": true
+          },
+          "expect": {
+            "received": "",
+            "result": {
+              "class": "Utopia\\Storage\\Exception\\RemoteException",
+              "message": "Backend returned an unexpected object response.",
+              "code": 0,
+              "error_code": null,
+              "previous": false
+            }
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/object",
+            "catch": true
+          },
+          "expect": {
+            "received": "",
+            "result": {
+              "class": "Utopia\\Storage\\Exception\\RemoteException",
+              "message": "Backend returned an unexpected object response.",
+              "code": 0,
+              "error_code": null,
+              "previous": false
+            }
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/object",
+            "offset": 1,
+            "catch": true
+          },
+          "expect": {
+            "received": "",
+            "result": {
+              "class": "Utopia\\Storage\\Exception\\RemoteException",
+              "message": "Backend returned an unexpected object response.",
+              "code": 0,
+              "error_code": null,
+              "previous": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an empty range sends nothing",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "response_streaming": true,
+            "responses": []
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "",
+            "host": "http://127.0.0.1:9000",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0.0
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/object",
+            "offset": 3,
+            "length": 0
+          },
+          "expect": {
+            "received": "",
+            "result": null
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "an etag streams only the version that carries it",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "response_streaming": true,
+            "responses": [
+              {
+                "status": 200,
+                "headers": [
+                  [
+                    "ETag",
+                    "\"abc\""
+                  ]
+                ],
+                "body": "current"
+              },
+              {
+                "status": 412,
+                "headers": [
+                  [
+                    "Content-Type",
+                    "application/xml"
+                  ]
+                ],
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Error><Code>PreconditionFailed</Code><Message>At least one of the pre-conditions you specified did not hold</Message></Error>"
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "",
+            "host": "http://127.0.0.1:9000",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0.0
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/object",
+            "etag": "abc",
+            "catch": true
+          },
+          "expect": {
+            "received": "current",
+            "result": {
+              "ok": null
+            }
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/object",
+            "etag": "\"old\"",
+            "catch": true
+          },
+          "expect": {
+            "received": "",
+            "result": {
+              "class": "Utopia\\Storage\\Exception\\PreconditionFailedException",
+              "message": "At least one of the pre-conditions you specified did not hold",
+              "code": 412,
+              "error_code": null,
+              "previous": false
+            }
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "http://127.0.0.1:9000/object",
+              "headers": {
+                "accept-encoding": "identity",
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "127.0.0.1:9000",
+                "if-match": "\"abc\"",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "url": "http://127.0.0.1:9000/object",
+              "headers": {
+                "accept-encoding": "identity",
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "127.0.0.1:9000",
+                "if-match": "\"old\"",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a failure before the head is retried",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "response_streaming": true,
+            "responses": [
+              {
+                "error": "connection",
+                "message": "Connection refused",
+                "code": 7
+              },
+              {
+                "status": 200,
+                "headers": [],
+                "body": "second try"
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "",
+            "host": "http://127.0.0.1:9000",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0.0
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/object"
+          },
+          "expect": {
+            "received": "second try",
+            "result": null
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "http://127.0.0.1:9000/object",
+              "headers": {
+                "accept-encoding": "identity",
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "127.0.0.1:9000",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "url": "http://127.0.0.1:9000/object",
+              "headers": {
+                "accept-encoding": "identity",
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "127.0.0.1:9000",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a cancelled sink stops the transfer without replay",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "response_streaming": true,
+            "responses": [
+              {
+                "status": 200,
+                "headers": [],
+                "body": "streamed"
+              },
+              {
+                "status": 200,
+                "headers": [],
+                "body": "replayed"
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "",
+            "host": "http://127.0.0.1:9000",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0.0
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.new",
+          "args": {
+            "device": {
+              "$ref": "s"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/object",
+            "cancel": true
+          },
+          "expect": {
+            "received": true,
+            "result": {
+              "cancelled": "Downstream disconnected"
+            }
+          }
+        },
+        {
+          "op": "telemetry.recorded",
+          "args": {
+            "device": {
+              "$ref": "d"
+            }
+          },
+          "expect": {
+            "storage.operation": 1
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "http://127.0.0.1:9000/object",
+              "headers": {
+                "accept-encoding": "identity",
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "127.0.0.1:9000",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

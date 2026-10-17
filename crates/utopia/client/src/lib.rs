@@ -43,7 +43,7 @@
 //! | PHP | Rust |
 //! |---|---|
 //! | `Client` | [`Client`] |
-//! | `Adapter`, `Psr18\StreamingClientInterface`, `Decorator` | [`Adapter`], [`Sink`] |
+//! | `Adapter`, `Psr18\StreamingClientInterface`, `Psr18\ResponseStreamingClientInterface`, `Decorator` | [`Adapter`] ([`Adapter::stream_with_response`], [`Adapter::supports_response_streaming`]), [`Sink`] |
 //! | `Adapter\Curl\Client`, `Adapter\SwooleCoroutine\Client` | [`Http`] |
 //! | `Decorator\Retry` | [`Retry`] |
 //! | `Decorator\Retry\Strategy` | [`Strategy`], [`Outcome`] |
@@ -95,6 +95,23 @@ impl<A: Adapter> Adapter for Client<A> {
 
     async fn stream<S: Sink>(&self, request: Request, sink: &mut S) -> Result<Response, Error> {
         Client::stream(self, request, sink).await
+    }
+
+    fn supports_response_streaming(&self) -> bool {
+        Client::supports_response_streaming(self)
+    }
+
+    async fn stream_with_response<S, R>(
+        &self,
+        request: Request,
+        sink: &mut S,
+        on_response: &mut R,
+    ) -> Result<Response, Error>
+    where
+        S: Sink,
+        R: FnMut(&Response) -> Result<(), Error> + Send,
+    {
+        Client::stream_with_response(self, request, sink, on_response).await
     }
 
     fn options(&self) -> &Options {

@@ -8,7 +8,7 @@ use std::time::Instant;
 use async_trait::async_trait;
 use utopia_telemetry::{Histogram, Telemetry as Backend, Value};
 
-use crate::device::{self, Device, DeviceType, FileInfo, FileList, Metadata, UploadList};
+use crate::device::{self, Device, DeviceType, FileInfo, FileList, Metadata, Sink, UploadList};
 use crate::{Body, Error, Result};
 
 /// The bucket boundaries of the `storage.operation` histogram, in seconds.
@@ -159,6 +159,17 @@ impl Device for Telemetry {
 
     async fn read(&self, path: &str, offset: u64, length: Option<u64>, etag: Option<&str>) -> Result<Body> {
         self.measure("read", self.device.read(path, offset, length, etag)).await
+    }
+
+    async fn stream(
+        &self,
+        path: &str,
+        sink: &mut dyn Sink,
+        offset: u64,
+        length: Option<u64>,
+        etag: Option<&str>,
+    ) -> Result<()> {
+        self.measure("stream", self.device.stream(path, sink, offset, length, etag)).await
     }
 
     async fn write(&self, path: &str, data: Body, content_type: &str) -> Result<String> {

@@ -132,13 +132,34 @@ final class Adapter implements Base, Benchmarks
             'client.stream' => fn (array $a, Session $s) => self::traced($a, function () use ($a, $s) {
                 [$client, $sleeps] = isset($a['client']) ? $s->get($a['client']) : self::client([], $s);
                 $streamed = '';
-                $response = $client->stream(self::request($a['request'], $s), function (string $chunk) use (&$streamed) {
+                $notified = [];
+                $ordered = true;
+                $sink = function (string $chunk) use (&$streamed, &$notified, &$ordered) {
+                    $ordered = $ordered && $notified !== [];
                     $streamed .= $chunk;
-                });
+                };
+                if ($a['on_response'] ?? false) {
+                    $response = $client->stream(self::request($a['request'], $s), $sink, function (ResponseInterface $response) use (&$notified, $s) {
+                        $notified[] = self::result($response, $s);
+                    });
+                } else {
+                    $response = $client->stream(self::request($a['request'], $s), function (string $chunk) use (&$streamed) {
+                        $streamed .= $chunk;
+                    });
+                }
                 $result = self::result($response, $s) + ['streamed' => self::localize($streamed, $s)];
+                if ($a['on_response'] ?? false) {
+                    $result += ['notified' => $notified, 'ordered' => $ordered];
+                }
 
                 return $sleeps->list === [] ? $result : $result + ['sleeps' => $sleeps->list];
             }),
+            'client.supports_response_streaming' => fn (array $a, Session $s) => $s->get($a['client'])[0]->supportsResponseStreaming(),
+            'client.record' => function (array $a, Session $s) {
+                [, $sleeps, $calls] = $s->get($a['client']);
+
+                return ['sleeps' => $sleeps->list, 'calls' => $calls?->count];
+            },
             'pool.send' => function (array $a, Session $s) {
                 $created = 0;
                 $pool = new Pool(new Connections(new Stack(), 'test', $a['size'], function () use (&$created) {
@@ -218,7 +239,13 @@ final class Adapter implements Base, Benchmarks
     {
         $sleeps = new \stdClass();
         $sleeps->list = [];
+        $calls = null;
         $adapter = new Curl();
+        if ($a['legacy'] ?? false) {
+            $calls = new \stdClass();
+            $calls->count = 0;
+            $adapter = new Legacy($adapter, $calls);
+        }
         if (isset($a['retry'])) {
             $adapter = new Retry($adapter, self::backoff($a['retry']), function (float $seconds) use ($sleeps) {
                 $sleeps->list[] = $seconds;
@@ -245,7 +272,7 @@ final class Adapter implements Base, Benchmarks
             };
         }
 
-        return [$client, $sleeps];
+        return [$client, $sleeps, $calls];
     }
 
     private static function destinations(array $d, Session $s): Destinations
@@ -360,5 +387,31 @@ final class Adapter implements Base, Benchmarks
     private static function localize(string $value, Session $s): string
     {
         return str_replace([$s->service('client-http'), $s->service('client-https'), $s->service('client-other')], ['${http}', '${https}', '${other}'], $value);
+    }
+}
+
+/**
+ * An adapter without response streaming (not a ResponseStreamingClientInterface)
+ * that counts the requests it sends: a client written before the interface.
+ */
+final class Legacy extends \Utopia\Client\Decorator
+{
+    public function __construct(\Utopia\Client\Adapter $adapter, private readonly \stdClass $calls)
+    {
+        parent::__construct($adapter);
+    }
+
+    public function sendRequest(RequestInterface $request): ResponseInterface
+    {
+        $this->calls->count++;
+
+        return parent::sendRequest($request);
+    }
+
+    public function stream(RequestInterface $request, callable $sink): ResponseInterface
+    {
+        $this->calls->count++;
+
+        return parent::stream($request, $sink);
     }
 }

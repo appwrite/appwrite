@@ -279,6 +279,36 @@ impl<A: Adapter> Client<A> {
         self.adapter.stream(self.prepare(request)?, sink).await
     }
 
+    /// Whether the adapter can hand over a response's head before its body
+    /// ([`Client::stream_with_response`]).
+    ///
+    /// PHP: `supportsResponseStreaming()`.
+    pub fn supports_response_streaming(&self) -> bool {
+        self.adapter.supports_response_streaming()
+    }
+
+    /// Like [`Client::stream`], and passes the response's status and
+    /// headers to `on_response` before the first body chunk reaches `sink`.
+    /// An adapter that cannot ([`Client::supports_response_streaming`])
+    /// fails with [`Error::AdapterPrecondition`] before anything is sent.
+    ///
+    /// PHP: `stream($request, $sink, $onResponse)`.
+    pub async fn stream_with_response<S, R>(
+        &self,
+        request: Request,
+        sink: &mut S,
+        on_response: &mut R,
+    ) -> Result<Response, Error>
+    where
+        S: Sink,
+        R: FnMut(&Response) -> Result<(), Error> + Send,
+    {
+        if !self.adapter.supports_response_streaming() {
+            return Err(crate::adapter::unsupported());
+        }
+        self.adapter.stream_with_response(self.prepare(request)?, sink, on_response).await
+    }
+
     /// The request as it is sent: base URI, default headers and trace
     /// applied.
     ///

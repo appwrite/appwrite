@@ -23,7 +23,7 @@ use sha2::{Digest, Sha256};
 pub use client::{Client, HttpClient, Method, Payload, Request, Response, Retry, TransportError};
 pub use retry::RetryStrategy;
 
-use crate::device::{self, Acl, Device, DeviceType, FileInfo, FileList, Metadata, Part, UploadInfo, UploadList};
+use crate::device::{self, Acl, Device, DeviceType, FileInfo, FileList, Metadata, Part, Sink, UploadInfo, UploadList};
 use crate::{Body, Error, Result};
 use xml::Decoded;
 
@@ -31,6 +31,10 @@ use xml::Decoded;
 const MAX_PAGE_SIZE: i64 = 1000;
 /// How much of a streamed error response is kept to read the error from.
 const ERROR_BODY_BUFFER_SIZE: usize = 16384;
+
+/// The error number of a response body that ended early: cURL's
+/// `CURLE_PARTIAL_FILE`.
+const CURLE_PARTIAL_FILE: i64 = 18;
 /// The CopyObject limit; larger objects copy server side part by part.
 const MAX_COPY_OBJECT_SIZE: u64 = 5_368_709_120;
 
@@ -122,6 +126,7 @@ pub mod regions {
 ///
 /// PHP: `Utopia\Storage\Device\S3\Response`.
 struct S3Response {
+    status: u16,
     headers: IndexMap<String, String>,
     body: ResponseBody,
 }
@@ -642,7 +647,11 @@ impl S3 {
                 }
                 return Err(s3_error(&head, response.status, &response_headers));
             }
-            return Ok(S3Response { headers: response_headers, body: ResponseBody::Stream(body) });
+            return Ok(S3Response {
+                status: response.status,
+                headers: response_headers,
+                body: ResponseBody::Stream(body),
+            });
         }
 
         let response = self.client.send(&request).await.map_err(transport)?;
@@ -663,7 +672,7 @@ impl S3 {
         } else {
             ResponseBody::Raw(body)
         };
-        Ok(S3Response { headers: response_headers, body })
+        Ok(S3Response { status: response.status, headers: response_headers, body })
     }
 
     /// The `Authorization` header of a request: AWS Signature V4.
@@ -832,6 +841,72 @@ impl Device for S3 {
         }
     }
 
+    /// One GET pins the object for the whole transfer, even when its path
+    /// is deleted or overwritten meanwhile. Its head is checked before any
+    /// byte reaches the sink (an error status, or a range the service did
+    /// not honour, delivers nothing); the body then goes to the sink as it
+    /// arrives, and is never fetched again. A client without response
+    /// streaming ([`Client::supports_response_streaming`]) reads the object
+    /// first ([`device::stream`]).
+    ///
+    /// PHP: `stream()`.
+    async fn stream(
+        &self,
+        path: &str,
+        sink: &mut dyn Sink,
+        offset: u64,
+        length: Option<u64>,
+        etag: Option<&str>,
+    ) -> Result<()> {
+        if !self.client.supports_response_streaming() {
+            return device::stream(self, path, sink, offset, length, etag).await;
+        }
+        if length == Some(0) {
+            return Ok(());
+        }
+        let mut headers: Vec<(&str, String)> = Vec::new();
+        match length {
+            Some(length) => headers.push(("range", format!("bytes={offset}-{}", offset as i128 + length as i128 - 1))),
+            None if offset > 0 => headers.push(("range", format!("bytes={offset}-"))),
+            None => {}
+        }
+        if let Some(etag) = etag {
+            headers.push(("if-match", quote(etag)));
+        }
+        // The stored bytes, even when the service has a Content-Encoding for them.
+        headers.push(("accept-encoding", "identity".into()));
+        let headers: Vec<(&str, &str)> = headers.iter().map(|(k, v)| (*k, v.as_str())).collect();
+        let response =
+            self.call(Method::Get, &read_uri(path), Hashed::empty(), &[], &headers, &[], false, true).await?;
+        let unexpected = || Error::remote("Backend returned an unexpected object response.");
+        if !(200..300).contains(&response.status) {
+            return Err(unexpected());
+        }
+        if length.is_some() || offset > 0 {
+            let range = response.headers.get("content-range").map(String::as_str).unwrap_or_default();
+            if !honours_range(response.status, range, offset, length) {
+                return Err(Error::remote("Backend did not honor the requested byte range."));
+            }
+        } else if response.status != 200 {
+            return Err(unexpected());
+        }
+        let mut body = match response.body {
+            ResponseBody::Stream(body) => body,
+            ResponseBody::Raw(bytes) => Body::from(bytes),
+            ResponseBody::Xml(_) => Body::empty(),
+        };
+        loop {
+            let chunk = body
+                .read(client::CHUNK_SIZE)
+                .await
+                .map_err(|e| Error::Transport { message: e.to_string(), code: CURLE_PARTIAL_FILE })?;
+            if chunk.is_empty() {
+                return Ok(());
+            }
+            sink.write(chunk).await.map_err(Error::Body)?;
+        }
+    }
+
     async fn write(&self, path: &str, data: Body, content_type: &str) -> Result<String> {
         self.put(path, data, content_type, None).await
     }
@@ -992,6 +1067,29 @@ fn build_query<'a>(parameters: impl Iterator<Item = (&'a str, &'a str)>) -> Stri
 
 /// The request path of an object read, deleted or looked at: the path
 /// URL-encoded, slashes kept.
+/// Whether a response answers the byte range a stream asked for: a 206
+/// whose `Content-Range` (`bytes <start>-<end>/<total>`) starts at
+/// `offset` and ends where the range, cut at the end of the object, does.
+///
+/// PHP: the `Content-Range` check of `S3::stream()`, its digits read by
+/// `(int)`, which saturates.
+fn honours_range(status: u16, content_range: &str, offset: u64, length: Option<u64>) -> bool {
+    let (unit, extent) = content_range.split_once(' ').unwrap_or((content_range, ""));
+    let (span, total) = extent.split_once('/').unwrap_or((extent, ""));
+    let (start, end) = span.split_once('-').unwrap_or((span, ""));
+    let digits = |s: &str| !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit());
+    if status != 206 || unit != "bytes" || !digits(start) || !digits(end) || !digits(total) {
+        return false;
+    }
+    let int = |s: &str| i128::from(s.parse::<i64>().unwrap_or(i64::MAX));
+    let (start, end, total, offset) = (int(start), int(end), int(total), i128::from(offset));
+    let last = match length {
+        None => total - 1,
+        Some(length) => (offset + i128::from(length) - 1).min(total - 1),
+    };
+    start == offset && end >= offset && total > end && end == last
+}
+
 fn read_uri(path: &str) -> String {
     if path.is_empty() {
         return "/".into();

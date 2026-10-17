@@ -263,6 +263,59 @@ impl<A: Adapter, S: Strategy + Clone, W: Sleep + Clone> Adapter for Retry<A, S, 
     }
 
     async fn stream<K: Sink>(&self, request: Request, sink: &mut K) -> Result<Response, Error> {
+        self.streamed(request, sink, None::<&mut fn(&Response) -> Result<(), Error>>).await
+    }
+
+    fn supports_response_streaming(&self) -> bool {
+        self.adapter.supports_response_streaming()
+    }
+
+    /// Refused before the first attempt when the decorated adapter cannot
+    /// hand over the head, so no retry is spent on it.
+    async fn stream_with_response<K, R>(
+        &self,
+        request: Request,
+        sink: &mut K,
+        on_response: &mut R,
+    ) -> Result<Response, Error>
+    where
+        K: Sink,
+        R: FnMut(&Response) -> Result<(), Error> + Send,
+    {
+        if !self.adapter.supports_response_streaming() {
+            return Err(crate::adapter::unsupported());
+        }
+        self.streamed(request, sink, Some(on_response)).await
+    }
+
+    fn options(&self) -> &Options {
+        self.adapter.options()
+    }
+
+    fn with_options(&self, options: Options) -> Self {
+        Retry {
+            adapter: self.adapter.with_options(options),
+            strategy: self.strategy.clone(),
+            sleep: self.sleep.clone(),
+        }
+    }
+}
+
+impl<A: Adapter, S: Strategy, W: Sleep> Retry<A, S, W> {
+    /// Streams with retries, telling `on_response` (when given) of each
+    /// attempt's head.
+    ///
+    /// PHP: `stream($request, $sink, $onResponse)`.
+    async fn streamed<K, R>(
+        &self,
+        request: Request,
+        sink: &mut K,
+        mut on_response: Option<&mut R>,
+    ) -> Result<Response, Error>
+    where
+        K: Sink,
+        R: FnMut(&Response) -> Result<(), Error> + Send,
+    {
         let mut attempt = 1;
         loop {
             let mut delivered = 0usize;
@@ -270,7 +323,12 @@ impl<A: Adapter, S: Strategy + Clone, W: Sleep + Clone> Adapter for Retry<A, S, 
                 delivered += chunk.len();
                 sink.write(chunk);
             };
-            let result = self.adapter.stream(request.clone(), &mut counting).await;
+            let result = match on_response.as_deref_mut() {
+                Some(on_response) => {
+                    self.adapter.stream_with_response(request.clone(), &mut counting, on_response).await
+                }
+                None => self.adapter.stream(request.clone(), &mut counting).await,
+            };
             let delay = match result {
                 Ok(response) => {
                     if delivered > 0 {
@@ -291,18 +349,6 @@ impl<A: Adapter, S: Strategy + Clone, W: Sleep + Clone> Adapter for Retry<A, S, 
             };
             self.sleep.sleep(delay).await;
             attempt += 1;
-        }
-    }
-
-    fn options(&self) -> &Options {
-        self.adapter.options()
-    }
-
-    fn with_options(&self, options: Options) -> Self {
-        Retry {
-            adapter: self.adapter.with_options(options),
-            strategy: self.strategy.clone(),
-            sleep: self.sleep.clone(),
         }
     }
 }

@@ -185,6 +185,14 @@ impl<F: FnMut(&[u8]) + Send> Sink for F {
     }
 }
 
+/// The refusal of an adapter that cannot hand over a response's head
+/// before its body.
+///
+/// PHP: the `AdapterPreconditionException` `Client` and `Retry` throw.
+pub(crate) fn unsupported() -> Error {
+    Error::AdapterPrecondition("This adapter cannot expose response headers before streaming.".into())
+}
+
 /// A transport: sends requests, buffering or streaming the response, under
 /// [`Options`] changed by returning a reconfigured copy.
 ///
@@ -209,6 +217,41 @@ pub trait Adapter: Send + Sync + Sized {
     ///
     /// PHP: `stream($request, $sink)`.
     fn stream<S: Sink>(&self, request: Request, sink: &mut S) -> impl Future<Output = Result<Response, Error>> + Send;
+
+    /// Whether [`Adapter::stream_with_response`] can hand over the status
+    /// and headers before the body. Default `false`; decorators answer for
+    /// the adapter they wrap.
+    ///
+    /// PHP: `Psr18\ResponseStreamingClientInterface::supportsResponseStreaming()`
+    /// (an adapter without the interface does not).
+    fn supports_response_streaming(&self) -> bool {
+        false
+    }
+
+    /// Like [`Adapter::stream`], and passes the response (its status and
+    /// headers, an empty body) to `on_response` once per attempt, before the
+    /// first body chunk reaches `sink` (an empty body included). An error
+    /// from `on_response` stops the transfer and is returned.
+    ///
+    /// An adapter that does not support it
+    /// ([`Adapter::supports_response_streaming`]) fails with
+    /// [`Error::AdapterPrecondition`] and sends nothing: the default.
+    ///
+    /// PHP: `stream($request, $sink, $onResponse)` of
+    /// `Psr18\ResponseStreamingClientInterface`.
+    fn stream_with_response<S, R>(
+        &self,
+        request: Request,
+        sink: &mut S,
+        on_response: &mut R,
+    ) -> impl Future<Output = Result<Response, Error>> + Send
+    where
+        S: Sink,
+        R: FnMut(&Response) -> Result<(), Error> + Send,
+    {
+        let _ = (request, sink, on_response);
+        std::future::ready(Err(unsupported()))
+    }
 
     /// The configuration in effect.
     fn options(&self) -> &Options;

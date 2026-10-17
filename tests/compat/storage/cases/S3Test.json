@@ -8987,6 +8987,198 @@
           }
         }
       ]
+    },
+    {
+      "name": "a wrapped legacy client keeps the buffered streaming fallback",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "headers": [],
+                "body": "original"
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "/root",
+            "host": "https://s3.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0.0
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/root/object"
+          },
+          "expect": {
+            "received": "original",
+            "result": null
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://s3.example.com/root/object",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a legacy client reads a range before streaming it",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "headers": [],
+                "body": "abcdefgh"
+              },
+              {
+                "status": 404,
+                "headers": [],
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Error><Code>NoSuchKey</Code><Message>The specified key does not exist.</Message></Error>"
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "/root",
+            "host": "https://s3.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/root/object",
+            "offset": 2,
+            "length": 4
+          },
+          "expect": {
+            "received": "abcdefgh",
+            "result": null
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/root/missing",
+            "catch": true
+          },
+          "expect": {
+            "received": "",
+            "result": {
+              "class": "Utopia\\Storage\\Exception\\NotFoundException",
+              "message": "The specified key does not exist.",
+              "code": 404,
+              "error_code": null,
+              "previous": false
+            }
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://s3.example.com/root/object",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "range": "bytes=2-5",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "url": "https://s3.example.com/root/missing",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
     }
   ]
 }
