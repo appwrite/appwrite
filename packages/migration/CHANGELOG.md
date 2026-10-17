@@ -21,6 +21,12 @@
   the reply-to address of scheduled emails, the Android channel of scheduled pushes, the password-pwned,
   password-rotation and passkey policies, and project environments as the new `project-environment` resource.
 
+### Fixed
+
+- The CSV destination prefixes string values that start with `=`, `+`, `-`, `@`, a tab or a carriage return with a
+  single quote, so spreadsheet applications do not evaluate them as formulas. Numbers, booleans and arrays are
+  written as before. The CSV source strips the quote again, so exports import back unchanged.
+
 ## 3.1.2
 
 3.1.2 reverses the 3.0.0 notes below on `Aborted`, `markAborted()` and finalizing with `success()`.
