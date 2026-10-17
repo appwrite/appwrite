@@ -268,7 +268,7 @@ utopia-php/audit runs its suites on both adapters. The ClickHouse ones use a Cli
 
 ## database
 
-utopia-php/database 8.3.0 (with utopia-php/query, its query and builder types) is driven through three vocabularies: `core` (`db.*` and `database.*`: a `Database` and what hangs off it), `objects` (`object.*`: every other class of the library, by reflection) and `adapter` (`adapter.*`: an adapter without a `Database`, and the fuzz programs). PHP: `tests/compat/database/ops/<area>.php`, values through `Values.php`, the objects `object.*` stores through `Objects.php`, the code the library takes as callables (filters, hooks, formats, codecs, mirror filters) as named fixtures in `Fixtures.php`. Rust: `crates/tools/compat/src/libs/database/`. Specs: `spec.d/<area>.json`.
+utopia-php/database 8.3.6 (with utopia-php/query, its query and builder types) is driven through three vocabularies: `core` (`db.*` and `database.*`: a `Database` and what hangs off it), `objects` (`object.*`: every other class of the library, by reflection) and `adapter` (`adapter.*`: an adapter without a `Database`, and the fuzz programs). PHP: `tests/compat/database/ops/<area>.php`, values through `Values.php`, the objects `object.*` stores through `Objects.php`, the code the library takes as callables (filters, hooks, formats, codecs, mirror filters) as named fixtures in `Fixtures.php`. Rust: `crates/tools/compat/src/libs/database/`. Specs: `spec.d/<area>.json`.
 
 ### Values
 
@@ -412,7 +412,9 @@ python3 tests/compat/database/recorder/derive.py                     # cases/Ada
 bin/compat record database --case Scope                              # their expectations
 ```
 
-The recordings are PHP 8.3.0's, the version `composer.lock` pins, so they come from a dev image built from this checkout's lockfile. When the shared `appwrite-dev` image may be rebuilt from another branch while you record, pin it first and record from the copy: `docker tag appwrite-dev compat-db830-php`, then `COMPAT_IMAGE=compat-db830-php` on each command above (check its version with `docker run --rm --entrypoint grep compat-db830-php -A1 '"name": "utopia-php/database"' /usr/src/code/vendor/composer/installed.json`). After re-recording join cases, run `python3 tests/compat/database/recorder/ties.py --write`.
+The recordings are PHP 8.3.6's, the version `composer.lock` pins, so they come from a dev image built from this checkout's lockfile. When the shared `appwrite-dev` image may be rebuilt from another branch while you record, pin it first and record from the copy: `docker tag appwrite-dev compat-db836-php`, then `COMPAT_IMAGE=compat-db836-php` on each command above (check its version with `docker run --rm --entrypoint grep compat-db836-php -A1 '"name": "utopia-php/database"' /usr/src/code/vendor/composer/installed.json`). After re-recording join cases, run `python3 tests/compat/database/recorder/ties.py --write`.
+
+To move the recordings to a new release, re-run the recorders on the files its tests change (`record.php <profile> <file filter>`, `units.php <path filter>`), keep each case whose steps are unchanged with its expectations, `bin/compat record database --case @<file>` the new and changed ones (a file listing their labels, one per line), then run each lane and re-record the cases both runtimes answer alike but not as recorded. A recorder run numbers its step bindings, fake ids and generated names across the whole run, so compare steps with those renumbered.
 
 ## php-std
 

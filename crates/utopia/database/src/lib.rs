@@ -5,7 +5,7 @@
 //! The crate reads and writes the same tables, rows and metadata as
 //! `utopia-php/database`, so PHP and Rust services share one dataset.
 //!
-//! PHP: `utopia-php/database` 8.3.0, built on `utopia-php/query`
+//! PHP: `utopia-php/database` 8.3.6, built on `utopia-php/query`
 //! ([`utopia_query`]): a database [`Query`] is a query of that library, and
 //! the SQL adapters compile statements with its builders.
 //!
