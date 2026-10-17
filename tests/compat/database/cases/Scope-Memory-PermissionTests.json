@@ -2712,7 +2712,7 @@
               }
             }
           },
-          "bind": "s3225",
+          "bind": "s3449",
           "expect": {
             "$document": {
               "$permissions": [
@@ -2938,7 +2938,7 @@
               }
             }
           },
-          "bind": "s3236",
+          "bind": "s3460",
           "expect": {
             "$document": {
               "id": null,
@@ -2988,7 +2988,7 @@
               }
             }
           },
-          "bind": "s3240",
+          "bind": "s3464",
           "expect": {
             "$document": {
               "id": "0",
@@ -3015,11 +3015,61 @@
           }
         },
         {
+          "op": "database.get_document",
+          "args": {
+            "collection": "documents_u000000000067",
+            "id": {
+              "$ref": "s3449",
+              "path": "/$document/$id"
+            }
+          },
+          "bind": "s4431",
+          "expect": {
+            "$document": {
+              "string": "text📝",
+              "integer_signed": -2147483647,
+              "integer_unsigned": 2147483647,
+              "bigint_signed": -9223372036854775807,
+              "bigint_unsigned": 9223372036854775807,
+              "float_signed": -5.55,
+              "float_unsigned": 5.55,
+              "boolean": true,
+              "colors": [
+                "pink",
+                "green",
+                "blue"
+              ],
+              "empty": [],
+              "with-dash": "Works",
+              "id": "1000000",
+              "$sequence": "1",
+              "$id": "<uniqid>",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "$collection": "documents_u000000000067"
+            }
+          }
+        },
+        {
           "op": "database.update_document",
           "args": {
             "collection": "documents_u000000000067",
             "id": {
-              "$ref": "s3225",
+              "$ref": "s3449",
               "path": "/$document/$id"
             },
             "document": {
@@ -3043,16 +3093,24 @@
                 "id": "1000000",
                 "$sequence": "1",
                 "$id": {
-                  "$ref": "s3225",
+                  "$ref": "s3449",
                   "path": "/$document/$id"
                 },
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4431",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4431",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [
                   "read(\"any\")",
@@ -3072,6 +3130,7 @@
               }
             }
           },
+          "bind": "s4432",
           "expect": {
             "$document": {
               "string": "text📝 updated",
@@ -3118,7 +3177,7 @@
           "args": {
             "collection": "documents_u000000000067",
             "id": {
-              "$ref": "s3225",
+              "$ref": "s3449",
               "path": "/$document/$id"
             },
             "document": {
@@ -3142,16 +3201,24 @@
                 "id": "1000000",
                 "$sequence": "1",
                 "$id": {
-                  "$ref": "s3225",
+                  "$ref": "s3449",
                   "path": "/$document/$id"
                 },
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4432",
+                  "path": "/$document/$createdAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4432",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [
                   "read(\"any\")",
@@ -3221,11 +3288,66 @@
           }
         },
         {
+          "op": "database.get_document",
+          "args": {
+            "collection": "documents_u000000000067",
+            "id": {
+              "$ref": "s3449",
+              "path": "/$document/$id"
+            }
+          },
+          "bind": "s4434",
+          "expect": {
+            "$document": {
+              "string": "text📝 updated",
+              "integer_signed": -6,
+              "integer_unsigned": 6,
+              "bigint_signed": -9223372036854775807,
+              "bigint_unsigned": 9223372036854775807,
+              "float_signed": -5.56,
+              "float_unsigned": 5.56,
+              "boolean": false,
+              "colors": [
+                "pink",
+                "green",
+                "blue",
+                "red"
+              ],
+              "empty": [],
+              "with-dash": "Works",
+              "id": "1000000",
+              "$sequence": "1",
+              "$id": "<uniqid>",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")",
+                "read(\"guests\")",
+                "create(\"guests\")",
+                "update(\"guests\")",
+                "delete(\"guests\")"
+              ],
+              "$collection": "documents_u000000000067"
+            }
+          }
+        },
+        {
           "op": "database.update_document",
           "args": {
             "collection": "documents_u000000000067",
             "id": {
-              "$ref": "s3225",
+              "$ref": "s3449",
               "path": "/$document/$id"
             },
             "document": {
@@ -3249,16 +3371,24 @@
                 "id": "1000000",
                 "$sequence": "1",
                 "$id": {
-                  "$ref": "s3225",
+                  "$ref": "s3449",
                   "path": "/$document/$id"
                 },
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4434",
+                  "path": "/$document/$createdAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4434",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [
                   "read(\"any\")",
@@ -3320,11 +3450,62 @@
           }
         },
         {
+          "op": "database.get_document",
+          "args": {
+            "collection": "documents_u000000000067",
+            "id": {
+              "$ref": "s3449",
+              "path": "/$document/$id"
+            }
+          },
+          "bind": "s4436",
+          "expect": {
+            "$document": {
+              "string": "text📝 updated",
+              "integer_signed": -6,
+              "integer_unsigned": 6,
+              "bigint_signed": -9223372036854775807,
+              "bigint_unsigned": 9223372036854775807,
+              "float_signed": -5.56,
+              "float_unsigned": 5.56,
+              "boolean": false,
+              "colors": [
+                "pink",
+                "green",
+                "blue",
+                "red"
+              ],
+              "empty": [],
+              "with-dash": "Works",
+              "id": "1000000",
+              "$sequence": "1",
+              "$id": "<uniqid>",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "$collection": "documents_u000000000067"
+            }
+          }
+        },
+        {
           "op": "database.update_document",
           "args": {
             "collection": "documents_u000000000067",
             "id": {
-              "$ref": "s3225",
+              "$ref": "s3449",
               "path": "/$document/$id"
             },
             "document": {
@@ -3441,12 +3622,16 @@
                 "id": "1000000",
                 "$sequence": "1",
                 "$id": {
-                  "$ref": "s3225",
+                  "$ref": "s3449",
                   "path": "/$document/$id"
                 },
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4436",
+                  "path": "/$document/$createdAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
                   "$now": 0,
@@ -3470,6 +3655,7 @@
               }
             }
           },
+          "bind": "s4438",
           "expect": {
             "$document": {
               "string": "text📝 updated",
@@ -3516,7 +3702,7 @@
           "args": {
             "collection": "documents_u000000000067",
             "id": {
-              "$ref": "s3225",
+              "$ref": "s3449",
               "path": "/$document/$id"
             }
           },
@@ -3559,17 +3745,25 @@
                 "with-dash": "Works",
                 "id": "1000000",
                 "$id": {
-                  "$ref": "s3225",
+                  "$ref": "s3449",
                   "path": "/$document/$id"
                 },
                 "$collection": "documents_u000000000067",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4438",
+                  "path": "/$document/$createdAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4438",
+                  "path": "/$document/$createdAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$sequence": "1"
               }
@@ -3643,7 +3837,7 @@
               }
             }
           },
-          "bind": "s3974",
+          "bind": "s4540",
           "expect": {
             "$document": {
               "$permissions": [
@@ -3764,7 +3958,7 @@
               }
             }
           },
-          "bind": "s3994",
+          "bind": "s4560",
           "expect": {
             "$document": {
               "$permissions": [
@@ -3802,13 +3996,13 @@
           "args": {
             "collection": "documents_u000000000067",
             "id": {
-              "$ref": "s3994",
+              "$ref": "s4560",
               "path": "/$document/$id"
             },
             "document": {
               "$document": {
                 "$id": {
-                  "$ref": "s3994",
+                  "$ref": "s4560",
                   "path": "/$document/$id"
                 },
                 "$permissions": [
@@ -3940,6 +4134,7 @@
               }
             }
           },
+          "bind": "s4617",
           "expect": {
             "$document": {
               "$permissions": [
@@ -4019,12 +4214,20 @@
                 "$id": "duplicated",
                 "$collection": "documents_u000000000067",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4617",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4617",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 }
               }
             }
@@ -4208,7 +4411,7 @@
               }
             }
           },
-          "bind": "s4068",
+          "bind": "s4634",
           "expect": {
             "$document": {
               "$permissions": [
@@ -4239,11 +4442,50 @@
           }
         },
         {
+          "op": "database.get_document",
+          "args": {
+            "collection": "documents_u000000000067",
+            "id": {
+              "$ref": "s4634",
+              "path": "/$document/$id"
+            }
+          },
+          "bind": "s4635",
+          "expect": {
+            "$document": {
+              "string": "tenant_test",
+              "integer_signed": 1,
+              "integer_unsigned": 1,
+              "bigint_signed": 1,
+              "bigint_unsigned": 1,
+              "float_signed": 1.0,
+              "float_unsigned": 1.0,
+              "boolean": true,
+              "colors": [
+                "red"
+              ],
+              "empty": [],
+              "with-dash": "test",
+              "$sequence": "56008",
+              "$id": "<uniqid>",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "documents_u000000000067",
+              "id": null
+            }
+          }
+        },
+        {
           "op": "database.update_document",
           "args": {
             "collection": "documents_u000000000067",
             "id": {
-              "$ref": "s4068",
+              "$ref": "s4634",
               "path": "/$document/$id"
             },
             "document": {
@@ -4263,16 +4505,24 @@
                 "with-dash": "test",
                 "$sequence": "56007",
                 "$id": {
-                  "$ref": "s4068",
+                  "$ref": "s4634",
                   "path": "/$document/$id"
                 },
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4635",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4635",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [
                   "read(\"any\")",
@@ -4318,9 +4568,30 @@
           "args": {
             "collection": "documents_u000000000067",
             "id": {
-              "$ref": "s4068",
+              "$ref": "s4634",
               "path": "/$document/$id"
             }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
           },
           "expect": true
         },
@@ -4507,7 +4778,7 @@
               }
             }
           },
-          "bind": "s12840",
+          "bind": "s13738",
           "expect": {
             "$document": {
               "$permissions": [
@@ -4552,7 +4823,7 @@
           "args": {
             "collection": "documents_u000000000067",
             "id": {
-              "$ref": "s12840",
+              "$ref": "s13738",
               "path": "/$document/$id"
             }
           },
@@ -5181,7 +5452,7 @@
               }
             }
           },
-          "bind": "s3225",
+          "bind": "s3449",
           "expect": {
             "$document": {
               "$permissions": [
@@ -5407,7 +5678,7 @@
               }
             }
           },
-          "bind": "s3236",
+          "bind": "s3460",
           "expect": {
             "$document": {
               "id": null,
@@ -5457,7 +5728,7 @@
               }
             }
           },
-          "bind": "s3240",
+          "bind": "s3464",
           "expect": {
             "$document": {
               "id": "0",
@@ -5484,11 +5755,61 @@
           }
         },
         {
+          "op": "database.get_document",
+          "args": {
+            "collection": "documents_u000000000067",
+            "id": {
+              "$ref": "s3449",
+              "path": "/$document/$id"
+            }
+          },
+          "bind": "s4431",
+          "expect": {
+            "$document": {
+              "string": "text📝",
+              "integer_signed": -2147483647,
+              "integer_unsigned": 2147483647,
+              "bigint_signed": -9223372036854775807,
+              "bigint_unsigned": 9223372036854775807,
+              "float_signed": -5.55,
+              "float_unsigned": 5.55,
+              "boolean": true,
+              "colors": [
+                "pink",
+                "green",
+                "blue"
+              ],
+              "empty": [],
+              "with-dash": "Works",
+              "id": "1000000",
+              "$sequence": "1",
+              "$id": "<uniqid>",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "$collection": "documents_u000000000067"
+            }
+          }
+        },
+        {
           "op": "database.update_document",
           "args": {
             "collection": "documents_u000000000067",
             "id": {
-              "$ref": "s3225",
+              "$ref": "s3449",
               "path": "/$document/$id"
             },
             "document": {
@@ -5512,16 +5833,24 @@
                 "id": "1000000",
                 "$sequence": "1",
                 "$id": {
-                  "$ref": "s3225",
+                  "$ref": "s3449",
                   "path": "/$document/$id"
                 },
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4431",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4431",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [
                   "read(\"any\")",
@@ -5541,6 +5870,7 @@
               }
             }
           },
+          "bind": "s4432",
           "expect": {
             "$document": {
               "string": "text📝 updated",
@@ -5587,7 +5917,7 @@
           "args": {
             "collection": "documents_u000000000067",
             "id": {
-              "$ref": "s3225",
+              "$ref": "s3449",
               "path": "/$document/$id"
             },
             "document": {
@@ -5611,16 +5941,24 @@
                 "id": "1000000",
                 "$sequence": "1",
                 "$id": {
-                  "$ref": "s3225",
+                  "$ref": "s3449",
                   "path": "/$document/$id"
                 },
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4432",
+                  "path": "/$document/$createdAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4432",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [
                   "read(\"any\")",
@@ -5690,11 +6028,66 @@
           }
         },
         {
+          "op": "database.get_document",
+          "args": {
+            "collection": "documents_u000000000067",
+            "id": {
+              "$ref": "s3449",
+              "path": "/$document/$id"
+            }
+          },
+          "bind": "s4434",
+          "expect": {
+            "$document": {
+              "string": "text📝 updated",
+              "integer_signed": -6,
+              "integer_unsigned": 6,
+              "bigint_signed": -9223372036854775807,
+              "bigint_unsigned": 9223372036854775807,
+              "float_signed": -5.56,
+              "float_unsigned": 5.56,
+              "boolean": false,
+              "colors": [
+                "pink",
+                "green",
+                "blue",
+                "red"
+              ],
+              "empty": [],
+              "with-dash": "Works",
+              "id": "1000000",
+              "$sequence": "1",
+              "$id": "<uniqid>",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")",
+                "read(\"guests\")",
+                "create(\"guests\")",
+                "update(\"guests\")",
+                "delete(\"guests\")"
+              ],
+              "$collection": "documents_u000000000067"
+            }
+          }
+        },
+        {
           "op": "database.update_document",
           "args": {
             "collection": "documents_u000000000067",
             "id": {
-              "$ref": "s3225",
+              "$ref": "s3449",
               "path": "/$document/$id"
             },
             "document": {
@@ -5718,16 +6111,24 @@
                 "id": "1000000",
                 "$sequence": "1",
                 "$id": {
-                  "$ref": "s3225",
+                  "$ref": "s3449",
                   "path": "/$document/$id"
                 },
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4434",
+                  "path": "/$document/$createdAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4434",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [
                   "read(\"any\")",
@@ -5789,11 +6190,62 @@
           }
         },
         {
+          "op": "database.get_document",
+          "args": {
+            "collection": "documents_u000000000067",
+            "id": {
+              "$ref": "s3449",
+              "path": "/$document/$id"
+            }
+          },
+          "bind": "s4436",
+          "expect": {
+            "$document": {
+              "string": "text📝 updated",
+              "integer_signed": -6,
+              "integer_unsigned": 6,
+              "bigint_signed": -9223372036854775807,
+              "bigint_unsigned": 9223372036854775807,
+              "float_signed": -5.56,
+              "float_unsigned": 5.56,
+              "boolean": false,
+              "colors": [
+                "pink",
+                "green",
+                "blue",
+                "red"
+              ],
+              "empty": [],
+              "with-dash": "Works",
+              "id": "1000000",
+              "$sequence": "1",
+              "$id": "<uniqid>",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:1\")",
+                "read(\"user:2\")",
+                "create(\"any\")",
+                "create(\"user:1x\")",
+                "create(\"user:2x\")",
+                "update(\"any\")",
+                "update(\"user:1x\")",
+                "update(\"user:2x\")",
+                "delete(\"any\")",
+                "delete(\"user:1x\")",
+                "delete(\"user:2x\")"
+              ],
+              "$collection": "documents_u000000000067"
+            }
+          }
+        },
+        {
           "op": "database.update_document",
           "args": {
             "collection": "documents_u000000000067",
             "id": {
-              "$ref": "s3225",
+              "$ref": "s3449",
               "path": "/$document/$id"
             },
             "document": {
@@ -5910,12 +6362,16 @@
                 "id": "1000000",
                 "$sequence": "1",
                 "$id": {
-                  "$ref": "s3225",
+                  "$ref": "s3449",
                   "path": "/$document/$id"
                 },
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4436",
+                  "path": "/$document/$createdAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
                   "$now": 0,
@@ -5939,6 +6395,7 @@
               }
             }
           },
+          "bind": "s4438",
           "expect": {
             "$document": {
               "string": "text📝 updated",
@@ -5985,7 +6442,7 @@
           "args": {
             "collection": "documents_u000000000067",
             "id": {
-              "$ref": "s3225",
+              "$ref": "s3449",
               "path": "/$document/$id"
             }
           },
@@ -6028,17 +6485,25 @@
                 "with-dash": "Works",
                 "id": "1000000",
                 "$id": {
-                  "$ref": "s3225",
+                  "$ref": "s3449",
                   "path": "/$document/$id"
                 },
                 "$collection": "documents_u000000000067",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4438",
+                  "path": "/$document/$createdAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4438",
+                  "path": "/$document/$createdAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$sequence": "1"
               }
@@ -6112,7 +6577,7 @@
               }
             }
           },
-          "bind": "s3974",
+          "bind": "s4540",
           "expect": {
             "$document": {
               "$permissions": [
@@ -6233,7 +6698,7 @@
               }
             }
           },
-          "bind": "s3994",
+          "bind": "s4560",
           "expect": {
             "$document": {
               "$permissions": [
@@ -6271,13 +6736,13 @@
           "args": {
             "collection": "documents_u000000000067",
             "id": {
-              "$ref": "s3994",
+              "$ref": "s4560",
               "path": "/$document/$id"
             },
             "document": {
               "$document": {
                 "$id": {
-                  "$ref": "s3994",
+                  "$ref": "s4560",
                   "path": "/$document/$id"
                 },
                 "$permissions": [
@@ -6409,6 +6874,7 @@
               }
             }
           },
+          "bind": "s4617",
           "expect": {
             "$document": {
               "$permissions": [
@@ -6488,12 +6954,20 @@
                 "$id": "duplicated",
                 "$collection": "documents_u000000000067",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4617",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4617",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 }
               }
             }
@@ -6677,7 +7151,7 @@
               }
             }
           },
-          "bind": "s4068",
+          "bind": "s4634",
           "expect": {
             "$document": {
               "$permissions": [
@@ -6708,11 +7182,50 @@
           }
         },
         {
+          "op": "database.get_document",
+          "args": {
+            "collection": "documents_u000000000067",
+            "id": {
+              "$ref": "s4634",
+              "path": "/$document/$id"
+            }
+          },
+          "bind": "s4635",
+          "expect": {
+            "$document": {
+              "string": "tenant_test",
+              "integer_signed": 1,
+              "integer_unsigned": 1,
+              "bigint_signed": 1,
+              "bigint_unsigned": 1,
+              "float_signed": 1.0,
+              "float_unsigned": 1.0,
+              "boolean": true,
+              "colors": [
+                "red"
+              ],
+              "empty": [],
+              "with-dash": "test",
+              "$sequence": "56008",
+              "$id": "<uniqid>",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "documents_u000000000067",
+              "id": null
+            }
+          }
+        },
+        {
           "op": "database.update_document",
           "args": {
             "collection": "documents_u000000000067",
             "id": {
-              "$ref": "s4068",
+              "$ref": "s4634",
               "path": "/$document/$id"
             },
             "document": {
@@ -6732,16 +7245,24 @@
                 "with-dash": "test",
                 "$sequence": "56007",
                 "$id": {
-                  "$ref": "s4068",
+                  "$ref": "s4634",
                   "path": "/$document/$id"
                 },
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4635",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s4635",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [
                   "read(\"any\")",
@@ -6787,9 +7308,30 @@
           "args": {
             "collection": "documents_u000000000067",
             "id": {
-              "$ref": "s4068",
+              "$ref": "s4634",
               "path": "/$document/$id"
             }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
           },
           "expect": true
         },
@@ -6960,7 +7502,7 @@
               }
             }
           },
-          "bind": "s12840",
+          "bind": "s13738",
           "expect": {
             "$document": {
               "$permissions": [
@@ -6999,7 +7541,7 @@
             "collection": "documents_u000000000067",
             "document": {
               "$document": {
-                "$id": "u0000000000000000113",
+                "$id": "u0000000000000000115",
                 "$permissions": [
                   "read(\"any\")"
                 ],
@@ -7019,9 +7561,10 @@
               }
             }
           },
+          "bind": "s13748",
           "expect": {
             "$document": {
-              "$id": "u0000000000000000113",
+              "$id": "u0000000000000000115",
               "$permissions": [
                 "read(\"any\")"
               ],
@@ -7046,17 +7589,16 @@
               "with-dash": null,
               "id": null
             }
-          },
-          "bind": "s49seq"
+          }
         },
         {
           "op": "database.update_document",
           "args": {
             "collection": "documents_u000000000067",
-            "id": "u0000000000000000113",
+            "id": "u0000000000000000115",
             "document": {
               "$document": {
-                "$id": "u0000000000000000113",
+                "$id": "u0000000000000000115",
                 "$permissions": [
                   "read(\"any\")"
                 ],
@@ -7075,17 +7617,22 @@
                 ],
                 "$collection": "documents_u000000000067",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s13748",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s13748",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
-                "$sequence": {
-                  "$ref": "s12840",
-                  "path": "/$document/$sequence"
-                },
+                "$sequence": "56010",
                 "empty": [],
                 "with-dash": null,
                 "id": null
@@ -7093,9 +7640,31 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "$document": {
+              "string": "text📝",
+              "integer_signed": -2147483647,
+              "integer_unsigned": 2147483647,
+              "bigint_signed": -9223372036854775807,
+              "bigint_unsigned": 9223372036854775807,
+              "float_signed": -123456789.12346,
+              "float_unsigned": 123456789.12346,
+              "boolean": true,
+              "colors": [
+                "pink",
+                "green",
+                "blue"
+              ],
+              "$sequence": "56011",
+              "$id": "u0000000000000000115",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "documents_u000000000067",
+              "empty": [],
+              "with-dash": null,
+              "id": null
             }
           }
         },
@@ -7105,7 +7674,7 @@
             "collection": "documents_u000000000067",
             "document": {
               "$document": {
-                "$id": "u0000000000000000114",
+                "$id": "u0000000000000000116",
                 "$permissions": [],
                 "string": "text📝",
                 "integer_signed": -2147483647,
@@ -7123,9 +7692,10 @@
               }
             }
           },
+          "bind": "s13750",
           "expect": {
             "$document": {
-              "$id": "u0000000000000000114",
+              "$id": "u0000000000000000116",
               "$permissions": [],
               "string": "text📝",
               "integer_signed": -2147483647,
@@ -7154,10 +7724,10 @@
           "op": "database.update_document",
           "args": {
             "collection": "documents_u000000000067",
-            "id": "u0000000000000000114",
+            "id": "u0000000000000000116",
             "document": {
               "$document": {
-                "$id": "u0000000000000000114",
+                "$id": "u0000000000000000116",
                 "$permissions": [],
                 "string": "text📝",
                 "integer_signed": -2147483647,
@@ -7174,17 +7744,22 @@
                 ],
                 "$collection": "documents_u000000000067",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s13750",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s13750",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
-                "$sequence": {
-                  "$ref": "s49seq",
-                  "path": "/$document/$sequence"
-                },
+                "$sequence": "56011",
                 "empty": [],
                 "with-dash": null,
                 "id": null
@@ -7194,7 +7769,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+              "message": "No permissions provided for action 'read'"
             }
           }
         }
@@ -17468,6 +18043,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "operator_double_decode"
@@ -17487,8 +18083,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "csParent_u000000000110",
-                "name": "csParent_u000000000110",
+                "$id": "csParent_u000000000112",
+                "name": "csParent_u000000000112",
                 "attributes": [],
                 "indexes": [],
                 "documentSecurity": true,
@@ -17504,8 +18100,8 @@
           },
           "expect": {
             "$document": {
-              "$id": "csParent_u000000000110",
-              "name": "csParent_u000000000110",
+              "$id": "csParent_u000000000112",
+              "name": "csParent_u000000000112",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
@@ -17526,7 +18122,7 @@
         {
           "op": "database.create_attribute",
           "args": {
-            "collection": "csParent_u000000000110",
+            "collection": "csParent_u000000000112",
             "attribute": {
               "$value": "Attribute",
               "fields": {
@@ -17570,8 +18166,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "csO2O_u000000000111",
-                "name": "csO2O_u000000000111",
+                "$id": "csO2O_u000000000113",
+                "name": "csO2O_u000000000113",
                 "attributes": [],
                 "indexes": [],
                 "documentSecurity": true,
@@ -17587,8 +18183,8 @@
           },
           "expect": {
             "$document": {
-              "$id": "csO2O_u000000000111",
-              "name": "csO2O_u000000000111",
+              "$id": "csO2O_u000000000113",
+              "name": "csO2O_u000000000113",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
@@ -17609,7 +18205,7 @@
         {
           "op": "database.create_attribute",
           "args": {
-            "collection": "csO2O_u000000000111",
+            "collection": "csO2O_u000000000113",
             "attribute": {
               "$value": "Attribute",
               "fields": {
@@ -17651,11 +18247,11 @@
         {
           "op": "database.create_relationship",
           "args": {
-            "collection": "csParent_u000000000110",
+            "collection": "csParent_u000000000112",
             "relationship": {
               "$value": "Relationship",
               "fields": {
-                "relatedCollection": "csO2O_u000000000111",
+                "relatedCollection": "csO2O_u000000000113",
                 "type": {
                   "$enum": "RelationshipType::OneToOne"
                 },
@@ -17671,13 +18267,13 @@
           "expect": {
             "$value": "Relationship",
             "fields": {
-              "relatedCollection": "csO2O_u000000000111",
+              "relatedCollection": "csO2O_u000000000113",
               "type": {
                 "$enum": "RelationshipType::OneToOne"
               },
               "twoWay": false,
               "key": "oneToOne",
-              "twoWayKey": "csParent_u000000000110",
+              "twoWayKey": "csParent_u000000000112",
               "onDelete": {
                 "$enum": "RelationshipDeleteAction::Cascade"
               }
@@ -17689,8 +18285,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "csO2M_u000000000112",
-                "name": "csO2M_u000000000112",
+                "$id": "csO2M_u000000000114",
+                "name": "csO2M_u000000000114",
                 "attributes": [],
                 "indexes": [],
                 "documentSecurity": true,
@@ -17706,8 +18302,8 @@
           },
           "expect": {
             "$document": {
-              "$id": "csO2M_u000000000112",
-              "name": "csO2M_u000000000112",
+              "$id": "csO2M_u000000000114",
+              "name": "csO2M_u000000000114",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
@@ -17728,7 +18324,7 @@
         {
           "op": "database.create_attribute",
           "args": {
-            "collection": "csO2M_u000000000112",
+            "collection": "csO2M_u000000000114",
             "attribute": {
               "$value": "Attribute",
               "fields": {
@@ -17770,11 +18366,11 @@
         {
           "op": "database.create_relationship",
           "args": {
-            "collection": "csParent_u000000000110",
+            "collection": "csParent_u000000000112",
             "relationship": {
               "$value": "Relationship",
               "fields": {
-                "relatedCollection": "csO2M_u000000000112",
+                "relatedCollection": "csO2M_u000000000114",
                 "type": {
                   "$enum": "RelationshipType::OneToMany"
                 },
@@ -17790,13 +18386,13 @@
           "expect": {
             "$value": "Relationship",
             "fields": {
-              "relatedCollection": "csO2M_u000000000112",
+              "relatedCollection": "csO2M_u000000000114",
               "type": {
                 "$enum": "RelationshipType::OneToMany"
               },
               "twoWay": false,
               "key": "oneToMany",
-              "twoWayKey": "csParent_u000000000110",
+              "twoWayKey": "csParent_u000000000112",
               "onDelete": {
                 "$enum": "RelationshipDeleteAction::Cascade"
               }
@@ -17806,10 +18402,10 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "csParent_u000000000110",
+            "collection": "csParent_u000000000112",
             "document": {
               "$document": {
-                "$id": "u0000000000000000129",
+                "$id": "u0000000000000000131",
                 "$permissions": [
                   "read(\"user:random\")",
                   "update(\"user:random\")",
@@ -17817,7 +18413,7 @@
                 ],
                 "test": "lorem",
                 "oneToOne": {
-                  "$id": "u0000000000000000130",
+                  "$id": "u0000000000000000132",
                   "$permissions": [
                     "read(\"user:random\")",
                     "update(\"user:random\")",
@@ -17827,7 +18423,7 @@
                 },
                 "oneToMany": [
                   {
-                    "$id": "u0000000000000000131",
+                    "$id": "u0000000000000000133",
                     "$permissions": [
                       "read(\"user:random\")",
                       "update(\"user:random\")",
@@ -17836,7 +18432,7 @@
                     "test": "lorem ipsum"
                   },
                   {
-                    "$id": "u0000000000000000132",
+                    "$id": "u0000000000000000134",
                     "$permissions": [
                       "read(\"user:torsten\")",
                       "update(\"user:random\")",
@@ -17877,8 +18473,8 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "csParent_u000000000110",
-            "id": "u0000000000000000129"
+            "collection": "csParent_u000000000112",
+            "id": "u0000000000000000131"
           },
           "expect": {
             "$document": {}
@@ -17903,9 +18499,10 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "csParent_u000000000110",
-            "id": "u0000000000000000129"
+            "collection": "csParent_u000000000112",
+            "id": "u0000000000000000131"
           },
+          "bind": "s14053",
           "expect": {
             "$document": {}
           }
@@ -17929,37 +18526,53 @@
         {
           "op": "database.update_document",
           "args": {
-            "collection": "csParent_u000000000110",
-            "id": "u0000000000000000129",
+            "collection": "csParent_u000000000112",
+            "id": "u0000000000000000131",
             "document": {
               "$document": {
                 "test": "loremnew_value",
                 "$sequence": "1",
-                "$id": "u0000000000000000129",
+                "$id": "u0000000000000000131",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s14053",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s14053",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [
                   "read(\"user:random\")",
                   "update(\"user:random\")",
                   "delete(\"user:random\")"
                 ],
-                "$collection": "csParent_u000000000110",
+                "$collection": "csParent_u000000000112",
                 "oneToOne": {
                   "test": "lorem ipsum",
-                  "$id": "u0000000000000000130",
+                  "$id": "u0000000000000000132",
                   "$createdAt": {
-                    "$now": 0,
-                    "format": "Y-m-d\\TH:i:s.vP"
+                    "$ref": "s14053",
+                    "path": "/$document/oneToOne/$document/$updatedAt",
+                    "default": {
+                      "$now": 0,
+                      "format": "Y-m-d\\TH:i:s.vP"
+                    }
                   },
                   "$updatedAt": {
-                    "$now": 0,
-                    "format": "Y-m-d\\TH:i:s.vP"
+                    "$ref": "s14053",
+                    "path": "/$document/oneToOne/$document/$updatedAt",
+                    "default": {
+                      "$now": 0,
+                      "format": "Y-m-d\\TH:i:s.vP"
+                    }
                   },
                   "$permissions": [
                     "read(\"user:random\")",
@@ -17967,19 +18580,27 @@
                     "delete(\"user:random\")"
                   ],
                   "$sequence": "1",
-                  "$collection": "csO2O_u000000000111"
+                  "$collection": "csO2O_u000000000113"
                 },
                 "oneToMany": [
                   {
                     "test": "lorem ipsum",
-                    "$id": "u0000000000000000131",
+                    "$id": "u0000000000000000133",
                     "$createdAt": {
-                      "$now": 0,
-                      "format": "Y-m-d\\TH:i:s.vP"
+                      "$ref": "s14053",
+                      "path": "/$document/oneToMany/0/$document/$updatedAt",
+                      "default": {
+                        "$now": 0,
+                        "format": "Y-m-d\\TH:i:s.vP"
+                      }
                     },
                     "$updatedAt": {
-                      "$now": 0,
-                      "format": "Y-m-d\\TH:i:s.vP"
+                      "$ref": "s14053",
+                      "path": "/$document/oneToMany/0/$document/$updatedAt",
+                      "default": {
+                        "$now": 0,
+                        "format": "Y-m-d\\TH:i:s.vP"
+                      }
                     },
                     "$permissions": [
                       "read(\"user:random\")",
@@ -17987,18 +18608,26 @@
                       "delete(\"user:random\")"
                     ],
                     "$sequence": "1",
-                    "$collection": "csO2M_u000000000112"
+                    "$collection": "csO2M_u000000000114"
                   },
                   {
                     "test": "dolor",
-                    "$id": "u0000000000000000132",
+                    "$id": "u0000000000000000134",
                     "$createdAt": {
-                      "$now": 0,
-                      "format": "Y-m-d\\TH:i:s.vP"
+                      "$ref": "s14053",
+                      "path": "/$document/oneToMany/1/$document/$updatedAt",
+                      "default": {
+                        "$now": 0,
+                        "format": "Y-m-d\\TH:i:s.vP"
+                      }
                     },
                     "$updatedAt": {
-                      "$now": 0,
-                      "format": "Y-m-d\\TH:i:s.vP"
+                      "$ref": "s14053",
+                      "path": "/$document/oneToMany/1/$document/$updatedAt",
+                      "default": {
+                        "$now": 0,
+                        "format": "Y-m-d\\TH:i:s.vP"
+                      }
                     },
                     "$permissions": [
                       "read(\"user:torsten\")",
@@ -18006,7 +18635,7 @@
                       "delete(\"user:random\")"
                     ],
                     "$sequence": "2",
-                    "$collection": "csO2M_u000000000112"
+                    "$collection": "csO2M_u000000000114"
                   }
                 ]
               }
@@ -18054,6 +18683,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "operator_double_decode"
@@ -18073,8 +18723,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "csParent_u000000000110",
-                "name": "csParent_u000000000110",
+                "$id": "csParent_u000000000112",
+                "name": "csParent_u000000000112",
                 "attributes": [],
                 "indexes": [],
                 "documentSecurity": true,
@@ -18090,8 +18740,8 @@
           },
           "expect": {
             "$document": {
-              "$id": "csParent_u000000000110",
-              "name": "csParent_u000000000110",
+              "$id": "csParent_u000000000112",
+              "name": "csParent_u000000000112",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
@@ -18112,7 +18762,7 @@
         {
           "op": "database.create_attribute",
           "args": {
-            "collection": "csParent_u000000000110",
+            "collection": "csParent_u000000000112",
             "attribute": {
               "$value": "Attribute",
               "fields": {
@@ -18156,8 +18806,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "csO2O_u000000000111",
-                "name": "csO2O_u000000000111",
+                "$id": "csO2O_u000000000113",
+                "name": "csO2O_u000000000113",
                 "attributes": [],
                 "indexes": [],
                 "documentSecurity": true,
@@ -18173,8 +18823,8 @@
           },
           "expect": {
             "$document": {
-              "$id": "csO2O_u000000000111",
-              "name": "csO2O_u000000000111",
+              "$id": "csO2O_u000000000113",
+              "name": "csO2O_u000000000113",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
@@ -18195,7 +18845,7 @@
         {
           "op": "database.create_attribute",
           "args": {
-            "collection": "csO2O_u000000000111",
+            "collection": "csO2O_u000000000113",
             "attribute": {
               "$value": "Attribute",
               "fields": {
@@ -18237,11 +18887,11 @@
         {
           "op": "database.create_relationship",
           "args": {
-            "collection": "csParent_u000000000110",
+            "collection": "csParent_u000000000112",
             "relationship": {
               "$value": "Relationship",
               "fields": {
-                "relatedCollection": "csO2O_u000000000111",
+                "relatedCollection": "csO2O_u000000000113",
                 "type": {
                   "$enum": "RelationshipType::OneToOne"
                 },
@@ -18257,13 +18907,13 @@
           "expect": {
             "$value": "Relationship",
             "fields": {
-              "relatedCollection": "csO2O_u000000000111",
+              "relatedCollection": "csO2O_u000000000113",
               "type": {
                 "$enum": "RelationshipType::OneToOne"
               },
               "twoWay": false,
               "key": "oneToOne",
-              "twoWayKey": "csParent_u000000000110",
+              "twoWayKey": "csParent_u000000000112",
               "onDelete": {
                 "$enum": "RelationshipDeleteAction::Cascade"
               }
@@ -18275,8 +18925,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "csO2M_u000000000112",
-                "name": "csO2M_u000000000112",
+                "$id": "csO2M_u000000000114",
+                "name": "csO2M_u000000000114",
                 "attributes": [],
                 "indexes": [],
                 "documentSecurity": true,
@@ -18292,8 +18942,8 @@
           },
           "expect": {
             "$document": {
-              "$id": "csO2M_u000000000112",
-              "name": "csO2M_u000000000112",
+              "$id": "csO2M_u000000000114",
+              "name": "csO2M_u000000000114",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
@@ -18314,7 +18964,7 @@
         {
           "op": "database.create_attribute",
           "args": {
-            "collection": "csO2M_u000000000112",
+            "collection": "csO2M_u000000000114",
             "attribute": {
               "$value": "Attribute",
               "fields": {
@@ -18356,11 +19006,11 @@
         {
           "op": "database.create_relationship",
           "args": {
-            "collection": "csParent_u000000000110",
+            "collection": "csParent_u000000000112",
             "relationship": {
               "$value": "Relationship",
               "fields": {
-                "relatedCollection": "csO2M_u000000000112",
+                "relatedCollection": "csO2M_u000000000114",
                 "type": {
                   "$enum": "RelationshipType::OneToMany"
                 },
@@ -18376,13 +19026,13 @@
           "expect": {
             "$value": "Relationship",
             "fields": {
-              "relatedCollection": "csO2M_u000000000112",
+              "relatedCollection": "csO2M_u000000000114",
               "type": {
                 "$enum": "RelationshipType::OneToMany"
               },
               "twoWay": false,
               "key": "oneToMany",
-              "twoWayKey": "csParent_u000000000110",
+              "twoWayKey": "csParent_u000000000112",
               "onDelete": {
                 "$enum": "RelationshipDeleteAction::Cascade"
               }
@@ -18392,10 +19042,10 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "csParent_u000000000110",
+            "collection": "csParent_u000000000112",
             "document": {
               "$document": {
-                "$id": "u0000000000000000129",
+                "$id": "u0000000000000000131",
                 "$permissions": [
                   "read(\"user:random\")",
                   "update(\"user:random\")",
@@ -18403,7 +19053,7 @@
                 ],
                 "test": "lorem",
                 "oneToOne": {
-                  "$id": "u0000000000000000130",
+                  "$id": "u0000000000000000132",
                   "$permissions": [
                     "read(\"user:random\")",
                     "update(\"user:random\")",
@@ -18413,7 +19063,7 @@
                 },
                 "oneToMany": [
                   {
-                    "$id": "u0000000000000000131",
+                    "$id": "u0000000000000000133",
                     "$permissions": [
                       "read(\"user:random\")",
                       "update(\"user:random\")",
@@ -18422,7 +19072,7 @@
                     "test": "lorem ipsum"
                   },
                   {
-                    "$id": "u0000000000000000132",
+                    "$id": "u0000000000000000134",
                     "$permissions": [
                       "read(\"user:torsten\")",
                       "update(\"user:random\")",
@@ -18442,39 +19092,66 @@
           }
         },
         {
+          "op": "database.get_document",
+          "args": {
+            "collection": "csParent_u000000000112",
+            "id": "u0000000000000000131"
+          },
+          "bind": "s14053",
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
           "op": "database.update_document",
           "args": {
-            "collection": "csParent_u000000000110",
-            "id": "u0000000000000000129",
+            "collection": "csParent_u000000000112",
+            "id": "u0000000000000000131",
             "document": {
               "$document": {
                 "test": "loremnew_value",
                 "$sequence": "1",
-                "$id": "u0000000000000000129",
+                "$id": "u0000000000000000131",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s14053",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s14053",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [
                   "read(\"user:random\")",
                   "update(\"user:random\")",
                   "delete(\"user:random\")"
                 ],
-                "$collection": "csParent_u000000000110",
+                "$collection": "csParent_u000000000112",
                 "oneToOne": {
                   "test": "lorem ipsum",
-                  "$id": "u0000000000000000130",
+                  "$id": "u0000000000000000132",
                   "$createdAt": {
-                    "$now": 0,
-                    "format": "Y-m-d\\TH:i:s.vP"
+                    "$ref": "s14053",
+                    "path": "/$document/oneToOne/$document/$updatedAt",
+                    "default": {
+                      "$now": 0,
+                      "format": "Y-m-d\\TH:i:s.vP"
+                    }
                   },
                   "$updatedAt": {
-                    "$now": 0,
-                    "format": "Y-m-d\\TH:i:s.vP"
+                    "$ref": "s14053",
+                    "path": "/$document/oneToOne/$document/$updatedAt",
+                    "default": {
+                      "$now": 0,
+                      "format": "Y-m-d\\TH:i:s.vP"
+                    }
                   },
                   "$permissions": [
                     "read(\"user:random\")",
@@ -18482,19 +19159,27 @@
                     "delete(\"user:random\")"
                   ],
                   "$sequence": "1",
-                  "$collection": "csO2O_u000000000111"
+                  "$collection": "csO2O_u000000000113"
                 },
                 "oneToMany": [
                   {
                     "test": "lorem ipsum",
-                    "$id": "u0000000000000000131",
+                    "$id": "u0000000000000000133",
                     "$createdAt": {
-                      "$now": 0,
-                      "format": "Y-m-d\\TH:i:s.vP"
+                      "$ref": "s14053",
+                      "path": "/$document/oneToMany/0/$document/$updatedAt",
+                      "default": {
+                        "$now": 0,
+                        "format": "Y-m-d\\TH:i:s.vP"
+                      }
                     },
                     "$updatedAt": {
-                      "$now": 0,
-                      "format": "Y-m-d\\TH:i:s.vP"
+                      "$ref": "s14053",
+                      "path": "/$document/oneToMany/0/$document/$updatedAt",
+                      "default": {
+                        "$now": 0,
+                        "format": "Y-m-d\\TH:i:s.vP"
+                      }
                     },
                     "$permissions": [
                       "read(\"user:random\")",
@@ -18502,18 +19187,26 @@
                       "delete(\"user:random\")"
                     ],
                     "$sequence": "1",
-                    "$collection": "csO2M_u000000000112"
+                    "$collection": "csO2M_u000000000114"
                   },
                   {
                     "test": "dolor",
-                    "$id": "u0000000000000000132",
+                    "$id": "u0000000000000000134",
                     "$createdAt": {
-                      "$now": 0,
-                      "format": "Y-m-d\\TH:i:s.vP"
+                      "$ref": "s14053",
+                      "path": "/$document/oneToMany/1/$document/$updatedAt",
+                      "default": {
+                        "$now": 0,
+                        "format": "Y-m-d\\TH:i:s.vP"
+                      }
                     },
                     "$updatedAt": {
-                      "$now": 0,
-                      "format": "Y-m-d\\TH:i:s.vP"
+                      "$ref": "s14053",
+                      "path": "/$document/oneToMany/1/$document/$updatedAt",
+                      "default": {
+                        "$now": 0,
+                        "format": "Y-m-d\\TH:i:s.vP"
+                      }
                     },
                     "$permissions": [
                       "read(\"user:torsten\")",
@@ -18521,7 +19214,7 @@
                       "delete(\"user:random\")"
                     ],
                     "$sequence": "2",
-                    "$collection": "csO2M_u000000000112"
+                    "$collection": "csO2M_u000000000114"
                   }
                 ]
               }
@@ -18553,8 +19246,8 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "csParent_u000000000110",
-            "id": "u0000000000000000129"
+            "collection": "csParent_u000000000112",
+            "id": "u0000000000000000131"
           },
           "expect": {
             "$document": {}
@@ -18579,9 +19272,10 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "csParent_u000000000110",
-            "id": "u0000000000000000129"
+            "collection": "csParent_u000000000112",
+            "id": "u0000000000000000131"
           },
+          "bind": "s14068",
           "expect": {
             "$document": {}
           }
@@ -18589,37 +19283,53 @@
         {
           "op": "database.update_document",
           "args": {
-            "collection": "csParent_u000000000110",
-            "id": "u0000000000000000129",
+            "collection": "csParent_u000000000112",
+            "id": "u0000000000000000131",
             "document": {
               "$document": {
                 "test": "lorem",
                 "$sequence": "1",
-                "$id": "u0000000000000000129",
+                "$id": "u0000000000000000131",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s14068",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s14068",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [
                   "read(\"user:random\")",
                   "update(\"user:random\")",
                   "delete(\"user:random\")"
                 ],
-                "$collection": "csParent_u000000000110",
+                "$collection": "csParent_u000000000112",
                 "oneToOne": {
                   "test": "lorem ipsum",
-                  "$id": "u0000000000000000130",
+                  "$id": "u0000000000000000132",
                   "$createdAt": {
-                    "$now": 0,
-                    "format": "Y-m-d\\TH:i:s.vP"
+                    "$ref": "s14068",
+                    "path": "/$document/oneToOne/$document/$updatedAt",
+                    "default": {
+                      "$now": 0,
+                      "format": "Y-m-d\\TH:i:s.vP"
+                    }
                   },
                   "$updatedAt": {
-                    "$now": 0,
-                    "format": "Y-m-d\\TH:i:s.vP"
+                    "$ref": "s14068",
+                    "path": "/$document/oneToOne/$document/$updatedAt",
+                    "default": {
+                      "$now": 0,
+                      "format": "Y-m-d\\TH:i:s.vP"
+                    }
                   },
                   "$permissions": [
                     "read(\"user:random\")",
@@ -18627,19 +19337,27 @@
                     "delete(\"user:random\")"
                   ],
                   "$sequence": "1",
-                  "$collection": "csO2O_u000000000111"
+                  "$collection": "csO2O_u000000000113"
                 },
                 "oneToMany": [
                   {
                     "test": "lorem ipsum",
-                    "$id": "u0000000000000000131",
+                    "$id": "u0000000000000000133",
                     "$createdAt": {
-                      "$now": 0,
-                      "format": "Y-m-d\\TH:i:s.vP"
+                      "$ref": "s14068",
+                      "path": "/$document/oneToMany/0/$document/$updatedAt",
+                      "default": {
+                        "$now": 0,
+                        "format": "Y-m-d\\TH:i:s.vP"
+                      }
                     },
                     "$updatedAt": {
-                      "$now": 0,
-                      "format": "Y-m-d\\TH:i:s.vP"
+                      "$ref": "s14068",
+                      "path": "/$document/oneToMany/0/$document/$updatedAt",
+                      "default": {
+                        "$now": 0,
+                        "format": "Y-m-d\\TH:i:s.vP"
+                      }
                     },
                     "$permissions": [
                       "read(\"user:random\")",
@@ -18647,18 +19365,26 @@
                       "delete(\"user:random\")"
                     ],
                     "$sequence": "1",
-                    "$collection": "csO2M_u000000000112"
+                    "$collection": "csO2M_u000000000114"
                   },
                   {
                     "test": "dolor",
-                    "$id": "u0000000000000000132",
+                    "$id": "u0000000000000000134",
                     "$createdAt": {
-                      "$now": 0,
-                      "format": "Y-m-d\\TH:i:s.vP"
+                      "$ref": "s14068",
+                      "path": "/$document/oneToMany/1/$document/$updatedAt",
+                      "default": {
+                        "$now": 0,
+                        "format": "Y-m-d\\TH:i:s.vP"
+                      }
                     },
                     "$updatedAt": {
-                      "$now": 0,
-                      "format": "Y-m-d\\TH:i:s.vP"
+                      "$ref": "s14068",
+                      "path": "/$document/oneToMany/1/$document/$updatedAt",
+                      "default": {
+                        "$now": 0,
+                        "format": "Y-m-d\\TH:i:s.vP"
+                      }
                     },
                     "$permissions": [
                       "read(\"user:torsten\")",
@@ -18666,12 +19392,13 @@
                       "delete(\"user:random\")"
                     ],
                     "$sequence": "2",
-                    "$collection": "csO2M_u000000000112"
+                    "$collection": "csO2M_u000000000114"
                   }
                 ]
               }
             }
           },
+          "bind": "s14069",
           "expect": {
             "$document": {}
           }
@@ -18695,37 +19422,53 @@
         {
           "op": "database.update_document",
           "args": {
-            "collection": "csParent_u000000000110",
-            "id": "u0000000000000000129",
+            "collection": "csParent_u000000000112",
+            "id": "u0000000000000000131",
             "document": {
               "$document": {
                 "test": "ipsum",
                 "$sequence": "1",
-                "$id": "u0000000000000000129",
+                "$id": "u0000000000000000131",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s14069",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s14069",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [
                   "read(\"user:random\")",
                   "update(\"user:random\")",
                   "delete(\"user:random\")"
                 ],
-                "$collection": "csParent_u000000000110",
+                "$collection": "csParent_u000000000112",
                 "oneToOne": {
                   "test": "lorem ipsum",
-                  "$id": "u0000000000000000130",
+                  "$id": "u0000000000000000132",
                   "$createdAt": {
-                    "$now": 0,
-                    "format": "Y-m-d\\TH:i:s.vP"
+                    "$ref": "s14069",
+                    "path": "/$document/oneToOne/$document/$updatedAt",
+                    "default": {
+                      "$now": 0,
+                      "format": "Y-m-d\\TH:i:s.vP"
+                    }
                   },
                   "$updatedAt": {
-                    "$now": 0,
-                    "format": "Y-m-d\\TH:i:s.vP"
+                    "$ref": "s14069",
+                    "path": "/$document/oneToOne/$document/$updatedAt",
+                    "default": {
+                      "$now": 0,
+                      "format": "Y-m-d\\TH:i:s.vP"
+                    }
                   },
                   "$permissions": [
                     "read(\"user:random\")",
@@ -18733,19 +19476,27 @@
                     "delete(\"user:random\")"
                   ],
                   "$sequence": "1",
-                  "$collection": "csO2O_u000000000111"
+                  "$collection": "csO2O_u000000000113"
                 },
                 "oneToMany": [
                   {
                     "test": "lorem ipsum",
-                    "$id": "u0000000000000000131",
+                    "$id": "u0000000000000000133",
                     "$createdAt": {
-                      "$now": 0,
-                      "format": "Y-m-d\\TH:i:s.vP"
+                      "$ref": "s14069",
+                      "path": "/$document/oneToMany/0/$document/$updatedAt",
+                      "default": {
+                        "$now": 0,
+                        "format": "Y-m-d\\TH:i:s.vP"
+                      }
                     },
                     "$updatedAt": {
-                      "$now": 0,
-                      "format": "Y-m-d\\TH:i:s.vP"
+                      "$ref": "s14069",
+                      "path": "/$document/oneToMany/0/$document/$updatedAt",
+                      "default": {
+                        "$now": 0,
+                        "format": "Y-m-d\\TH:i:s.vP"
+                      }
                     },
                     "$permissions": [
                       "read(\"user:random\")",
@@ -18753,18 +19504,26 @@
                       "delete(\"user:random\")"
                     ],
                     "$sequence": "1",
-                    "$collection": "csO2M_u000000000112"
+                    "$collection": "csO2M_u000000000114"
                   },
                   {
                     "test": "dolor",
-                    "$id": "u0000000000000000132",
+                    "$id": "u0000000000000000134",
                     "$createdAt": {
-                      "$now": 0,
-                      "format": "Y-m-d\\TH:i:s.vP"
+                      "$ref": "s14069",
+                      "path": "/$document/oneToMany/1/$document/$updatedAt",
+                      "default": {
+                        "$now": 0,
+                        "format": "Y-m-d\\TH:i:s.vP"
+                      }
                     },
                     "$updatedAt": {
-                      "$now": 0,
-                      "format": "Y-m-d\\TH:i:s.vP"
+                      "$ref": "s14069",
+                      "path": "/$document/oneToMany/1/$document/$updatedAt",
+                      "default": {
+                        "$now": 0,
+                        "format": "Y-m-d\\TH:i:s.vP"
+                      }
                     },
                     "$permissions": [
                       "read(\"user:torsten\")",
@@ -18772,7 +19531,7 @@
                       "delete(\"user:random\")"
                     ],
                     "$sequence": "2",
-                    "$collection": "csO2M_u000000000112"
+                    "$collection": "csO2M_u000000000114"
                   }
                 ]
               }
@@ -18845,6 +19604,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "operator_double_decode"
@@ -18864,8 +19644,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "collectionSecurity_u000000000115",
-                "name": "collectionSecurity_u000000000115",
+                "$id": "collectionSecurity_u000000000117",
+                "name": "collectionSecurity_u000000000117",
                 "attributes": [],
                 "indexes": [],
                 "documentSecurity": false,
@@ -18881,8 +19661,8 @@
           },
           "expect": {
             "$document": {
-              "$id": "collectionSecurity_u000000000115",
-              "name": "collectionSecurity_u000000000115",
+              "$id": "collectionSecurity_u000000000117",
+              "name": "collectionSecurity_u000000000117",
               "attributes": [],
               "indexes": [],
               "documentSecurity": false,
@@ -18903,7 +19683,7 @@
         {
           "op": "database.create_attribute",
           "args": {
-            "collection": "collectionSecurity_u000000000115",
+            "collection": "collectionSecurity_u000000000117",
             "attribute": {
               "$value": "Attribute",
               "fields": {
@@ -18945,10 +19725,10 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "collectionSecurity_u000000000115",
+            "collection": "collectionSecurity_u000000000117",
             "document": {
               "$document": {
-                "$id": "u0000000000000000119",
+                "$id": "u0000000000000000121",
                 "$permissions": [
                   "read(\"user:random\")",
                   "update(\"user:random\")",
@@ -18977,8 +19757,8 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "collectionSecurity_u000000000115",
-            "id": "u0000000000000000119"
+            "collection": "collectionSecurity_u000000000117",
+            "id": "u0000000000000000121"
           },
           "expect": {
             "$document": {}
@@ -19003,9 +19783,10 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "collectionSecurity_u000000000115",
-            "id": "u0000000000000000119"
+            "collection": "collectionSecurity_u000000000117",
+            "id": "u0000000000000000121"
           },
+          "bind": "s14083",
           "expect": {
             "$document": {}
           }
@@ -19029,27 +19810,35 @@
         {
           "op": "database.update_document",
           "args": {
-            "collection": "collectionSecurity_u000000000115",
-            "id": "u0000000000000000119",
+            "collection": "collectionSecurity_u000000000117",
+            "id": "u0000000000000000121",
             "document": {
               "$document": {
                 "test": "changed_value",
                 "$sequence": "1",
-                "$id": "u0000000000000000119",
+                "$id": "u0000000000000000121",
                 "$createdAt": {
-                  "$now": -1,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s14083",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": -1,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s14083",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [
                   "read(\"user:random\")",
                   "update(\"user:random\")",
                   "delete(\"user:random\")"
                 ],
-                "$collection": "collectionSecurity_u000000000115"
+                "$collection": "collectionSecurity_u000000000117"
               }
             }
           },
@@ -19095,6 +19884,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "operator_double_decode"
@@ -19114,8 +19924,8 @@
           "args": {
             "collection": {
               "$document": {
-                "$id": "collectionSecurity_u000000000115",
-                "name": "collectionSecurity_u000000000115",
+                "$id": "collectionSecurity_u000000000117",
+                "name": "collectionSecurity_u000000000117",
                 "attributes": [],
                 "indexes": [],
                 "documentSecurity": false,
@@ -19131,8 +19941,8 @@
           },
           "expect": {
             "$document": {
-              "$id": "collectionSecurity_u000000000115",
-              "name": "collectionSecurity_u000000000115",
+              "$id": "collectionSecurity_u000000000117",
+              "name": "collectionSecurity_u000000000117",
               "attributes": [],
               "indexes": [],
               "documentSecurity": false,
@@ -19153,7 +19963,7 @@
         {
           "op": "database.create_attribute",
           "args": {
-            "collection": "collectionSecurity_u000000000115",
+            "collection": "collectionSecurity_u000000000117",
             "attribute": {
               "$value": "Attribute",
               "fields": {
@@ -19195,10 +20005,10 @@
         {
           "op": "database.create_document",
           "args": {
-            "collection": "collectionSecurity_u000000000115",
+            "collection": "collectionSecurity_u000000000117",
             "document": {
               "$document": {
-                "$id": "u0000000000000000119",
+                "$id": "u0000000000000000121",
                 "$permissions": [
                   "read(\"user:random\")",
                   "update(\"user:random\")",
@@ -19216,29 +20026,48 @@
           }
         },
         {
+          "op": "database.get_document",
+          "args": {
+            "collection": "collectionSecurity_u000000000117",
+            "id": "u0000000000000000121"
+          },
+          "bind": "s14083",
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
           "op": "database.update_document",
           "args": {
-            "collection": "collectionSecurity_u000000000115",
-            "id": "u0000000000000000119",
+            "collection": "collectionSecurity_u000000000117",
+            "id": "u0000000000000000121",
             "document": {
               "$document": {
                 "test": "changed_value",
                 "$sequence": "1",
-                "$id": "u0000000000000000119",
+                "$id": "u0000000000000000121",
                 "$createdAt": {
-                  "$now": -1,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s14083",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": -1,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s14083",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [
                   "read(\"user:random\")",
                   "update(\"user:random\")",
                   "delete(\"user:random\")"
                 ],
-                "$collection": "collectionSecurity_u000000000115"
+                "$collection": "collectionSecurity_u000000000117"
               }
             }
           },
@@ -19258,8 +20087,8 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "collectionSecurity_u000000000115",
-            "id": "u0000000000000000119"
+            "collection": "collectionSecurity_u000000000117",
+            "id": "u0000000000000000121"
           },
           "expect": {
             "$document": {}
@@ -19284,9 +20113,10 @@
         {
           "op": "database.get_document",
           "args": {
-            "collection": "collectionSecurity_u000000000115",
-            "id": "u0000000000000000119"
+            "collection": "collectionSecurity_u000000000117",
+            "id": "u0000000000000000121"
           },
+          "bind": "s14097",
           "expect": {
             "$document": {}
           }
@@ -19294,27 +20124,35 @@
         {
           "op": "database.update_document",
           "args": {
-            "collection": "collectionSecurity_u000000000115",
-            "id": "u0000000000000000119",
+            "collection": "collectionSecurity_u000000000117",
+            "id": "u0000000000000000121",
             "document": {
               "$document": {
                 "test": "ipsum",
                 "$sequence": "1",
-                "$id": "u0000000000000000119",
+                "$id": "u0000000000000000121",
                 "$createdAt": {
-                  "$now": -1,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s14097",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": -1,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s14097",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [
                   "read(\"user:random\")",
                   "update(\"user:random\")",
                   "delete(\"user:random\")"
                 ],
-                "$collection": "collectionSecurity_u000000000115"
+                "$collection": "collectionSecurity_u000000000117"
               }
             }
           },
@@ -19564,6 +20402,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "operator_double_decode"
@@ -19678,6 +20537,7 @@
               }
             }
           },
+          "bind": "s14118",
           "expect": {
             "$document": {
               "$id": "dog",
@@ -19706,6 +20566,7 @@
               }
             }
           },
+          "bind": "s14119",
           "expect": {
             "$document": {
               "$id": "cat",
@@ -19774,12 +20635,20 @@
                 "type": "newDog",
                 "$collection": "animals",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s14118",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s14118",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$sequence": "1"
               }
@@ -19814,12 +20683,20 @@
                 "type": "newCat",
                 "$collection": "animals",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s14119",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s14119",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$sequence": "2"
               }
@@ -19957,6 +20834,27 @@
             "name": "subQueryProbe"
           },
           "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -20214,6 +21112,7 @@
               }
             }
           },
+          "bind": "s14142",
           "expect": {
             "$document": {
               "$id": "parent1",
@@ -20250,12 +21149,20 @@
                 "name": "Parent 1",
                 "$collection": "parentRelationTest",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s14142",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s14142",
+                  "path": "/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [],
                 "$sequence": "1",
@@ -28046,6 +28953,27 @@
           "expect": null
         },
         {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterBigIntegerRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "counterDoubleRange"
+          },
+          "expect": true
+        },
+        {
           "op": "database.add_filter",
           "args": {
             "name": "operator_double_decode"
@@ -28113,7 +29041,7 @@
         {
           "op": "database.set_namespace",
           "args": {
-            "namespace": "1ns6ad065afd9d9c"
+            "namespace": "1ns6ad323246feba"
           },
           "expect": {
             "$database": true

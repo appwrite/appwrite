@@ -1369,9 +1369,12 @@ final class Recorder
     }
 
     /**
-     * `{"$now": <seconds>, "format": ...}` for a datetime string near now.
+     * `{"$now": <seconds>, "format": ...}` for a datetime string near now,
+     * with the string itself under `$was` for Cases to resolve (a document's
+     * own timestamp passed back becomes a reference to the step that made
+     * it) and drop.
      *
-     * @return array{'$now': int, format: string}|null
+     * @return array{'$now': int, format: string, '$was': string}|null
      */
     private static function now(string $value): ?array
     {
@@ -1389,7 +1392,7 @@ final class Recorder
                 return null;
             }
 
-            return ['$now' => $offset, 'format' => $format];
+            return ['$now' => $offset, 'format' => $format, '$was' => $value];
         }
 
         return null;

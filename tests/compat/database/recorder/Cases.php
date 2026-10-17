@@ -199,6 +199,12 @@ final class Cases
             return $this->tokens($value, $locals);
         }
         if (\is_array($value)) {
+            // A datetime near now (Recorder::now()) replays as now.
+            if (self::stamp($value)) {
+                unset($value['$was']);
+
+                return $value;
+            }
             // A stored object: the step defining it comes along.
             if (\count($value) === 1 && \is_string($value['$obj'] ?? null)) {
                 if (isset($this->definers[$value['$obj']])) {
@@ -217,6 +223,18 @@ final class Cases
             }
             $out = [];
             foreach ($value as $k => $v) {
+                // A document's own timestamp a step returned, passed back
+                // (an update that changes nothing must not see a later now).
+                if (\in_array($k, self::STAMPS, true) && self::stamp($v) && \is_string($value['$id'] ?? null)
+                    && isset($this->stamps[$value['$id'] . "\0" . $v['$was']])) {
+                    [$index, $path] = $this->stamps[$value['$id'] . "\0" . $v['$was']];
+                    $refs[] = $index;
+                    unset($v['$was']);
+                    // Now stands in when the producing step fails on replay.
+                    $out[$k] = ['$ref' => "s{$index}", 'path' => $path, 'default' => $v];
+
+                    continue;
+                }
                 $out[\is_string($k) ? $this->tokens($k, $locals) : $k] = $this->value($v, $refs, $locals);
             }
 
@@ -303,11 +321,34 @@ final class Cases
         return abs(intdiv(hexdec(substr($hex, 0, 12)), 1000) - time()) <= 86400;
     }
 
+    private const STAMPS = ['$createdAt', '$updatedAt'];
+
+    /** @var array<string, array{0: int, 1: string}> the step and path of each document's timestamp, by `$id` NUL timestamp (the latest) */
+    private array $stamps = [];
+
     /**
-     * Registers the uniqids in a step's result as produced by it.
+     * Recorder::now()'s tag for a datetime near now.
+     *
+     * @phpstan-assert-if-true array{'$now': int, format: string, '$was': string} $value
+     */
+    private static function stamp(mixed $value): bool
+    {
+        return \is_array($value) && \count($value) === 3 && \is_string($value['$was'] ?? null) && \array_key_exists('$now', $value);
+    }
+
+    /**
+     * Registers the uniqids in a step's result, and the timestamps of the
+     * documents in it, as produced by it.
      */
     private function produce(mixed $value, int $index, string $path): void
     {
+        if (\is_array($value) && \is_string($value['$id'] ?? null)) {
+            foreach (self::STAMPS as $key) {
+                if (\is_string($value[$key] ?? null)) {
+                    $this->stamps[$value['$id'] . "\0" . $value[$key]] = [$index, $path . '/' . $key];
+                }
+            }
+        }
         if (\is_string($value)) {
             if ((self::uniqid($value) || self::uuid7($value)) && !isset($this->fakes[$value]) && !isset($this->producers[$value])) {
                 $this->producers[$value] = [$index, $path];
