@@ -39,6 +39,7 @@ COPY ./src /usr/src/code/src
 COPY ./packages /usr/src/code/packages
 COPY ./dev /usr/src/code/dev
 COPY ./docker/opcache.ini /usr/local/etc/php/conf.d/zz-opcache.ini
+COPY ./docker/php.ini /usr/local/etc/php/conf.d/zz-php.ini
 COPY ./mongo-init.js /usr/src/code/mongo-init.js
 COPY ./mongo-entrypoint.sh /usr/src/code/mongo-entrypoint.sh
 COPY ./clickhouse-config.xml /usr/src/code/clickhouse-config.xml
