@@ -10,6 +10,7 @@ use Appwrite\SDK\Response;
 use Appwrite\SDK\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\Operation;
+use Appwrite\Utopia\Database\Validator\Queries\Restricted;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Any;
 use Utopia\Database\Permission;
@@ -19,6 +20,7 @@ use Utopia\Database\Validator\Spatial;
 use Utopia\OpenAPI\Model\Composition;
 use Utopia\OpenAPI\Model\ParameterLocation;
 use Utopia\Platform\Enum;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
@@ -819,6 +821,12 @@ class OpenAPI3 extends Format
                         $node['schema']['items'] = [
                             'type' => 'string',
                         ];
+                        if ($validator instanceof Restricted) {
+                            $node['schema']['x-appwrite']['queries'] = [
+                                'attributes' => $validator->getAllowedAttributes(),
+                                'methods' => \array_map(fn (QueryMethod $method) => $method->value, $validator->getAllowedMethods()),
+                            ];
+                        }
                         break;
                     case \Utopia\Validator\Multiple::class:
                         // Its rules check the whole value, so an array-typed Multiple declares no
