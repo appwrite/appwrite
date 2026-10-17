@@ -205,19 +205,35 @@ class Get extends Action
             return;
         }
 
-        if ($size > APP_STORAGE_READ_BUFFER) {
-            for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
-                $response->chunk(
-                    (string) $deviceForFiles->read(
-                        $path,
-                        ($i * MAX_OUTPUT_CHUNK_SIZE),
-                        min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
-                    ),
-                    (($i + 1) * MAX_OUTPUT_CHUNK_SIZE) >= $size
-                );
-            }
-        } else {
+        if ($size <= APP_STORAGE_READ_BUFFER) {
             $response->send((string) $deviceForFiles->read($path));
+            return;
+        }
+
+        // One backend read pins the representation, even if an S3 writer replaces
+        // and deletes its path while this response is still being delivered.
+        $remaining = $size;
+        $started = false;
+        try {
+            $deviceForFiles->stream($path, static function (string $chunk) use ($response, &$remaining, &$started): void {
+                $remaining -= \strlen($chunk);
+                if ($remaining < 0) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'File read exceeded its captured size.');
+                }
+                if ($chunk !== '') {
+                    $started = true;
+                    $response->chunk($chunk, false);
+                }
+            });
+            if ($remaining !== 0) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Incomplete file read.');
+            }
+            $response->chunk('', true);
+        } catch (\Throwable $error) {
+            if ($started) {
+                $response->abort();
+            }
+            throw $error;
         }
     }
 }

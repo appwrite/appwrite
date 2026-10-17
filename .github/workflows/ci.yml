@@ -638,6 +638,8 @@ jobs:
         mode: ${{ fromJSON(needs.changes.outputs.modes) }}
         service: ${{ fromJSON(needs.changes.outputs.services) }}
     env:
+      # Permit the 100 MiB native read/overwrite regression in Storage.
+      _APP_STORAGE_LIMIT: 134217728
       SERVICE: ${{ matrix.service.name }}
       DATABASE: ${{ matrix.database }}
       MODE: ${{ matrix.mode }}
@@ -799,6 +801,8 @@ jobs:
         mode: ${{ fromJSON(needs.changes.outputs.modes) }}
         config: ${{ fromJSON(needs.changes.outputs.groups) }}
     env:
+      # The S3 lane exercises a 100 MiB native read while an overwrite commits.
+      _APP_STORAGE_LIMIT: 134217728
       # Shared tables mode connects every pool at boot, including the MongoDB-only DocumentsDB.
       COMPOSE_PROFILES: ${{ matrix.mode == 'shared' && format('mongodb,{0}', matrix.config.compose_profiles) || matrix.config.compose_profiles }}
       WAIT: ${{ matrix.config.wait }}
