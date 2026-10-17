@@ -1,6 +1,14 @@
 {
-  "updated": "2026-10-17T01:39:00Z",
+  "updated": "2026-10-17T02:39:00Z",
   "tasks": [
+    {
+      "id": "storage-sync",
+      "title": "Storage and client: S3 streaming from main",
+      "area": "Libraries",
+      "status": "progress",
+      "updated": "2026-10-17T02:39:00Z",
+      "note": "main's S3 backend streaming added Device::stream, S3::stream and Telemetry::stream to storage, and supportsResponseStreaming to client."
+    },
     {
       "id": "db836",
       "title": "Database: follow PHP from 8.3.0 to 8.3.6",
@@ -8,14 +16,6 @@
       "status": "progress",
       "updated": "2026-10-17T01:39:00Z",
       "note": "main bumped utopia-php/database again. Port 8.3.0→8.3.6, re-record what changed, and clear CI's remaining sqlite and postgres differences."
-    },
-    {
-      "id": "lib-sync-2",
-      "title": "Sync usage, queue, query and storage with main again",
-      "area": "Libraries",
-      "status": "progress",
-      "updated": "2026-10-17T01:39:00Z",
-      "note": "usage skip-index realignment, the NATS queue fixes, joins without an alias, and S3 streaming where a Rust crate covers it."
     },
     {
       "id": "db-last",
@@ -32,6 +32,14 @@
       "status": "todo",
       "updated": "2026-10-15T23:30:00Z",
       "note": "tests/compat/async/spec.json points at the crate but has no operations yet; write the ops and cases against utopia-php/async 0.2 to mark it complete."
+    },
+    {
+      "id": "lib-sync-2",
+      "title": "Sync usage, query, http, queue and validators with main again",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-10-17T02:39:00Z",
+      "note": "usage realigns drifted skip indexes; query reads a join without an alias under its collection; http counts and aborts streamed chunks; queue publishes without provisioning and reconnects its receive side; validators' Integer bounds are exact. All five CONVERTED with 0 differences."
     },
     {
       "id": "rust-197",
