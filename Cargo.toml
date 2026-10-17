@@ -10,13 +10,12 @@
 #   crates/support/<name>   Support crates shared by Utopia crates: php-std (PHP engine semantics),
 #                           mirrored to github.com/utopia-rs/php-std
 #   crates/tools/<name>     Development tools (not shipped): compat, the PHP/Rust differential tester
-#   example                 A minimal HTTP server demo (not shipped)
 #
 # See rfc/rust.md for the migration plan, mirrors and crates/CONVERSION.md for the
 # standard each Utopia crate is converted to.
 [workspace]
 resolver = "3"
-members = ["crates/utopia/*", "crates/appwrite/*", "crates/support/*", "crates/tools/*", "example"]
+members = ["crates/utopia/*", "crates/appwrite/*", "crates/support/*", "crates/tools/*"]
 
 [workspace.package]
 version = "0.1.0"
