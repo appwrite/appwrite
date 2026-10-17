@@ -9,6 +9,7 @@ import {
   Dependencies,
   useProject,
   useOrganizationPlan,
+  useConsoleVariables,
   getCachedBucketListsFromQueryClient,
   pickNextBucketIdAfterDelete,
 } from '@/lib/react-query/hooks'
@@ -65,8 +66,11 @@ export function BucketSettings() {
 
   // Get organization plan to check max file size limit
   const { plan: organizationPlan } = useOrganizationPlan(orgId)
+  const { storageLimit } = useConsoleVariables(project?.region)
 
-  // Get max file size from plan object (fileSize is in MB, -1 means unlimited)
+  // Get max file size from plan object (fileSize is in MB, -1 means unlimited).
+  // MAX_SAFE_INTEGER is the stand-in plan on self-hosted or after a failed
+  // request, where _APP_STORAGE_LIMIT is the limit instead.
   const maxFileSizeByPlan = useMemo(() => {
     if (!organizationPlan) return null
 
@@ -78,11 +82,11 @@ export function BucketSettings() {
           ? Number(fileSize)
           : Number(fileSize)
 
-    // -1 means unlimited
     if (
       fileSizeNumber == null ||
       !Number.isFinite(fileSizeNumber) ||
-      fileSizeNumber === -1
+      fileSizeNumber === -1 ||
+      fileSizeNumber >= Number.MAX_SAFE_INTEGER
     ) {
       return null
     }
@@ -458,8 +462,8 @@ export function BucketSettings() {
 
   // Validation error for file size input
   const fileSizeError = useMemo(() => {
-    if (maxFileSizeByPlan === null) return null // Enterprise has no limit
-    if (fileSizeInBytes === 0) return null // 0 means unlimited, which is allowed
+    if (maxFileSizeByPlan === null) return null
+    if (fileSizeInBytes === 0) return null // 0 uses the plan or server limit
     if (fileSizeInBytes > maxFileSizeByPlan) {
       return {
         message: `${t('Maximum file size cannot exceed')} ${formatBytes(maxFileSizeByPlan)} ${t('for your plan')}`,
@@ -921,7 +925,10 @@ export function BucketSettings() {
                   ({formatBytes(maxFileSizeByPlan)}).
                 </>
               ) : (
-                t('No limit for your plan. Set to 0 for unlimited.')
+                <>
+                  {t("Set to 0 to use the server's maximum limit")}
+                  {storageLimit ? ` (${formatBytes(storageLimit)})` : ''}.
+                </>
               )}
             </p>
           </div>
@@ -950,7 +957,7 @@ export function BucketSettings() {
                     }
                   }}
                   max={maxFileSizeInCurrentUnit}
-                  placeholder={t('0 for unlimited')}
+                  placeholder={t('0 for the maximum limit')}
                   disabled={updateMaximumFileSizeMutation.isPending}
                 />
               </div>
@@ -1018,9 +1025,13 @@ export function BucketSettings() {
                 </div>
               ) : (
                 <p className="text-[12px] text-muted-foreground">
-                  {bucket.maximumFileSize > 0
-                    ? `${t('Current:')} ${formatBytes(bucket.maximumFileSize)}`
-                    : t('Unlimited')}
+                  {t('Current:')}{' '}
+                  {formatBytes(
+                    toByteCount(bucket.maximumFileSize) ||
+                      maxFileSizeByPlan ||
+                      storageLimit ||
+                      0,
+                  )}
                 </p>
               )}
             </div>
