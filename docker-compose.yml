@@ -1768,6 +1768,11 @@ services:
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
       - OPR_EXECUTOR_CONNECTION_STORAGE=${_APP_EXECUTOR_CONNECTION_STORAGE:-local://localhost}
       - OPR_EXECUTOR_CONNECTION_BUILD_CACHE_STORAGE=
+    command:
+      - php
+      - -d
+      - memory_limit=${_APP_EXECUTOR_MEMORY_LIMIT:-1024M}
+      - app/http.php
     healthcheck:
       test:
         - CMD-SHELL
