@@ -384,6 +384,8 @@ const API_KEY_OAUTH2 = 'oauth2';
 
 // Realtime
 const CONSOLE_TAIL_CHANNEL_PREFIX = 'console.tail';
+const APP_LIMIT_REALTIME_SUBSCRIPTIONS = 100; // Maximum subscriptions one connection can hold
+const APP_LIMIT_REALTIME_CHANNELS = 100; // Maximum distinct channels one connection can subscribe to
 
 // Usage metrics
 const METRIC_TEAMS = 'teams';
