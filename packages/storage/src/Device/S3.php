@@ -472,17 +472,24 @@ class S3 extends Device
     }
 
     /**
-     * Delete file in given path, Return true on success and false on failure.
-     *
-     * @see http://php.net/manual/en/function.filesize.php
+     * Delete the object at the given path. Recursive, it also deletes every
+     * object under `path/`.
      *
      * @throws StorageException
+     * @throws \InvalidArgumentException When a recursive delete would cover the whole bucket
      */
     public function delete(string $path, bool $recursive = false): bool
     {
+        // Resolved first, so a recursive delete of the whole bucket is refused before any request.
+        $directory = $recursive ? $this->directory($path) : null;
+
         $uri = ($path !== '') ? '/' . str_replace('%2F', '/', rawurlencode($path)) : '/';
 
         $this->call(Method::DELETE, $uri);
+
+        if ($directory !== null) {
+            $this->deletePrefix(...$directory);
+        }
 
         return true;
     }
@@ -620,18 +627,47 @@ class S3 extends Device
     }
 
     /**
-     * Delete files in given path, path must be a directory. Return true on success and false on failure.
-     *
+     * Delete every object in the directory `path/` under the root. Objects
+     * that only share the directory name as a prefix are kept.
      *
      * @throws StorageException
+     * @throws \InvalidArgumentException When the directory is the whole bucket
      */
     public function deletePath(string $path): bool
     {
-        [$uri, $key] = $this->prefix($this->getRoot() . '/' . $path);
+        $this->deletePrefix(...$this->directory($this->getRoot() . '/' . $path));
 
+        return true;
+    }
+
+    /**
+     * The request URI and the key prefix, ending in a slash, of the directory
+     * at the given path.
+     *
+     * @return array{string, string}
+     *
+     * @throws \InvalidArgumentException When the directory is the whole bucket
+     */
+    private function directory(string $path): array
+    {
+        [$uri, $key] = $this->prefix($path);
+        if ($key === '') {
+            throw new \InvalidArgumentException('Refusing to delete every object in the bucket: ' . $path);
+        }
+
+        return [$uri, str_ends_with($key, '/') ? $key : $key . '/'];
+    }
+
+    /**
+     * Delete every object whose key begins with the prefix, a page of keys per DeleteObjects request.
+     *
+     * @throws StorageException
+     */
+    private function deletePrefix(string $uri, string $prefix): void
+    {
         $continuationToken = '';
         do {
-            $objects = $this->listBucket($uri, $key, continuationToken: $continuationToken);
+            $objects = $this->listBucket($uri, $prefix, continuationToken: $continuationToken);
             $token = $objects['NextContinuationToken'] ?? '';
             $continuationToken = \is_string($token) ? $token : '';
 
@@ -653,14 +689,12 @@ class S3 extends Device
 
             $body = '<Delete xmlns="http://s3.amazonaws.com/doc/2006-03-01/">';
             foreach ($keys as $key) {
-                $body .= "<Object><Key>{$key}</Key></Object>";
+                $body .= '<Object><Key>' . htmlspecialchars($key, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</Key></Object>';
             }
             $body .= '<Quiet>true</Quiet>';
             $body .= '</Delete>';
             $this->call(Method::POST, $uri, $body, ['delete' => ''], headers: ['content-type' => 'application/xml']);
         } while ($continuationToken !== '');
-
-        return true;
     }
 
     /**

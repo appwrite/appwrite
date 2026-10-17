@@ -302,4 +302,39 @@ final class S3Test extends S3Base
             }
         }
     }
+
+    public function testPathStyleRecursiveDelete(): void
+    {
+        $directory = 'ps-' . bin2hex(random_bytes(8));
+        $root = $this->bucket . '/' . $directory;
+        $device = $this->pathStyleDevice($root);
+        $nested = [
+            $root . '/a.txt',
+            $root . '/dir/b.txt',
+            $root . '/dir/sub/c.txt',
+        ];
+        $sibling = $this->bucket . '/' . $directory . '-b/d.txt';
+
+        try {
+            foreach ([...$nested, $sibling] as $path) {
+                $device->write($path, new Stream($path), 'text/plain');
+            }
+
+            $listed = array_map(static fn (FileInfo $file): string => $file->path, $device->listFiles($root . '/')->files);
+            sort($listed);
+            $this->assertSame($nested, $listed, 'the listing sees every nested object and not the sibling');
+
+            $this->assertTrue($device->delete($root, true));
+
+            $this->assertSame([], $device->listFiles($root . '/')->files);
+            foreach ($nested as $path) {
+                $this->assertFalse($device->exists($path), $path . ' survived the recursive delete');
+            }
+            $this->assertSame($sibling, (string) $device->read($sibling), 'a sibling sharing the name as a prefix is kept');
+        } finally {
+            foreach ([...$nested, $sibling] as $path) {
+                $device->delete($path);
+            }
+        }
+    }
 }

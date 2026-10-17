@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Storage\Tests\Device;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
@@ -1173,5 +1174,74 @@ final class S3Test extends TestCase
             client: new ScriptedClient([]),
             pathStyle: true,
         );
+    }
+
+    public function testPathStyleDeletePathAddressesTheBucket(): void
+    {
+        $keys = ['storage/uploads/app-p/b/1.txt', 'storage/uploads/app-p/b/c/2.txt'];
+        $client = new ScriptedClient([
+            $this->objectListing(...$keys),
+            new Response(200, body: new Stream('<?xml version="1.0" encoding="UTF-8"?><DeleteResult></DeleteResult>'))->withHeader('content-type', 'application/xml'),
+        ]);
+
+        $this->assertTrue($this->pathStyleDevice($client)->deletePath('b'));
+
+        $this->assertCount(2, $client->requests);
+        [$list, $delete] = $client->requests;
+        $this->assertSame('GET', $list->getMethod());
+        $this->assertSame('/appwrite', $list->getUri()->getPath());
+        $this->assertSame('storage/uploads/app-p/b/', $this->queryOf($list)['prefix'] ?? null);
+
+        $this->assertSame('POST', $delete->getMethod());
+        $this->assertSame('/appwrite', $delete->getUri()->getPath());
+        $this->assertArrayHasKey('delete', $this->queryOf($delete));
+        $xml = simplexml_load_string((string) $delete->getBody());
+        $this->assertNotFalse($xml);
+        $deleted = [];
+        foreach ($xml->Object as $object) {
+            $deleted[] = (string) $object->Key;
+        }
+        $this->assertSame($keys, $deleted);
+    }
+
+    /**
+     * @return \Iterator<string, array{string}>
+     */
+    public static function pathStyleBucketPaths(): \Iterator
+    {
+        yield 'bucket' => ['appwrite'];
+        yield 'bucket with a trailing slash' => ['appwrite/'];
+        yield 'bucket with a leading slash' => ['/appwrite'];
+        yield 'empty' => [''];
+        yield 'slash' => ['/'];
+    }
+
+    #[DataProvider('pathStyleBucketPaths')]
+    public function testPathStyleRecursiveDeleteOfTheBucketIsRefused(string $path): void
+    {
+        $client = new ScriptedClient([]);
+
+        try {
+            $this->pathStyleDevice($client, 'appwrite/storage')->delete($path, true);
+            self::fail('A recursive delete of the whole bucket must be refused');
+        } catch (\InvalidArgumentException) {
+        }
+
+        $this->assertCount(0, $client->requests, 'no DeleteBucket, no listing of the whole bucket');
+    }
+
+    public function testPathStyleDeletePathOfTheRootIsRefusedWhenTheRootIsTheBucket(): void
+    {
+        $client = new ScriptedClient([]);
+
+        foreach (['', '/'] as $path) {
+            try {
+                $this->pathStyleDevice($client, 'appwrite')->deletePath($path);
+                self::fail('Deleting the root that is the whole bucket must be refused');
+            } catch (\InvalidArgumentException) {
+            }
+        }
+
+        $this->assertCount(0, $client->requests);
     }
 }
