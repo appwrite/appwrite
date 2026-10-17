@@ -10,6 +10,9 @@ permissions:
 jobs:
   tests:
     name: Release
+    # Console versions are apps/console/<version> Releases; they must not
+    # publish appwrite/appwrite. console-production.yml owns those tags.
+    if: ${{ !startsWith(github.event.release.tag_name, 'apps/console/') }}
     runs-on: ubuntu-24.04
 
     steps:
