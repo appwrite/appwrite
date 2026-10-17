@@ -169,6 +169,8 @@ class Create extends Base
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $validator->getDescription());
         }
 
+        $headers = Headers::stripReserved($headers);
+
         /* @var Document $function */
         $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
