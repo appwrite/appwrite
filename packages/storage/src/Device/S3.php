@@ -472,22 +472,22 @@ class S3 extends Device
     }
 
     /**
-     * Delete the object at the given path. Recursive, it also deletes every
-     * object under `path/`.
+     * Delete the object at the given path. When `$recursive` is true, also
+     * removes every object under `path/`.
      *
      * @throws StorageException
-     * @throws \InvalidArgumentException When a recursive delete would cover the whole bucket
+     * @throws \InvalidArgumentException When the path names the whole bucket, or a path-style path is outside it
      */
     public function delete(string $path, bool $recursive = false): bool
     {
-        // Resolved first, so a recursive delete of the whole bucket is refused before any request.
-        $directory = $recursive ? $this->directory($path) : null;
+        // Resolved first: an empty key would send DeleteBucket, so it is refused before any request.
+        $directory = $this->directory($path);
 
-        $uri = ($path !== '') ? '/' . str_replace('%2F', '/', rawurlencode($path)) : '/';
+        $uri = '/' . str_replace('%2F', '/', rawurlencode($path));
 
         $this->call(Method::DELETE, $uri);
 
-        if ($directory !== null) {
+        if ($recursive) {
             $this->deletePrefix(...$directory);
         }
 
@@ -566,8 +566,9 @@ class S3 extends Device
      */
     private function copyObject(string $source, string $target): bool
     {
-        // Refuses a source outside the bucket before anything is sent.
+        // Refuses a source or target outside the bucket before anything is sent.
         $this->prefix($source);
+        $this->prefix($target);
 
         $info = $this->getInfo($source);
         $size = (int) ($info['content-length'] ?? 0);
@@ -631,10 +632,14 @@ class S3 extends Device
      * that only share the directory name as a prefix are kept.
      *
      * @throws StorageException
-     * @throws \InvalidArgumentException When the directory is the whole bucket
+     * @throws \InvalidArgumentException When the path is empty or the directory is the whole bucket
      */
     public function deletePath(string $path): bool
     {
+        if (trim($path, '/') === '') {
+            throw new \InvalidArgumentException('Refusing to delete the whole root: ' . $this->getRoot());
+        }
+
         $this->deletePrefix(...$this->directory($this->getRoot() . '/' . $path));
 
         return true;

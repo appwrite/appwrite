@@ -252,8 +252,9 @@ abstract class Device
     }
 
     /**
-     * Delete the file at the given path. Recursive, it also removes everything
-     * under `path/`. Return true on success and false on failure.
+     * Delete the file at the given path. When `$recursive` is true, also
+     * removes every object under `path/`. Return true on success and false on
+     * failure.
      */
     abstract public function delete(string $path, bool $recursive = false): bool;
 

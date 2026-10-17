@@ -332,6 +332,41 @@ final class S3Test extends TestCase
         );
     }
 
+    private function objectListing(string ...$keys): Response
+    {
+        $body = '<?xml version="1.0" encoding="UTF-8"?><ListBucketResult><KeyCount>' . \count($keys) . '</KeyCount><IsTruncated>false</IsTruncated>';
+        foreach ($keys as $key) {
+            $body .= '<Contents><Key>' . htmlspecialchars($key, ENT_XML1) . '</Key><Size>1</Size></Contents>';
+        }
+        $body .= '</ListBucketResult>';
+
+        return new Response(200, body: new Stream($body))->withHeader('content-type', 'application/xml');
+    }
+
+    /**
+     * @return array<int|string, mixed>
+     */
+    private function queryOf(RequestInterface $request): array
+    {
+        parse_str($request->getUri()->getQuery(), $parameters);
+
+        return $parameters;
+    }
+
+    private function pathStyleDevice(ScriptedClient $client, string $root = 'appwrite/storage/uploads/app-p'): S3
+    {
+        return new S3(
+            root: $root,
+            accessKey: 'test-key',
+            secretKey: 'test-secret',
+            host: 'http://minio:9000',
+            region: 'us-east-1',
+            client: $client,
+            bucket: 'appwrite',
+            pathStyle: true,
+        );
+    }
+
     private function slowDown(): Response
     {
         $body = '<?xml version="1.0" encoding="UTF-8"?><Error><Code>SlowDown</Code><Message>Please reduce your request rate.</Message></Error>';
@@ -723,27 +758,6 @@ final class S3Test extends TestCase
         $this->assertNull($list->cursor);
     }
 
-    private function objectListing(string ...$keys): Response
-    {
-        $body = '<?xml version="1.0" encoding="UTF-8"?><ListBucketResult><KeyCount>' . \count($keys) . '</KeyCount><IsTruncated>false</IsTruncated>';
-        foreach ($keys as $key) {
-            $body .= '<Contents><Key>' . htmlspecialchars($key, ENT_XML1) . '</Key><Size>1</Size></Contents>';
-        }
-        $body .= '</ListBucketResult>';
-
-        return new Response(200, body: new Stream($body))->withHeader('content-type', 'application/xml');
-    }
-
-    /**
-     * @return array<int|string, mixed>
-     */
-    private function queryOf(RequestInterface $request): array
-    {
-        parse_str($request->getUri()->getQuery(), $parameters);
-
-        return $parameters;
-    }
-
     public function testRecursiveDeleteRemovesEveryObjectUnderThePrefix(): void
     {
         $client = new ScriptedClient([
@@ -786,11 +800,30 @@ final class S3Test extends TestCase
         $this->assertSame('root/img/', $this->queryOf($client->requests[1])['prefix'] ?? null);
     }
 
-    public function testRecursiveDeleteOfAnEmptyPrefixIsRefused(): void
+    /**
+     * @return \Iterator<string, array{string, \Closure(S3): mixed}>
+     */
+    public static function wholeBucketDeletes(): \Iterator
+    {
+        yield 'delete of an empty path' => ['', static fn (S3 $device): bool => $device->delete('')];
+        yield 'delete of a slash' => ['', static fn (S3 $device): bool => $device->delete('/')];
+        yield 'delete of a path that resolves to nothing' => ['', static fn (S3 $device): bool => $device->delete('a/..')];
+        yield 'recursive delete of an empty path' => ['', static fn (S3 $device): bool => $device->delete('', true)];
+        yield 'recursive delete of a slash' => ['', static fn (S3 $device): bool => $device->delete('/', true)];
+        yield 'deletePath of an empty path under an empty root' => ['', static fn (S3 $device): bool => $device->deletePath('')];
+        yield 'deletePath of an empty path' => ['/root', static fn (S3 $device): bool => $device->deletePath('')];
+        yield 'deletePath of a slash' => ['/root', static fn (S3 $device): bool => $device->deletePath('/')];
+    }
+
+    /**
+     * @param  \Closure(S3): mixed  $attempt
+     */
+    #[DataProvider('wholeBucketDeletes')]
+    public function testDeleteOfTheWholeBucketOrRootIsRefused(string $root, \Closure $attempt): void
     {
         $client = new ScriptedClient([]);
         $device = new S3(
-            root: '',
+            root: $root,
             accessKey: 'test-key',
             secretKey: 'test-secret',
             host: 'https://s3.example.com',
@@ -798,20 +831,13 @@ final class S3Test extends TestCase
             client: $client,
         );
 
-        $attempts = [
-            'delete(\'\', true)' => fn (): bool => $device->delete('', true),
-            'delete(\'/\', true)' => fn (): bool => $device->delete('/', true),
-            'deletePath(\'\')' => fn (): bool => $device->deletePath(''),
-        ];
-        foreach ($attempts as $call => $attempt) {
-            try {
-                $attempt();
-                self::fail("{$call} must refuse to delete the whole bucket");
-            } catch (\InvalidArgumentException) {
-            }
+        try {
+            $attempt($device);
+            self::fail('Deleting the whole bucket or root must be refused');
+        } catch (\InvalidArgumentException) {
         }
 
-        $this->assertCount(0, $client->requests, 'nothing may reach the bucket before the prefix is validated');
+        $this->assertCount(0, $client->requests, 'no DeleteBucket and no listing may be sent before the path is validated');
     }
 
     public function testDeleteWithoutRecursionSendsOneRequest(): void
@@ -1089,20 +1115,6 @@ final class S3Test extends TestCase
         $this->device($client)->listUploads('/root/', 10, 'next-token');
     }
 
-    private function pathStyleDevice(ScriptedClient $client, string $root = 'appwrite/storage/uploads/app-p'): S3
-    {
-        return new S3(
-            root: $root,
-            accessKey: 'test-key',
-            secretKey: 'test-secret',
-            host: 'http://minio:9000',
-            region: 'us-east-1',
-            client: $client,
-            bucket: 'appwrite',
-            pathStyle: true,
-        );
-    }
-
     public function testPathStyleListFilesReturnsDevicePaths(): void
     {
         $client = new ScriptedClient([$this->objectListing('storage/uploads/app-p/a.txt', 'storage/uploads/app-p/b/c.txt')]);
@@ -1122,24 +1134,33 @@ final class S3Test extends TestCase
         );
     }
 
-    public function testPathStyleRejectsPathsOutsideTheBucket(): void
+    /**
+     * @return \Iterator<string, array{\Closure(S3): mixed}>
+     */
+    public static function pathsOutsideTheBucket(): \Iterator
+    {
+        yield 'listFiles' => [static fn (S3 $device): mixed => $device->listFiles('other/storage/')];
+        yield 'listFiles sharing the bucket name as a prefix' => [static fn (S3 $device): mixed => $device->listFiles('appwrite-old/storage/')];
+        yield 'listFiles escaping the bucket' => [static fn (S3 $device): mixed => $device->listFiles('appwrite/../other/')];
+        yield 'listUploads' => [static fn (S3 $device): mixed => $device->listUploads('other/storage/a.bin')];
+        yield 'copy source' => [static fn (S3 $device): mixed => $device->copy('other/storage/a.txt', 'appwrite/storage/b.txt')];
+        yield 'copy target' => [static fn (S3 $device): mixed => $device->copy('appwrite/a', 'other/b')];
+        yield 'delete' => [static fn (S3 $device): mixed => $device->delete('other/x')];
+        yield 'recursive delete' => [static fn (S3 $device): mixed => $device->delete('other/x', true)];
+    }
+
+    /**
+     * @param  \Closure(S3): mixed  $attempt
+     */
+    #[DataProvider('pathsOutsideTheBucket')]
+    public function testPathStyleRejectsPathsOutsideTheBucket(\Closure $attempt): void
     {
         $client = new ScriptedClient([]);
-        $device = $this->pathStyleDevice($client);
 
-        $attempts = [
-            'listFiles' => static fn (): mixed => $device->listFiles('other/storage/'),
-            'listFiles sharing the bucket name as a prefix' => static fn (): mixed => $device->listFiles('appwrite-old/storage/'),
-            'listFiles escaping the bucket' => static fn (): mixed => $device->listFiles('appwrite/../other/'),
-            'listUploads' => static fn (): mixed => $device->listUploads('other/storage/a.bin'),
-            'copy' => static fn (): mixed => $device->copy('other/storage/a.txt', 'appwrite/storage/b.txt'),
-        ];
-        foreach ($attempts as $name => $attempt) {
-            try {
-                $attempt();
-                self::fail($name . ' outside the bucket must be refused');
-            } catch (\InvalidArgumentException) {
-            }
+        try {
+            $attempt($this->pathStyleDevice($client));
+            self::fail('A path outside the bucket must be refused');
+        } catch (\InvalidArgumentException) {
         }
 
         $this->assertCount(0, $client->requests, 'nothing outside the bucket is ever addressed');
@@ -1205,41 +1226,48 @@ final class S3Test extends TestCase
     }
 
     /**
-     * @return \Iterator<string, array{string}>
+     * @return \Iterator<string, array{string, bool}>
      */
     public static function pathStyleBucketPaths(): \Iterator
     {
-        yield 'bucket' => ['appwrite'];
-        yield 'bucket with a trailing slash' => ['appwrite/'];
-        yield 'bucket with a leading slash' => ['/appwrite'];
-        yield 'empty' => [''];
-        yield 'slash' => ['/'];
+        foreach (['bucket' => 'appwrite', 'bucket with a trailing slash' => 'appwrite/', 'bucket with a leading slash' => '/appwrite', 'empty' => '', 'slash' => '/'] as $name => $path) {
+            yield $name => [$path, false];
+            yield $name . ', recursive' => [$path, true];
+        }
     }
 
     #[DataProvider('pathStyleBucketPaths')]
-    public function testPathStyleRecursiveDeleteOfTheBucketIsRefused(string $path): void
+    public function testPathStyleDeleteOfTheBucketIsRefused(string $path, bool $recursive): void
     {
         $client = new ScriptedClient([]);
 
         try {
-            $this->pathStyleDevice($client, 'appwrite/storage')->delete($path, true);
-            self::fail('A recursive delete of the whole bucket must be refused');
+            $this->pathStyleDevice($client, 'appwrite/storage')->delete($path, $recursive);
+            self::fail('A delete of the whole bucket must be refused');
         } catch (\InvalidArgumentException) {
         }
 
         $this->assertCount(0, $client->requests, 'no DeleteBucket, no listing of the whole bucket');
     }
 
-    public function testPathStyleDeletePathOfTheRootIsRefusedWhenTheRootIsTheBucket(): void
+    /**
+     * @return \Iterator<string, array{string}>
+     */
+    public static function rootPaths(): \Iterator
+    {
+        yield 'empty' => [''];
+        yield 'slash' => ['/'];
+    }
+
+    #[DataProvider('rootPaths')]
+    public function testPathStyleDeletePathOfTheRootIsRefusedWhenTheRootIsTheBucket(string $path): void
     {
         $client = new ScriptedClient([]);
 
-        foreach (['', '/'] as $path) {
-            try {
-                $this->pathStyleDevice($client, 'appwrite')->deletePath($path);
-                self::fail('Deleting the root that is the whole bucket must be refused');
-            } catch (\InvalidArgumentException) {
-            }
+        try {
+            $this->pathStyleDevice($client, 'appwrite')->deletePath($path);
+            self::fail('Deleting the root that is the whole bucket must be refused');
+        } catch (\InvalidArgumentException) {
         }
 
         $this->assertCount(0, $client->requests);

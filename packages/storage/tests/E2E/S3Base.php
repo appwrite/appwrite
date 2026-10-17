@@ -311,9 +311,12 @@ abstract class S3Base extends TestCase
             $this->object->write($sentinel, new Stream('sentinel'), 'text/plain');
 
             $attempts = [
+                'delete(\'\')' => fn (): bool => $this->object->delete(''),
+                'delete(\'/\')' => fn (): bool => $this->object->delete('/'),
                 'delete(\'\', true)' => fn (): bool => $this->object->delete('', true),
                 'delete(\'/\', true)' => fn (): bool => $this->object->delete('/', true),
                 'deletePath(\'\') under an empty root' => fn (): bool => $bucket->deletePath(''),
+                'deletePath(\'\')' => fn (): bool => $this->object->deletePath(''),
             ];
             foreach ($attempts as $call => $attempt) {
                 try {
