@@ -14,6 +14,8 @@
 //! | `Validator\BigInt` | [`big_int::BigInt`], [`big_int::Integer`], [`big_int::Operand`] |
 //! | `Validator\ByteLength` | [`byte_length::ByteLength`] |
 //! | `Validator\Datetime` | [`datetime::Datetime`], [`datetime::Precision`] |
+//! | `Validator\Finite` | [`finite::Finite`] |
+//! | `Validator\Geometry` | [`geometry::Geometry`] |
 //! | `Validator\IndexDefinition` | [`index_definition::IndexDefinition`] |
 //! | `Validator\IndexDependency` | [`index_dependency::IndexDependency`] |
 //! | `Validator\Key`, `UID`, `Label` | [`key::Key`], [`uid::Uid`], [`label::Label`] |
@@ -53,6 +55,8 @@ pub mod authorization;
 pub mod big_int;
 pub mod byte_length;
 pub mod datetime;
+pub mod finite;
+pub mod geometry;
 pub mod index_definition;
 pub mod index_dependency;
 pub mod key;

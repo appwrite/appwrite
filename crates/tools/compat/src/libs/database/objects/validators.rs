@@ -27,6 +27,8 @@ use utopia_database::validator::attribute_definition::{AttributeDefinition, Meas
 use utopia_database::validator::big_int::{BigInt, Integer, Operand};
 use utopia_database::validator::byte_length::ByteLength;
 use utopia_database::validator::datetime::{Datetime, Precision, default_max, default_min};
+use utopia_database::validator::finite::Finite;
+use utopia_database::validator::geometry::Geometry;
 use utopia_database::validator::index_definition::IndexDefinition;
 use utopia_database::validator::index_dependency::IndexDependency;
 use utopia_database::validator::key::Key;
@@ -69,6 +71,7 @@ use crate::libs::database::calls::{Calls, Cb};
 use crate::libs::database::codec;
 use crate::libs::database::convert::{IntoObj, ok};
 use crate::libs::database::ctx::{Fail, R, fault};
+use crate::libs::database::enums;
 use crate::libs::database::obj::{Obj, PhpObject};
 use crate::libs::database::values;
 
@@ -103,6 +106,10 @@ pub enum V {
     BigInt(Arc<BigInt>),
     /// `Validator\ByteLength`
     ByteLength(Arc<ByteLength>),
+    /// `Validator\Finite`
+    Finite(Arc<Finite>),
+    /// `Validator\Geometry`
+    Geometry(Arc<Geometry>),
     /// `Validator\Sequence`
     Sequence(Arc<Sequence>),
     /// `Validator\Spatial`
@@ -167,6 +174,8 @@ macro_rules! each {
             V::Datetime($x) => $body,
             V::BigInt($x) => $body,
             V::ByteLength($x) => $body,
+            V::Finite($x) => $body,
+            V::Geometry($x) => $body,
             V::Sequence($x) => $body,
             V::Spatial($x) => $body,
             V::Vector($x) => $body,
@@ -211,6 +220,8 @@ impl V {
             V::Datetime(_) => "Validator\\Datetime",
             V::BigInt(_) => "Validator\\BigInt",
             V::ByteLength(_) => "Validator\\ByteLength",
+            V::Finite(_) => "Validator\\Finite",
+            V::Geometry(_) => "Validator\\Geometry",
             V::Sequence(_) => "Validator\\Sequence",
             V::Spatial(_) => "Validator\\Spatial",
             V::Vector(_) => "Validator\\Vector",
@@ -558,6 +569,8 @@ pub async fn construct(class: &str, a: &Args) -> R<Option<Obj>> {
         )?)),
         "BigInt" => V::BigInt(Arc::new(BigInt::new(a.bool("signed")?, a.bool_or("supportUnsigned64Bit", true)?))),
         "ByteLength" => V::ByteLength(Arc::new(ByteLength::new(a.int("max")?))),
+        "Finite" => V::Finite(Arc::new(Finite::new(a.bool_or("loose", false)?))),
+        "Geometry" => V::Geometry(Arc::new(Geometry::new())),
         "Sequence" => V::Sequence(Arc::new(Sequence::new(a.string("idAttributeType")?, a.bool("primary")?))),
         "Spatial" => V::Spatial(Arc::new(Spatial::new(a.string("spatialType")?))),
         "Vector" => V::Vector(Arc::new(Vector::new(a.int("size")?))),
@@ -682,6 +695,10 @@ pub async fn call_static(class: &str, method: &str, a: &Args) -> R<Option<Obj>> 
         ("Structure" | "PartialStructure", _) => structure_static(method, a)?,
         ("BigInt", _) => big_int_static(method, a)?,
         ("Spatial", "isWktString") => Spatial::is_wkt_string(a.string("value")?.as_bytes()).into_obj(),
+        ("Spatial", "parseWkt") => match Spatial::parse_wkt(a.string("value")?.as_bytes()) {
+            Some((kind, coordinates)) => Obj::List(vec![enums::obj(kind), Obj::Value(coordinates)]),
+            None => Obj::null(),
+        },
         ("ObjectPath", "accepts") => ObjectPath::accepts(a.string("path")?.as_bytes()).into_obj(),
         ("ObjectPath", "isKey") => ObjectPath::is_key(a.string("key")?.as_bytes()).into_obj(),
         ("Queries\\Narrow", "accepts") => Narrow::accepts(&a.queries("queries")?).into_obj(),
@@ -696,7 +713,12 @@ pub async fn call_static(class: &str, method: &str, a: &Args) -> R<Option<Obj>> 
                 None => Obj::null(),
             }
         }
-        ("Query\\Join", "describeInvalidAlias") => Join::describe_invalid_alias(&a.string("alias")?).into_obj(),
+        ("Query\\Join", "describeInvalidAlias") => {
+            Join::describe_invalid_alias(&a.string("alias")?, a.bool_or("defaulted", false)?).into_obj()
+        }
+        ("Query\\Join", "describeDuplicateAlias") => {
+            Join::describe_duplicate_alias(&a.string("alias")?, a.bool_or("defaulted", false)?).into_obj()
+        }
         _ => return Ok(None),
     };
     Ok(Some(result))

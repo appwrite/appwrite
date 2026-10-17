@@ -10,7 +10,7 @@ use php_std::ArrayKey;
 use php_std::datetime::DateTime;
 use utopia_query::schema::ColumnType;
 use utopia_query::{Array as QArray, Method, Value as QValue};
-use utopia_validators::{Boolean, Float, Integer, Text};
+use utopia_validators::{Boolean, Integer, Text};
 
 use crate::attribute::Attribute;
 use crate::document;
@@ -18,6 +18,8 @@ use crate::error::{Error, Kind, Result};
 use crate::validator::Message;
 use crate::validator::big_int::BigInt;
 use crate::validator::datetime::{Datetime, default_max, default_min};
+use crate::validator::finite::finite_query_value;
+use crate::validator::geometry::Geometry;
 use crate::validator::object_path::ObjectPath;
 use crate::validator::query::base::{
     INVALID_QUERY, MethodType, accepts, nested, query_of, query_validator, split_dot, ucfirst,
@@ -25,6 +27,7 @@ use crate::validator::query::base::{
 use crate::validator::query::joined::attributes::Joins;
 use crate::validator::query::joined::collection::{Collection, stores_column};
 use crate::validator::sequence::Sequence;
+use crate::validator::spatial::Spatial;
 use crate::value::{self as dbvalue, Value};
 
 const ENCRYPT: &str = "encrypt";
@@ -76,7 +79,7 @@ impl Rule {
             Rule::Text(v) => accepts(v, value),
             Rule::Integer(v) => v.as_ref().is_some_and(|v| accepts(v, value)),
             Rule::BigInt(v) => v.is_valid(&dbvalue::from_query(value)),
-            Rule::Float => accepts(&Float::default(), value),
+            Rule::Float => finite_query_value(value),
             Rule::Boolean => accepts(&Boolean::STRICT, value),
             Rule::Datetime(v) => v.is_valid(&dbvalue::from_query(value)),
         }
@@ -87,6 +90,10 @@ const STRING_TYPES: [ColumnType; 5] =
     [ColumnType::String, ColumnType::Varchar, ColumnType::Text, ColumnType::MediumText, ColumnType::LongText];
 
 const SPATIAL_TYPES: [ColumnType; 3] = [ColumnType::Point, ColumnType::Linestring, ColumnType::Polygon];
+
+/// `DISTANCE_METHODS`: their geometry is checked by `isValidDistance()`.
+const DISTANCE_METHODS: [Method; 4] =
+    [Method::DistanceEqual, Method::DistanceNotEqual, Method::DistanceGreaterThan, Method::DistanceLessThan];
 
 /// A filter query on an attribute of the collection (or of a join, or a
 /// path into an object attribute) whose values suit the attribute's type:
@@ -195,6 +202,9 @@ impl Filter {
         let method = query.method();
         let attribute = query.attribute();
         let values = query.values();
+        if !values.is_list() {
+            return self.fail(format!("{} query values must be a list", ucfirst(method.as_str())));
+        }
         match method {
             Method::Equal | Method::Contains | Method::ContainsAny | Method::NotContains | Method::ContainsAll => {
                 if is_empty(values) {
@@ -212,16 +222,8 @@ impl Filter {
             | Method::DistanceNotEqual
             | Method::DistanceGreaterThan
             | Method::DistanceLessThan => {
-                let first = values.get(&ArrayKey::Int(0));
-                let Some(QValue::Array(parameters)) = first.filter(|_| values.len() == 1) else {
-                    return self.fail("Distance query requires [[geometry, distance]] parameters");
-                };
-                if parameters.len() != 3 {
-                    return self.fail("Distance query requires [[geometry, distance]] parameters");
-                }
-                let distance = parameters.get(&ArrayKey::Int(1)).unwrap_or(&QValue::Null);
-                if !is_numeric(distance) || !distance.to_double().is_finite() {
-                    return self.fail("Distance query requires a finite distance");
+                if !self.is_valid_distance(values) {
+                    return false;
                 }
                 self.is_valid_attribute_and_values(joins, attribute, values, method)
             }
@@ -308,6 +310,43 @@ impl Filter {
             }
             _ => false,
         }
+    }
+
+    /// A distance query holds one `[geometry, distance, meters]` tuple: the
+    /// geometry as coordinates or WKT, a finite distance and whether it is in
+    /// meters (`isValidDistance()`, 8.3.4).
+    fn is_valid_distance(&self, values: &QArray) -> bool {
+        let tuple = values.get(&ArrayKey::Int(0));
+        let Some(QValue::Array(tuple)) = tuple.filter(|_| values.len() == 1) else {
+            return self.fail("Distance query requires [[geometry, distance]] parameters");
+        };
+        if !tuple.is_list() || tuple.len() != 3 {
+            return self.fail("Distance query requires [[geometry, distance]] parameters");
+        }
+        let item = |i: i64| tuple.get(&ArrayKey::Int(i)).unwrap_or(&QValue::Null);
+        let geometry = dbvalue::from_query(item(0));
+        let (valid, description) = match &geometry {
+            Value::Str(wkt) => {
+                let kind = Spatial::parse_wkt(wkt.as_bytes()).map_or(ColumnType::Point, |(kind, _)| kind);
+                let spatial = Spatial::new(kind.as_str());
+                (spatial.is_valid(&geometry), spatial.description())
+            }
+            _ => {
+                let shape = Geometry::new();
+                (shape.is_valid(&geometry), shape.description())
+            }
+        };
+        if !valid {
+            return self.fail(format!("Distance query requires a geometry as coordinates or WKT: {description}"));
+        }
+        let distance = item(1);
+        if !is_numeric(distance) || !distance.to_double().is_finite() {
+            return self.fail("Distance query requires a finite distance");
+        }
+        if !matches!(item(2), QValue::Bool(_)) {
+            return self.fail("Distance query requires a boolean meters flag");
+        }
+        true
     }
 
     /// The nested queries of a logical query, when every value is a query
@@ -497,12 +536,24 @@ impl Filter {
                     if !matches!(value, QValue::Array(_)) {
                         return self.fail("Spatial data must be an array");
                     }
+                    if !DISTANCE_METHODS.contains(&method) {
+                        let geometry = Geometry::new();
+                        if !geometry.is_valid(&dbvalue::from_query(value)) {
+                            return self.fail(format!(
+                                "Invalid spatial data for attribute \"{attribute}\": {}",
+                                geometry.description()
+                            ));
+                        }
+                    }
                     continue;
                 }
                 ColumnType::Vector => {
                     let QValue::Array(components) = value else {
                         return self.fail("Vector query value must be an array");
                     };
+                    if !components.is_list() {
+                        return self.fail("Vector query value must be an array");
+                    }
                     if !components.values().all(is_numeric) {
                         return self.fail("Vector query value must contain only numeric values");
                     }
@@ -637,12 +688,14 @@ pub(crate) fn grouped_as_filter(method: Method) -> bool {
         || method.is_join())
 }
 
-/// `isEmpty($values)`: no values, or a first value that is an empty array.
+/// `isEmpty($values)`: no values, or a first value (`reset()`) that is an
+/// empty array.
 fn is_empty(values: &QArray) -> bool {
-    if values.is_empty() {
-        return true;
+    match values.values().next() {
+        None => true,
+        Some(QValue::Array(a)) => a.is_empty(),
+        Some(_) => false,
     }
-    matches!(values.get(&ArrayKey::Int(0)), Some(QValue::Array(a)) if a.is_empty())
 }
 
 /// `is_numeric($value)`.

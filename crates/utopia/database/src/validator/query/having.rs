@@ -5,12 +5,12 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex, MutexGuard};
 
+use crate::validator::finite::finite_query_value;
 use utopia_query::{Method, Value as QValue};
-use utopia_validators::Float;
 
 use crate::validator::Message;
 use crate::validator::query::base::{
-    INVALID_QUERY, MethodType, QueryValidator, accepts, base_is_valid, nested, query_validator, ucfirst,
+    INVALID_QUERY, MethodType, QueryValidator, base_is_valid, nested, query_validator, ucfirst,
 };
 use crate::validator::query::filter::Filter;
 
@@ -194,8 +194,7 @@ impl Having {
                 filter.max_values_count()
             ));
         }
-        let number = Float::default();
-        if !values.values().all(|value| accepts(&number, value)) {
+        if !values.values().all(finite_query_value) {
             return self.fail(format!("Query value is invalid for aggregate alias \"{alias}\""));
         }
         true
