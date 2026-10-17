@@ -742,15 +742,24 @@ class Jobs extends Action
             $this->updateLatestDeployment($dbForProject, $resource);
         }
 
-        if ($applied > 0 && $success && $deployment->getAttribute('activate') === true && ! $resource->isEmpty()) {
-            $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
-        }
-
+        // The status and the resource's deploymentId commit together, so
+        // executions never reach a deployment that is still building and a
+        // deployment reported ready is already the one they reach. The rules
+        // live in the platform database and are repointed before the commit;
+        // the router keeps serving the active deployment until then.
         if ($applied > 0) {
-            $applied = $dbForProject->updateDocuments('deployments', new Document(['status' => $terminal]), [
-                Query::equal('$id', [$deployment->getId()]),
-                Query::notEqual('status', 'canceled'),
-            ]);
+            $applied = $dbForProject->withTransaction(function () use ($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus, $success, $terminal): int {
+                $applied = $dbForProject->updateDocuments('deployments', new Document(['status' => $terminal]), [
+                    Query::equal('$id', [$deployment->getId()]),
+                    Query::notEqual('status', 'canceled'),
+                ]);
+
+                if ($applied > 0 && $success && $deployment->getAttribute('activate') === true && ! $resource->isEmpty()) {
+                    $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
+                }
+
+                return $applied;
+            });
             $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
         }
 

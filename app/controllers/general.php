@@ -222,6 +222,15 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $authorization->skip(fn () => $dbForProject->getDocument('functions', $deployment->getAttribute('resourceId', ''))) :
             $authorization->skip(fn () => $dbForProject->getDocument('sites', $deployment->getAttribute('resourceId', '')));
 
+        // The builds worker repoints manual rules before the deployment turns
+        // ready and becomes the resource's active one; serve the active one until then.
+        if ($rule->getAttribute('trigger', '') === 'manual' && $deployment->getAttribute('status') !== 'ready') {
+            $active = $authorization->skip(fn () => $dbForProject->getDocument('deployments', $resource->getAttribute('deploymentId', '')));
+            if ($active->getAttribute('status') === 'ready') {
+                $deployment = $active;
+            }
+        }
+
         $isPreview = $type === 'function' ? false : ($rule->getAttribute('trigger', '') !== 'manual');
 
         $path = ($swooleRequest->server['request_uri'] ?? '/');
