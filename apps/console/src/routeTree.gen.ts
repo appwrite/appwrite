@@ -81,6 +81,7 @@ import { Route as ApiChangelogRssDotxmlRouteImport } from './routes/_api/changel
 import { Route as ApiDebugIpRouteImport } from './routes/_api/debug.ip'
 import { Route as ApiGeneratorCoverRouteImport } from './routes/_api/generator/cover'
 import { Route as ApiGeneratorDiagramRouteImport } from './routes/_api/generator/diagram'
+import { Route as ApiOgCoverDotjpgRouteImport } from './routes/_api/og/cover[.]jpg'
 import { Route as ApiOgImageDotpngRouteImport } from './routes/_api/og/image[.]png'
 import { Route as ApiOgInitDotpngRouteImport } from './routes/_api/og/init[.]png'
 import { Route as ApiReferencesApiModelRouteImport } from './routes/_api/references-api/model'
@@ -826,6 +827,11 @@ const ApiGeneratorCoverRoute = ApiGeneratorCoverRouteImport.update({
 const ApiGeneratorDiagramRoute = ApiGeneratorDiagramRouteImport.update({
   id: '/_api/generator/diagram',
   path: '/generator/diagram',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOgCoverDotjpgRoute = ApiOgCoverDotjpgRouteImport.update({
+  id: '/_api/og/cover.jpg',
+  path: '/og/cover.jpg',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiOgImageDotpngRoute = ApiOgImageDotpngRouteImport.update({
@@ -3417,6 +3423,7 @@ export interface FileRoutesByFullPath {
   '/debug/ip': typeof ApiDebugIpRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
+  '/og/cover.jpg': typeof ApiOgCoverDotjpgRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
   '/og/init.png': typeof ApiOgInitDotpngRoute
   '/references-api/model': typeof ApiReferencesApiModelRoute
@@ -3872,6 +3879,7 @@ export interface FileRoutesByTo {
   '/debug/ip': typeof ApiDebugIpRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
+  '/og/cover.jpg': typeof ApiOgCoverDotjpgRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
   '/og/init.png': typeof ApiOgInitDotpngRoute
   '/references-api/model': typeof ApiReferencesApiModelRoute
@@ -4287,6 +4295,7 @@ export interface FileRoutesById {
   '/_api/debug/ip': typeof ApiDebugIpRoute
   '/_api/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/_api/generator/diagram': typeof ApiGeneratorDiagramRoute
+  '/_api/og/cover.jpg': typeof ApiOgCoverDotjpgRoute
   '/_api/og/image.png': typeof ApiOgImageDotpngRoute
   '/_api/og/init.png': typeof ApiOgInitDotpngRoute
   '/_api/references-api/model': typeof ApiReferencesApiModelRoute
@@ -4748,6 +4757,7 @@ export interface FileRouteTypes {
     | '/debug/ip'
     | '/generator/cover'
     | '/generator/diagram'
+    | '/og/cover.jpg'
     | '/og/image.png'
     | '/og/init.png'
     | '/references-api/model'
@@ -5203,6 +5213,7 @@ export interface FileRouteTypes {
     | '/debug/ip'
     | '/generator/cover'
     | '/generator/diagram'
+    | '/og/cover.jpg'
     | '/og/image.png'
     | '/og/init.png'
     | '/references-api/model'
@@ -5617,6 +5628,7 @@ export interface FileRouteTypes {
     | '/_api/debug/ip'
     | '/_api/generator/cover'
     | '/_api/generator/diagram'
+    | '/_api/og/cover.jpg'
     | '/_api/og/image.png'
     | '/_api/og/init.png'
     | '/_api/references-api/model'
@@ -6039,6 +6051,7 @@ export interface RootRouteChildren {
   ApiDebugIpRoute: typeof ApiDebugIpRoute
   ApiGeneratorCoverRoute: typeof ApiGeneratorCoverRouteWithChildren
   ApiGeneratorDiagramRoute: typeof ApiGeneratorDiagramRoute
+  ApiOgCoverDotjpgRoute: typeof ApiOgCoverDotjpgRoute
   ApiOgImageDotpngRoute: typeof ApiOgImageDotpngRoute
   ApiOgInitDotpngRoute: typeof ApiOgInitDotpngRoute
   ApiReferencesApiModelRoute: typeof ApiReferencesApiModelRoute
@@ -6557,6 +6570,13 @@ declare module '@tanstack/react-router' {
       path: '/generator/diagram'
       fullPath: '/generator/diagram'
       preLoaderRoute: typeof ApiGeneratorDiagramRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/og/cover.jpg': {
+      id: '/_api/og/cover.jpg'
+      path: '/og/cover.jpg'
+      fullPath: '/og/cover.jpg'
+      preLoaderRoute: typeof ApiOgCoverDotjpgRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_api/og/image.png': {
@@ -11278,6 +11298,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiDebugIpRoute: ApiDebugIpRoute,
   ApiGeneratorCoverRoute: ApiGeneratorCoverRouteWithChildren,
   ApiGeneratorDiagramRoute: ApiGeneratorDiagramRoute,
+  ApiOgCoverDotjpgRoute: ApiOgCoverDotjpgRoute,
   ApiOgImageDotpngRoute: ApiOgImageDotpngRoute,
   ApiOgInitDotpngRoute: ApiOgInitDotpngRoute,
   ApiReferencesApiModelRoute: ApiReferencesApiModelRoute,

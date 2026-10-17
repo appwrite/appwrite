@@ -1,7 +1,12 @@
 import { MARKETING_SITE_ORIGIN } from '@/lib/marketing/urls'
 import { getSeoSiteOrigin } from '@/lib/marketing/site-origin'
 import { getCoverImageDimensions } from '@/lib/seo/cover-dimensions'
-import { buildOgImageUrl, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/lib/seo/og-image'
+import {
+  buildOgCoverUrl,
+  buildOgImageUrl,
+  OG_IMAGE_HEIGHT,
+  OG_IMAGE_WIDTH,
+} from '@/lib/seo/og-image'
 import { getOrganizationSchema } from '@/lib/seo/organization'
 import { SEO_SITE_NAME } from '@/lib/seo/page-meta'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -30,10 +35,7 @@ function getChangelogEntryOgImage(
   siteOrigin?: string,
 ): string {
   if (entry.cover) {
-    if (entry.cover.startsWith('/')) {
-      return `${getSeoSiteOrigin(siteOrigin)}${entry.cover}`
-    }
-    return entry.cover
+    return buildOgCoverUrl(entry.cover, siteOrigin)
   }
 
   return buildOgImageUrl(
