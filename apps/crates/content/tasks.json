@@ -1,13 +1,13 @@
 {
-  "updated": "2026-10-17T14:14:00Z",
+  "updated": "2026-10-17T15:00:00Z",
   "tasks": [
     {
-      "id": "users-purge-flake",
-      "title": "Users parity: two differences on dedicated tables",
+      "id": "debug-stack",
+      "title": "Debug build overflows its stack on DELETE /v1/account",
       "area": "Services",
-      "status": "progress",
-      "updated": "2026-10-17T14:14:00Z",
-      "note": "users.list narrowkey purges 3 vs 1 (reproducible, not a flake) and teams.memberships.delete jwt headers 16 vs 13. Time-boxed to 90 minutes: decide whether each is a Rust bug, main's newer PHP, or a diff-tool artifact."
+      "status": "todo",
+      "updated": "2026-10-17T15:00:00Z",
+      "note": "The debug appwrite-rust aborts with a stack overflow on account deletion even with 8 MiB worker stacks, which stops full local parity runs. Release builds (CI, production) are not affected."
     },
     {
       "id": "db-known-gaps",
@@ -24,6 +24,14 @@
       "status": "todo",
       "updated": "2026-10-15T23:30:00Z",
       "note": "tests/compat/async/spec.json points at the crate but has no operations yet; write the ops and cases against utopia-php/async 0.2 to mark it complete."
+    },
+    {
+      "id": "users-purge-flake",
+      "title": "Users parity on dedicated tables",
+      "area": "Services",
+      "status": "done",
+      "updated": "2026-10-17T15:00:00Z",
+      "note": "Rust updated a key's access time in the background after answering; PHP does it before the action, so on CI only one of three cache purges landed in the diff window. It now runs inline, as in PHP. The twins' JWTs expired mid-run (900s), so they now last 3600s."
     },
     {
       "id": "db836",
