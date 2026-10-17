@@ -23,7 +23,7 @@ The plan applies `crates/CONVERSION.md`, the standard and the document to refer 
 | 15 | Legacy hot path. | `row::index` does a linear name search for every column of every row. `load_user` pipelines 5 `query_typed` statements. Three handlers match `NotFound(m) if m.starts_with("cursor:")`. Eight appwrite files contain hand-written SQL. | The baseline to keep or beat. |
 | 16 | php-std values. | php-std carries values as `serde_json::Value`, which has no int keys and no stdClass distinction. json, serialize, pcre and datetime are 4-line stubs. | The value model and these engine functions are prerequisites. |
 | 17 | Sizes. | Database: src 49.8k lines; Database.php 11.2k lines with 130 public methods; Mirror.php 53 public methods; 84 test files, 67k lines; 16 e2e profiles. Query: 297 src files, 25.6k lines; 101 test classes, 75k lines. packages/cache: 5.2k lines. packages/pools: 1k lines. utopia-php/mongo: 3k lines, a Swoole wire client. | Scale of the work. |
-| 18 | Toolchain. | Edition 2024, rust-version 1.88. RPITIT and async closures are available. The future of an `AsyncFn*` cannot be given a nameable Send bound. | Closure APIs take an owned handle and a plain `FnMut(..) -> Fut + Send`. |
+| 18 | Toolchain. | Edition 2024, rust-version 1.97. RPITIT and async closures are available. The future of an `AsyncFn*` cannot be given a nameable Send bound. | Closure APIs take an owned handle and a plain `FnMut(..) -> Fut + Send`. |
 
 ## 1. Decisions
 

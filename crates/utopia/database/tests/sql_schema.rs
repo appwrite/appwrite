@@ -3139,7 +3139,7 @@ mod sqlite_schema_indexes_test {
             let e = database(shared).await;
             let title = Index::fulltext("title_search", ["title"]);
             let body = Index::fulltext("body_search", ["body"]);
-            create(&e, title.clone(), &[title.clone()]).await;
+            create(&e, title.clone(), std::slice::from_ref(&title)).await;
             create(&e, body.clone(), &[title.clone(), body.clone()]).await;
             assert_eq!(fulltext(&e).await, [ft("body_search", "body"), ft("title_search", "title")]);
             assert!(e.adapter.rename_index("notes", "title_search", "title_lookup").await.unwrap());
@@ -3154,7 +3154,7 @@ mod sqlite_schema_indexes_test {
             let e = database(shared).await;
             let title = Index::fulltext("title_search", ["title"]);
             let body = Index::fulltext("body_search", ["body"]);
-            create(&e, title.clone(), &[title.clone()]).await;
+            create(&e, title.clone(), std::slice::from_ref(&title)).await;
             create(&e, body.clone(), &[title.clone(), body.clone()]).await;
             assert!(e.adapter.delete_index("notes", "title_search").await.unwrap());
             e.define(notes(vec![body.clone()])).await;
@@ -3176,7 +3176,7 @@ mod sqlite_schema_indexes_test {
             let e = database(shared).await;
             let by_title = Index::key("by_title", ["title"], vec![], vec![]).unwrap();
             let by_body = Index::unique("by_body", ["body"], vec![], vec![]).unwrap();
-            create(&e, by_title.clone(), &[by_title.clone()]).await;
+            create(&e, by_title.clone(), std::slice::from_ref(&by_title)).await;
             create(&e, by_body.clone(), &[by_title.clone(), by_body.clone()]).await;
             let tenant: Vec<String> = if shared { vec!["_tenant".into()] } else { vec![] };
             let with = |column: &str| [tenant.clone(), vec![column.to_owned()]].concat();
@@ -3192,7 +3192,7 @@ mod sqlite_schema_indexes_test {
     async fn test_shared_tables_list_every_tenants_index_once_and_prefer_their_own() {
         let e = database(true).await;
         let by_title = Index::key("by_title", ["title"], vec![], vec![]).unwrap();
-        create(&e, by_title.clone(), &[by_title.clone()]).await;
+        create(&e, by_title.clone(), std::slice::from_ref(&by_title)).await;
         e.adapter
             .create_index("notes", &Index::key("lookup", ["title"], vec![], vec![]).unwrap(), &[], &[])
             .await
@@ -3237,7 +3237,7 @@ mod sqlite_schema_indexes_test {
         for shared in [false, true] {
             let e = database(shared).await;
             let by_title = Index::key("by_title", ["title"], vec![], vec![]).unwrap();
-            create(&e, by_title.clone(), &[by_title.clone()]).await;
+            create(&e, by_title.clone(), std::slice::from_ref(&by_title)).await;
             assert!(e.adapter.delete_index("notes", "by_title").await.unwrap());
             assert!(!indexes(&e).await.contains_key("by_title"));
             assert!(e.adapter.rename_index("notes", "by_title", "by_heading").await.unwrap());

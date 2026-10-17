@@ -171,7 +171,7 @@ fn positional(full: &str, quoted: &str, named: &[(String, Value)], sort_keys: bo
     let expression = full.strip_prefix(prefix.as_str()).unwrap_or(full);
     let mut keys: Vec<&(String, Value)> = named.iter().collect();
     if sort_keys {
-        keys.sort_by(|a, b| b.0.len().cmp(&a.0.len()));
+        keys.sort_by_key(|k| std::cmp::Reverse(k.0.len()));
     }
     let mut replacements: Vec<(usize, usize, &Value)> = Vec::new();
     for (key, value) in keys {

@@ -7,7 +7,7 @@
 #
 # The build context is filtered by Dockerfile.rust.dockerignore.
 
-ARG RUST_VERSION=1.88
+ARG RUST_VERSION=1.97
 
 FROM rust:${RUST_VERSION}-slim-bookworm AS builder
 

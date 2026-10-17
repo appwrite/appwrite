@@ -14,7 +14,7 @@ Non-goal: a line-by-line port. The Rust code keeps the boundaries and responsibi
 ## 2. Repository layout
 
 ```
-Cargo.toml                 workspace (resolver 3, edition 2024, MSRV 1.88)
+Cargo.toml                 workspace (resolver 3, edition 2024, MSRV 1.97)
 Cargo.lock                 committed: the workspace ships a binary
 Dockerfile.rust            image for the Rust API (distroless, non-root)
 crates/

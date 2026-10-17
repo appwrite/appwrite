@@ -942,7 +942,7 @@ jobs:
           --health-retries 15
     env:
       CARGO_TERM_COLOR: always
-      RUST_VERSION: '1.88'
+      RUST_VERSION: '1.97'
       UTOPIA_CACHE_REDIS: redis://localhost:6379/6
     steps:
       - name: Checkout repository
@@ -1008,7 +1008,7 @@ jobs:
         mode: [dedicated, shared]
     env:
       COMPOSE_PROFILES: postgresql,rust
-      RUST_VERSION: '1.88'
+      RUST_VERSION: '1.97'
       _APP_DB_ADAPTER: postgresql
       _APP_DB_HOST: postgresql
       _APP_DB_PORT: '5432'
@@ -1151,7 +1151,7 @@ jobs:
           - shard: libraries
             libs: '!database !usage !php-std !agents !audit !messaging !vcs'
     env:
-      RUST_VERSION: '1.88'
+      RUST_VERSION: '1.97'
       COMPOSE_PROFILES: postgresql
     steps:
       - name: Checkout repository

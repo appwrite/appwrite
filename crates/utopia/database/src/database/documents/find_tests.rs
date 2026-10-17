@@ -400,12 +400,11 @@ fn recording(
     auth: Arc<Mutex<Option<Arc<crate::validator::authorization::Authorization>>>>,
 ) -> Extra {
     Box::new(move |c| {
-        if matches!(c, Call::Find { .. } | Call::Count { .. } | Call::Sum { .. })
-            || matches!(c, Call::GetDocument { collection, .. } if collection.id() != METADATA)
+        if (matches!(c, Call::Find { .. } | Call::Count { .. } | Call::Sum { .. })
+            || matches!(c, Call::GetDocument { collection, .. } if collection.id() != METADATA))
+            && let Some(a) = auth.lock().unwrap().as_ref()
         {
-            if let Some(a) = auth.lock().unwrap().as_ref() {
-                statuses.lock().unwrap().push(a.status());
-            }
+            statuses.lock().unwrap().push(a.status());
         }
         None
     })

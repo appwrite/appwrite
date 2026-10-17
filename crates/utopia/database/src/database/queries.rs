@@ -218,10 +218,11 @@ fn convert_query_with_map(db: &Database, query: &mut BaseQuery, map: &AttributeM
                 query.set_values(values);
             }
         }
-        None if !adapter.supports(Capability::DefinedAttributes) => {
-            if adapter.supports(Capability::Objects) && Database::is_compatible_object_value(query.values()) {
-                query.set_attribute_type(ColumnType::Object.as_str());
-            }
+        None if !adapter.supports(Capability::DefinedAttributes)
+            && adapter.supports(Capability::Objects)
+            && Database::is_compatible_object_value(query.values()) =>
+        {
+            query.set_attribute_type(ColumnType::Object.as_str());
         }
         None => {}
     }

@@ -614,12 +614,11 @@ fn is_main_row_condition(query: &utopia_query::Query, join_aliases: &[String]) -
                     return false;
                 }
             }
-            utopia_query::Value::Str(s) => {
+            utopia_query::Value::Str(s)
                 if matches!(method, Method::Exists | Method::NotExists)
-                    && join_alias_of(&String::from_utf8_lossy(s.as_bytes()), join_aliases).is_some()
-                {
-                    return false;
-                }
+                    && join_alias_of(&String::from_utf8_lossy(s.as_bytes()), join_aliases).is_some() =>
+            {
+                return false;
             }
             _ => {}
         }

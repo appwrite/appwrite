@@ -78,10 +78,10 @@ impl Sql {
 
         let mut explicit: Vec<&str> = Vec::new();
         for selection in selections {
-            if let Some(internal) = internal_keys.iter().find(|k| **k == selection) {
-                if !explicit.contains(internal) {
-                    explicit.push(internal);
-                }
+            if let Some(internal) = internal_keys.iter().find(|k| **k == selection)
+                && !explicit.contains(internal)
+            {
+                explicit.push(internal);
             }
         }
 
