@@ -3,6 +3,10 @@
 
 use std::sync::Mutex;
 
+use utopia_database::attribute::IntegerWidth;
+use utopia_database::database::LENGTH_KEY;
+pub use utopia_database::{Attribute, Index};
+
 use super::{Rule, Store};
 use crate::{Error, Result};
 
@@ -32,11 +36,14 @@ pub trait Documents: Send + Sync {
     /// PHP: `$db->exists($db->getDatabase())`.
     fn exists(&self) -> impl Future<Output = Result<bool>> + Send;
 
-    /// Creates the collection with its attributes and indexes, failing with
-    /// [`Error::Duplicate`] when it exists.
+    /// Creates the collection with `attributes` and `indexes` (those of
+    /// [`attributes`] and [`indexes`]), failing with [`Error::Duplicate`]
+    /// when it exists.
     ///
-    /// PHP: `createCollection(Database::COLLECTION, ATTRIBUTES, INDEXES)`.
-    fn create_collection(&self) -> impl Future<Output = Result<()>> + Send;
+    /// PHP: `createCollection(Collection::create(id: Database::COLLECTION,
+    /// attributes: Database::attributes(), indexes: Database::indexes()))`.
+    fn create_collection(&self, attributes: &[Attribute], indexes: &[Index])
+    -> impl Future<Output = Result<()>> + Send;
 
     /// The document of `key` and `time`, if any.
     ///
@@ -45,7 +52,8 @@ pub trait Documents: Send + Sync {
     fn find_one(&self, key: &str, time: &str) -> impl Future<Output = Result<Option<Entry>>> + Send;
 
     /// Creates a document (its `id` is chosen by the store), failing with
-    /// [`Error::Duplicate`] when one exists for its key and time.
+    /// [`Error::Unique`] when one exists for its key and time (the `unique1`
+    /// index).
     fn create(&self, entry: &Entry) -> impl Future<Output = Result<()>> + Send;
 
     /// Adds one to the count of document `id`.
@@ -80,8 +88,12 @@ impl<D: Documents + ?Sized> Documents for std::sync::Arc<D> {
         (**self).exists()
     }
 
-    fn create_collection(&self) -> impl Future<Output = Result<()>> + Send {
-        (**self).create_collection()
+    fn create_collection(
+        &self,
+        attributes: &[Attribute],
+        indexes: &[Index],
+    ) -> impl Future<Output = Result<()>> + Send {
+        (**self).create_collection(attributes, indexes)
     }
 
     fn find_one(&self, key: &str, time: &str) -> impl Future<Output = Result<Option<Entry>>> + Send {
@@ -117,6 +129,56 @@ impl<D: Documents + ?Sized> Documents for std::sync::Arc<D> {
 ///
 /// PHP: `Database::COLLECTION`.
 pub const COLLECTION: &str = "abuse";
+
+/// The attributes of the `abuse` collection: the limit's `key`, the
+/// window's start (`time`) and the unsigned 64-bit `count`, all required.
+///
+/// ```
+/// use utopia_abuse::time_limit::database;
+///
+/// let keys: Vec<_> = database::attributes().into_iter().map(|a| a.key).collect();
+/// assert_eq!(keys, ["key", "time", "count"]);
+/// ```
+///
+/// ```php
+/// use Utopia\Abuse\Adapter\TimeLimit\Database;
+///
+/// echo implode(', ', array_map(fn ($a) => $a->key, Database::attributes())), "\n"; // key, time, count
+/// ```
+///
+/// PHP: `Database::attributes()`.
+pub fn attributes() -> Vec<Attribute> {
+    vec![
+        Attribute::string("key", LENGTH_KEY).required(true),
+        Attribute::datetime("time").required(true),
+        Attribute::integer("count").width(IntegerWidth::Bits64).required(true).signed(false),
+    ]
+}
+
+/// The indexes of the `abuse` collection: `unique1` on `key` and `time`
+/// (one document per key and window), and `index2` on `time` (for
+/// [`cleanup`](super::TimeLimit::cleanup)).
+///
+/// ```
+/// use utopia_abuse::time_limit::database;
+///
+/// let keys: Vec<_> = database::indexes().into_iter().map(|i| i.key).collect();
+/// assert_eq!(keys, ["unique1", "index2"]);
+/// ```
+///
+/// ```php
+/// use Utopia\Abuse\Adapter\TimeLimit\Database;
+///
+/// echo implode(', ', array_map(fn ($i) => $i->key, Database::indexes())), "\n"; // unique1, index2
+/// ```
+///
+/// PHP: `Database::indexes()`.
+pub fn indexes() -> Vec<Index> {
+    vec![
+        Index::unique("unique1", ["key", "time"], Vec::new(), Vec::new()).expect("an index without orders is valid"),
+        Index::key("index2", ["time"], Vec::new(), Vec::new()).expect("an index without orders is valid"),
+    ]
+}
 
 /// Counters as documents of the `abuse` collection: one per key and window,
 /// with its count.
@@ -170,13 +232,14 @@ impl<D: Documents> Database<D> {
         &self.db
     }
 
-    /// Creates the `abuse` collection, unless it exists. Fails with
-    /// [`Error::Exception`] when the database does not exist.
+    /// Creates the `abuse` collection with its [`attributes`] and
+    /// [`indexes`], unless it exists. Fails with [`Error::Exception`] when
+    /// the database does not exist.
     pub async fn setup(&self) -> Result<()> {
         if !self.db.exists().await? {
             return Err(Error::Exception("You need to create database before running timelimit setup".into()));
         }
-        match self.db.create_collection().await {
+        match self.db.create_collection(&attributes(), &indexes()).await {
             Ok(()) | Err(Error::Duplicate(_)) => Ok(()),
             Err(e) => Err(e),
         }
@@ -193,7 +256,7 @@ impl<D: Documents> Database<D> {
         match self.db.create(&entry).await {
             Ok(()) => Ok(None),
             // Another request created it first.
-            Err(Error::Duplicate(_)) => match self.db.find_one(key, time).await? {
+            Err(Error::Duplicate(_) | Error::Unique(_)) => match self.db.find_one(key, time).await? {
                 Some(entry) => Ok(Some(entry)),
                 None => Err(Error::Exception(lost.into())),
             },
@@ -301,7 +364,7 @@ impl Documents for Memory {
         Ok(self.state().database)
     }
 
-    async fn create_collection(&self) -> Result<()> {
+    async fn create_collection(&self, _attributes: &[Attribute], _indexes: &[Index]) -> Result<()> {
         let mut state = self.state();
         if state.collection {
             return Err(Error::Duplicate("Collection already exists".into()));
@@ -320,7 +383,7 @@ impl Documents for Memory {
         let mut state = self.state();
         Self::collection(&state)?;
         if state.entries.iter().any(|e| e.key == entry.key && e.time == entry.time) {
-            return Err(Error::Duplicate("Document already exists".into()));
+            return Err(Error::Unique("Unique index violation".into()));
         }
         state.next += 1;
         let id = state.next.to_string();

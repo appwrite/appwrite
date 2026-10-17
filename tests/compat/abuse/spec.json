@@ -321,8 +321,29 @@
         "Utopia\\Abuse\\Adapter\\TimeLimit\\Database::setup"
       ]
     },
+    "database.attributes": {
+      "doc": "TimeLimit\\Database::attributes(), each toDocument()->getArrayCopy()",
+      "covers": [
+        "Utopia\\Abuse\\Adapter\\TimeLimit\\Database::attributes"
+      ]
+    },
+    "database.indexes": {
+      "doc": "TimeLimit\\Database::indexes(), each toDocument()->getArrayCopy()",
+      "covers": [
+        "Utopia\\Abuse\\Adapter\\TimeLimit\\Database::indexes"
+      ]
+    },
+    "database.store": {
+      "doc": "fixture: a counter document {key, time (a Unix time, stored as the database formats dates), count} created directly in the abuse collection, bypassing authorization (DatabaseSchemaTest::store)"
+    },
+    "database.windows": {
+      "doc": "the window starts of `key`'s documents in a TimeLimit\\Database's getLogs(), as sorted Unix times (DatabaseSchemaTest::windows)"
+    },
     "tables.new": {
       "doc": "a fake Appwrite TablesDB API in memory (`table`: none | bare | complete)"
+    },
+    "tables.reject": {
+      "doc": "makes the fake TablesDB answer `create` (the database) and `createTable` with the status given (0 accepts), as the PHP tests' fixture endpoint does: an AppwriteException 'setup rejected', typed database_already_exists for 409 and fixture_rejected otherwise"
     },
     "tables.setup": {
       "doc": "$limit->setup() on a TimeLimit\\Appwrite\\TablesDB",
@@ -525,7 +546,9 @@
     }
   },
   "waivers": {},
-  "tests_waived": {},
+  "tests_waived": {
+    "packages/abuse/tests/E2E/DiscoveryTest.php": "Runs PHPUnit's --list-tests-xml over the package and asserts TablesDBTest and TablesDBFixtureTest are both discovered with test methods: a guard on PHPUnit's discovery of the PHP suite, with no library behaviour to compare. bin/compat coverage itself requires a case file for each of those classes (TablesDBTest.json, TablesDBFixtureTest.json)."
+  },
   "quirks": [
     {
       "symbol": "Utopia\\Abuse\\Adapter::withParams",

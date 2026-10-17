@@ -12,6 +12,7 @@ use utopia_abuse::{
 };
 
 use crate::adapter::{Args, Fault, OpResult, Outcome, Session, bytes_value};
+use crate::libs::database::codec::encode_array;
 
 pub const OPS: &[&str] = &[
     "limit.new",
@@ -26,7 +27,12 @@ pub const OPS: &[&str] = &[
     "limit.run",
     "database.new",
     "database.setup",
+    "database.attributes",
+    "database.indexes",
+    "database.store",
+    "database.windows",
     "tables.new",
+    "tables.reject",
     "tables.setup",
     "tables.calls",
     "memory.new",
@@ -301,6 +307,10 @@ struct FakeState {
     tables: Vec<(String, Vec<String>, Vec<String>)>,
     rows: Vec<time_limit::Row>,
     next: u64,
+    /// The status `create` (the database) answers with, `0` to accept.
+    reject_create: u16,
+    /// The status `createTable` answers with, `0` to accept.
+    reject_table: u16,
 }
 
 #[derive(Clone, Default)]
@@ -335,6 +345,12 @@ impl FakeTables {
         s
     }
 
+    /// The rejection of the PHP tests' fixture endpoint: `status`, typed
+    /// `database_already_exists` when it is 409.
+    fn rejected(status: u16) -> Error {
+        appwrite("setup rejected", status, if status == 409 { "database_already_exists" } else { "fixture_rejected" })
+    }
+
     fn schema(&self, table: &str) -> Vec<String> {
         let s = self.state();
         s.tables
@@ -358,6 +374,9 @@ impl time_limit::Tables for FakeTables {
 
     async fn create_database(&self, database: &str, _name: &str) -> utopia_abuse::Result<()> {
         let mut s = self.call("create");
+        if s.reject_create != 0 {
+            return Err(Self::rejected(s.reject_create));
+        }
         if s.databases.iter().any(|d| d == database) {
             return Err(appwrite("Database already exists", 409, "database_already_exists"));
         }
@@ -374,6 +393,9 @@ impl time_limit::Tables for FakeTables {
         indexes: &[time_limit::Index],
     ) -> utopia_abuse::Result<()> {
         let mut s = self.call("createTable");
+        if s.reject_table != 0 {
+            return Err(Self::rejected(s.reject_table));
+        }
         let id = format!("{database}/{table}");
         if s.tables.iter().any(|t| t.0 == id) {
             return Err(appwrite("Table already exists", 409, "table_already_exists"));
@@ -852,7 +874,58 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             },
             _ => return Err(Fault::new("not a database limit")),
         },
+        "database.attributes" => {
+            let documents = time_limit::database::attributes()
+                .iter()
+                .map(|a| a.to_document().map(|d| encode_array(&d.array_copy())))
+                .collect::<Result<Vec<_>, _>>()
+                .map_err(|e| Fault::new(e.message()))?;
+            Outcome::Ok(Value::Array(documents))
+        }
+        "database.indexes" => Outcome::Ok(Value::Array(
+            time_limit::database::indexes().iter().map(|i| encode_array(&i.to_document().array_copy())).collect(),
+        )),
+        "database.store" => {
+            use time_limit::Documents as _;
+            let db = session.get::<Db>(a.value("database")?)?.clone();
+            let time = String::from_utf8(php_std::datetime::gmdate(b"Y-m-d H:i:s.v", a.i64("time")?))
+                .map_err(|e| Fault::new(e.to_string()))?;
+            let entry =
+                time_limit::Entry { id: String::new(), key: a.str("key")?.to_owned(), time, count: a.i64("count")? };
+            match db.create(&entry).await {
+                Ok(()) => Outcome::Ok(Value::Null),
+                Err(e) => err(e),
+            }
+        }
+        "database.windows" => match limit(session)? {
+            AnyLimit::TlDatabase(l) => {
+                let key = a.str("key")?;
+                let utc = php_std::datetime::TzInfo::utc();
+                let now = php_std::datetime::time();
+                let mut windows: Vec<i64> = match l.logs(None, Some(25)).await {
+                    Ok(logs) => logs
+                        .into_iter()
+                        .filter(|e| e.key == key)
+                        .filter_map(|e| php_std::datetime::strtotime(e.time.as_bytes(), now, &utc))
+                        .collect(),
+                    Err(e) => return Ok(err(e)),
+                };
+                windows.sort_unstable();
+                Outcome::Ok(json!(windows))
+            }
+            _ => return Err(Fault::new("not a database limit")),
+        },
         "tables.new" => Outcome::Ok(session.handle(FakeTables::new(a.opt_str("state")?.unwrap_or("none")))),
+        "tables.reject" => {
+            let fake = session.get::<FakeTables>(a.value("tables")?)?.clone();
+            let status = |k: &str| -> Result<u16, Fault> {
+                a.opt_i64(k)?.unwrap_or(0).try_into().map_err(|_| Fault::new(format!("bad status {k}")))
+            };
+            let (create, table) = (status("create")?, status("createTable")?);
+            let mut s = fake.state();
+            (s.reject_create, s.reject_table) = (create, table);
+            Outcome::Ok(Value::Null)
+        }
         "tables.setup" => match limit(session)? {
             AnyLimit::TlTables(l) => match l.store().setup().await {
                 Ok(()) => Outcome::Ok(Value::Null),

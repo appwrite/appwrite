@@ -4115,6 +4115,7 @@ dependencies = [
  "rustls",
  "thiserror",
  "utopia-async",
+ "utopia-database",
 ]
 
 [[package]]
