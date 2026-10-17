@@ -454,9 +454,12 @@
       "description": "The organization that owns the project, or on the console the one a route names (path project, `teamId` or `X-Appwrite-Organization`); used for admin roles.",
       "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('team'" },
       "rust": {
-        "status": "partial",
-        "note": "The project's team for admin mode; console organization routes are not needed by Users.",
-        "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "async fn load_team_id" }]
+        "status": "done",
+        "note": "Resolved as PHP does: the project's organization by `teamInternalId`; on the console the project of a `/v1/projects/:projectId` route (`projectIdFromPath`), the `teamId` param of `/v1/projects`, or `X-Appwrite-Organization` on an `organization` group route; empty otherwise. Organization keys are decoded against its keys and admin mode reads its memberships. A unit test covers each branch. The console's admin branch of the `auth` hook (bare owner/developer roles from this team, `projectIdFromPath` scopes, authorization on for `/v1/projects`) is the `auth` hook's, for when the Organization and Projects routes move.",
+        "where": [
+          { "file": "crates/appwrite/core/src/platform/context.rs", "anchor": "pub(super) async fn team(" },
+          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "async fn load_team" }
+        ]
       }
     },
     {

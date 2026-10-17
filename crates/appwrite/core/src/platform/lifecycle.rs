@@ -262,9 +262,9 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
         // The project's organization (`$team`) and its keys, for an
         // organization key.
         let organization = if key_header.starts_with("organization_") {
-            match load_team_id(&platform_db, &ctx.project.team_internal_id).await? {
-                Some(id) => {
-                    let keys = project::owned_keys(&platform_db, "teams", &ctx.project.team_internal_id).await?;
+            match load_team(&platform_db, ctx).await? {
+                Some((id, sequence)) => {
+                    let keys = project::owned_keys(&platform_db, "teams", &sequence).await?;
                     Some((id, keys))
                 }
                 None => None,
@@ -371,7 +371,7 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
             extra_roles.push(format!("team:{}/owner", key.team_id));
         }
     } else if ctx.user.is_some() && ctx.mode == Mode::Admin && !ctx.project.is_console() {
-        let team_id = load_team_id(&platform_db, &ctx.project.team_internal_id).await?;
+        let team_id = load_team(&platform_db, ctx).await?.map(|(id, _)| id);
         let source = ctx.roles_user().cloned().unwrap_or_default();
         let admin_roles = source
             .memberships
@@ -512,8 +512,6 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
     Ok(())
 }
 
-/// The `$id` of the project's team (the `team` resource:
-/// `findOne('teams', [equal('$sequence', [$teamInternalId])])`).
 /// PHP's `rule` resource: the custom domain rule of the request's origin
 /// (or referer), when it serves the project or a trusted one.
 async fn rule_domain(
@@ -549,14 +547,15 @@ async fn rule_domain(
     Ok(Some(rule.string_or_empty("domain")))
 }
 
-async fn load_team_id(platform_db: &Database, team_internal_id: &str) -> Result<Option<String>> {
-    if team_internal_id.is_empty() {
+/// The `$id` and `$sequence` of the `team` resource ([`super::context::team`]),
+/// `None` when it is empty.
+async fn load_team(platform_db: &Database, ctx: &Context) -> Result<Option<(String, String)>> {
+    let team = super::context::team(platform_db, &ctx.project, &ctx.route, &ctx.request, &ctx.path_params).await?;
+    if team.is_empty() {
         return Ok(None);
     }
-    let authorization = platform_db.authorization();
-    let team =
-        authorization.skip(platform_db.find_one("teams", vec![Query::equal("$sequence", [team_internal_id])])).await?;
-    Ok(if team.is_empty() { None } else { Some(team.id().to_owned()) })
+    let sequence = team.sequence().map(utopia_database::value::to_text).unwrap_or_default();
+    Ok(Some((team.id().to_owned(), sequence)))
 }
 
 /// The user an impersonator names (the `targetUser` resource): by id,
