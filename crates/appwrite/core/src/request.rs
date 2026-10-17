@@ -3,26 +3,130 @@
 //! reads them.
 //!
 //! PHP: `Appwrite\Utopia\Request\Filters` (`V16` ... `V27`), which
-//! `app/controllers/general.php` adds by `X-Appwrite-Response-Format`. Only
-//! the filters that touch a route Rust serves are here: `V17` (1.4 query
-//! strings) and `V27` (bare keywords); the others match none of its routes.
+//! `app/controllers/general.php` adds by `X-Appwrite-Response-Format`, each
+//! rewriting the routes (SDK models) it names: a service ported later gets
+//! its filters with no change here.
 
 use serde_json::{Map, Value};
+use utopia_database::{Database, Document};
 
 use crate::response::Version;
 use crate::{Error, ErrorType};
 
+/// What `V20` reads: the project database and the route's `databaseId`
+/// and `collectionId` (PHP's `params`).
+pub struct Related<'a> {
+    pub db: &'a Database,
+    pub database_id: String,
+    pub collection_id: String,
+}
+
 /// Rewrites `params` for a client of response format `format`, for the
 /// route whose SDK model is `model` (`users.list`), as each filter PHP adds
 /// for that format does, in PHP's order.
-pub fn apply(format: Version, model: &str, params: &mut Map<String, Value>) -> Result<(), Error> {
+pub async fn apply(
+    format: Version,
+    model: &str,
+    params: &mut Map<String, Value>,
+    related: Option<Related<'_>>,
+) -> Result<(), Error> {
+    if format < Version(1, 4, 0) {
+        v16(model, params);
+    }
     if format < Version(1, 5, 0) {
         v17(model, params)?;
+    }
+    if format < Version(1, 6, 0) {
+        v18(model, params);
+    }
+    if format < Version(1, 7, 0) {
+        v19(model, params);
+    }
+    if format < Version(1, 8, 0) {
+        v20(model, params, related).await?;
+    }
+    if format < Version(1, 9, 0) {
+        v21(model, params);
+    }
+    if format < Version(1, 9, 1) {
+        v22(model, params);
+    }
+    if format < Version(1, 9, 2) {
+        v23(model, params);
+    }
+    if format < Version(1, 9, 3) {
+        v24(model, params);
+    }
+    if format < Version(1, 9, 4) {
+        v25(model, params);
+    }
+    if format < Version(1, 9, 5) {
+        v26(model, params);
     }
     if format < Version(2, 0, 0) {
         v27(model, params);
     }
     Ok(())
+}
+
+/// Whether PHP's `isset($content[$key])` holds.
+fn isset(params: &Map<String, Value>, key: &str) -> bool {
+    params.get(key).is_some_and(|v| !v.is_null())
+}
+
+/// `$content[$key] = $content[$key] ?? $default`.
+fn fill(params: &mut Map<String, Value>, key: &str, default: Value) {
+    if !isset(params, key) {
+        params.insert(key.to_owned(), default);
+    }
+}
+
+/// `if (isset($content[$from])) { $content[$to] = $content[$from]; unset($content[$from]); }`
+fn rename(params: &mut Map<String, Value>, from: &str, to: &str) {
+    if let Some(value) = params.get(from).filter(|v| !v.is_null()).cloned() {
+        params.insert(to.to_owned(), value);
+        params.remove(from);
+    }
+}
+
+/// A scalar as a PHP `string` parameter coerces it (`None` for `null` and
+/// arrays).
+fn php_string(value: &Value) -> Option<String> {
+    match value {
+        Value::String(s) => Some(s.clone()),
+        Value::Bool(true) => Some("1".to_owned()),
+        Value::Bool(false) => Some(String::new()),
+        Value::Number(n) => Some(php_number_string(&php_std::value::json_number(n))),
+        _ => None,
+    }
+}
+
+/// `V16::parse()`: 1.3 params to 1.4.
+fn v16(model: &str, params: &mut Map<String, Value>) {
+    match model {
+        "functions.create" | "functions.update" => {
+            let runtime = params.get("runtime").and_then(php_string).unwrap_or_default();
+            const COMMANDS: [(&str, &str); 7] = [
+                ("node", "npm install"),
+                ("python", "pip install --no-cache-dir -r requirements.txt"),
+                ("dart", "dart pub get"),
+                (
+                    "php",
+                    "composer update --no-interaction --ignore-platform-reqs --optimize-autoloader --prefer-dist --no-dev",
+                ),
+                ("ruby", "bundle install"),
+                ("swift", "swift package resolve"),
+                ("dotnet", "dotnet restore"),
+            ];
+            let commands = COMMANDS.iter().find(|(prefix, _)| runtime.starts_with(prefix)).map_or("", |(_, c)| c);
+            params.insert("commands".to_owned(), Value::String(commands.to_owned()));
+        }
+        "functions.createExecution" => {
+            let body = params.remove("data").filter(|v| !v.is_null()).unwrap_or(Value::String(String::new()));
+            params.insert("body".to_owned(), body);
+        }
+        _ => {}
+    }
 }
 
 /// `V17::parse()`: 1.4 query strings (`equal("name", ["x"])`) become JSON
@@ -426,16 +530,415 @@ fn parse_value(value: &[u8]) -> Php {
     Php::Str(trimmed.to_vec())
 }
 
-/// `V27::parse()`: bare keywords gained parentheses in 2.0.0.
+/// `V18::parse()`: 1.5 params to 1.6.
+fn v18(model: &str, params: &mut Map<String, Value>) {
+    match model {
+        "account.deleteMfaAuthenticator" => {
+            params.remove("otp");
+        }
+        "functions.create" => {
+            let version =
+                params.remove("templateBranch").filter(|v| !v.is_null()).unwrap_or(Value::String(String::new()));
+            params.insert("templateVersion".to_owned(), version);
+        }
+        _ => {}
+    }
+}
+
+/// `V19::parse()`: 1.6 params to 1.7.
+fn v19(model: &str, params: &mut Map<String, Value>) {
+    match model {
+        "functions.list" => v19_attribute(params, "deployment", "deploymentId"),
+        "functions.listDeployments" => v19_attribute(params, "size", "deploymentSize"),
+        "proxy.listRules" => {
+            v19_attribute(params, "resourceType", "deploymentResourceType");
+            v19_attribute(params, "resourceId", "deploymentResourceId");
+        }
+        "functions.create" => {
+            for key in ["templateRepository", "templateOwner", "templateRootDirectory", "templateVersion"] {
+                params.remove(key);
+            }
+        }
+        "functions.listExecutions" => {
+            params.remove("search");
+        }
+        "project.createVariable"
+        | "project.listVariables"
+        | "functions.createVariable"
+        | "functions.updateVariable" => {
+            params.insert("secret".to_owned(), Value::Bool(false));
+        }
+        "functions.getDeploymentDownload" => {
+            params.insert("type".to_owned(), Value::String("output".to_owned()));
+        }
+        _ => {}
+    }
+}
+
+/// `V19::convertQueryAttribute()`: each query decoded, its attribute
+/// renamed, and encoded again (an undecodable one becomes `null`).
+fn v19_attribute(params: &mut Map<String, Value>, old: &str, new: &str) {
+    let Some(Value::Array(queries)) = params.get_mut("queries") else { return };
+    for query in queries.iter_mut() {
+        let text = php_string(query).unwrap_or_default();
+        let mut decoded = php_std::json::decode(
+            text.as_bytes(),
+            Some(true),
+            php_std::json::DEFAULT_DEPTH,
+            php_std::json::Flags::NONE,
+        )
+        .unwrap_or(php_std::Value::Null);
+        if let php_std::Value::Array(array) = &mut decoded {
+            let key = php_std::ArrayKey::from("attribute");
+            if matches!(array.get(&key), Some(php_std::Value::Str(s)) if s.as_bytes() == old.as_bytes()) {
+                array.set(key, php_std::Value::Str(php_std::Str::from(new.as_bytes().to_vec())));
+            }
+        }
+        *query = match php_std::json::encode(&decoded, php_std::json::Flags::NONE, php_std::json::DEFAULT_DEPTH) {
+            Ok(json) => Value::String(json),
+            Err(_) => Value::Bool(false),
+        };
+    }
+}
+
+fn query_error(e: utopia_database::Error) -> Error {
+    Error::with_message(ErrorType::GeneralQueryInvalid, e.message().to_owned())
+}
+
+/// `V20::parse()`: 1.7 params to 1.8. Related documents stopped coming
+/// back by default, so a 1.7 client's `getDocument` and `listDocuments`
+/// select every attribute and every relationship (three levels deep).
+async fn v20(model: &str, params: &mut Map<String, Value>, related: Option<Related<'_>>) -> Result<(), Error> {
+    if !matches!(model, "databases.getDocument" | "databases.listDocuments") {
+        return Ok(());
+    }
+    let queries = params.entry("queries").or_insert_with(|| Value::Array(Vec::new()));
+    let Value::Array(items) = queries else { return Ok(()) };
+    // `array_filter()`: empty objects, blank strings and empty values out.
+    items.retain(|q| match q {
+        Value::Object(map) => !map.is_empty(),
+        Value::String(s) => !s.trim_matches([' ', '\t', '\n', '\r', '\0', '\x0B']).is_empty() && s != "0",
+        other => !php_std::value::empty(other),
+    });
+    let texts: Vec<String> = items.iter().map(|q| php_string(q).unwrap_or_default()).collect();
+    let parsed = utopia_database::Query::parse_queries(&texts, false).map_err(query_error)?;
+    let selects: Vec<&utopia_database::Query> =
+        parsed.iter().filter(|q| q.method() == utopia_query::Method::Select).collect();
+    let star = |v: &utopia_query::Value| matches!(v, utopia_query::Value::Str(s) if s.as_bytes() == b"*");
+    let needs = selects.is_empty() || selects.iter().any(|s| s.values().values().any(star));
+    let mut queries: Vec<Value> = Vec::with_capacity(parsed.len() + 1);
+    for query in &parsed {
+        if needs && query.method() == utopia_query::Method::Select {
+            continue;
+        }
+        queries.push(Value::String(query.to_json().map_err(query_error)?));
+    }
+    if needs {
+        let mut selected = vec!["*".to_owned()];
+        if let Some(related) = related {
+            for key in related_keys(&related).await {
+                if !selected.contains(&key) {
+                    selected.push(key);
+                }
+            }
+        }
+        let select = utopia_database::Query::from(utopia_query::Query::select(selected));
+        queries.push(Value::String(select.to_json().map_err(query_error)?));
+    }
+    params.insert("queries".to_owned(), Value::Array(queries));
+    Ok(())
+}
+
+/// `V20::getRelatedCollectionKeys()`: `key.*` for each available
+/// relationship of the collection, and of the collections it relates to,
+/// up to `RELATION_MAX_DEPTH` levels, never back to a collection on the
+/// path.
+async fn related_keys(related: &Related<'_>) -> Vec<String> {
+    if related.database_id.is_empty() || related.collection_id.is_empty() {
+        return Vec::new();
+    }
+    let db = related.db;
+    let database =
+        match db.authorization().skip(db.get_document("databases", &related.database_id, Vec::new(), false)).await {
+            Ok(d) if !d.is_empty() => d,
+            _ => return Vec::new(),
+        };
+    let namespace = format!("database_{}", crate::database::documents::sequence_text(&database));
+    let mut cache: Vec<(String, Option<Document>)> = Vec::new();
+    let mut keys = Vec::new();
+    walk(db, &namespace, &related.collection_id, None, 1, Vec::new(), &mut cache, &mut keys).await;
+    keys
+}
+
+/// `V20::walkRelatedCollectionKeys()`, appending to `out`.
+#[allow(clippy::too_many_arguments)]
+fn walk<'a>(
+    db: &'a Database,
+    namespace: &'a str,
+    collection_id: &'a str,
+    prefix: Option<String>,
+    depth: i64,
+    mut visited: Vec<String>,
+    cache: &'a mut Vec<(String, Option<Document>)>,
+    out: &'a mut Vec<String>,
+) -> std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + 'a>> {
+    Box::pin(async move {
+        if depth > utopia_database::database::RELATION_MAX_DEPTH || visited.iter().any(|v| v == collection_id) {
+            return;
+        }
+        let collection = match cache.iter().find(|(id, _)| id == collection_id) {
+            Some((_, c)) => c.clone(),
+            None => {
+                let found =
+                    match db.authorization().skip(db.get_document(namespace, collection_id, Vec::new(), false)).await {
+                        Ok(c) if !c.is_empty() => Some(c),
+                        _ => None,
+                    };
+                cache.push((collection_id.to_owned(), found.clone()));
+                found
+            }
+        };
+        let Some(collection) = collection else { return };
+        visited.push(collection_id.to_owned());
+        let attributes = match collection.get("attributes") {
+            Some(utopia_database::Value::Array(items)) => items.values().cloned().collect::<Vec<_>>(),
+            _ => Vec::new(),
+        };
+        // This level's keys, each followed by its relationship's nested ones.
+        let mut level: Vec<String> = Vec::new();
+        for attribute in attributes {
+            let text = |key: &str| -> Option<String> {
+                let value = match utopia_database::value::as_document(&attribute) {
+                    Some(d) => d.get(key),
+                    None => match &attribute {
+                        utopia_database::Value::Array(a) => a.get_str(key),
+                        _ => None,
+                    },
+                };
+                value.map(|v| utopia_database::value::to_text(v).to_string())
+            };
+            if text("type").as_deref() != Some("relationship") || text("status").as_deref() != Some("available") {
+                continue;
+            }
+            let key = text("key").unwrap_or_default();
+            let full = match &prefix {
+                Some(p) if !p.is_empty() => format!("{p}.{key}"),
+                _ => key,
+            };
+            let target = text("relatedCollection").filter(|t| !t.is_empty());
+            if target.as_ref().is_some_and(|t| visited.contains(t)) {
+                continue;
+            }
+            level.push(format!("{full}.*"));
+            if let Some(target) = target {
+                let mut nested = Vec::new();
+                walk(db, namespace, &target, Some(full), depth + 1, visited.clone(), cache, &mut nested).await;
+                level.extend(nested);
+            }
+        }
+        for key in level {
+            if !out.contains(&key) {
+                out.push(key);
+            }
+        }
+    })
+}
+
+/// `V21::parse()`: 1.8.0 params to 1.9.0.
+fn v21(model: &str, params: &mut Map<String, Value>) {
+    let unique = || Value::String("unique()".to_owned());
+    match model {
+        "project.createWebPlatform" => {
+            fill(params, "platformId", unique());
+            params.remove("store");
+        }
+        "project.updateWebPlatform" => {
+            params.remove("store");
+        }
+        "project.createApplePlatform"
+        | "project.createAndroidPlatform"
+        | "project.createWindowsPlatform"
+        | "project.createLinuxPlatform"
+        | "project.updateApplePlatform"
+        | "project.updateAndroidPlatform"
+        | "project.updateWindowsPlatform"
+        | "project.updateLinuxPlatform" => {
+            if model.starts_with("project.create") {
+                fill(params, "platformId", unique());
+            }
+            params.remove("store");
+            let new = if model.ends_with("ApplePlatform") {
+                "bundleIdentifier"
+            } else if model.ends_with("AndroidPlatform") {
+                "applicationId"
+            } else if model.ends_with("WindowsPlatform") {
+                "packageIdentifierName"
+            } else {
+                "packageName"
+            };
+            // `$content[$new] ?? $content['key'] ?? null`, then no `key`.
+            let key = params.remove("key").filter(|v| !v.is_null()).unwrap_or(Value::Null);
+            fill(params, new, key);
+            params.remove("hostname");
+        }
+        "project.listPlatforms" => fill(params, "queries", limit(5000)),
+        "webhooks.create" => fill(params, "webhookId", unique()),
+        "project.createKey" | "organization.createProjectKey" => fill(params, "keyId", unique()),
+        "project.createVariable" => fill(params, "variableId", unique()),
+        // `APP_LIMIT_SUBQUERY`.
+        "project.listVariables" => fill(params, "queries", limit(1000)),
+        "functions.createTemplateDeployment" | "sites.createTemplateDeployment"
+            if params.get("version").is_some_and(|v| !php_std::value::empty(v)) =>
+        {
+            let version = params.remove("version").unwrap_or(Value::Null);
+            params.insert("type".to_owned(), Value::String("tag".to_owned()));
+            params.insert("reference".to_owned(), version);
+        }
+        "functions.create" | "sites.create" | "functions.update" | "sites.update"
+            if params.get("specification").is_some_and(|v| !php_std::value::empty(v)) =>
+        {
+            let specification = params.remove("specification").unwrap_or(Value::Null);
+            params.insert("buildSpecification".to_owned(), specification.clone());
+            params.insert("runtimeSpecification".to_owned(), specification);
+        }
+        _ => {}
+    }
+}
+
+/// `[Query::limit($n)]`: PHP hands the route the `Query` itself, which its
+/// `Queries` validator reads as this JSON.
+fn limit(n: i64) -> Value {
+    Value::Array(vec![Value::String(format!("{{\"method\":\"limit\",\"values\":[{n}]}}"))])
+}
+
+/// `V22::parse()`: 1.9.0 params to 1.9.1.
+fn v22(model: &str, params: &mut Map<String, Value>) {
+    match model {
+        "project.updateService" => {
+            rename(params, "service", "serviceId");
+            rename(params, "status", "enabled");
+        }
+        "project.updateProtocol" => {
+            rename(params, "api", "protocolId");
+            rename(params, "status", "enabled");
+            if params.get("protocolId").and_then(Value::as_str) == Some("realtime") {
+                params.insert("protocolId".to_owned(), Value::String("websocket".to_owned()));
+            }
+        }
+        "project.createKey"
+        | "project.updateKey"
+        | "organization.createProjectKey"
+        | "organization.updateProjectKey" => scopes(params),
+        "webhooks.create" | "webhooks.update" => {
+            rename(params, "security", "tls");
+            rename(params, "httpUser", "authUsername");
+            rename(params, "httpPass", "authPassword");
+        }
+        _ => {}
+    }
+}
+
+/// `parseKeyScopes()`: scopes that are not an array become `[]`.
+fn scopes(params: &mut Map<String, Value>) {
+    if !matches!(params.get("scopes"), Some(Value::Array(_) | Value::Object(_))) {
+        params.insert("scopes".to_owned(), Value::Array(Vec::new()));
+    }
+}
+
+/// `V23::parse()`: 1.9.1 params to 1.9.2.
+fn v23(model: &str, params: &mut Map<String, Value>) {
+    match model {
+        "project.getEmailTemplate" | "project.deleteEmailTemplate" => rename(params, "type", "templateId"),
+        "project.updateEmailTemplate" => {
+            rename(params, "type", "templateId");
+            rename(params, "replyTo", "replyToEmail");
+        }
+        "project.updateSMTP" => rename(params, "replyTo", "replyToEmail"),
+        "project.updateMembershipPrivacyPolicy" => {
+            params.insert("userId".to_owned(), Value::Bool(false));
+            params.insert("userPhone".to_owned(), Value::Bool(false));
+            rename(params, "mfa", "userMFA");
+        }
+        "project.updateSessionAlertPolicy" => rename(params, "alerts", "enabled"),
+        "project.updateUserLimitPolicy"
+        | "project.updatePasswordHistoryPolicy"
+        | "project.updateSessionLimitPolicy" => {
+            if let Some(limit) = params.get("limit").filter(|v| !v.is_null()).cloned() {
+                // `=== 0`: the integer zero only.
+                let zero = limit.is_i64() && limit.as_i64() == Some(0);
+                params.insert("total".to_owned(), if zero { Value::Null } else { limit });
+                params.remove("limit");
+            }
+        }
+        "project.updateAuthMethod" => {
+            rename(params, "status", "enabled");
+            rename(params, "method", "methodId");
+        }
+        _ => {}
+    }
+}
+
+/// `V24::parse()`: 1.9.2 params to 1.9.3.
+fn v24(model: &str, params: &mut Map<String, Value>) {
+    if model == "project.createStandardKey" {
+        fill(params, "keyId", Value::String("unique()".to_owned()));
+        scopes(params);
+    }
+}
+
+/// `V25::parse()`: 1.9.3 params to 1.9.4.
+fn v25(model: &str, params: &mut Map<String, Value>) {
+    if matches!(model, "functions.createVariable" | "sites.createVariable") {
+        fill(params, "variableId", Value::String("unique()".to_owned()));
+    }
+}
+
+/// `V26::parse()`: 1.9.4 params to 1.9.5.
+fn v26(model: &str, params: &mut Map<String, Value>) {
+    const METADATA: [&str; 9] = [
+        "description",
+        "logo",
+        "url",
+        "legalName",
+        "legalCountry",
+        "legalState",
+        "legalCity",
+        "legalAddress",
+        "legalTaxId",
+    ];
+    if model == "projects.create" {
+        for key in METADATA {
+            params.remove(key);
+        }
+    }
+}
+
+/// `V27::parse()`: bare keywords gained parentheses in 2.0.0, and the CSV
+/// and JSON migrations name the database and the collection apart.
 fn v27(model: &str, params: &mut Map<String, Value>) {
-    if model == "users.createJWT" && params.get("sessionId").and_then(Value::as_str) == Some("recent") {
-        params.insert("sessionId".to_owned(), Value::String("recent()".to_owned()));
+    match model {
+        "migrations.createCSVImport"
+        | "migrations.createCSVExport"
+        | "migrations.createJSONImport"
+        | "migrations.createJSONExport" => {
+            let Some(Value::String(resource)) = params.get("resourceId") else { return };
+            let Some((database_id, collection_id)) = resource.split_once(':') else { return };
+            let (database_id, collection_id) = (database_id.to_owned(), collection_id.to_owned());
+            fill(params, "databaseId", Value::String(database_id));
+            fill(params, "collectionId", Value::String(collection_id));
+            params.remove("resourceId");
+        }
+        "users.createJWT" if params.get("sessionId").and_then(Value::as_str) == Some("recent") => {
+            params.insert("sessionId".to_owned(), Value::String("recent()".to_owned()));
+        }
+        _ => {}
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
 
     /// Every query of `tests/fixtures/request-v17.json`, which PHP's own
     /// `V17::parse()` produced (see that file's generator in the test).
@@ -464,13 +967,130 @@ mod tests {
         assert!(failures.is_empty(), "{} of {} differ:\n{}", failures.len(), fixtures.len(), failures.join("\n"));
     }
 
-    #[test]
-    fn v27_rewrites_the_recent_keyword() {
+    fn params(value: Value) -> Map<String, Value> {
+        match value {
+            Value::Object(map) => map,
+            _ => unreachable!(),
+        }
+    }
+
+    async fn filtered(format: Version, model: &str, value: Value) -> Value {
+        let mut map = params(value);
+        apply(format, model, &mut map, None).await.unwrap();
+        Value::Object(map)
+    }
+
+    #[utopia_async::test]
+    async fn v27_rewrites_the_recent_keyword() {
         let mut params = Map::new();
         params.insert("sessionId".to_owned(), Value::String("recent".to_owned()));
-        apply(Version(1, 9, 5), "users.createJWT", &mut params).unwrap();
+        apply(Version(1, 9, 5), "users.createJWT", &mut params, None).await.unwrap();
         assert_eq!(params["sessionId"], "recent()");
-        apply(Version(2, 0, 0), "users.createJWT", &mut params).unwrap();
+        apply(Version(2, 0, 0), "users.createJWT", &mut params, None).await.unwrap();
         assert_eq!(params["sessionId"], "recent()");
+    }
+
+    #[utopia_async::test]
+    async fn v27_splits_the_migration_resource() {
+        let got = filtered(Version(1, 9, 5), "migrations.createCSVImport", json!({"resourceId": "db:col:x"})).await;
+        assert_eq!(got, json!({"databaseId": "db", "collectionId": "col:x"}));
+        let kept = filtered(Version(1, 9, 5), "migrations.createCSVImport", json!({"resourceId": "db"})).await;
+        assert_eq!(kept, json!({"resourceId": "db"}));
+        let explicit =
+            filtered(Version(1, 9, 5), "migrations.createJSONExport", json!({"resourceId": "a:b", "databaseId": "c"}))
+                .await;
+        assert_eq!(explicit, json!({"databaseId": "c", "collectionId": "b"}));
+    }
+
+    #[utopia_async::test]
+    async fn filters_apply_below_their_version_only() {
+        // V16 (before 1.4.0) runs for 1.3, not for 1.4.
+        let old = filtered(Version(1, 3, 0), "functions.create", json!({"runtime": "node-18.0"})).await;
+        assert_eq!(old["commands"], "npm install");
+        let new = filtered(Version(1, 4, 0), "functions.create", json!({"runtime": "node-18.0"})).await;
+        assert!(new.get("commands").is_none());
+        // V16 renames an execution's data, then V18 and V19 run on the result.
+        let execution = filtered(Version(1, 3, 0), "functions.createExecution", json!({"data": "x"})).await;
+        assert_eq!(execution, json!({"body": "x"}));
+        let empty = filtered(Version(1, 3, 0), "functions.createExecution", json!({})).await;
+        assert_eq!(empty, json!({"body": ""}));
+    }
+
+    #[utopia_async::test]
+    async fn v18_and_v19_reshape_functions() {
+        let mfa =
+            filtered(Version(1, 5, 0), "account.deleteMfaAuthenticator", json!({"otp": "1", "type": "totp"})).await;
+        assert_eq!(mfa, json!({"type": "totp"}));
+        // V18 moves the branch to the version, V19 (still before 1.7) drops it.
+        let create = filtered(Version(1, 5, 0), "functions.create", json!({"templateBranch": "main"})).await;
+        assert_eq!(create, json!({}));
+        let queries = filtered(
+            Version(1, 6, 0),
+            "functions.list",
+            json!({"queries": ["{\"method\":\"equal\",\"attribute\":\"deployment\",\"values\":[\"x\"]}", "nope"]}),
+        )
+        .await;
+        assert_eq!(
+            queries["queries"],
+            json!(["{\"method\":\"equal\",\"attribute\":\"deploymentId\",\"values\":[\"x\"]}", "null"])
+        );
+        let variable = filtered(Version(1, 6, 0), "functions.createVariable", json!({"key": "k"})).await;
+        assert_eq!(variable, json!({"key": "k", "secret": false, "variableId": "unique()"}));
+    }
+
+    #[utopia_async::test]
+    async fn v20_selects_everything_for_documents() {
+        let none = filtered(Version(1, 7, 0), "databases.listDocuments", json!({})).await;
+        assert_eq!(none["queries"], json!(["{\"method\":\"select\",\"values\":[\"*\"]}"]));
+        let limited = filtered(
+            Version(1, 7, 0),
+            "databases.getDocument",
+            json!({"queries": ["", "{\"method\":\"limit\",\"values\":[1]}", "{\"method\":\"select\",\"values\":[\"*\"]}"]}),
+        )
+        .await;
+        assert_eq!(
+            limited["queries"],
+            json!(["{\"method\":\"limit\",\"values\":[1]}", "{\"method\":\"select\",\"values\":[\"*\"]}"])
+        );
+        let chosen = filtered(
+            Version(1, 7, 0),
+            "databases.listDocuments",
+            json!({"queries": ["{\"method\":\"select\",\"values\":[\"name\"]}"]}),
+        )
+        .await;
+        assert_eq!(chosen["queries"], json!(["{\"method\":\"select\",\"values\":[\"name\"]}"]));
+        let mut invalid = params(json!({"queries": ["{"]}));
+        let error = apply(Version(1, 7, 0), "databases.listDocuments", &mut invalid, None).await.unwrap_err();
+        assert_eq!(error.kind, ErrorType::GeneralQueryInvalid);
+    }
+
+    #[utopia_async::test]
+    async fn v21_to_v26_rename_project_params() {
+        let apple = filtered(
+            Version(1, 8, 0),
+            "project.createApplePlatform",
+            json!({"key": "com.x", "store": "s", "hostname": "h", "name": "n"}),
+        )
+        .await;
+        assert_eq!(apple, json!({"name": "n", "platformId": "unique()", "bundleIdentifier": "com.x"}));
+        let platforms = filtered(Version(1, 8, 0), "project.listPlatforms", json!({})).await;
+        assert_eq!(platforms["queries"], json!(["{\"method\":\"limit\",\"values\":[5000]}"]));
+        let protocol =
+            filtered(Version(1, 9, 0), "project.updateProtocol", json!({"api": "realtime", "status": true})).await;
+        assert_eq!(protocol, json!({"protocolId": "websocket", "enabled": true}));
+        let key = filtered(Version(1, 9, 0), "project.updateKey", json!({"scopes": "x"})).await;
+        assert_eq!(key, json!({"scopes": []}));
+        let limit = filtered(Version(1, 9, 1), "project.updateUserLimitPolicy", json!({"limit": 0})).await;
+        assert_eq!(limit, json!({"total": null}));
+        let limit = filtered(Version(1, 9, 1), "project.updateUserLimitPolicy", json!({"limit": 5})).await;
+        assert_eq!(limit, json!({"total": 5}));
+        let standard = filtered(Version(1, 9, 2), "project.createStandardKey", json!({})).await;
+        assert_eq!(standard, json!({"keyId": "unique()", "scopes": []}));
+        let site = filtered(Version(1, 9, 3), "sites.createVariable", json!({})).await;
+        assert_eq!(site, json!({"variableId": "unique()"}));
+        let project = filtered(Version(1, 9, 4), "projects.create", json!({"name": "p", "logo": "l"})).await;
+        assert_eq!(project, json!({"name": "p"}));
+        let current = filtered(Version(1, 9, 5), "projects.create", json!({"name": "p", "logo": "l"})).await;
+        assert_eq!(current, json!({"name": "p", "logo": "l"}));
     }
 }

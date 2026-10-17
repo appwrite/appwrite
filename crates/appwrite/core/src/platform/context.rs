@@ -117,6 +117,10 @@ pub struct Context {
     /// The session store the request carries (`$store`): its key
     /// (`a_session_<project>`) and the decoded `id` and `secret`.
     pub store: Store,
+    /// The response an init hook already sent (PHP's `$response->send()`
+    /// before the action, `isSent()` after): the action is skipped, and an
+    /// error a later hook throws is not sent.
+    pub sent: Option<Response>,
     db: Option<Database>,
     platform_db: OnceLock<Database>,
 }
@@ -151,6 +155,7 @@ impl Context {
             account_keys: Vec::new(),
             failed: false,
             store: Store::default(),
+            sent: None,
             mode: Mode::Default,
             locale,
             format: None,

@@ -120,6 +120,15 @@ pub struct Config {
     /// domain (before the 1.7 migration).
     pub rules_md5: bool,
     pub locking: bool,
+    /// The products an operator turns on (`_APP_DOCUMENTSDB`,
+    /// `_APP_VECTORSDB`, `_APP_EMBEDDING`): an SDK namespace and whether it
+    /// is on.
+    pub products: Vec<(&'static str, bool)>,
+    /// `_APP_CERTIFICATES_QUEUE_NAME`.
+    pub queue_certificates: String,
+    /// The domains Appwrite owns (`_APP_DOMAIN_FUNCTIONS_FALLBACK`,
+    /// `_APP_DOMAIN_FUNCTIONS`, `_APP_DOMAIN_SITES`, each a list).
+    pub appwrite_domains: Vec<String>,
 }
 
 fn list(value: Option<String>) -> Vec<String> {
@@ -229,6 +238,19 @@ impl Config {
                 .map(|c| c.to_uppercase())
                 .collect(),
             locking: env_or("_APP_LOCKING_ENABLED", "enabled") == "enabled",
+            products: vec![
+                ("documentsdb", env_or("_APP_DOCUMENTSDB", "disabled") == "enabled"),
+                ("vectorsdb", env_or("_APP_VECTORSDB", "disabled") == "enabled"),
+                ("embeddings", env_or("_APP_EMBEDDING", "enabled") == "enabled"),
+            ],
+            queue_certificates: env_or("_APP_CERTIFICATES_QUEUE_NAME", "v1-certificates").into_owned(),
+            // `explode(',')` without trimming, empty entries skipped.
+            appwrite_domains: ["_APP_DOMAIN_FUNCTIONS_FALLBACK", "_APP_DOMAIN_FUNCTIONS", "_APP_DOMAIN_SITES"]
+                .iter()
+                .flat_map(|name| {
+                    env_or(name, "").split(',').filter(|d| !d.is_empty()).map(str::to_owned).collect::<Vec<_>>()
+                })
+                .collect(),
             domain,
             console_domain,
         }
