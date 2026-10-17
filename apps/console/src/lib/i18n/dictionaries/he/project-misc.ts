@@ -646,8 +646,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Request activity over time': 'פעילות בקשות לאורך זמן',
   'Real-time view of requests processed by firewall rules':
     'תצוגה בזמן אמת של בקשות שעובדו על ידי כללי חומת האש',
-  'Traffic broken down by Firewall action':
-    'תעבורה מפורקת לפי פעולת חומת האש',
+  'Traffic broken down by Firewall action': 'תעבורה מפורקת לפי פעולת חומת האש',
   Challenged: 'אותגרו',
   'Challenge solves': 'פתרונות Challenge',
   'Avg solve time': 'זמן פתרון ממוצע',
@@ -662,10 +661,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'No denied IPs in this period': 'אין כתובות IP שנדחו בתקופה זו',
   'Top blocked countries': 'המדינות החסומות המובילות',
   'Top denied countries': 'המדינות שנדחו המובילות',
-  'Countries with the most blocked requests':
-    'מדינות עם הכי הרבה בקשות חסומות',
-  'Countries with the most denied requests':
-    'מדינות עם הכי הרבה בקשות שנדחו',
+  'Countries with the most blocked requests': 'מדינות עם הכי הרבה בקשות חסומות',
+  'Countries with the most denied requests': 'מדינות עם הכי הרבה בקשות שנדחו',
   'No blocked countries in this period': 'אין מדינות חסומות בתקופה זו',
   'No denied countries in this period': 'אין מדינות שנדחו בתקופה זו',
   'Requests throttled by rate limit rules':
@@ -855,7 +852,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Hide: 'הסתרה',
   Show: 'הצגה',
   'No data for this date range': 'אין נתונים לטווח תאריכים זה',
-  'Drag on the chart to select a date range': 'גררו על התרשים כדי לבחור טווח תאריכים',
+  'Drag on the chart to select a date range':
+    'גררו על התרשים כדי לבחור טווח תאריכים',
   'Filter activities by': 'סינון פעילויות לפי',
   Database: 'מסד נתונים',
   Table: 'טבלה',
@@ -972,6 +970,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Show more': 'הצגת עוד',
   more: 'נוספים',
   'Select date range': 'בחירת טווח תאריכים',
+  'Start time': 'שעת התחלה',
+  'End time': 'שעת סיום',
   'Quick select': 'בחירה מהירה',
   Days: 'ימים',
   'To date': 'עד היום',
@@ -1048,7 +1048,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "Update this property's display name.": 'עדכנו את שם התצוגה של הנכס הזה.',
   'Name updated': 'השם עודכן',
   'Property details': 'פרטי הנכס',
-  'Control whether this property accepts events.': 'קבעו אם הנכס הזה מקבל אירועים.',
+  'Control whether this property accepts events.':
+    'קבעו אם הנכס הזה מקבל אירועים.',
   'Tracking enabled': 'המעקב הופעל',
   'Tracking disabled': 'המעקב הושבת',
   'Tracking is enabled': 'המעקב פעיל',
@@ -1684,7 +1685,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Your dedicated Slack channel is monitored during business hours (9am-6pm EST). For urgent issues, please use our':
     'ערוץ ה-Slack הייעודי שלכם מנוטר בשעות העבודה (9:00-18:00 EST). לנושאים דחופים, השתמשו ב',
   'priority support portal': 'פורטל התמיכה בעדיפות גבוהה',
-  "Appwrite offers an MCP server that allows LLMs to interact with Appwrite's API and documentation. Install with a single click or view the": 'Appwrite מציעה שרת MCP שמאפשר למודלי שפה לתקשר עם ה-API והדוקומנטציה של Appwrite. התקינו בלחיצה אחת או עיינו ב', // pragma: allowlist secret
+  "Appwrite offers an MCP server that allows LLMs to interact with Appwrite's API and documentation. Install with a single click or view the":
+    'Appwrite מציעה שרת MCP שמאפשר למודלי שפה לתקשר עם ה-API והדוקומנטציה של Appwrite. התקינו בלחיצה אחת או עיינו ב', // pragma: allowlist secret
   'Run Appwrite MCP locally with uvx and a project API key. Replace YOUR_API_KEY, then see the':
     'הריצו את Appwrite MCP באופן מקומי עם uvx ומפתח API של הפרויקט. החליפו את YOUR_API_KEY, ואז עיינו ב',
   docs: 'דוקומנטציה',
@@ -1874,7 +1876,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'פרסו את הפונקציה שלכם באמצעות ה-CLI של Appwrite על ידי הרצת הפקודה הבאה בתוך תיקיית הפונקציה.', // pragma: allowlist secret
   "Deploy your site using the Appwrite CLI by running the following command inside your site's folder.":
     'פרסו את האתר שלכם באמצעות ה-CLI של Appwrite על ידי הרצת הפקודה הבאה בתוך תיקיית האתר.', // pragma: allowlist secret
- 'Common filename for provider {} blocks. Example: custom endpoint and self_signed when Appwrite is not at cloud.appwrite.io. Secrets stay in tfvars, env, or CI - not in .tf files. One required_providers block per root module (see main.tf).':
+  'Common filename for provider {} blocks. Example: custom endpoint and self_signed when Appwrite is not at cloud.appwrite.io. Secrets stay in tfvars, env, or CI - not in .tf files. One required_providers block per root module (see main.tf).':
     'שם קובץ נפוץ לבלוקים של provider {}. דוגמה: נקודת קצה מותאמת ו-self_signed כאשר Appwrite אינו ב-cloud.appwrite.io. סודות נשארים ב-tfvars, במשתני סביבה או ב-CI, לא בקובצי ‎.tf. בלוק required_providers אחד לכל מודול שורש (ראו main.tf).', // pragma: allowlist secret
   'About GBH': 'אודות GBH',
   Bandwidth: 'רוחב פס',
@@ -1887,6 +1889,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   '1d': '1 יום',
   'Use a date range of': 'השתמשו בטווח תאריכים של',
   'hours or less for this interval.': 'שעות או פחות למרווח הזה.',
+  'Ranges shorter than 15 minutes use the 1m interval.':
+    'טווחים קצרים מ-15 דקות משתמשים במרווח של דקה אחת.',
   'days or less for this interval.': 'ימים או פחות למרווח הזה.',
   Compute: 'מחשוב',
   'Compute over time': 'חישוב לאורך זמן',
@@ -2130,8 +2134,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'נפח בקשות מקובץ לפי מקטע שירות של Appwrite.', // pragma: allowlist secret
   'Request volume grouped by caller country.':
     'נפח בקשות מקובץ לפי מדינת המקור.',
-  'Request volume grouped by caller city.':
-    'נפח בקשות מקובץ לפי עיר המקור.',
+  'Request volume grouped by caller city.': 'נפח בקשות מקובץ לפי עיר המקור.',
   'Request volume grouped by caller internet service provider.':
     'נפח בקשות מקובץ לפי ספק האינטרנט של המקור.',
   'Request volume grouped by caller autonomous system number.':
@@ -2701,7 +2704,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'have been enabled.': 'הופעלו.',
   here: 'כאן',
   installations: 'התקנות',
-  "instead. If you're using Cloudflare or another CDN, make sure the proxy is disabled (set to DNS only) for this record, since Appwrite serves your domain through its own CDN.": // pragma: allowlist secret
+  // pragma: allowlist secret
+  "instead. If you're using Cloudflare or another CDN, make sure the proxy is disabled (set to DNS only) for this record, since Appwrite serves your domain through its own CDN.":
     'במקום זאת. אם אתם משתמשים ב-Cloudflare או ב-CDN אחר, ודאו שהפרוקסי מושבת (מוגדר כ-DNS only) עבור הרשומה הזו, כי Appwrite מגיש את הדומיין שלכם דרך ה-CDN שלו.', // pragma: allowlist secret
   "is an apex domain, CNAME record is only supported by certain providers. If yours doesn't, please verify using":
     'הוא דומיין שורש (apex), ורשומת CNAME נתמכת רק אצל ספקים מסוימים. אם הספק שלכם לא תומך בכך, אמתו באמצעות',
@@ -3234,7 +3238,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "A payment is awaiting confirmation. If you've completed authentication, click refresh to check the payment status.":
     'תשלום ממתין לאישור. אם השלמתם את האימות, לחצו על רענון כדי לבדוק את סטטוס התשלום.',
   'Scheduled for removal': 'מתוזמן להסרה',
-  'Enabled for this project at {price}/month.': 'מופעל בפרויקט זה ב-{price}/חודש.',
+  'Enabled for this project at {price}/month.':
+    'מופעל בפרויקט זה ב-{price}/חודש.',
   'Enabled for this project.': 'מופעל בפרויקט זה.',
   '{price}/month': '{price}/חודש',
   'Enrich request and session data with premium geolocation. {price}/month, prorated for the current billing cycle.':
@@ -3278,13 +3283,12 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'A contributor opened this pull request. Approve it to start the Git deployment.':
     'משתתף פתח pull request זה. אשרו אותו כדי להתחיל את פריסת ה-Git.',
   'The build will start shortly.': 'הבנייה תתחיל בקרוב.',
-  'Approved': 'אושר',
+  Approved: 'אושר',
   'Merge request': 'Merge request',
   'Pull request': 'Pull request',
   'Failed to approve deployment': 'אישור הפריסה נכשל',
   'Pause live updates': 'השהיית עדכונים חיים',
-  'Pause live updates to refresh manually':
-    'השהו עדכונים חיים כדי לרענן ידנית',
+  'Pause live updates to refresh manually': 'השהו עדכונים חיים כדי לרענן ידנית',
   'Resume live updates': 'חידוש עדכונים חיים',
   'Updating…': 'מתעדכן…',
   Paused: 'מושהה',
