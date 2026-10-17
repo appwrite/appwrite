@@ -1,0 +1,682 @@
+{
+  "source": "packages/validators/tests/ContainsTest.php",
+  "cases": [
+    {
+      "name": "testCanValidateWithSinglePattern",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Contains",
+            "args": {
+              "patterns": [
+                "[skip ci]"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "[skip ci] update changelog"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "docs: update readme [skip ci]"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "prefix[skip ci]suffix"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "fix: real bug fix"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "skip deploy without brackets"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": ""
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testCanValidateWithMultiplePatterns",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Contains",
+            "args": {
+              "patterns": [
+                "[skip ci]",
+                "[no ci]",
+                "[ci skip]"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "[skip ci]"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "[no ci]"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "[ci skip]"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "[skip deploy]"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testCanValidateLoosely",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Contains",
+            "args": {
+              "patterns": [
+                "[skip ci]"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "[skip ci]"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "[SKIP CI]"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "[Skip Ci]"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "Docs update [SKIP CI]"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testCanValidateStrictly",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Contains",
+            "args": {
+              "patterns": [
+                "[skip ci]"
+              ],
+              "strict": true
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "[skip ci]"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "prefix[skip ci]suffix"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "[SKIP CI]"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "[Skip Ci]"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testCanValidateMultilineStrings",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Contains",
+            "args": {
+              "patterns": [
+                "[skip ci]"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "feat: add new stuff\n\nMore detail here.\n\n[skip ci]"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testThrowsExceptionForEmptyPatternsArray",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Contains",
+            "args": {
+              "patterns": []
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Patterns array cannot be empty"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCanValidateWithEmptyPatternString",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Contains",
+            "args": {
+              "patterns": [
+                ""
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "any string"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": ""
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testCanValidateWithNonStringValues",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Contains",
+            "args": {
+              "patterns": [
+                "[skip ci]"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": null
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": []
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 123
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": 12.34
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": true
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": false
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testCanValidatePartialMatches",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Contains",
+            "args": {
+              "patterns": [
+                "skip"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "skip"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "skip ci"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "please skip this"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "skipping"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "ski"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": ""
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testCanValidateWithUnicodeCharacters",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Contains",
+            "args": {
+              "patterns": [
+                "café",
+                "naïve"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "I love café"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "Naïve approach"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "CAFÉ"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            },
+            "value": "I love coffee"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testReturnsCorrectMetadata",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Contains",
+            "args": {
+              "patterns": [
+                "foo",
+                "bar"
+              ]
+            }
+          },
+          "bind": "v1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_array",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.type",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "string"
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "Value must contain one of (foo, bar) (case-insensitive)"
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "Value must contain one of (foo, bar) (case-insensitive)"
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v1"
+            }
+          },
+          "expect": "Value must contain one of (foo, bar) (case-insensitive)"
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Contains",
+            "args": {
+              "patterns": [
+                "foo",
+                "bar"
+              ],
+              "strict": true
+            }
+          },
+          "bind": "v2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v2"
+            }
+          },
+          "expect": "Value must contain one of (foo, bar) (case-sensitive)"
+        }
+      ]
+    }
+  ]
+}

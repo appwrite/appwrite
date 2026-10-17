@@ -1,0 +1,150 @@
+{
+  "ops": {
+    "igbinary.serialize": {
+      "doc": "igbinary_serialize($v)",
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "ref",
+                "name": "tv_v3"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "long",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "repeat",
+                      "part": {
+                        "gen": "const",
+                        "value": "abcdefghij"
+                      },
+                      "min": 6600,
+                      "max": 6700
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "tv_str"
+                    }
+                  ]
+                },
+                "min": 1,
+                "max": 3
+              }
+            },
+            "optional": []
+          },
+          "iterations": 30
+        },
+        {
+          "name": "wide",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "tv_scalar"
+                },
+                "min": 250,
+                "max": 300
+              }
+            },
+            "optional": []
+          },
+          "iterations": 100
+        }
+      ]
+    },
+    "igbinary.unserialize": {
+      "doc": "['value' => igbinary_unserialize($s), 'warnings' => the warnings it emitted]"
+    },
+    "igbinary.roundtrip": {
+      "doc": "igbinary_serialize($v), igbinary_unserialize of it, and igbinary_serialize of that: Rust reads what it writes back byte for byte",
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "ref",
+                "name": "tv_v3"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "wide",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "v": {
+                "gen": "object",
+                "fields": {
+                  "$array": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "object",
+                      "fields": {
+                        "k": {
+                          "gen": "ref",
+                          "name": "tv_key"
+                        },
+                        "v": {
+                          "gen": "ref",
+                          "name": "tv_v1"
+                        }
+                      },
+                      "optional": []
+                    },
+                    "min": 200,
+                    "max": 300
+                  }
+                },
+                "optional": []
+              }
+            },
+            "optional": []
+          },
+          "iterations": 100
+        }
+      ]
+    }
+  },
+  "generators": {},
+  "deviations": [
+    {
+      "symbol": "igbinary_serialize",
+      "php": "The second occurrence of the same array or object instance (a PHP reference, or a copy sharing its zend_array) is written as a back-reference (01-03, 22-24, 25).",
+      "reason": "php_std::Value has no identity. Every empty array is written as the engine's shared immutable empty array (in full once, then as a back-reference), which is what PHP writes for data from literals, json_decode, unserialize and igbinary_unserialize; other arrays and objects are written in full. An empty array PHP built by unsetting elements, or returned by array_filter, is a separate instance there and written in full."
+    },
+    {
+      "symbol": "igbinary_unserialize",
+      "php": "Back-references and PHP references become shared values or references; objects of other classes become __PHP_Incomplete_Class; recursive structures are recursive.",
+      "reason": "Back-references and references read as copies (the value is equal; re-serializing writes them in full). Objects of classes other than stdClass, recursive structures and nesting deeper than igbinary::MAX_DEPTH (4096; PHP recurses until its stack runs out) fail with igbinary::Error::Unsupported."
+    },
+    {
+      "symbol": "Value::Ext",
+      "php": "igbinary_serialize, serialize and var_export of an object of another class (Utopia\\Database\\Document) write the object with its class name.",
+      "reason": "An Extension value is written as its to_array() (getArrayCopy()), which is what PHP code stores (the cache stores getArrayCopy() of documents). json::encode writes it as an object, as json_encode does for an ArrayObject."
+    }
+  ]
+}

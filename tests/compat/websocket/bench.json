@@ -1,0 +1,97 @@
+{
+  "lib": "websocket",
+  "environment": {
+    "date": "2026-10-11T19:33:03Z",
+    "commit": "e2c3406452",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "dispatch",
+      "description": "Deliver a message to the server's message hook, which replies to its connection",
+      "php": {
+        "ns": 164.51226342058015,
+        "min": 163.67219028480127,
+        "max": 165.84923981617223,
+        "samples": 15,
+        "calls": 121418
+      },
+      "rust": {
+        "ns": 25.787119672582943,
+        "min": 25.543505361222508,
+        "max": 26.468325902573337,
+        "samples": 15,
+        "calls": 776502,
+        "allocations": 1.0000000858551126,
+        "bytes": 160.0000103026135
+      },
+      "speedup": 6.379629268773698,
+      "bound": null
+    },
+    {
+      "name": "fanout",
+      "description": "Send one message to 1,000 open connections",
+      "php": {
+        "ns": 30260.432473444613,
+        "min": 30096.358118361153,
+        "max": 32105.842185128982,
+        "samples": 15,
+        "calls": 659
+      },
+      "rust": {
+        "ns": 9204.131970260223,
+        "min": 9083.681691449814,
+        "max": 9895.562267657993,
+        "samples": 15,
+        "calls": 2152,
+        "allocations": 1.0000309789343247,
+        "bytes": 40000.00371747212
+      },
+      "speedup": 3.287700846882694,
+      "bound": null
+    },
+    {
+      "name": "client",
+      "description": "Create a client: parse a wss URL with a path and a query",
+      "php": {
+        "ns": 336.37316176470586,
+        "min": 327.28528062601185,
+        "max": 360.94411090124123,
+        "samples": 15,
+        "calls": 59296
+      },
+      "rust": {
+        "ns": 140.9179170404197,
+        "min": 137.25371714371144,
+        "max": 145.60511294136833,
+        "samples": 15,
+        "calls": 147156,
+        "allocations": 5.000000453033969,
+        "bytes": 144.00005436407622
+      },
+      "speedup": 2.3870148582186568,
+      "bound": null
+    }
+  ]
+}

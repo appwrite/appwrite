@@ -1,0 +1,801 @@
+{
+  "source": "packages/span/tests/Exporter/StdoutTest.php",
+  "cases": [
+    {
+      "name": "testExportWritesJson",
+      "steps": [
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "stdout",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "action",
+                  "value": "test.action"
+                },
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "info"
+                }
+              ],
+              "action": "test.action"
+            }
+          },
+          "expect": {
+            "stdout": "{\"level\":\"info\",\"action\":\"test.action\",\"span.trace_id\":\"0af7651916cd43dd8448eb211c80319c\",\"span.id\":\"b7ad6b7169203331\",\"span.started_at\":1700000000.25,\"span.finished_at\":1700000000.5,\"span.duration\":0.25}\n",
+            "stderr": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExportDoesNotThrow",
+      "steps": [
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "stdout",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": []
+            }
+          },
+          "expect": {
+            "stdout": "{\"action\":\"unknown\",\"span.trace_id\":\"0af7651916cd43dd8448eb211c80319c\",\"span.id\":\"b7ad6b7169203331\",\"span.started_at\":1700000000.25}\n",
+            "stderr": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExportHandlesAllAttributeTypes",
+      "steps": [
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "stdout",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "string",
+                  "value": "value"
+                },
+                {
+                  "key": "int",
+                  "value": 42
+                },
+                {
+                  "key": "float",
+                  "value": 3.14
+                },
+                {
+                  "key": "bool",
+                  "value": true
+                },
+                {
+                  "key": "null",
+                  "value": null
+                }
+              ],
+              "action": "test.types"
+            }
+          },
+          "expect": {
+            "stdout": "{\"action\":\"test.types\",\"span.trace_id\":\"0af7651916cd43dd8448eb211c80319c\",\"span.id\":\"b7ad6b7169203331\",\"span.started_at\":1700000000.25,\"string\":\"value\",\"int\":42,\"float\":3.14,\"bool\":true,\"null\":null}\n",
+            "stderr": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExportHandlesError",
+      "steps": [
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "stdout",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [],
+              "action": "test.error",
+              "error": {
+                "class": "RuntimeException",
+                "message": "Test error",
+                "file": "/app/src/Test.php",
+                "line": 10,
+                "code": 42
+              }
+            }
+          },
+          "expect": {
+            "stdout": "",
+            "stderr": "{\"action\":\"test.error\",\"span.trace_id\":\"0af7651916cd43dd8448eb211c80319c\",\"span.id\":\"b7ad6b7169203331\",\"span.started_at\":1700000000.25,\"error.type\":\"RuntimeException\",\"error.message\":\"Test error\",\"error.code\":42,\"error.file\":\"/app/src/Test.php\",\"error.line\":10,\"error.trace\":[]}\n"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExportIncludesSpanMetadata",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id"
+          },
+          "expect": {
+            "type": "string",
+            "length": 32,
+            "hex": true
+          }
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.id"
+          },
+          "expect": {
+            "type": "string",
+            "length": 16,
+            "hex": true
+          }
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.started_at"
+          },
+          "expect": {
+            "type": "float"
+          }
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.finished_at"
+          },
+          "expect": {
+            "type": "float"
+          }
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.duration"
+          },
+          "expect": {
+            "type": "float"
+          }
+        }
+      ]
+    },
+    {
+      "name": "error with a long trace",
+      "steps": [
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "stdout",
+            "options": {
+              "max_trace_frames": 2
+            },
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "level",
+                  "value": "error"
+                },
+                {
+                  "key": "user.id",
+                  "value": "u1"
+                }
+              ],
+              "action": "job",
+              "error": {
+                "class": "RuntimeException",
+                "message": "boom",
+                "file": "/app/src/Test.php",
+                "line": 10,
+                "trace": [
+                  {
+                    "file": "/app/src/Worker.php",
+                    "line": 12,
+                    "function": "run",
+                    "class": "App\\Worker",
+                    "type": "->"
+                  },
+                  {
+                    "file": "/app/vendor/lib/Kernel.php",
+                    "line": 40,
+                    "function": "handle",
+                    "class": "Kernel",
+                    "type": "::"
+                  },
+                  {
+                    "function": "{closure}"
+                  },
+                  {
+                    "file": "/app/public/index.php",
+                    "line": 3,
+                    "function": "main"
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "stdout": "",
+            "stderr": "{\"level\":\"error\",\"action\":\"job\",\"span.trace_id\":\"0af7651916cd43dd8448eb211c80319c\",\"span.id\":\"b7ad6b7169203331\",\"span.started_at\":1700000000.25,\"user.id\":\"u1\",\"error.type\":\"RuntimeException\",\"error.message\":\"boom\",\"error.code\":0,\"error.file\":\"/app/src/Test.php\",\"error.line\":10,\"error.trace\":[{\"file\":\"/app/src/Worker.php\",\"line\":12,\"function\":\"run\"},{\"file\":\"/app/vendor/lib/Kernel.php\",\"line\":40,\"function\":\"handle\"}],\"error.trace_truncated\":2}\n"
+          }
+        }
+      ]
+    },
+    {
+      "name": "error with a trace and no frames kept",
+      "steps": [
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "stdout",
+            "options": {
+              "max_trace_frames": 0
+            },
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [],
+              "action": "job",
+              "error": {
+                "class": "RuntimeException",
+                "message": "boom",
+                "file": "/app/src/Test.php",
+                "line": 10,
+                "trace": [
+                  {
+                    "file": "/app/src/Worker.php",
+                    "line": 12,
+                    "function": "run",
+                    "class": "App\\Worker",
+                    "type": "->"
+                  },
+                  {
+                    "file": "/app/vendor/lib/Kernel.php",
+                    "line": 40,
+                    "function": "handle",
+                    "class": "Kernel",
+                    "type": "::"
+                  },
+                  {
+                    "function": "{closure}"
+                  },
+                  {
+                    "file": "/app/public/index.php",
+                    "line": 3,
+                    "function": "main"
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "stdout": "",
+            "stderr": "{\"action\":\"job\",\"span.trace_id\":\"0af7651916cd43dd8448eb211c80319c\",\"span.id\":\"b7ad6b7169203331\",\"span.started_at\":1700000000.25,\"error.type\":\"RuntimeException\",\"error.message\":\"boom\",\"error.code\":0,\"error.file\":\"/app/src/Test.php\",\"error.line\":10,\"error.trace\":[],\"error.trace_truncated\":4}\n"
+          }
+        }
+      ]
+    },
+    {
+      "name": "numeric and odd keys",
+      "steps": [
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "stdout",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "1",
+                  "value": "one"
+                },
+                {
+                  "key": "01",
+                  "value": "zero-one"
+                },
+                {
+                  "key": "",
+                  "value": "empty"
+                },
+                {
+                  "key": "level",
+                  "value": "warn"
+                },
+                {
+                  "key": "action",
+                  "value": "attribute action"
+                },
+                {
+                  "key": "error.type",
+                  "value": "user value"
+                }
+              ],
+              "action": "odd",
+              "error": {
+                "class": "RuntimeException",
+                "message": "Test",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "expect": {
+            "stdout": "",
+            "stderr": "{\"level\":\"warn\",\"action\":\"odd\",\"span.trace_id\":\"0af7651916cd43dd8448eb211c80319c\",\"span.id\":\"b7ad6b7169203331\",\"span.started_at\":1700000000.25,\"1\":\"one\",\"01\":\"zero-one\",\"\":\"empty\",\"error.type\":\"RuntimeException\",\"error.message\":\"Test\",\"error.code\":0,\"error.file\":\"/app/src/Test.php\",\"error.line\":10,\"error.trace\":[]}\n"
+          }
+        }
+      ]
+    },
+    {
+      "name": "floats",
+      "steps": [
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "stdout",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "a",
+                  "value": 0.1
+                },
+                {
+                  "key": "b",
+                  "value": 1e+25
+                },
+                {
+                  "key": "c",
+                  "value": -0.0
+                },
+                {
+                  "key": "d",
+                  "value": 1.0
+                },
+                {
+                  "key": "e",
+                  "value": 0.30000000000000004
+                },
+                {
+                  "key": "span.duration",
+                  "value": 1.234567
+                }
+              ],
+              "action": "f"
+            }
+          },
+          "expect": {
+            "stdout": "{\"action\":\"f\",\"span.trace_id\":\"0af7651916cd43dd8448eb211c80319c\",\"span.id\":\"b7ad6b7169203331\",\"span.started_at\":1700000000.25,\"a\":0.1,\"b\":1.0e+25,\"c\":-0,\"d\":1,\"e\":0.30000000000000004,\"span.duration\":1.234567}\n",
+            "stderr": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "durations",
+      "steps": [
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "stdout",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.duration",
+                  "value": 0.0
+                }
+              ],
+              "action": "d"
+            }
+          },
+          "expect": {
+            "stdout": "{\"action\":\"d\",\"span.trace_id\":\"0af7651916cd43dd8448eb211c80319c\",\"span.id\":\"b7ad6b7169203331\",\"span.started_at\":1700000000.25,\"span.duration\":0}\n",
+            "stderr": ""
+          }
+        },
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "stdout",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.duration",
+                  "value": 0.00049
+                }
+              ],
+              "action": "d"
+            }
+          },
+          "expect": {
+            "stdout": "{\"action\":\"d\",\"span.trace_id\":\"0af7651916cd43dd8448eb211c80319c\",\"span.id\":\"b7ad6b7169203331\",\"span.started_at\":1700000000.25,\"span.duration\":0.00049}\n",
+            "stderr": ""
+          }
+        },
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "stdout",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.duration",
+                  "value": 0.0995
+                }
+              ],
+              "action": "d"
+            }
+          },
+          "expect": {
+            "stdout": "{\"action\":\"d\",\"span.trace_id\":\"0af7651916cd43dd8448eb211c80319c\",\"span.id\":\"b7ad6b7169203331\",\"span.started_at\":1700000000.25,\"span.duration\":0.0995}\n",
+            "stderr": ""
+          }
+        },
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "stdout",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.duration",
+                  "value": 0.1
+                }
+              ],
+              "action": "d"
+            }
+          },
+          "expect": {
+            "stdout": "{\"action\":\"d\",\"span.trace_id\":\"0af7651916cd43dd8448eb211c80319c\",\"span.id\":\"b7ad6b7169203331\",\"span.started_at\":1700000000.25,\"span.duration\":0.1}\n",
+            "stderr": ""
+          }
+        },
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "stdout",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.duration",
+                  "value": 0.99999
+                }
+              ],
+              "action": "d"
+            }
+          },
+          "expect": {
+            "stdout": "{\"action\":\"d\",\"span.trace_id\":\"0af7651916cd43dd8448eb211c80319c\",\"span.id\":\"b7ad6b7169203331\",\"span.started_at\":1700000000.25,\"span.duration\":0.99999}\n",
+            "stderr": ""
+          }
+        },
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "stdout",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.duration",
+                  "value": 1.0
+                }
+              ],
+              "action": "d"
+            }
+          },
+          "expect": {
+            "stdout": "{\"action\":\"d\",\"span.trace_id\":\"0af7651916cd43dd8448eb211c80319c\",\"span.id\":\"b7ad6b7169203331\",\"span.started_at\":1700000000.25,\"span.duration\":1}\n",
+            "stderr": ""
+          }
+        },
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "stdout",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.duration",
+                  "value": 1.005
+                }
+              ],
+              "action": "d"
+            }
+          },
+          "expect": {
+            "stdout": "{\"action\":\"d\",\"span.trace_id\":\"0af7651916cd43dd8448eb211c80319c\",\"span.id\":\"b7ad6b7169203331\",\"span.started_at\":1700000000.25,\"span.duration\":1.005}\n",
+            "stderr": ""
+          }
+        },
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "stdout",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.duration",
+                  "value": 12.3456
+                }
+              ],
+              "action": "d"
+            }
+          },
+          "expect": {
+            "stdout": "{\"action\":\"d\",\"span.trace_id\":\"0af7651916cd43dd8448eb211c80319c\",\"span.id\":\"b7ad6b7169203331\",\"span.started_at\":1700000000.25,\"span.duration\":12.3456}\n",
+            "stderr": ""
+          }
+        },
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "stdout",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.duration",
+                  "value": 3
+                }
+              ],
+              "action": "d"
+            }
+          },
+          "expect": {
+            "stdout": "{\"action\":\"d\",\"span.trace_id\":\"0af7651916cd43dd8448eb211c80319c\",\"span.id\":\"b7ad6b7169203331\",\"span.started_at\":1700000000.25,\"span.duration\":3}\n",
+            "stderr": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "binary values",
+      "steps": [
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "stdout",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "bytes",
+                  "value": {
+                    "$bytes": "/w=="
+                  }
+                },
+                {
+                  "key": "ok",
+                  "value": "fine"
+                }
+              ],
+              "action": "bin"
+            }
+          },
+          "expect": {
+            "stdout": "",
+            "stderr": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "sampler",
+      "steps": [
+        {
+          "op": "exporter.sample",
+          "args": {
+            "exporter": "stdout",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": []
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "exporter.sample",
+          "args": {
+            "exporter": "stdout",
+            "options": {
+              "sampler": {
+                "kind": "none"
+              }
+            },
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": []
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "exporter.sample",
+          "args": {
+            "exporter": "stdout",
+            "options": {
+              "sampler": {
+                "kind": "error"
+              }
+            },
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [],
+              "action": "x",
+              "error": {
+                "class": "RuntimeException",
+                "message": "Test",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

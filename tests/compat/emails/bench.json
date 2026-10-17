@@ -1,0 +1,157 @@
+{
+  "lib": "emails",
+  "environment": {
+    "date": "2026-10-11T09:07:18Z",
+    "commit": "efd6922f03",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "parse",
+      "description": "Parse a mixed-case address with a plus tag",
+      "php": {
+        "ns": 361.2803475123783,
+        "min": 356.69638682839735,
+        "max": 475.681348819231,
+        "samples": 15,
+        "calls": 54329
+      },
+      "rust": {
+        "ns": 77.37287334593573,
+        "min": 76.46187901701323,
+        "max": 82.99243856332703,
+        "samples": 15,
+        "calls": 264500,
+        "allocations": 2.0000002520478892,
+        "bytes": 46.00003024574669
+      },
+      "speedup": 4.669341228896674
+    },
+    {
+      "name": "validate",
+      "description": "Validate an address with the email validator",
+      "php": {
+        "ns": 1287.9527294303798,
+        "min": 1271.0586102320676,
+        "max": 1398.2534941983122,
+        "samples": 15,
+        "calls": 15168
+      },
+      "rust": {
+        "ns": 172.2541822764705,
+        "min": 167.86617578509401,
+        "max": 175.08625243858225,
+        "samples": 15,
+        "calls": 115846,
+        "allocations": 4.000000575476639,
+        "bytes": 96.00006905719663
+      },
+      "speedup": 7.477047653700488
+    },
+    {
+      "name": "canonical_gmail",
+      "description": "Canonicalise a parsed Gmail address with dots and a plus tag",
+      "php": {
+        "ns": 214.46086569819153,
+        "min": 209.98687052644954,
+        "max": 379.35135106518146,
+        "samples": 15,
+        "calls": 94444
+      },
+      "rust": {
+        "ns": 84.39384578335265,
+        "min": 82.88837126260675,
+        "max": 86.25899444866573,
+        "samples": 15,
+        "calls": 240843,
+        "allocations": 5.0000002768054985,
+        "bytes": 61.000033216659816
+      },
+      "speedup": 2.5411908144194992
+    },
+    {
+      "name": "canonical_outlook",
+      "description": "Canonicalise a parsed Outlook address with a plus tag",
+      "php": {
+        "ns": 216.72297182440187,
+        "min": 214.24397603161788,
+        "max": 277.7856019718669,
+        "samples": 15,
+        "calls": 94124
+      },
+      "rust": {
+        "ns": 77.5201654964114,
+        "min": 75.79770671482618,
+        "max": 79.1250525447214,
+        "samples": 15,
+        "calls": 256924,
+        "allocations": 5.000000259480106,
+        "bytes": 81.00003113761268
+      },
+      "speedup": 2.7956980024047358
+    },
+    {
+      "name": "disposable",
+      "description": "Check a parsed corporate address against the disposable domain list",
+      "php": {
+        "ns": 79900.73306772909,
+        "min": 70927.78884462151,
+        "max": 85050.46215139443,
+        "samples": 15,
+        "calls": 251
+      },
+      "rust": {
+        "ns": 8.60693595339874,
+        "min": 8.426222635254234,
+        "max": 8.666049701295497,
+        "samples": 15,
+        "calls": 2323199,
+        "allocations": 2.8696063775279977e-8,
+        "bytes": 3.443527653033597e-6
+      },
+      "speedup": 9283.295879084308
+    },
+    {
+      "name": "free",
+      "description": "Check a parsed Gmail address against the free and disposable domain lists",
+      "php": {
+        "ns": 84331.02978723405,
+        "min": 77017.55319148937,
+        "max": 95685.45957446808,
+        "samples": 15,
+        "calls": 235
+      },
+      "rust": {
+        "ns": 17.099773624297942,
+        "min": 16.761620350181023,
+        "max": 17.619455049164245,
+        "samples": 15,
+        "calls": 1176363,
+        "allocations": 5.667184930728582e-8,
+        "bytes": 6.800621916874298e-6
+      },
+      "speedup": 4931.7044564498665
+    }
+  ]
+}

@@ -1,0 +1,169 @@
+{
+  "lib": "mqtt",
+  "environment": {
+    "date": "2026-10-12T09:58:31Z",
+    "commit": "e4e095988a",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release (thin LTO: the Docker VM had no memory for the workspace's fat-LTO link)",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "decode",
+      "description": "Parse a v5 PUBLISH with three properties and decode it",
+      "php": {
+        "ns": 4021.2779156327542,
+        "min": 2163.689081885856,
+        "max": 15073.64540942928,
+        "samples": 15,
+        "calls": 4030
+      },
+      "rust": {
+        "ns": 182.06411269088994,
+        "min": 138.74078462348604,
+        "max": 4850.387309110058,
+        "samples": 15,
+        "calls": 7596,
+        "allocations": 6.000008776549061,
+        "bytes": 366.0010531858873
+      },
+      "speedup": 22.087153015488095,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "encode",
+      "description": "Encode a v5 PUBLISH with three properties",
+      "php": {
+        "ns": 2968.417468257022,
+        "min": 1918.3741823778375,
+        "max": 7867.400923432089,
+        "samples": 15,
+        "calls": 5198
+      },
+      "rust": {
+        "ns": 354.9568599888515,
+        "min": 264.1224885485083,
+        "max": 653.6630716657377,
+        "samples": 15,
+        "calls": 41261,
+        "allocations": 11.000001615730755,
+        "bytes": 884.0001938876906
+      },
+      "speedup": 8.362755598948713,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "properties",
+      "description": "Parse a property block of three properties and merge its User Properties",
+      "php": {
+        "ns": 3428.3511318242345,
+        "min": 1886.9007989347538,
+        "max": 12873.945805592542,
+        "samples": 15,
+        "calls": 7510
+      },
+      "rust": {
+        "ns": 194.80191789032065,
+        "min": 146.09670473590162,
+        "max": 786.891818999101,
+        "samples": 15,
+        "calls": 90099,
+        "allocations": 7.000000739926821,
+        "bytes": 466.00008879121856
+      },
+      "speedup": 17.59916518765744,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "connect",
+      "description": "Decode a v5 CONNECT with authentication and a User Property",
+      "php": {
+        "ns": 4020.964510589582,
+        "min": 2851.0068689181453,
+        "max": 29103.152833428736,
+        "samples": 15,
+        "calls": 1747
+      },
+      "rust": {
+        "ns": 227.11238532110093,
+        "min": 210.62729357798165,
+        "max": 5546.875,
+        "samples": 15,
+        "calls": 872,
+        "allocations": 8.000076452599389,
+        "bytes": 640.0091743119266
+      },
+      "speedup": 17.704734618081595,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "match",
+      "description": "Find the subscribers of a topic among 10,000 subscriptions (exact, + and # filters)",
+      "php": {
+        "ns": 23118.215644820295,
+        "min": 11734.849894291754,
+        "max": 217964.85200845666,
+        "samples": 15,
+        "calls": 473
+      },
+      "rust": {
+        "ns": 1079.9843137254902,
+        "min": 1011.6823529411764,
+        "max": 60779.41176470588,
+        "samples": 15,
+        "calls": 510,
+        "allocations": 5.0001307189542485,
+        "bytes": 30800.01568627451
+      },
+      "speedup": 21.406066135416545,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "fanout",
+      "description": "Dispatch a QoS 0 PUBLISH through the broker to 1,000 subscribers on the in-process adapter",
+      "php": {
+        "ns": 1869333.4,
+        "min": 686216.8,
+        "max": 3230391.6,
+        "samples": 15,
+        "calls": 5
+      },
+      "rust": {
+        "ns": 143503.0,
+        "min": 113711.35714285714,
+        "max": 996270.8571428572,
+        "samples": 15,
+        "calls": 14,
+        "allocations": 3025.004761904762,
+        "bytes": 405708.5714285714
+      },
+      "speedup": 13.026441259067754,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

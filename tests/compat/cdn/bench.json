@@ -1,0 +1,169 @@
+{
+  "lib": "cdn",
+  "environment": {
+    "date": "2026-10-12T11:30:28Z",
+    "commit": "e4e095988a",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "validate",
+      "description": "Normalise and validate a mixed-case hostname",
+      "php": {
+        "ns": 194.4021270480023,
+        "min": 130.4206381144007,
+        "max": 475.74015521701637,
+        "samples": 15,
+        "calls": 17395
+      },
+      "rust": {
+        "ns": 53.83749448332387,
+        "min": 50.35149107874661,
+        "max": 484.6649328541706,
+        "samples": 15,
+        "calls": 31722,
+        "allocations": 1.0000021015909044,
+        "bytes": 16.00025219090852
+      },
+      "speedup": 3.610905910716522,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "validate_paths",
+      "description": "Check ten cache paths",
+      "php": {
+        "ns": 152.1469694260683,
+        "min": 149.53209368853925,
+        "max": 2883.820489898087,
+        "samples": 15,
+        "calls": 5593
+      },
+      "rust": {
+        "ns": 24.048850908147735,
+        "min": 10.307016047014818,
+        "max": 60.510419297371456,
+        "samples": 15,
+        "calls": 732535,
+        "allocations": 9.100816570766812e-8,
+        "bytes": 0.000010920979884920174
+      },
+      "speedup": 6.326579594475385,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "fastly_purge_paths",
+      "description": "Purge three paths through Fastly on a transport answering at once",
+      "php": {
+        "ns": 20952.86842105263,
+        "min": 19391.447368421053,
+        "max": 472128.2894736842,
+        "samples": 15,
+        "calls": 38
+      },
+      "rust": {
+        "ns": 4881.733585858586,
+        "min": 4094.4861111111113,
+        "max": 58432.344696969696,
+        "samples": 15,
+        "calls": 792,
+        "allocations": 91.00008417508417,
+        "bytes": 4318.010101010101
+      },
+      "speedup": 4.292095841065341,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "cloudflare_purge_keys",
+      "description": "Purge 40 cache tags through Cloudflare (two batches) on a transport answering at once",
+      "php": {
+        "ns": 42888.35897435898,
+        "min": 19765.5,
+        "max": 2102330.128205128,
+        "samples": 15,
+        "calls": 78
+      },
+      "rust": {
+        "ns": 8018.731909845789,
+        "min": 4670.027283511269,
+        "max": 80782.02846975089,
+        "samples": 15,
+        "calls": 843,
+        "allocations": 78.00007908264136,
+        "bytes": 7224.0094899169635
+      },
+      "speedup": 5.348521369282662,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "fastly_tls_status",
+      "description": "Read an issued, activated Fastly TLS subscription",
+      "php": {
+        "ns": 63376.38333333333,
+        "min": 39227.76666666667,
+        "max": 965579.8666666667,
+        "samples": 15,
+        "calls": 60
+      },
+      "rust": {
+        "ns": 34016.260162601626,
+        "min": 24898.37398373984,
+        "max": 228868.2276422764,
+        "samples": 15,
+        "calls": 123,
+        "allocations": 217.00054200542004,
+        "bytes": 78420.06504065041
+      },
+      "speedup": 1.8631202557361377,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "balancer_purge_domain",
+      "description": "Fan a domain purge out over three recording adapters, one filtered away",
+      "php": {
+        "ns": 5607.064967860422,
+        "min": 896.5284664830119,
+        "max": 12475.793311906948,
+        "samples": 15,
+        "calls": 13068
+      },
+      "rust": {
+        "ns": 227.0784356839956,
+        "min": 186.967959792681,
+        "max": 1581.5324014449504,
+        "samples": 15,
+        "calls": 31835,
+        "allocations": 8.000002094131197,
+        "bytes": 413.0002512957437
+      },
+      "speedup": 24.692194795913007,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

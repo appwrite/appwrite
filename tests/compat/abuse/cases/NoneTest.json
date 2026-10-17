@@ -1,0 +1,879 @@
+{
+  "source": "packages/abuse/tests/NoneTest.php",
+  "cases": [
+    {
+      "name": "time limit: never limits requests",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "none",
+            "key": "none-key",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "time limit: returns no logs and cleanup succeeds",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "none",
+            "key": "none-key",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "offset": 3,
+            "count": null
+          },
+          "expect": []
+        },
+        {
+          "op": "limit.cleanup",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "timestamp": 1700000000
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "time limit: reset is a no-op",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "none",
+            "key": "none-key",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sliding window: never limits requests",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "sliding_window",
+            "store": "none",
+            "key": "none-key",
+            "limit": 1,
+            "window": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sliding window: returns no logs and cleanup succeeds",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "sliding_window",
+            "store": "none",
+            "key": "none-key",
+            "limit": 1,
+            "window": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "offset": 3,
+            "count": null
+          },
+          "expect": []
+        },
+        {
+          "op": "limit.cleanup",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "timestamp": 1700000000
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "sliding window: reset is a no-op",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "sliding_window",
+            "store": "none",
+            "key": "none-key",
+            "limit": 1,
+            "window": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "token bucket: never limits requests",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "token_bucket",
+            "store": "none",
+            "key": "none-key",
+            "tokens": 1,
+            "refill_rate": 1.0
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "token bucket: returns no logs and cleanup succeeds",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "token_bucket",
+            "store": "none",
+            "key": "none-key",
+            "tokens": 1,
+            "refill_rate": 1.0
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "offset": 3,
+            "count": null
+          },
+          "expect": []
+        },
+        {
+          "op": "limit.cleanup",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "timestamp": 1700000000
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "token bucket: reset is a no-op",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "token_bucket",
+            "store": "none",
+            "key": "none-key",
+            "tokens": 1,
+            "refill_rate": 1.0
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "time limit: zero seconds is rejected",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "none",
+            "key": "k",
+            "limit": 1,
+            "seconds": 0
+          },
+          "bind": "l",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "seconds must be greater than 0"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "time limit: negative seconds is rejected",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "none",
+            "key": "k",
+            "limit": 1,
+            "seconds": -5
+          },
+          "bind": "l",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "seconds must be greater than 0"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "sliding window: zero window is rejected",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "sliding_window",
+            "store": "none",
+            "key": "k",
+            "limit": 1,
+            "window": 0
+          },
+          "bind": "l",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "windowSize must be greater than 0"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "token bucket: zero refill rate is rejected",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "token_bucket",
+            "store": "none",
+            "key": "k",
+            "tokens": 1,
+            "refill_rate": 0.0
+          },
+          "bind": "l",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "refillRate must be greater than 0"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "token bucket: negative capacity with no refill divides by zero",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "token_bucket",
+            "store": "none",
+            "key": "k",
+            "tokens": -1,
+            "refill_rate": 0.0
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock: the window's end depends on when the case runs"
+          },
+          "expect": {
+            "$error": {
+              "class": "DivisionByZeroError",
+              "message": "Division by zero"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "token bucket: zero capacity is unlimited",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "token_bucket",
+            "store": "none",
+            "key": "k",
+            "tokens": 0,
+            "refill_rate": 0.0
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/reset"
+            ],
+            "reason": "the real clock"
+          },
+          "expect": {
+            "limited": false,
+            "limit": 0,
+            "remaining": 0,
+            "reset": "<masked>"
+          }
+        }
+      ]
+    }
+  ]
+}

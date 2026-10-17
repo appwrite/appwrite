@@ -1,0 +1,1494 @@
+{
+  "source": "packages/query/tests/Tokenizer/PostgreSQLTest.php",
+  "cases": [
+    {
+      "name": "testDoubleQuoteIdentifier",
+      "op": "tokenizer",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SELECT \"name\" FROM \"users\""
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                },
+                {
+                  "$o": 5
+                },
+                {
+                  "$o": 6
+                },
+                {
+                  "$o": 7
+                },
+                {
+                  "$o": 8
+                },
+                {
+                  "$o": 9
+                }
+              ]
+            ]
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 10
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 11
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 12
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 13
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 14
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 11
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 13
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\PostgreSQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 2,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "\"name\"",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 13
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 14
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 18
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "\"users\"",
+              "position": 19
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 26
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "\"name\"",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 12,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 14
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 13,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "\"users\"",
+              "position": 19
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 14,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 26
+            }
+          }
+        ],
+        {
+          "$enum": "Tokenizer\\TokenType::Keyword"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Keyword"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Eof"
+        },
+        "\"name\"",
+        "\"users\""
+      ]
+    },
+    {
+      "name": "testJsonbContainsOperator",
+      "op": "tokenizer",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "WHERE tags @> '[\"php\"]'"
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                },
+                {
+                  "$o": 5
+                },
+                {
+                  "$o": 6
+                },
+                {
+                  "$o": 7
+                },
+                {
+                  "$o": 8
+                },
+                {
+                  "$o": 9
+                }
+              ]
+            ]
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 10
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 11
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 12
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 13
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 14
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 12
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\PostgreSQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 2,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "WHERE",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 5
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "tags",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 10
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "@>",
+              "position": 11
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 13
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::String"
+              },
+              "value": "'[\"php\"]'",
+              "position": 14
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 23
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "WHERE",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "tags",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 12,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "@>",
+              "position": 11
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 13,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::String"
+              },
+              "value": "'[\"php\"]'",
+              "position": 14
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 14,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 23
+            }
+          }
+        ],
+        {
+          "$enum": "Tokenizer\\TokenType::Keyword"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Identifier"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Operator"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::String"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Eof"
+        },
+        "@>"
+      ]
+    },
+    {
+      "name": "testJsonbContainedByOperator",
+      "op": "tokenizer",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "WHERE '[\"php\"]' <@ tags"
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                },
+                {
+                  "$o": 5
+                },
+                {
+                  "$o": 6
+                },
+                {
+                  "$o": 7
+                },
+                {
+                  "$o": 8
+                },
+                {
+                  "$o": 9
+                }
+              ]
+            ]
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 10
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 11
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 12
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 13
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 14
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 12
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\PostgreSQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 2,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "WHERE",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 5
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::String"
+              },
+              "value": "'[\"php\"]'",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 15
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "<@",
+              "position": 16
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 18
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "tags",
+              "position": 19
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 23
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "WHERE",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::String"
+              },
+              "value": "'[\"php\"]'",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 12,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "<@",
+              "position": 16
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 13,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "tags",
+              "position": 19
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 14,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 23
+            }
+          }
+        ],
+        {
+          "$enum": "Tokenizer\\TokenType::Keyword"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::String"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Operator"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Identifier"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Eof"
+        },
+        "<@"
+      ]
+    },
+    {
+      "name": "testVectorOperators",
+      "op": "tokenizer",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "embedding <=> query_vec"
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                },
+                {
+                  "$o": 5
+                },
+                {
+                  "$o": 6
+                },
+                {
+                  "$o": 7
+                }
+              ]
+            ]
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 8
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 9
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 10
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 11
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 9
+            }
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "embedding <-> query_vec"
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 12
+                },
+                {
+                  "$o": 13
+                },
+                {
+                  "$o": 14
+                },
+                {
+                  "$o": 15
+                },
+                {
+                  "$o": 16
+                },
+                {
+                  "$o": 17
+                }
+              ]
+            ]
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 18
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 19
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 20
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 21
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 19
+            }
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "embedding <#> query_vec"
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 22
+                },
+                {
+                  "$o": 23
+                },
+                {
+                  "$o": 24
+                },
+                {
+                  "$o": 25
+                },
+                {
+                  "$o": 26
+                },
+                {
+                  "$o": 27
+                }
+              ]
+            ]
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 28
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 29
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 30
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 31
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 29
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\PostgreSQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 2,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "embedding",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 9
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "<=>",
+              "position": 10
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 13
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "query_vec",
+              "position": 14
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 23
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "embedding",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "<=>",
+              "position": 10
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "query_vec",
+              "position": 14
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 23
+            }
+          }
+        ],
+        {
+          "$enum": "Tokenizer\\TokenType::Identifier"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Operator"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Identifier"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Eof"
+        },
+        "<=>",
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 12,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "embedding",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 13,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 9
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 14,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "<->",
+              "position": 10
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 15,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 13
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 16,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "query_vec",
+              "position": 14
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 17,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 23
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 18,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "embedding",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 19,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "<->",
+              "position": 10
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 20,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "query_vec",
+              "position": 14
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 21,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 23
+            }
+          }
+        ],
+        {
+          "$enum": "Tokenizer\\TokenType::Identifier"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Operator"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Identifier"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Eof"
+        },
+        "<->",
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 22,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "embedding",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 23,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 9
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 24,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "<#>",
+              "position": 10
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 25,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 13
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 26,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "query_vec",
+              "position": 14
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 27,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 23
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 28,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "embedding",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 29,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Operator"
+              },
+              "value": "<#>",
+              "position": 10
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 30,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "query_vec",
+              "position": 14
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 31,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 23
+            }
+          }
+        ],
+        {
+          "$enum": "Tokenizer\\TokenType::Identifier"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Operator"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Identifier"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Eof"
+        },
+        "<#>"
+      ]
+    },
+    {
+      "name": "testDoubleQuoteNotString",
+      "op": "tokenizer",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "\"col\""
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\PostgreSQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 2,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "\"col\"",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 5
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "\"col\"",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 5
+            }
+          }
+        ],
+        {
+          "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+        },
+        "\"col\"",
+        {
+          "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+        }
+      ]
+    }
+  ]
+}

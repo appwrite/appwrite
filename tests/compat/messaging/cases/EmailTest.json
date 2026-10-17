@@ -1,0 +1,935 @@
+{
+  "source": "packages/messaging/tests/Messages/EmailTest.php",
+  "cases": [
+    {
+      "name": "undeliverable recipient: no at",
+      "op": "email.new",
+      "args": {
+        "to": [
+          {
+            "email": "john",
+            "name": "John"
+          }
+        ],
+        "from_email": "noreply@appwrite.io"
+      },
+      "expect": {
+        "$invalid": {
+          "type": "recipient_malformed",
+          "value": "john",
+          "message": "Email address \"john\" is not a valid address."
+        }
+      }
+    },
+    {
+      "name": "undeliverable recipient: angle brackets",
+      "op": "email.new",
+      "args": {
+        "to": [
+          {
+            "email": "John <john@appwrite.io>",
+            "name": "John"
+          }
+        ],
+        "from_email": "noreply@appwrite.io"
+      },
+      "expect": {
+        "$invalid": {
+          "type": "recipient_malformed",
+          "value": "John <john@appwrite.io>",
+          "message": "Email address \"John <john@appwrite.io>\" is not a valid address."
+        }
+      }
+    },
+    {
+      "name": "undeliverable recipient: one letter tld",
+      "op": "email.new",
+      "args": {
+        "to": [
+          {
+            "email": "john@c.c",
+            "name": "John"
+          }
+        ],
+        "from_email": "noreply@appwrite.io"
+      },
+      "expect": {
+        "$invalid": {
+          "type": "recipient_domain_invalid",
+          "value": "john@c.c",
+          "message": "Email address \"john@c.c\" has a domain that cannot receive mail."
+        }
+      }
+    },
+    {
+      "name": "undeliverable recipient: digits in tld",
+      "op": "email.new",
+      "args": {
+        "to": [
+          {
+            "email": "john@gyung.me976153",
+            "name": "John"
+          }
+        ],
+        "from_email": "noreply@appwrite.io"
+      },
+      "expect": {
+        "$invalid": {
+          "type": "recipient_domain_invalid",
+          "value": "john@gyung.me976153",
+          "message": "Email address \"john@gyung.me976153\" has a domain that cannot receive mail."
+        }
+      }
+    },
+    {
+      "name": "documentation domain is well formed",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "john@example.com",
+          "john@xn--bcher-kva.example"
+        ],
+        "from_email": "noreply@appwrite.io"
+      },
+      "expect": {
+        "to": [
+          {
+            "email": "john@example.com"
+          },
+          {
+            "email": "john@xn--bcher-kva.example"
+          }
+        ],
+        "subject": "Subject",
+        "content": "Body",
+        "fromName": "Sender",
+        "fromEmail": "noreply@appwrite.io",
+        "replyToName": "Sender",
+        "replyToEmail": "noreply@appwrite.io",
+        "cc": null,
+        "bcc": null,
+        "attachments": null,
+        "html": false,
+        "headers": [],
+        "origin": null
+      }
+    },
+    {
+      "name": "recipient name with line break is refused",
+      "op": "email.new",
+      "args": {
+        "to": [
+          {
+            "email": "john@appwrite.io",
+            "name": "John\nDoe"
+          }
+        ],
+        "from_email": "noreply@appwrite.io"
+      },
+      "expect": {
+        "$invalid": {
+          "type": "name_malformed",
+          "value": "John\nDoe",
+          "message": "Display name must not contain control characters."
+        }
+      }
+    },
+    {
+      "name": "carbon copy recipients are validated too",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "john@appwrite.io"
+        ],
+        "bcc": [
+          "not an address"
+        ],
+        "from_email": "noreply@appwrite.io"
+      },
+      "expect": {
+        "$invalid": {
+          "type": "recipient_malformed",
+          "value": "not an address",
+          "message": "Email address \"not an address\" is not a valid address."
+        }
+      }
+    },
+    {
+      "name": "malformed sender: no domain",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "john@appwrite.io"
+        ],
+        "from_email": "noreply"
+      },
+      "expect": {
+        "$invalid": {
+          "type": "sender_malformed",
+          "value": "noreply",
+          "message": "Email address \"noreply\" is not a valid address."
+        }
+      }
+    },
+    {
+      "name": "malformed sender: empty",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "john@appwrite.io"
+        ],
+        "from_email": ""
+      },
+      "expect": {
+        "$invalid": {
+          "type": "sender_malformed",
+          "value": "",
+          "message": "Email address must not be empty."
+        }
+      }
+    },
+    {
+      "name": "empty recipient keeps its type",
+      "op": "email.new",
+      "args": {
+        "to": [
+          ""
+        ],
+        "from_email": "noreply@appwrite.io"
+      },
+      "expect": {
+        "$invalid": {
+          "type": "recipient_empty",
+          "value": "",
+          "message": "Email address must not be empty."
+        }
+      }
+    },
+    {
+      "name": "typed exception is still an InvalidArgumentException",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "nope"
+        ],
+        "from_email": "noreply@appwrite.io"
+      },
+      "expect": {
+        "$invalid": {
+          "type": "recipient_malformed",
+          "value": "nope",
+          "message": "Email address \"nope\" is not a valid address."
+        }
+      }
+    },
+    {
+      "name": "headers are kept",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "john@appwrite.io"
+        ],
+        "from_email": "noreply@appwrite.io",
+        "headers": {
+          "List-Unsubscribe": "<https://example.test/u?token=abc>",
+          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+        }
+      },
+      "expect": {
+        "to": [
+          {
+            "email": "john@appwrite.io"
+          }
+        ],
+        "subject": "Subject",
+        "content": "Body",
+        "fromName": "Sender",
+        "fromEmail": "noreply@appwrite.io",
+        "replyToName": "Sender",
+        "replyToEmail": "noreply@appwrite.io",
+        "cc": null,
+        "bcc": null,
+        "attachments": null,
+        "html": false,
+        "headers": {
+          "List-Unsubscribe": "<https://example.test/u?token=abc>",
+          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+        },
+        "origin": null
+      }
+    },
+    {
+      "name": "header value with line break is refused",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "john@appwrite.io"
+        ],
+        "from_email": "noreply@appwrite.io",
+        "headers": {
+          "X-Tag": "a\r\nBcc: victim@example.com"
+        }
+      },
+      "expect": {
+        "$invalid": {
+          "type": "header_malformed",
+          "value": "X-Tag",
+          "message": "Header \"X-Tag\" must be a single-line string."
+        }
+      }
+    },
+    {
+      "name": "header name with colon is refused",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "john@appwrite.io"
+        ],
+        "from_email": "noreply@appwrite.io",
+        "headers": {
+          "X-Tag: forged": "value"
+        }
+      },
+      "expect": {
+        "$invalid": {
+          "type": "header_malformed",
+          "value": "X-Tag: forged",
+          "message": "Header name must be printable ASCII without spaces or colons."
+        }
+      }
+    },
+    {
+      "name": "reserved header: sender-owned header",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "john@appwrite.io"
+        ],
+        "from_email": "noreply@appwrite.io",
+        "headers": {
+          "From": "value"
+        }
+      },
+      "expect": {
+        "$invalid": {
+          "type": "header_malformed",
+          "value": "From",
+          "message": "The message already owns the \"From\" header."
+        }
+      }
+    },
+    {
+      "name": "reserved header: reserved name in another case",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "john@appwrite.io"
+        ],
+        "from_email": "noreply@appwrite.io",
+        "headers": {
+          "subject": "value"
+        }
+      },
+      "expect": {
+        "$invalid": {
+          "type": "header_malformed",
+          "value": "subject",
+          "message": "The message already owns the \"subject\" header."
+        }
+      }
+    },
+    {
+      "name": "empty header value: empty",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "john@appwrite.io"
+        ],
+        "from_email": "noreply@appwrite.io",
+        "headers": {
+          "X-Tag": ""
+        }
+      },
+      "expect": {
+        "$invalid": {
+          "type": "header_malformed",
+          "value": "X-Tag",
+          "message": "Header \"X-Tag\" must not be empty."
+        }
+      }
+    },
+    {
+      "name": "empty header value: whitespace only",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "john@appwrite.io"
+        ],
+        "from_email": "noreply@appwrite.io",
+        "headers": {
+          "X-Tag": "  "
+        }
+      },
+      "expect": {
+        "$invalid": {
+          "type": "header_malformed",
+          "value": "X-Tag",
+          "message": "Header \"X-Tag\" must not be empty."
+        }
+      }
+    },
+    {
+      "name": "duplicate header name by case is refused",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "john@appwrite.io"
+        ],
+        "from_email": "noreply@appwrite.io",
+        "headers": {
+          "List-Unsubscribe": "<https://example.test/u?token=abc>",
+          "list-unsubscribe": "<https://example.test/u?token=def>"
+        }
+      },
+      "expect": {
+        "$invalid": {
+          "type": "header_malformed",
+          "value": "list-unsubscribe",
+          "message": "Header \"list-unsubscribe\" duplicates \"List-Unsubscribe\" by case."
+        }
+      }
+    },
+    {
+      "name": "every getter, with an origin",
+      "op": "email.new",
+      "args": {
+        "to": [
+          {
+            "email": "a@example.test",
+            "name": "A"
+          },
+          "b@example.test"
+        ],
+        "subject": "Hi",
+        "content": "<b>x</b>",
+        "from_name": "Acme",
+        "from_email": "noreply@example.test",
+        "reply_to_name": "Support",
+        "reply_to_email": "support@example.test",
+        "cc": [
+          "c@example.test"
+        ],
+        "bcc": [
+          {
+            "email": "d@example.test"
+          }
+        ],
+        "attachments": [
+          {
+            "name": "a.txt",
+            "path": "/tmp/a.txt",
+            "type": "text/plain"
+          },
+          {
+            "name": "b.txt",
+            "type": "text/plain",
+            "content": "hello"
+          }
+        ],
+        "html": true,
+        "origin": "internal"
+      },
+      "expect": {
+        "to": [
+          {
+            "email": "a@example.test",
+            "name": "A"
+          },
+          {
+            "email": "b@example.test"
+          }
+        ],
+        "subject": "Hi",
+        "content": "<b>x</b>",
+        "fromName": "Acme",
+        "fromEmail": "noreply@example.test",
+        "replyToName": "Support",
+        "replyToEmail": "support@example.test",
+        "cc": [
+          {
+            "email": "c@example.test"
+          }
+        ],
+        "bcc": [
+          {
+            "email": "d@example.test"
+          }
+        ],
+        "attachments": [
+          {
+            "name": "a.txt",
+            "path": "/tmp/a.txt",
+            "type": "text/plain",
+            "content": null
+          },
+          {
+            "name": "b.txt",
+            "path": "",
+            "type": "text/plain",
+            "content": "hello"
+          }
+        ],
+        "html": true,
+        "headers": [],
+        "origin": "internal"
+      }
+    },
+    {
+      "name": "an explicitly empty reply-to is not validated",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "a@example.test"
+        ],
+        "reply_to_email": ""
+      },
+      "expect": {
+        "to": [
+          {
+            "email": "a@example.test"
+          }
+        ],
+        "subject": "Subject",
+        "content": "Body",
+        "fromName": "Sender",
+        "fromEmail": "sender@example.test",
+        "replyToName": "Sender",
+        "replyToEmail": "",
+        "cc": null,
+        "bcc": null,
+        "attachments": null,
+        "html": false,
+        "headers": [],
+        "origin": null
+      }
+    },
+    {
+      "name": "a reply-to of 0 is not validated",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "a@example.test"
+        ],
+        "reply_to_email": "0"
+      },
+      "expect": {
+        "to": [
+          {
+            "email": "a@example.test"
+          }
+        ],
+        "subject": "Subject",
+        "content": "Body",
+        "fromName": "Sender",
+        "fromEmail": "sender@example.test",
+        "replyToName": "Sender",
+        "replyToEmail": "0",
+        "cc": null,
+        "bcc": null,
+        "attachments": null,
+        "html": false,
+        "headers": [],
+        "origin": null
+      }
+    },
+    {
+      "name": "a malformed reply-to is a sender failure",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "a@example.test"
+        ],
+        "reply_to_email": "support"
+      },
+      "expect": {
+        "$invalid": {
+          "type": "sender_malformed",
+          "value": "support",
+          "message": "Email address \"support\" is not a valid address."
+        }
+      }
+    },
+    {
+      "name": "a reply-to name with a control character is refused",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "a@example.test"
+        ],
+        "reply_to_name": "Support"
+      },
+      "expect": {
+        "$invalid": {
+          "type": "name_malformed",
+          "value": "Support",
+          "message": "Display name must not contain control characters."
+        }
+      }
+    },
+    {
+      "name": "a sender name with a tab is refused",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "a@example.test"
+        ],
+        "from_name": "A\tB"
+      },
+      "expect": {
+        "$invalid": {
+          "type": "name_malformed",
+          "value": "A\tB",
+          "message": "Display name must not contain control characters."
+        }
+      }
+    },
+    {
+      "name": "a header name with a trailing newline passes the name check (PCRE $)",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "a@example.test"
+        ],
+        "headers": {
+          "X-Tag\n": "v"
+        }
+      },
+      "expect": {
+        "to": [
+          {
+            "email": "a@example.test"
+          }
+        ],
+        "subject": "Subject",
+        "content": "Body",
+        "fromName": "Sender",
+        "fromEmail": "sender@example.test",
+        "replyToName": "Sender",
+        "replyToEmail": "sender@example.test",
+        "cc": null,
+        "bcc": null,
+        "attachments": null,
+        "html": false,
+        "headers": {
+          "X-Tag\n": "v"
+        },
+        "origin": null
+      }
+    },
+    {
+      "name": "a numeric header name is not a string",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "a@example.test"
+        ],
+        "headers": {
+          "123": "v"
+        }
+      },
+      "expect": {
+        "$invalid": {
+          "type": "header_malformed",
+          "value": null,
+          "message": "Header name must be printable ASCII without spaces or colons."
+        }
+      }
+    },
+    {
+      "name": "an entry without email is refused",
+      "op": "email.new",
+      "args": {
+        "to": [
+          {
+            "name": "No Email"
+          }
+        ]
+      },
+      "expect": {
+        "$invalid": {
+          "type": "recipient_empty",
+          "value": null,
+          "message": "Each recipient must have a non-empty \"email\" key."
+        }
+      }
+    },
+    {
+      "name": "an address without a dot has no deliverable domain",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "user@localhost"
+        ]
+      },
+      "expect": {
+        "$invalid": {
+          "type": "recipient_malformed",
+          "value": "user@localhost",
+          "message": "Email address \"user@localhost\" is not a valid address."
+        }
+      }
+    },
+    {
+      "name": "a unicode local part is accepted",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "jöhn@example.test"
+        ]
+      },
+      "expect": {
+        "to": [
+          {
+            "email": "jöhn@example.test"
+          }
+        ],
+        "subject": "Subject",
+        "content": "Body",
+        "fromName": "Sender",
+        "fromEmail": "sender@example.test",
+        "replyToName": "Sender",
+        "replyToEmail": "sender@example.test",
+        "cc": null,
+        "bcc": null,
+        "attachments": null,
+        "html": false,
+        "headers": [],
+        "origin": null
+      }
+    },
+    {
+      "name": "a sender with a one letter tld is a sender failure",
+      "op": "email.new",
+      "args": {
+        "to": [
+          "a@example.test"
+        ],
+        "from_email": "a@b.c"
+      },
+      "expect": {
+        "$invalid": {
+          "type": "sender_malformed",
+          "value": "a@b.c",
+          "message": "Email address \"a@b.c\" has a domain that cannot receive mail."
+        }
+      }
+    },
+    {
+      "name": "an empty to list is accepted",
+      "op": "email.new",
+      "args": {
+        "to": []
+      },
+      "expect": {
+        "to": [],
+        "subject": "Subject",
+        "content": "Body",
+        "fromName": "Sender",
+        "fromEmail": "sender@example.test",
+        "replyToName": "Sender",
+        "replyToEmail": "sender@example.test",
+        "cc": null,
+        "bcc": null,
+        "attachments": null,
+        "html": false,
+        "headers": [],
+        "origin": null
+      }
+    },
+    {
+      "name": "every reserved header",
+      "steps": [
+        {
+          "op": "email.new",
+          "args": {
+            "to": [
+              "a@example.test"
+            ],
+            "headers": {
+              "Date": "v"
+            }
+          },
+          "expect": {
+            "$invalid": {
+              "type": "header_malformed",
+              "value": "Date",
+              "message": "The message already owns the \"Date\" header."
+            }
+          }
+        },
+        {
+          "op": "email.new",
+          "args": {
+            "to": [
+              "a@example.test"
+            ],
+            "headers": {
+              "TO": "v"
+            }
+          },
+          "expect": {
+            "$invalid": {
+              "type": "header_malformed",
+              "value": "TO",
+              "message": "The message already owns the \"TO\" header."
+            }
+          }
+        },
+        {
+          "op": "email.new",
+          "args": {
+            "to": [
+              "a@example.test"
+            ],
+            "headers": {
+              "Cc": "v"
+            }
+          },
+          "expect": {
+            "$invalid": {
+              "type": "header_malformed",
+              "value": "Cc",
+              "message": "The message already owns the \"Cc\" header."
+            }
+          }
+        },
+        {
+          "op": "email.new",
+          "args": {
+            "to": [
+              "a@example.test"
+            ],
+            "headers": {
+              "Bcc": "v"
+            }
+          },
+          "expect": {
+            "$invalid": {
+              "type": "header_malformed",
+              "value": "Bcc",
+              "message": "The message already owns the \"Bcc\" header."
+            }
+          }
+        },
+        {
+          "op": "email.new",
+          "args": {
+            "to": [
+              "a@example.test"
+            ],
+            "headers": {
+              "Reply-To": "v"
+            }
+          },
+          "expect": {
+            "$invalid": {
+              "type": "header_malformed",
+              "value": "Reply-To",
+              "message": "The message already owns the \"Reply-To\" header."
+            }
+          }
+        },
+        {
+          "op": "email.new",
+          "args": {
+            "to": [
+              "a@example.test"
+            ],
+            "headers": {
+              "Message-ID": "v"
+            }
+          },
+          "expect": {
+            "$invalid": {
+              "type": "header_malformed",
+              "value": "Message-ID",
+              "message": "The message already owns the \"Message-ID\" header."
+            }
+          }
+        },
+        {
+          "op": "email.new",
+          "args": {
+            "to": [
+              "a@example.test"
+            ],
+            "headers": {
+              "MIME-Version": "v"
+            }
+          },
+          "expect": {
+            "$invalid": {
+              "type": "header_malformed",
+              "value": "MIME-Version",
+              "message": "The message already owns the \"MIME-Version\" header."
+            }
+          }
+        },
+        {
+          "op": "email.new",
+          "args": {
+            "to": [
+              "a@example.test"
+            ],
+            "headers": {
+              "Content-Type": "v"
+            }
+          },
+          "expect": {
+            "$invalid": {
+              "type": "header_malformed",
+              "value": "Content-Type",
+              "message": "The message already owns the \"Content-Type\" header."
+            }
+          }
+        },
+        {
+          "op": "email.new",
+          "args": {
+            "to": [
+              "a@example.test"
+            ],
+            "headers": {
+              "Content-Transfer-Encoding": "v"
+            }
+          },
+          "expect": {
+            "$invalid": {
+              "type": "header_malformed",
+              "value": "Content-Transfer-Encoding",
+              "message": "The message already owns the \"Content-Transfer-Encoding\" header."
+            }
+          }
+        },
+        {
+          "op": "email.new",
+          "args": {
+            "to": [
+              "a@example.test"
+            ],
+            "headers": {
+              "X-Null": "a\u0000b"
+            }
+          },
+          "expect": {
+            "$invalid": {
+              "type": "header_malformed",
+              "value": "X-Null",
+              "message": "Header \"X-Null\" must be a single-line string."
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

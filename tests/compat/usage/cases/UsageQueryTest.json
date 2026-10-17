@@ -1,0 +1,310 @@
+{
+  "source": "packages/usage/tests/UsageQueryTest.php",
+  "cases": [
+    {
+      "name": "groupByInterval creation",
+      "op": "query.group_by_interval",
+      "args": {
+        "attribute": "time",
+        "interval": "1h"
+      },
+      "expect": {
+        "class": "Utopia\\Usage\\UsageQuery",
+        "method": "groupByTimeBucket",
+        "attribute": "time",
+        "values": [
+          "1h"
+        ]
+      }
+    },
+    {
+      "name": "groupByInterval accepts every valid interval",
+      "steps": [
+        {
+          "op": "query.group_by_interval",
+          "args": {
+            "attribute": "time",
+            "interval": "1m"
+          },
+          "expect": {
+            "class": "Utopia\\Usage\\UsageQuery",
+            "method": "groupByTimeBucket",
+            "attribute": "time",
+            "values": [
+              "1m"
+            ]
+          }
+        },
+        {
+          "op": "query.group_by_interval",
+          "args": {
+            "attribute": "time",
+            "interval": "5m"
+          },
+          "expect": {
+            "class": "Utopia\\Usage\\UsageQuery",
+            "method": "groupByTimeBucket",
+            "attribute": "time",
+            "values": [
+              "5m"
+            ]
+          }
+        },
+        {
+          "op": "query.group_by_interval",
+          "args": {
+            "attribute": "time",
+            "interval": "15m"
+          },
+          "expect": {
+            "class": "Utopia\\Usage\\UsageQuery",
+            "method": "groupByTimeBucket",
+            "attribute": "time",
+            "values": [
+              "15m"
+            ]
+          }
+        },
+        {
+          "op": "query.group_by_interval",
+          "args": {
+            "attribute": "time",
+            "interval": "30m"
+          },
+          "expect": {
+            "class": "Utopia\\Usage\\UsageQuery",
+            "method": "groupByTimeBucket",
+            "attribute": "time",
+            "values": [
+              "30m"
+            ]
+          }
+        },
+        {
+          "op": "query.group_by_interval",
+          "args": {
+            "attribute": "time",
+            "interval": "1h"
+          },
+          "expect": {
+            "class": "Utopia\\Usage\\UsageQuery",
+            "method": "groupByTimeBucket",
+            "attribute": "time",
+            "values": [
+              "1h"
+            ]
+          }
+        },
+        {
+          "op": "query.group_by_interval",
+          "args": {
+            "attribute": "time",
+            "interval": "1d"
+          },
+          "expect": {
+            "class": "Utopia\\Usage\\UsageQuery",
+            "method": "groupByTimeBucket",
+            "attribute": "time",
+            "values": [
+              "1d"
+            ]
+          }
+        },
+        {
+          "op": "query.group_by_interval",
+          "args": {
+            "attribute": "time",
+            "interval": "1w"
+          },
+          "expect": {
+            "class": "Utopia\\Usage\\UsageQuery",
+            "method": "groupByTimeBucket",
+            "attribute": "time",
+            "values": [
+              "1w"
+            ]
+          }
+        },
+        {
+          "op": "query.group_by_interval",
+          "args": {
+            "attribute": "time",
+            "interval": "1M"
+          },
+          "expect": {
+            "class": "Utopia\\Usage\\UsageQuery",
+            "method": "groupByTimeBucket",
+            "attribute": "time",
+            "values": [
+              "1M"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "groupByInterval rejects an invalid interval",
+      "op": "query.group_by_interval",
+      "args": {
+        "attribute": "time",
+        "interval": "2h"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid interval '2h'. Allowed: 1m, 5m, 15m, 30m, 1h, 1d, 1w, 1M"
+        }
+      }
+    },
+    {
+      "name": "groupByInterval rejects an empty interval",
+      "op": "query.group_by_interval",
+      "args": {
+        "attribute": "time",
+        "interval": ""
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid interval ''. Allowed: 1m, 5m, 15m, 30m, 1h, 1d, 1w, 1M"
+        }
+      }
+    },
+    {
+      "name": "valid intervals and aggregates constants",
+      "op": "query.constants",
+      "args": {},
+      "expect": {
+        "intervals": {
+          "1m": "INTERVAL 1 MINUTE",
+          "5m": "INTERVAL 5 MINUTE",
+          "15m": "INTERVAL 15 MINUTE",
+          "30m": "INTERVAL 30 MINUTE",
+          "1h": "INTERVAL 1 HOUR",
+          "1d": "INTERVAL 1 DAY",
+          "1w": "INTERVAL 1 WEEK",
+          "1M": "INTERVAL 1 MONTH"
+        },
+        "aggregates": [
+          "max"
+        ]
+      }
+    },
+    {
+      "name": "groupBy creation",
+      "op": "query.group_by",
+      "args": {
+        "attributes": "service"
+      },
+      "expect": {
+        "class": "Utopia\\Usage\\UsageQuery",
+        "method": "groupBy",
+        "attribute": "service",
+        "values": []
+      }
+    },
+    {
+      "name": "groupBy of several attributes",
+      "op": "query.group_by",
+      "args": {
+        "attributes": [
+          "service",
+          "status"
+        ]
+      },
+      "expect": {
+        "class": "Utopia\\Usage\\UsageQuery",
+        "method": "groupBy",
+        "attribute": "",
+        "values": [
+          "service",
+          "status"
+        ]
+      }
+    },
+    {
+      "name": "aggregate creation",
+      "op": "query.aggregate",
+      "args": {
+        "function": "max"
+      },
+      "expect": {
+        "class": "Utopia\\Usage\\UsageQuery",
+        "method": "max",
+        "attribute": "value",
+        "values": []
+      }
+    },
+    {
+      "name": "aggregate rejects an invalid function",
+      "op": "query.aggregate",
+      "args": {
+        "function": "peak"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid aggregate 'peak'. Allowed: max"
+        }
+      }
+    },
+    {
+      "name": "extractAggregate finds the aggregate",
+      "op": "query.extract_aggregate",
+      "args": {
+        "queries": [
+          {
+            "method": "equal",
+            "attribute": "metric",
+            "values": [
+              "realtime.connections"
+            ]
+          },
+          {
+            "method": "max",
+            "attribute": "value",
+            "values": []
+          }
+        ]
+      },
+      "expect": "max"
+    },
+    {
+      "name": "extractAggregate returns null when missing",
+      "op": "query.extract_aggregate",
+      "args": {
+        "queries": [
+          {
+            "method": "equal",
+            "attribute": "metric",
+            "values": [
+              "realtime.connections"
+            ]
+          },
+          {
+            "method": "groupByTimeBucket",
+            "attribute": "time",
+            "values": [
+              "1h"
+            ]
+          }
+        ]
+      },
+      "expect": null
+    },
+    {
+      "name": "groupBy parse round trip feeds the adapters",
+      "op": "query.extract_aggregate",
+      "args": {
+        "queries": [
+          {
+            "method": "groupBy",
+            "attribute": "service",
+            "values": []
+          }
+        ]
+      },
+      "expect": null
+    }
+  ]
+}

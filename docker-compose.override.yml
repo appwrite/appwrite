@@ -522,6 +522,135 @@ services:
       - 9509:3000
     environment:
       - SERVER_URL=http://localhost:9520/v1/graphql
+  # Rust API (see rfc/rust.md). Serves the services migrated to Rust; Traefik
+  # routes their paths here and everything else keeps going to the PHP API.
+  # Opt in with `COMPOSE_PROFILES=rust` (or `--profile rust`).
+  appwrite-rust:
+    profiles:
+      - rust
+    build:
+      context: .
+      dockerfile: Dockerfile.rust
+    image: appwrite-rust-dev
+    container_name: appwrite-rust
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    networks:
+      - appwrite
+    ports:
+      - 9530:8080
+    depends_on:
+      - redis
+      - ${_APP_DB_HOST:-postgresql}
+    healthcheck:
+      test:
+        - CMD
+        - /usr/local/bin/appwrite-rust
+        - health
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    labels:
+      - traefik.enable=true
+      - traefik.constraint-label-stack=appwrite
+      - traefik.docker.network=appwrite
+      - traefik.http.services.appwrite_rust.loadbalancer.server.port=8080
+      - traefik.http.routers.appwrite_rust_http.entrypoints=appwrite_web
+      - traefik.http.routers.appwrite_rust_http.rule=(Host(`${_APP_DOMAIN:-localhost}`) || Host(`${_APP_CONSOLE_DOMAIN:-localhost}`) || Host(`localhost`)) && (Path(`/v1/users`) || PathPrefix(`/v1/users/`) || Path(`/v1/teams`) || PathPrefix(`/v1/teams/`)) && !HeaderRegexp(`x-appwrite-hostname`, `.+`)
+      - traefik.http.routers.appwrite_rust_http.priority=1000
+      - traefik.http.routers.appwrite_rust_http.service=appwrite_rust
+      - traefik.http.routers.appwrite_rust_https.entrypoints=appwrite_websecure
+      - traefik.http.routers.appwrite_rust_https.rule=(Host(`${_APP_DOMAIN:-localhost}`) || Host(`${_APP_CONSOLE_DOMAIN:-localhost}`) || Host(`localhost`)) && (Path(`/v1/users`) || PathPrefix(`/v1/users/`) || Path(`/v1/teams`) || PathPrefix(`/v1/teams/`)) && !HeaderRegexp(`x-appwrite-hostname`, `.+`)
+      - traefik.http.routers.appwrite_rust_https.priority=1000
+      - traefik.http.routers.appwrite_rust_https.service=appwrite_rust
+      - traefik.http.routers.appwrite_rust_https.tls=true
+    environment:
+      - _APP_ENV
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
+      - _APP_CONSOLE_WHITELIST_ROOT
+      - _APP_CONSOLE_WHITELIST_EMAILS
+      - _APP_CONSOLE_WHITELIST_IPS
+      - _APP_CONSOLE_INVITES
+      - _APP_CONSOLE_SESSION_ALERTS
+      - _APP_CONSOLE_PASSKEY_ORIGINS
+      - _APP_CONSOLE_COUNTRIES_DENYLIST
+      - _APP_CONSOLE_GITHUB_APP_ID
+      - _APP_CONSOLE_GITHUB_SECRET
+      - _APP_CONSOLE_GITLAB_APP_ID
+      - _APP_CONSOLE_GITLAB_SECRET
+      - _APP_CONSOLE_GITLAB_ENDPOINT
+      - _APP_CONSOLE_GOOGLE_APP_ID
+      - _APP_CONSOLE_GOOGLE_SECRET
+      - _APP_CONSOLE_BITBUCKET_APP_ID
+      - _APP_CONSOLE_BITBUCKET_SECRET
+      - _APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS
+      # No _APP_RULES_FORMAT: the PHP API is not given it either, so both
+      # find custom domain rules by domain (.env's `md5` would make Rust
+      # look them up by ID instead).
+      - _APP_SMS_FROM
+      - _APP_SMTP_PORT
+      - _APP_SMTP_SECURE
+      - _APP_SMTP_USERNAME
+      - _APP_SMTP_PASSWORD
+      # PHP's mock OAuth2 provider, which PHP reaches at localhost.
+      - _APP_RUST_MOCK_ENDPOINT=http://appwrite
+      - _APP_EDITION
+      - _APP_LOCALE
+      - _APP_REGION
+      - _APP_OPENSSL_KEY_V1
+      - _APP_DOMAIN
+      - _APP_CONSOLE_DOMAIN
+      - _APP_DOMAIN_SITES
+      - _APP_DOMAIN_FUNCTIONS
+      - _APP_CONSOLE_URL
+      - _APP_CONSOLE_SCHEMA
+      - _APP_CONSOLE_TRUSTED_PROJECTS
+      - _APP_MIGRATION_HOST
+      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_OPTIONS_ABUSE
+      - _APP_TRUSTED_HEADERS
+      - _APP_TRUSTED_PROXIES
+      - _APP_COMPRESSION_ENABLED
+      - _APP_COMPRESSION_MIN_SIZE_BYTES
+      - _APP_SYSTEM_RESPONSE_FORMAT
+      - _APP_DB_ADAPTER
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_CONNECTIONS_DATABASE
+      - _APP_DATABASE_SHARED_TABLES
+      - _APP_DATABASE_SHARED_NAMESPACE
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_LOCKING_ENABLED
+      - _APP_USAGE_STATS
+      - _APP_PWNED_PASSWORDS_DSN
+      - _APP_GEO_ENDPOINT
+      - _APP_GEO_SECRET
+      - _APP_FUNCTIONS_QUEUE_NAME
+      - _APP_WEBHOOK_QUEUE_NAME
+      - _APP_DELETE_QUEUE_NAME
+      - _APP_STATS_USAGE_QUEUE_NAME
+      - _APP_AUDITS_QUEUE_NAME
+      - _APP_MAILS_QUEUE_NAME
+      - _APP_MESSAGING_QUEUE_NAME
+      - _APP_SMTP_HOST
+      - _APP_SMS_PROVIDER
+      - _APP_SYSTEM_EMAIL_ADDRESS
+      - _APP_SYSTEM_EMAIL_NAME
+      - _APP_CONSOLE_ROOT_SESSION
+      - _APP_RUST_LOG
+      - _APP_RUST_WORKERS
+      - _APP_RUST_DB_POOL
   traefik:
     command:
       - --providers.file.directory=/storage/config
@@ -568,6 +697,13 @@ services:
   postgresql:
     ports:
       - "9512:5432"
+    # PHP's HTTP server alone opens a pool per worker (96 by default), past
+    # Postgres' default of 100 connections once the workers, the Rust API and
+    # the tasks connect too.
+    command:
+      - postgres
+      - -c
+      - max_connections=500
   redis:
     ports:
       - "9513:6379"

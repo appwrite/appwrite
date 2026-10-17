@@ -1,0 +1,1865 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/State/ValueTest.php"
+  ],
+  "cases": [
+    {
+      "name": "ValueTest::testAnOverrideOutsideACoroutineLastsForItsCallback",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "State\\Value",
+            "args": {
+              "value": "handle"
+            },
+            "as": "o381"
+          },
+          "bind": "s661",
+          "expect": {
+            "$value": "State\\Value",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o381"
+            },
+            "method": "with",
+            "args": {
+              "value": "override",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o381"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o381"
+                      },
+                      "method": "set",
+                      "args": {
+                        "value": "changed"
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o381"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": [
+                        "override",
+                        "changed"
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": [
+              "override",
+              "changed"
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    "override",
+                    null,
+                    "changed",
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o381"
+            },
+            "method": "get",
+            "args": {}
+          },
+          "expect": "handle"
+        }
+      ]
+    },
+    {
+      "name": "ValueTest::testAWriteOutsideAnOverrideChangesTheHandleWideValue",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "State\\Value",
+            "args": {
+              "value": "handle"
+            },
+            "as": "o382"
+          },
+          "bind": "s664",
+          "expect": {
+            "$value": "State\\Value",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o382"
+            },
+            "method": "set",
+            "args": {
+              "value": "changed"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o382"
+            },
+            "method": "get",
+            "args": {}
+          },
+          "expect": "changed"
+        }
+      ]
+    },
+    {
+      "name": "ValueTest::testAnOverrideIsRemovedWhenItsCallbackThrows",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "State\\Value",
+            "args": {
+              "value": "handle"
+            },
+            "as": "o383"
+          },
+          "bind": "s667",
+          "expect": {
+            "$value": "State\\Value",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o383"
+            },
+            "method": "with",
+            "args": {
+              "value": "override",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "$throw",
+                    "args": {
+                      "class": "RuntimeException",
+                      "message": "failed"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "failed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o383"
+            },
+            "method": "get",
+            "args": {}
+          },
+          "expect": "handle"
+        }
+      ]
+    },
+    {
+      "name": "ValueTest::testValuesKeepTheirOwnOverrides",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "State\\Value",
+            "args": {
+              "value": "first"
+            },
+            "as": "o384"
+          },
+          "bind": "s670",
+          "expect": {
+            "$value": "State\\Value",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "State\\Value",
+            "args": {
+              "value": "second"
+            },
+            "as": "o385"
+          },
+          "bind": "s671",
+          "expect": {
+            "$value": "State\\Value",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o384"
+            },
+            "method": "with",
+            "args": {
+              "value": "override",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o384"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o385"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": [
+                        "override",
+                        "second"
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": [
+              "override",
+              "second"
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    "override",
+                    "second",
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ValueTest::testAnOverrideIsSeenByTheCoroutinesItStartsButNotBySiblingsOrTheParent",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "State\\Value",
+            "args": {
+              "value": "handle"
+            },
+            "as": "o386"
+          },
+          "bind": "s673",
+          "expect": {
+            "$value": "State\\Value",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o386"
+            },
+            "method": "with",
+            "args": {
+              "value": "override",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o386"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o386"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o386"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    "override",
+                    "override",
+                    "override"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ValueTest::testAWriteInsideACoroutinesOverrideStaysInThatOverride",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "State\\Value",
+            "args": {
+              "value": "handle"
+            },
+            "as": "o387"
+          },
+          "bind": "s675",
+          "expect": {
+            "$value": "State\\Value",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o387"
+            },
+            "method": "with",
+            "args": {
+              "value": "override",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o387"
+                      },
+                      "method": "set",
+                      "args": {
+                        "value": "changed"
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o387"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null,
+                    "changed"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o387"
+            },
+            "method": "get",
+            "args": {}
+          },
+          "expect": "handle"
+        }
+      ]
+    },
+    {
+      "name": "ValueTest::testAWriteInACoroutineWithoutAnOverrideChangesTheHandleWideValue",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "State\\Value",
+            "args": {
+              "value": "handle"
+            },
+            "as": "o388"
+          },
+          "bind": "s678",
+          "expect": {
+            "$value": "State\\Value",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o388"
+            },
+            "method": "set",
+            "args": {
+              "value": "changed"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o388"
+            },
+            "method": "get",
+            "args": {}
+          },
+          "expect": "changed"
+        }
+      ]
+    },
+    {
+      "name": "ValueTest::testAWriteInACoroutineStartedInsideAnOverrideStaysInThatCoroutine",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "State\\Value",
+            "args": {
+              "value": "handle"
+            },
+            "as": "o389"
+          },
+          "bind": "s681",
+          "expect": {
+            "$value": "State\\Value",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o389"
+            },
+            "method": "with",
+            "args": {
+              "value": "override",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o389"
+                      },
+                      "method": "set",
+                      "args": {
+                        "value": "child"
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o389"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o389"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o389"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null,
+                    "child",
+                    "child",
+                    "child"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o389"
+            },
+            "method": "get",
+            "args": {}
+          },
+          "expect": "handle"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o389"
+            },
+            "method": "get",
+            "args": {}
+          },
+          "expect": "handle"
+        }
+      ]
+    },
+    {
+      "name": "ValueTest::testAWriteInACoroutineStartedInsideAnOverrideEndsWithThatOverride",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "State\\Value",
+            "args": {
+              "value": "handle"
+            },
+            "as": "o390"
+          },
+          "bind": "s685",
+          "expect": {
+            "$value": "State\\Value",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o390"
+            },
+            "method": "with",
+            "args": {
+              "value": "override",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o390"
+                      },
+                      "method": "set",
+                      "args": {
+                        "value": "child"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o390"
+            },
+            "method": "get",
+            "args": {}
+          },
+          "expect": "handle"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o390"
+            },
+            "method": "get",
+            "args": {}
+          },
+          "expect": "handle"
+        }
+      ]
+    },
+    {
+      "name": "ValueTest::testAWriteInACoroutineStartedInsideAnOverrideIsSeenByTheCoroutinesItStarts",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "State\\Value",
+            "args": {
+              "value": "handle"
+            },
+            "as": "o391"
+          },
+          "bind": "s689",
+          "expect": {
+            "$value": "State\\Value",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o391"
+            },
+            "method": "with",
+            "args": {
+              "value": "override",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o391"
+                      },
+                      "method": "set",
+                      "args": {
+                        "value": "child"
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o391"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o391"
+                      },
+                      "method": "set",
+                      "args": {
+                        "value": "grandchild"
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o391"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o391"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o391"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null,
+                    "child",
+                    null,
+                    "grandchild",
+                    "grandchild",
+                    "grandchild"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o391"
+            },
+            "method": "get",
+            "args": {}
+          },
+          "expect": "handle"
+        }
+      ]
+    },
+    {
+      "name": "ValueTest::testAWriteInACoroutineUnderAnOverrideOpenedOutsideCoroutinesStaysInThatCoroutine",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "State\\Value",
+            "args": {
+              "value": "handle"
+            },
+            "as": "o392"
+          },
+          "bind": "s692",
+          "expect": {
+            "$value": "State\\Value",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o392"
+            },
+            "method": "with",
+            "args": {
+              "value": "override",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o392"
+                      },
+                      "method": "set",
+                      "args": {
+                        "value": "child"
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o392"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o392"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o392"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null,
+                    "child",
+                    "child",
+                    "child"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o392"
+            },
+            "method": "get",
+            "args": {}
+          },
+          "expect": "handle"
+        }
+      ]
+    },
+    {
+      "name": "ValueTest::testANullWriteInACoroutineStartedInsideAnOverrideIsKept",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "State\\Value",
+            "args": {
+              "value": "handle"
+            },
+            "as": "o393"
+          },
+          "bind": "s695",
+          "expect": {
+            "$value": "State\\Value",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o393"
+            },
+            "method": "with",
+            "args": {
+              "value": "override",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o393"
+                      },
+                      "method": "set",
+                      "args": {
+                        "value": null
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o393"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null,
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ValueTest::testAChildsOverrideLeavesItsParentUnchanged",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "State\\Value",
+            "args": {
+              "value": "handle"
+            },
+            "as": "o394"
+          },
+          "bind": "s697",
+          "expect": {
+            "$value": "State\\Value",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o394"
+            },
+            "method": "with",
+            "args": {
+              "value": "parent",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o394"
+                      },
+                      "method": "with",
+                      "args": {
+                        "value": "child",
+                        "callback": {
+                          "steps": [
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o394"
+                                },
+                                "method": "get",
+                                "args": {}
+                              }
+                            },
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o394"
+                                },
+                                "method": "get",
+                                "args": {}
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o394"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "result": null,
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              "child",
+                              "child"
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    "parent"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ValueTest::testAnOverrideOpenedOutsideCoroutinesIsSeenInsideThem",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "State\\Value",
+            "args": {
+              "value": "handle"
+            },
+            "as": "o395"
+          },
+          "bind": "s699",
+          "expect": {
+            "$value": "State\\Value",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o395"
+            },
+            "method": "with",
+            "args": {
+              "value": "override",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o395"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    "override"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o395"
+            },
+            "method": "get",
+            "args": {}
+          },
+          "expect": "handle"
+        }
+      ]
+    },
+    {
+      "name": "ValueTest::testAWriteInACoroutineWhoseStarterHasReturnedStaysInThatCoroutine",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "State\\Value",
+            "args": {
+              "value": "handle"
+            },
+            "as": "o396"
+          },
+          "bind": "s702",
+          "expect": {
+            "$value": "State\\Value",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o396"
+            },
+            "method": "with",
+            "args": {
+              "value": "override",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o396"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o396"
+                      },
+                      "method": "set",
+                      "args": {
+                        "value": "first"
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o396"
+                      },
+                      "method": "set",
+                      "args": {
+                        "value": "second"
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o396"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o396"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o396"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    "override",
+                    null,
+                    null,
+                    "second",
+                    "second",
+                    "second"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o396"
+            },
+            "method": "get",
+            "args": {}
+          },
+          "expect": "handle"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o396"
+            },
+            "method": "get",
+            "args": {}
+          },
+          "expect": "handle"
+        }
+      ]
+    },
+    {
+      "name": "ValueTest::testAWriteInACoroutineWhoseStarterHasReturnedEndsWithThatCoroutine",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "State\\Value",
+            "args": {
+              "value": "handle"
+            },
+            "as": "o397"
+          },
+          "bind": "s706",
+          "expect": {
+            "$value": "State\\Value",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o397"
+            },
+            "method": "with",
+            "args": {
+              "value": "override",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o397"
+                      },
+                      "method": "set",
+                      "args": {
+                        "value": "detached"
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o397"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null,
+                    "detached"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o397"
+            },
+            "method": "get",
+            "args": {}
+          },
+          "expect": "handle"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o397"
+            },
+            "method": "set",
+            "args": {
+              "value": "later"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o397"
+            },
+            "method": "get",
+            "args": {}
+          },
+          "expect": "later"
+        }
+      ]
+    },
+    {
+      "name": "ValueTest::testAWriteInACoroutineWhoseStarterHasReturnedKeepsItsValueAcrossItsOwnOverride",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "State\\Value",
+            "args": {
+              "value": "handle"
+            },
+            "as": "o398"
+          },
+          "bind": "s711",
+          "expect": {
+            "$value": "State\\Value",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o398"
+            },
+            "method": "with",
+            "args": {
+              "value": "override",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o398"
+                      },
+                      "method": "set",
+                      "args": {
+                        "value": "detached"
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o398"
+                      },
+                      "method": "with",
+                      "args": {
+                        "value": "inner",
+                        "callback": {
+                          "steps": [
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o398"
+                                },
+                                "method": "get",
+                                "args": {}
+                              },
+                              "return": true
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o398"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null,
+                    {
+                      "result": "inner",
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              "inner"
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    "detached"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o398"
+            },
+            "method": "get",
+            "args": {}
+          },
+          "expect": "handle"
+        }
+      ]
+    },
+    {
+      "name": "ValueTest::testADetachedWriteAfterEveryOverrideEndedChangesTheSharedValueWhileAnOrphanKeepsItsOwn",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "State\\Value",
+            "args": {
+              "value": "handle"
+            },
+            "as": "o399"
+          },
+          "bind": "s714",
+          "expect": {
+            "$value": "State\\Value",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o399"
+            },
+            "method": "with",
+            "args": {
+              "value": "override",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o399"
+                      },
+                      "method": "set",
+                      "args": {
+                        "value": "orphan"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o399"
+            },
+            "method": "set",
+            "args": {
+              "value": "shared"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o399"
+            },
+            "method": "get",
+            "args": {}
+          },
+          "expect": "shared"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o399"
+            },
+            "method": "get",
+            "args": {}
+          },
+          "expect": "shared"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o399"
+            },
+            "method": "get",
+            "args": {}
+          },
+          "expect": "shared"
+        }
+      ]
+    },
+    {
+      "name": "ValueTest::testAWriteInACoroutineWhoseStarterHasReturnedUnderAnOverrideOpenedOutsideCoroutinesStaysInThatCoroutine",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "State\\Value",
+            "args": {
+              "value": "handle"
+            },
+            "as": "o400"
+          },
+          "bind": "s720",
+          "expect": {
+            "$value": "State\\Value",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o400"
+            },
+            "method": "with",
+            "args": {
+              "value": "override",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o400"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o400"
+                      },
+                      "method": "set",
+                      "args": {
+                        "value": "child"
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o400"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o400"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o400"
+                      },
+                      "method": "get",
+                      "args": {}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    "override",
+                    null,
+                    "child",
+                    "child",
+                    "child"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o400"
+            },
+            "method": "get",
+            "args": {}
+          },
+          "expect": "handle"
+        }
+      ]
+    },
+    {
+      "name": "ValueTest::testAWriteInACoroutineWhoseStarterHasReturnedWithoutAnyOverrideChangesTheHandleWideValue",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "State\\Value",
+            "args": {
+              "value": "handle"
+            },
+            "as": "o401"
+          },
+          "bind": "s723",
+          "expect": {
+            "$value": "State\\Value",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o401"
+            },
+            "method": "set",
+            "args": {
+              "value": "changed"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o401"
+            },
+            "method": "get",
+            "args": {}
+          },
+          "expect": "changed"
+        }
+      ]
+    }
+  ]
+}

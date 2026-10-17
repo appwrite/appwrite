@@ -1,0 +1,888 @@
+//! The incoming request: method, path, headers, cookies, query string, form,
+//! multipart and JSON bodies, and the client's address and scheme.
+//!
+//! PHP: `Utopia\Http\Request` with the semantics of its Swoole adapter, the
+//! one Appwrite serves with: headers, cookies, query and form fields are
+//! parsed the way Swoole parses them, the JSON body the way Utopia does.
+
+use std::borrow::Cow;
+use std::net::IpAddr;
+use std::sync::{Arc, OnceLock};
+
+use bytes::Bytes;
+use indexmap::IndexMap;
+use php_std::{Array, Value as Php};
+use serde_json::{Map, Value};
+
+use crate::headers::{self, Headers};
+use crate::multipart;
+use crate::params::{self, Params};
+use crate::trusted::TrustedHeaders;
+
+/// Headers Swoole keeps a single value of (a repeated one replaces it).
+const SINGLE: [&str; 8] = [
+    "host",
+    "content-type",
+    "connection",
+    "user-agent",
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-length",
+];
+
+/// Schemes a trusted proto header may name.
+///
+/// PHP: `Request::SCHEMES`.
+pub const SCHEMES: [&str; 4] = ["http", "https", "ws", "wss"];
+
+/// How the body was encoded, decided by the original `Content-Type` (Swoole
+/// parses form bodies while reading the request).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Form {
+    None,
+    Urlencoded,
+    Multipart,
+}
+
+/// A `Range` or `Content-Range` header, parsed.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Range {
+    /// The range unit, such as `bytes`.
+    pub unit: String,
+    /// The first position, inclusive.
+    pub start: i64,
+    /// The last position, inclusive; `None` for an open range (`bytes=0-`).
+    pub end: Option<i64>,
+    /// The total size (`Content-Range` only).
+    pub size: Option<i64>,
+}
+
+/// An incoming HTTP request.
+///
+/// Query, body and cookie params and uploaded files are parsed on first use.
+#[derive(Debug)]
+pub struct Request {
+    method: Cow<'static, str>,
+    uri: String,
+    query_string: Option<String>,
+    protocol: Cow<'static, str>,
+    remote_addr: Option<String>,
+    remote_port: Option<u16>,
+    server_port: Option<u16>,
+    time: f64,
+    /// `setServer()` values and keys this adapter does not model.
+    server: IndexMap<String, String>,
+    headers: Headers,
+    cookie_lines: Vec<String>,
+    body: Bytes,
+    form: Form,
+    trusted: Arc<TrustedHeaders>,
+    query: OnceLock<Params>,
+    payload: OnceLock<Params>,
+    post: OnceLock<(Params, Params)>,
+    cookies: OnceLock<Params>,
+}
+
+impl Clone for Request {
+    /// A copy of the request, with the params parsed so far.
+    fn clone(&self) -> Self {
+        let cell = |c: &OnceLock<Params>| {
+            let n = OnceLock::new();
+            if let Some(v) = c.get() {
+                let _ = n.set(v.clone());
+            }
+            n
+        };
+        let post = OnceLock::new();
+        if let Some(v) = self.post.get() {
+            let _ = post.set(v.clone());
+        }
+        Self {
+            method: self.method.clone(),
+            uri: self.uri.clone(),
+            query_string: self.query_string.clone(),
+            protocol: self.protocol.clone(),
+            remote_addr: self.remote_addr.clone(),
+            remote_port: self.remote_port,
+            server_port: self.server_port,
+            time: self.time,
+            server: self.server.clone(),
+            headers: self.headers.clone(),
+            cookie_lines: self.cookie_lines.clone(),
+            body: self.body.clone(),
+            form: self.form,
+            trusted: self.trusted.clone(),
+            query: cell(&self.query),
+            payload: cell(&self.payload),
+            post,
+            cookies: cell(&self.cookies),
+        }
+    }
+}
+
+impl Request {
+    /// A request for `method` and `target` (the request-line target: path and
+    /// optional `?query`) with `headers` in arrival order and `body`.
+    pub fn new<'a, I>(method: &str, target: &str, headers: I, body: Bytes) -> Self
+    where
+        I: IntoIterator<Item = (&'a str, &'a str)>,
+    {
+        let (uri, query_string) = match target.split_once('?') {
+            Some((path, query)) => (path.to_owned(), Some(query.to_owned())),
+            None => (target.to_owned(), None),
+        };
+        let mut map = Headers::with_capacity(16);
+        let mut cookie_lines = Vec::new();
+        let mut form = Form::None;
+        for (name, value) in headers {
+            if name.eq_ignore_ascii_case("cookie") {
+                // Swoole parses cookies out of the headers (`http_parse_cookie`).
+                cookie_lines.push(value.to_owned());
+                continue;
+            }
+            // Lowercased once; common names are static and cost nothing.
+            let name = headers::name(name);
+            if name == "content-type" && form == Form::None {
+                form = form_kind(value);
+            }
+            // Swoole drops the whitespace before a value (hyper drops it around).
+            let value = value.trim_start_matches([' ', '\t']).to_owned();
+            if SINGLE.contains(&name.as_ref()) {
+                // Headers Swoole keeps one value of: the last one wins.
+                map.set_lowercase(name, value);
+            } else {
+                map.push_lowercase(name, value);
+            }
+        }
+        // Swoole parses form bodies of these methods only.
+        if !matches!(method, "POST" | "PUT" | "PATCH" | "DELETE") {
+            form = Form::None;
+        }
+        Self {
+            method: method_name(method),
+            uri,
+            query_string,
+            protocol: Cow::Borrowed("HTTP/1.1"),
+            remote_addr: None,
+            remote_port: None,
+            server_port: None,
+            time: now(),
+            server: IndexMap::new(),
+            headers: map,
+            cookie_lines,
+            body,
+            form,
+            trusted: TrustedHeaders::shared_default(),
+            query: OnceLock::new(),
+            payload: OnceLock::new(),
+            post: OnceLock::new(),
+            cookies: OnceLock::new(),
+        }
+    }
+
+    /// A request from hyper's request parts, its body and the client's
+    /// socket address. Header values that are not UTF-8 are decoded lossily.
+    pub fn from_http(parts: &http::request::Parts, body: Bytes, remote: Option<std::net::SocketAddr>) -> Self {
+        let target = parts.uri.path_and_query().map(|p| p.as_str()).unwrap_or("/");
+        let headers = parts.headers.iter().map(|(n, v)| (n.as_str(), std::str::from_utf8(v.as_bytes()).unwrap_or("")));
+        // Non-UTF-8 header values are decoded lossily.
+        let lossy: Vec<(String, String)>;
+        let mut request = if parts.headers.values().all(|v| std::str::from_utf8(v.as_bytes()).is_ok()) {
+            Self::new(parts.method.as_str(), target, headers, body)
+        } else {
+            lossy = parts
+                .headers
+                .iter()
+                .map(|(n, v)| (n.as_str().to_owned(), String::from_utf8_lossy(v.as_bytes()).into_owned()))
+                .collect();
+            Self::new(parts.method.as_str(), target, lossy.iter().map(|(n, v)| (n.as_str(), v.as_str())), body)
+        };
+        request.protocol = Cow::Borrowed(match parts.version {
+            http::Version::HTTP_09 => "HTTP/0.9",
+            http::Version::HTTP_10 => "HTTP/1.0",
+            http::Version::HTTP_2 => "HTTP/2",
+            http::Version::HTTP_3 => "HTTP/3",
+            _ => "HTTP/1.1",
+        });
+        if let Some(remote) = remote {
+            request.remote_addr = Some(remote.ip().to_string());
+            request.remote_port = Some(remote.port());
+        }
+        request
+    }
+
+    /// Sets which forwarded headers to believe for the client's address and
+    /// scheme (the server does this from its options).
+    pub fn with_trusted(mut self, trusted: Arc<TrustedHeaders>) -> Self {
+        self.trusted = trusted;
+        self
+    }
+
+    /// Sets the client's socket address and port.
+    ///
+    /// PHP: `$server['remote_addr']`, `$server['remote_port']`.
+    pub fn with_remote(mut self, addr: impl Into<String>, port: Option<u16>) -> Self {
+        self.remote_addr = Some(addr.into());
+        self.remote_port = port;
+        self
+    }
+
+    /// Sets the request-line protocol, such as `HTTP/1.1` (the default).
+    ///
+    /// PHP: `$server['server_protocol']`.
+    pub fn with_protocol(mut self, protocol: impl Into<String>) -> Self {
+        self.protocol = Cow::Owned(protocol.into());
+        self
+    }
+
+    /// Sets the port the server listens on.
+    ///
+    /// PHP: `$server['server_port']`.
+    pub fn with_server_port(mut self, port: u16) -> Self {
+        self.server_port = Some(port);
+        self
+    }
+
+    // -- server ------------------------------------------------------------
+
+    /// A server variable by lowercase name: `request_method`, `request_uri`,
+    /// `path_info` (the decoded path), `query_string`, `server_protocol`,
+    /// `remote_addr`, `remote_port`, `server_port`, `request_time`,
+    /// `request_time_float`, or one set with [`Request::set_server`].
+    ///
+    /// PHP: `getServer($key, $default)`.
+    pub fn server(&self, key: &str) -> Option<String> {
+        if let Some(v) = self.server.get(key) {
+            return Some(v.clone());
+        }
+        match key {
+            "request_method" => Some(self.method.clone().into_owned()),
+            "request_uri" => Some(self.uri.clone()),
+            "path_info" => {
+                Some(String::from_utf8_lossy(&php_std::encoding::rawurldecode(self.uri.as_bytes())).into_owned())
+            }
+            "query_string" => self.query_string.clone(),
+            "server_protocol" => Some(self.protocol.clone().into_owned()),
+            "remote_addr" => self.remote_addr.clone(),
+            "remote_port" => self.remote_port.map(|p| p.to_string()),
+            "server_port" => self.server_port.map(|p| p.to_string()),
+            "request_time" => Some((self.time as i64).to_string()),
+            "request_time_float" => Some(php_std::number::to_string(self.time)),
+            _ => None,
+        }
+    }
+
+    /// Sets a server variable; `request_method` and `request_uri` change the
+    /// method and path.
+    ///
+    /// PHP: `setServer($key, $value)`.
+    pub fn set_server(&mut self, key: &str, value: impl Into<String>) -> &mut Self {
+        let value = value.into();
+        match key {
+            "request_method" => self.method = Cow::Owned(value),
+            "request_uri" => self.uri = value,
+            _ => {
+                self.server.insert(key.to_owned(), value);
+            }
+        }
+        self
+    }
+
+    // -- request line ------------------------------------------------------
+
+    /// The HTTP method, such as `GET`.
+    ///
+    /// PHP: `getMethod()`.
+    pub fn method(&self) -> &str {
+        &self.method
+    }
+
+    /// Sets the HTTP method.
+    ///
+    /// PHP: `setMethod($method)`.
+    pub fn set_method(&mut self, method: impl Into<String>) -> &mut Self {
+        self.method = Cow::Owned(method.into());
+        self
+    }
+
+    /// The request-line path, without the query string, as sent.
+    ///
+    /// PHP: `getURI()`.
+    pub fn uri(&self) -> &str {
+        &self.uri
+    }
+
+    /// The path as sent (the request-line target without its query); the
+    /// same as [`Request::uri`].
+    pub fn path(&self) -> &str {
+        &self.uri
+    }
+
+    /// The path the router matches: the path part of the URI, `/` when it
+    /// has none. `//host/path` is a network path: only `/path` is matched.
+    ///
+    /// PHP: `parse_url($uri, PHP_URL_PATH)`, as `Http::match()` reads it.
+    pub fn route_path(&self) -> std::borrow::Cow<'_, str> {
+        // A plain absolute path is its own path; anything else goes through parse_url().
+        let plain = self.uri.starts_with('/')
+            && !self.uri.starts_with("//")
+            && !self.uri.bytes().any(|b| matches!(b, b'#' | b'?' | b':' | b'@'));
+        if plain {
+            return std::borrow::Cow::Borrowed(&self.uri);
+        }
+        let path = php_std::url::parse_url(self.uri.as_bytes()).and_then(|u| u.path().map(|p| p.into_owned()));
+        std::borrow::Cow::Owned(match path {
+            Some(p) if !p.is_empty() => String::from_utf8_lossy(&p).into_owned(),
+            _ => "/".to_owned(),
+        })
+    }
+
+    /// Sets the path.
+    ///
+    /// PHP: `setURI($uri)`.
+    pub fn set_uri(&mut self, uri: impl Into<String>) -> &mut Self {
+        self.uri = uri.into();
+        self
+    }
+
+    /// The raw query string, if the target had one.
+    pub fn query_string(&self) -> Option<&str> {
+        self.query_string.as_deref()
+    }
+
+    /// The request-line protocol, such as `HTTP/1.1`.
+    pub fn version(&self) -> &str {
+        &self.protocol
+    }
+
+    /// The client's socket address, when known and a valid IP.
+    pub fn remote_addr(&self) -> Option<IpAddr> {
+        self.remote_addr.as_deref().and_then(|a| a.parse().ok())
+    }
+
+    // -- headers -----------------------------------------------------------
+
+    /// Every header.
+    ///
+    /// PHP: `getHeaders()`.
+    pub fn headers(&self) -> &Headers {
+        &self.headers
+    }
+
+    /// Whether a header is present.
+    ///
+    /// PHP: `hasHeader($key)`.
+    pub fn has_header(&self, name: &str) -> bool {
+        self.headers.has(name)
+    }
+
+    /// Every value of a header (empty when missing).
+    ///
+    /// PHP: `getHeader($key)`.
+    pub fn header_values(&self, name: &str) -> &[String] {
+        self.headers.get(name).unwrap_or(&[])
+    }
+
+    /// The first value of a header.
+    pub fn header(&self, name: &str) -> Option<&str> {
+        self.headers.first(name)
+    }
+
+    /// The first value of a header, or `""`.
+    pub fn header_or_empty(&self, name: &str) -> &str {
+        self.header(name).unwrap_or("")
+    }
+
+    /// The values of a header joined with `", "`, or `None` when missing.
+    ///
+    /// PHP: `getHeaderLine($key, $default)`.
+    pub fn header_line(&self, name: &str) -> Option<String> {
+        self.headers.line(name)
+    }
+
+    /// The values of a header joined with `", "`, or `default` when missing.
+    ///
+    /// PHP: `getHeaderLine($key, $default)`.
+    pub fn header_line_or(&self, name: &str, default: &str) -> String {
+        self.headers.line(name).unwrap_or_else(|| default.to_owned())
+    }
+
+    /// Sets a header to one value, replacing the others.
+    ///
+    /// PHP: `setHeader($key, $value)`.
+    pub fn set_header(&mut self, name: &str, value: impl Into<String>) -> &mut Self {
+        self.headers.set(name, value);
+        self
+    }
+
+    /// Appends a value to a header.
+    ///
+    /// PHP: `addHeader($key, $value)`.
+    pub fn add_header(&mut self, name: &str, value: impl Into<String>) -> &mut Self {
+        self.headers.add(name, value);
+        self
+    }
+
+    /// Removes a header.
+    ///
+    /// PHP: `removeHeader($key)`.
+    pub fn remove_header(&mut self, name: &str) -> &mut Self {
+        self.headers.remove(name);
+        self
+    }
+
+    /// The `Referer` header, or `default`.
+    ///
+    /// PHP: `getReferer($default)`.
+    pub fn referer(&self, default: &str) -> String {
+        self.header_line_or("referer", default)
+    }
+
+    /// The `Origin` header, or `default`.
+    ///
+    /// PHP: `getOrigin($default)`.
+    pub fn origin(&self, default: &str) -> String {
+        self.header_line_or("origin", default)
+    }
+
+    /// The `User-Agent` header, or `default`.
+    ///
+    /// PHP: `getUserAgent($default)`.
+    pub fn user_agent(&self, default: &str) -> String {
+        self.header_line_or("user-agent", default)
+    }
+
+    /// The `Accept` header, or `default`.
+    ///
+    /// PHP: `getAccept($default)`.
+    pub fn accept(&self, default: &str) -> String {
+        self.header_line_or("accept", default)
+    }
+
+    // -- client ------------------------------------------------------------
+
+    /// The client's IP: the leftmost address of the first trusted header
+    /// that carries a valid IP, else the socket address, else `0.0.0.0`.
+    ///
+    /// PHP: `getIP()`.
+    pub fn ip(&self) -> String {
+        for header in self.trusted.ip() {
+            let Some(value) = self.headers.line(header) else { continue };
+            if value.is_empty() || value == "0" {
+                continue;
+            }
+            let first = value.split(',').next().unwrap_or("");
+            let ip = php_std::string::trim(first.as_bytes(), b" \t\n\r\0\x0B");
+            if valid_ip(ip) {
+                return String::from_utf8_lossy(ip).into_owned();
+            }
+        }
+        self.server("remote_addr").unwrap_or_else(|| "0.0.0.0".to_owned())
+    }
+
+    /// The scheme named by the first trusted proto header that names a known one.
+    fn trusted_protocol(&self) -> Option<String> {
+        for header in self.trusted.proto() {
+            let Some(value) = self.headers.line(header) else { continue };
+            if value.is_empty() {
+                continue;
+            }
+            let first = value.split(',').next().unwrap_or("");
+            let scheme = php_std::string::trim(first.as_bytes(), b" \t\n\r\0\x0B").to_ascii_lowercase();
+            let scheme = String::from_utf8_lossy(&scheme).into_owned();
+            if SCHEMES.contains(&scheme.as_str()) {
+                return Some(scheme);
+            }
+        }
+        None
+    }
+
+    /// The scheme the client used: the first trusted proto header naming one
+    /// of [`SCHEMES`], else `http` for an `HTTP/1.1` request line and `https`
+    /// for any other protocol.
+    ///
+    /// PHP: `getProtocol()`.
+    pub fn protocol(&self) -> String {
+        if let Some(trusted) = self.trusted_protocol() {
+            return trusted;
+        }
+        let protocol = self.server("server_protocol").unwrap_or_else(|| "https".to_owned());
+        if protocol == "HTTP/1.1" {
+            return "http".to_owned();
+        }
+        match protocol.as_str() {
+            "http" | "https" | "ws" | "wss" => protocol,
+            _ => "https".to_owned(),
+        }
+    }
+
+    fn authority(&self) -> String {
+        let host = self.header_line_or("host", "");
+        let host = self.header_line_or("x-forwarded-host", &host);
+        format!("{}://{}", self.protocol(), host)
+    }
+
+    /// The port the client connected to: `X-Forwarded-Port`, else the port of
+    /// the `X-Forwarded-Host` or `Host` header, else `""`.
+    ///
+    /// PHP: `getPort()`.
+    pub fn port(&self) -> String {
+        let authority = self.authority();
+        let port = php_std::url::parse_url(authority.as_bytes())
+            .and_then(|u| u.port())
+            .map(|p| p.to_string())
+            .unwrap_or_default();
+        self.header_line_or("x-forwarded-port", &port)
+    }
+
+    /// The lowercased host name of the `X-Forwarded-Host` or `Host` header,
+    /// without the port; `""` when there is none.
+    ///
+    /// PHP: `getHostname()`.
+    pub fn hostname(&self) -> String {
+        let authority = self.authority();
+        php_std::url::parse_url(authority.as_bytes())
+            .and_then(|u| u.host().map(|h| h.to_ascii_lowercase()))
+            .map(|h| String::from_utf8_lossy(&h).into_owned())
+            .unwrap_or_default()
+    }
+
+    // -- cookies -----------------------------------------------------------
+
+    /// Every cookie, parsed from the `Cookie` headers (values URL-decoded;
+    /// of two cookies with the same name, the first wins).
+    ///
+    /// PHP: `getCookieParams()`. Swoole skips a cookie whose name, as sent,
+    /// is already a key, then registers it the way PHP does (`.` and ` `
+    /// becoming `_`): so `a` then `a=1` keeps the first, but `a.b` then
+    /// `a.b=1` keeps the second, since the first was stored as `a_b`.
+    pub fn cookies(&self) -> &Params {
+        self.cookies.get_or_init(|| {
+            // Straight into params while every name is flat (no `[`).
+            let mut cookies = Map::new();
+            let mut count = 0;
+            let mut flat = |name: &[u8], value| {
+                if std::str::from_utf8(name).is_ok_and(|raw| cookies.contains_key(raw)) {
+                    return Some(());
+                }
+                params::register_flat(&mut cookies, name, value, false)
+            };
+            if self
+                .cookie_lines
+                .iter()
+                .try_for_each(|line| parse_cookie(line.as_bytes(), &mut count, &mut flat))
+                .is_some()
+            {
+                return cookies;
+            }
+            let mut array = Array::new();
+            let mut count = 0;
+            let mut register = |name: &[u8], value: Vec<u8>| {
+                let raw = php_std::types::ArrayKey::normalize(php_std::types::Str::copy_from(name));
+                if array.get(&raw).is_none() {
+                    php_std::encoding::register_variable(&mut array, name, Php::Str(value.into()), false);
+                }
+                Some(())
+            };
+            for line in &self.cookie_lines {
+                parse_cookie(line.as_bytes(), &mut count, &mut register);
+            }
+            params::array_to_params(&array)
+        })
+    }
+
+    /// The value of a cookie, when it is a plain string (not a bracketed
+    /// array name such as `a[]`).
+    ///
+    /// PHP: `getCookie($key)`.
+    pub fn cookie(&self, name: &str) -> Option<&str> {
+        self.cookies().get(name).and_then(Value::as_str)
+    }
+
+    /// Replaces the cookies.
+    ///
+    /// PHP: `setCookieParams($cookies)`.
+    pub fn set_cookies(&mut self, cookies: Params) -> &mut Self {
+        self.cookies = OnceLock::from(cookies);
+        self
+    }
+
+    // -- params ------------------------------------------------------------
+
+    fn post(&self) -> &(Params, Params) {
+        self.post.get_or_init(|| match self.form {
+            Form::Urlencoded => (params::parse_query_bytes(&self.body), Map::new()),
+            Form::Multipart => {
+                let ct = self.headers.first("content-type").unwrap_or("");
+                multipart::parse(ct, &self.body)
+            }
+            Form::None => (Map::new(), Map::new()),
+        })
+    }
+
+    /// The query string parameters, parsed on first use.
+    ///
+    /// PHP: Swoole's `$request->get`.
+    pub fn query_params(&self) -> &Params {
+        self.query.get_or_init(|| self.query_string.as_deref().map(params::parse_query).unwrap_or_default())
+    }
+
+    /// The body parameters, parsed on first use: the JSON body for an
+    /// `application/json` content type, else the form fields (urlencoded or
+    /// multipart).
+    pub fn payload_params(&self) -> &Params {
+        self.payload.get_or_init(|| {
+            let ct = self.headers.line("content-type").unwrap_or_default();
+            // substr($ct, 0, strpos($ct, ';') ?: strlen($ct))
+            let ct = match ct.find(';') {
+                Some(n) if n > 0 => &ct[..n],
+                _ => ct.as_str(),
+            };
+            if ct == "application/json" { params::decode_payload(&self.body) } else { self.post().0.clone() }
+        })
+    }
+
+    /// The request's params: the body params for `POST`, `PUT`, `PATCH` and
+    /// `DELETE`, the query string params for every other method.
+    ///
+    /// PHP: `getParams()`.
+    pub fn params(&self) -> &Params {
+        if self.has_body_params() { self.payload_params() } else { self.query_params() }
+    }
+
+    fn has_body_params(&self) -> bool {
+        matches!(self.method.as_ref(), "POST" | "PUT" | "PATCH" | "DELETE")
+    }
+
+    /// A param from [`Request::params`]; a `null` value counts as missing.
+    ///
+    /// PHP: `getParam($key)`.
+    pub fn param(&self, key: &str) -> Option<&Value> {
+        self.params().get(key).filter(|v| !v.is_null())
+    }
+
+    /// A query string param; a `null` value counts as missing.
+    ///
+    /// PHP: `getQuery($key)`.
+    pub fn query(&self, key: &str) -> Option<&Value> {
+        self.query_params().get(key).filter(|v| !v.is_null())
+    }
+
+    /// A query string param, when it is a string.
+    pub fn query_value(&self, key: &str) -> Option<&str> {
+        self.query_params().get(key).and_then(Value::as_str)
+    }
+
+    /// A body param; a `null` value counts as missing.
+    ///
+    /// PHP: `getPayload($key)`.
+    pub fn payload(&self, key: &str) -> Option<&Value> {
+        self.payload_params().get(key).filter(|v| !v.is_null())
+    }
+
+    /// Replaces the query string params.
+    ///
+    /// PHP: `setQueryString($params)`.
+    pub fn set_query(&mut self, params: Params) -> &mut Self {
+        self.query = OnceLock::from(params);
+        self
+    }
+
+    /// Replaces the body params.
+    ///
+    /// PHP: `setPayload($params)`.
+    pub fn set_payload(&mut self, params: Params) -> &mut Self {
+        self.payload = OnceLock::from(params);
+        self
+    }
+
+    /// The request body as received.
+    pub fn body(&self) -> &Bytes {
+        &self.body
+    }
+
+    /// The raw body, except that a body of exactly `0` reads as empty.
+    ///
+    /// PHP: `getRawPayload()`; the `0` case reproduces
+    /// `$swoole->rawContent() ?: ''` (quirk kept).
+    pub fn raw_payload(&self) -> &[u8] {
+        if self.body.as_ref() == b"0" { b"" } else { &self.body }
+    }
+
+    /// The uploaded file or files of a multipart field, each an object with
+    /// `name`, `type`, `tmp_name` (the temporary file it was saved to),
+    /// `error` and `size`. The field name is looked up lowercased.
+    ///
+    /// PHP: `getFiles($key)`; lowercased as the Swoole adapter does.
+    pub fn files(&self, key: &str) -> Option<&Value> {
+        self.post().1.get(&key.to_ascii_lowercase())
+    }
+
+    /// Every uploaded file, by field name.
+    pub fn all_files(&self) -> &Params {
+        &self.post().1
+    }
+
+    // -- size and ranges ---------------------------------------------------
+
+    /// The size of the request in bytes, counted as its header lines
+    /// (`name: v1, v2`, joined by `\n`). The body is not counted.
+    ///
+    /// PHP: `getSize()`; the body is not counted because under Swoole
+    /// `php://input` is always empty.
+    pub fn size(&self) -> usize {
+        let mut total = 0usize;
+        for (i, (name, values)) in self.headers.iter().enumerate() {
+            if i > 0 {
+                total += 1;
+            }
+            total += name.len() + 2;
+            for (j, v) in values.iter().enumerate() {
+                if j > 0 {
+                    total += 2;
+                }
+                total += v.len();
+            }
+        }
+        total
+    }
+
+    /// The `Content-Range` header (`bytes 0-99/200`), or `None` when it is
+    /// missing or malformed, or its range is reversed or past the size.
+    ///
+    /// PHP: `getContentRangeUnit()`, `getContentRangeStart()`,
+    /// `getContentRangeEnd()`, `getContentRangeSize()`.
+    pub fn content_range(&self) -> Option<Range> {
+        let header = self.headers.line("content-range").unwrap_or_default();
+        if php_std::value::empty(&Value::String(header.clone())) {
+            return None;
+        }
+        let parts: Vec<&str> = header.split(' ').collect();
+        if parts.len() != 2 {
+            return None;
+        }
+        let unit = String::from_utf8_lossy(php_std::string::trim(parts[0].as_bytes(), b" \t\n\r\0\x0B")).into_owned();
+        if unit.is_empty() || unit == "0" {
+            return None;
+        }
+        let range: Vec<&str> = parts[1].split('/').collect();
+        if range.len() != 2 || !php_std::string::ctype_digit(range[1].as_bytes()) {
+            return None;
+        }
+        let size = int(range[1]);
+        let bounds: Vec<&str> = range[0].split('-').collect();
+        if bounds.len() != 2
+            || !php_std::string::ctype_digit(bounds[0].as_bytes())
+            || !php_std::string::ctype_digit(bounds[1].as_bytes())
+        {
+            return None;
+        }
+        let (start, end) = (int(bounds[0]), int(bounds[1]));
+        if start > end || end > size {
+            return None;
+        }
+        Some(Range { unit, start, end: Some(end), size: Some(size) })
+    }
+
+    /// The `Range` header (`bytes=0-99`, or open-ended `bytes=100-`), or
+    /// `None` when it is missing or malformed, or its range is reversed.
+    ///
+    /// PHP: `getRangeUnit()`, `getRangeStart()`, `getRangeEnd()`.
+    pub fn range(&self) -> Option<Range> {
+        let header = self.headers.line("range").unwrap_or_default();
+        if header.is_empty() || header == "0" {
+            return None;
+        }
+        let parts: Vec<&str> = header.split('=').collect();
+        if parts.len() != 2 || parts[0].is_empty() || parts[0] == "0" || parts[1].is_empty() || parts[1] == "0" {
+            return None;
+        }
+        let unit = parts[0].to_owned();
+        let bounds: Vec<&str> = parts[1].split('-').collect();
+        if bounds.len() != 2 || bounds[0].is_empty() || !php_std::string::ctype_digit(bounds[0].as_bytes()) {
+            return None;
+        }
+        let start = int(bounds[0]);
+        let end = if bounds[1].is_empty() {
+            None
+        } else {
+            if !php_std::string::ctype_digit(bounds[1].as_bytes()) {
+                return None;
+            }
+            Some(int(bounds[1]))
+        };
+        if let Some(end) = end
+            && start > end
+        {
+            return None;
+        }
+        Some(Range { unit, start, end, size: None })
+    }
+}
+
+/// `(int) $digits`: saturates like PHP's string to int conversion.
+fn int(digits: &str) -> i64 {
+    php_std::format::str_to_int(digits.as_bytes())
+}
+
+/// The method as given: a static copy for the standard methods.
+fn method_name(method: &str) -> Cow<'static, str> {
+    const METHODS: [&str; 9] = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD", "CONNECT", "TRACE"];
+    match METHODS.iter().find(|m| **m == method) {
+        Some(m) => Cow::Borrowed(m),
+        None => Cow::Owned(method.to_owned()),
+    }
+}
+
+fn now() -> f64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs_f64()).unwrap_or(0.0)
+}
+
+/// Swoole's `Content-Type` sniffing: case-insensitive prefixes.
+fn form_kind(content_type: &str) -> Form {
+    let lower = content_type.as_bytes();
+    let starts = |p: &str| lower.len() >= p.len() && lower[..p.len()].eq_ignore_ascii_case(p.as_bytes());
+    if starts("application/x-www-form-urlencoded") {
+        Form::Urlencoded
+    } else if starts("multipart/form-data") {
+        Form::Multipart
+    } else {
+        Form::None
+    }
+}
+
+/// `filter_var($ip, FILTER_VALIDATE_IP)` is truthy.
+fn valid_ip(ip: &[u8]) -> bool {
+    use php_std::filter::{FILTER_VALIDATE_IP, Options, Value as F, filter_var};
+    match filter_var(&F::Str(ip.to_vec()), FILTER_VALIDATE_IP, &Options::Flags(0)) {
+        Ok(filtered) => matches!(filtered.value, F::Str(ref s) if !s.is_empty() && s.as_slice() != b"0"),
+        Err(_) => false,
+    }
+}
+
+/// Swoole's cookie parser: `php_default_treat_data(PARSE_COOKIE)` rules.
+/// Pairs are separated by `;`, leading whitespace of names is skipped, names
+/// are registered like PHP variables (first one wins at the top level) and
+/// values are raw-URL-decoded.
+///
+/// `register` takes each name and value; `None` from it stops parsing.
+fn parse_cookie(line: &[u8], count: &mut usize, register: &mut impl FnMut(&[u8], Vec<u8>) -> Option<()>) -> Option<()> {
+    for pair in line.split(|&b| b == b';').filter(|p| !p.is_empty()) {
+        let start = pair.iter().position(|b| !b.is_ascii_whitespace() && *b != 0x0B).unwrap_or(pair.len());
+        let pair = &pair[start..];
+        if pair.is_empty() || pair[0] == b'=' {
+            continue;
+        }
+        *count += 1;
+        if *count > php_std::encoding::MAX_INPUT_VARS {
+            return Some(());
+        }
+        let (name, value) = match pair.iter().position(|&b| b == b'=') {
+            Some(eq) => (&pair[..eq], php_std::encoding::rawurldecode(&pair[eq + 1..])),
+            None => (pair, Vec::new()),
+        };
+        register(name, value)?;
+    }
+    Some(())
+}

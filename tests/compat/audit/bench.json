@@ -1,0 +1,217 @@
+{
+  "lib": "audit",
+  "environment": {
+    "date": "2026-10-13T21:12:22Z",
+    "commit": "46950232c0",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "clickhouse_find",
+      "description": "Find a page of logs on ClickHouse: filters and an order compiled to typed parameters, the multipart request, and 10 JSON rows parsed into logs (a stub transport answers)",
+      "php": {
+        "ns": 101868.15458937197,
+        "min": 95119.76811594203,
+        "max": 158491.5458937198,
+        "samples": 15,
+        "calls": 207,
+        "cpu": 107189.0499194847,
+        "peak": 49576.0,
+        "retained": 0.12109500805152978,
+        "rss": 103886848.0
+      },
+      "rust": {
+        "ns": 37215.13508442777,
+        "min": 36172.13883677298,
+        "max": 38408.84803001876,
+        "samples": 15,
+        "calls": 533,
+        "cpu": 37340.723076923074,
+        "rss": 29216768.0,
+        "allocations": 879.0013758599124,
+        "bytes": 1360851.3513445903,
+        "peak": 88282.0,
+        "retained": 0.2068792995622264
+      },
+      "speedup": 2.737277571565164,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "clickhouse_create_batch",
+      "description": "Insert 10 logs on ClickHouse: rows built from the logs (legacy names, data, parsed resources) and the JSONEachRow request (a stub transport answers)",
+      "php": {
+        "ns": 1679208.3636363635,
+        "min": 1632696.9090909092,
+        "max": 1790405.3636363635,
+        "samples": 15,
+        "calls": 11,
+        "cpu": 1694351.5151515151,
+        "peak": 67664.0,
+        "retained": 2.278787878787879,
+        "rss": 104017920.0
+      },
+      "rust": {
+        "ns": 107053.44067796611,
+        "min": 103624.53107344633,
+        "max": 112659.60451977402,
+        "samples": 15,
+        "calls": 177,
+        "cpu": 107181.85800376648,
+        "rss": 29216768.0,
+        "allocations": 936.004143126177,
+        "bytes": 349599.05800376646,
+        "peak": 64534.0,
+        "retained": 0.6229755178907721
+      },
+      "speedup": 15.685701954108053,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "database_get_by_user",
+      "description": "Read a page of 25 logs of a user through the Database adapter, on the in-memory database",
+      "php": {
+        "ns": 348041.67346938775,
+        "min": 308498.306122449,
+        "max": 462522.9591836735,
+        "samples": 15,
+        "calls": 49,
+        "cpu": 373765.9863945578,
+        "peak": 86920.0,
+        "retained": 0.5115646258503401,
+        "rss": 109207552.0
+      },
+      "rust": {
+        "ns": 195499.59405940594,
+        "min": 180663.36633663366,
+        "max": 203489.27722772278,
+        "samples": 15,
+        "calls": 101,
+        "cpu": 193732.53531353135,
+        "rss": 29216768.0,
+        "allocations": 3110.0072607260727,
+        "bytes": 481989.85412541253,
+        "peak": 92871.0,
+        "retained": 1.0917491749174917
+      },
+      "speedup": 1.780268011009932,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "log_getters",
+      "description": "Read the fields of a log through its getters",
+      "php": {
+        "ns": 767.523745464922,
+        "min": 718.4922343157638,
+        "max": 802.226407402878,
+        "samples": 15,
+        "calls": 24531,
+        "cpu": 773.4132322367617,
+        "peak": 3008.0,
+        "retained": 0.001021836315953963,
+        "rss": 109207552.0
+      },
+      "rust": {
+        "ns": 88.49061264142902,
+        "min": 80.53568662673736,
+        "max": 91.12386180855013,
+        "samples": 15,
+        "calls": 218219,
+        "cpu": 87.59993095621066,
+        "rss": 29216768.0,
+        "allocations": 3.3605384193554794e-6,
+        "bytes": 0.0008581593109063219,
+        "peak": 1650.0,
+        "retained": 0.0005053027768739966
+      },
+      "speedup": 8.673504709194285,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "parse_resource",
+      "description": "Split a resource path into its type, id and parent",
+      "php": {
+        "ns": 218.48363570678617,
+        "min": 207.59621572191426,
+        "max": 227.1884010521919,
+        "samples": 15,
+        "calls": 88577,
+        "cpu": 217.84737196638707,
+        "peak": 3008.0,
+        "retained": 0.00028299295151864104,
+        "rss": 109207552.0
+      },
+      "rust": {
+        "ns": 76.96859242712668,
+        "min": 71.87191580080139,
+        "max": 80.16795000876395,
+        "samples": 15,
+        "calls": 245323,
+        "cpu": 76.74905437593159,
+        "rss": 29216768.0,
+        "allocations": 2.989256340960013e-6,
+        "bytes": 0.000763347369250607,
+        "peak": 1650.0,
+        "retained": 0.0004494754534498056
+      },
+      "speedup": 2.8386076556310282,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "clickhouse_count",
+      "description": "Count a user's logs on the ClickHouse service: one HTTP round trip",
+      "php": {
+        "ns": 1330559.0,
+        "min": 1283812.5,
+        "max": 1615670.1666666667,
+        "samples": 15,
+        "calls": 12,
+        "cpu": 197627.77777777778,
+        "peak": 287440.0,
+        "retained": 2.088888888888889,
+        "rss": 113500160.0
+      },
+      "rust": {
+        "ns": 1268572.2,
+        "min": 1233494.4666666666,
+        "max": 1725658.3333333333,
+        "samples": 15,
+        "calls": 15,
+        "cpu": 59312.05333333334,
+        "rss": 30720000.0,
+        "allocations": 477.0488888888889,
+        "bytes": 533605.4577777778,
+        "peak": 83224.0,
+        "retained": 7.351111111111111
+      },
+      "speedup": 1.0488634387542153,
+      "bound": "A ClickHouse round trip (the server scans the table), the same on both runtimes, dominates the call",
+      "compat": null
+    }
+  ]
+}

@@ -1,0 +1,3942 @@
+{
+  "source": [],
+  "cases": [
+    {
+      "name": "wildcards, delegations and shuffles",
+      "steps": [
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.1"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.2"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.3"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.4"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.5"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.6"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.7"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.8"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "w"
+                },
+                {
+                  "name": "*.a.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "9.9.9.9"
+                },
+                {
+                  "name": "x.*.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "8.8.8.8"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.sub.example.com"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "7.7.7.7"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 5,
+                  "ttl": 1,
+                  "rdata": "www.example.com"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "both"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "www.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 8,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.8",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.3",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.2",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.5",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.7",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.4",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.6",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.1"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.2"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.3"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.4"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.5"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.6"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.7"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.8"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "w"
+                },
+                {
+                  "name": "*.a.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "9.9.9.9"
+                },
+                {
+                  "name": "x.*.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "8.8.8.8"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.sub.example.com"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "7.7.7.7"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 5,
+                  "ttl": 1,
+                  "rdata": "www.example.com"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "both"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "www.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 2
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 8,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.2",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.7",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.8",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.3",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.5",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.6",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.4",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.1"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.2"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.3"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.4"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.5"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.6"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.7"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.8"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "w"
+                },
+                {
+                  "name": "*.a.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "9.9.9.9"
+                },
+                {
+                  "name": "x.*.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "8.8.8.8"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.sub.example.com"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "7.7.7.7"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 5,
+                  "ttl": 1,
+                  "rdata": "www.example.com"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "both"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "www.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 99
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 8,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.4",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.5",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.3",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.8",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.7",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.6",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.2",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.1"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.2"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.3"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.4"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.5"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.6"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.7"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.8"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "w"
+                },
+                {
+                  "name": "*.a.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "9.9.9.9"
+                },
+                {
+                  "name": "x.*.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "8.8.8.8"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.sub.example.com"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "7.7.7.7"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 5,
+                  "ttl": 1,
+                  "rdata": "www.example.com"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "both"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "www.example.com",
+                  "type": 28
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 1,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "www.example.com",
+                "type": 28,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.1"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.2"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.3"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.4"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.5"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.6"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.7"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.8"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "w"
+                },
+                {
+                  "name": "*.a.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "9.9.9.9"
+                },
+                {
+                  "name": "x.*.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "8.8.8.8"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.sub.example.com"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "7.7.7.7"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 5,
+                  "ttl": 1,
+                  "rdata": "www.example.com"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "both"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "q.example.com",
+                  "type": 16
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "q.example.com",
+                "type": 16,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "q.example.com",
+                "type": 16,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "w",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.1"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.2"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.3"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.4"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.5"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.6"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.7"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.8"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "w"
+                },
+                {
+                  "name": "*.a.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "9.9.9.9"
+                },
+                {
+                  "name": "x.*.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "8.8.8.8"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.sub.example.com"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "7.7.7.7"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 5,
+                  "ttl": 1,
+                  "rdata": "www.example.com"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "both"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "q.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 1,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "q.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.1"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.2"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.3"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.4"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.5"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.6"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.7"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.8"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "w"
+                },
+                {
+                  "name": "*.a.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "9.9.9.9"
+                },
+                {
+                  "name": "x.*.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "8.8.8.8"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.sub.example.com"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "7.7.7.7"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 5,
+                  "ttl": 1,
+                  "rdata": "www.example.com"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "both"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "b.a.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "b.a.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "b.a.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "9.9.9.9",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.1"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.2"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.3"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.4"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.5"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.6"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.7"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.8"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "w"
+                },
+                {
+                  "name": "*.a.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "9.9.9.9"
+                },
+                {
+                  "name": "x.*.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "8.8.8.8"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.sub.example.com"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "7.7.7.7"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 5,
+                  "ttl": 1,
+                  "rdata": "www.example.com"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "both"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "c.b.a.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 3,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 1,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "c.b.a.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.1"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.2"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.3"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.4"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.5"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.6"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.7"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.8"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "w"
+                },
+                {
+                  "name": "*.a.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "9.9.9.9"
+                },
+                {
+                  "name": "x.*.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "8.8.8.8"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.sub.example.com"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "7.7.7.7"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 5,
+                  "ttl": 1,
+                  "rdata": "www.example.com"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "both"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "x.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 1,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "x.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.1"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.2"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.3"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.4"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.5"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.6"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.7"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.8"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "w"
+                },
+                {
+                  "name": "*.a.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "9.9.9.9"
+                },
+                {
+                  "name": "x.*.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "8.8.8.8"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.sub.example.com"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "7.7.7.7"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 5,
+                  "ttl": 1,
+                  "rdata": "www.example.com"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "both"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "sub.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 1,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "sub.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [
+              {
+                "name": "sub.example.com",
+                "type": 2,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "ns1.sub.example.com",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.1"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.2"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.3"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.4"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.5"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.6"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.7"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.8"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "w"
+                },
+                {
+                  "name": "*.a.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "9.9.9.9"
+                },
+                {
+                  "name": "x.*.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "8.8.8.8"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.sub.example.com"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "7.7.7.7"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 5,
+                  "ttl": 1,
+                  "rdata": "www.example.com"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "both"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "sub.example.com",
+                  "type": 2
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 1,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "sub.example.com",
+                "type": 2,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [
+              {
+                "name": "sub.example.com",
+                "type": 2,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "ns1.sub.example.com",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.1"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.2"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.3"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.4"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.5"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.6"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.7"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.8"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "w"
+                },
+                {
+                  "name": "*.a.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "9.9.9.9"
+                },
+                {
+                  "name": "x.*.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "8.8.8.8"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.sub.example.com"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "7.7.7.7"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 5,
+                  "ttl": 1,
+                  "rdata": "www.example.com"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "both"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "deep.sub.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 3,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 1,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "deep.sub.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.1"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.2"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.3"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.4"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.5"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.6"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.7"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.8"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "w"
+                },
+                {
+                  "name": "*.a.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "9.9.9.9"
+                },
+                {
+                  "name": "x.*.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "8.8.8.8"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.sub.example.com"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "7.7.7.7"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 5,
+                  "ttl": 1,
+                  "rdata": "www.example.com"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "both"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "cn.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "cn.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "cn.example.com",
+                "type": 5,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "www.example.com",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.1"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.2"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.3"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.4"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.5"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.6"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.7"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.8"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "w"
+                },
+                {
+                  "name": "*.a.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "9.9.9.9"
+                },
+                {
+                  "name": "x.*.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "8.8.8.8"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.sub.example.com"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "7.7.7.7"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 5,
+                  "ttl": 1,
+                  "rdata": "www.example.com"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "both"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "cn.example.com",
+                  "type": 16
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "cn.example.com",
+                "type": 16,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "cn.example.com",
+                "type": 16,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "both",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.1"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.2"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.3"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.4"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.5"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.6"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.7"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.8"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "w"
+                },
+                {
+                  "name": "*.a.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "9.9.9.9"
+                },
+                {
+                  "name": "x.*.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "8.8.8.8"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.sub.example.com"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "7.7.7.7"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 5,
+                  "ttl": 1,
+                  "rdata": "www.example.com"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "both"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "cn.example.com",
+                  "type": 5
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "cn.example.com",
+                "type": 5,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "cn.example.com",
+                "type": 5,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "www.example.com",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.1"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.2"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.3"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.4"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.5"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.6"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.7"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.8"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "w"
+                },
+                {
+                  "name": "*.a.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "9.9.9.9"
+                },
+                {
+                  "name": "x.*.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "8.8.8.8"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.sub.example.com"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "7.7.7.7"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 5,
+                  "ttl": 1,
+                  "rdata": "www.example.com"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "both"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "example.com",
+                  "type": 6
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.1"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.2"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.3"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.4"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.5"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.6"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.7"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.8"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "w"
+                },
+                {
+                  "name": "*.a.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "9.9.9.9"
+                },
+                {
+                  "name": "x.*.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "8.8.8.8"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.sub.example.com"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "7.7.7.7"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 5,
+                  "ttl": 1,
+                  "rdata": "www.example.com"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "both"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "EXAMPLE.com",
+                  "type": 6
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.1"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.2"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.3"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.4"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.5"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.6"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.7"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.8"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "w"
+                },
+                {
+                  "name": "*.a.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "9.9.9.9"
+                },
+                {
+                  "name": "x.*.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "8.8.8.8"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.sub.example.com"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "7.7.7.7"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 5,
+                  "ttl": 1,
+                  "rdata": "www.example.com"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "both"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "other.org",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 3,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 1,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "other.org",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.1"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.2"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.3"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.4"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.5"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.6"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.7"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.8"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "w"
+                },
+                {
+                  "name": "*.a.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "9.9.9.9"
+                },
+                {
+                  "name": "x.*.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "8.8.8.8"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.sub.example.com"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "7.7.7.7"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 5,
+                  "ttl": 1,
+                  "rdata": "www.example.com"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "both"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 3,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 1,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.1"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.2"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.3"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.4"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.5"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.6"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.7"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.8"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "w"
+                },
+                {
+                  "name": "*.a.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "9.9.9.9"
+                },
+                {
+                  "name": "x.*.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "8.8.8.8"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.sub.example.com"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "7.7.7.7"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 5,
+                  "ttl": 1,
+                  "rdata": "www.example.com"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "both"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 3,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 1,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.1"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.2"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.3"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.4"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.5"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.6"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.7"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.8"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "w"
+                },
+                {
+                  "name": "*.a.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "9.9.9.9"
+                },
+                {
+                  "name": "x.*.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "8.8.8.8"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.sub.example.com"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "7.7.7.7"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 5,
+                  "ttl": 1,
+                  "rdata": "www.example.com"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "both"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "a..example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 3,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 1,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "a..example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.1"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.2"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.3"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.4"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.5"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.6"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.7"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "10.0.0.8"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "w"
+                },
+                {
+                  "name": "*.a.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "9.9.9.9"
+                },
+                {
+                  "name": "x.*.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "8.8.8.8"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.sub.example.com"
+                },
+                {
+                  "name": "sub.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "7.7.7.7"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 5,
+                  "ttl": 1,
+                  "rdata": "www.example.com"
+                },
+                {
+                  "name": "cn.example.com",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "both"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 5,
+                "isResponse": false,
+                "opcode": 3,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": false,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "www.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 3
+          },
+          "expect": {
+            "header": {
+              "id": 5,
+              "isResponse": true,
+              "opcode": 3,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": false,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 8,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.6",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.5",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.7",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.8",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.2",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.4",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 1,
+                "rdata": "10.0.0.3",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        }
+      ]
+    }
+  ]
+}

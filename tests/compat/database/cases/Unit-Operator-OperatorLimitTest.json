@@ -1,0 +1,6471 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Operator/OperatorLimitTest.php"
+  ],
+  "cases": [
+    {
+      "name": "OperatorLimitTest::testAFractionalLimitOnAnIntegerAttributeIsRefused#increment max",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count"
+            },
+            "as": "o108"
+          },
+          "bind": "s211",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "big"
+            },
+            "as": "o109"
+          },
+          "bind": "s212",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "big",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "unsigned",
+              "signed": false
+            },
+            "as": "o110"
+          },
+          "bind": "s213",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "unsigned",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "score"
+            },
+            "as": "o111"
+          },
+          "bind": "s214",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o108"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o112"
+          },
+          "bind": "s215",
+          "expect": {
+            "$document": {
+              "$id": "count",
+              "key": "count",
+              "type": "integer",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o109"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o113"
+          },
+          "bind": "s216",
+          "expect": {
+            "$document": {
+              "$id": "big",
+              "key": "big",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o110"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o114"
+          },
+          "bind": "s217",
+          "expect": {
+            "$document": {
+              "$id": "unsigned",
+              "key": "unsigned",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o111"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o115"
+          },
+          "bind": "s218",
+          "expect": {
+            "$document": {
+              "$id": "score",
+              "key": "score",
+              "type": "double",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "counters",
+                "$collection": "_metadata",
+                "attributes": [
+                  {
+                    "$obj": "o112"
+                  },
+                  {
+                    "$obj": "o113"
+                  },
+                  {
+                    "$obj": "o114"
+                  },
+                  {
+                    "$obj": "o115"
+                  }
+                ],
+                "indexes": []
+              }
+            },
+            "as": "o116"
+          },
+          "bind": "s219",
+          "expect": {
+            "$document": {
+              "$id": "counters",
+              "$collection": "_metadata",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "big",
+                    "key": "big",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "unsigned",
+                    "key": "unsigned",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Operator",
+            "args": {
+              "collection": {
+                "$obj": "o116"
+              }
+            },
+            "as": "o117"
+          },
+          "bind": "s220",
+          "expect": {
+            "$value": "Validator\\Operator",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Operator",
+            "args": {
+              "method": {
+                "$enum": "OperatorType::Increment"
+              },
+              "attribute": "count",
+              "values": [
+                2,
+                102.4
+              ]
+            },
+            "as": "o118"
+          },
+          "bind": "s221",
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "count",
+              "values": [
+                2,
+                102.4
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o117"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o118"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o117"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Cannot apply increment operator: max/min limit must be a whole number for integer attribute 'count', got 102.4"
+        }
+      ]
+    },
+    {
+      "name": "OperatorLimitTest::testAFractionalLimitOnAnIntegerAttributeIsRefused#decrement min",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count"
+            },
+            "as": "o119"
+          },
+          "bind": "s224",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "big"
+            },
+            "as": "o120"
+          },
+          "bind": "s225",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "big",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "unsigned",
+              "signed": false
+            },
+            "as": "o121"
+          },
+          "bind": "s226",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "unsigned",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "score"
+            },
+            "as": "o122"
+          },
+          "bind": "s227",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o119"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o123"
+          },
+          "bind": "s228",
+          "expect": {
+            "$document": {
+              "$id": "count",
+              "key": "count",
+              "type": "integer",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o120"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o124"
+          },
+          "bind": "s229",
+          "expect": {
+            "$document": {
+              "$id": "big",
+              "key": "big",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o121"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o125"
+          },
+          "bind": "s230",
+          "expect": {
+            "$document": {
+              "$id": "unsigned",
+              "key": "unsigned",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o122"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o126"
+          },
+          "bind": "s231",
+          "expect": {
+            "$document": {
+              "$id": "score",
+              "key": "score",
+              "type": "double",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "counters",
+                "$collection": "_metadata",
+                "attributes": [
+                  {
+                    "$obj": "o123"
+                  },
+                  {
+                    "$obj": "o124"
+                  },
+                  {
+                    "$obj": "o125"
+                  },
+                  {
+                    "$obj": "o126"
+                  }
+                ],
+                "indexes": []
+              }
+            },
+            "as": "o127"
+          },
+          "bind": "s232",
+          "expect": {
+            "$document": {
+              "$id": "counters",
+              "$collection": "_metadata",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "big",
+                    "key": "big",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "unsigned",
+                    "key": "unsigned",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Operator",
+            "args": {
+              "collection": {
+                "$obj": "o127"
+              }
+            },
+            "as": "o128"
+          },
+          "bind": "s233",
+          "expect": {
+            "$value": "Validator\\Operator",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Operator",
+            "args": {
+              "method": {
+                "$enum": "OperatorType::Decrement"
+              },
+              "attribute": "count",
+              "values": [
+                2,
+                -0.5
+              ]
+            },
+            "as": "o129"
+          },
+          "bind": "s234",
+          "expect": {
+            "$operator": {
+              "method": "decrement",
+              "attribute": "count",
+              "values": [
+                2,
+                -0.5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o128"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o129"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o128"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Cannot apply decrement operator: max/min limit must be a whole number for integer attribute 'count', got -0.5"
+        }
+      ]
+    },
+    {
+      "name": "OperatorLimitTest::testAFractionalLimitOnAnIntegerAttributeIsRefused#multiply max",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count"
+            },
+            "as": "o130"
+          },
+          "bind": "s237",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "big"
+            },
+            "as": "o131"
+          },
+          "bind": "s238",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "big",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "unsigned",
+              "signed": false
+            },
+            "as": "o132"
+          },
+          "bind": "s239",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "unsigned",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "score"
+            },
+            "as": "o133"
+          },
+          "bind": "s240",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o130"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o134"
+          },
+          "bind": "s241",
+          "expect": {
+            "$document": {
+              "$id": "count",
+              "key": "count",
+              "type": "integer",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o131"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o135"
+          },
+          "bind": "s242",
+          "expect": {
+            "$document": {
+              "$id": "big",
+              "key": "big",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o132"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o136"
+          },
+          "bind": "s243",
+          "expect": {
+            "$document": {
+              "$id": "unsigned",
+              "key": "unsigned",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o133"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o137"
+          },
+          "bind": "s244",
+          "expect": {
+            "$document": {
+              "$id": "score",
+              "key": "score",
+              "type": "double",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "counters",
+                "$collection": "_metadata",
+                "attributes": [
+                  {
+                    "$obj": "o134"
+                  },
+                  {
+                    "$obj": "o135"
+                  },
+                  {
+                    "$obj": "o136"
+                  },
+                  {
+                    "$obj": "o137"
+                  }
+                ],
+                "indexes": []
+              }
+            },
+            "as": "o138"
+          },
+          "bind": "s245",
+          "expect": {
+            "$document": {
+              "$id": "counters",
+              "$collection": "_metadata",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "big",
+                    "key": "big",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "unsigned",
+                    "key": "unsigned",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Operator",
+            "args": {
+              "collection": {
+                "$obj": "o138"
+              }
+            },
+            "as": "o139"
+          },
+          "bind": "s246",
+          "expect": {
+            "$value": "Validator\\Operator",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Operator",
+            "args": {
+              "method": {
+                "$enum": "OperatorType::Multiply"
+              },
+              "attribute": "count",
+              "values": [
+                2,
+                99.9
+              ]
+            },
+            "as": "o140"
+          },
+          "bind": "s247",
+          "expect": {
+            "$operator": {
+              "method": "multiply",
+              "attribute": "count",
+              "values": [
+                2,
+                99.9
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o139"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o140"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o139"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Cannot apply multiply operator: max/min limit must be a whole number for integer attribute 'count', got 99.9"
+        }
+      ]
+    },
+    {
+      "name": "OperatorLimitTest::testAFractionalLimitOnAnIntegerAttributeIsRefused#divide min",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count"
+            },
+            "as": "o141"
+          },
+          "bind": "s250",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "big"
+            },
+            "as": "o142"
+          },
+          "bind": "s251",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "big",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "unsigned",
+              "signed": false
+            },
+            "as": "o143"
+          },
+          "bind": "s252",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "unsigned",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "score"
+            },
+            "as": "o144"
+          },
+          "bind": "s253",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o141"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o145"
+          },
+          "bind": "s254",
+          "expect": {
+            "$document": {
+              "$id": "count",
+              "key": "count",
+              "type": "integer",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o142"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o146"
+          },
+          "bind": "s255",
+          "expect": {
+            "$document": {
+              "$id": "big",
+              "key": "big",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o143"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o147"
+          },
+          "bind": "s256",
+          "expect": {
+            "$document": {
+              "$id": "unsigned",
+              "key": "unsigned",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o144"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o148"
+          },
+          "bind": "s257",
+          "expect": {
+            "$document": {
+              "$id": "score",
+              "key": "score",
+              "type": "double",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "counters",
+                "$collection": "_metadata",
+                "attributes": [
+                  {
+                    "$obj": "o145"
+                  },
+                  {
+                    "$obj": "o146"
+                  },
+                  {
+                    "$obj": "o147"
+                  },
+                  {
+                    "$obj": "o148"
+                  }
+                ],
+                "indexes": []
+              }
+            },
+            "as": "o149"
+          },
+          "bind": "s258",
+          "expect": {
+            "$document": {
+              "$id": "counters",
+              "$collection": "_metadata",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "big",
+                    "key": "big",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "unsigned",
+                    "key": "unsigned",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Operator",
+            "args": {
+              "collection": {
+                "$obj": "o149"
+              }
+            },
+            "as": "o150"
+          },
+          "bind": "s259",
+          "expect": {
+            "$value": "Validator\\Operator",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Operator",
+            "args": {
+              "method": {
+                "$enum": "OperatorType::Divide"
+              },
+              "attribute": "count",
+              "values": [
+                2,
+                1.5
+              ]
+            },
+            "as": "o151"
+          },
+          "bind": "s260",
+          "expect": {
+            "$operator": {
+              "method": "divide",
+              "attribute": "count",
+              "values": [
+                2,
+                1.5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o150"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o151"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o150"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Cannot apply divide operator: max/min limit must be a whole number for integer attribute 'count', got 1.5"
+        }
+      ]
+    },
+    {
+      "name": "OperatorLimitTest::testAFractionalLimitOnAnIntegerAttributeIsRefused#power max",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count"
+            },
+            "as": "o152"
+          },
+          "bind": "s263",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "big"
+            },
+            "as": "o153"
+          },
+          "bind": "s264",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "big",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "unsigned",
+              "signed": false
+            },
+            "as": "o154"
+          },
+          "bind": "s265",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "unsigned",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "score"
+            },
+            "as": "o155"
+          },
+          "bind": "s266",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o152"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o156"
+          },
+          "bind": "s267",
+          "expect": {
+            "$document": {
+              "$id": "count",
+              "key": "count",
+              "type": "integer",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o153"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o157"
+          },
+          "bind": "s268",
+          "expect": {
+            "$document": {
+              "$id": "big",
+              "key": "big",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o154"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o158"
+          },
+          "bind": "s269",
+          "expect": {
+            "$document": {
+              "$id": "unsigned",
+              "key": "unsigned",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o155"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o159"
+          },
+          "bind": "s270",
+          "expect": {
+            "$document": {
+              "$id": "score",
+              "key": "score",
+              "type": "double",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "counters",
+                "$collection": "_metadata",
+                "attributes": [
+                  {
+                    "$obj": "o156"
+                  },
+                  {
+                    "$obj": "o157"
+                  },
+                  {
+                    "$obj": "o158"
+                  },
+                  {
+                    "$obj": "o159"
+                  }
+                ],
+                "indexes": []
+              }
+            },
+            "as": "o160"
+          },
+          "bind": "s271",
+          "expect": {
+            "$document": {
+              "$id": "counters",
+              "$collection": "_metadata",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "big",
+                    "key": "big",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "unsigned",
+                    "key": "unsigned",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Operator",
+            "args": {
+              "collection": {
+                "$obj": "o160"
+              }
+            },
+            "as": "o161"
+          },
+          "bind": "s272",
+          "expect": {
+            "$value": "Validator\\Operator",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Operator",
+            "args": {
+              "method": {
+                "$enum": "OperatorType::Power"
+              },
+              "attribute": "count",
+              "values": [
+                2,
+                1000.01
+              ]
+            },
+            "as": "o162"
+          },
+          "bind": "s273",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "count",
+              "values": [
+                2,
+                1000.01
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o161"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o162"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o161"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Cannot apply power operator: max/min limit must be a whole number for integer attribute 'count', got 1000.01"
+        }
+      ]
+    },
+    {
+      "name": "OperatorLimitTest::testAFractionalLimitOnAnIntegerAttributeIsRefused#numeric string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count"
+            },
+            "as": "o163"
+          },
+          "bind": "s276",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "big"
+            },
+            "as": "o164"
+          },
+          "bind": "s277",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "big",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "unsigned",
+              "signed": false
+            },
+            "as": "o165"
+          },
+          "bind": "s278",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "unsigned",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "score"
+            },
+            "as": "o166"
+          },
+          "bind": "s279",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o163"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o167"
+          },
+          "bind": "s280",
+          "expect": {
+            "$document": {
+              "$id": "count",
+              "key": "count",
+              "type": "integer",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o164"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o168"
+          },
+          "bind": "s281",
+          "expect": {
+            "$document": {
+              "$id": "big",
+              "key": "big",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o165"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o169"
+          },
+          "bind": "s282",
+          "expect": {
+            "$document": {
+              "$id": "unsigned",
+              "key": "unsigned",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o166"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o170"
+          },
+          "bind": "s283",
+          "expect": {
+            "$document": {
+              "$id": "score",
+              "key": "score",
+              "type": "double",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "counters",
+                "$collection": "_metadata",
+                "attributes": [
+                  {
+                    "$obj": "o167"
+                  },
+                  {
+                    "$obj": "o168"
+                  },
+                  {
+                    "$obj": "o169"
+                  },
+                  {
+                    "$obj": "o170"
+                  }
+                ],
+                "indexes": []
+              }
+            },
+            "as": "o171"
+          },
+          "bind": "s284",
+          "expect": {
+            "$document": {
+              "$id": "counters",
+              "$collection": "_metadata",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "big",
+                    "key": "big",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "unsigned",
+                    "key": "unsigned",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Operator",
+            "args": {
+              "collection": {
+                "$obj": "o171"
+              }
+            },
+            "as": "o172"
+          },
+          "bind": "s285",
+          "expect": {
+            "$value": "Validator\\Operator",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Operator",
+            "args": {
+              "method": {
+                "$enum": "OperatorType::Increment"
+              },
+              "attribute": "count",
+              "values": [
+                2,
+                "102.4"
+              ]
+            },
+            "as": "o173"
+          },
+          "bind": "s286",
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "count",
+              "values": [
+                2,
+                "102.4"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o172"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o173"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o172"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Cannot apply increment operator: max/min limit must be a whole number for integer attribute 'count', got 102.4"
+        }
+      ]
+    },
+    {
+      "name": "OperatorLimitTest::testAFractionalLimitOnAnIntegerAttributeIsRefused#big integer",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count"
+            },
+            "as": "o174"
+          },
+          "bind": "s289",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "big"
+            },
+            "as": "o175"
+          },
+          "bind": "s290",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "big",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "unsigned",
+              "signed": false
+            },
+            "as": "o176"
+          },
+          "bind": "s291",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "unsigned",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "score"
+            },
+            "as": "o177"
+          },
+          "bind": "s292",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o174"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o178"
+          },
+          "bind": "s293",
+          "expect": {
+            "$document": {
+              "$id": "count",
+              "key": "count",
+              "type": "integer",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o175"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o179"
+          },
+          "bind": "s294",
+          "expect": {
+            "$document": {
+              "$id": "big",
+              "key": "big",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o176"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o180"
+          },
+          "bind": "s295",
+          "expect": {
+            "$document": {
+              "$id": "unsigned",
+              "key": "unsigned",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o177"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o181"
+          },
+          "bind": "s296",
+          "expect": {
+            "$document": {
+              "$id": "score",
+              "key": "score",
+              "type": "double",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "counters",
+                "$collection": "_metadata",
+                "attributes": [
+                  {
+                    "$obj": "o178"
+                  },
+                  {
+                    "$obj": "o179"
+                  },
+                  {
+                    "$obj": "o180"
+                  },
+                  {
+                    "$obj": "o181"
+                  }
+                ],
+                "indexes": []
+              }
+            },
+            "as": "o182"
+          },
+          "bind": "s297",
+          "expect": {
+            "$document": {
+              "$id": "counters",
+              "$collection": "_metadata",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "big",
+                    "key": "big",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "unsigned",
+                    "key": "unsigned",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Operator",
+            "args": {
+              "collection": {
+                "$obj": "o182"
+              }
+            },
+            "as": "o183"
+          },
+          "bind": "s298",
+          "expect": {
+            "$value": "Validator\\Operator",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Operator",
+            "args": {
+              "method": {
+                "$enum": "OperatorType::Increment"
+              },
+              "attribute": "big",
+              "values": [
+                2,
+                4000000000000000.5
+              ]
+            },
+            "as": "o184"
+          },
+          "bind": "s299",
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "big",
+              "values": [
+                2,
+                4000000000000000.5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o183"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o184"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o183"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Cannot apply increment operator: max/min limit must be a whole number for integer attribute 'big', got 4.0E+15"
+        }
+      ]
+    },
+    {
+      "name": "OperatorLimitTest::testAWholeLimitIsAccepted#integer",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count"
+            },
+            "as": "o185"
+          },
+          "bind": "s302",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "big"
+            },
+            "as": "o186"
+          },
+          "bind": "s303",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "big",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "unsigned",
+              "signed": false
+            },
+            "as": "o187"
+          },
+          "bind": "s304",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "unsigned",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "score"
+            },
+            "as": "o188"
+          },
+          "bind": "s305",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o185"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o189"
+          },
+          "bind": "s306",
+          "expect": {
+            "$document": {
+              "$id": "count",
+              "key": "count",
+              "type": "integer",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o186"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o190"
+          },
+          "bind": "s307",
+          "expect": {
+            "$document": {
+              "$id": "big",
+              "key": "big",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o187"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o191"
+          },
+          "bind": "s308",
+          "expect": {
+            "$document": {
+              "$id": "unsigned",
+              "key": "unsigned",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o188"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o192"
+          },
+          "bind": "s309",
+          "expect": {
+            "$document": {
+              "$id": "score",
+              "key": "score",
+              "type": "double",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "counters",
+                "$collection": "_metadata",
+                "attributes": [
+                  {
+                    "$obj": "o189"
+                  },
+                  {
+                    "$obj": "o190"
+                  },
+                  {
+                    "$obj": "o191"
+                  },
+                  {
+                    "$obj": "o192"
+                  }
+                ],
+                "indexes": []
+              }
+            },
+            "as": "o193"
+          },
+          "bind": "s310",
+          "expect": {
+            "$document": {
+              "$id": "counters",
+              "$collection": "_metadata",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "big",
+                    "key": "big",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "unsigned",
+                    "key": "unsigned",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Operator",
+            "args": {
+              "collection": {
+                "$obj": "o193"
+              }
+            },
+            "as": "o194"
+          },
+          "bind": "s311",
+          "expect": {
+            "$value": "Validator\\Operator",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Operator",
+            "args": {
+              "method": {
+                "$enum": "OperatorType::Increment"
+              },
+              "attribute": "count",
+              "values": [
+                1,
+                100
+              ]
+            },
+            "as": "o195"
+          },
+          "bind": "s312",
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "count",
+              "values": [
+                1,
+                100
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o194"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o195"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o194"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid operator"
+        }
+      ]
+    },
+    {
+      "name": "OperatorLimitTest::testAWholeLimitIsAccepted#whole float",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count"
+            },
+            "as": "o196"
+          },
+          "bind": "s315",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "big"
+            },
+            "as": "o197"
+          },
+          "bind": "s316",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "big",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "unsigned",
+              "signed": false
+            },
+            "as": "o198"
+          },
+          "bind": "s317",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "unsigned",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "score"
+            },
+            "as": "o199"
+          },
+          "bind": "s318",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o196"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o200"
+          },
+          "bind": "s319",
+          "expect": {
+            "$document": {
+              "$id": "count",
+              "key": "count",
+              "type": "integer",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o197"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o201"
+          },
+          "bind": "s320",
+          "expect": {
+            "$document": {
+              "$id": "big",
+              "key": "big",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o198"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o202"
+          },
+          "bind": "s321",
+          "expect": {
+            "$document": {
+              "$id": "unsigned",
+              "key": "unsigned",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o199"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o203"
+          },
+          "bind": "s322",
+          "expect": {
+            "$document": {
+              "$id": "score",
+              "key": "score",
+              "type": "double",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "counters",
+                "$collection": "_metadata",
+                "attributes": [
+                  {
+                    "$obj": "o200"
+                  },
+                  {
+                    "$obj": "o201"
+                  },
+                  {
+                    "$obj": "o202"
+                  },
+                  {
+                    "$obj": "o203"
+                  }
+                ],
+                "indexes": []
+              }
+            },
+            "as": "o204"
+          },
+          "bind": "s323",
+          "expect": {
+            "$document": {
+              "$id": "counters",
+              "$collection": "_metadata",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "big",
+                    "key": "big",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "unsigned",
+                    "key": "unsigned",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Operator",
+            "args": {
+              "collection": {
+                "$obj": "o204"
+              }
+            },
+            "as": "o205"
+          },
+          "bind": "s324",
+          "expect": {
+            "$value": "Validator\\Operator",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Operator",
+            "args": {
+              "method": {
+                "$enum": "OperatorType::Increment"
+              },
+              "attribute": "count",
+              "values": [
+                1,
+                100.0
+              ]
+            },
+            "as": "o206"
+          },
+          "bind": "s325",
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "count",
+              "values": [
+                1,
+                100.0
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o205"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o206"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o205"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid operator"
+        }
+      ]
+    },
+    {
+      "name": "OperatorLimitTest::testAWholeLimitIsAccepted#integer string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count"
+            },
+            "as": "o207"
+          },
+          "bind": "s328",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "big"
+            },
+            "as": "o208"
+          },
+          "bind": "s329",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "big",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "unsigned",
+              "signed": false
+            },
+            "as": "o209"
+          },
+          "bind": "s330",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "unsigned",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "score"
+            },
+            "as": "o210"
+          },
+          "bind": "s331",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o207"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o211"
+          },
+          "bind": "s332",
+          "expect": {
+            "$document": {
+              "$id": "count",
+              "key": "count",
+              "type": "integer",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o208"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o212"
+          },
+          "bind": "s333",
+          "expect": {
+            "$document": {
+              "$id": "big",
+              "key": "big",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o209"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o213"
+          },
+          "bind": "s334",
+          "expect": {
+            "$document": {
+              "$id": "unsigned",
+              "key": "unsigned",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o210"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o214"
+          },
+          "bind": "s335",
+          "expect": {
+            "$document": {
+              "$id": "score",
+              "key": "score",
+              "type": "double",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "counters",
+                "$collection": "_metadata",
+                "attributes": [
+                  {
+                    "$obj": "o211"
+                  },
+                  {
+                    "$obj": "o212"
+                  },
+                  {
+                    "$obj": "o213"
+                  },
+                  {
+                    "$obj": "o214"
+                  }
+                ],
+                "indexes": []
+              }
+            },
+            "as": "o215"
+          },
+          "bind": "s336",
+          "expect": {
+            "$document": {
+              "$id": "counters",
+              "$collection": "_metadata",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "big",
+                    "key": "big",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "unsigned",
+                    "key": "unsigned",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Operator",
+            "args": {
+              "collection": {
+                "$obj": "o215"
+              }
+            },
+            "as": "o216"
+          },
+          "bind": "s337",
+          "expect": {
+            "$value": "Validator\\Operator",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Operator",
+            "args": {
+              "method": {
+                "$enum": "OperatorType::Increment"
+              },
+              "attribute": "count",
+              "values": [
+                1,
+                "100"
+              ]
+            },
+            "as": "o217"
+          },
+          "bind": "s338",
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "count",
+              "values": [
+                1,
+                "100"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o216"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o217"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o216"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid operator"
+        }
+      ]
+    },
+    {
+      "name": "OperatorLimitTest::testAWholeLimitIsAccepted#whole float string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count"
+            },
+            "as": "o218"
+          },
+          "bind": "s341",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "big"
+            },
+            "as": "o219"
+          },
+          "bind": "s342",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "big",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "unsigned",
+              "signed": false
+            },
+            "as": "o220"
+          },
+          "bind": "s343",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "unsigned",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "score"
+            },
+            "as": "o221"
+          },
+          "bind": "s344",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o218"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o222"
+          },
+          "bind": "s345",
+          "expect": {
+            "$document": {
+              "$id": "count",
+              "key": "count",
+              "type": "integer",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o219"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o223"
+          },
+          "bind": "s346",
+          "expect": {
+            "$document": {
+              "$id": "big",
+              "key": "big",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o220"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o224"
+          },
+          "bind": "s347",
+          "expect": {
+            "$document": {
+              "$id": "unsigned",
+              "key": "unsigned",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o221"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o225"
+          },
+          "bind": "s348",
+          "expect": {
+            "$document": {
+              "$id": "score",
+              "key": "score",
+              "type": "double",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "counters",
+                "$collection": "_metadata",
+                "attributes": [
+                  {
+                    "$obj": "o222"
+                  },
+                  {
+                    "$obj": "o223"
+                  },
+                  {
+                    "$obj": "o224"
+                  },
+                  {
+                    "$obj": "o225"
+                  }
+                ],
+                "indexes": []
+              }
+            },
+            "as": "o226"
+          },
+          "bind": "s349",
+          "expect": {
+            "$document": {
+              "$id": "counters",
+              "$collection": "_metadata",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "big",
+                    "key": "big",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "unsigned",
+                    "key": "unsigned",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Operator",
+            "args": {
+              "collection": {
+                "$obj": "o226"
+              }
+            },
+            "as": "o227"
+          },
+          "bind": "s350",
+          "expect": {
+            "$value": "Validator\\Operator",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Operator",
+            "args": {
+              "method": {
+                "$enum": "OperatorType::Increment"
+              },
+              "attribute": "count",
+              "values": [
+                1,
+                "100.0"
+              ]
+            },
+            "as": "o228"
+          },
+          "bind": "s351",
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "count",
+              "values": [
+                1,
+                "100.0"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o227"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o228"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o227"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid operator"
+        }
+      ]
+    },
+    {
+      "name": "OperatorLimitTest::testAWholeLimitIsAccepted#big whole float",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count"
+            },
+            "as": "o229"
+          },
+          "bind": "s354",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "big"
+            },
+            "as": "o230"
+          },
+          "bind": "s355",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "big",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "unsigned",
+              "signed": false
+            },
+            "as": "o231"
+          },
+          "bind": "s356",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "unsigned",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "score"
+            },
+            "as": "o232"
+          },
+          "bind": "s357",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o229"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o233"
+          },
+          "bind": "s358",
+          "expect": {
+            "$document": {
+              "$id": "count",
+              "key": "count",
+              "type": "integer",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o230"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o234"
+          },
+          "bind": "s359",
+          "expect": {
+            "$document": {
+              "$id": "big",
+              "key": "big",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o231"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o235"
+          },
+          "bind": "s360",
+          "expect": {
+            "$document": {
+              "$id": "unsigned",
+              "key": "unsigned",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o232"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o236"
+          },
+          "bind": "s361",
+          "expect": {
+            "$document": {
+              "$id": "score",
+              "key": "score",
+              "type": "double",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "counters",
+                "$collection": "_metadata",
+                "attributes": [
+                  {
+                    "$obj": "o233"
+                  },
+                  {
+                    "$obj": "o234"
+                  },
+                  {
+                    "$obj": "o235"
+                  },
+                  {
+                    "$obj": "o236"
+                  }
+                ],
+                "indexes": []
+              }
+            },
+            "as": "o237"
+          },
+          "bind": "s362",
+          "expect": {
+            "$document": {
+              "$id": "counters",
+              "$collection": "_metadata",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "big",
+                    "key": "big",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "unsigned",
+                    "key": "unsigned",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Operator",
+            "args": {
+              "collection": {
+                "$obj": "o237"
+              }
+            },
+            "as": "o238"
+          },
+          "bind": "s363",
+          "expect": {
+            "$value": "Validator\\Operator",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Operator",
+            "args": {
+              "method": {
+                "$enum": "OperatorType::Increment"
+              },
+              "attribute": "big",
+              "values": [
+                1,
+                9e+18
+              ]
+            },
+            "as": "o239"
+          },
+          "bind": "s364",
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "big",
+              "values": [
+                1,
+                9e+18
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o238"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o239"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o238"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid operator"
+        }
+      ]
+    },
+    {
+      "name": "OperatorLimitTest::testAWholeLimitIsAccepted#unsigned whole float beyond the signed range",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count"
+            },
+            "as": "o240"
+          },
+          "bind": "s367",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "big"
+            },
+            "as": "o241"
+          },
+          "bind": "s368",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "big",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "unsigned",
+              "signed": false
+            },
+            "as": "o242"
+          },
+          "bind": "s369",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "unsigned",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "score"
+            },
+            "as": "o243"
+          },
+          "bind": "s370",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o240"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o244"
+          },
+          "bind": "s371",
+          "expect": {
+            "$document": {
+              "$id": "count",
+              "key": "count",
+              "type": "integer",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o241"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o245"
+          },
+          "bind": "s372",
+          "expect": {
+            "$document": {
+              "$id": "big",
+              "key": "big",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o242"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o246"
+          },
+          "bind": "s373",
+          "expect": {
+            "$document": {
+              "$id": "unsigned",
+              "key": "unsigned",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o243"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o247"
+          },
+          "bind": "s374",
+          "expect": {
+            "$document": {
+              "$id": "score",
+              "key": "score",
+              "type": "double",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "counters",
+                "$collection": "_metadata",
+                "attributes": [
+                  {
+                    "$obj": "o244"
+                  },
+                  {
+                    "$obj": "o245"
+                  },
+                  {
+                    "$obj": "o246"
+                  },
+                  {
+                    "$obj": "o247"
+                  }
+                ],
+                "indexes": []
+              }
+            },
+            "as": "o248"
+          },
+          "bind": "s375",
+          "expect": {
+            "$document": {
+              "$id": "counters",
+              "$collection": "_metadata",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "big",
+                    "key": "big",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "unsigned",
+                    "key": "unsigned",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Operator",
+            "args": {
+              "collection": {
+                "$obj": "o248"
+              }
+            },
+            "as": "o249"
+          },
+          "bind": "s376",
+          "expect": {
+            "$value": "Validator\\Operator",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Operator",
+            "args": {
+              "method": {
+                "$enum": "OperatorType::Increment"
+              },
+              "attribute": "unsigned",
+              "values": [
+                1,
+                1e+19
+              ]
+            },
+            "as": "o250"
+          },
+          "bind": "s377",
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "unsigned",
+              "values": [
+                1,
+                1e+19
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o249"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o250"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o249"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid operator"
+        }
+      ]
+    },
+    {
+      "name": "OperatorLimitTest::testAWholeLimitIsAccepted#fractional limit on a double",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count"
+            },
+            "as": "o251"
+          },
+          "bind": "s380",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "big"
+            },
+            "as": "o252"
+          },
+          "bind": "s381",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "big",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "unsigned",
+              "signed": false
+            },
+            "as": "o253"
+          },
+          "bind": "s382",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "unsigned",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "score"
+            },
+            "as": "o254"
+          },
+          "bind": "s383",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o251"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o255"
+          },
+          "bind": "s384",
+          "expect": {
+            "$document": {
+              "$id": "count",
+              "key": "count",
+              "type": "integer",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o252"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o256"
+          },
+          "bind": "s385",
+          "expect": {
+            "$document": {
+              "$id": "big",
+              "key": "big",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o253"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o257"
+          },
+          "bind": "s386",
+          "expect": {
+            "$document": {
+              "$id": "unsigned",
+              "key": "unsigned",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o254"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o258"
+          },
+          "bind": "s387",
+          "expect": {
+            "$document": {
+              "$id": "score",
+              "key": "score",
+              "type": "double",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "counters",
+                "$collection": "_metadata",
+                "attributes": [
+                  {
+                    "$obj": "o255"
+                  },
+                  {
+                    "$obj": "o256"
+                  },
+                  {
+                    "$obj": "o257"
+                  },
+                  {
+                    "$obj": "o258"
+                  }
+                ],
+                "indexes": []
+              }
+            },
+            "as": "o259"
+          },
+          "bind": "s388",
+          "expect": {
+            "$document": {
+              "$id": "counters",
+              "$collection": "_metadata",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "big",
+                    "key": "big",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "unsigned",
+                    "key": "unsigned",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Operator",
+            "args": {
+              "collection": {
+                "$obj": "o259"
+              }
+            },
+            "as": "o260"
+          },
+          "bind": "s389",
+          "expect": {
+            "$value": "Validator\\Operator",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Operator",
+            "args": {
+              "method": {
+                "$enum": "OperatorType::Increment"
+              },
+              "attribute": "score",
+              "values": [
+                1,
+                102.4
+              ]
+            },
+            "as": "o261"
+          },
+          "bind": "s390",
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "score",
+              "values": [
+                1,
+                102.4
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o260"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o261"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o260"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid operator"
+        }
+      ]
+    },
+    {
+      "name": "OperatorLimitTest::testALimitOutsideTheAttributeRangeIsRefused",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count"
+            },
+            "as": "o262"
+          },
+          "bind": "s393",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "big"
+            },
+            "as": "o263"
+          },
+          "bind": "s394",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "big",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "unsigned",
+              "signed": false
+            },
+            "as": "o264"
+          },
+          "bind": "s395",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "unsigned",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "score"
+            },
+            "as": "o265"
+          },
+          "bind": "s396",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o262"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o266"
+          },
+          "bind": "s397",
+          "expect": {
+            "$document": {
+              "$id": "count",
+              "key": "count",
+              "type": "integer",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o263"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o267"
+          },
+          "bind": "s398",
+          "expect": {
+            "$document": {
+              "$id": "big",
+              "key": "big",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o264"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o268"
+          },
+          "bind": "s399",
+          "expect": {
+            "$document": {
+              "$id": "unsigned",
+              "key": "unsigned",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o265"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o269"
+          },
+          "bind": "s400",
+          "expect": {
+            "$document": {
+              "$id": "score",
+              "key": "score",
+              "type": "double",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "counters",
+                "$collection": "_metadata",
+                "attributes": [
+                  {
+                    "$obj": "o266"
+                  },
+                  {
+                    "$obj": "o267"
+                  },
+                  {
+                    "$obj": "o268"
+                  },
+                  {
+                    "$obj": "o269"
+                  }
+                ],
+                "indexes": []
+              }
+            },
+            "as": "o270"
+          },
+          "bind": "s401",
+          "expect": {
+            "$document": {
+              "$id": "counters",
+              "$collection": "_metadata",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "big",
+                    "key": "big",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "unsigned",
+                    "key": "unsigned",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Operator",
+            "args": {
+              "collection": {
+                "$obj": "o270"
+              }
+            },
+            "as": "o271"
+          },
+          "bind": "s402",
+          "expect": {
+            "$value": "Validator\\Operator",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Operator",
+            "args": {
+              "method": {
+                "$enum": "OperatorType::Increment"
+              },
+              "attribute": "big",
+              "values": [
+                1,
+                1e+19
+              ]
+            },
+            "as": "o272"
+          },
+          "bind": "s403",
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "big",
+              "values": [
+                1,
+                1e+19
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o271"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o272"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o271"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Cannot apply increment operator: max/min limit must be between -9223372036854775808 and 9223372036854775807"
+        }
+      ]
+    },
+    {
+      "name": "OperatorLimitTest::testANonNumericLimitIsRefused",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count"
+            },
+            "as": "o273"
+          },
+          "bind": "s406",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "big"
+            },
+            "as": "o274"
+          },
+          "bind": "s407",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "big",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "bigInteger",
+            "args": {
+              "key": "unsigned",
+              "signed": false
+            },
+            "as": "o275"
+          },
+          "bind": "s408",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "unsigned",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::BigInteger"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "score"
+            },
+            "as": "o276"
+          },
+          "bind": "s409",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o273"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o277"
+          },
+          "bind": "s410",
+          "expect": {
+            "$document": {
+              "$id": "count",
+              "key": "count",
+              "type": "integer",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o274"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o278"
+          },
+          "bind": "s411",
+          "expect": {
+            "$document": {
+              "$id": "big",
+              "key": "big",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o275"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o279"
+          },
+          "bind": "s412",
+          "expect": {
+            "$document": {
+              "$id": "unsigned",
+              "key": "unsigned",
+              "type": "bigint",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o276"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o280"
+          },
+          "bind": "s413",
+          "expect": {
+            "$document": {
+              "$id": "score",
+              "key": "score",
+              "type": "double",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "counters",
+                "$collection": "_metadata",
+                "attributes": [
+                  {
+                    "$obj": "o277"
+                  },
+                  {
+                    "$obj": "o278"
+                  },
+                  {
+                    "$obj": "o279"
+                  },
+                  {
+                    "$obj": "o280"
+                  }
+                ],
+                "indexes": []
+              }
+            },
+            "as": "o281"
+          },
+          "bind": "s414",
+          "expect": {
+            "$document": {
+              "$id": "counters",
+              "$collection": "_metadata",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "big",
+                    "key": "big",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "unsigned",
+                    "key": "unsigned",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": false,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Operator",
+            "args": {
+              "collection": {
+                "$obj": "o281"
+              }
+            },
+            "as": "o282"
+          },
+          "bind": "s415",
+          "expect": {
+            "$value": "Validator\\Operator",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Operator",
+            "args": {
+              "method": {
+                "$enum": "OperatorType::Increment"
+              },
+              "attribute": "count",
+              "values": [
+                1,
+                "many"
+              ]
+            },
+            "as": "o283"
+          },
+          "bind": "s416",
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "count",
+              "values": [
+                1,
+                "many"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o282"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o283"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o282"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Cannot apply increment operator: max/min limit must be numeric, got string"
+        }
+      ]
+    }
+  ]
+}

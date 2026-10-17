@@ -1,0 +1,1889 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Collections/MetadataModelTest.php"
+  ],
+  "cases": [
+    {
+      "name": "MetadataModelTest::testMetadataCollectionReadsAreIndependentCopies",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o529"
+          },
+          "bind": "s1084",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o529"
+              },
+              "cache": "none"
+            },
+            "as": "o530"
+          },
+          "bind": "s1085",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Database",
+            "method": "collectionDefinition",
+            "args": {},
+            "as": "o531"
+          },
+          "bind": "s1086",
+          "expect": {
+            "$document": {
+              "$id": "_metadata",
+              "name": "collections",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 256,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attributes",
+                    "key": "attributes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "indexes",
+                    "key": "indexes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "documentSecurity",
+                    "key": "documentSecurity",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o531"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "_metadata",
+            "name": "collections",
+            "attributes": [
+              {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              },
+              {
+                "$id": "attributes",
+                "key": "attributes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "indexes",
+                "key": "indexes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "documentSecurity",
+                "key": "documentSecurity",
+                "type": "boolean",
+                "size": 0,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              }
+            ],
+            "indexes": [],
+            "documentSecurity": false,
+            "$collection": "_metadata"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "_metadata",
+                "name": "collections",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 256,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "attributes",
+                    "key": "attributes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  },
+                  {
+                    "$id": "indexes",
+                    "key": "indexes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  },
+                  {
+                    "$id": "documentSecurity",
+                    "key": "documentSecurity",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$collection": "_metadata"
+              }
+            },
+            "as": "o532"
+          },
+          "bind": "s1088",
+          "expect": {
+            "$document": {
+              "$id": "_metadata",
+              "name": "collections",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 256,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attributes",
+                    "key": "attributes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "indexes",
+                    "key": "indexes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "documentSecurity",
+                    "key": "documentSecurity",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o532"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "_metadata",
+            "name": "collections",
+            "attributes": [
+              {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              },
+              {
+                "$id": "attributes",
+                "key": "attributes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "indexes",
+                "key": "indexes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "documentSecurity",
+                "key": "documentSecurity",
+                "type": "boolean",
+                "size": 0,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              }
+            ],
+            "indexes": [],
+            "documentSecurity": false,
+            "$collection": "_metadata"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o530"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "_metadata"
+            },
+            "as": "o533"
+          },
+          "bind": "s1090",
+          "expect": {
+            "$document": {
+              "$id": "_metadata",
+              "name": "collections",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 256,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attributes",
+                    "key": "attributes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "indexes",
+                    "key": "indexes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "documentSecurity",
+                    "key": "documentSecurity",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o533"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "_metadata",
+            "name": "collections",
+            "attributes": [
+              {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              },
+              {
+                "$id": "attributes",
+                "key": "attributes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "indexes",
+                "key": "indexes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "documentSecurity",
+                "key": "documentSecurity",
+                "type": "boolean",
+                "size": 0,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              }
+            ],
+            "indexes": [],
+            "documentSecurity": false,
+            "$collection": "_metadata"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o533"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "attributes"
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              }
+            },
+            {
+              "$document": {
+                "$id": "attributes",
+                "key": "attributes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              }
+            },
+            {
+              "$document": {
+                "$id": "indexes",
+                "key": "indexes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              }
+            },
+            {
+              "$document": {
+                "$id": "documentSecurity",
+                "key": "documentSecurity",
+                "type": "boolean",
+                "size": 0,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              }
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "key",
+              "value": "renamed"
+            },
+            "as": "o534"
+          },
+          "bind": "s1093",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "renamed",
+              "type": "string",
+              "size": 256,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o534"
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "size",
+              "value": 1
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "renamed",
+              "type": "string",
+              "size": 1,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o533"
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "name",
+              "value": "changed"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "_metadata",
+              "name": "changed",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 256,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attributes",
+                    "key": "attributes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "indexes",
+                    "key": "indexes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "documentSecurity",
+                    "key": "documentSecurity",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o530"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "_metadata"
+            },
+            "as": "o535"
+          },
+          "bind": "s1096",
+          "expect": {
+            "$document": {
+              "$id": "_metadata",
+              "name": "collections",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 256,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attributes",
+                    "key": "attributes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "indexes",
+                    "key": "indexes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "documentSecurity",
+                    "key": "documentSecurity",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o535"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "_metadata",
+            "name": "collections",
+            "attributes": [
+              {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              },
+              {
+                "$id": "attributes",
+                "key": "attributes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "indexes",
+                "key": "indexes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "documentSecurity",
+                "key": "documentSecurity",
+                "type": "boolean",
+                "size": 0,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              }
+            ],
+            "indexes": [],
+            "documentSecurity": false,
+            "$collection": "_metadata"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o535"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "attributes"
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              }
+            },
+            {
+              "$document": {
+                "$id": "attributes",
+                "key": "attributes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              }
+            },
+            {
+              "$document": {
+                "$id": "indexes",
+                "key": "indexes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              }
+            },
+            {
+              "$document": {
+                "$id": "documentSecurity",
+                "key": "documentSecurity",
+                "type": "boolean",
+                "size": 0,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MetadataModelTest::testMetadataDefinitionReadsAreIndependentCopies",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o536"
+          },
+          "bind": "s1099",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o536"
+              },
+              "cache": "none"
+            },
+            "as": "o537"
+          },
+          "bind": "s1100",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Database",
+            "method": "collectionDefinition",
+            "args": {},
+            "as": "o538"
+          },
+          "bind": "s1101",
+          "expect": {
+            "$document": {
+              "$id": "_metadata",
+              "name": "collections",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 256,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attributes",
+                    "key": "attributes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "indexes",
+                    "key": "indexes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "documentSecurity",
+                    "key": "documentSecurity",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o538"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "_metadata",
+            "name": "collections",
+            "attributes": [
+              {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              },
+              {
+                "$id": "attributes",
+                "key": "attributes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "indexes",
+                "key": "indexes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "documentSecurity",
+                "key": "documentSecurity",
+                "type": "boolean",
+                "size": 0,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              }
+            ],
+            "indexes": [],
+            "documentSecurity": false,
+            "$collection": "_metadata"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o537"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "_metadata",
+              "id": "_metadata"
+            },
+            "as": "o539"
+          },
+          "bind": "s1103",
+          "expect": {
+            "$document": {
+              "$id": "_metadata",
+              "name": "collections",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 256,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attributes",
+                    "key": "attributes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "indexes",
+                    "key": "indexes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "documentSecurity",
+                    "key": "documentSecurity",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o539"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "_metadata",
+            "name": "collections",
+            "attributes": [
+              {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              },
+              {
+                "$id": "attributes",
+                "key": "attributes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "indexes",
+                "key": "indexes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "documentSecurity",
+                "key": "documentSecurity",
+                "type": "boolean",
+                "size": 0,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              }
+            ],
+            "indexes": [],
+            "documentSecurity": false,
+            "$collection": "_metadata"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o539"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "attributes"
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              }
+            },
+            {
+              "$document": {
+                "$id": "attributes",
+                "key": "attributes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              }
+            },
+            {
+              "$document": {
+                "$id": "indexes",
+                "key": "indexes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              }
+            },
+            {
+              "$document": {
+                "$id": "documentSecurity",
+                "key": "documentSecurity",
+                "type": "boolean",
+                "size": 0,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              }
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "key",
+              "value": "renamed"
+            },
+            "as": "o540"
+          },
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "renamed",
+              "type": "string",
+              "size": 256,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o539"
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "name",
+              "value": "changed"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "_metadata",
+              "name": "changed",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 256,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attributes",
+                    "key": "attributes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "indexes",
+                    "key": "indexes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "documentSecurity",
+                    "key": "documentSecurity",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o537"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "_metadata",
+              "id": "_metadata"
+            },
+            "as": "o541"
+          },
+          "bind": "s1108",
+          "expect": {
+            "$document": {
+              "$id": "_metadata",
+              "name": "collections",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 256,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attributes",
+                    "key": "attributes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "indexes",
+                    "key": "indexes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "documentSecurity",
+                    "key": "documentSecurity",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o541"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "_metadata",
+            "name": "collections",
+            "attributes": [
+              {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              },
+              {
+                "$id": "attributes",
+                "key": "attributes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "indexes",
+                "key": "indexes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              },
+              {
+                "$id": "documentSecurity",
+                "key": "documentSecurity",
+                "type": "boolean",
+                "size": 0,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              }
+            ],
+            "indexes": [],
+            "documentSecurity": false,
+            "$collection": "_metadata"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o541"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "attributes"
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              }
+            },
+            {
+              "$document": {
+                "$id": "attributes",
+                "key": "attributes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              }
+            },
+            {
+              "$document": {
+                "$id": "indexes",
+                "key": "indexes",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": [
+                  "json"
+                ]
+              }
+            },
+            {
+              "$document": {
+                "$id": "documentSecurity",
+                "key": "documentSecurity",
+                "type": "boolean",
+                "size": 0,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

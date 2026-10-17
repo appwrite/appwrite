@@ -1,0 +1,37 @@
+[package]
+name = "utopia-abuse"
+description = "Rate limits: fixed windows, sliding windows and token buckets over Redis, Redis Cluster, pooled connections, document stores and Appwrite tables, and reCAPTCHA verification."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/abuse"
+publish.workspace = true
+
+[features]
+default = ["redis", "recaptcha"]
+# Redis (redis-rs connections) and pooled Redis connections.
+redis = ["dep:redis"]
+# Redis Cluster (redis-rs cluster client), directly and in pools.
+redis-cluster = ["redis", "redis/cluster-async"]
+# reCAPTCHA verification over HTTPS (hyper and rustls).
+recaptcha = ["dep:bytes", "dep:http-body-util", "dep:hyper", "dep:hyper-rustls", "dep:hyper-util", "dep:rustls"]
+
+[dependencies]
+bytes = { workspace = true, optional = true }
+http-body-util = { workspace = true, optional = true }
+hyper = { workspace = true, features = ["client", "http1"], optional = true }
+hyper-rustls = { workspace = true, optional = true }
+hyper-util = { workspace = true, features = ["client-legacy", "http1"], optional = true }
+php-std.workspace = true
+redis = { workspace = true, optional = true }
+rustls = { workspace = true, optional = true }
+thiserror.workspace = true
+utopia-async = { workspace = true, features = ["hyper"] }
+# The schema of the `abuse` collection, as utopia-database's Attribute and Index models.
+utopia-database.workspace = true
+
+
+[package.metadata.utopia]
+category = "security"
+php-sync = "2ca9a38d36e32854844a172bf7238ec7cb8b5f05"

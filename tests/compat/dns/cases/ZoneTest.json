@@ -1,0 +1,292 @@
+{
+  "source": "packages/dns/tests/ZoneTest.php",
+  "cases": [
+    {
+      "name": "constructor rejects non SOA record",
+      "steps": [
+        {
+          "op": "zone.new",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [],
+              "soa": {
+                "name": "example.com",
+                "type": 1,
+                "ttl": 0,
+                "rdata": ""
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SOA parameter must be a Record with TYPE_SOA"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "constructor requires matching SOA name",
+      "steps": [
+        {
+          "op": "zone.new",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [],
+              "soa": {
+                "name": "other.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.other.com hostmaster.other.com 1 7200 3600 1209600 300"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SOA record name must match zone name: expected 'example.com', got 'other.com'"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "constructor rejects SOA records in zone data",
+      "steps": [
+        {
+          "op": "zone.new",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "example.com",
+                  "type": 6,
+                  "ttl": 0,
+                  "rdata": ""
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SOA records should be passed as the $soa parameter, not in $records"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "constructor rejects out of zone record",
+      "steps": [
+        {
+          "op": "zone.new",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "other.com",
+                  "type": 1,
+                  "ttl": 300,
+                  "rdata": "1.1.1.1"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Record name 'other.com' does not belong to zone 'example.com'"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "constructor rejects out of zone wildcard record",
+      "steps": [
+        {
+          "op": "zone.new",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "*.other.com",
+                  "type": 1,
+                  "ttl": 300,
+                  "rdata": "1.1.1.1"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Record name '*.other.com' does not belong to zone 'example.com'"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "constructor accepts nested wildcard record",
+      "steps": [
+        {
+          "op": "zone.new",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "*.api.example.com",
+                  "type": 1,
+                  "ttl": 120,
+                  "rdata": "203.0.113.10"
+                },
+                {
+                  "name": "origin.api.example.com",
+                  "type": 1,
+                  "ttl": 120,
+                  "rdata": "203.0.113.20"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            }
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "*.api.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 120,
+                "rdata": "203.0.113.10",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "origin.api.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 120,
+                "rdata": "203.0.113.20",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "constructor accepts template records",
+      "steps": [
+        {
+          "op": "zone.new",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "api.example.com",
+                  "type": 1,
+                  "ttl": 120,
+                  "rdata": "a.a.a.a"
+                },
+                {
+                  "name": "api.example.com",
+                  "type": 28,
+                  "ttl": 120,
+                  "rdata": "b:b::b:b:b"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            }
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "api.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 120,
+                "rdata": "a.a.a.a",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "api.example.com",
+                "type": 28,
+                "class": 1,
+                "ttl": 120,
+                "rdata": "b:b::b:b:b",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

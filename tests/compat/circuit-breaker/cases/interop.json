@@ -1,0 +1,264 @@
+{
+  "source": "interop",
+  "cases": [
+    {
+      "name": "a circuit one runtime opens through Redis is open for the other, and probes close it",
+      "interop": true,
+      "steps": [
+        {
+          "op": "store.redis",
+          "args": {
+            "prefix": "${ns}:breaker:"
+          },
+          "bind": "ca",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.redis",
+          "args": {
+            "prefix": "${ns}:breaker:"
+          },
+          "bind": "cb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 0,
+            "success_threshold": 2,
+            "store": {
+              "$ref": "ca"
+            },
+            "key": "users-api",
+            "minimum_throughput": 1
+          },
+          "bind": "a",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 0,
+            "success_threshold": 2,
+            "store": {
+              "$ref": "cb"
+            },
+            "key": "users-api",
+            "minimum_throughput": 1
+          },
+          "bind": "b",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "a"
+            },
+            "close": {
+              "throw": "failed"
+            }
+          },
+          "side": "a",
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.is",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "side": "b",
+          "expect": {
+            "open": false,
+            "closed": false,
+            "half_open": true
+          }
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "closed"
+            },
+            "half_open": {
+              "result": "probe-1"
+            }
+          },
+          "side": "b",
+          "expect": "probe-1"
+        },
+        {
+          "op": "breaker.successes",
+          "args": {
+            "breaker": {
+              "$ref": "a"
+            }
+          },
+          "side": "a",
+          "expect": 1
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "a"
+            },
+            "close": {
+              "result": "closed"
+            },
+            "half_open": {
+              "result": "probe-2"
+            }
+          },
+          "side": "a",
+          "expect": "probe-2"
+        },
+        {
+          "op": "breaker.is",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "side": "b",
+          "expect": {
+            "open": false,
+            "closed": true,
+            "half_open": false
+          }
+        },
+        {
+          "op": "store.get",
+          "args": {
+            "store": {
+              "$ref": "cb"
+            },
+            "key": "users-api:state"
+          },
+          "side": "b",
+          "expect": "closed"
+        },
+        {
+          "op": "store.get",
+          "args": {
+            "store": {
+              "$ref": "ca"
+            },
+            "key": "users-api:opened_at"
+          },
+          "side": "a",
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a trip by one runtime short-circuits the other",
+      "interop": true,
+      "steps": [
+        {
+          "op": "store.redis",
+          "args": {
+            "prefix": "${ns}:breaker:"
+          },
+          "bind": "ca",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.redis",
+          "args": {
+            "prefix": "${ns}:breaker:"
+          },
+          "bind": "cb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "store": {
+              "$ref": "ca"
+            },
+            "key": "api"
+          },
+          "bind": "a",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 30,
+            "store": {
+              "$ref": "cb"
+            },
+            "key": "api"
+          },
+          "bind": "b",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.trip",
+          "args": {
+            "breaker": {
+              "$ref": "a"
+            }
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "breaker.call",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            },
+            "close": {
+              "result": "should not run"
+            }
+          },
+          "side": "b",
+          "expect": "fallback"
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "side": "b",
+          "expect": 0
+        }
+      ],
+      "state": []
+    }
+  ]
+}

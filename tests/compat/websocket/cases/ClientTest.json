@@ -1,0 +1,1654 @@
+{
+  "source": "packages/websocket/tests/ClientTest.php",
+  "cases": [
+    {
+      "name": "testConstructorWithValidUrl",
+      "op": "client.new",
+      "args": {
+        "url": "ws://localhost:8080"
+      },
+      "expect": {
+        "client": {
+          "$handle": "*"
+        },
+        "host": "localhost",
+        "port": 8080,
+        "path": "/",
+        "headers": [],
+        "timeout": 30.0
+      }
+    },
+    {
+      "name": "testConstructorWithInvalidUrl",
+      "op": "client.new",
+      "args": {
+        "url": "invalid-url"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "WebSocket URL must contain a host"
+        }
+      }
+    },
+    {
+      "name": "testConstructorWithCustomOptions",
+      "op": "client.new",
+      "args": {
+        "url": "ws://localhost:8080",
+        "options": {
+          "headers": [
+            [
+              "Authorization",
+              "Bearer token"
+            ]
+          ],
+          "timeout": 60
+        }
+      },
+      "expect": {
+        "client": {
+          "$handle": "*"
+        },
+        "host": "localhost",
+        "port": 8080,
+        "path": "/",
+        "headers": [
+          [
+            "Authorization",
+            "Bearer token"
+          ]
+        ],
+        "timeout": 60.0
+      }
+    },
+    {
+      "name": "testEventHandlers",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "url": "ws://localhost:8080"
+          },
+          "bind": "c",
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "localhost",
+            "port": 8080,
+            "path": "/",
+            "headers": [],
+            "timeout": 30.0
+          }
+        },
+        {
+          "op": "client.hooks",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testIsConnected",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "url": "ws://localhost:8080"
+          },
+          "bind": "c",
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "localhost",
+            "port": 8080,
+            "path": "/",
+            "headers": [],
+            "timeout": 30.0
+          }
+        },
+        {
+          "op": "client.is_connected",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testSendWithoutConnection",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "url": "ws://localhost:8080"
+          },
+          "bind": "c",
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "localhost",
+            "port": 8080,
+            "path": "/",
+            "headers": [],
+            "timeout": 30.0
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            },
+            "data": "test message"
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Not connected to WebSocket server"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testReceiveWithoutConnection",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "url": "ws://localhost:8080"
+          },
+          "bind": "c",
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "localhost",
+            "port": 8080,
+            "path": "/",
+            "headers": [],
+            "timeout": 30.0
+          }
+        },
+        {
+          "op": "client.receive",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Not connected to WebSocket server"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testListen",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "url": "ws://localhost:8080"
+          },
+          "bind": "c",
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "localhost",
+            "port": 8080,
+            "path": "/",
+            "headers": [],
+            "timeout": 30.0
+          }
+        },
+        {
+          "op": "client.hooks",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "op": "client.attach",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            },
+            "script": [
+              {
+                "opcode": 1,
+                "data": "Hello WebSocket!"
+              },
+              {
+                "code": 5001,
+                "message": ""
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "client.listen",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "client.log",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": [
+            [
+              "message",
+              "Hello WebSocket!"
+            ],
+            [
+              "close"
+            ],
+            [
+              "transport.close"
+            ]
+          ]
+        },
+        {
+          "op": "client.is_connected",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testListenWithError",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "url": "ws://localhost:8080"
+          },
+          "bind": "c",
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "localhost",
+            "port": 8080,
+            "path": "/",
+            "headers": [],
+            "timeout": 30.0
+          }
+        },
+        {
+          "op": "client.hooks",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "op": "client.attach",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            },
+            "script": [
+              {
+                "code": 1,
+                "message": "Test error"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "client.listen",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "client.log",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": [
+            [
+              "error",
+              "RuntimeException",
+              "Failed to receive data: 1 - Test error"
+            ],
+            [
+              "close"
+            ],
+            [
+              "transport.close"
+            ]
+          ]
+        },
+        {
+          "op": "client.is_connected",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "wss defaults to port 443",
+      "op": "client.new",
+      "args": {
+        "url": "wss://realtime.example.com"
+      },
+      "expect": {
+        "client": {
+          "$handle": "*"
+        },
+        "host": "realtime.example.com",
+        "port": 443,
+        "path": "/",
+        "headers": [],
+        "timeout": 30.0
+      }
+    },
+    {
+      "name": "ws defaults to port 80, path to /",
+      "op": "client.new",
+      "args": {
+        "url": "ws://realtime.example.com"
+      },
+      "expect": {
+        "client": {
+          "$handle": "*"
+        },
+        "host": "realtime.example.com",
+        "port": 80,
+        "path": "/",
+        "headers": [],
+        "timeout": 30.0
+      }
+    },
+    {
+      "name": "explicit port, path and query, fragment dropped",
+      "op": "client.new",
+      "args": {
+        "url": "wss://h:8443/v1/realtime?project=p&channels[]=a#f"
+      },
+      "expect": {
+        "client": {
+          "$handle": "*"
+        },
+        "host": "h",
+        "port": 8443,
+        "path": "/v1/realtime?project=p&channels[]=a",
+        "headers": [],
+        "timeout": 30.0
+      }
+    },
+    {
+      "name": "scheme compared case-sensitively",
+      "op": "client.new",
+      "args": {
+        "url": "WSS://h"
+      },
+      "expect": {
+        "client": {
+          "$handle": "*"
+        },
+        "host": "h",
+        "port": 80,
+        "path": "/",
+        "headers": [],
+        "timeout": 30.0
+      }
+    },
+    {
+      "name": "port 0 is kept",
+      "op": "client.new",
+      "args": {
+        "url": "ws://h:0"
+      },
+      "expect": {
+        "client": {
+          "$handle": "*"
+        },
+        "host": "h",
+        "port": 0,
+        "path": "/",
+        "headers": [],
+        "timeout": 30.0
+      }
+    },
+    {
+      "name": "no scheme",
+      "op": "client.new",
+      "args": {
+        "url": "//h/p"
+      },
+      "expect": {
+        "client": {
+          "$handle": "*"
+        },
+        "host": "h",
+        "port": 80,
+        "path": "/p",
+        "headers": [],
+        "timeout": 30.0
+      }
+    },
+    {
+      "name": "query without a path",
+      "op": "client.new",
+      "args": {
+        "url": "ws://h?x=1"
+      },
+      "expect": {
+        "client": {
+          "$handle": "*"
+        },
+        "host": "h",
+        "port": 80,
+        "path": "/?x=1",
+        "headers": [],
+        "timeout": 30.0
+      }
+    },
+    {
+      "name": "credentials are ignored",
+      "op": "client.new",
+      "args": {
+        "url": "ws://user:pass@h:81/p"
+      },
+      "expect": {
+        "client": {
+          "$handle": "*"
+        },
+        "host": "h",
+        "port": 81,
+        "path": "/p",
+        "headers": [],
+        "timeout": 30.0
+      }
+    },
+    {
+      "name": "ipv6 host",
+      "op": "client.new",
+      "args": {
+        "url": "ws://[::1]:9000/"
+      },
+      "expect": {
+        "client": {
+          "$handle": "*"
+        },
+        "host": "[::1]",
+        "port": 9000,
+        "path": "/",
+        "headers": [],
+        "timeout": 30.0
+      }
+    },
+    {
+      "name": "empty host is invalid",
+      "op": "client.new",
+      "args": {
+        "url": "ws://:80"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid WebSocket URL"
+        }
+      }
+    },
+    {
+      "name": "empty authority is invalid",
+      "op": "client.new",
+      "args": {
+        "url": "http:///x"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid WebSocket URL"
+        }
+      }
+    },
+    {
+      "name": "port out of range is invalid",
+      "op": "client.new",
+      "args": {
+        "url": "ws://h:65536"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid WebSocket URL"
+        }
+      }
+    },
+    {
+      "name": "empty string has no host",
+      "op": "client.new",
+      "args": {
+        "url": ""
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "WebSocket URL must contain a host"
+        }
+      }
+    },
+    {
+      "name": "repeated header keeps the last value",
+      "op": "client.new",
+      "args": {
+        "url": "ws://h",
+        "options": {
+          "headers": [
+            [
+              "A",
+              "1"
+            ],
+            [
+              "B",
+              "2"
+            ],
+            [
+              "A",
+              "3"
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "client": {
+          "$handle": "*"
+        },
+        "host": "h",
+        "port": 80,
+        "path": "/",
+        "headers": [
+          [
+            "A",
+            "3"
+          ],
+          [
+            "B",
+            "2"
+          ]
+        ],
+        "timeout": 30.0
+      }
+    },
+    {
+      "name": "fractional timeout",
+      "op": "client.new",
+      "args": {
+        "url": "ws://h",
+        "options": {
+          "timeout": 2.5
+        }
+      },
+      "expect": {
+        "client": {
+          "$handle": "*"
+        },
+        "host": "h",
+        "port": 80,
+        "path": "/",
+        "headers": [],
+        "timeout": 2.5
+      }
+    },
+    {
+      "name": "listen answers pings and reports pongs; binary and other opcodes are ignored",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "url": "ws://localhost:8080"
+          },
+          "bind": "c",
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "localhost",
+            "port": 8080,
+            "path": "/",
+            "headers": [],
+            "timeout": 30.0
+          }
+        },
+        {
+          "op": "client.hooks",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "op": "client.attach",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            },
+            "script": [
+              {
+                "opcode": 9,
+                "data": "are you there"
+              },
+              {
+                "opcode": 10,
+                "data": "pong data"
+              },
+              {
+                "opcode": 2,
+                "data": "bin"
+              },
+              {
+                "opcode": 0,
+                "data": "cont"
+              },
+              {},
+              {
+                "code": 110,
+                "message": "Connection timed out"
+              },
+              {
+                "opcode": 1,
+                "data": "after"
+              },
+              {
+                "opcode": 8,
+                "data": ""
+              },
+              {
+                "opcode": 1,
+                "data": "never read"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "client.listen",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "client.log",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": [
+            [
+              "ping",
+              "are you there"
+            ],
+            [
+              "push",
+              "",
+              10
+            ],
+            [
+              "pong",
+              "pong data"
+            ],
+            [
+              "message",
+              "after"
+            ],
+            [
+              "close"
+            ],
+            [
+              "transport.close"
+            ]
+          ]
+        },
+        {
+          "op": "client.is_connected",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "receive returns text and null for everything else",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "url": "ws://localhost:8080"
+          },
+          "bind": "c",
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "localhost",
+            "port": 8080,
+            "path": "/",
+            "headers": [],
+            "timeout": 30.0
+          }
+        },
+        {
+          "op": "client.hooks",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "op": "client.attach",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            },
+            "script": [
+              {
+                "opcode": 1,
+                "data": "one"
+              },
+              {
+                "opcode": 9,
+                "data": "p"
+              },
+              {
+                "opcode": 10,
+                "data": "q"
+              },
+              {
+                "opcode": 2,
+                "data": "bin"
+              },
+              {},
+              {
+                "code": 110,
+                "message": "Connection timed out"
+              },
+              {
+                "opcode": 1,
+                "data": "two"
+              },
+              {
+                "code": 5001,
+                "message": ""
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "client.receive",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": "one"
+        },
+        {
+          "op": "client.receive",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "client.receive",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "client.receive",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "client.receive",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "client.receive",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Failed to receive data: 110 - Connection timed out"
+            }
+          }
+        },
+        {
+          "op": "client.is_connected",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "client.receive",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": "two"
+        },
+        {
+          "op": "client.receive",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "client.is_connected",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "client.receive",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Not connected to WebSocket server"
+            }
+          }
+        },
+        {
+          "op": "client.log",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": [
+            [
+              "message",
+              "one"
+            ],
+            [
+              "ping",
+              "p"
+            ],
+            [
+              "push",
+              "",
+              10
+            ],
+            [
+              "pong",
+              "q"
+            ],
+            [
+              "message",
+              "two"
+            ],
+            [
+              "close"
+            ],
+            [
+              "transport.close"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "receive on a close frame closes the client",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "url": "ws://localhost:8080"
+          },
+          "bind": "c",
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "localhost",
+            "port": 8080,
+            "path": "/",
+            "headers": [],
+            "timeout": 30.0
+          }
+        },
+        {
+          "op": "client.hooks",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "op": "client.attach",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            },
+            "script": [
+              {
+                "opcode": 8,
+                "data": ""
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "client.receive",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "client.is_connected",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            },
+            "data": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Not connected to WebSocket server"
+            }
+          }
+        },
+        {
+          "op": "client.log",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": [
+            [
+              "close"
+            ],
+            [
+              "transport.close"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "send pushes a text frame; a failed push raises and reports the error",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "url": "ws://localhost:8080"
+          },
+          "bind": "c",
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "localhost",
+            "port": 8080,
+            "path": "/",
+            "headers": [],
+            "timeout": 30.0
+          }
+        },
+        {
+          "op": "client.hooks",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "op": "client.attach",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            },
+            "script": []
+          },
+          "expect": null
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            },
+            "data": "hello"
+          },
+          "expect": null
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            },
+            "data": {
+              "$bytes": "/wABAg=="
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "client.attach",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            },
+            "script": [],
+            "push_fail": [
+              32,
+              "Broken pipe"
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            },
+            "data": "lost"
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Failed to send data: 32 - Broken pipe"
+            }
+          }
+        },
+        {
+          "op": "client.is_connected",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "client.log",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": [
+            [
+              "push",
+              "hello",
+              1
+            ],
+            [
+              "push",
+              {
+                "$bytes": "/wABAg=="
+              },
+              1
+            ],
+            [
+              "push",
+              "lost",
+              1
+            ],
+            [
+              "error",
+              "RuntimeException",
+              "Failed to send data: 32 - Broken pipe"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "close calls the close hook once",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "url": "ws://localhost:8080"
+          },
+          "bind": "c",
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "localhost",
+            "port": 8080,
+            "path": "/",
+            "headers": [],
+            "timeout": 30.0
+          }
+        },
+        {
+          "op": "client.hooks",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "client.attach",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            },
+            "script": []
+          },
+          "expect": null
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "client.listen",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "client.log",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": [
+            [
+              "close"
+            ],
+            [
+              "transport.close"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a receive failure raises without closing",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "url": "ws://localhost:8080"
+          },
+          "bind": "c",
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "localhost",
+            "port": 8080,
+            "path": "/",
+            "headers": [],
+            "timeout": 30.0
+          }
+        },
+        {
+          "op": "client.hooks",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "op": "client.attach",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            },
+            "script": [
+              {
+                "code": 104,
+                "message": "Connection reset by peer"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "client.receive",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Failed to receive data: 104 - Connection reset by peer"
+            }
+          }
+        },
+        {
+          "op": "client.is_connected",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "client.log",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "connect to a closed port reports and raises the refusal",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "url": "ws://127.0.0.1:1",
+            "options": {
+              "timeout": 2
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "client": {
+              "$handle": "*"
+            },
+            "host": "127.0.0.1",
+            "port": 1,
+            "path": "/",
+            "headers": [],
+            "timeout": 2.0
+          }
+        },
+        {
+          "op": "client.hooks",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ]
+        },
+        {
+          "op": "client.connect",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "WebSocket connection failed: 111 - Connection refused"
+            }
+          }
+        },
+        {
+          "op": "client.is_connected",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "client.log",
+          "args": {
+            "client": {
+              "$ref": "c",
+              "path": "/client"
+            }
+          },
+          "expect": [
+            [
+              "error",
+              "RuntimeException",
+              "WebSocket connection failed: 111 - Connection refused"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "listen over a script: messages, pings, failures",
+      "op": "client.script",
+      "args": {
+        "script": [
+          {
+            "opcode": 1,
+            "data": "a"
+          },
+          {
+            "opcode": 9,
+            "data": "p"
+          },
+          {},
+          {
+            "code": 110,
+            "message": "Connection timed out"
+          },
+          {
+            "opcode": 10,
+            "data": "q"
+          },
+          {
+            "code": 104,
+            "message": "Connection reset by peer"
+          },
+          {
+            "opcode": 1,
+            "data": "never"
+          }
+        ]
+      },
+      "expect": {
+        "log": [
+          [
+            "message",
+            "a"
+          ],
+          [
+            "ping",
+            "p"
+          ],
+          [
+            "push",
+            "",
+            10
+          ],
+          [
+            "pong",
+            "q"
+          ],
+          [
+            "error",
+            "RuntimeException",
+            "Failed to receive data: 104 - Connection reset by peer"
+          ],
+          [
+            "close"
+          ],
+          [
+            "transport.close"
+          ]
+        ],
+        "connected": false
+      }
+    }
+  ]
+}

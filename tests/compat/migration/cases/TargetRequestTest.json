@@ -1,0 +1,710 @@
+{
+  "source": "packages/migration/tests/General/TargetRequestTest.php",
+  "cases": [
+    {
+      "name": "a redirect is not followed by default",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "req-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/redirect",
+                "status": 302,
+                "headers": {
+                  "Location": "/p/req-${ns}/echo"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/redirect-file",
+                "status": 302,
+                "headers": {
+                  "Location": "file:///etc/hosts"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/echo",
+                "status": 200,
+                "body": {
+                  "method": "GET",
+                  "host": "{host}",
+                  "uri": "{uri}"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "request_target.new",
+          "args": {
+            "endpoint": "{api}/p/req-${ns}"
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.request",
+          "args": {
+            "target": {
+              "$ref": "t"
+            },
+            "method": "GET",
+            "path": "/redirect",
+            "params": {
+              "to": "/echo"
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "code": 302,
+              "message": "302: Redirects are not followed"
+            }
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "req-${ns}"
+          },
+          "mask": {
+            "paths": [
+              "/*/headers/user-agent"
+            ],
+            "reason": "Target::call() requests carry cURL's user agent, `<os>-<release>:php-<version>` on PHP and `<os>-<release>:rust` on Rust"
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "path": "/redirect",
+              "query": "to=%2Fecho",
+              "headers": {
+                "accept": "*/*",
+                "user-agent": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a redirect is followed when enabled",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "req-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/redirect",
+                "status": 302,
+                "headers": {
+                  "Location": "/p/req-${ns}/echo"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/redirect-file",
+                "status": 302,
+                "headers": {
+                  "Location": "file:///etc/hosts"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/echo",
+                "status": 200,
+                "body": {
+                  "method": "GET",
+                  "host": "{host}",
+                  "uri": "{uri}"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "request_target.new",
+          "args": {
+            "endpoint": "{api}/p/req-${ns}"
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.configure",
+          "args": {
+            "target": {
+              "$ref": "t"
+            },
+            "follow": true
+          },
+          "expect": null
+        },
+        {
+          "op": "target.request",
+          "args": {
+            "target": {
+              "$ref": "t"
+            },
+            "method": "GET",
+            "path": "/redirect",
+            "params": {
+              "to": "/echo"
+            }
+          },
+          "expect": {
+            "response": {
+              "method": "GET",
+              "host": "{authority}",
+              "uri": "/echo"
+            }
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "req-${ns}"
+          },
+          "mask": {
+            "paths": [
+              "/*/headers/user-agent"
+            ],
+            "reason": "Target::call() requests carry cURL's user agent, `<os>-<release>:php-<version>` on PHP and `<os>-<release>:rust` on Rust"
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "path": "/redirect",
+              "query": "to=%2Fecho",
+              "headers": {
+                "accept": "*/*",
+                "user-agent": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "path": "/echo",
+              "query": "",
+              "headers": {
+                "accept": "*/*",
+                "user-agent": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a followed redirect to another protocol is refused",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "req-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/redirect",
+                "status": 302,
+                "headers": {
+                  "Location": "/p/req-${ns}/echo"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/redirect-file",
+                "status": 302,
+                "headers": {
+                  "Location": "file:///etc/hosts"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/echo",
+                "status": 200,
+                "body": {
+                  "method": "GET",
+                  "host": "{host}",
+                  "uri": "{uri}"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "request_target.new",
+          "args": {
+            "endpoint": "{api}/p/req-${ns}"
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.configure",
+          "args": {
+            "target": {
+              "$ref": "t"
+            },
+            "follow": true
+          },
+          "expect": null
+        },
+        {
+          "op": "target.request",
+          "args": {
+            "target": {
+              "$ref": "t"
+            },
+            "method": "GET",
+            "path": "/redirect-file",
+            "message": false
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "code": 500,
+              "message": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "the resolver pins the connection",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "req-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/redirect",
+                "status": 302,
+                "headers": {
+                  "Location": "/p/req-${ns}/echo"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/redirect-file",
+                "status": 302,
+                "headers": {
+                  "Location": "file:///etc/hosts"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/echo",
+                "status": 200,
+                "body": {
+                  "method": "GET",
+                  "host": "{host}",
+                  "uri": "{uri}"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "request_target.new",
+          "args": {
+            "endpoint": "http://pinned.invalid:{port}/p/req-${ns}"
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resolver.new",
+          "args": {
+            "mode": "pin"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.configure",
+          "args": {
+            "target": {
+              "$ref": "t"
+            },
+            "resolver": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "target.request",
+          "args": {
+            "target": {
+              "$ref": "t"
+            },
+            "method": "GET",
+            "path": "/echo",
+            "params": {
+              "a": "b"
+            }
+          },
+          "expect": {
+            "response": {
+              "method": "GET",
+              "host": "pinned.invalid:{port}",
+              "uri": "/echo?a=b"
+            }
+          }
+        },
+        {
+          "op": "resolver.urls",
+          "args": {
+            "resolver": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            "http://pinned.invalid:{port}/p/req-${ns}/echo?a=b"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "the resolver bypasses the environment proxy",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "req-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/redirect",
+                "status": 302,
+                "headers": {
+                  "Location": "/p/req-${ns}/echo"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/redirect-file",
+                "status": 302,
+                "headers": {
+                  "Location": "file:///etc/hosts"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/echo",
+                "status": 200,
+                "body": {
+                  "method": "GET",
+                  "host": "{host}",
+                  "uri": "{uri}"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "request_target.new",
+          "args": {
+            "endpoint": "http://pinned.invalid:{port}/p/req-${ns}"
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resolver.new",
+          "args": {
+            "mode": "pin"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.configure",
+          "args": {
+            "target": {
+              "$ref": "t"
+            },
+            "resolver": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "target.request",
+          "args": {
+            "target": {
+              "$ref": "t"
+            },
+            "method": "GET",
+            "path": "/echo",
+            "proxy": "http://127.0.0.1:1"
+          },
+          "expect": {
+            "response": {
+              "method": "GET",
+              "host": "pinned.invalid:{port}",
+              "uri": "/echo"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "the resolver can refuse the URL",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "req-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/redirect",
+                "status": 302,
+                "headers": {
+                  "Location": "/p/req-${ns}/echo"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/redirect-file",
+                "status": 302,
+                "headers": {
+                  "Location": "file:///etc/hosts"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/echo",
+                "status": 200,
+                "body": {
+                  "method": "GET",
+                  "host": "{host}",
+                  "uri": "{uri}"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "request_target.new",
+          "args": {
+            "endpoint": "{api}/p/req-${ns}"
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resolver.new",
+          "args": {
+            "mode": "refuse"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.configure",
+          "args": {
+            "target": {
+              "$ref": "t"
+            },
+            "resolver": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "target.request",
+          "args": {
+            "target": {
+              "$ref": "t"
+            },
+            "method": "GET",
+            "path": "/echo"
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "code": 0,
+              "message": "Refused"
+            }
+          }
+        },
+        {
+          "op": "resolver.urls",
+          "args": {
+            "resolver": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            "{api}/p/req-${ns}/echo"
+          ]
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "req-${ns}"
+          },
+          "mask": {
+            "paths": [
+              "/*/headers/user-agent"
+            ],
+            "reason": "Target::call() requests carry cURL's user agent, `<os>-<release>:php-<version>` on PHP and `<os>-<release>:rust` on Rust"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "only http protocols are allowed",
+      "steps": [
+        {
+          "op": "request_target.new",
+          "args": {
+            "endpoint": "gopher://127.0.0.1:1/"
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.request",
+          "args": {
+            "target": {
+              "$ref": "t"
+            },
+            "method": "GET",
+            "path": "",
+            "message": false
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "code": 500,
+              "message": null
+            }
+          }
+        },
+        {
+          "op": "request_target.new",
+          "args": {
+            "endpoint": "dict://127.0.0.1:1/"
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.request",
+          "args": {
+            "target": {
+              "$ref": "t"
+            },
+            "method": "GET",
+            "path": "",
+            "message": false
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "code": 500,
+              "message": null
+            }
+          }
+        },
+        {
+          "op": "request_target.new",
+          "args": {
+            "endpoint": "file:///etc/hosts"
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.request",
+          "args": {
+            "target": {
+              "$ref": "t"
+            },
+            "method": "GET",
+            "path": "",
+            "message": false
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "code": 500,
+              "message": null
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

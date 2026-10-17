@@ -1,0 +1,257 @@
+//! API coverage: how much of the PHP library's public API the operations
+//! cover, whether both drivers implement every operation, whether every
+//! operation has cases, every PHP test class is ported and every PHP task
+//! has a Rust binary.
+
+use std::collections::{BTreeMap, BTreeSet};
+use std::path::Path;
+
+use super::cases;
+use super::engine::Engine;
+use super::spec::{self, Spec};
+use super::tasks;
+
+#[derive(Default)]
+pub struct Coverage {
+    pub lib: String,
+    pub complete: bool,
+    pub symbols: usize,
+    pub covered: usize,
+    pub waived: usize,
+    pub uncovered: Vec<String>,
+    /// `covers` or waiver patterns that match nothing (typos, renamed APIs).
+    pub dangling: Vec<String>,
+    pub ops: usize,
+    pub missing_php: Vec<String>,
+    pub missing_rust: Vec<String>,
+    pub unknown_php: Vec<String>,
+    pub unknown_rust: Vec<String>,
+    pub ops_without_cases: Vec<String>,
+    pub cases: usize,
+    pub steps: usize,
+    pub steps_without_expect: usize,
+    pub tests: usize,
+    pub tests_unported: Vec<String>,
+    /// The PHP library's tasks (see [`super::tasks`]).
+    pub tasks: usize,
+    pub tasks_ported: usize,
+    pub tasks_waived: usize,
+    /// Tasks neither ported nor waived.
+    pub tasks_pending: Vec<String>,
+    /// Declared tasks that do not hold, and waivers matching no task.
+    pub tasks_broken: Vec<String>,
+}
+
+impl Coverage {
+    pub fn percent(&self) -> f64 {
+        if self.symbols == 0 { 100.0 } else { (self.covered + self.waived) as f64 * 100.0 / self.symbols as f64 }
+    }
+
+    /// Every structural rule of crates/CONVERSION.md §2 holds.
+    pub fn ok(&self) -> bool {
+        self.uncovered.is_empty()
+            && self.dangling.is_empty()
+            && self.missing_php.is_empty()
+            && self.missing_rust.is_empty()
+            && self.unknown_php.is_empty()
+            && self.unknown_rust.is_empty()
+            && self.ops_without_cases.is_empty()
+            && self.tests_unported.is_empty()
+            && self.steps_without_expect == 0
+            && self.tasks_pending.is_empty()
+            && self.tasks_broken.is_empty()
+    }
+
+    /// `ported + waived / total` for the status table.
+    pub fn tasks_cell(&self) -> String {
+        if self.tasks == 0 {
+            "—".to_owned()
+        } else {
+            format!("{}/{}", self.tasks_ported + self.tasks_waived, self.tasks)
+        }
+    }
+
+    pub fn render(&self) -> String {
+        let mut out = format!(
+            "{}: API {:.1}% ({} symbols: {} covered, {} waived, {} uncovered); {} ops; {} cases, {} steps ({} without expect); PHP tests ported {}/{}; tasks {} ({} ported, {} waived, {} pending)\n",
+            self.lib,
+            self.percent(),
+            self.symbols,
+            self.covered,
+            self.waived,
+            self.uncovered.len(),
+            self.ops,
+            self.cases,
+            self.steps,
+            self.steps_without_expect,
+            self.tests - self.tests_unported.len(),
+            self.tests,
+            self.tasks,
+            self.tasks_ported,
+            self.tasks_waived,
+            self.tasks_pending.len()
+        );
+        let mut list = |title: &str, items: &[String]| {
+            if !items.is_empty() {
+                out.push_str(&format!("  {title} ({}):\n", items.len()));
+                for i in items {
+                    out.push_str(&format!("    - {i}\n"));
+                }
+            }
+        };
+        list("uncovered PHP API", &self.uncovered);
+        list("patterns matching nothing", &self.dangling);
+        list("ops missing in the PHP adapter", &self.missing_php);
+        list("ops missing in the Rust adapter", &self.missing_rust);
+        list("PHP adapter ops not in spec.json", &self.unknown_php);
+        list("Rust adapter ops not in spec.json", &self.unknown_rust);
+        list("ops without cases", &self.ops_without_cases);
+        list("PHP test files not ported", &self.tests_unported);
+        list("PHP tasks not ported or waived", &self.tasks_pending);
+        list("task problems", &self.tasks_broken);
+        out
+    }
+}
+
+/// Whether `symbol` matches a pattern: exact, `Class::*` or `Namespace\*`.
+pub fn matches(pattern: &str, symbol: &str) -> bool {
+    if let Some(prefix) = pattern.strip_suffix('*') { symbol.starts_with(prefix) } else { pattern == symbol }
+}
+
+/// Whether a file holds PHP tests: `*Test.php` classes, and the `*Tests.php`
+/// traits test classes are assembled from (utopia-php/database's e2e scopes
+/// hold the test bodies every adapter test class runs).
+pub fn is_test_file(name: &str) -> bool {
+    name.ends_with("Test.php") || name.ends_with("Tests.php")
+}
+
+/// Test files under `dirs` (relative to the repository root). Directories that
+/// are not on the host (`vendor/`, which lives only in the dev image) are
+/// listed by the PHP driver (`$tests`).
+fn test_files(engine: &mut Engine, root: &Path, dirs: &[String]) -> Result<Vec<String>, String> {
+    let (here, image): (Vec<String>, Vec<String>) = dirs.iter().cloned().partition(|d| root.join(d).is_dir());
+    let mut out = local_test_files(root, &here);
+    if !image.is_empty() {
+        out.extend(engine.php_tests(&image)?);
+    }
+    out.sort();
+    out.dedup();
+    Ok(out)
+}
+
+fn local_test_files(root: &Path, dirs: &[String]) -> Vec<String> {
+    fn walk(dir: &Path, root: &Path, out: &mut Vec<String>) {
+        let Ok(entries) = std::fs::read_dir(dir) else { return };
+        for e in entries.flatten() {
+            let p = e.path();
+            if p.is_dir() {
+                walk(&p, root, out);
+            } else if p.file_name().and_then(|n| n.to_str()).is_some_and(is_test_file)
+                && let Ok(rel) = p.strip_prefix(root)
+            {
+                out.push(rel.display().to_string());
+            }
+        }
+    }
+    let mut out = Vec::new();
+    for d in dirs {
+        walk(&root.join(d), root, &mut out);
+    }
+    out.sort();
+    out
+}
+
+pub fn coverage(engine: &mut Engine, lib: &str) -> Result<Coverage, String> {
+    let root = engine.cfg.root.clone();
+    let spec: Spec = spec::load(&root, lib)?;
+    let inventory = engine.inventory(&spec)?;
+    let mut c = Coverage {
+        lib: lib.to_owned(),
+        complete: spec.complete,
+        symbols: inventory.len(),
+        ops: spec.ops.len(),
+        ..Default::default()
+    };
+
+    let covers: Vec<&String> = spec.ops.values().flat_map(|o| &o.covers).collect();
+    let mut used: BTreeSet<&str> = BTreeSet::new();
+    for symbol in &inventory {
+        if let Some(p) = covers.iter().find(|p| matches(p, symbol)) {
+            c.covered += 1;
+            used.insert(p.as_str());
+        } else if let Some(p) = spec.waivers.keys().find(|p| matches(p, symbol)) {
+            c.waived += 1;
+            used.insert(p.as_str());
+        } else {
+            c.uncovered.push(symbol.clone());
+        }
+    }
+    // A library with no PHP source (php-std: engine built-ins) has nothing to
+    // inventory, so its `covers` are documentation and cannot dangle.
+    let patterns: Vec<&str> = if spec.php.src.is_empty() {
+        Vec::new()
+    } else {
+        covers.iter().map(|p| p.as_str()).chain(spec.waivers.keys().map(String::as_str)).collect()
+    };
+    for p in patterns {
+        if !used.contains(p) && !inventory.iter().any(|s| matches(p, s)) {
+            c.dangling.push(p.to_owned());
+        }
+    }
+    c.dangling.sort();
+    c.dangling.dedup();
+
+    let spec_ops: BTreeSet<&String> = spec.ops.keys().collect();
+    let php: BTreeSet<String> = engine.hello("php", lib)?.into_iter().collect();
+    let rust: BTreeSet<String> = engine.hello("rust", lib)?.into_iter().collect();
+    c.missing_php = spec_ops.iter().filter(|o| !php.contains(**o)).map(|o| (*o).clone()).collect();
+    c.missing_rust = spec_ops.iter().filter(|o| !rust.contains(**o)).map(|o| (*o).clone()).collect();
+    c.unknown_php = php.iter().filter(|o| !spec_ops.contains(o)).cloned().collect();
+    c.unknown_rust = rust.iter().filter(|o| !spec_ops.contains(o)).cloned().collect();
+
+    let files = cases::load_dir(&spec::lib_dir(&root, lib).join("cases"))?;
+    let mut per_op: BTreeMap<&str, usize> = BTreeMap::new();
+    let mut sources = BTreeSet::new();
+    for f in &files {
+        sources.extend(f.sources.iter().cloned());
+        for case in &f.cases {
+            c.cases += 1;
+            for s in &case.steps {
+                c.steps += 1;
+                if s.expect.is_none() {
+                    c.steps_without_expect += 1;
+                }
+                *per_op.entry(s.op.as_str()).or_default() += 1;
+            }
+        }
+    }
+    c.ops_without_cases = spec.ops.keys().filter(|o| !per_op.contains_key(o.as_str())).cloned().collect();
+
+    let tests = test_files(engine, &root, &spec.php.tests)?;
+    c.tests = tests.len();
+    c.tests_unported =
+        tests.into_iter().filter(|t| !sources.contains(t) && !spec.tests_waived.contains_key(t)).collect();
+
+    let found = tasks::entries(Some(&mut *engine), &root, &spec)?;
+    let t = tasks::check_entries(&root, lib, &spec, found);
+    c.tasks = t.total();
+    c.tasks_ported = t.ported.len();
+    c.tasks_waived = t.waived.len();
+    c.tasks_pending = t.pending;
+    c.tasks_broken = t.broken;
+    c.tasks_broken.extend(t.dangling.into_iter().map(|id| format!("{id}: waived, but no such task")));
+    Ok(c)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::matches;
+
+    #[test]
+    fn patterns() {
+        assert!(matches("Utopia\\Validator\\Text::isValid", "Utopia\\Validator\\Text::isValid"));
+        assert!(matches("Utopia\\Validator\\Text::*", "Utopia\\Validator\\Text::getDescription"));
+        assert!(matches("Utopia\\Validator\\JSON\\*", "Utopia\\Validator\\JSON\\Schema::isValid"));
+        assert!(!matches("Utopia\\Validator\\Text::*", "Utopia\\Validator\\TextArea::isValid"));
+    }
+}

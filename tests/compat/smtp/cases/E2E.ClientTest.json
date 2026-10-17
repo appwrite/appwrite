@@ -1,0 +1,2229 @@
+{
+  "source": "packages/smtp/tests/E2E/ClientTest.php",
+  "cases": [
+    {
+      "name": "upgrades through STARTTLS and delivers",
+      "steps": [
+        {
+          "op": "mailpit.clear",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": null
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "service": "smtp",
+              "verify": "self_signed",
+              "peer_name": "localhost"
+            },
+            "domain": "tests.example.test",
+            "authenticators": [
+              {
+                "mechanism": "plain",
+                "username": "jane",
+                "secret": "secret"
+              }
+            ],
+            "encryption": "starttls"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "message": {
+              "from": {
+                "email": "jane@example.test",
+                "name": "Jane Doe"
+              },
+              "to": [
+                {
+                  "email": "john@example.test"
+                }
+              ],
+              "subject": "Hello from Utopia",
+              "text": "Plain body",
+              "date": {
+                "timestamp": 1786613400,
+                "offset": 0
+              },
+              "message_id": "fixed@example.test"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/message_id",
+              "/ok/message_id"
+            ],
+            "reason": "Mailpit's queue identifier is random"
+          },
+          "expect": {
+            "message_id": "<masked>",
+            "accepted": [
+              "john@example.test"
+            ],
+            "rejected": [],
+            "complete": true
+          }
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mailpit.message",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": {
+            "subject": "Hello from Utopia",
+            "from": [
+              [
+                "Jane Doe",
+                "jane@example.test"
+              ]
+            ],
+            "to": [
+              [
+                "",
+                "john@example.test"
+              ]
+            ],
+            "cc": [],
+            "bcc": [],
+            "reply_to": [],
+            "return_path": "jane@example.test",
+            "text": "Plain body\r\n",
+            "html": "",
+            "attachments": [],
+            "inline": []
+          }
+        },
+        {
+          "op": "mailpit.raw",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": {
+            "ours": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Hello from Utopia\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nPlain body\r\n",
+            "bcc": null,
+            "longest": 43
+          }
+        }
+      ]
+    },
+    {
+      "name": "advertises the extensions we rely on",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "service": "smtp",
+              "verify": "self_signed",
+              "peer_name": "localhost"
+            },
+            "domain": "tests.example.test",
+            "authenticators": [
+              {
+                "mechanism": "plain",
+                "username": "jane",
+                "secret": "secret"
+              }
+            ],
+            "encryption": "starttls"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.capabilities",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "keywords": [
+              "AUTH",
+              "ENHANCEDSTATUSCODES",
+              "STARTTLS",
+              "SIZE",
+              "PIPELINING",
+              "8BITMIME",
+              "SMTPUTF8"
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/keywords/0/2",
+              "/mechanisms"
+            ],
+            "reason": "Mailpit lists its AUTH mechanisms in Go map order, which varies"
+          },
+          "expect": {
+            "keywords": [
+              [
+                "AUTH",
+                true,
+                "<masked>"
+              ],
+              [
+                "ENHANCEDSTATUSCODES",
+                true,
+                []
+              ],
+              [
+                "STARTTLS",
+                false,
+                []
+              ],
+              [
+                "SIZE",
+                true,
+                [
+                  "0"
+                ]
+              ],
+              [
+                "PIPELINING",
+                false,
+                []
+              ],
+              [
+                "8BITMIME",
+                false,
+                []
+              ],
+              [
+                "SMTPUTF8",
+                false,
+                []
+              ]
+            ],
+            "max_size": null,
+            "mechanisms": "<masked>"
+          }
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "advertises STARTTLS before the upgrade",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "service": "smtp",
+              "verify": "self_signed",
+              "peer_name": "localhost"
+            },
+            "domain": "tests.example.test",
+            "authenticators": [
+              {
+                "mechanism": "plain",
+                "username": "jane",
+                "secret": "secret"
+              }
+            ],
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.capabilities",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "keywords": [
+              "AUTH",
+              "STARTTLS"
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/keywords/0/2",
+              "/mechanisms"
+            ],
+            "reason": "Mailpit lists its AUTH mechanisms in Go map order, which varies"
+          },
+          "expect": {
+            "keywords": [
+              [
+                "AUTH",
+                true,
+                "<masked>"
+              ],
+              [
+                "STARTTLS",
+                true,
+                []
+              ]
+            ],
+            "max_size": null,
+            "mechanisms": "<masked>"
+          }
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "sends without encryption when asked",
+      "steps": [
+        {
+          "op": "mailpit.clear",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": null
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "service": "smtp",
+              "verify": "self_signed",
+              "peer_name": "localhost"
+            },
+            "domain": "tests.example.test",
+            "authenticators": [
+              {
+                "mechanism": "plain",
+                "username": "jane",
+                "secret": "secret"
+              }
+            ],
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "message": {
+              "from": {
+                "email": "jane@example.test",
+                "name": "Jane Doe"
+              },
+              "to": [
+                {
+                  "email": "john@example.test"
+                }
+              ],
+              "subject": "Plaintext",
+              "text": "Plain body",
+              "date": {
+                "timestamp": 1786613400,
+                "offset": 0
+              },
+              "message_id": "fixed@example.test"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/message_id",
+              "/ok/message_id"
+            ],
+            "reason": "Mailpit's queue identifier is random"
+          },
+          "expect": {
+            "message_id": "<masked>",
+            "accepted": [
+              "john@example.test"
+            ],
+            "rejected": [],
+            "complete": true
+          }
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mailpit.message",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": {
+            "subject": "Plaintext",
+            "from": [
+              [
+                "Jane Doe",
+                "jane@example.test"
+              ]
+            ],
+            "to": [
+              [
+                "",
+                "john@example.test"
+              ]
+            ],
+            "cc": [],
+            "bcc": [],
+            "reply_to": [],
+            "return_path": "jane@example.test",
+            "text": "Plain body\r\n",
+            "html": "",
+            "attachments": [],
+            "inline": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "opportunistic encryption upgrades",
+      "steps": [
+        {
+          "op": "mailpit.clear",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": null
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "service": "smtp",
+              "verify": "self_signed",
+              "peer_name": "localhost"
+            },
+            "domain": "tests.example.test",
+            "authenticators": [
+              {
+                "mechanism": "plain",
+                "username": "jane",
+                "secret": "secret"
+              }
+            ],
+            "encryption": "opportunistic"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "message": {
+              "from": {
+                "email": "jane@example.test",
+                "name": "Jane Doe"
+              },
+              "to": [
+                {
+                  "email": "john@example.test"
+                }
+              ],
+              "subject": "Opportunistic",
+              "text": "Plain body",
+              "date": {
+                "timestamp": 1786613400,
+                "offset": 0
+              },
+              "message_id": "fixed@example.test"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/message_id",
+              "/ok/message_id"
+            ],
+            "reason": "Mailpit's queue identifier is random"
+          },
+          "expect": {
+            "message_id": "<masked>",
+            "accepted": [
+              "john@example.test"
+            ],
+            "rejected": [],
+            "complete": true
+          }
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mailpit.message",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": {
+            "subject": "Opportunistic",
+            "from": [
+              [
+                "Jane Doe",
+                "jane@example.test"
+              ]
+            ],
+            "to": [
+              [
+                "",
+                "john@example.test"
+              ]
+            ],
+            "cc": [],
+            "bcc": [],
+            "reply_to": [],
+            "return_path": "jane@example.test",
+            "text": "Plain body\r\n",
+            "html": "",
+            "attachments": [],
+            "inline": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "delivers over implicit TLS",
+      "steps": [
+        {
+          "op": "mailpit.clear",
+          "args": {
+            "api": "smtp-implicit-api"
+          },
+          "expect": null
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "service": "smtp-implicit",
+              "verify": "self_signed",
+              "peer_name": "localhost"
+            },
+            "domain": "tests.example.test",
+            "authenticators": [
+              {
+                "mechanism": "plain",
+                "username": "jane",
+                "secret": "secret"
+              }
+            ],
+            "encryption": "implicit"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "message": {
+              "from": {
+                "email": "jane@example.test",
+                "name": "Jane Doe"
+              },
+              "to": [
+                {
+                  "email": "john@example.test"
+                }
+              ],
+              "subject": "Implicit",
+              "text": "Plain body",
+              "date": {
+                "timestamp": 1786613400,
+                "offset": 0
+              },
+              "message_id": "fixed@example.test"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/message_id",
+              "/ok/message_id"
+            ],
+            "reason": "Mailpit's queue identifier is random"
+          },
+          "expect": {
+            "message_id": "<masked>",
+            "accepted": [
+              "john@example.test"
+            ],
+            "rejected": [],
+            "complete": true
+          }
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mailpit.message",
+          "args": {
+            "api": "smtp-implicit-api"
+          },
+          "expect": {
+            "subject": "Implicit",
+            "from": [
+              [
+                "Jane Doe",
+                "jane@example.test"
+              ]
+            ],
+            "to": [
+              [
+                "",
+                "john@example.test"
+              ]
+            ],
+            "cc": [],
+            "bcc": [],
+            "reply_to": [],
+            "return_path": "jane@example.test",
+            "text": "Plain body\r\n",
+            "html": "",
+            "attachments": [],
+            "inline": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "upgrades without checking the certificate",
+      "steps": [
+        {
+          "op": "mailpit.clear",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": null
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "service": "smtp",
+              "verify": "none"
+            },
+            "domain": "tests.example.test",
+            "authenticators": [
+              {
+                "mechanism": "plain",
+                "username": "jane",
+                "secret": "secret"
+              }
+            ],
+            "encryption": "starttls"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "message": {
+              "from": {
+                "email": "jane@example.test",
+                "name": "Jane Doe"
+              },
+              "to": [
+                {
+                  "email": "john@example.test"
+                }
+              ],
+              "subject": "Unchecked",
+              "text": "Plain body",
+              "date": {
+                "timestamp": 1786613400,
+                "offset": 0
+              },
+              "message_id": "fixed@example.test"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/message_id",
+              "/ok/message_id"
+            ],
+            "reason": "Mailpit's queue identifier is random"
+          },
+          "expect": {
+            "message_id": "<masked>",
+            "accepted": [
+              "john@example.test"
+            ],
+            "rejected": [],
+            "complete": true
+          }
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mailpit.message",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": {
+            "subject": "Unchecked",
+            "from": [
+              [
+                "Jane Doe",
+                "jane@example.test"
+              ]
+            ],
+            "to": [
+              [
+                "",
+                "john@example.test"
+              ]
+            ],
+            "cc": [],
+            "bcc": [],
+            "reply_to": [],
+            "return_path": "jane@example.test",
+            "text": "Plain body\r\n",
+            "html": "",
+            "attachments": [],
+            "inline": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "a certificate for another name is refused",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "service": "smtp",
+              "verify": "self_signed",
+              "peer_name": "mail.example.invalid"
+            },
+            "domain": "tests.example.test",
+            "authenticators": [
+              {
+                "mechanism": "plain",
+                "username": "jane",
+                "secret": "secret"
+              }
+            ],
+            "encryption": "starttls"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "message": {
+              "from": {
+                "email": "jane@example.test",
+                "name": "Jane Doe"
+              },
+              "to": [
+                {
+                  "email": "john@example.test"
+                }
+              ],
+              "subject": "Hello",
+              "text": "Plain body",
+              "date": {
+                "timestamp": 1786613400,
+                "offset": 0
+              },
+              "message_id": "fixed@example.test"
+            },
+            "catch": true
+          },
+          "mask": {
+            "paths": [
+              "/error/message"
+            ],
+            "reason": "names the host dialled, each runtime's own address of the service"
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\SMTP\\Exception\\ConnectionException",
+              "message": "<masked>",
+              "code": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an unknown issuer is refused under full verification",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "service": "smtp",
+              "verify": "full",
+              "peer_name": "localhost"
+            },
+            "domain": "tests.example.test",
+            "authenticators": [
+              {
+                "mechanism": "plain",
+                "username": "jane",
+                "secret": "secret"
+              }
+            ],
+            "encryption": "starttls"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "message": {
+              "from": {
+                "email": "jane@example.test",
+                "name": "Jane Doe"
+              },
+              "to": [
+                {
+                  "email": "john@example.test"
+                }
+              ],
+              "subject": "Hello",
+              "text": "Plain body",
+              "date": {
+                "timestamp": 1786613400,
+                "offset": 0
+              },
+              "message_id": "fixed@example.test"
+            },
+            "catch": true
+          },
+          "mask": {
+            "paths": [
+              "/error/message"
+            ],
+            "reason": "names the host dialled, each runtime's own address of the service"
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\SMTP\\Exception\\ConnectionException",
+              "message": "<masked>",
+              "code": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "login mechanism also authenticates",
+      "steps": [
+        {
+          "op": "mailpit.clear",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": null
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "service": "smtp",
+              "verify": "self_signed",
+              "peer_name": "localhost"
+            },
+            "domain": "tests.example.test",
+            "authenticators": [
+              {
+                "mechanism": "login",
+                "username": "jane",
+                "secret": "secret"
+              }
+            ],
+            "encryption": "starttls"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "message": {
+              "from": {
+                "email": "jane@example.test",
+                "name": "Jane Doe"
+              },
+              "to": [
+                {
+                  "email": "john@example.test"
+                }
+              ],
+              "subject": "Login",
+              "text": "Plain body",
+              "date": {
+                "timestamp": 1786613400,
+                "offset": 0
+              },
+              "message_id": "fixed@example.test"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/message_id",
+              "/ok/message_id"
+            ],
+            "reason": "Mailpit's queue identifier is random"
+          },
+          "expect": {
+            "message_id": "<masked>",
+            "accepted": [
+              "john@example.test"
+            ],
+            "rejected": [],
+            "complete": true
+          }
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mailpit.message",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": {
+            "subject": "Login",
+            "from": [
+              [
+                "Jane Doe",
+                "jane@example.test"
+              ]
+            ],
+            "to": [
+              [
+                "",
+                "john@example.test"
+              ]
+            ],
+            "cc": [],
+            "bcc": [],
+            "reply_to": [],
+            "return_path": "jane@example.test",
+            "text": "Plain body\r\n",
+            "html": "",
+            "attachments": [],
+            "inline": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "refuses bad credentials",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "service": "smtp",
+              "verify": "self_signed",
+              "peer_name": "localhost"
+            },
+            "domain": "tests.example.test",
+            "authenticators": [
+              {
+                "mechanism": "plain",
+                "username": "jane",
+                "secret": "wrong"
+              }
+            ],
+            "encryption": "starttls"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "message": {
+              "from": {
+                "email": "jane@example.test",
+                "name": "Jane Doe"
+              },
+              "to": [
+                {
+                  "email": "john@example.test"
+                }
+              ],
+              "subject": "Hello",
+              "text": "Plain body",
+              "date": {
+                "timestamp": 1786613400,
+                "offset": 0
+              },
+              "message_id": "fixed@example.test"
+            },
+            "catch": true
+          },
+          "mask": {
+            "paths": [
+              "/message_id",
+              "/ok/message_id"
+            ],
+            "reason": "Mailpit's queue identifier is random"
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\SMTP\\Exception\\AuthenticationException",
+              "message": "Authentication failed: 535 5.7.8 Authentication credentials invalid",
+              "code": 535
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "carries several messages on one connection",
+      "steps": [
+        {
+          "op": "mailpit.clear",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": null
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "service": "smtp",
+              "verify": "self_signed",
+              "peer_name": "localhost"
+            },
+            "domain": "tests.example.test",
+            "authenticators": [
+              {
+                "mechanism": "plain",
+                "username": "jane",
+                "secret": "secret"
+              }
+            ],
+            "encryption": "starttls"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "message": {
+              "from": {
+                "email": "jane@example.test",
+                "name": "Jane Doe"
+              },
+              "to": [
+                {
+                  "email": "john@example.test"
+                }
+              ],
+              "subject": "First",
+              "text": "Plain body",
+              "date": {
+                "timestamp": 1786613400,
+                "offset": 0
+              },
+              "message_id": "fixed@example.test"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/message_id",
+              "/ok/message_id"
+            ],
+            "reason": "Mailpit's queue identifier is random"
+          },
+          "expect": {
+            "message_id": "<masked>",
+            "accepted": [
+              "john@example.test"
+            ],
+            "rejected": [],
+            "complete": true
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "message": {
+              "from": {
+                "email": "jane@example.test",
+                "name": "Jane Doe"
+              },
+              "to": [
+                {
+                  "email": "john@example.test"
+                }
+              ],
+              "subject": "Second",
+              "text": "Plain body",
+              "date": {
+                "timestamp": 1786613400,
+                "offset": 0
+              },
+              "message_id": "fixed@example.test"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/message_id",
+              "/ok/message_id"
+            ],
+            "reason": "Mailpit's queue identifier is random"
+          },
+          "expect": {
+            "message_id": "<masked>",
+            "accepted": [
+              "john@example.test"
+            ],
+            "rejected": [],
+            "complete": true
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "message": {
+              "from": {
+                "email": "jane@example.test",
+                "name": "Jane Doe"
+              },
+              "to": [
+                {
+                  "email": "john@example.test"
+                }
+              ],
+              "subject": "Third",
+              "text": "Plain body",
+              "date": {
+                "timestamp": 1786613400,
+                "offset": 0
+              },
+              "message_id": "fixed@example.test"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/message_id",
+              "/ok/message_id"
+            ],
+            "reason": "Mailpit's queue identifier is random"
+          },
+          "expect": {
+            "message_id": "<masked>",
+            "accepted": [
+              "john@example.test"
+            ],
+            "rejected": [],
+            "complete": true
+          }
+        },
+        {
+          "op": "client.transactions",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": 3
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mailpit.count",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": 3
+        }
+      ]
+    },
+    {
+      "name": "starts a fresh session after closing",
+      "steps": [
+        {
+          "op": "mailpit.clear",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": null
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "service": "smtp",
+              "verify": "self_signed",
+              "peer_name": "localhost"
+            },
+            "domain": "tests.example.test",
+            "authenticators": [
+              {
+                "mechanism": "login",
+                "username": "jane",
+                "secret": "secret"
+              }
+            ],
+            "encryption": "starttls"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "message": {
+              "from": {
+                "email": "jane@example.test",
+                "name": "Jane Doe"
+              },
+              "to": [
+                {
+                  "email": "john@example.test"
+                }
+              ],
+              "subject": "Before",
+              "text": "Plain body",
+              "date": {
+                "timestamp": 1786613400,
+                "offset": 0
+              },
+              "message_id": "fixed@example.test"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/message_id",
+              "/ok/message_id"
+            ],
+            "reason": "Mailpit's queue identifier is random"
+          },
+          "expect": {
+            "message_id": "<masked>",
+            "accepted": [
+              "john@example.test"
+            ],
+            "rejected": [],
+            "complete": true
+          }
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "message": {
+              "from": {
+                "email": "jane@example.test",
+                "name": "Jane Doe"
+              },
+              "to": [
+                {
+                  "email": "john@example.test"
+                }
+              ],
+              "subject": "After",
+              "text": "Plain body",
+              "date": {
+                "timestamp": 1786613400,
+                "offset": 0
+              },
+              "message_id": "fixed@example.test"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/message_id",
+              "/ok/message_id"
+            ],
+            "reason": "Mailpit's queue identifier is random"
+          },
+          "expect": {
+            "message_id": "<masked>",
+            "accepted": [
+              "john@example.test"
+            ],
+            "rejected": [],
+            "complete": true
+          }
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mailpit.count",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": 2
+        }
+      ]
+    },
+    {
+      "name": "delivers to every recipient including blind ones",
+      "steps": [
+        {
+          "op": "mailpit.clear",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": null
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "service": "smtp",
+              "verify": "self_signed",
+              "peer_name": "localhost"
+            },
+            "domain": "tests.example.test",
+            "authenticators": [
+              {
+                "mechanism": "plain",
+                "username": "jane",
+                "secret": "secret"
+              }
+            ],
+            "encryption": "starttls"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "message": {
+              "from": {
+                "email": "jane@example.test"
+              },
+              "to": [
+                {
+                  "email": "john@example.test"
+                }
+              ],
+              "subject": "Wide",
+              "text": "Body",
+              "date": {
+                "timestamp": 1786613400,
+                "offset": 0
+              },
+              "message_id": "fixed@example.test",
+              "cc": [
+                {
+                  "email": "ada@example.test"
+                }
+              ],
+              "bcc": [
+                {
+                  "email": "eve@example.test"
+                }
+              ]
+            }
+          },
+          "mask": {
+            "paths": [
+              "/message_id",
+              "/ok/message_id"
+            ],
+            "reason": "Mailpit's queue identifier is random"
+          },
+          "expect": {
+            "message_id": "<masked>",
+            "accepted": [
+              "john@example.test",
+              "ada@example.test",
+              "eve@example.test"
+            ],
+            "rejected": [],
+            "complete": true
+          }
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mailpit.message",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": {
+            "subject": "Wide",
+            "from": [
+              [
+                "",
+                "jane@example.test"
+              ]
+            ],
+            "to": [
+              [
+                "",
+                "john@example.test"
+              ]
+            ],
+            "cc": [
+              [
+                "",
+                "ada@example.test"
+              ]
+            ],
+            "bcc": [
+              [
+                "",
+                "eve@example.test"
+              ]
+            ],
+            "reply_to": [],
+            "return_path": "jane@example.test",
+            "text": "Body\r\n",
+            "html": "",
+            "attachments": [],
+            "inline": []
+          }
+        },
+        {
+          "op": "mailpit.raw",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": {
+            "ours": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: <jane@example.test>\r\nTo: <john@example.test>\r\nCc: <ada@example.test>\r\nSubject: Wide\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody\r\n",
+            "bcc": "eve@example.test",
+            "longest": 43
+          }
+        }
+      ]
+    },
+    {
+      "name": "reports a permanently refused recipient without losing the rest",
+      "steps": [
+        {
+          "op": "mailpit.clear",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": null
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "service": "smtp",
+              "verify": "self_signed",
+              "peer_name": "localhost"
+            },
+            "domain": "tests.example.test",
+            "authenticators": [
+              {
+                "mechanism": "plain",
+                "username": "jane",
+                "secret": "secret"
+              }
+            ],
+            "encryption": "starttls"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test",
+                "blocked@example.invalid"
+              ]
+            },
+            "content": "Subject: Partial\r\n\r\nBody\r\n",
+            "catch": false
+          },
+          "mask": {
+            "paths": [
+              "/message_id",
+              "/ok/message_id"
+            ],
+            "reason": "Mailpit's queue identifier is random"
+          },
+          "expect": {
+            "message_id": "<masked>",
+            "accepted": [
+              "john@example.test"
+            ],
+            "rejected": [
+              [
+                "blocked@example.invalid",
+                {
+                  "code": 550,
+                  "lines": [
+                    "5.1.0 Requested action not taken: mailbox unavailable"
+                  ],
+                  "status": "5.1.0",
+                  "outcome": "Permanent",
+                  "text": "5.1.0 Requested action not taken: mailbox unavailable",
+                  "string": "550 5.1.0 Requested action not taken: mailbox unavailable"
+                }
+              ]
+            ],
+            "complete": false
+          }
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mailpit.message",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": {
+            "subject": "Partial",
+            "from": [],
+            "to": [],
+            "cc": [],
+            "bcc": [
+              [
+                "",
+                "john@example.test"
+              ]
+            ],
+            "reply_to": [],
+            "return_path": "jane@example.test",
+            "text": "Body\r\n",
+            "html": "",
+            "attachments": [],
+            "inline": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "reports a transiently refused recipient as worth retrying",
+      "steps": [
+        {
+          "op": "mailpit.clear",
+          "args": {
+            "api": "smtp-implicit-api"
+          },
+          "expect": null
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "service": "smtp-implicit",
+              "verify": "self_signed",
+              "peer_name": "localhost"
+            },
+            "domain": "tests.example.test",
+            "authenticators": [
+              {
+                "mechanism": "plain",
+                "username": "jane",
+                "secret": "secret"
+              }
+            ],
+            "encryption": "implicit"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "one@example.test",
+                "two@example.test",
+                "three@example.test"
+              ]
+            },
+            "content": "Subject: Crowded\r\n\r\nBody\r\n",
+            "catch": false
+          },
+          "mask": {
+            "paths": [
+              "/message_id",
+              "/ok/message_id"
+            ],
+            "reason": "Mailpit's queue identifier is random"
+          },
+          "expect": {
+            "message_id": "<masked>",
+            "accepted": [
+              "one@example.test",
+              "two@example.test"
+            ],
+            "rejected": [
+              [
+                "three@example.test",
+                {
+                  "code": 452,
+                  "lines": [
+                    "4.5.3 Too many recipients"
+                  ],
+                  "status": "4.5.3",
+                  "outcome": "Transient",
+                  "text": "4.5.3 Too many recipients",
+                  "string": "452 4.5.3 Too many recipients"
+                }
+              ]
+            ],
+            "complete": false
+          }
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mailpit.message",
+          "args": {
+            "api": "smtp-implicit-api"
+          },
+          "expect": {
+            "subject": "Crowded",
+            "from": [],
+            "to": [],
+            "cc": [],
+            "bcc": [
+              [
+                "",
+                "one@example.test"
+              ],
+              [
+                "",
+                "two@example.test"
+              ]
+            ],
+            "reply_to": [],
+            "return_path": "jane@example.test",
+            "text": "Body\r\n",
+            "html": "",
+            "attachments": [],
+            "inline": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "surfaces a refusal as a transaction failure",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "service": "smtp",
+              "verify": "self_signed",
+              "peer_name": "localhost"
+            },
+            "domain": "tests.example.test",
+            "authenticators": [
+              {
+                "mechanism": "plain",
+                "username": "jane",
+                "secret": "secret"
+              }
+            ],
+            "encryption": "starttls"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "blocked@example.invalid"
+              ]
+            },
+            "content": "Subject: X\r\n\r\nBody\r\n",
+            "catch": true
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\SMTP\\Exception\\TransactionException",
+              "message": "Every recipient was refused",
+              "code": 550,
+              "reply": {
+                "code": 550,
+                "lines": [
+                  "5.1.0 Requested action not taken: mailbox unavailable"
+                ],
+                "status": "5.1.0",
+                "outcome": "Permanent",
+                "text": "5.1.0 Requested action not taken: mailbox unavailable",
+                "string": "550 5.1.0 Requested action not taken: mailbox unavailable"
+              },
+              "rejected": [
+                [
+                  "blocked@example.invalid",
+                  {
+                    "code": 550,
+                    "lines": [
+                      "5.1.0 Requested action not taken: mailbox unavailable"
+                    ],
+                    "status": "5.1.0",
+                    "outcome": "Permanent",
+                    "text": "5.1.0 Requested action not taken: mailbox unavailable",
+                    "string": "550 5.1.0 Requested action not taken: mailbox unavailable"
+                  }
+                ]
+              ],
+              "transient": false,
+              "permanent": true
+            }
+          }
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "stuffs a dot that would otherwise end the message",
+      "steps": [
+        {
+          "op": "mailpit.clear",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": null
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "service": "smtp",
+              "verify": "self_signed",
+              "peer_name": "localhost"
+            },
+            "domain": "tests.example.test",
+            "authenticators": [
+              {
+                "mechanism": "plain",
+                "username": "jane",
+                "secret": "secret"
+              }
+            ],
+            "encryption": "starttls"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "message": {
+              "from": {
+                "email": "jane@example.test"
+              },
+              "to": [
+                {
+                  "email": "john@example.test"
+                }
+              ],
+              "subject": "Transparency",
+              "text": "before\r\n.\r\nafter",
+              "date": {
+                "timestamp": 1786613400,
+                "offset": 0
+              },
+              "message_id": "fixed@example.test"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/message_id",
+              "/ok/message_id"
+            ],
+            "reason": "Mailpit's queue identifier is random"
+          },
+          "expect": {
+            "message_id": "<masked>",
+            "accepted": [
+              "john@example.test"
+            ],
+            "rejected": [],
+            "complete": true
+          }
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mailpit.message",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": {
+            "subject": "Transparency",
+            "from": [
+              [
+                "",
+                "jane@example.test"
+              ]
+            ],
+            "to": [
+              [
+                "",
+                "john@example.test"
+              ]
+            ],
+            "cc": [],
+            "bcc": [],
+            "reply_to": [],
+            "return_path": "jane@example.test",
+            "text": "before\r\n.\r\nafter\r\n",
+            "html": "",
+            "attachments": [],
+            "inline": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "the envelope sender is not the From header",
+      "steps": [
+        {
+          "op": "mailpit.clear",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": null
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "service": "smtp",
+              "verify": "self_signed",
+              "peer_name": "localhost"
+            },
+            "domain": "tests.example.test",
+            "authenticators": [
+              {
+                "mechanism": "plain",
+                "username": "jane",
+                "secret": "secret"
+              }
+            ],
+            "encryption": "starttls"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.render",
+          "args": {
+            "message": {
+              "from": {
+                "email": "jane@example.test",
+                "name": "Jane Doe"
+              },
+              "to": [
+                {
+                  "email": "john@example.test"
+                }
+              ],
+              "subject": "Split",
+              "text": "Body",
+              "date": {
+                "timestamp": 1786613400,
+                "offset": 0
+              },
+              "message_id": "fixed@example.test"
+            }
+          },
+          "bind": "m",
+          "expect": {
+            "string": "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Split\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nBody",
+            "chunks": [
+              "Date: Thu, 13 Aug 2026 09:30:00 +0000\r\nFrom: \"Jane Doe\" <jane@example.test>\r\nTo: <john@example.test>\r\nSubject: Split\r\nMessage-ID: <fixed@example.test>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n",
+              "Body"
+            ],
+            "international": false,
+            "message_id": "fixed@example.test",
+            "date": "Thu, 13 Aug 2026 09:30:00 +0000"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "bounces@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": {
+              "$ref": "m",
+              "path": "/string"
+            },
+            "catch": false
+          },
+          "mask": {
+            "paths": [
+              "/message_id",
+              "/ok/message_id"
+            ],
+            "reason": "Mailpit's queue identifier is random"
+          },
+          "expect": {
+            "message_id": "<masked>",
+            "accepted": [
+              "john@example.test"
+            ],
+            "rejected": [],
+            "complete": true
+          }
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mailpit.message",
+          "args": {
+            "api": "smtp-api"
+          },
+          "expect": {
+            "subject": "Split",
+            "from": [
+              [
+                "Jane Doe",
+                "jane@example.test"
+              ]
+            ],
+            "to": [
+              [
+                "",
+                "john@example.test"
+              ]
+            ],
+            "cc": [],
+            "bcc": [],
+            "reply_to": [],
+            "return_path": "bounces@example.test",
+            "text": "Body\r\n",
+            "html": "",
+            "attachments": [],
+            "inline": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "noop, reset and ping on a live session",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "service": "smtp",
+              "verify": "self_signed",
+              "peer_name": "localhost"
+            },
+            "domain": "tests.example.test",
+            "authenticators": [
+              {
+                "mechanism": "plain",
+                "username": "jane",
+                "secret": "secret"
+              }
+            ],
+            "encryption": "starttls"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.noop",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "LogicException",
+              "message": "The transport is not connected"
+            }
+          }
+        },
+        {
+          "op": "client.reset",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "LogicException",
+              "message": "The transport is not connected"
+            }
+          }
+        },
+        {
+          "op": "client.ping",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "client.command",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "command": "HELP",
+            "expect": [
+              214,
+              502
+            ],
+            "catch": true
+          },
+          "expect": {
+            "$error": {
+              "class": "LogicException",
+              "message": "The transport is not connected"
+            }
+          }
+        },
+        {
+          "op": "client.close",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "client.ping",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,635 @@
+{
+  "source": "packages/cdn/tests/Cache/AdapterTest.php",
+  "cases": [
+    {
+      "name": "every adapter offers the same operations",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone",
+            "token": "token"
+          },
+          "bind": "cloudflare",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cloudflare"
+            },
+            "method": "purgePaths",
+            "domain": "example.com",
+            "paths": [
+              "/a"
+            ],
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"files\":[\"https:\\/\\/example.com\\/a\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cloudflare"
+            },
+            "method": "purgeDomain",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"hosts\":[\"example.com\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cloudflare"
+            },
+            "method": "purgeKeys",
+            "keys": [
+              "k"
+            ],
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"tags\":[\"k\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cloudflare"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"purge_everything\":true}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "prefix": "domain-",
+            "service": "service"
+          },
+          "bind": "fastly",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "fastly"
+            },
+            "method": "purgePaths",
+            "domain": "example.com",
+            "paths": [
+              "/a"
+            ],
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/purge/example.com/a",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "fastly"
+            },
+            "method": "purgeDomain",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/service/service/purge",
+                "headers": {
+                  "accept": "application/json",
+                  "content-type": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": "{\"surrogate_keys\":[\"domain-example.com\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "fastly"
+            },
+            "method": "purgeKeys",
+            "keys": [
+              "k"
+            ],
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/service/service/purge",
+                "headers": {
+                  "accept": "application/json",
+                  "content-type": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": "{\"surrogate_keys\":[\"k\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "fastly"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/service/service/purge_all",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "log",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "recorder",
+            "name": "rec",
+            "log": {
+              "$ref": "log"
+            }
+          },
+          "bind": "rec",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "adapter": {
+              "$ref": "rec"
+            },
+            "provider": "fastly"
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "balancer",
+            "options": [
+              {
+                "$ref": "o"
+              }
+            ]
+          },
+          "bind": "bal",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "bal"
+            },
+            "method": "purgePaths",
+            "domain": "example.com",
+            "paths": [
+              "/a"
+            ]
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "bal"
+            },
+            "method": "purgeDomain",
+            "domain": "example.com"
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "bal"
+            },
+            "method": "purgeKeys",
+            "keys": [
+              "k"
+            ]
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "bal"
+            },
+            "method": "purgeZone"
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "log.take",
+          "args": {
+            "log": {
+              "$ref": "log"
+            }
+          },
+          "expect": [
+            {
+              "call": "rec:paths",
+              "args": [
+                "example.com",
+                [
+                  "/a"
+                ]
+              ]
+            },
+            {
+              "call": "rec:domain",
+              "args": [
+                "example.com"
+              ]
+            },
+            {
+              "call": "rec:keys",
+              "args": [
+                [
+                  "k"
+                ]
+              ]
+            },
+            {
+              "call": "rec:zone",
+              "args": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "the facade exposes every operation",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone",
+            "token": "token"
+          },
+          "bind": "cf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "facade",
+            "adapter": {
+              "$ref": "cf"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgePaths",
+            "domain": "example.com",
+            "paths": [
+              "/a"
+            ],
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"files\":[\"https:\\/\\/example.com\\/a\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgeDomain",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"hosts\":[\"example.com\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgeKeys",
+            "keys": [
+              "k"
+            ],
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"tags\":[\"k\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"purge_everything\":true}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "batch ceilings are named alike",
+      "op": "constants",
+      "args": {},
+      "expect": {
+        "cloudflare": {
+          "PATHS_PER_PURGE": 30,
+          "KEYS_PER_PURGE": 30
+        },
+        "fastly": {
+          "KEYS_PER_PURGE": 256
+        },
+        "option": {
+          "ADAPTER": "adapter",
+          "PROVIDER": "provider",
+          "EDGE": "edge",
+          "PROVIDER_FASTLY": "fastly",
+          "PROVIDER_CLOUDFLARE": "cloudflare"
+        },
+        "status": [
+          "pending",
+          "processing",
+          "issued",
+          "renewing",
+          "failed",
+          "blocked",
+          "unknown"
+        ],
+        "fastly_tls": {
+          "CHALLENGE_MANAGED_DNS": "managed-dns"
+        }
+      }
+    }
+  ]
+}

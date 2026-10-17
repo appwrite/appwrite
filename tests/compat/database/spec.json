@@ -1,0 +1,97 @@
+{
+  "lib": "database",
+  "description": "The full conversion of utopia-php/database 8.1 (with the query and builder types of utopia-php/query it extends): Database (collections, attributes, indexes, documents, bulk operations, upserts, increments, aggregations, joins, relationships, permissions, tenancy, hooks, codecs, caching and the query cache, transactions and savepoints, the query and schema builders, profiling), the value objects (Document, Collection, Attribute, Index, Relationship, Query, Operator, the update models, events), the helpers and validators, over every adapter: PostgreSQL, MariaDB, MySQL, SQLite, the in-memory one, MongoDB, Redis, Pool and ReadWritePool, and Mirror (with its filters), and the shared Redis caches.",
+  "complete": true,
+  "php": {
+    "src": [
+      "vendor/utopia-php/database/src"
+    ],
+    "tests": [
+      "vendor/utopia-php/database/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/database"
+  },
+  "services": [
+    "database-postgres",
+    "database-mariadb",
+    "database-mysql",
+    "database-mongo"
+  ],
+  "state": [],
+  "ops": {},
+  "generators": {},
+  "waivers": {
+    "Utopia\\Database\\PDO::*": "PHP runtime plumbing: a PDO wrapper that reconnects; the Rust adapters own their connections (reconnect behaviour is converted with Adapter::reconnect)",
+    "Utopia\\Database\\Adapter\\SQL\\Plan::__construct": "Accessors subsumed by Rust types: the readonly value SQL::plan() builds for find(), count() and sum(), which no caller constructs; its effect is covered by their cases",
+    "Utopia\\Database\\PDOStatement::*": "PHP runtime plumbing: the PDOStatement wrapper of Utopia\\Database\\PDO"
+  },
+  "tests_waived": {},
+  "quirks": [],
+  "deviations": [],
+  "flakes": {
+    "Failed to execute transaction: the transaction was lost before it could commit": "PHP's metadata transaction lost under a loaded CI runner: the PHP library failing, and every later step of the case following from it",
+    "Failed to persist metadata after retries": "PHP's metadata write giving up after its retries under a loaded CI runner: the PHP library failing, and every later step of the case following from it"
+  },
+  "bench": {
+    "bound": {
+      "create_document": "One INSERT (document and permissions) on PostgreSQL: the round trip, the same server and network for both runtimes, dominates the call",
+      "create_documents": "One batched INSERT of ten documents on PostgreSQL: the round trip dominates the call",
+      "get_document": "One SELECT on PostgreSQL (uncached): the round trip dominates the call",
+      "find": "One SELECT over 100 rows on PostgreSQL: the round trip and the server's query dominate the call",
+      "update_document": "A transaction with a locking read and an UPDATE on PostgreSQL: its round trips dominate the call",
+      "cached_get_document": "One HGET on Redis and the decode of a small document: the round trip, the same server and network for both runtimes, dominates the call",
+      "redis_get_document": "A MULTI of the document and its permissions on Redis: the round trip dominates the call",
+      "create_document_mariadb": "One INSERT of the document and one of its permissions on MariaDB: the round trips dominate the call",
+      "create_documents_mariadb": "One batched INSERT of ten documents (and one of their permissions) on MariaDB: the round trips dominate the call",
+      "get_document_mariadb": "One SELECT on MariaDB (uncached): the round trip dominates the call",
+      "find_mariadb": "One SELECT over 100 rows on MariaDB: the round trip and the server's query dominate the call",
+      "update_document_mariadb": "A transaction with a locking read and an UPDATE on MariaDB: its round trips dominate the call",
+      "create_document_mysql": "One INSERT of the document and one of its permissions on MySQL: the round trips dominate the call",
+      "create_documents_mysql": "One batched INSERT of ten documents (and one of their permissions) on MySQL: the round trips dominate the call",
+      "get_document_mysql": "One SELECT on MySQL (uncached): the round trip dominates the call",
+      "find_mysql": "One SELECT over 100 rows on MySQL: the round trip and the server's query dominate the call",
+      "update_document_mysql": "A transaction with a locking read and an UPDATE on MySQL: its round trips dominate the call",
+      "mongo_create_document": "One insert command on MongoDB: the round trip, the same server and network for both runtimes, dominates the call",
+      "mongo_get_document": "One find command on MongoDB (uncached): the round trip dominates the call",
+      "mongo_find": "One find command over 100 documents on MongoDB: the round trip and the server's query dominate the call",
+      "mongo_update_document": "A find and an update command on MongoDB: their round trips dominate the call"
+    }
+  },
+  "shards": {
+    "postgres": [
+      "*"
+    ],
+    "mysql": [
+      "MariaDB-",
+      "MySQL-",
+      "Adapter-MariaDB-",
+      "Adapter-MySQL-",
+      "MariaDBTest",
+      "MySQLTest"
+    ],
+    "sqlite": [
+      "Scope-SQLite-",
+      "Scope-Memory-",
+      "MemoryTest",
+      "SQLiteTest",
+      "Unit-"
+    ],
+    "mongo": [
+      "Scope-Mongo-",
+      "Mongo-"
+    ],
+    "redis": [
+      "Scope-Redis-",
+      "Scope-SharedTables-Redis-",
+      "Scope-Pool-",
+      "Scope-Mirror-",
+      "PoolTest",
+      "MirrorTest",
+      "RedisTest",
+      "core-Mirror",
+      "core-Redis"
+    ]
+  }
+}

@@ -1,0 +1,999 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/SQL/Hook/Join/OuterChainTest.php"
+  ],
+  "cases": [
+    {
+      "name": "OuterChainTest::testEveryEarlierTableFilteredInWhereIsRepeatedInOnRelaxedForMissingRows#right join",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "args": {
+              "joins": {
+                "b": {
+                  "$enum": "Query\\Builder\\JoinType::Inner"
+                },
+                "c": {
+                  "$enum": "Query\\Builder\\JoinType::Right"
+                },
+                "x": {
+                  "$enum": "Query\\Builder\\JoinType::Cross"
+                },
+                "d": {
+                  "$enum": "Query\\Builder\\JoinType::Right"
+                },
+                "e": {
+                  "$enum": "Query\\Builder\\JoinType::Right"
+                }
+              }
+            },
+            "as": "o1224"
+          },
+          "bind": "s2489",
+          "expect": {
+            "$value": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7
+            },
+            "as": "o1225"
+          },
+          "bind": "s2490",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1225"
+            },
+            "method": "joined",
+            "args": {
+              "table": "b"
+            },
+            "as": "o1226"
+          },
+          "bind": "s2491",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`b`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1225"
+            },
+            "method": "joined",
+            "args": {
+              "table": "c"
+            },
+            "as": "o1227"
+          },
+          "bind": "s2492",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`c`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1225"
+            },
+            "method": "joined",
+            "args": {
+              "table": "x"
+            },
+            "as": "o1228"
+          },
+          "bind": "s2493",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`x`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1225"
+            },
+            "method": "joined",
+            "args": {
+              "table": "d"
+            },
+            "as": "o1229"
+          },
+          "bind": "s2494",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`d`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1225"
+            },
+            "method": "joined",
+            "args": {
+              "table": "e"
+            },
+            "as": "o1230"
+          },
+          "bind": "s2495",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`e`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\OuterChain",
+            "args": {
+              "chain": {
+                "$obj": "o1224"
+              },
+              "conditions": {
+                "b": {
+                  "$obj": "o1226"
+                },
+                "c": {
+                  "$obj": "o1227"
+                },
+                "x": {
+                  "$obj": "o1228"
+                },
+                "d": {
+                  "$obj": "o1229"
+                },
+                "e": {
+                  "$obj": "o1230"
+                }
+              }
+            },
+            "as": "o1231"
+          },
+          "bind": "s2496",
+          "expect": {
+            "$hook": "OuterChain"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1231"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "d",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o1232"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`c`._tenant IN (?) OR `c`.`_uid` IS NULL) AND (`x`._tenant IN (?) OR `x`.`_uid` IS NULL)",
+                  "bindings": [
+                    7,
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "OuterChainTest::testEveryEarlierTableFilteredInWhereIsRepeatedInOnRelaxedForMissingRows#full outer join",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "args": {
+              "joins": {
+                "b": {
+                  "$enum": "Query\\Builder\\JoinType::Inner"
+                },
+                "c": {
+                  "$enum": "Query\\Builder\\JoinType::Right"
+                },
+                "x": {
+                  "$enum": "Query\\Builder\\JoinType::Cross"
+                },
+                "d": {
+                  "$enum": "Query\\Builder\\JoinType::FullOuter"
+                },
+                "e": {
+                  "$enum": "Query\\Builder\\JoinType::Right"
+                }
+              }
+            },
+            "as": "o1233"
+          },
+          "bind": "s2498",
+          "expect": {
+            "$value": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7
+            },
+            "as": "o1234"
+          },
+          "bind": "s2499",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1234"
+            },
+            "method": "joined",
+            "args": {
+              "table": "b"
+            },
+            "as": "o1235"
+          },
+          "bind": "s2500",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`b`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1234"
+            },
+            "method": "joined",
+            "args": {
+              "table": "c"
+            },
+            "as": "o1236"
+          },
+          "bind": "s2501",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`c`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1234"
+            },
+            "method": "joined",
+            "args": {
+              "table": "x"
+            },
+            "as": "o1237"
+          },
+          "bind": "s2502",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`x`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1234"
+            },
+            "method": "joined",
+            "args": {
+              "table": "d"
+            },
+            "as": "o1238"
+          },
+          "bind": "s2503",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`d`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1234"
+            },
+            "method": "joined",
+            "args": {
+              "table": "e"
+            },
+            "as": "o1239"
+          },
+          "bind": "s2504",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`e`._tenant IN (?)",
+              "bindings": [
+                7
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\OuterChain",
+            "args": {
+              "chain": {
+                "$obj": "o1233"
+              },
+              "conditions": {
+                "b": {
+                  "$obj": "o1235"
+                },
+                "c": {
+                  "$obj": "o1236"
+                },
+                "x": {
+                  "$obj": "o1237"
+                },
+                "d": {
+                  "$obj": "o1238"
+                },
+                "e": {
+                  "$obj": "o1239"
+                }
+              }
+            },
+            "as": "o1240"
+          },
+          "bind": "s2505",
+          "expect": {
+            "$hook": "OuterChain"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1240"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "d",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::FullOuter"
+              }
+            },
+            "as": "o1241"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`c`._tenant IN (?) OR `c`.`_uid` IS NULL) AND (`x`._tenant IN (?) OR `x`.`_uid` IS NULL)",
+                  "bindings": [
+                    7,
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "OuterChainTest::testJoinsThatKeepNoUnmatchedRowsOfEarlierTablesNeedNothing#inner join",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "args": {
+              "joins": {
+                "c": {
+                  "$enum": "Query\\Builder\\JoinType::Right"
+                },
+                "d": {
+                  "$enum": "Query\\Builder\\JoinType::Inner"
+                }
+              }
+            },
+            "as": "o1242"
+          },
+          "bind": "s2507",
+          "expect": {
+            "$value": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query\\Builder\\Condition",
+            "args": {
+              "expression": "c.ok"
+            },
+            "as": "o1243"
+          },
+          "bind": "s2508",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "c.ok",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\OuterChain",
+            "args": {
+              "chain": {
+                "$obj": "o1242"
+              },
+              "conditions": {
+                "c": {
+                  "$obj": "o1243"
+                }
+              }
+            },
+            "as": "o1244"
+          },
+          "bind": "s2509",
+          "expect": {
+            "$hook": "OuterChain"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1244"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "d",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Inner"
+              }
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "OuterChainTest::testJoinsThatKeepNoUnmatchedRowsOfEarlierTablesNeedNothing#left join",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "args": {
+              "joins": {
+                "c": {
+                  "$enum": "Query\\Builder\\JoinType::Right"
+                },
+                "d": {
+                  "$enum": "Query\\Builder\\JoinType::Left"
+                }
+              }
+            },
+            "as": "o1245"
+          },
+          "bind": "s2511",
+          "expect": {
+            "$value": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query\\Builder\\Condition",
+            "args": {
+              "expression": "c.ok"
+            },
+            "as": "o1246"
+          },
+          "bind": "s2512",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "c.ok",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\OuterChain",
+            "args": {
+              "chain": {
+                "$obj": "o1245"
+              },
+              "conditions": {
+                "c": {
+                  "$obj": "o1246"
+                }
+              }
+            },
+            "as": "o1247"
+          },
+          "bind": "s2513",
+          "expect": {
+            "$hook": "OuterChain"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1247"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "d",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Left"
+              }
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "OuterChainTest::testJoinsThatKeepNoUnmatchedRowsOfEarlierTablesNeedNothing#cross join",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "args": {
+              "joins": {
+                "c": {
+                  "$enum": "Query\\Builder\\JoinType::Right"
+                },
+                "d": {
+                  "$enum": "Query\\Builder\\JoinType::Cross"
+                }
+              }
+            },
+            "as": "o1248"
+          },
+          "bind": "s2515",
+          "expect": {
+            "$value": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query\\Builder\\Condition",
+            "args": {
+              "expression": "c.ok"
+            },
+            "as": "o1249"
+          },
+          "bind": "s2516",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "c.ok",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\OuterChain",
+            "args": {
+              "chain": {
+                "$obj": "o1248"
+              },
+              "conditions": {
+                "c": {
+                  "$obj": "o1249"
+                }
+              }
+            },
+            "as": "o1250"
+          },
+          "bind": "s2517",
+          "expect": {
+            "$hook": "OuterChain"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1250"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "d",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Cross"
+              }
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "OuterChainTest::testTheFirstOuterJoinAndTablesWithoutConditionsAddNothing",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "args": {
+              "joins": {
+                "c": {
+                  "$enum": "Query\\Builder\\JoinType::Right"
+                },
+                "d": {
+                  "$enum": "Query\\Builder\\JoinType::Right"
+                }
+              }
+            },
+            "as": "o1251"
+          },
+          "bind": "s2519",
+          "expect": {
+            "$value": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query\\Builder\\Condition",
+            "args": {
+              "expression": "c.ok"
+            },
+            "as": "o1252"
+          },
+          "bind": "s2520",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "c.ok",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\OuterChain",
+            "args": {
+              "chain": {
+                "$obj": "o1251"
+              },
+              "conditions": {
+                "c": {
+                  "$obj": "o1252"
+                }
+              }
+            },
+            "as": "o1253"
+          },
+          "bind": "s2521",
+          "expect": {
+            "$hook": "OuterChain"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1253"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "c",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query\\Builder\\Condition",
+            "args": {
+              "expression": "d.ok"
+            },
+            "as": "o1254"
+          },
+          "bind": "s2523",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "d.ok",
+              "bindings": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\OuterChain",
+            "args": {
+              "chain": {
+                "$obj": "o1251"
+              },
+              "conditions": {
+                "d": {
+                  "$obj": "o1254"
+                }
+              }
+            },
+            "as": "o1255"
+          },
+          "bind": "s2524",
+          "expect": {
+            "$hook": "OuterChain"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1255"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "d",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "OuterChainTest::testBindingsFollowTheConditionsInOrder",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "args": {
+              "joins": {
+                "c": {
+                  "$enum": "Query\\Builder\\JoinType::FullOuter"
+                },
+                "x": {
+                  "$enum": "Query\\Builder\\JoinType::Cross"
+                },
+                "d": {
+                  "$enum": "Query\\Builder\\JoinType::Right"
+                }
+              }
+            },
+            "as": "o1256"
+          },
+          "bind": "s2526",
+          "expect": {
+            "$value": "Adapter\\SQL\\Hook\\Join\\Chain",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query\\Builder\\Condition",
+            "args": {
+              "expression": "x.role IN (?, ?)",
+              "bindings": [
+                "x1",
+                "x2"
+              ]
+            },
+            "as": "o1257"
+          },
+          "bind": "s2527",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "x.role IN (?, ?)",
+              "bindings": [
+                "x1",
+                "x2"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query\\Builder\\Condition",
+            "args": {
+              "expression": "c.role = ?",
+              "bindings": [
+                "c1"
+              ]
+            },
+            "as": "o1258"
+          },
+          "bind": "s2528",
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "c.role = ?",
+              "bindings": [
+                "c1"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Join\\OuterChain",
+            "args": {
+              "chain": {
+                "$obj": "o1256"
+              },
+              "conditions": {
+                "x": {
+                  "$obj": "o1257"
+                },
+                "c": {
+                  "$obj": "o1258"
+                }
+              },
+              "quoteCharacter": "\""
+            },
+            "as": "o1259"
+          },
+          "bind": "s2529",
+          "expect": {
+            "$hook": "OuterChain"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1259"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "d",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o1260"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(c.role = ? OR \"c\".\"_uid\" IS NULL) AND (x.role IN (?, ?) OR \"x\".\"_uid\" IS NULL)",
+                  "bindings": [
+                    "c1",
+                    "x1",
+                    "x2"
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

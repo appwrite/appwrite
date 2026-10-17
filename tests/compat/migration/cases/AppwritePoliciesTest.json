@@ -1,0 +1,985 @@
+{
+  "source": "packages/migration/tests/Destinations/AppwritePoliciesTest.php",
+  "cases": [
+    {
+      "name": "new policies are written to auths",
+      "steps": [
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "projects"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "authenticators"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "projects",
+            "document": {
+              "$id": "destination-project",
+              "auths": {
+                "limit": 5,
+                "custom": true
+              }
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\Policies",
+            "args": {
+              "id": "destination-project",
+              "passwordPwned": {
+                "enabled": true,
+                "sessions": true,
+                "users": false
+              },
+              "passwordRotation": {
+                "enabled": true,
+                "maxAge": 7776000
+              },
+              "passkeyRpId": "example.com"
+            }
+          },
+          "bind": "pol",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "pol"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "policies"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "policies",
+                "id": "destination-project",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "db.get",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "projects",
+            "id": "destination-project"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": {
+            "auths": {
+              "limit": 0,
+              "custom": true,
+              "passwordHistory": 0,
+              "duration": 31536000,
+              "maxSessions": 100,
+              "passwordDictionary": false,
+              "personalDataCheck": false,
+              "sessionAlerts": false,
+              "invalidateSessions": false,
+              "membershipsUserId": true,
+              "membershipsUserEmail": true,
+              "membershipsUserName": true,
+              "membershipsMfa": true,
+              "membershipsUserPhone": true,
+              "passwordPwned": {
+                "enabled": true,
+                "sessions": true,
+                "users": false
+              },
+              "passwordRotation": {
+                "enabled": true,
+                "maxAge": 7776000
+              },
+              "passkeyRpId": "example.com"
+            },
+            "$sequence": "1",
+            "$id": "destination-project",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "projects"
+          }
+        }
+      ]
+    },
+    {
+      "name": "unreported policies keep the destination values",
+      "steps": [
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "projects"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "authenticators"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "projects",
+            "document": {
+              "$id": "destination-project",
+              "auths": {
+                "passwordPwned": {
+                  "enabled": false,
+                  "sessions": false,
+                  "users": true
+                },
+                "passwordRotation": {
+                  "enabled": true,
+                  "maxAge": 86400
+                },
+                "passkeyRpId": "destination.example.com"
+              }
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\Policies",
+            "args": {
+              "id": "destination-project"
+            }
+          },
+          "bind": "pol",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "pol"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "policies"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "policies",
+                "id": "destination-project",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "db.get",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "projects",
+            "id": "destination-project"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": {
+            "auths": {
+              "passwordPwned": {
+                "enabled": false,
+                "sessions": false,
+                "users": true
+              },
+              "passwordRotation": {
+                "enabled": true,
+                "maxAge": 86400
+              },
+              "passkeyRpId": "destination.example.com",
+              "passwordHistory": 0,
+              "duration": 31536000,
+              "maxSessions": 100,
+              "limit": 0,
+              "passwordDictionary": false,
+              "personalDataCheck": false,
+              "sessionAlerts": false,
+              "invalidateSessions": false,
+              "membershipsUserId": true,
+              "membershipsUserEmail": true,
+              "membershipsUserName": true,
+              "membershipsMfa": true,
+              "membershipsUserPhone": true
+            },
+            "$sequence": "1",
+            "$id": "destination-project",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "projects"
+          }
+        }
+      ]
+    },
+    {
+      "name": "the passkey relying party changes while no user has a passkey",
+      "steps": [
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "projects"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "authenticators"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "projects",
+            "document": {
+              "$id": "destination-project",
+              "auths": {
+                "passkeyRpId": "destination.example.com"
+              }
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\Policies",
+            "args": {
+              "id": "destination-project",
+              "passkeyRpId": "source.example.com"
+            }
+          },
+          "bind": "pol",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "pol"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "policies"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "policies",
+                "id": "destination-project",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "db.get",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "projects",
+            "id": "destination-project"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": {
+            "auths": {
+              "passkeyRpId": "source.example.com",
+              "passwordHistory": 0,
+              "duration": 31536000,
+              "maxSessions": 100,
+              "limit": 0,
+              "passwordDictionary": false,
+              "personalDataCheck": false,
+              "sessionAlerts": false,
+              "invalidateSessions": false,
+              "membershipsUserId": true,
+              "membershipsUserEmail": true,
+              "membershipsUserName": true,
+              "membershipsMfa": true,
+              "membershipsUserPhone": true
+            },
+            "$sequence": "1",
+            "$id": "destination-project",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "projects"
+          }
+        }
+      ]
+    },
+    {
+      "name": "the passkey relying party is kept while users have passkeys",
+      "steps": [
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "projects"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "authenticators"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "projects",
+            "document": {
+              "$id": "destination-project",
+              "auths": {
+                "passkeyRpId": "destination.example.com"
+              }
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "authenticators",
+            "document": {
+              "$id": "a1",
+              "type": "passkey"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\Policies",
+            "args": {
+              "id": "destination-project",
+              "passkeyRpId": "source.example.com"
+            }
+          },
+          "bind": "pol",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "pol"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "policies"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "policies",
+                "id": "destination-project",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "db.get",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "projects",
+            "id": "destination-project"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": {
+            "auths": {
+              "passkeyRpId": "destination.example.com",
+              "passwordHistory": 0,
+              "duration": 31536000,
+              "maxSessions": 100,
+              "limit": 0,
+              "passwordDictionary": false,
+              "personalDataCheck": false,
+              "sessionAlerts": false,
+              "invalidateSessions": false,
+              "membershipsUserId": true,
+              "membershipsUserEmail": true,
+              "membershipsUserName": true,
+              "membershipsMfa": true,
+              "membershipsUserPhone": true
+            },
+            "$sequence": "1",
+            "$id": "destination-project",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "projects"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a destination without a relying party takes the source's, passkeys or not",
+      "steps": [
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "projects"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "authenticators"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "projects",
+            "document": {
+              "$id": "destination-project",
+              "auths": {
+                "passkeyRpId": 5
+              }
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "authenticators",
+            "document": {
+              "$id": "a1",
+              "type": "passkey"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\Policies",
+            "args": {
+              "id": "destination-project",
+              "passkeyRpId": "source.example.com"
+            }
+          },
+          "bind": "pol",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "pol"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "policies"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "policies",
+                "id": "destination-project",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "db.get",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "projects",
+            "id": "destination-project"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": {
+            "auths": {
+              "passkeyRpId": "source.example.com",
+              "passwordHistory": 0,
+              "duration": 31536000,
+              "maxSessions": 100,
+              "limit": 0,
+              "passwordDictionary": false,
+              "personalDataCheck": false,
+              "sessionAlerts": false,
+              "invalidateSessions": false,
+              "membershipsUserId": true,
+              "membershipsUserEmail": true,
+              "membershipsUserName": true,
+              "membershipsMfa": true,
+              "membershipsUserPhone": true
+            },
+            "$sequence": "1",
+            "$id": "destination-project",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "projects"
+          }
+        }
+      ]
+    }
+  ]
+}

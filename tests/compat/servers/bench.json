@@ -1,0 +1,77 @@
+{
+  "lib": "servers",
+  "environment": {
+    "date": "2026-10-12T02:47:58Z",
+    "commit": "b5c0f44a39",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "declare",
+      "description": "Declare a hook with three params, two injections, groups and a label",
+      "php": {
+        "ns": 1069.0592466261307,
+        "min": 936.9685599881359,
+        "max": 1554.0777102180039,
+        "samples": 15,
+        "calls": 13486
+      },
+      "rust": {
+        "ns": 529.785656511189,
+        "min": 495.03461849555134,
+        "max": 548.1216770018873,
+        "samples": 15,
+        "calls": 37090,
+        "allocations": 23.000001797429675,
+        "bytes": 1912.0002156915612
+      },
+      "speedup": 2.0179090043060692,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "prepare",
+      "description": "Resolve and validate three params of a hook from the request",
+      "php": {
+        "ns": 779.8021878224974,
+        "min": 699.2311661506708,
+        "max": 1529.5872033023736,
+        "samples": 15,
+        "calls": 24225
+      },
+      "rust": {
+        "ns": 363.231342491348,
+        "min": 346.0892800271768,
+        "max": 410.4165268901675,
+        "samples": 15,
+        "calls": 47099,
+        "allocations": 18.000001415458218,
+        "bytes": 718.0001698549863
+      },
+      "speedup": 2.1468471924089862,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

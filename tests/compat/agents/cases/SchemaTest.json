@@ -1,0 +1,315 @@
+{
+  "source": "packages/agents/tests/SchemaTest.php",
+  "cases": [
+    {
+      "name": "constructor and getters",
+      "steps": [
+        {
+          "op": "schema_object.new",
+          "args": {
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "The ID of the user"
+              },
+              "name": {
+                "type": "string",
+                "description": "The name of the user"
+              },
+              "age": {
+                "type": "integer",
+                "description": "The age of the user"
+              }
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema.new",
+          "args": {
+            "name": "TestSchema",
+            "description": "A test schema.",
+            "object": {
+              "$ref": "o"
+            },
+            "required": [
+              "id",
+              "name"
+            ]
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema.inspect",
+          "args": {
+            "schema": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "name": "TestSchema",
+            "description": "A test schema.",
+            "required": [
+              "id",
+              "name"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "The ID of the user"
+              },
+              "name": {
+                "type": "string",
+                "description": "The name of the user"
+              },
+              "age": {
+                "type": "integer",
+                "description": "The age of the user"
+              }
+            },
+            "object": {
+              "id": {
+                "type": "string",
+                "description": "The ID of the user"
+              },
+              "name": {
+                "type": "string",
+                "description": "The name of the user"
+              },
+              "age": {
+                "type": "integer",
+                "description": "The age of the user"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "to json",
+      "steps": [
+        {
+          "op": "schema_object.new",
+          "args": {
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "The ID of the user"
+              },
+              "name": {
+                "type": "string",
+                "description": "The name of the user"
+              },
+              "age": {
+                "type": "integer",
+                "description": "The age of the user"
+              }
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema.new",
+          "args": {
+            "name": "TestSchema",
+            "description": "A test schema.",
+            "object": {
+              "$ref": "o"
+            },
+            "required": [
+              "id",
+              "name"
+            ]
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema.to_json",
+          "args": {
+            "schema": {
+              "$ref": "s"
+            }
+          },
+          "expect": "{\"id\":\"The ID of the user (string)\",\"name\":\"The name of the user (string)\",\"age\":\"The age of the user (integer)\"}"
+        }
+      ]
+    },
+    {
+      "name": "to json of an empty schema and of properties without description",
+      "steps": [
+        {
+          "op": "schema_object.new",
+          "args": {},
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema.new",
+          "args": {
+            "name": "Empty",
+            "description": "",
+            "object": {
+              "$ref": "o"
+            }
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema.to_json",
+          "args": {
+            "schema": {
+              "$ref": "s"
+            }
+          },
+          "expect": "[]"
+        },
+        {
+          "op": "schema_object.new",
+          "args": {
+            "properties": {
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "1": {
+                "type": "null"
+              }
+            }
+          },
+          "bind": "o2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema.new",
+          "args": {
+            "name": "Odd",
+            "description": "",
+            "object": {
+              "$ref": "o2"
+            },
+            "required": []
+          },
+          "bind": "s2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema.to_json",
+          "args": {
+            "schema": {
+              "$ref": "s2"
+            }
+          },
+          "expect": "{\"tags\":\" (array)\",\"1\":\" (null)\"}"
+        },
+        {
+          "op": "schema.inspect",
+          "args": {
+            "schema": {
+              "$ref": "s2"
+            }
+          },
+          "expect": {
+            "name": "Odd",
+            "description": "",
+            "required": [],
+            "properties": {
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "1": {
+                "type": "null"
+              }
+            },
+            "object": {
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "1": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "to json of a description that is not utf-8 throws",
+      "steps": [
+        {
+          "op": "schema_object.new",
+          "args": {
+            "properties": {
+              "bad": {
+                "type": "string",
+                "description": {
+                  "$bytes": "/w=="
+                }
+              }
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema.new",
+          "args": {
+            "name": "Bad",
+            "description": "",
+            "object": {
+              "$ref": "o"
+            }
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema.to_json",
+          "args": {
+            "schema": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid JSON: Malformed UTF-8 characters, possibly incorrectly encoded"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

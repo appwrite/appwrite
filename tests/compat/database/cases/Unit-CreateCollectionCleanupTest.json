@@ -1,0 +1,72 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/CreateCollectionCleanupTest.php"
+  ],
+  "cases": [
+    {
+      "name": "CreateCollectionCleanupTest::testACleanupThatFailsKeepsTheOriginalErrorAndLogsTheCleanupFailure",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "message",
+              "size": 64
+            },
+            "as": "o962"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "message",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "byMessage",
+              "attributes": [
+                "message"
+              ]
+            },
+            "as": "o963"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "byMessage",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "message"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,685 @@
+{
+  "ops": {
+    "mb.strlen": {
+      "doc": "mb_strlen($string, $encoding): characters; invalid sequences count as one",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "mb_text"
+              }
+            }
+          },
+          "iterations": 3000
+        },
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "mb_text"
+              },
+              "encoding": {
+                "gen": "pick",
+                "from": [
+                  "UTF-8",
+                  "utf8",
+                  "8bit",
+                  "UTF8",
+                  "BINARY"
+                ]
+              }
+            }
+          },
+          "iterations": 2000,
+          "name": "encodings"
+        }
+      ]
+    },
+    "mb.substr": {
+      "doc": "mb_substr($string, $start, $length): re-encodes invalid sequences as '?'",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "mb_text"
+              },
+              "start": {
+                "gen": "ref",
+                "name": "mb_offset"
+              },
+              "length": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "mb_offset"
+                  },
+                  {
+                    "gen": "null"
+                  }
+                ]
+              }
+            },
+            "optional": [
+              "length"
+            ]
+          },
+          "iterations": 4000
+        }
+      ]
+    },
+    "mb.strtolower": {
+      "doc": "mb_strtolower($string): full lower case with the final sigma rule",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "mb_text"
+              }
+            }
+          },
+          "iterations": 6000
+        },
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "mb_long"
+              }
+            }
+          },
+          "iterations": 3000,
+          "name": "long"
+        }
+      ]
+    },
+    "mb.strpos": {
+      "doc": "mb_strpos($haystack, $needle, $offset)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "haystack": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "repeat",
+                    "part": {
+                      "gen": "ref",
+                      "name": "mb_char"
+                    },
+                    "sep": "",
+                    "min": 0,
+                    "max": 12
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "unicode",
+                    "min": 0,
+                    "max": 12,
+                    "tricky": 0.3
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "mb_raw_tail"
+                  }
+                ]
+              },
+              "needle": {
+                "gen": "ref",
+                "name": "mb_needle"
+              },
+              "offset": {
+                "gen": "ref",
+                "name": "mb_offset"
+              }
+            },
+            "optional": [
+              "offset"
+            ]
+          },
+          "iterations": 4000
+        }
+      ]
+    },
+    "mb.check_encoding": {
+      "doc": "mb_check_encoding($value) for strings",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "mb_text"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "mb.scrub": {
+      "doc": "mb_scrub($string): invalid sequences become '?'",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "mb_text"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "mb.convert_encoding": {
+      "doc": "mb_convert_encoding($string, 'UTF-8') from the internal UTF-8",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "mb_text"
+              },
+              "to_encoding": {
+                "gen": "const",
+                "value": "UTF-8"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "mb.strimwidth": {
+      "doc": "mb_strimwidth($string, 0, $width): the longest prefix within $width columns (start 0, no trim marker, width >= 0: what the ported callers use)",
+      "covers": [
+        "mb_strimwidth()"
+      ],
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "string": {
+                "gen": "ref",
+                "name": "mb_text"
+              },
+              "width": {
+                "gen": "int",
+                "min": 0,
+                "max": 20
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    }
+  },
+  "generators": {
+    "mb_char": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "ß",
+            "ẞ",
+            "ŉ",
+            "ǰ",
+            "ΐ",
+            "ΰ",
+            "և",
+            "ﬀ",
+            "ﬁ",
+            "ﬃ",
+            "ﬆ",
+            "ﬓ",
+            "İ",
+            "ı",
+            "i̇",
+            "ǅ",
+            "ǆ",
+            "Ǆ",
+            "ǈ",
+            "ǋ",
+            "ǲ",
+            "ᾈ",
+            "ᾀ",
+            "ᾼ",
+            "ῼ",
+            "ῳ",
+            "Σ",
+            "σ",
+            "ς",
+            "ϲ",
+            "Ω",
+            "Ꭰ",
+            "ꭰ",
+            "Ⓐ",
+            "ⓐ",
+            "Ａ",
+            "ａ",
+            "𐐀",
+            "𐐨",
+            "𞤀",
+            "Å",
+            "K",
+            "'",
+            "’",
+            ".",
+            ":",
+            "·",
+            "­",
+            "́",
+            "ͅ",
+            "​",
+            "‍",
+            "ʼ",
+            "ˆ",
+            "ᴬ",
+            "ʰ",
+            "_",
+            "-",
+            " ",
+            "\t",
+            "a",
+            "A",
+            "z",
+            "Z",
+            "é",
+            "É",
+            "日",
+            "😀",
+            "　",
+            " ",
+            " ",
+            "",
+            "᠎",
+            "\u0000"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "unicode",
+          "min": 1,
+          "max": 2
+        }
+      ]
+    },
+    "mb_text": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "ref",
+            "name": "mb_char"
+          },
+          "sep": "",
+          "min": 0,
+          "max": 12
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "pick",
+            "from": [
+              "Σ",
+              "ΣΑΣ",
+              "Σ.",
+              ".Σ",
+              "'Σ",
+              "Σ'",
+              "AΣ",
+              "ΑΣ ",
+              "ΣΣ",
+              "́Σ",
+              "Σ́",
+              "ὈΔΥΣΣΕΎΣ",
+              "ΑΣ'Σ",
+              "a.Σ.b",
+              " ",
+              "a",
+              "'",
+              "́",
+              "1"
+            ]
+          },
+          "sep": "",
+          "min": 0,
+          "max": 8
+        },
+        {
+          "gen": "string",
+          "alphabet": "unicode",
+          "min": 0,
+          "max": 12,
+          "tricky": 0.3
+        },
+        {
+          "gen": "ref",
+          "name": "mb_raw"
+        }
+      ]
+    },
+    "mb_long": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "string",
+          "alphabet": "aA",
+          "min": 0,
+          "max": 2
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "pick",
+            "from": [
+              "'",
+              "́",
+              ".",
+              ":",
+              "­",
+              "Σ",
+              "a",
+              " ",
+              "ͅ",
+              "·"
+            ]
+          },
+          "sep": "",
+          "min": 40,
+          "max": 150
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "Σ",
+            "ΣA",
+            "Σ.",
+            "",
+            "a",
+            "Σ'"
+          ]
+        }
+      ]
+    },
+    "mb_raw": {
+      "gen": "object",
+      "fields": {
+        "$bytes": {
+          "gen": "repeat",
+          "part": {
+            "gen": "one_of",
+            "of": [
+              {
+                "gen": "pick",
+                "from": [
+                  "YWJj",
+                  "QUJD",
+                  "zqNh",
+                  "Yc6j",
+                  "zqMu",
+                  "J86j",
+                  "w58u",
+                  "x4Vh",
+                  "4bqe",
+                  "xLBh",
+                  "4oKs",
+                  "8J+Y",
+                  "gGFi",
+                  "//79",
+                  "wyhh",
+                  "4oJh",
+                  "7aCA",
+                  "wK9h",
+                  "9JCA",
+                  "+IiA",
+                  "zIFh",
+                  "4ICA",
+                  "4KCA",
+                  "77u/",
+                  "wqBh",
+                  "n5iA",
+                  "8JCQ",
+                  "kKiA",
+                  "IAkK",
+                  "AAAA",
+                  "44CA"
+                ]
+              },
+              {
+                "gen": "string",
+                "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+                "min": 4,
+                "max": 4
+              }
+            ]
+          },
+          "sep": "",
+          "min": 0,
+          "max": 8
+        }
+      }
+    },
+    "mb_raw_tail": {
+      "gen": "object",
+      "fields": {
+        "$bytes": {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "YWJj",
+                      "QUJD",
+                      "zqNh",
+                      "Yc6j",
+                      "zqMu",
+                      "J86j",
+                      "w58u",
+                      "x4Vh",
+                      "4bqe",
+                      "xLBh",
+                      "4oKs",
+                      "8J+Y",
+                      "gGFi",
+                      "//79",
+                      "wyhh",
+                      "4oJh",
+                      "7aCA",
+                      "wK9h",
+                      "9JCA",
+                      "+IiA",
+                      "zIFh",
+                      "4ICA",
+                      "4KCA",
+                      "77u/",
+                      "wqBh",
+                      "n5iA",
+                      "8JCQ",
+                      "kKiA",
+                      "IAkK",
+                      "AAAA",
+                      "44CA"
+                    ]
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+                    "min": 4,
+                    "max": 4
+                  }
+                ]
+              },
+              "sep": "",
+              "min": 0,
+              "max": 8
+            },
+            {
+              "gen": "const",
+              "value": "YWJj"
+            }
+          ]
+        }
+      }
+    },
+    "mb_needle": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "pick",
+            "from": [
+              "a",
+              "A",
+              "Σ",
+              "σ",
+              "ς",
+              "ß",
+              "SS",
+              "ǅ",
+              "é",
+              "É",
+              "İ",
+              "i",
+              " ",
+              "'"
+            ]
+          },
+          "sep": "",
+          "min": 0,
+          "max": 3
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "a",
+            "Σ",
+            "ss",
+            "́",
+            "😀"
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "$bytes": {
+              "gen": "pick",
+              "from": [
+                "YWJj",
+                "QUJD",
+                "zqNh",
+                "Yc6j",
+                "zqMu",
+                "J86j",
+                "w58u",
+                "x4Vh",
+                "4bqe",
+                "xLBh",
+                "4oKs",
+                "8J+Y",
+                "gGFi",
+                "//79",
+                "wyhh",
+                "4oJh",
+                "7aCA",
+                "wK9h",
+                "9JCA",
+                "+IiA",
+                "zIFh",
+                "4ICA",
+                "4KCA",
+                "77u/",
+                "wqBh",
+                "n5iA",
+                "8JCQ",
+                "kKiA",
+                "IAkK",
+                "AAAA",
+                "44CA",
+                "",
+                "/w==",
+                "4oI="
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "mb_offset": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": -12,
+          "max": 12
+        },
+        {
+          "gen": "pick",
+          "from": [
+            0,
+            -9223372036854775808,
+            9223372036854775807,
+            -1,
+            1
+          ]
+        }
+      ]
+    }
+  },
+  "deviations": [
+    {
+      "symbol": "mb_* $encoding",
+      "php": "every mbstring encoding",
+      "reason": "php_std::mb works on UTF-8 (PHP's default internal encoding, the only one the libraries use); mb_strlen also takes Encoding::EightBit"
+    },
+    {
+      "symbol": "mb_check_encoding() / mb_convert_encoding() of arrays",
+      "php": "arrays are checked or converted recursively (keys and string values)",
+      "reason": "php_std::mb takes strings; callers walk their arrays (JSON-decoded strings are always valid UTF-8)"
+    },
+    {
+      "symbol": "mb_strpos() positive $offset",
+      "php": "PHP 8.5.10's offset walk can step past the end of a haystack ending in a truncated UTF-8 sequence and then reads out of bounds (undefined behaviour, later fixed by clamping)",
+      "reason": "not reproducible; Rust clamps to the end like later PHP releases. The fuzz profiles end invalid haystacks with ASCII so the walk stays in bounds"
+    }
+  ],
+  "quirks": [
+    {
+      "symbol": "mb_strtolower() final sigma",
+      "description": "the look-behind for a cased letter before a capital sigma stops at PHP's 64-codepoint conversion chunks (it only rescans what is left of the previous chunk's output), so a long run of case-ignorable characters hides the cased letter and the sigma is not final",
+      "case": "mb.json#strtolower sigma look-behind across PHP's 64-codepoint chunks"
+    }
+  ]
+}

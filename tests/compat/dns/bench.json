@@ -1,0 +1,169 @@
+{
+  "lib": "dns",
+  "environment": {
+    "date": "2026-10-12T10:30:36Z",
+    "commit": "57b6aaef2b",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "decode",
+      "description": "Decode a response with A, AAAA and TXT answers",
+      "php": {
+        "ns": 15236.117117117117,
+        "min": 8365.990990990991,
+        "max": 74355.1081081081,
+        "samples": 15,
+        "calls": 111
+      },
+      "rust": {
+        "ns": 1689.448381294964,
+        "min": 1209.3974820143885,
+        "max": 12559.65989208633,
+        "samples": 15,
+        "calls": 5560,
+        "allocations": 19.000011990407675,
+        "bytes": 1028.0014388489208
+      },
+      "speedup": 9.018397534844253,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "encode",
+      "description": "Encode that response within 512 bytes",
+      "php": {
+        "ns": 15567.656472261735,
+        "min": 5513.1578947368425,
+        "max": 82507.7347083926,
+        "samples": 15,
+        "calls": 1406
+      },
+      "rust": {
+        "ns": 1112.397890600765,
+        "min": 534.5018095336574,
+        "max": 7712.279909006307,
+        "samples": 15,
+        "calls": 9671,
+        "allocations": 6.000006893461552,
+        "bytes": 636.0008272153862
+      },
+      "speedup": 13.994683560442763,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "lookup",
+      "description": "Answer an A query from a zone",
+      "php": {
+        "ns": 2687.0061791967046,
+        "min": 1932.97219361483,
+        "max": 29040.72296601442,
+        "samples": 15,
+        "calls": 971
+      },
+      "rust": {
+        "ns": 256.27022916639584,
+        "min": 175.321612873874,
+        "max": 955.0890928234392,
+        "samples": 15,
+        "calls": 76931,
+        "allocations": 3.0000008665774094,
+        "bytes": 656.0001039892891
+      },
+      "speedup": 10.485050050242222,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "lookup_wildcard",
+      "description": "Answer a query from a zone's wildcard CNAME",
+      "php": {
+        "ns": 8985.823863636364,
+        "min": 3999.081590909091,
+        "max": 20341.581590909092,
+        "samples": 15,
+        "calls": 4400
+      },
+      "rust": {
+        "ns": 410.6772093023256,
+        "min": 240.14966408268734,
+        "max": 2750.223927648579,
+        "samples": 15,
+        "calls": 38700,
+        "allocations": 4.000001722652885,
+        "bytes": 679.0002067183462
+      },
+      "speedup": 21.88050288668765,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "serve",
+      "description": "Decode a query, answer it from a zone and encode the response",
+      "php": {
+        "ns": 19836.439903846152,
+        "min": 7495.7932692307695,
+        "max": 65720.55288461539,
+        "samples": 15,
+        "calls": 416
+      },
+      "rust": {
+        "ns": 827.6701277955272,
+        "min": 580.7874068157614,
+        "max": 5331.0480564430245,
+        "samples": 15,
+        "calls": 7512,
+        "allocations": 10.000008874689385,
+        "bytes": 1816.0010649627263
+      },
+      "speedup": 23.966601231193245,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "name",
+      "description": "Validate a record name",
+      "php": {
+        "ns": 763.9582504970178,
+        "min": 728.4204771371769,
+        "max": 14885.72763419483,
+        "samples": 15,
+        "calls": 1006
+      },
+      "rust": {
+        "ns": 117.40215654952077,
+        "min": 48.07773162939297,
+        "max": 509.95607028753994,
+        "samples": 15,
+        "calls": 62600,
+        "allocations": 1.0649627263045794e-6,
+        "bytes": 0.00012779552715654952
+      },
+      "speedup": 6.507190949041696,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

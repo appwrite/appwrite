@@ -1,0 +1,5303 @@
+{
+  "source": "packages/query/tests/E2E/Builder/MySQLIntegrationTest.php",
+  "cases": [
+    {
+      "name": "testSelectWithWhere",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "name",
+                "email"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "city",
+              [
+                "New York"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "city",
+            "values": [
+              "New York"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT `name`, `email` FROM `users` WHERE `city` IN (?)",
+            "bindings": [
+              "New York"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSelectWithOrderByAndLimit",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "name",
+                "age"
+              ]
+            ]
+          },
+          {
+            "call": "sortDesc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "age"
+            ]
+          },
+          {
+            "call": "limit",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              3
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT `name`, `age` FROM `users` ORDER BY `age` DESC LIMIT ?",
+            "bindings": [
+              3
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSelectWithJoin",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              "u"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "u.name",
+                "o.product",
+                "o.amount"
+              ]
+            ]
+          },
+          {
+            "call": "join",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders",
+              "u.id",
+              "o.user_id",
+              "=",
+              "o"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "o.status",
+              [
+                "completed"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "o.status",
+            "values": [
+              "completed"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT `u`.`name`, `o`.`product`, `o`.`amount` FROM `users` AS `u` JOIN `orders` AS `o` ON `u`.`id` = `o`.`user_id` WHERE `o`.`status` IN (?)",
+            "bindings": [
+              "completed"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSelectWithLeftJoin",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              "u"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "u.name",
+                "o.product"
+              ]
+            ]
+          },
+          {
+            "call": "leftJoin",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders",
+              "u.id",
+              "o.user_id",
+              "=",
+              "o"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT `u`.`name`, `o`.`product` FROM `users` AS `u` LEFT JOIN `orders` AS `o` ON `u`.`id` = `o`.`user_id`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInsertSingleRow",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "name": "Frank",
+                "email": "frank@example.com",
+                "age": 40,
+                "city": "Berlin",
+                "active": 1
+              }
+            ]
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "email",
+              [
+                "frank@example.com"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `users` (`name`, `email`, `age`, `city`, `active`) VALUES (?, ?, ?, ?, ?)",
+            "bindings": [
+              "Frank",
+              "frank@example.com",
+              40,
+              "Berlin",
+              1
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "email",
+            "values": [
+              "frank@example.com"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "SELECT `name` FROM `users` WHERE `email` IN (?)",
+            "bindings": [
+              "frank@example.com"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInsertMultipleRows",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "name": "Grace",
+                "email": "grace@example.com",
+                "age": 33,
+                "city": "Tokyo",
+                "active": 1
+              }
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "name": "Hank",
+                "email": "hank@example.com",
+                "age": 45,
+                "city": "Tokyo",
+                "active": 0
+              }
+            ]
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "city",
+              [
+                "Tokyo"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `users` (`name`, `email`, `age`, `city`, `active`) VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?)",
+            "bindings": [
+              "Grace",
+              "grace@example.com",
+              33,
+              "Tokyo",
+              1,
+              "Hank",
+              "hank@example.com",
+              45,
+              "Tokyo",
+              0
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "city",
+            "values": [
+              "Tokyo"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "SELECT `name` FROM `users` WHERE `city` IN (?)",
+            "bindings": [
+              "Tokyo"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testUpdateWithWhere",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "active": 0
+              }
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "Bob"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "active"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "Bob"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "Bob"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "UPDATE `users` SET `active` = ? WHERE `name` IN (?)",
+            "bindings": [
+              0,
+              "Bob"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "Bob"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "SELECT `active` FROM `users` WHERE `name` IN (?)",
+            "bindings": [
+              "Bob"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDeleteWithWhere",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "Charlie"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "delete",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "Charlie"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "Charlie"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "DELETE FROM `users` WHERE `name` IN (?)",
+            "bindings": [
+              "Charlie"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "Charlie"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "SELECT `name` FROM `users` WHERE `name` IN (?)",
+            "bindings": [
+              "Charlie"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSelectWithGroupByAndHaving",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "user_id"
+              ]
+            ]
+          },
+          {
+            "call": "count",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "*",
+              "order_count"
+            ]
+          },
+          {
+            "call": "groupBy",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "user_id"
+              ]
+            ]
+          },
+          {
+            "static": "greaterThan",
+            "class": "Query",
+            "args": [
+              "order_count",
+              1
+            ]
+          },
+          {
+            "call": "having",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::GreaterThan"
+            },
+            "attribute": "order_count",
+            "values": [
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT COUNT(*) AS `order_count`, `user_id` FROM `orders` GROUP BY `user_id` HAVING COUNT(*) > ?",
+            "bindings": [
+              1
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSelectWithUnion",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "city",
+              [
+                "New York"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "city",
+              [
+                "London"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              [
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "call": "union",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 3
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "city",
+            "values": [
+              "New York"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 3
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "city",
+            "values": [
+              "London"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "(SELECT `name` FROM `users` WHERE `city` IN (?)) UNION (SELECT `name` FROM `users` WHERE `city` IN (?))",
+            "bindings": [
+              "New York",
+              "London"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSelectWithCaseExpression",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Builder\\Case\\Expression",
+            "args": []
+          },
+          {
+            "call": "when",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "age",
+              {
+                "$enum": "Builder\\Case\\Operator::LessThan"
+              },
+              25,
+              "young"
+            ]
+          },
+          {
+            "call": "whenRaw",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "`age` BETWEEN 25 AND 30",
+              "mid"
+            ]
+          },
+          {
+            "call": "else",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "senior"
+            ]
+          },
+          {
+            "call": "alias",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "age_group"
+            ]
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "call": "selectCase",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\Case\\Expression",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\Case\\Expression",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\Case\\Expression",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\Case\\Expression",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\Case\\Expression",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT `name`, CASE WHEN `age` < ? THEN ? WHEN `age` BETWEEN 25 AND 30 THEN ? ELSE ? END AS `age_group` FROM `users` ORDER BY `name` ASC",
+            "bindings": [
+              25,
+              "young",
+              "mid",
+              "senior"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSelectWithWhereInSubquery",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "user_id"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "status",
+              [
+                "completed"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "call": "filterWhereIn",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "id",
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "status",
+            "values": [
+              "completed"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "SELECT `name` FROM `users` WHERE `id` IN (SELECT `user_id` FROM `orders` WHERE `status` IN (?)) ORDER BY `name` ASC",
+            "bindings": [
+              "completed"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSelectWithExistsSubquery",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "orders",
+              "o"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "1"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "o.status",
+              [
+                "completed"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              "u"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "u.name"
+              ]
+            ]
+          },
+          {
+            "call": "filterExists",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "orders",
+              "o"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "1"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "o.status",
+              [
+                "refunded"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              [
+                {
+                  "$o": 6
+                }
+              ]
+            ]
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              "u"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "u.name"
+              ]
+            ]
+          },
+          {
+            "call": "filterExists",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 5
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "o.status",
+            "values": [
+              "completed"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "SELECT `u`.`name` FROM `users` AS `u` WHERE EXISTS (SELECT 1 FROM `orders` AS `o` WHERE `o`.`status` IN (?))",
+            "bindings": [
+              "completed"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 5
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 5
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 5
+        },
+        {
+          "$value": "Query",
+          "id": 6,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "o.status",
+            "values": [
+              "refunded"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 5
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 7,
+          "props": {
+            "query": "SELECT `u`.`name` FROM `users` AS `u` WHERE EXISTS (SELECT 1 FROM `orders` AS `o` WHERE `o`.`status` IN (?))",
+            "bindings": [
+              "refunded"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSelectWithCte",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "user_id"
+              ]
+            ]
+          },
+          {
+            "call": "sum",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "amount",
+              "total"
+            ]
+          },
+          {
+            "call": "groupBy",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "user_id"
+              ]
+            ]
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "with",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "user_totals",
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "user_totals"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "user_id",
+                "total"
+              ]
+            ]
+          },
+          {
+            "static": "greaterThan",
+            "class": "Query",
+            "args": [
+              "total",
+              30
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::GreaterThan"
+            },
+            "attribute": "total",
+            "values": [
+              30
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "WITH `user_totals` AS (SELECT SUM(`amount`) AS `total`, `user_id` FROM `orders` GROUP BY `user_id`) SELECT `user_id`, `total` FROM `user_totals` WHERE `total` > ?",
+            "bindings": [
+              30
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testUpsertOnDuplicateKeyUpdate",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "name": "Alice",
+                "email": "alice@example.com",
+                "age": 31,
+                "city": "New York",
+                "active": 1
+              }
+            ]
+          },
+          {
+            "call": "onConflict",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "email"
+              ],
+              [
+                "age"
+              ]
+            ]
+          },
+          {
+            "call": "upsert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "age"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "email",
+              [
+                "alice@example.com"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `users` (`name`, `email`, `age`, `city`, `active`) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `age` = VALUES(`age`)",
+            "bindings": [
+              "Alice",
+              "alice@example.com",
+              31,
+              "New York",
+              1
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "email",
+            "values": [
+              "alice@example.com"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "SELECT `age` FROM `users` WHERE `email` IN (?)",
+            "bindings": [
+              "alice@example.com"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSelectWithWindowFunction",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "user_id",
+                "product",
+                "amount"
+              ]
+            ]
+          },
+          {
+            "call": "selectWindow",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "ROW_NUMBER()",
+              "rn",
+              [
+                "user_id"
+              ],
+              [
+                "-amount"
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT `user_id`, `product`, `amount`, ROW_NUMBER() OVER (PARTITION BY `user_id` ORDER BY `amount` DESC) AS `rn` FROM `orders`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSelectWithDistinct",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "product"
+              ]
+            ]
+          },
+          {
+            "call": "distinct",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "product"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT DISTINCT `product` FROM `orders` ORDER BY `product` ASC",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSelectWithBetween",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "name",
+                "age"
+              ]
+            ]
+          },
+          {
+            "static": "between",
+            "class": "Query",
+            "args": [
+              "age",
+              25,
+              30
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Between"
+            },
+            "attribute": "age",
+            "values": [
+              25,
+              30
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT `name`, `age` FROM `users` WHERE `age` BETWEEN ? AND ? ORDER BY `name` ASC",
+            "bindings": [
+              25,
+              30
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSelectWithStartsWith",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "name",
+                "email"
+              ]
+            ]
+          },
+          {
+            "static": "startsWith",
+            "class": "Query",
+            "args": [
+              "name",
+              "Al"
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::StartsWith"
+            },
+            "attribute": "name",
+            "values": [
+              "Al"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT `name`, `email` FROM `users` WHERE `name` LIKE ?",
+            "bindings": [
+              "Al%"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSelectForUpdate",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "name",
+                "age"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "Alice"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "forUpdate",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "Alice"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT `name`, `age` FROM `users` WHERE `name` IN (?) FOR UPDATE",
+            "bindings": [
+              "Alice"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testRecursiveCte",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "1 AS n"
+            ]
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "n + 1"
+            ]
+          },
+          {
+            "static": "lessThan",
+            "class": "Query",
+            "args": [
+              "n",
+              5
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              [
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "withRecursiveSeedStep",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t",
+              {
+                "$o": 2
+              },
+              {
+                "$o": 3
+              },
+              [
+                "n"
+              ]
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "n"
+              ]
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "n"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 3
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::LessThan"
+            },
+            "attribute": "n",
+            "values": [
+              5
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "WITH RECURSIVE `t`(`n`) AS (SELECT 1 AS n UNION ALL SELECT n + 1 FROM `t` WHERE `n` < ?) SELECT `n` FROM `t` ORDER BY `n` ASC",
+            "bindings": [
+              5
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJsonFilterContains",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "json_docs"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id"
+              ]
+            ]
+          },
+          {
+            "call": "filterJsonContains",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "tags",
+              "php"
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT `id` FROM `json_docs` WHERE JSON_CONTAINS(`tags`, ?) ORDER BY `id` ASC",
+            "bindings": [
+              "\"php\""
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJsonFilterPath",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "json_docs"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id"
+              ]
+            ]
+          },
+          {
+            "call": "filterJsonPath",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "metadata",
+              "level",
+              ">",
+              5
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT `id` FROM `json_docs` WHERE JSON_EXTRACT(`metadata`, '$.level') > ? ORDER BY `id` ASC",
+            "bindings": [
+              5
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJsonSetAppend",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "json_docs"
+            ]
+          },
+          {
+            "call": "setJsonAppend",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "tags",
+              [
+                "added"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "id",
+              [
+                1
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "id",
+            "values": [
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "UPDATE `json_docs` SET `tags` = JSON_MERGE_PRESERVE(IFNULL(`tags`, JSON_ARRAY()), ?) WHERE `id` IN (?)",
+            "bindings": [
+              "[\"added\"]",
+              1
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJsonSetRemove",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "json_docs"
+            ]
+          },
+          {
+            "call": "setJsonRemove",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "tags",
+              "mysql"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "id",
+              [
+                1
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "id",
+            "values": [
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "UPDATE `json_docs` SET `tags` = JSON_REMOVE(`tags`, JSON_UNQUOTE(JSON_SEARCH(`tags`, 'one', ?))) WHERE `id` IN (?)",
+            "bindings": [
+              "mysql",
+              1
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testJsonSetPath",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "json_docs"
+            ]
+          },
+          {
+            "call": "setJsonPath",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "metadata",
+              "$.level",
+              42
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "id",
+              [
+                1
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "id",
+            "values": [
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "UPDATE `json_docs` SET `metadata` = JSON_SET(`metadata`, ?, ?) WHERE `id` IN (?)",
+            "bindings": [
+              "$.level",
+              42,
+              1
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testHintUsesIndex",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "name",
+                "age"
+              ]
+            ]
+          },
+          {
+            "call": "hint",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "INDEX(`users` `idx_users_age`)"
+            ]
+          },
+          {
+            "static": "greaterThan",
+            "class": "Query",
+            "args": [
+              "age",
+              20
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "age"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::GreaterThan"
+            },
+            "attribute": "age",
+            "values": [
+              20
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT /*+ INDEX(`users` `idx_users_age`) */ `name`, `age` FROM `users` WHERE `age` > ? ORDER BY `age` ASC",
+            "bindings": [
+              20
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT /*+ INDEX(`users` `idx_users_age`) */ `name`, `age` FROM `users` WHERE `age` > ? ORDER BY `age` ASC"
+      ]
+    },
+    {
+      "name": "testLateralJoin",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "product",
+                "amount"
+              ]
+            ]
+          },
+          {
+            "call": "whereColumn",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "user_id",
+              "=",
+              "u.id"
+            ]
+          },
+          {
+            "call": "sortDesc",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "amount"
+            ]
+          },
+          {
+            "call": "limit",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              1
+            ]
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              "u"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "u.name",
+                "top_order.product",
+                "top_order.amount"
+              ]
+            ]
+          },
+          {
+            "call": "joinLateral",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              },
+              "top_order"
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "u.name"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT `u`.`name`, `top_order`.`product`, `top_order`.`amount` FROM `users` AS `u` JOIN LATERAL (SELECT `product`, `amount` FROM `orders` WHERE `user_id` = `u`.`id` ORDER BY `amount` DESC LIMIT ?) AS `top_order` ON true ORDER BY `u`.`name` ASC",
+            "bindings": [
+              1
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGroupConcat",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "user_id"
+              ]
+            ]
+          },
+          {
+            "call": "groupConcat",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "product",
+              ",",
+              "products",
+              [
+                "product"
+              ]
+            ]
+          },
+          {
+            "call": "groupBy",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "user_id"
+              ]
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "user_id"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT `user_id`, GROUP_CONCAT(`product` ORDER BY `product` ASC SEPARATOR ?) AS `products` FROM `orders` GROUP BY `user_id` ORDER BY `user_id` ASC",
+            "bindings": [
+              ","
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGroupByWithRollup",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "status"
+              ]
+            ]
+          },
+          {
+            "call": "count",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "*",
+              "total"
+            ]
+          },
+          {
+            "call": "groupBy",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "status"
+              ]
+            ]
+          },
+          {
+            "call": "withRollup",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT COUNT(*) AS `total`, `status` FROM `orders` GROUP BY `status` WITH ROLLUP",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCountWhen",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "countWhen",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "`status` = ?",
+              "completed_count",
+              "completed"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT COUNT(CASE WHEN `status` = ? THEN 1 END) AS `completed_count` FROM `orders`",
+            "bindings": [
+              "completed"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSumWhen",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "sumWhen",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "amount",
+              "`status` = ?",
+              "completed_total",
+              "completed"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT SUM(CASE WHEN `status` = ? THEN `amount` END) AS `completed_total` FROM `orders`",
+            "bindings": [
+              "completed"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testAvgWhen",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "avgWhen",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "amount",
+              "`status` = ?",
+              "completed_avg",
+              "completed"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT AVG(CASE WHEN `status` = ? THEN `amount` END) AS `completed_avg` FROM `orders`",
+            "bindings": [
+              "completed"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testMaxWhen",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "call": "maxWhen",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "amount",
+              "`status` = ?",
+              "completed_max",
+              "completed"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT MAX(CASE WHEN `status` = ? THEN `amount` END) AS `completed_max` FROM `orders`",
+            "bindings": [
+              "completed"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSpatialIntersects",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "places"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "call": "filterIntersects",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "location",
+              [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    1.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT `name` FROM `places` WHERE ST_Intersects(`location`, ST_GeomFromText(?, 4326, 'axis-order=long-lat')) ORDER BY `name` ASC",
+            "bindings": [
+              "POLYGON((0 0, 1 0, 1 1, 0 1, 0 0))"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSpatialDistance",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "places"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "call": "filterDistance",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "location",
+              [
+                0.0,
+                0.0
+              ],
+              "<",
+              2.0
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT `name` FROM `places` WHERE ST_Distance(ST_SRID(`location`, 0), ST_GeomFromText(?, 0, 'axis-order=long-lat')) < ? ORDER BY `name` ASC",
+            "bindings": [
+              "POINT(0 0)",
+              2.0
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testFullTextSearch",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "articles"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "title"
+              ]
+            ]
+          },
+          {
+            "call": "filterSearch",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "body",
+              "tomatoes"
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "title"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT `title` FROM `articles` WHERE MATCH(`body`) AGAINST(? IN BOOLEAN MODE) ORDER BY `title` ASC",
+            "bindings": [
+              "tomatoes*"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        }
+      ]
+    }
+  ]
+}

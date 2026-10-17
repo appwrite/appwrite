@@ -1,0 +1,2185 @@
+{
+  "source": "packages/query/tests/Builder/Feature/ClickHouse/BulkInsertTest.php",
+  "cases": [
+    {
+      "name": "testBulkInsertSingleRowJsonEachRow",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "bulkInsert",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$enum": "Builder\\ClickHouse\\Format::JSONEachRow"
+              },
+              [
+                {
+                  "id": 1,
+                  "event": "login",
+                  "time": "2024-01-01 00:00:00"
+                }
+              ]
+            ]
+          },
+          {
+            "is": "Builder\\ClickHouse\\FormattedInsertStatement",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "format",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "body",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`, `event`, `time`) FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id",
+              "event",
+              "time"
+            ],
+            "format": "JSONEachRow",
+            "body": "{\"id\":1,\"event\":\"login\",\"time\":\"2024-01-01 00:00:00\"}"
+          }
+        },
+        true,
+        "INSERT INTO `events` (`id`, `event`, `time`) FORMAT JSONEachRow",
+        [],
+        [
+          "id",
+          "event",
+          "time"
+        ],
+        "JSONEachRow",
+        "{\"id\":1,\"event\":\"login\",\"time\":\"2024-01-01 00:00:00\"}"
+      ]
+    },
+    {
+      "name": "testBulkInsertMultipleRowsJsonEachRow",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "bulkInsert",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$enum": "Builder\\ClickHouse\\Format::JSONEachRow"
+              },
+              [
+                {
+                  "id": 1,
+                  "event": "login"
+                },
+                {
+                  "id": 2,
+                  "event": "logout"
+                },
+                {
+                  "id": 3,
+                  "event": "view"
+                }
+              ]
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "body",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "body",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`, `event`) FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id",
+              "event"
+            ],
+            "format": "JSONEachRow",
+            "body": "{\"id\":1,\"event\":\"login\"}\n{\"id\":2,\"event\":\"logout\"}\n{\"id\":3,\"event\":\"view\"}"
+          }
+        },
+        "INSERT INTO `events` (`id`, `event`) FORMAT JSONEachRow",
+        "{\"id\":1,\"event\":\"login\"}\n{\"id\":2,\"event\":\"logout\"}\n{\"id\":3,\"event\":\"view\"}",
+        "{\"id\":1,\"event\":\"login\"}\n{\"id\":2,\"event\":\"logout\"}\n{\"id\":3,\"event\":\"view\"}"
+      ]
+    },
+    {
+      "name": "testBulkInsertEmptyIterableEmitsEmptyBody",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "bulkInsert",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$enum": "Builder\\ClickHouse\\Format::JSONEachRow"
+              },
+              [],
+              [
+                "id",
+                "event"
+              ]
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "body",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`, `event`) FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id",
+              "event"
+            ],
+            "format": "JSONEachRow",
+            "body": ""
+          }
+        },
+        "INSERT INTO `events` (`id`, `event`) FORMAT JSONEachRow",
+        "",
+        [
+          "id",
+          "event"
+        ]
+      ]
+    },
+    {
+      "name": "testBulkInsertEmptyIterableWithoutColumnsOmitsColumnList",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "bulkInsert",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$enum": "Builder\\ClickHouse\\Format::JSONEachRow"
+              },
+              []
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "body",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [],
+            "format": "JSONEachRow",
+            "body": ""
+          }
+        },
+        "INSERT INTO `events` FORMAT JSONEachRow",
+        "",
+        []
+      ]
+    },
+    {
+      "name": "testBulkInsertJsonEachRowEscapesSpecialCharacters",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "bulkInsert",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$enum": "Builder\\ClickHouse\\Format::JSONEachRow"
+              },
+              [
+                {
+                  "id": 1,
+                  "note": "tab\there\nnewline\"quote\\back"
+                }
+              ]
+            ]
+          },
+          {
+            "get": "body",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`, `note`) FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id",
+              "note"
+            ],
+            "format": "JSONEachRow",
+            "body": "{\"id\":1,\"note\":\"tab\\there\\nnewline\\\"quote\\\\back\"}"
+          }
+        },
+        "{\"id\":1,\"note\":\"tab\\there\\nnewline\\\"quote\\\\back\"}"
+      ]
+    },
+    {
+      "name": "testBulkInsertJsonEachRowPreservesUnicodeAndSlashes",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "bulkInsert",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$enum": "Builder\\ClickHouse\\Format::JSONEachRow"
+              },
+              [
+                {
+                  "path": "/api/v1/events",
+                  "label": "café — 日本"
+                }
+              ]
+            ]
+          },
+          {
+            "get": "body",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`path`, `label`) FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "path",
+              "label"
+            ],
+            "format": "JSONEachRow",
+            "body": "{\"path\":\"/api/v1/events\",\"label\":\"café — 日本\"}"
+          }
+        },
+        "{\"path\":\"/api/v1/events\",\"label\":\"café — 日本\"}"
+      ]
+    },
+    {
+      "name": "testBulkInsertJsonEachRowSerializesNull",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "bulkInsert",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$enum": "Builder\\ClickHouse\\Format::JSONEachRow"
+              },
+              [
+                {
+                  "id": 1,
+                  "note": null
+                }
+              ]
+            ]
+          },
+          {
+            "get": "body",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`, `note`) FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id",
+              "note"
+            ],
+            "format": "JSONEachRow",
+            "body": "{\"id\":1,\"note\":null}"
+          }
+        },
+        "{\"id\":1,\"note\":null}"
+      ]
+    },
+    {
+      "name": "testBulkInsertExplicitColumnsPinOrderAndFillMissingKeysWithNull",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "bulkInsert",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$enum": "Builder\\ClickHouse\\Format::JSONEachRow"
+              },
+              [
+                {
+                  "id": 1,
+                  "event": "login"
+                },
+                {
+                  "event": "view",
+                  "id": 2
+                },
+                {
+                  "id": 3
+                }
+              ],
+              [
+                "id",
+                "event"
+              ]
+            ]
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "body",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`, `event`) FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id",
+              "event"
+            ],
+            "format": "JSONEachRow",
+            "body": "{\"id\":1,\"event\":\"login\"}\n{\"id\":2,\"event\":\"view\"}\n{\"id\":3,\"event\":null}"
+          }
+        },
+        [
+          "id",
+          "event"
+        ],
+        "{\"id\":1,\"event\":\"login\"}\n{\"id\":2,\"event\":\"view\"}\n{\"id\":3,\"event\":null}"
+      ]
+    },
+    {
+      "name": "testBulkInsertPreservesLiteralDotInTableName",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "my.namespace"
+            ]
+          },
+          {
+            "call": "bulkInsert",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$enum": "Builder\\ClickHouse\\Format::JSONEachRow"
+              },
+              [
+                {
+                  "id": 1
+                }
+              ]
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `my`.`namespace` (`id`) FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id"
+            ],
+            "format": "JSONEachRow",
+            "body": "{\"id\":1}"
+          }
+        },
+        "INSERT INTO `my`.`namespace` (`id`) FORMAT JSONEachRow"
+      ]
+    },
+    {
+      "name": "testBulkInsertTabSeparated",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "bulkInsert",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$enum": "Builder\\ClickHouse\\Format::TabSeparated"
+              },
+              [
+                {
+                  "id": 1,
+                  "event": "login"
+                },
+                {
+                  "id": 2,
+                  "event": "logout"
+                }
+              ]
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "body",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "format",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`, `event`) FORMAT TabSeparated",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id",
+              "event"
+            ],
+            "format": "TabSeparated",
+            "body": "1\tlogin\n2\tlogout"
+          }
+        },
+        "INSERT INTO `events` (`id`, `event`) FORMAT TabSeparated",
+        "1\tlogin\n2\tlogout",
+        "TabSeparated"
+      ]
+    },
+    {
+      "name": "testBulkInsertTabSeparatedEscapesControlCharacters",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "bulkInsert",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$enum": "Builder\\ClickHouse\\Format::TabSeparated"
+              },
+              [
+                {
+                  "id": 1,
+                  "note": "a\tb\nc\\d"
+                }
+              ]
+            ]
+          },
+          {
+            "get": "body",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`, `note`) FORMAT TabSeparated",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id",
+              "note"
+            ],
+            "format": "TabSeparated",
+            "body": "1\ta\\tb\\nc\\\\d"
+          }
+        },
+        "1\ta\\tb\\nc\\\\d"
+      ]
+    },
+    {
+      "name": "testBulkInsertTabSeparatedRendersNullAsBackslashN",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "bulkInsert",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$enum": "Builder\\ClickHouse\\Format::TabSeparated"
+              },
+              [
+                {
+                  "id": 1,
+                  "note": null
+                }
+              ]
+            ]
+          },
+          {
+            "get": "body",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`, `note`) FORMAT TabSeparated",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id",
+              "note"
+            ],
+            "format": "TabSeparated",
+            "body": "1\t\\N"
+          }
+        },
+        "1\t\\N"
+      ]
+    },
+    {
+      "name": "testBulkInsertTabSeparatedRendersBooleansAsZeroOne",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "bulkInsert",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$enum": "Builder\\ClickHouse\\Format::TabSeparated"
+              },
+              [
+                {
+                  "id": 1,
+                  "active": true,
+                  "archived": false
+                }
+              ]
+            ]
+          },
+          {
+            "get": "body",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`, `active`, `archived`) FORMAT TabSeparated",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id",
+              "active",
+              "archived"
+            ],
+            "format": "TabSeparated",
+            "body": "1\t1\t0"
+          }
+        },
+        "1\t1\t0"
+      ]
+    },
+    {
+      "name": "testBulkInsertTabSeparatedRejectsArrayValues",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "bulkInsert",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$enum": "Builder\\ClickHouse\\Format::TabSeparated"
+              },
+              [
+                {
+                  "id": 1,
+                  "tags": [
+                    "a",
+                    "b"
+                  ]
+                }
+              ]
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "TabSeparated values must be scalar, null, or stringable. Received: array"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testBulkInsertAcceptsGenerator",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "bulkInsert",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$enum": "Builder\\ClickHouse\\Format::JSONEachRow"
+              },
+              {
+                "$generator": [
+                  {
+                    "id": 1,
+                    "event": "login"
+                  },
+                  {
+                    "id": 2,
+                    "event": "logout"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "body",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`, `event`) FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id",
+              "event"
+            ],
+            "format": "JSONEachRow",
+            "body": "{\"id\":1,\"event\":\"login\"}\n{\"id\":2,\"event\":\"logout\"}"
+          }
+        },
+        "INSERT INTO `events` (`id`, `event`) FORMAT JSONEachRow",
+        "{\"id\":1,\"event\":\"login\"}\n{\"id\":2,\"event\":\"logout\"}"
+      ]
+    },
+    {
+      "name": "testBulkInsertRejectsNonAssociativeRow",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "bulkInsert",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$enum": "Builder\\ClickHouse\\Format::JSONEachRow"
+              },
+              {
+                "$generator": [
+                  "not-a-row"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "bulkInsert() rows must be associative arrays."
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testBulkInsertRejectsEmptyColumnName",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "bulkInsert",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$enum": "Builder\\ClickHouse\\Format::JSONEachRow"
+              },
+              [
+                {
+                  "id": 1
+                }
+              ],
+              [
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Column names for FORMAT INSERT must be non-empty strings."
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testBulkInsertRequiresTable",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "bulkInsert",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$enum": "Builder\\ClickHouse\\Format::JSONEachRow"
+              },
+              [
+                {
+                  "id": 1
+                }
+              ]
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "No table specified. Call from() or into() before building a query."
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testFormattedInsertStatementWithExecutorPreservesBody",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "bulkInsert",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$enum": "Builder\\ClickHouse\\Format::JSONEachRow"
+              },
+              [
+                {
+                  "id": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "withExecutor",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              {
+                "$fn": 1
+              }
+            ]
+          },
+          {
+            "is": "Builder\\ClickHouse\\FormattedInsertStatement",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "format",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "format",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "body",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "body",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`) FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id"
+            ],
+            "format": "JSONEachRow",
+            "body": "{\"id\":1}"
+          }
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 3,
+          "props": {
+            "query": "INSERT INTO `events` (`id`) FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id"
+            ],
+            "format": "JSONEachRow",
+            "body": "{\"id\":1}"
+          }
+        },
+        true,
+        "INSERT INTO `events` (`id`) FORMAT JSONEachRow",
+        "INSERT INTO `events` (`id`) FORMAT JSONEachRow",
+        [],
+        [],
+        [
+          "id"
+        ],
+        [
+          "id"
+        ],
+        "JSONEachRow",
+        "JSONEachRow",
+        "{\"id\":1}",
+        "{\"id\":1}"
+      ]
+    },
+    {
+      "name": "testInsertFormatEnvelopeStillEmitsNullBodyForBackCompat",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "insertFormat",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "JSONEachRow",
+              [
+                "id",
+                "event"
+              ]
+            ]
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "is": "Builder\\ClickHouse\\FormattedInsertStatement",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "body",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`, `event`) FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id",
+              "event"
+            ],
+            "format": "JSONEachRow",
+            "body": null
+          }
+        },
+        true,
+        null
+      ]
+    },
+    {
+      "name": "testBulkInsertAndInsertFormatEmitIdenticalEnvelopeForSameInputs",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "bulkInsert",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$enum": "Builder\\ClickHouse\\Format::JSONEachRow"
+              },
+              [
+                {
+                  "id": 1,
+                  "event": "login"
+                }
+              ]
+            ]
+          },
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "insertFormat",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "JSONEachRow",
+              [
+                "id",
+                "event"
+              ]
+            ]
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "is": "Builder\\ClickHouse\\FormattedInsertStatement",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "format",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "format",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`, `event`) FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id",
+              "event"
+            ],
+            "format": "JSONEachRow",
+            "body": "{\"id\":1,\"event\":\"login\"}"
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 4,
+          "props": {
+            "query": "INSERT INTO `events` (`id`, `event`) FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id",
+              "event"
+            ],
+            "format": "JSONEachRow",
+            "body": null
+          }
+        },
+        true,
+        "INSERT INTO `events` (`id`, `event`) FORMAT JSONEachRow",
+        "INSERT INTO `events` (`id`, `event`) FORMAT JSONEachRow",
+        [
+          "id",
+          "event"
+        ],
+        [
+          "id",
+          "event"
+        ],
+        "JSONEachRow",
+        "JSONEachRow"
+      ]
+    },
+    {
+      "name": "testInsertFormatEnvelopeQuotesTableWithLiteralDot",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "my.namespace"
+            ]
+          },
+          {
+            "call": "insertFormat",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "JSONEachRow",
+              [
+                "id"
+              ]
+            ]
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "my.namespace"
+            ]
+          },
+          {
+            "call": "bulkInsert",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              {
+                "$enum": "Builder\\ClickHouse\\Format::JSONEachRow"
+              },
+              [
+                {
+                  "id": 1
+                }
+              ]
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `my`.`namespace` (`id`) FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id"
+            ],
+            "format": "JSONEachRow",
+            "body": null
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 4,
+          "props": {
+            "query": "INSERT INTO `my`.`namespace` (`id`) FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id"
+            ],
+            "format": "JSONEachRow",
+            "body": "{\"id\":1}"
+          }
+        },
+        "INSERT INTO `my`.`namespace` (`id`) FORMAT JSONEachRow",
+        "INSERT INTO `my`.`namespace` (`id`) FORMAT JSONEachRow",
+        "INSERT INTO `my`.`namespace` (`id`) FORMAT JSONEachRow"
+      ]
+    },
+    {
+      "name": "testInsertFormatRejectsEmptyColumnNameMatchingBulkInsert",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "insertFormat",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "JSONEachRow",
+              [
+                "id",
+                ""
+              ]
+            ]
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Column names for FORMAT INSERT must be non-empty strings."
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testBulkInsertDoesNotPersistFormatStateOnBuilder",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "bulkInsert",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$enum": "Builder\\ClickHouse\\Format::JSONEachRow"
+              },
+              [
+                {
+                  "id": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "name": "alice"
+              }
+            ]
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "is": "Builder\\ClickHouse\\FormattedInsertStatement",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`) FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id"
+            ],
+            "format": "JSONEachRow",
+            "body": "{\"id\":1}"
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "INSERT INTO `users` (`name`) VALUES (?)",
+            "bindings": [
+              "alice"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        false,
+        "INSERT INTO `users` (`name`) VALUES (?)",
+        "INSERT INTO `users` (`name`) VALUES (?)",
+        [
+          "alice"
+        ]
+      ]
+    },
+    {
+      "name": "testFormatSerializeExplicitColumnsPinOrderingAcrossInconsistentRows",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "call": "serialize",
+            "on": {
+              "$enum": "Builder\\ClickHouse\\Format::TabSeparated"
+            },
+            "args": [
+              [
+                {
+                  "id": 1,
+                  "event": "login"
+                },
+                {
+                  "event": "view",
+                  "id": 2
+                },
+                {
+                  "id": 3
+                }
+              ],
+              [
+                "id",
+                "event"
+              ]
+            ]
+          },
+          {
+            "call": "serialize",
+            "on": {
+              "$enum": "Builder\\ClickHouse\\Format::JSONEachRow"
+            },
+            "args": [
+              [
+                {
+                  "id": 1,
+                  "event": "login"
+                },
+                {
+                  "event": "view",
+                  "id": 2
+                },
+                {
+                  "id": 3
+                }
+              ],
+              [
+                "id",
+                "event"
+              ]
+            ]
+          }
+        ]
+      },
+      "expect": [
+        "1\tlogin\n2\tview\n3\t\\N",
+        "{\"id\":1,\"event\":\"login\"}\n{\"id\":2,\"event\":\"view\"}\n{\"id\":3,\"event\":null}"
+      ]
+    }
+  ]
+}

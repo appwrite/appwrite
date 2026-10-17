@@ -1,0 +1,522 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Cache/OwnersTest.php"
+  ],
+  "cases": [
+    {
+      "name": "OwnersTest::testRegisteringAndFindingOwnersListsTheHashOnce",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Cache\\Owners",
+            "args": {
+              "cache": "memory"
+            },
+            "as": "o2852"
+          },
+          "bind": "s6749",
+          "expect": {
+            "$value": "Cache\\Owners",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2852"
+            },
+            "method": "register",
+            "args": {
+              "key": "default:collection",
+              "token": "first"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Cache\\Owners",
+            "args": {
+              "cache": "memory"
+            },
+            "as": "o2853"
+          },
+          "bind": "s6751",
+          "expect": {
+            "$value": "Cache\\Owners",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2853"
+            },
+            "method": "register",
+            "args": {
+              "key": "default:collection",
+              "token": "second"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Cache\\Owners",
+            "args": {
+              "cache": "memory"
+            },
+            "as": "o2854"
+          },
+          "bind": "s6753",
+          "expect": {
+            "$value": "Cache\\Owners",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2854"
+            },
+            "method": "register",
+            "args": {
+              "key": "default:collection",
+              "token": "third"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Cache\\Owners",
+            "args": {
+              "cache": "memory"
+            },
+            "as": "o2855"
+          },
+          "bind": "s6755",
+          "expect": {
+            "$value": "Cache\\Owners",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2855"
+            },
+            "method": "find",
+            "args": {
+              "key": "default:collection",
+              "token": "first"
+            },
+            "as": "o2856"
+          },
+          "expect": {
+            "$value": "Cache\\Registration",
+            "fields": {
+              "key": "default:collection#owner:first",
+              "field": ""
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Cache\\Owners",
+            "args": {
+              "cache": "memory"
+            },
+            "as": "o2857"
+          },
+          "bind": "s6757",
+          "expect": {
+            "$value": "Cache\\Owners",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2857"
+            },
+            "method": "find",
+            "args": {
+              "key": "default:collection",
+              "token": "second"
+            },
+            "as": "o2858"
+          },
+          "expect": {
+            "$value": "Cache\\Registration",
+            "fields": {
+              "key": "default:collection#owner:second",
+              "field": ""
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Cache\\Owners",
+            "args": {
+              "cache": "memory"
+            },
+            "as": "o2859"
+          },
+          "bind": "s6759",
+          "expect": {
+            "$value": "Cache\\Owners",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2859"
+            },
+            "method": "find",
+            "args": {
+              "key": "default:collection",
+              "token": "third"
+            },
+            "as": "o2860"
+          },
+          "expect": {
+            "$value": "Cache\\Registration",
+            "fields": {
+              "key": "default:collection#owner:third",
+              "field": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "OwnersTest::testOwnersResolveOnACacheWithoutFields",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Cache\\Owners",
+            "args": {
+              "cache": "memory"
+            },
+            "as": "o2861"
+          },
+          "bind": "s6761",
+          "expect": {
+            "$value": "Cache\\Owners",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2861"
+            },
+            "method": "register",
+            "args": {
+              "key": "default:collection",
+              "token": "first"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Cache\\Owners",
+            "args": {
+              "cache": "memory"
+            },
+            "as": "o2862"
+          },
+          "bind": "s6763",
+          "expect": {
+            "$value": "Cache\\Owners",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2862"
+            },
+            "method": "find",
+            "args": {
+              "key": "default:collection",
+              "token": "first"
+            },
+            "as": "o2863"
+          },
+          "expect": {
+            "$value": "Cache\\Registration",
+            "fields": {
+              "key": "default:collection#owner:first",
+              "field": ""
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Cache\\Owners",
+            "args": {
+              "cache": "memory"
+            },
+            "as": "o2864"
+          },
+          "bind": "s6765",
+          "expect": {
+            "$value": "Cache\\Owners",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2864"
+            },
+            "method": "register",
+            "args": {
+              "key": "default:collection",
+              "token": "second"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Cache\\Owners",
+            "args": {
+              "cache": "memory"
+            },
+            "as": "o2865"
+          },
+          "bind": "s6767",
+          "expect": {
+            "$value": "Cache\\Owners",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2865"
+            },
+            "method": "find",
+            "args": {
+              "key": "default:collection",
+              "token": "second"
+            },
+            "as": "o2866"
+          },
+          "expect": {
+            "$value": "Cache\\Registration",
+            "fields": {
+              "key": "default:collection#owner:second",
+              "field": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "OwnersTest::testAFlushBeforeTheFirstListDoesNotPinPerTokenKeys",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Cache\\Owners",
+            "args": {
+              "cache": "memory"
+            },
+            "as": "o2867"
+          },
+          "bind": "s6769",
+          "expect": {
+            "$value": "Cache\\Owners",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2867"
+            },
+            "method": "register",
+            "args": {
+              "key": "default:collection",
+              "token": "flushed"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Cache\\Owners",
+            "args": {
+              "cache": "memory"
+            },
+            "as": "o2868"
+          },
+          "bind": "s6771",
+          "expect": {
+            "$value": "Cache\\Owners",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2868"
+            },
+            "method": "find",
+            "args": {
+              "key": "default:collection",
+              "token": "flushed"
+            },
+            "as": "o2869"
+          },
+          "expect": {
+            "$value": "Cache\\Registration",
+            "fields": {
+              "key": "default:collection#owner:flushed",
+              "field": ""
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Cache\\Owners",
+            "args": {
+              "cache": "memory"
+            },
+            "as": "o2870"
+          },
+          "bind": "s6773",
+          "expect": {
+            "$value": "Cache\\Owners",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2870"
+            },
+            "method": "register",
+            "args": {
+              "key": "default:collection",
+              "token": "kept"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Cache\\Owners",
+            "args": {
+              "cache": "memory"
+            },
+            "as": "o2871"
+          },
+          "bind": "s6775",
+          "expect": {
+            "$value": "Cache\\Owners",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2871"
+            },
+            "method": "find",
+            "args": {
+              "key": "default:collection",
+              "token": "kept"
+            },
+            "as": "o2872"
+          },
+          "expect": {
+            "$value": "Cache\\Registration",
+            "fields": {
+              "key": "default:collection#owner:kept",
+              "field": ""
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

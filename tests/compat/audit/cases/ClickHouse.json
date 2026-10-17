@@ -1,0 +1,900 @@
+{
+  "source": "packages/audit/tests/E2E/Adapter/ClickHouseTest.php",
+  "cases": [
+    {
+      "name": "setup on a database that does not exist (quirk)",
+      "state": [
+        "clickhouse@audit-clickhouse"
+      ],
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {},
+          "bind": "adapter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set_database",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "value": "${ns}_missing"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.setup",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "ClickHouse query execution failed: ClickHouse query failed with HTTP 404: Code: 81. DB::Exception: Database ${ns}_missing does not exist. (UNKNOWN_DATABASE) (version 26.4.3.37 (official build))\n"
+            }
+          }
+        },
+        {
+          "op": "adapter.ping",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "cleanup with shared tables: the tenant parameter is never sent (quirk)",
+      "state": [
+        "clickhouse@audit-clickhouse"
+      ],
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {},
+          "bind": "adapter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set_shared_tables",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "value": true
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.set_tenant",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "value": 3
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.setup",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create_batch",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "logs": [
+              {
+                "id": "old",
+                "userId": "u",
+                "event": "e",
+                "resource": "r/1",
+                "userAgent": "ua",
+                "ip": "1",
+                "time": "2020-01-01 00:00:00.000",
+                "actorType": "member",
+                "resourceType": "document",
+                "resourceId": "res-1",
+                "projectId": "proj-1",
+                "projectInternalId": "proj-int-1",
+                "teamId": "team-1",
+                "teamInternalId": "team-int-1",
+                "hostname": "example.org",
+                "country": "us"
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.cleanup",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "datetime": "2021-01-01"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "ClickHouse query execution failed: ClickHouse query failed with HTTP 500: Code: 456. DB::Exception: Substitution `param0` is not set. (UNKNOWN_QUERY_PARAMETER) (version 26.4.3.37 (official build))\n"
+            }
+          }
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "retention: setup adds the TTL, setup without it removes it",
+      "state": [
+        "clickhouse@audit-clickhouse"
+      ],
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {},
+          "bind": "adapter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set_namespace",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "value": "ttl"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.set_table",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "value": "logs"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.set_retention",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "value": 30
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.setup",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.set_retention",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "value": null
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.setup",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.setup",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "create with an id, get_by_id, async cleanup, legacy names",
+      "state": [
+        "clickhouse@audit-clickhouse"
+      ],
+      "steps": [
+        {
+          "op": "clickhouse.new",
+          "args": {},
+          "bind": "adapter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.setup",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "log": {
+              "id": "fixed-1",
+              "userId": "legacy",
+              "userType": "user",
+              "userInternalId": "42",
+              "event": "e",
+              "resource": "project/p1/database/d1",
+              "userAgent": "ua",
+              "ip": "1",
+              "time": "2024-02-03 04:05:06.789",
+              "data": {
+                "sdk": "web",
+                "extra": "kept",
+                "actorType": "ignored"
+              },
+              "actorType": "member",
+              "projectId": "proj-1",
+              "projectInternalId": "proj-int-1",
+              "teamId": "team-1",
+              "teamInternalId": "team-int-1",
+              "hostname": "example.org",
+              "country": "us"
+            }
+          },
+          "expect": {
+            "actorId": "legacy",
+            "event": "e",
+            "resource": "project/p1/database/d1",
+            "userAgent": "ua",
+            "ip": "1",
+            "time": "2024-02-03T04:05:06.789+00:00",
+            "actorType": "member",
+            "actorInternalId": "42",
+            "resourceParent": "project/p1",
+            "resourceType": "database",
+            "resourceId": "d1",
+            "resourceInternalId": null,
+            "country": "us",
+            "city": null,
+            "continentCode": null,
+            "subdivisions": null,
+            "isp": null,
+            "autonomousSystemNumber": null,
+            "autonomousSystemOrganization": null,
+            "connectionType": null,
+            "connectionUsageType": null,
+            "connectionOrganization": null,
+            "projectId": "proj-1",
+            "projectInternalId": "proj-int-1",
+            "teamId": "team-1",
+            "teamInternalId": "team-int-1",
+            "hostname": "example.org",
+            "sdk": "web",
+            "sdkVersion": null,
+            "osCode": null,
+            "osName": null,
+            "osVersion": null,
+            "clientType": null,
+            "clientCode": null,
+            "clientName": null,
+            "clientVersion": null,
+            "clientEngine": null,
+            "clientEngineVersion": null,
+            "deviceName": null,
+            "deviceBrand": null,
+            "deviceModel": null,
+            "data": {
+              "extra": "kept"
+            },
+            "$id": "fixed-1",
+            "userId": "legacy",
+            "userType": "member",
+            "userInternalId": "42"
+          }
+        },
+        {
+          "op": "adapter.get_by_id",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "id": "fixed-1"
+          },
+          "expect": {
+            "actorId": "legacy",
+            "event": "e",
+            "resource": "project/p1/database/d1",
+            "userAgent": "ua",
+            "ip": "1",
+            "time": "2024-02-03T04:05:06.789+00:00",
+            "actorType": "member",
+            "actorInternalId": "42",
+            "resourceParent": "project/p1",
+            "resourceType": "database",
+            "resourceId": "d1",
+            "resourceInternalId": null,
+            "country": "us",
+            "city": null,
+            "continentCode": null,
+            "subdivisions": null,
+            "isp": null,
+            "autonomousSystemNumber": null,
+            "autonomousSystemOrganization": null,
+            "connectionType": null,
+            "connectionUsageType": null,
+            "connectionOrganization": null,
+            "projectId": "proj-1",
+            "projectInternalId": "proj-int-1",
+            "teamId": "team-1",
+            "teamInternalId": "team-int-1",
+            "hostname": "example.org",
+            "sdk": "web",
+            "sdkVersion": null,
+            "osCode": null,
+            "osName": null,
+            "osVersion": null,
+            "clientType": null,
+            "clientCode": null,
+            "clientName": null,
+            "clientVersion": null,
+            "clientEngine": null,
+            "clientEngineVersion": null,
+            "deviceName": null,
+            "deviceBrand": null,
+            "deviceModel": null,
+            "data": {
+              "extra": "kept"
+            },
+            "$id": "fixed-1",
+            "userId": "legacy",
+            "userType": "member",
+            "userInternalId": "42"
+          }
+        },
+        {
+          "op": "adapter.get_by_id",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "id": "missing"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "log": {
+              "id": 5,
+              "event": "e"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Log ID must be a string"
+            }
+          }
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "log": {
+              "event": "e",
+              "userAgent": "ua",
+              "ip": "1",
+              "resource": "a/b"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Required attribute 'actorType' is missing in batch log entry"
+            }
+          }
+        },
+        {
+          "op": "adapter.get_by_resource",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "resource": "project/p1/database/d1",
+            "after": "2024-01-01",
+            "before": "2025-01-01",
+            "ascending": true
+          },
+          "expect": [
+            {
+              "actorId": "legacy",
+              "event": "e",
+              "resource": "project/p1/database/d1",
+              "userAgent": "ua",
+              "ip": "1",
+              "time": "2024-02-03T04:05:06.789+00:00",
+              "actorType": "member",
+              "actorInternalId": "42",
+              "resourceParent": "project/p1",
+              "resourceType": "database",
+              "resourceId": "d1",
+              "resourceInternalId": null,
+              "country": "us",
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "projectId": "proj-1",
+              "projectInternalId": "proj-int-1",
+              "teamId": "team-1",
+              "teamInternalId": "team-int-1",
+              "hostname": "example.org",
+              "sdk": "web",
+              "sdkVersion": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "data": {
+                "extra": "kept"
+              },
+              "$id": "fixed-1",
+              "userId": "legacy",
+              "userType": "member",
+              "userInternalId": "42"
+            }
+          ]
+        },
+        {
+          "op": "adapter.count_by_resource",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "resource": "project/p1/database/d1",
+            "after": "2024-01-01"
+          },
+          "expect": 1
+        },
+        {
+          "op": "adapter.count_by_resource_and_events",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "resource": "project/p1/database/d1",
+            "events": [
+              "e",
+              "f"
+            ],
+            "before": "2030-01-01",
+            "max": 5
+          },
+          "expect": 1
+        },
+        {
+          "op": "adapter.get_by_resource_and_events",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "resource": "project/p1/database/d1",
+            "events": [
+              "e"
+            ],
+            "limit": 1
+          },
+          "expect": [
+            {
+              "actorId": "legacy",
+              "event": "e",
+              "resource": "project/p1/database/d1",
+              "userAgent": "ua",
+              "ip": "1",
+              "time": "2024-02-03T04:05:06.789+00:00",
+              "actorType": "member",
+              "actorInternalId": "42",
+              "resourceParent": "project/p1",
+              "resourceType": "database",
+              "resourceId": "d1",
+              "resourceInternalId": null,
+              "country": "us",
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "projectId": "proj-1",
+              "projectInternalId": "proj-int-1",
+              "teamId": "team-1",
+              "teamInternalId": "team-int-1",
+              "hostname": "example.org",
+              "sdk": "web",
+              "sdkVersion": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "data": {
+                "extra": "kept"
+              },
+              "$id": "fixed-1",
+              "userId": "legacy",
+              "userType": "member",
+              "userInternalId": "42"
+            }
+          ]
+        },
+        {
+          "op": "adapter.get_by_user_and_events",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "user_id": "legacy",
+            "events": [
+              "e"
+            ],
+            "after": "2024-02-03 04:05:06",
+            "before": "2024-02-03 04:05:07"
+          },
+          "expect": [
+            {
+              "actorId": "legacy",
+              "event": "e",
+              "resource": "project/p1/database/d1",
+              "userAgent": "ua",
+              "ip": "1",
+              "time": "2024-02-03T04:05:06.789+00:00",
+              "actorType": "member",
+              "actorInternalId": "42",
+              "resourceParent": "project/p1",
+              "resourceType": "database",
+              "resourceId": "d1",
+              "resourceInternalId": null,
+              "country": "us",
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "projectId": "proj-1",
+              "projectInternalId": "proj-int-1",
+              "teamId": "team-1",
+              "teamInternalId": "team-int-1",
+              "hostname": "example.org",
+              "sdk": "web",
+              "sdkVersion": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "data": {
+                "extra": "kept"
+              },
+              "$id": "fixed-1",
+              "userId": "legacy",
+              "userType": "member",
+              "userInternalId": "42"
+            }
+          ]
+        },
+        {
+          "op": "adapter.count_by_user_and_events",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "user_id": "legacy",
+            "events": [
+              "e"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "adapter.get_by_user",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "user_id": "legacy"
+          },
+          "expect": [
+            {
+              "actorId": "legacy",
+              "event": "e",
+              "resource": "project/p1/database/d1",
+              "userAgent": "ua",
+              "ip": "1",
+              "time": "2024-02-03T04:05:06.789+00:00",
+              "actorType": "member",
+              "actorInternalId": "42",
+              "resourceParent": "project/p1",
+              "resourceType": "database",
+              "resourceId": "d1",
+              "resourceInternalId": null,
+              "country": "us",
+              "city": null,
+              "continentCode": null,
+              "subdivisions": null,
+              "isp": null,
+              "autonomousSystemNumber": null,
+              "autonomousSystemOrganization": null,
+              "connectionType": null,
+              "connectionUsageType": null,
+              "connectionOrganization": null,
+              "projectId": "proj-1",
+              "projectInternalId": "proj-int-1",
+              "teamId": "team-1",
+              "teamInternalId": "team-int-1",
+              "hostname": "example.org",
+              "sdk": "web",
+              "sdkVersion": null,
+              "osCode": null,
+              "osName": null,
+              "osVersion": null,
+              "clientType": null,
+              "clientCode": null,
+              "clientName": null,
+              "clientVersion": null,
+              "clientEngine": null,
+              "clientEngineVersion": null,
+              "deviceName": null,
+              "deviceBrand": null,
+              "deviceModel": null,
+              "data": {
+                "extra": "kept"
+              },
+              "$id": "fixed-1",
+              "userId": "legacy",
+              "userType": "member",
+              "userInternalId": "42"
+            }
+          ]
+        },
+        {
+          "op": "adapter.count_by_user",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "user_id": "legacy",
+            "before": "2024-02-03 04:05:06"
+          },
+          "expect": 0
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "queries": [
+              {
+                "method": "equal",
+                "attribute": "userId",
+                "values": [
+                  "legacy"
+                ]
+              },
+              {
+                "method": "select",
+                "values": [
+                  "actorType",
+                  "event",
+                  "actorType"
+                ]
+              }
+            ]
+          },
+          "expect": [
+            {
+              "actorType": "member",
+              "event": "e",
+              "$id": "fixed-1",
+              "userType": "member"
+            }
+          ]
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "queries": [
+              {
+                "method": "select",
+                "values": [
+                  "userId"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid attribute name: userId"
+            }
+          }
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "queries": [
+              {
+                "method": "limit",
+                "values": [
+                  "2"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid limit value. Expected int"
+            }
+          }
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "queries": [
+              {
+                "method": "offset",
+                "values": []
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid offset value. Expected int"
+            }
+          }
+        },
+        {
+          "op": "adapter.cleanup",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "datetime": "2025-01-01"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "adapter.set_async_cleanup",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "value": true
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.cleanup",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            },
+            "datetime": "2000-01-01"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "adapter"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    }
+  ]
+}

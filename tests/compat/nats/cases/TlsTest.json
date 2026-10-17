@@ -1,0 +1,291 @@
+{
+  "source": "packages/nats/tests/E2E/TlsTest.php",
+  "cases": [
+    {
+      "name": "mutual TLS connects and round-trips",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats-tls",
+            "options": {
+              "tlsCaFile": "packages/nats/tests/fixtures/certs/ca.pem",
+              "tlsCertFile": "packages/nats/tests/fixtures/certs/client-cert.pem",
+              "tlsKeyFile": "packages/nats/tests/fixtures/certs/client-key.pem",
+              "tlsServerName": "localhost"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "conn.subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "tls.echo.${ns}"
+          },
+          "bind": "sub",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "tls.echo.${ns}",
+            "data": "secure-hello"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.next_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "sub"
+            },
+            "timeout": 2.0
+          },
+          "expect": {
+            "subject": "tls.echo.${ns}",
+            "data": "secure-hello",
+            "reply": null,
+            "headers": null,
+            "sid": "1"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "without a client certificate the handshake is refused",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats-tls",
+            "options": {
+              "tlsCaFile": "packages/nats/tests/fixtures/certs/ca.pem",
+              "tlsServerName": "localhost"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Failed to connect to any NATS server"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a server name the certificate does not hold is refused",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats-tls",
+            "options": {
+              "tlsCaFile": "packages/nats/tests/fixtures/certs/ca.pem",
+              "tlsCertFile": "packages/nats/tests/fixtures/certs/client-cert.pem",
+              "tlsKeyFile": "packages/nats/tests/fixtures/certs/client-key.pem",
+              "tlsServerName": "wrong.example"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Failed to connect to any NATS server"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "without verification the name does not matter",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats-tls",
+            "options": {
+              "tlsCertFile": "packages/nats/tests/fixtures/certs/client-cert.pem",
+              "tlsKeyFile": "packages/nats/tests/fixtures/certs/client-key.pem",
+              "tlsVerify": false,
+              "tlsServerName": "wrong.example"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "the TLS transport on its own",
+      "steps": [
+        {
+          "op": "transport.round_trip",
+          "args": {
+            "kind": "tls",
+            "service": "nats-tls",
+            "tls": {
+              "cafile": "packages/nats/tests/fixtures/certs/ca.pem",
+              "local_cert": "packages/nats/tests/fixtures/certs/client-cert.pem",
+              "local_pk": "packages/nats/tests/fixtures/certs/client-key.pem",
+              "peer_name": "localhost"
+            }
+          },
+          "expect": [
+            [
+              "connect",
+              null
+            ],
+            [
+              "connected",
+              true
+            ],
+            [
+              "info",
+              true
+            ],
+            [
+              "write",
+              33
+            ],
+            [
+              "pong",
+              "PONG\r\n"
+            ],
+            [
+              "ping",
+              6
+            ],
+            [
+              "read",
+              "PONG\r\n"
+            ],
+            [
+              "close",
+              null
+            ],
+            [
+              "connected_after",
+              false
+            ],
+            [
+              "write_after",
+              {
+                "class": "Utopia\\NATS\\Exception\\ConnectionException",
+                "message": "Not connected"
+              }
+            ],
+            [
+              "read_after",
+              {
+                "class": "Utopia\\NATS\\Exception\\ConnectionException",
+                "message": "Not connected"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "upgrading a plain stream to TLS against a server that does not speak it fails",
+      "steps": [
+        {
+          "op": "transport.round_trip",
+          "args": {
+            "kind": "tcp",
+            "service": "nats",
+            "upgrade": true,
+            "tls": {
+              "peer_name": "localhost"
+            }
+          },
+          "expect": [
+            [
+              "connect",
+              null
+            ],
+            [
+              "connected",
+              true
+            ],
+            [
+              "info",
+              true
+            ],
+            [
+              "upgrade",
+              {
+                "class": "Utopia\\NATS\\Exception\\ConnectionException",
+                "message": "Failed to upgrade connection to TLS"
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1287 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/CoreMinorsTest.php"
+  ],
+  "cases": [
+    {
+      "name": "CoreMinorsTest::testSpatialDefaultsAreValidated#point with one coordinate",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o902"
+          },
+          "bind": "s1665",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o902"
+              },
+              "capabilities": [],
+              "features": [
+                "Utopia\\Database\\Adapter\\Feature\\Spatial"
+              ],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o903"
+          },
+          "bind": "s1666",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [],
+              "features": [
+                "Utopia\\Database\\Adapter\\Feature\\Spatial"
+              ],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\AttributeDefinition",
+            "args": {
+              "attributes": [],
+              "profile": {
+                "$obj": "o903"
+              }
+            },
+            "as": "o904"
+          },
+          "bind": "s1667",
+          "expect": {
+            "$value": "Validator\\AttributeDefinition",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "shape",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Point"
+                },
+                "default": [
+                  1.0
+                ]
+              }
+            },
+            "as": "o905"
+          },
+          "bind": "s1668",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "shape",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              },
+              "size": null,
+              "required": false,
+              "default": [
+                1.0
+              ],
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "point"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o904"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o905"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid default value: Value must be a valid point: Point must be an array of two numeric values [x, y]"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o906"
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        }
+      ]
+    },
+    {
+      "name": "CoreMinorsTest::testSpatialDefaultsAreValidated#point out of range",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o907"
+          },
+          "bind": "s1671",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o907"
+              },
+              "capabilities": [],
+              "features": [
+                "Utopia\\Database\\Adapter\\Feature\\Spatial"
+              ],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o908"
+          },
+          "bind": "s1672",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [],
+              "features": [
+                "Utopia\\Database\\Adapter\\Feature\\Spatial"
+              ],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\AttributeDefinition",
+            "args": {
+              "attributes": [],
+              "profile": {
+                "$obj": "o908"
+              }
+            },
+            "as": "o909"
+          },
+          "bind": "s1673",
+          "expect": {
+            "$value": "Validator\\AttributeDefinition",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "shape",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Point"
+                },
+                "default": [
+                  200.0,
+                  0.0
+                ]
+              }
+            },
+            "as": "o910"
+          },
+          "bind": "s1674",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "shape",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              },
+              "size": null,
+              "required": false,
+              "default": [
+                200.0,
+                0.0
+              ],
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "point"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o909"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o910"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid default value: Value must be a valid point: Longitude (x) must be between -180 and 180, got 200"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o911"
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        }
+      ]
+    },
+    {
+      "name": "CoreMinorsTest::testSpatialDefaultsAreValidated#linestring with one point",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o912"
+          },
+          "bind": "s1677",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o912"
+              },
+              "capabilities": [],
+              "features": [
+                "Utopia\\Database\\Adapter\\Feature\\Spatial"
+              ],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o913"
+          },
+          "bind": "s1678",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [],
+              "features": [
+                "Utopia\\Database\\Adapter\\Feature\\Spatial"
+              ],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\AttributeDefinition",
+            "args": {
+              "attributes": [],
+              "profile": {
+                "$obj": "o913"
+              }
+            },
+            "as": "o914"
+          },
+          "bind": "s1679",
+          "expect": {
+            "$value": "Validator\\AttributeDefinition",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "shape",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Linestring"
+                },
+                "default": [
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ]
+              }
+            },
+            "as": "o915"
+          },
+          "bind": "s1680",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "shape",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              },
+              "size": null,
+              "required": false,
+              "default": [
+                [
+                  0.0,
+                  0.0
+                ]
+              ],
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "linestring"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o914"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o915"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid default value: Value must be a valid linestring: LineString must contain at least two points"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o916"
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        }
+      ]
+    },
+    {
+      "name": "CoreMinorsTest::testSpatialDefaultsAreValidated#polygon with an open ring",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o917"
+          },
+          "bind": "s1683",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o917"
+              },
+              "capabilities": [],
+              "features": [
+                "Utopia\\Database\\Adapter\\Feature\\Spatial"
+              ],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o918"
+          },
+          "bind": "s1684",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [],
+              "features": [
+                "Utopia\\Database\\Adapter\\Feature\\Spatial"
+              ],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\AttributeDefinition",
+            "args": {
+              "attributes": [],
+              "profile": {
+                "$obj": "o918"
+              }
+            },
+            "as": "o919"
+          },
+          "bind": "s1685",
+          "expect": {
+            "$value": "Validator\\AttributeDefinition",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "shape",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Polygon"
+                },
+                "default": [
+                  [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      1.0,
+                      1.0
+                    ]
+                  ]
+                ]
+              }
+            },
+            "as": "o920"
+          },
+          "bind": "s1686",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "shape",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              },
+              "size": null,
+              "required": false,
+              "default": [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ]
+                ]
+              ],
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "polygon"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o919"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o920"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid default value: Value must be a valid polygon: Ring #0 must contain at least 4 points to form a closed polygon"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o921"
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        }
+      ]
+    },
+    {
+      "name": "CoreMinorsTest::testValidSpatialDefaultsAreAccepted",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o922"
+          },
+          "bind": "s1689",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o922"
+              },
+              "capabilities": [],
+              "features": [
+                "Utopia\\Database\\Adapter\\Feature\\Spatial"
+              ],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o923"
+          },
+          "bind": "s1690",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [],
+              "features": [
+                "Utopia\\Database\\Adapter\\Feature\\Spatial"
+              ],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\AttributeDefinition",
+            "args": {
+              "attributes": [],
+              "profile": {
+                "$obj": "o923"
+              }
+            },
+            "as": "o924"
+          },
+          "bind": "s1691",
+          "expect": {
+            "$value": "Validator\\AttributeDefinition",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o925"
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "shape",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Point"
+                },
+                "default": [
+                  1.0,
+                  2.0
+                ]
+              }
+            },
+            "as": "o926"
+          },
+          "bind": "s1693",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "shape",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              },
+              "size": null,
+              "required": false,
+              "default": [
+                1.0,
+                2.0
+              ],
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "point"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o924"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o926"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "shape",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Linestring"
+                },
+                "default": [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    1.0,
+                    1.0
+                  ]
+                ]
+              }
+            },
+            "as": "o927"
+          },
+          "bind": "s1695",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "shape",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              },
+              "size": null,
+              "required": false,
+              "default": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.0,
+                  1.0
+                ]
+              ],
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "linestring"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o924"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o927"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "shape",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Polygon"
+                },
+                "default": [
+                  [
+                    [
+                      0.0,
+                      0.0
+                    ],
+                    [
+                      0.0,
+                      2.0
+                    ],
+                    [
+                      2.0,
+                      2.0
+                    ],
+                    [
+                      0.0,
+                      0.0
+                    ]
+                  ]
+                ]
+              }
+            },
+            "as": "o928"
+          },
+          "bind": "s1697",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "shape",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              },
+              "size": null,
+              "required": false,
+              "default": [
+                [
+                  [
+                    0.0,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    2.0
+                  ],
+                  [
+                    2.0,
+                    2.0
+                  ],
+                  [
+                    0.0,
+                    0.0
+                  ]
+                ]
+              ],
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "polygon"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o924"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o928"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

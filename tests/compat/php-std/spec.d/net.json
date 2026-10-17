@@ -1,0 +1,1252 @@
+{
+ "ops": {
+  "net.inet_pton": {
+   "doc": "inet_pton($ip): the packed address, or false",
+   "covers": [
+    "inet_pton()"
+   ],
+   "fuzz": [
+    {
+     "name": "addresses",
+     "args": {
+      "gen": "object",
+      "fields": {
+       "ip": {
+        "gen": "ref",
+        "name": "net_ip"
+       }
+      }
+     },
+     "iterations": 4000
+    },
+    {
+     "name": "ipv6",
+     "args": {
+      "gen": "object",
+      "fields": {
+       "ip": {
+        "gen": "one_of",
+        "of": [
+         {
+          "gen": "repeat",
+          "part": {
+           "gen": "one_of",
+           "of": [
+            {
+             "gen": "string",
+             "alphabet": "0123456789abcdefABCDEF",
+             "min": 0,
+             "max": 5
+            },
+            {
+             "gen": "pick",
+             "from": [
+              "0",
+              "00",
+              "0000",
+              "ffff",
+              "FFFF",
+              "",
+              "g",
+              "12345",
+              "1.2.3.4"
+             ]
+            }
+           ]
+          },
+          "min": 1,
+          "max": 10,
+          "sep": ":"
+         },
+         {
+          "gen": "concat",
+          "parts": [
+           {
+            "gen": "repeat",
+            "part": {
+             "gen": "one_of",
+             "of": [
+              {
+               "gen": "string",
+               "alphabet": "0123456789abcdefABCDEF",
+               "min": 0,
+               "max": 5
+              },
+              {
+               "gen": "pick",
+               "from": [
+                "0",
+                "00",
+                "0000",
+                "ffff",
+                "FFFF",
+                "",
+                "g",
+                "12345",
+                "1.2.3.4"
+               ]
+              }
+             ]
+            },
+            "min": 0,
+            "max": 4,
+            "sep": ":"
+           },
+           {
+            "gen": "pick",
+            "from": [
+             "::",
+             ":::",
+             ":"
+            ]
+           },
+           {
+            "gen": "repeat",
+            "part": {
+             "gen": "one_of",
+             "of": [
+              {
+               "gen": "string",
+               "alphabet": "0123456789abcdefABCDEF",
+               "min": 0,
+               "max": 5
+              },
+              {
+               "gen": "pick",
+               "from": [
+                "0",
+                "00",
+                "0000",
+                "ffff",
+                "FFFF",
+                "",
+                "g",
+                "12345",
+                "1.2.3.4"
+               ]
+              }
+             ]
+            },
+            "min": 0,
+            "max": 4,
+            "sep": ":"
+           }
+          ]
+         },
+         {
+          "gen": "concat",
+          "parts": [
+           {
+            "gen": "pick",
+            "from": [
+             "::ffff:",
+             "::",
+             "1::",
+             "1:2:3:4:5:6:",
+             "1:2:3:4:5::",
+             "::1:",
+             "64:ff9b::",
+             "1:2:3:4:5:6:7:"
+            ]
+           },
+           {
+            "gen": "repeat",
+            "part": {
+             "gen": "one_of",
+             "of": [
+              {
+               "gen": "int",
+               "min": 0,
+               "max": 300
+              },
+              {
+               "gen": "pick",
+               "from": [
+                "00",
+                "01",
+                "007",
+                "0",
+                "255",
+                "256",
+                "999",
+                "1000",
+                "",
+                "a",
+                "0x1",
+                " 1",
+                "1 "
+               ]
+              }
+             ]
+            },
+            "min": 1,
+            "max": 6,
+            "sep": "."
+           }
+          ]
+         }
+        ]
+       }
+      }
+     },
+     "iterations": 4000
+    }
+   ]
+  },
+  "net.inet_ntop": {
+   "doc": "inet_ntop($ip): the text form of a 4- or 16-byte packed address, or false",
+   "covers": [
+    "inet_ntop()"
+   ],
+   "fuzz": [
+    {
+     "name": "packed",
+     "args": {
+      "gen": "object",
+      "fields": {
+       "packed": {
+        "gen": "ref",
+        "name": "net_packed"
+       }
+      }
+     },
+     "iterations": 4000
+    }
+   ]
+  }
+ },
+ "generators": {
+  "net_ip": {
+   "gen": "one_of",
+   "of": [
+    {
+     "gen": "repeat",
+     "part": {
+      "gen": "one_of",
+      "of": [
+       {
+        "gen": "int",
+        "min": 0,
+        "max": 300
+       },
+       {
+        "gen": "pick",
+        "from": [
+         "00",
+         "01",
+         "007",
+         "0",
+         "255",
+         "256",
+         "999",
+         "1000",
+         "",
+         "a",
+         "0x1",
+         " 1",
+         "1 "
+        ]
+       }
+      ]
+     },
+     "min": 1,
+     "max": 6,
+     "sep": "."
+    },
+    {
+     "gen": "one_of",
+     "of": [
+      {
+       "gen": "repeat",
+       "part": {
+        "gen": "one_of",
+        "of": [
+         {
+          "gen": "string",
+          "alphabet": "0123456789abcdefABCDEF",
+          "min": 0,
+          "max": 5
+         },
+         {
+          "gen": "pick",
+          "from": [
+           "0",
+           "00",
+           "0000",
+           "ffff",
+           "FFFF",
+           "",
+           "g",
+           "12345",
+           "1.2.3.4"
+          ]
+         }
+        ]
+       },
+       "min": 1,
+       "max": 10,
+       "sep": ":"
+      },
+      {
+       "gen": "concat",
+       "parts": [
+        {
+         "gen": "repeat",
+         "part": {
+          "gen": "one_of",
+          "of": [
+           {
+            "gen": "string",
+            "alphabet": "0123456789abcdefABCDEF",
+            "min": 0,
+            "max": 5
+           },
+           {
+            "gen": "pick",
+            "from": [
+             "0",
+             "00",
+             "0000",
+             "ffff",
+             "FFFF",
+             "",
+             "g",
+             "12345",
+             "1.2.3.4"
+            ]
+           }
+          ]
+         },
+         "min": 0,
+         "max": 4,
+         "sep": ":"
+        },
+        {
+         "gen": "pick",
+         "from": [
+          "::",
+          ":::",
+          ":"
+         ]
+        },
+        {
+         "gen": "repeat",
+         "part": {
+          "gen": "one_of",
+          "of": [
+           {
+            "gen": "string",
+            "alphabet": "0123456789abcdefABCDEF",
+            "min": 0,
+            "max": 5
+           },
+           {
+            "gen": "pick",
+            "from": [
+             "0",
+             "00",
+             "0000",
+             "ffff",
+             "FFFF",
+             "",
+             "g",
+             "12345",
+             "1.2.3.4"
+            ]
+           }
+          ]
+         },
+         "min": 0,
+         "max": 4,
+         "sep": ":"
+        }
+       ]
+      },
+      {
+       "gen": "concat",
+       "parts": [
+        {
+         "gen": "pick",
+         "from": [
+          "::ffff:",
+          "::",
+          "1::",
+          "1:2:3:4:5:6:",
+          "1:2:3:4:5::",
+          "::1:",
+          "64:ff9b::",
+          "1:2:3:4:5:6:7:"
+         ]
+        },
+        {
+         "gen": "repeat",
+         "part": {
+          "gen": "one_of",
+          "of": [
+           {
+            "gen": "int",
+            "min": 0,
+            "max": 300
+           },
+           {
+            "gen": "pick",
+            "from": [
+             "00",
+             "01",
+             "007",
+             "0",
+             "255",
+             "256",
+             "999",
+             "1000",
+             "",
+             "a",
+             "0x1",
+             " 1",
+             "1 "
+            ]
+           }
+          ]
+         },
+         "min": 1,
+         "max": 6,
+         "sep": "."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "gen": "one_of",
+     "of": [
+      {
+       "gen": "string",
+       "alphabet": "0123456789.:abcdefABCDEFx ",
+       "min": 0,
+       "max": 20
+      },
+      {
+       "gen": "string",
+       "alphabet": "unicode",
+       "min": 0,
+       "max": 12
+      },
+      {
+       "gen": "pick",
+       "from": [
+        "",
+        "1.2.3.4",
+        "0.0.0.0",
+        "255.255.255.255",
+        "127.0.0.1",
+        "1.2.3",
+        "1.2.3.4.5",
+        "1..2.3",
+        ".1.2.3",
+        "1.2.3.",
+        "::",
+        "::1",
+        "1::",
+        ":1",
+        "1:",
+        ":::",
+        "1:2:3:4:5:6:7:8",
+        "1:2:3:4:5:6:7:8:9",
+        "1:2:3:4:5:6:7::",
+        "::1:2:3:4:5:6:7",
+        "::1:2:3:4:5:6:7:8",
+        "1::2::3",
+        "::ffff:1.2.3.4",
+        "::1.2.3.4",
+        "1:2:3:4:5:6:1.2.3.4",
+        "1:2:3:4:5:1.2.3.4",
+        "fe80::1%eth0",
+        "[::1]",
+        "0x7f.1",
+        "1.2.3.04",
+        "1.2.3.4 ",
+        " 1.2.3.4",
+        {
+         "$bytes": "MS4yLjMuNAA="
+        },
+        {
+         "$bytes": "ADEuMi4zLjQ="
+        },
+        {
+         "$bytes": "OjoxAA=="
+        },
+        {
+         "$bytes": "MS4yLjMuNABqdW5r"
+        },
+        {
+         "$bytes": "/y4xLjIuMw=="
+        },
+        {
+         "$bytes": "MS4yLjMuw6k="
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "net_packed": {
+   "gen": "one_of",
+   "of": [
+    {
+     "gen": "pick",
+     "from": [
+      {
+       "$bytes": "AQAAAA=="
+      },
+      {
+       "$bytes": "AQAAAQ=="
+      },
+      {
+       "$bytes": "8f8BAQ=="
+      },
+      {
+       "$bytes": "AIr/AA=="
+      },
+      {
+       "$bytes": "AAEuAQ=="
+      },
+      {
+       "$bytes": "AccBAA=="
+      },
+      {
+       "$bytes": "/wH/AA=="
+      },
+      {
+       "$bytes": "sACQAA=="
+      },
+      {
+       "$bytes": "AAAA/w=="
+      },
+      {
+       "$bytes": "AP8AAA=="
+      },
+      {
+       "$bytes": "AQAAAA=="
+      },
+      {
+       "$bytes": "AQHPAA=="
+      },
+      {
+       "$bytes": "F/8Apg=="
+      },
+      {
+       "$bytes": "AAD/AA=="
+      },
+      {
+       "$bytes": "/wAAQQ=="
+      },
+      {
+       "$bytes": "AQEAAA=="
+      },
+      {
+       "$bytes": "6wAA9Q=="
+      },
+      {
+       "$bytes": "/wEA/w=="
+      },
+      {
+       "$bytes": "VgD/AA=="
+      },
+      {
+       "$bytes": "rv8AAA=="
+      },
+      {
+       "$bytes": "/wEAAA=="
+      },
+      {
+       "$bytes": "/wAAAA=="
+      },
+      {
+       "$bytes": "AADlAA=="
+      },
+      {
+       "$bytes": "AAAB/w=="
+      },
+      {
+       "$bytes": "AAD/AA=="
+      },
+      {
+       "$bytes": "/wBBAA=="
+      },
+      {
+       "$bytes": "AP//AA=="
+      },
+      {
+       "$bytes": "sQD/AQ=="
+      },
+      {
+       "$bytes": "AQEAAA=="
+      },
+      {
+       "$bytes": "/wAA/w=="
+      },
+      {
+       "$bytes": "/wAA/w=="
+      },
+      {
+       "$bytes": "QBYBAA=="
+      },
+      {
+       "$bytes": "/wAA/w=="
+      },
+      {
+       "$bytes": "AP8BhQ=="
+      },
+      {
+       "$bytes": "sAL/AA=="
+      },
+      {
+       "$bytes": "Af8A/w=="
+      },
+      {
+       "$bytes": "AAEBAA=="
+      },
+      {
+       "$bytes": "AW8A/w=="
+      },
+      {
+       "$bytes": "AKr/AA=="
+      },
+      {
+       "$bytes": "AAAA/w=="
+      },
+      {
+       "$bytes": "AAHhAA=="
+      },
+      {
+       "$bytes": "AAAAAA=="
+      },
+      {
+       "$bytes": "AAAA/w=="
+      },
+      {
+       "$bytes": "ANoA/w=="
+      },
+      {
+       "$bytes": "/wAAAA=="
+      },
+      {
+       "$bytes": "AFEA/w=="
+      },
+      {
+       "$bytes": "AP8AAQ=="
+      },
+      {
+       "$bytes": "AAEA/w=="
+      },
+      {
+       "$bytes": "ALr/MA=="
+      },
+      {
+       "$bytes": "AP8BAQ=="
+      },
+      {
+       "$bytes": "AAEAAA=="
+      },
+      {
+       "$bytes": "LscBgA=="
+      },
+      {
+       "$bytes": "AAABAA=="
+      },
+      {
+       "$bytes": "/5oA/w=="
+      },
+      {
+       "$bytes": "8f8AAA=="
+      },
+      {
+       "$bytes": "qgEAXA=="
+      },
+      {
+       "$bytes": "/wABAA=="
+      },
+      {
+       "$bytes": "tP+aAQ=="
+      },
+      {
+       "$bytes": "kwsB/w=="
+      },
+      {
+       "$bytes": "AAD//w=="
+      },
+      {
+       "$bytes": "qzUBdzMA////AQEA/wD/AA=="
+      },
+      {
+       "$bytes": "AAAAAQAAABsAjgAAAAAAAA=="
+      },
+      {
+       "$bytes": "SgANVgE5Af8BACUA/wEAAA=="
+      },
+      {
+       "$bytes": "AP8A1d4AAABMABpOAED/AQ=="
+      },
+      {
+       "$bytes": "/wD/AKYBAAAA//8AEv8AAA=="
+      },
+      {
+       "$bytes": "/wAA/wBr/74BAQABAP8AAA=="
+      },
+      {
+       "$bytes": "zAAACgD//wAAACEBAP+AAQ=="
+      },
+      {
+       "$bytes": "AP8BAAEAAAEAASoAAAAAAA=="
+      },
+      {
+       "$bytes": "AAAAAPT//ywAAAH/8f8AvQ=="
+      },
+      {
+       "$bytes": "AAABAAH/AAAA////AQEBAA=="
+      },
+      {
+       "$bytes": "AQD/MgEBCQAAAQD9AAAAQw=="
+      },
+      {
+       "$bytes": "AAAAAf8A1wEAAQAA/wAB/w=="
+      },
+      {
+       "$bytes": "/5QAAAAAAAD/AAAAAQAArg=="
+      },
+      {
+       "$bytes": "AAAAAQBrAHej//8BAM0AAA=="
+      },
+      {
+       "$bytes": "AACTAKUBAP85//4AAAC6XQ=="
+      },
+      {
+       "$bytes": "Af8AAAEAAABr/wAAAP8AAQ=="
+      },
+      {
+       "$bytes": "AQAAAAH/AAAA/wAAAAAB/w=="
+      },
+      {
+       "$bytes": "AAAA/wABAQEBAAEBAQAB/w=="
+      },
+      {
+       "$bytes": "AAAAAf//AHcAATpXJAD/ng=="
+      },
+      {
+       "$bytes": "AP8BAAEAAAEA/wD/AAD//w=="
+      },
+      {
+       "$bytes": "AAEAAAEBAAAAAAABAAAAug=="
+      },
+      {
+       "$bytes": "/wFkAf8AAILDAAAAdv8AAA=="
+      },
+      {
+       "$bytes": "7f83AAAAAQABAFUAAAEAAQ=="
+      },
+      {
+       "$bytes": "AP//ATUBAAEAAAD/AP/PAQ=="
+      },
+      {
+       "$bytes": "AAEAewEA/wABAADeAQD/AQ=="
+      },
+      {
+       "$bytes": "AAAA/y0AAAEBAGgA/wAl+Q=="
+      },
+      {
+       "$bytes": "AAAAHgBsxAABtiAAABL/8A=="
+      },
+      {
+       "$bytes": "AP8B//8YXv8AAABlAIUBAA=="
+      },
+      {
+       "$bytes": "AAFYACUAAAABAAAA/wAAYw=="
+      },
+      {
+       "$bytes": "AAD/Af8AAAAB//8AAAD0AA=="
+      },
+      {
+       "$bytes": "hQEAAAEAAAD/AAAAuP8BbA=="
+      },
+      {
+       "$bytes": "k/8AwP8B6wH/AakAAAAAqw=="
+      },
+      {
+       "$bytes": "AAAAvQAAkAAAJQFkAACxAA=="
+      },
+      {
+       "$bytes": "AADPAAD/AAABIgD/AAAAeA=="
+      },
+      {
+       "$bytes": "AWS7r5UAAHmwAAAA/wAAAA=="
+      },
+      {
+       "$bytes": "AAAA/wCSAAEA////TgGRnQ=="
+      },
+      {
+       "$bytes": "LwAAAAFzAAH//wCWALYBCg=="
+      },
+      {
+       "$bytes": "Af8AAQEAAf//AAAA8////w=="
+      },
+      {
+       "$bytes": "AP//AT7/AAAB/wAAAVoB/w=="
+      },
+      {
+       "$bytes": "AAAAAP8AAAD/AP//AYMAAA=="
+      },
+      {
+       "$bytes": "1wABZgAAAQBfSwD/AAEAAA=="
+      },
+      {
+       "$bytes": "AAAAAQAAAAAAAAAA+QAA/w=="
+      },
+      {
+       "$bytes": "/wH/AQAAAf8AmwAgcwE/AA=="
+      },
+      {
+       "$bytes": "NgAAAAABATUBAf8AAF7//w=="
+      },
+      {
+       "$bytes": "AAAaAAD//wABAP9q/wABAA=="
+      },
+      {
+       "$bytes": "ADiYAAAA8gAA/6YAAP8AAA=="
+      },
+      {
+       "$bytes": "VwD/AQABAAD/AAAA/wA4RA=="
+      },
+      {
+       "$bytes": "AAABAQCbvQAAAABGAAABAA=="
+      },
+      {
+       "$bytes": "ACcAAB4A/wD/AQD/ANxHAA=="
+      },
+      {
+       "$bytes": "ADEBAP8AAACAAAC9AP/tAQ=="
+      },
+      {
+       "$bytes": "AQABAAAAAXfwhQD/AAEY/w=="
+      },
+      {
+       "$bytes": "/wAAHwABAP///xwAAAH/UQ=="
+      },
+      {
+       "$bytes": "AACpAAABAAEAAAGaAP//AA=="
+      },
+      {
+       "$bytes": "AAAA////AAAAAAcBAAAA/w=="
+      },
+      {
+       "$bytes": "NqY5AA3/AP8AAAAAAQD/xw=="
+      },
+      {
+       "$bytes": "AAEAAPUAAAAAAAABAAAAAQ=="
+      },
+      {
+       "$bytes": "ACsAAAAAAP8Bxf8A/wAAAQ=="
+      },
+      {
+       "$bytes": "AAAAAP8AAAAAAAFtAAD/AA=="
+      },
+      {
+       "$bytes": "AP8A/wAAAACFAAFJAQEAtQ=="
+      },
+      {
+       "$bytes": "hwBGASgB/y8B////AACpRQ=="
+      },
+      {
+       "$bytes": "ACQBAAAAAAEBAAAAAAD/AQ=="
+      },
+      {
+       "$bytes": "AAEAiQEAAABCAAAAAQAAAQ=="
+      },
+      {
+       "$bytes": "xQEA/x8A/wAAAQCaAf///w=="
+      },
+      {
+       "$bytes": "Af8BAN4AAAAAAAD/Af8AAA=="
+      },
+      {
+       "$bytes": "AAAAAAD/AAD/AQAAADwApw=="
+      },
+      {
+       "$bytes": "AP//Af8BUAAAAP8AAAEBJw=="
+      },
+      {
+       "$bytes": "AADmAAAAAAD/AAEAAAAAAA=="
+      },
+      {
+       "$bytes": "AQD/AAAAAOUBAQAYfgEjMg=="
+      },
+      {
+       "$bytes": "AADAAAD/AAAAAAAA2QABAA=="
+      },
+      {
+       "$bytes": "AAABAAABADoBAAEAACz/NA=="
+      },
+      {
+       "$bytes": "KwAAAAH/zAB82wEA////AA=="
+      },
+      {
+       "$bytes": "AAD/AAH/AP8AwwD/7AD/CA=="
+      },
+      {
+       "$bytes": "ACkAAP8AAAD/AQAA/wAiAA=="
+      },
+      {
+       "$bytes": "AP+PAf8AAAABAQAB///G/w=="
+      },
+      {
+       "$bytes": "AP8A5/8AlQH/AAD//wC8AA=="
+      },
+      {
+       "$bytes": "AL2BAFUAAf8BAf//5v/8AA=="
+      },
+      {
+       "$bytes": "AAAA/wD//wAAAQAAAAEkAA=="
+      },
+      {
+       "$bytes": "/wAAAAAA/wEA/wAAAAAA/w=="
+      },
+      {
+       "$bytes": "AAEA/wABAQAAAP8AAD//AQ=="
+      },
+      {
+       "$bytes": "/wAB6wBerv8AAAAA4Kf/AA=="
+      },
+      {
+       "$bytes": "LQD/AAFOAAH/AAD/AAEqxg=="
+      },
+      {
+       "$bytes": "QgD/x/91AAD/AAEAbwAA+Q=="
+      },
+      {
+       "$bytes": "/wAA/wAAAACAAAAB/wEBAA=="
+      },
+      {
+       "$bytes": "HQAANAH/AQABAXUAAAC8/w=="
+      },
+      {
+       "$bytes": "Af8AAQAA/wAAAP8BAC4A/w=="
+      },
+      {
+       "$bytes": "AAEF/wAAogAA/wH/AIAA/w=="
+      },
+      {
+       "$bytes": "AAAAAAEAAAAdAQD/APoA/w=="
+      },
+      {
+       "$bytes": "0AEAAJABOuUAAAH/AAEAAQ=="
+      },
+      {
+       "$bytes": "AAAAVQABAAEAkQAAAAAAAQ=="
+      },
+      {
+       "$bytes": "AMIAAACZAQE7AdkB/xNvAA=="
+      },
+      {
+       "$bytes": "AAEA6v8AAcz/ABkA/wAA6w=="
+      },
+      {
+       "$bytes": "AQAB4wAAAAD/AAAAAAAAAA=="
+      },
+      {
+       "$bytes": "lgBHLv8AUAEAAAH/AQAB/w=="
+      },
+      {
+       "$bytes": "AAEAvAD///8AAf9W/wAAAA=="
+      },
+      {
+       "$bytes": "AAEAfAABAAAAAP8AAAEABg=="
+      },
+      {
+       "$bytes": "/wEAAAD/AAEAAAEA/wAAAA=="
+      },
+      {
+       "$bytes": "/wABAAAAAAChAAAA/57/ZQ=="
+      },
+      {
+       "$bytes": "AAD/APomAQAAFwB2AAG4AQ=="
+      },
+      {
+       "$bytes": "ZvwBAXXEAAAA/wH/AAABAA=="
+      },
+      {
+       "$bytes": "AQABAQAAAAAABCv/ACf/AA=="
+      },
+      {
+       "$bytes": "AQAA4wRSAAD//wAAAAALAA=="
+      },
+      {
+       "$bytes": "AAAA/wAAAQAwAAAAAAEA8w=="
+      },
+      {
+       "$bytes": "AQEAAAD/AAAPw/f//5n/AA=="
+      },
+      {
+       "$bytes": "AAH/d83/AP8A/zotAQEA/w=="
+      },
+      {
+       "$bytes": "AHv/AQEAACYA/wABAAADAQ=="
+      },
+      {
+       "$bytes": "/wH/AP8AIPkAAAA5AJf/AA=="
+      },
+      {
+       "$bytes": "AAD/puABAQAABcAAyAH/aQ=="
+      },
+      {
+       "$bytes": "/wEAAQAB2wAAAQABo2BFAA=="
+      },
+      {
+       "$bytes": "AQFRAAD/AAEA/AH/AAAAzQ=="
+      },
+      {
+       "$bytes": "AFMAAAEA/wAAAP/oAAAB/w=="
+      },
+      {
+       "$bytes": "AAAAAAAAAAD/AAAAAADXAA=="
+      },
+      {
+       "$bytes": "AAGdAAD/AP8AAAAAAe8AAA=="
+      },
+      {
+       "$bytes": "AAABAAAAAf8BAQEAqwD//w=="
+      },
+      {
+       "$bytes": "AQDv//8A/wEBAAEWOh4AAA=="
+      },
+      {
+       "$bytes": "/0UBAP8LAAAA0/8BAAGV/w=="
+      },
+      {
+       "$bytes": "/wAAAVUBAP/+AAAAK//xAA=="
+      },
+      {
+       "$bytes": "//8BAAAA/wAAAAD/7dv//w=="
+      },
+      {
+       "$bytes": "AQwB+QABAQCv7QABAABRAA=="
+      },
+      {
+       "$bytes": "/0n/AAAAAKkB/wAAAf8B/w=="
+      },
+      {
+       "$bytes": "//8AAAEAAAD/AP+VAP8AAA=="
+      },
+      {
+       "$bytes": ""
+      },
+      {
+       "$bytes": "/w=="
+      },
+      {
+       "$bytes": "AQH/"
+      },
+      {
+       "$bytes": "//8AAAA="
+      },
+      {
+       "$bytes": "Af//AAAAAACwl8X//wD/"
+      },
+      {
+       "$bytes": "AP8A/wAdAAABANwB/wAAyeM="
+      },
+      {
+       "$bytes": "/wABAAAAAAEAAQAApf8/AAHVARX/5QEAAQABAAAAtAE="
+      },
+      {
+       "$bytes": "AAH//wAA67MAAAAAAADLiA=="
+      },
+      {
+       "$bytes": "HJIAAOxOAAEAAAAA/hIAAA=="
+      },
+      {
+       "$bytes": "GSsAAQABAAEAAbdF8fEAAA=="
+      },
+      {
+       "$bytes": "LmEAAAAA//8AAQAAAAGsKQ=="
+      },
+      {
+       "$bytes": "+/P7GP/////3aP////8AAA=="
+      },
+      {
+       "$bytes": "AAAAAAAA//8AAAABAAEAAA=="
+      },
+      {
+       "$bytes": "AAEAAQABAAD//wAAeeEAAQ=="
+      },
+      {
+       "$bytes": "X/gAAP//wKwAAAAAAAH//w=="
+      },
+      {
+       "$bytes": "AAAAAAAB/////wAAAAD//w=="
+      },
+      {
+       "$bytes": "AAAAAQABAAEAAAAAAAD//w=="
+      },
+      {
+       "$bytes": "AAEAAAABAAD//wAAAAAAAA=="
+      },
+      {
+       "$bytes": "//8AAAAAAAAj2AAAAAAAAA=="
+      },
+      {
+       "$bytes": "//8AAAAB//8AAAAAAAEAAA=="
+      },
+      {
+       "$bytes": "a80AAQAA//8AAQAAAAAAAQ=="
+      },
+      {
+       "$bytes": "AAEAAf////8AAAAAAAAAAA=="
+      },
+      {
+       "$bytes": "AAH///////8AAP//AAH//w=="
+      },
+      {
+       "$bytes": "AAEAAIiuYRMAAQAAAAAAAA=="
+      },
+      {
+       "$bytes": "AAEAAAAAGLEAAKzrAAAAAA=="
+      },
+      {
+       "$bytes": "AACfGAAB//8AAZaMAAAAAA=="
+      },
+      {
+       "$bytes": "//8AAP////8AAP///////w=="
+      },
+      {
+       "$bytes": "AAAAAAAAAAAAAVeuAAEAAA=="
+      },
+      {
+       "$bytes": "AAAAAAAAAAAAAPiCAAAAAA=="
+      },
+      {
+       "$bytes": "AAAAAAAA0ewAAP//AAAAAA=="
+      },
+      {
+       "$bytes": "AAAAAAABAAEAASLAAABFmQ=="
+      },
+      {
+       "$bytes": "AAAAAP//AAEcTgABAAAAAQ=="
+      },
+      {
+       "$bytes": "AAD//wAAAABIrAABAAAAAA=="
+      },
+      {
+       "$bytes": "TYQAAAAA//9ZmAAAAAD//w=="
+      },
+      {
+       "$bytes": "AAEAAOKyAAAAAAABAAAvQg=="
+      },
+      {
+       "$bytes": "AAAAAAAAAAEAAAAAAAAAAA=="
+      },
+      {
+       "$bytes": "//8AAAABAAAAAAKQAAAAAA=="
+      },
+      {
+       "$bytes": "AAAAAAAAAAAAAAAA2R4AAA=="
+      },
+      {
+       "$bytes": "AAD//wAAAAAAAf//AAC+Og=="
+      },
+      {
+       "$bytes": "AAD//wAAYVUAAQAB//8AAA=="
+      },
+      {
+       "$bytes": "//8AAAAAAAAAAAABAAH//w=="
+      },
+      {
+       "$bytes": "b7gAAAAAAAEAAQAAAAAAAA=="
+      },
+      {
+       "$bytes": "bZH//wAAz68AAAAAAAH//w=="
+      },
+      {
+       "$bytes": "AAAAAAAAAAEAAAABYSkAAQ=="
+      },
+      {
+       "$bytes": "AAEAAX4LAAEAAQABAAAAAA=="
+      },
+      {
+       "$bytes": "AAE9MwAAAADimAABAAGEXA=="
+      },
+      {
+       "$bytes": "m/oAAAAAAAAAAQABAAD//w=="
+      },
+      {
+       "$bytes": "AAAAAAAAAAAAAP//h8yDXQ=="
+      },
+      {
+       "$bytes": "AAAAAAAAAAAAAP//UgU6qw=="
+      },
+      {
+       "$bytes": "AAAAAAAAAAAAAP//EVUK5A=="
+      },
+      {
+       "$bytes": "AAAAAAAAAAAAAP//IaSLeQ=="
+      },
+      {
+       "$bytes": "AAAAAAAAAAAAAP//vT8SWg=="
+      },
+      {
+       "$bytes": "AAAAAAAAAAAAAP//ck2zEA=="
+      },
+      {
+       "$bytes": "AAAAAAAAAAAAAP//pX3m5w=="
+      },
+      {
+       "$bytes": "AAAAAAAAAAAAAP//TTrteg=="
+      },
+      {
+       "$bytes": "AAAAAAAAAAAAAP//eRYViw=="
+      },
+      {
+       "$bytes": "AAAAAAAAAAAAAP//UaqwjA=="
+      },
+      {
+       "$bytes": "AAAAAAAAAAAAAAAAAAAAAA=="
+      },
+      {
+       "$bytes": "AAAAAAAAAAAAAAAAAAAAAQ=="
+      },
+      {
+       "$bytes": "AAEAAAAAAAAAAAAAAAAAAA=="
+      },
+      {
+       "$bytes": "AAAAAAAAAAAAAAAAAQIDBA=="
+      }
+     ]
+    },
+    {
+     "gen": "string",
+     "alphabet": "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
+     "min": 4,
+     "max": 4
+    },
+    {
+     "gen": "string",
+     "alphabet": "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
+     "min": 16,
+     "max": 16
+    },
+    {
+     "gen": "string",
+     "alphabet": "\u0000\u0001",
+     "min": 16,
+     "max": 16
+    },
+    {
+     "gen": "string",
+     "alphabet": "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
+     "min": 0,
+     "max": 20
+    }
+   ]
+  }
+ },
+ "deviations": []
+}

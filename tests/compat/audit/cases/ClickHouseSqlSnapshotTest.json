@@ -1,0 +1,1476 @@
+{
+  "source": "packages/audit/tests/Adapter/ClickHouseSqlSnapshotTest.php",
+  "cases": [
+    {
+      "name": "testSetupCreateTableSnapshot",
+      "steps": [
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "setup",
+            "responses": [
+              {
+                "status": 200
+              },
+              {
+                "status": 200
+              },
+              {
+                "status": 200
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "error": null,
+            "requests": [
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "CREATE DATABASE IF NOT EXISTS `default`"
+                }
+              },
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "CREATE TABLE IF NOT EXISTS `default`.`audits` (`id` String, `actorId` Nullable(String), `event` LowCardinality(String), `resource` Nullable(String), `userAgent` String, `ip` String, `time` DateTime64(3), `data` Nullable(String), `actorType` LowCardinality(String), `actorInternalId` Nullable(String), `resourceParent` Nullable(String), `resourceType` LowCardinality(String), `resourceId` String, `resourceInternalId` Nullable(String), `country` LowCardinality(Nullable(String)), `city` Nullable(String), `continentCode` LowCardinality(Nullable(String)), `subdivisions` LowCardinality(Nullable(String)), `isp` Nullable(String), `autonomousSystemNumber` Nullable(String), `autonomousSystemOrganization` Nullable(String), `connectionType` LowCardinality(Nullable(String)), `connectionUsageType` LowCardinality(Nullable(String)), `connectionOrganization` Nullable(String), `projectId` String, `projectInternalId` String, `teamId` String, `teamInternalId` String, `hostname` String, `sdk` LowCardinality(Nullable(String)), `sdkVersion` Nullable(String), `osCode` LowCardinality(Nullable(String)), `osName` LowCardinality(Nullable(String)), `osVersion` Nullable(String), `clientType` LowCardinality(Nullable(String)), `clientCode` LowCardinality(Nullable(String)), `clientName` LowCardinality(Nullable(String)), `clientVersion` Nullable(String), `clientEngine` LowCardinality(Nullable(String)), `clientEngineVersion` Nullable(String), `deviceName` LowCardinality(Nullable(String)), `deviceBrand` LowCardinality(Nullable(String)), `deviceModel` Nullable(String), INDEX `idx_event` `event` TYPE bloom_filter GRANULARITY 1, INDEX `idx_actorId_event` (`actorId`, `event`) TYPE bloom_filter GRANULARITY 1, INDEX `idx_resource_event` (`resource`, `event`) TYPE bloom_filter GRANULARITY 1, INDEX `idx_time_desc` `time` TYPE bloom_filter GRANULARITY 1, INDEX `_key_actor_internal_and_event` (`actorInternalId`, `event`) TYPE bloom_filter GRANULARITY 1, INDEX `_key_project_internal_id` `projectInternalId` TYPE bloom_filter GRANULARITY 1, INDEX `_key_team_internal_id` `teamInternalId` TYPE bloom_filter GRANULARITY 1, INDEX `_key_actor_internal_id` `actorInternalId` TYPE bloom_filter GRANULARITY 1, INDEX `_key_actor_type` `actorType` TYPE bloom_filter GRANULARITY 1, INDEX `_key_country` `country` TYPE bloom_filter GRANULARITY 1, INDEX `_key_hostname` `hostname` TYPE bloom_filter GRANULARITY 1, INDEX `_key_sdk` `sdk` TYPE bloom_filter GRANULARITY 1) ENGINE = MergeTree() PARTITION BY toYYYYMM(time) ORDER BY (`time`, `id`) SETTINGS index_granularity = 8192"
+                }
+              },
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "ALTER TABLE `default`.`audits` REMOVE TTL"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "setup",
+            "config": {
+              "set_retention": 30
+            },
+            "responses": [
+              {
+                "status": 200
+              },
+              {
+                "status": 200
+              },
+              {
+                "status": 200
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "error": null,
+            "requests": [
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "CREATE DATABASE IF NOT EXISTS `default`"
+                }
+              },
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "CREATE TABLE IF NOT EXISTS `default`.`audits` (`id` String, `actorId` Nullable(String), `event` LowCardinality(String), `resource` Nullable(String), `userAgent` String, `ip` String, `time` DateTime64(3), `data` Nullable(String), `actorType` LowCardinality(String), `actorInternalId` Nullable(String), `resourceParent` Nullable(String), `resourceType` LowCardinality(String), `resourceId` String, `resourceInternalId` Nullable(String), `country` LowCardinality(Nullable(String)), `city` Nullable(String), `continentCode` LowCardinality(Nullable(String)), `subdivisions` LowCardinality(Nullable(String)), `isp` Nullable(String), `autonomousSystemNumber` Nullable(String), `autonomousSystemOrganization` Nullable(String), `connectionType` LowCardinality(Nullable(String)), `connectionUsageType` LowCardinality(Nullable(String)), `connectionOrganization` Nullable(String), `projectId` String, `projectInternalId` String, `teamId` String, `teamInternalId` String, `hostname` String, `sdk` LowCardinality(Nullable(String)), `sdkVersion` Nullable(String), `osCode` LowCardinality(Nullable(String)), `osName` LowCardinality(Nullable(String)), `osVersion` Nullable(String), `clientType` LowCardinality(Nullable(String)), `clientCode` LowCardinality(Nullable(String)), `clientName` LowCardinality(Nullable(String)), `clientVersion` Nullable(String), `clientEngine` LowCardinality(Nullable(String)), `clientEngineVersion` Nullable(String), `deviceName` LowCardinality(Nullable(String)), `deviceBrand` LowCardinality(Nullable(String)), `deviceModel` Nullable(String), INDEX `idx_event` `event` TYPE bloom_filter GRANULARITY 1, INDEX `idx_actorId_event` (`actorId`, `event`) TYPE bloom_filter GRANULARITY 1, INDEX `idx_resource_event` (`resource`, `event`) TYPE bloom_filter GRANULARITY 1, INDEX `idx_time_desc` `time` TYPE bloom_filter GRANULARITY 1, INDEX `_key_actor_internal_and_event` (`actorInternalId`, `event`) TYPE bloom_filter GRANULARITY 1, INDEX `_key_project_internal_id` `projectInternalId` TYPE bloom_filter GRANULARITY 1, INDEX `_key_team_internal_id` `teamInternalId` TYPE bloom_filter GRANULARITY 1, INDEX `_key_actor_internal_id` `actorInternalId` TYPE bloom_filter GRANULARITY 1, INDEX `_key_actor_type` `actorType` TYPE bloom_filter GRANULARITY 1, INDEX `_key_country` `country` TYPE bloom_filter GRANULARITY 1, INDEX `_key_hostname` `hostname` TYPE bloom_filter GRANULARITY 1, INDEX `_key_sdk` `sdk` TYPE bloom_filter GRANULARITY 1) ENGINE = MergeTree() PARTITION BY toYYYYMM(time) ORDER BY (`time`, `id`) SETTINGS index_granularity = 8192"
+                }
+              },
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "ALTER TABLE `default`.`audits` MODIFY TTL toDateTime(time) + INTERVAL 30 DAY SETTINGS materialize_ttl_after_modify = 0"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "setup",
+            "config": {
+              "set_shared_tables": true,
+              "set_namespace": "proj"
+            },
+            "responses": [
+              {
+                "status": 200
+              },
+              {
+                "status": 200
+              },
+              {
+                "status": 500,
+                "body": "Code: 36. DB::Exception: Table default.proj_audits doesn't have any table TTL expression, cannot remove. (BAD_ARGUMENTS)"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "error": null,
+            "requests": [
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "CREATE DATABASE IF NOT EXISTS `default`"
+                }
+              },
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "CREATE TABLE IF NOT EXISTS `default`.`proj_audits` (`id` String, `actorId` Nullable(String), `event` LowCardinality(String), `resource` Nullable(String), `userAgent` String, `ip` String, `time` DateTime64(3), `data` Nullable(String), `actorType` LowCardinality(String), `actorInternalId` Nullable(String), `resourceParent` Nullable(String), `resourceType` LowCardinality(String), `resourceId` String, `resourceInternalId` Nullable(String), `country` LowCardinality(Nullable(String)), `city` Nullable(String), `continentCode` LowCardinality(Nullable(String)), `subdivisions` LowCardinality(Nullable(String)), `isp` Nullable(String), `autonomousSystemNumber` Nullable(String), `autonomousSystemOrganization` Nullable(String), `connectionType` LowCardinality(Nullable(String)), `connectionUsageType` LowCardinality(Nullable(String)), `connectionOrganization` Nullable(String), `projectId` String, `projectInternalId` String, `teamId` String, `teamInternalId` String, `hostname` String, `sdk` LowCardinality(Nullable(String)), `sdkVersion` Nullable(String), `osCode` LowCardinality(Nullable(String)), `osName` LowCardinality(Nullable(String)), `osVersion` Nullable(String), `clientType` LowCardinality(Nullable(String)), `clientCode` LowCardinality(Nullable(String)), `clientName` LowCardinality(Nullable(String)), `clientVersion` Nullable(String), `clientEngine` LowCardinality(Nullable(String)), `clientEngineVersion` Nullable(String), `deviceName` LowCardinality(Nullable(String)), `deviceBrand` LowCardinality(Nullable(String)), `deviceModel` Nullable(String), `tenant` Nullable(UInt64), INDEX `idx_event` `event` TYPE bloom_filter GRANULARITY 1, INDEX `idx_actorId_event` (`actorId`, `event`) TYPE bloom_filter GRANULARITY 1, INDEX `idx_resource_event` (`resource`, `event`) TYPE bloom_filter GRANULARITY 1, INDEX `idx_time_desc` `time` TYPE bloom_filter GRANULARITY 1, INDEX `_key_actor_internal_and_event` (`actorInternalId`, `event`) TYPE bloom_filter GRANULARITY 1, INDEX `_key_project_internal_id` `projectInternalId` TYPE bloom_filter GRANULARITY 1, INDEX `_key_team_internal_id` `teamInternalId` TYPE bloom_filter GRANULARITY 1, INDEX `_key_actor_internal_id` `actorInternalId` TYPE bloom_filter GRANULARITY 1, INDEX `_key_actor_type` `actorType` TYPE bloom_filter GRANULARITY 1, INDEX `_key_country` `country` TYPE bloom_filter GRANULARITY 1, INDEX `_key_hostname` `hostname` TYPE bloom_filter GRANULARITY 1, INDEX `_key_sdk` `sdk` TYPE bloom_filter GRANULARITY 1) ENGINE = MergeTree() PARTITION BY toYYYYMM(time) ORDER BY (`tenant`, `time`, `id`) SETTINGS index_granularity = 8192, allow_nullable_key = 1"
+                }
+              },
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "ALTER TABLE `default`.`proj_audits` REMOVE TTL"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "setup",
+            "responses": [
+              {
+                "status": 200
+              },
+              {
+                "status": 200
+              },
+              {
+                "status": 500,
+                "body": "Code: 60. DB::Exception: Unknown table"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "error": {
+              "class": "Exception",
+              "message": "ClickHouse query execution failed: ClickHouse query failed with HTTP 500: Code: 60. DB::Exception: Unknown table"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "CREATE DATABASE IF NOT EXISTS `default`"
+                }
+              },
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "CREATE TABLE IF NOT EXISTS `default`.`audits` (`id` String, `actorId` Nullable(String), `event` LowCardinality(String), `resource` Nullable(String), `userAgent` String, `ip` String, `time` DateTime64(3), `data` Nullable(String), `actorType` LowCardinality(String), `actorInternalId` Nullable(String), `resourceParent` Nullable(String), `resourceType` LowCardinality(String), `resourceId` String, `resourceInternalId` Nullable(String), `country` LowCardinality(Nullable(String)), `city` Nullable(String), `continentCode` LowCardinality(Nullable(String)), `subdivisions` LowCardinality(Nullable(String)), `isp` Nullable(String), `autonomousSystemNumber` Nullable(String), `autonomousSystemOrganization` Nullable(String), `connectionType` LowCardinality(Nullable(String)), `connectionUsageType` LowCardinality(Nullable(String)), `connectionOrganization` Nullable(String), `projectId` String, `projectInternalId` String, `teamId` String, `teamInternalId` String, `hostname` String, `sdk` LowCardinality(Nullable(String)), `sdkVersion` Nullable(String), `osCode` LowCardinality(Nullable(String)), `osName` LowCardinality(Nullable(String)), `osVersion` Nullable(String), `clientType` LowCardinality(Nullable(String)), `clientCode` LowCardinality(Nullable(String)), `clientName` LowCardinality(Nullable(String)), `clientVersion` Nullable(String), `clientEngine` LowCardinality(Nullable(String)), `clientEngineVersion` Nullable(String), `deviceName` LowCardinality(Nullable(String)), `deviceBrand` LowCardinality(Nullable(String)), `deviceModel` Nullable(String), INDEX `idx_event` `event` TYPE bloom_filter GRANULARITY 1, INDEX `idx_actorId_event` (`actorId`, `event`) TYPE bloom_filter GRANULARITY 1, INDEX `idx_resource_event` (`resource`, `event`) TYPE bloom_filter GRANULARITY 1, INDEX `idx_time_desc` `time` TYPE bloom_filter GRANULARITY 1, INDEX `_key_actor_internal_and_event` (`actorInternalId`, `event`) TYPE bloom_filter GRANULARITY 1, INDEX `_key_project_internal_id` `projectInternalId` TYPE bloom_filter GRANULARITY 1, INDEX `_key_team_internal_id` `teamInternalId` TYPE bloom_filter GRANULARITY 1, INDEX `_key_actor_internal_id` `actorInternalId` TYPE bloom_filter GRANULARITY 1, INDEX `_key_actor_type` `actorType` TYPE bloom_filter GRANULARITY 1, INDEX `_key_country` `country` TYPE bloom_filter GRANULARITY 1, INDEX `_key_hostname` `hostname` TYPE bloom_filter GRANULARITY 1, INDEX `_key_sdk` `sdk` TYPE bloom_filter GRANULARITY 1) ENGINE = MergeTree() PARTITION BY toYYYYMM(time) ORDER BY (`time`, `id`) SETTINGS index_granularity = 8192"
+                }
+              },
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "ALTER TABLE `default`.`audits` REMOVE TTL"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testBulkInsertJsonEachRowSnapshot",
+      "steps": [
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "create_batch",
+            "args": {
+              "logs": [
+                {
+                  "id": "log-1",
+                  "time": "2025-01-02 03:04:05.678",
+                  "actorId": "u1",
+                  "actorType": "users",
+                  "event": "users.create",
+                  "data": {
+                    "foo": "bar"
+                  },
+                  "userAgent": "ua",
+                  "ip": "1.2.3.4",
+                  "resource": "users/u1",
+                  "projectId": "p",
+                  "projectInternalId": "1",
+                  "teamId": "t",
+                  "teamInternalId": "1",
+                  "hostname": "h"
+                },
+                {
+                  "id": "log-2",
+                  "time": "2025-01-02 03:04:06.000",
+                  "userId": "u2",
+                  "actorType": "users",
+                  "event": "users.delete",
+                  "data": {
+                    "foo": "baz",
+                    "userType": "legacy"
+                  },
+                  "userAgent": "ua",
+                  "ip": "1.2.3.4",
+                  "resource": "database/d/table/t",
+                  "projectId": "p",
+                  "projectInternalId": "1",
+                  "teamId": "t",
+                  "teamInternalId": "1",
+                  "hostname": "h"
+                }
+              ]
+            },
+            "config": {
+              "set_shared_tables": true,
+              "set_tenant": 3
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": ""
+              }
+            ]
+          },
+          "expect": {
+            "result": true,
+            "error": null,
+            "requests": [
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/?query=INSERT+INTO+%60default%60.%60audits%60+%28%60id%60%2C+%60time%60%2C+%60actorId%60%2C+%60event%60%2C+%60resource%60%2C+%60userAgent%60%2C+%60ip%60%2C+%60data%60%2C+%60actorType%60%2C+%60actorInternalId%60%2C+%60resourceParent%60%2C+%60resourceType%60%2C+%60resourceId%60%2C+%60resourceInternalId%60%2C+%60country%60%2C+%60city%60%2C+%60continentCode%60%2C+%60subdivisions%60%2C+%60isp%60%2C+%60autonomousSystemNumber%60%2C+%60autonomousSystemOrganization%60%2C+%60connectionType%60%2C+%60connectionUsageType%60%2C+%60connectionOrganization%60%2C+%60projectId%60%2C+%60projectInternalId%60%2C+%60teamId%60%2C+%60teamInternalId%60%2C+%60hostname%60%2C+%60sdk%60%2C+%60sdkVersion%60%2C+%60osCode%60%2C+%60osName%60%2C+%60osVersion%60%2C+%60clientType%60%2C+%60clientCode%60%2C+%60clientName%60%2C+%60clientVersion%60%2C+%60clientEngine%60%2C+%60clientEngineVersion%60%2C+%60deviceName%60%2C+%60deviceBrand%60%2C+%60deviceModel%60%2C+%60tenant%60%29+FORMAT+JSONEachRow",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "application/x-www-form-urlencoded",
+                "body": "{\"id\":\"log-1\",\"time\":\"2025-01-02 03:04:05.678\",\"actorId\":\"u1\",\"event\":\"users.create\",\"resource\":\"users/u1\",\"userAgent\":\"ua\",\"ip\":\"1.2.3.4\",\"data\":\"{\\\"foo\\\":\\\"bar\\\"}\",\"actorType\":\"users\",\"actorInternalId\":null,\"resourceParent\":\"\",\"resourceType\":\"users\",\"resourceId\":\"u1\",\"resourceInternalId\":null,\"country\":null,\"city\":null,\"continentCode\":null,\"subdivisions\":null,\"isp\":null,\"autonomousSystemNumber\":null,\"autonomousSystemOrganization\":null,\"connectionType\":null,\"connectionUsageType\":null,\"connectionOrganization\":null,\"projectId\":\"p\",\"projectInternalId\":\"1\",\"teamId\":\"t\",\"teamInternalId\":\"1\",\"hostname\":\"h\",\"sdk\":null,\"sdkVersion\":null,\"osCode\":null,\"osName\":null,\"osVersion\":null,\"clientType\":null,\"clientCode\":null,\"clientName\":null,\"clientVersion\":null,\"clientEngine\":null,\"clientEngineVersion\":null,\"deviceName\":null,\"deviceBrand\":null,\"deviceModel\":null,\"tenant\":3}\n{\"id\":\"log-2\",\"time\":\"2025-01-02 03:04:06.000\",\"actorId\":\"u2\",\"event\":\"users.delete\",\"resource\":\"database/d/table/t\",\"userAgent\":\"ua\",\"ip\":\"1.2.3.4\",\"data\":\"{\\\"foo\\\":\\\"baz\\\"}\",\"actorType\":\"users\",\"actorInternalId\":null,\"resourceParent\":\"database/d\",\"resourceType\":\"table\",\"resourceId\":\"t\",\"resourceInternalId\":null,\"country\":null,\"city\":null,\"continentCode\":null,\"subdivisions\":null,\"isp\":null,\"autonomousSystemNumber\":null,\"autonomousSystemOrganization\":null,\"connectionType\":null,\"connectionUsageType\":null,\"connectionOrganization\":null,\"projectId\":\"p\",\"projectInternalId\":\"1\",\"teamId\":\"t\",\"teamInternalId\":\"1\",\"hostname\":\"h\",\"sdk\":null,\"sdkVersion\":null,\"osCode\":null,\"osName\":null,\"osVersion\":null,\"clientType\":null,\"clientCode\":null,\"clientName\":null,\"clientVersion\":null,\"clientEngine\":null,\"clientEngineVersion\":null,\"deviceName\":null,\"deviceBrand\":null,\"deviceModel\":null,\"tenant\":3}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "create_batch",
+            "args": {
+              "logs": []
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": ""
+              }
+            ]
+          },
+          "expect": {
+            "result": true,
+            "error": null,
+            "requests": []
+          }
+        },
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "create_batch",
+            "args": {
+              "logs": [
+                {
+                  "event": "x",
+                  "userAgent": "ua",
+                  "ip": "1",
+                  "resource": "a/b"
+                }
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": ""
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "error": {
+              "class": "InvalidArgumentException",
+              "message": "Required attribute 'actorType' is missing in batch log entry"
+            },
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "testAsyncCleanupDeleteEmitsSettingsClause",
+      "steps": [
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "cleanup",
+            "args": {
+              "datetime": "2025-01-02 03:04:05.678"
+            },
+            "config": {
+              "set_async_cleanup": true
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": ""
+              }
+            ]
+          },
+          "expect": {
+            "result": true,
+            "error": null,
+            "requests": [
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "DELETE FROM `default`.`audits` WHERE `time` < {datetime:DateTime64(3)} SETTINGS lightweight_deletes_sync=0",
+                  "param_datetime": "2025-01-02 03:04:05.678"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSyncCleanupDeleteOmitsSettingsClause",
+      "steps": [
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "cleanup",
+            "args": {
+              "datetime": "2025-01-02 03:04:05.678"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": ""
+              }
+            ]
+          },
+          "expect": {
+            "result": true,
+            "error": null,
+            "requests": [
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "DELETE FROM `default`.`audits` WHERE `time` < {datetime:DateTime64(3)}",
+                  "param_datetime": "2025-01-02 03:04:05.678"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "cleanup with shared tables binds no tenant parameter (quirk)",
+      "steps": [
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "cleanup",
+            "args": {
+              "datetime": "2025-01-02 03:04:05.678"
+            },
+            "config": {
+              "set_shared_tables": true,
+              "set_tenant": 9
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": ""
+              }
+            ]
+          },
+          "expect": {
+            "result": true,
+            "error": null,
+            "requests": [
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "DELETE FROM `default`.`audits` WHERE `tenant` IN ({param0:UInt64}) AND `time` < {datetime:DateTime64(3)}",
+                  "param_datetime": "2025-01-02 03:04:05.678"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testFindEmitsTypedNamedBindings",
+      "steps": [
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "get_by_user",
+            "args": {
+              "user_id": "u1",
+              "after": "2025-01-01 00:00:00",
+              "before": "2025-12-31 00:00:00"
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": [],
+            "error": null,
+            "requests": [
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "SELECT `id`, `actorId`, `event`, `resource`, `userAgent`, `ip`, `time`, `actorType`, `actorInternalId`, `resourceParent`, `resourceType`, `resourceId`, `resourceInternalId`, `country`, `city`, `continentCode`, `subdivisions`, `isp`, `autonomousSystemNumber`, `autonomousSystemOrganization`, `connectionType`, `connectionUsageType`, `connectionOrganization`, `projectId`, `projectInternalId`, `teamId`, `teamInternalId`, `hostname`, `sdk`, `sdkVersion`, `osCode`, `osName`, `osVersion`, `clientType`, `clientCode`, `clientName`, `clientVersion`, `clientEngine`, `clientEngineVersion`, `deviceName`, `deviceBrand`, `deviceModel`, `data` FROM `default`.`audits` WHERE `actorId` IN ({param0:String}) AND `time` BETWEEN {param1:DateTime64(3)} AND {param2:DateTime64(3)} ORDER BY `time` DESC LIMIT {param3:Int64} OFFSET {param4:Int64} FORMAT JSON",
+                  "param_param0": "u1",
+                  "param_param1": "2025-01-01 00:00:00.000",
+                  "param_param2": "2025-12-31 00:00:00.000",
+                  "param_param3": "25",
+                  "param_param4": "0"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "find",
+            "args": {
+              "queries": [
+                {
+                  "method": "equal",
+                  "attribute": "actorId",
+                  "values": [
+                    "u1"
+                  ]
+                },
+                {
+                  "method": "between",
+                  "attribute": "time",
+                  "values": [
+                    "2025-01-01 00:00:00.000",
+                    "2025-12-31 00:00:00.000"
+                  ]
+                },
+                {
+                  "method": "orderDesc",
+                  "attribute": "time"
+                },
+                {
+                  "method": "limit",
+                  "values": [
+                    25
+                  ]
+                }
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": [],
+            "error": null,
+            "requests": [
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "SELECT `id`, `actorId`, `event`, `resource`, `userAgent`, `ip`, `time`, `actorType`, `actorInternalId`, `resourceParent`, `resourceType`, `resourceId`, `resourceInternalId`, `country`, `city`, `continentCode`, `subdivisions`, `isp`, `autonomousSystemNumber`, `autonomousSystemOrganization`, `connectionType`, `connectionUsageType`, `connectionOrganization`, `projectId`, `projectInternalId`, `teamId`, `teamInternalId`, `hostname`, `sdk`, `sdkVersion`, `osCode`, `osName`, `osVersion`, `clientType`, `clientCode`, `clientName`, `clientVersion`, `clientEngine`, `clientEngineVersion`, `deviceName`, `deviceBrand`, `deviceModel`, `data` FROM `default`.`audits` WHERE `actorId` IN ({param0:String}) AND `time` BETWEEN {param1:DateTime64(3)} AND {param2:DateTime64(3)} ORDER BY `time` DESC LIMIT {param3:Int64} FORMAT JSON",
+                  "param_param0": "u1",
+                  "param_param1": "2025-01-01 00:00:00.000",
+                  "param_param2": "2025-12-31 00:00:00.000",
+                  "param_param3": "25"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testEqualMultiValueEmitsTypedIn",
+      "steps": [
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "find",
+            "args": {
+              "queries": [
+                {
+                  "method": "notEqual",
+                  "attribute": "event",
+                  "values": [
+                    "users.delete",
+                    "projects.delete"
+                  ]
+                },
+                {
+                  "method": "limit",
+                  "values": [
+                    25
+                  ]
+                }
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": [],
+            "error": null,
+            "requests": [
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "SELECT `id`, `actorId`, `event`, `resource`, `userAgent`, `ip`, `time`, `actorType`, `actorInternalId`, `resourceParent`, `resourceType`, `resourceId`, `resourceInternalId`, `country`, `city`, `continentCode`, `subdivisions`, `isp`, `autonomousSystemNumber`, `autonomousSystemOrganization`, `connectionType`, `connectionUsageType`, `connectionOrganization`, `projectId`, `projectInternalId`, `teamId`, `teamInternalId`, `hostname`, `sdk`, `sdkVersion`, `osCode`, `osName`, `osVersion`, `clientType`, `clientCode`, `clientName`, `clientVersion`, `clientEngine`, `clientEngineVersion`, `deviceName`, `deviceBrand`, `deviceModel`, `data` FROM `default`.`audits` WHERE `event` NOT IN ({param0:String}, {param1:String}) LIMIT {param2:Int64} FORMAT JSON",
+                  "param_param0": "users.delete",
+                  "param_param1": "projects.delete",
+                  "param_param2": "25"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testContainsEmitsPositionPredicate",
+      "steps": [
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "find",
+            "args": {
+              "queries": [
+                {
+                  "method": "contains",
+                  "attribute": "event",
+                  "values": [
+                    "dat"
+                  ]
+                }
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": [],
+            "error": null,
+            "requests": [
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "SELECT `id`, `actorId`, `event`, `resource`, `userAgent`, `ip`, `time`, `actorType`, `actorInternalId`, `resourceParent`, `resourceType`, `resourceId`, `resourceInternalId`, `country`, `city`, `continentCode`, `subdivisions`, `isp`, `autonomousSystemNumber`, `autonomousSystemOrganization`, `connectionType`, `connectionUsageType`, `connectionOrganization`, `projectId`, `projectInternalId`, `teamId`, `teamInternalId`, `hostname`, `sdk`, `sdkVersion`, `osCode`, `osName`, `osVersion`, `clientType`, `clientCode`, `clientName`, `clientVersion`, `clientEngine`, `clientEngineVersion`, `deviceName`, `deviceBrand`, `deviceModel`, `data` FROM `default`.`audits` WHERE position(`event`, {param0:String}) > 0 FORMAT JSON",
+                  "param_param0": "dat"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testContainsMultiValueOrsPositionPredicates",
+      "steps": [
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "find",
+            "args": {
+              "queries": [
+                {
+                  "method": "contains",
+                  "attribute": "event",
+                  "values": [
+                    "dat",
+                    "ins"
+                  ]
+                }
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": [],
+            "error": null,
+            "requests": [
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "SELECT `id`, `actorId`, `event`, `resource`, `userAgent`, `ip`, `time`, `actorType`, `actorInternalId`, `resourceParent`, `resourceType`, `resourceId`, `resourceInternalId`, `country`, `city`, `continentCode`, `subdivisions`, `isp`, `autonomousSystemNumber`, `autonomousSystemOrganization`, `connectionType`, `connectionUsageType`, `connectionOrganization`, `projectId`, `projectInternalId`, `teamId`, `teamInternalId`, `hostname`, `sdk`, `sdkVersion`, `osCode`, `osName`, `osVersion`, `clientType`, `clientCode`, `clientName`, `clientVersion`, `clientEngine`, `clientEngineVersion`, `deviceName`, `deviceBrand`, `deviceModel`, `data` FROM `default`.`audits` WHERE (position(`event`, {param0:String}) > 0 OR position(`event`, {param1:String}) > 0) FORMAT JSON",
+                  "param_param0": "dat",
+                  "param_param1": "ins"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testNotContainsMultiValueAndsNegatedPositionPredicates",
+      "steps": [
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "find",
+            "args": {
+              "queries": [
+                {
+                  "method": "notContains",
+                  "attribute": "event",
+                  "values": [
+                    "update",
+                    "delete"
+                  ]
+                }
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": [],
+            "error": null,
+            "requests": [
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "SELECT `id`, `actorId`, `event`, `resource`, `userAgent`, `ip`, `time`, `actorType`, `actorInternalId`, `resourceParent`, `resourceType`, `resourceId`, `resourceInternalId`, `country`, `city`, `continentCode`, `subdivisions`, `isp`, `autonomousSystemNumber`, `autonomousSystemOrganization`, `connectionType`, `connectionUsageType`, `connectionOrganization`, `projectId`, `projectInternalId`, `teamId`, `teamInternalId`, `hostname`, `sdk`, `sdkVersion`, `osCode`, `osName`, `osVersion`, `clientType`, `clientCode`, `clientName`, `clientVersion`, `clientEngine`, `clientEngineVersion`, `deviceName`, `deviceBrand`, `deviceModel`, `data` FROM `default`.`audits` WHERE (position(`event`, {param0:String}) = 0 AND position(`event`, {param1:String}) = 0) FORMAT JSON",
+                  "param_param0": "update",
+                  "param_param1": "delete"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testFindCursorRawFragmentMergesWithTypedBindings",
+      "steps": [
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "find",
+            "args": {
+              "queries": [
+                {
+                  "method": "equal",
+                  "attribute": "userId",
+                  "values": [
+                    "u1"
+                  ]
+                },
+                {
+                  "method": "orderDesc",
+                  "attribute": "time"
+                },
+                {
+                  "method": "limit",
+                  "values": [
+                    25
+                  ]
+                },
+                {
+                  "method": "cursorAfter",
+                  "values": [
+                    {
+                      "$log": {
+                        "$id": "c1",
+                        "time": "2025-01-02T03:04:05.678+00:00"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"id\":\"x\",\"time\":\"2025-01-01 00:00:00.000\",\"actorId\":\"u1\",\"data\":\"{\\\"a\\\":1}\",\"tenant\":null}]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": [
+              {
+                "time": "2025-01-01T00:00:00.000+00:00",
+                "actorId": "u1",
+                "data": {
+                  "a": 1
+                },
+                "tenant": null,
+                "$id": "x",
+                "userId": "u1"
+              }
+            ],
+            "error": null,
+            "requests": [
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "SELECT `id`, `actorId`, `event`, `resource`, `userAgent`, `ip`, `time`, `actorType`, `actorInternalId`, `resourceParent`, `resourceType`, `resourceId`, `resourceInternalId`, `country`, `city`, `continentCode`, `subdivisions`, `isp`, `autonomousSystemNumber`, `autonomousSystemOrganization`, `connectionType`, `connectionUsageType`, `connectionOrganization`, `projectId`, `projectInternalId`, `teamId`, `teamInternalId`, `hostname`, `sdk`, `sdkVersion`, `osCode`, `osName`, `osVersion`, `clientType`, `clientCode`, `clientName`, `clientVersion`, `clientEngine`, `clientEngineVersion`, `deviceName`, `deviceBrand`, `deviceModel`, `data` FROM `default`.`audits` WHERE `actorId` IN ({param0:String}) AND ((`time` < {cursor_cmp_0:DateTime64(3)}) OR (`time` = {cursor_eq_1_0:DateTime64(3)} AND `id` < {cursor_cmp_1:String})) ORDER BY `time` DESC, `id` DESC LIMIT {param1:Int64} FORMAT JSON",
+                  "param_param0": "u1",
+                  "param_param1": "25",
+                  "param_cursor_cmp_0": "2025-01-02 03:04:05.678",
+                  "param_cursor_eq_1_0": "2025-01-02 03:04:05.678",
+                  "param_cursor_cmp_1": "c1"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "find",
+            "args": {
+              "queries": [
+                {
+                  "method": "orderAsc",
+                  "attribute": "event"
+                },
+                {
+                  "method": "cursorBefore",
+                  "values": [
+                    {
+                      "event": "e",
+                      "id": "c1"
+                    }
+                  ]
+                },
+                {
+                  "method": "limit",
+                  "values": [
+                    2
+                  ]
+                }
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"id\":\"b\",\"event\":\"d\"},{\"id\":\"a\",\"event\":\"c\"}]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": [
+              {
+                "event": "c",
+                "$id": "a"
+              },
+              {
+                "event": "d",
+                "$id": "b"
+              }
+            ],
+            "error": null,
+            "requests": [
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "SELECT `id`, `actorId`, `event`, `resource`, `userAgent`, `ip`, `time`, `actorType`, `actorInternalId`, `resourceParent`, `resourceType`, `resourceId`, `resourceInternalId`, `country`, `city`, `continentCode`, `subdivisions`, `isp`, `autonomousSystemNumber`, `autonomousSystemOrganization`, `connectionType`, `connectionUsageType`, `connectionOrganization`, `projectId`, `projectInternalId`, `teamId`, `teamInternalId`, `hostname`, `sdk`, `sdkVersion`, `osCode`, `osName`, `osVersion`, `clientType`, `clientCode`, `clientName`, `clientVersion`, `clientEngine`, `clientEngineVersion`, `deviceName`, `deviceBrand`, `deviceModel`, `data` FROM `default`.`audits` WHERE ((`event` < {cursor_cmp_0:String}) OR (`event` = {cursor_eq_1_0:String} AND `id` < {cursor_cmp_1:String})) ORDER BY `event` DESC, `id` DESC LIMIT {param0:Int64} FORMAT JSON",
+                  "param_param0": "2",
+                  "param_cursor_cmp_0": "e",
+                  "param_cursor_eq_1_0": "e",
+                  "param_cursor_cmp_1": "c1"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "find",
+            "args": {
+              "queries": [
+                {
+                  "method": "cursorAfter",
+                  "values": [
+                    {
+                      "event": "e"
+                    }
+                  ]
+                },
+                {
+                  "method": "orderAsc",
+                  "attribute": "event"
+                }
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": ""
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "error": {
+              "class": "Exception",
+              "message": "Cursor is missing required attribute 'id'"
+            },
+            "requests": []
+          }
+        },
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "find",
+            "args": {
+              "queries": [
+                {
+                  "method": "cursorAfter",
+                  "values": [
+                    "nope"
+                  ]
+                }
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": ""
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "error": {
+              "class": "Exception",
+              "message": "Invalid cursor value: expected ArrayObject (Log) or associative array, got string"
+            },
+            "requests": []
+          }
+        },
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "find",
+            "args": {
+              "queries": [
+                {
+                  "method": "cursorAfter",
+                  "values": [
+                    {
+                      "id": null
+                    }
+                  ]
+                }
+              ]
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": ""
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "error": {
+              "class": "Exception",
+              "message": "Cursor value for 'id' cannot be null"
+            },
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCountWithMaxWrapsInnerSelect",
+      "steps": [
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "count",
+            "args": {
+              "queries": [
+                {
+                  "method": "equal",
+                  "attribute": "actorId",
+                  "values": [
+                    "u1"
+                  ]
+                }
+              ],
+              "max": 5000
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": "3\n"
+              }
+            ]
+          },
+          "expect": {
+            "result": 3,
+            "error": null,
+            "requests": [
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "SELECT COUNT(*) AS count FROM (SELECT 1 FROM `default`.`audits` WHERE `actorId` IN ({param0:String}) LIMIT {param1:Int64}) sub FORMAT TabSeparated",
+                  "param_param0": "u1",
+                  "param_param1": "5000"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "count",
+            "args": {
+              "queries": [
+                {
+                  "method": "equal",
+                  "attribute": "actorId",
+                  "values": [
+                    "u1"
+                  ]
+                }
+              ]
+            },
+            "config": {
+              "set_shared_tables": true,
+              "set_tenant": 4
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": ""
+              }
+            ]
+          },
+          "expect": {
+            "result": 0,
+            "error": null,
+            "requests": [
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "SELECT COUNT(*) AS count FROM `default`.`audits` WHERE `actorId` IN ({param0:String}) AND `tenant` IN ({param1:UInt64}) FORMAT TabSeparated",
+                  "param_param0": "u1",
+                  "param_param1": "4"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "clickhouse.call",
+          "args": {
+            "method": "count_by_user_and_events",
+            "args": {
+              "user_id": "u1",
+              "events": [
+                "a",
+                "b"
+              ],
+              "after": "2025-01-01",
+              "max": 10
+            },
+            "responses": [
+              {
+                "status": 200,
+                "body": " 12 \n"
+              }
+            ]
+          },
+          "expect": {
+            "result": 12,
+            "error": null,
+            "requests": [
+              {
+                "method": "POST",
+                "uri": "http://clickhouse:8124/",
+                "headers": {
+                  "Host": [
+                    "clickhouse:8124"
+                  ],
+                  "X-ClickHouse-User": [
+                    "user"
+                  ],
+                  "X-ClickHouse-Key": [
+                    "secret"
+                  ],
+                  "X-ClickHouse-Database": [
+                    "default"
+                  ]
+                },
+                "content_type": "multipart/form-data",
+                "fields": {
+                  "query": "SELECT COUNT(*) AS count FROM (SELECT 1 FROM `default`.`audits` WHERE `actorId` IN ({param0:String}) AND `event` IN ({param1:String}, {param2:String}) AND `time` > {param3:DateTime64(3)} LIMIT {param4:Int64}) sub FORMAT TabSeparated",
+                  "param_param0": "u1",
+                  "param_param1": "a",
+                  "param_param2": "b",
+                  "param_param3": "2025-01-01 00:00:00.000",
+                  "param_param4": "10"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

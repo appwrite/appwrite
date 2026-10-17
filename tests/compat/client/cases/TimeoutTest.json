@@ -1,0 +1,634 @@
+{
+  "source": "packages/client/tests/Adapter/TimeoutTest.php",
+  "cases": [
+    {
+      "name": "timeout rejects INF",
+      "op": "client.new",
+      "args": {
+        "with": [
+          [
+            "timeout",
+            {
+              "$float": "INF"
+            }
+          ]
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "Timeout must be a finite number greater than or equal to zero."
+        }
+      }
+    },
+    {
+      "name": "timeout rejects -1",
+      "op": "client.new",
+      "args": {
+        "with": [
+          [
+            "timeout",
+            -1
+          ]
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "Timeout must be a finite number greater than or equal to zero."
+        }
+      }
+    },
+    {
+      "name": "timeout rejects -0.001",
+      "op": "client.new",
+      "args": {
+        "with": [
+          [
+            "timeout",
+            -0.001
+          ]
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "Timeout must be a finite number greater than or equal to zero."
+        }
+      }
+    },
+    {
+      "name": "timeout rejects NAN",
+      "op": "client.new",
+      "args": {
+        "with": [
+          [
+            "timeout",
+            {
+              "$float": "NAN"
+            }
+          ]
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "Timeout must be a finite number greater than or equal to zero."
+        }
+      }
+    },
+    {
+      "name": "timeout rejects -INF",
+      "op": "client.new",
+      "args": {
+        "with": [
+          [
+            "timeout",
+            {
+              "$float": "-INF"
+            }
+          ]
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "Timeout must be a finite number greater than or equal to zero."
+        }
+      }
+    },
+    {
+      "name": "timeout accepts 0",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "timeout",
+                0
+              ]
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/echo"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "application/json"
+                ]
+              ],
+              [
+                "Transfer-Encoding",
+                [
+                  "chunked"
+                ]
+              ]
+            ],
+            "body": "{\"method\":\"GET\",\"target\":\"/echo\",\"protocol\":\"HTTP/1.1\",\"headers\":[[\"Host\",\"${http}\"],[\"Accept\",\"*/*\"],[\"Accept-Encoding\",\"deflate, gzip, br, zstd\"]],\"body\":\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "timeout accepts 0.0004",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "timeout",
+                0.0004
+              ]
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/echo"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "application/json"
+                ]
+              ],
+              [
+                "Transfer-Encoding",
+                [
+                  "chunked"
+                ]
+              ]
+            ],
+            "body": "{\"method\":\"GET\",\"target\":\"/echo\",\"protocol\":\"HTTP/1.1\",\"headers\":[[\"Host\",\"${http}\"],[\"Accept\",\"*/*\"],[\"Accept-Encoding\",\"deflate, gzip, br, zstd\"]],\"body\":\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "timeout accepts 1e-09",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "timeout",
+                1e-9
+              ]
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/echo"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "application/json"
+                ]
+              ],
+              [
+                "Transfer-Encoding",
+                [
+                  "chunked"
+                ]
+              ]
+            ],
+            "body": "{\"method\":\"GET\",\"target\":\"/echo\",\"protocol\":\"HTTP/1.1\",\"headers\":[[\"Host\",\"${http}\"],[\"Accept\",\"*/*\"],[\"Accept-Encoding\",\"deflate, gzip, br, zstd\"]],\"body\":\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "timeout accepts 2.5",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "timeout",
+                2.5
+              ]
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/echo"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "application/json"
+                ]
+              ],
+              [
+                "Transfer-Encoding",
+                [
+                  "chunked"
+                ]
+              ]
+            ],
+            "body": "{\"method\":\"GET\",\"target\":\"/echo\",\"protocol\":\"HTTP/1.1\",\"headers\":[[\"Host\",\"${http}\"],[\"Accept\",\"*/*\"],[\"Accept-Encoding\",\"deflate, gzip, br, zstd\"]],\"body\":\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "connect_timeout rejects INF",
+      "op": "client.new",
+      "args": {
+        "with": [
+          [
+            "connect_timeout",
+            {
+              "$float": "INF"
+            }
+          ]
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "Timeout must be a finite number greater than or equal to zero."
+        }
+      }
+    },
+    {
+      "name": "connect_timeout rejects -1",
+      "op": "client.new",
+      "args": {
+        "with": [
+          [
+            "connect_timeout",
+            -1
+          ]
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "Timeout must be a finite number greater than or equal to zero."
+        }
+      }
+    },
+    {
+      "name": "connect_timeout rejects -0.001",
+      "op": "client.new",
+      "args": {
+        "with": [
+          [
+            "connect_timeout",
+            -0.001
+          ]
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "Timeout must be a finite number greater than or equal to zero."
+        }
+      }
+    },
+    {
+      "name": "connect_timeout rejects NAN",
+      "op": "client.new",
+      "args": {
+        "with": [
+          [
+            "connect_timeout",
+            {
+              "$float": "NAN"
+            }
+          ]
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "Timeout must be a finite number greater than or equal to zero."
+        }
+      }
+    },
+    {
+      "name": "connect_timeout rejects -INF",
+      "op": "client.new",
+      "args": {
+        "with": [
+          [
+            "connect_timeout",
+            {
+              "$float": "-INF"
+            }
+          ]
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "Timeout must be a finite number greater than or equal to zero."
+        }
+      }
+    },
+    {
+      "name": "connect_timeout accepts 0",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "connect_timeout",
+                0
+              ]
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/echo"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "application/json"
+                ]
+              ],
+              [
+                "Transfer-Encoding",
+                [
+                  "chunked"
+                ]
+              ]
+            ],
+            "body": "{\"method\":\"GET\",\"target\":\"/echo\",\"protocol\":\"HTTP/1.1\",\"headers\":[[\"Host\",\"${http}\"],[\"Accept\",\"*/*\"],[\"Accept-Encoding\",\"deflate, gzip, br, zstd\"]],\"body\":\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "connect_timeout accepts 0.0004",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "connect_timeout",
+                0.0004
+              ]
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/echo"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "application/json"
+                ]
+              ],
+              [
+                "Transfer-Encoding",
+                [
+                  "chunked"
+                ]
+              ]
+            ],
+            "body": "{\"method\":\"GET\",\"target\":\"/echo\",\"protocol\":\"HTTP/1.1\",\"headers\":[[\"Host\",\"${http}\"],[\"Accept\",\"*/*\"],[\"Accept-Encoding\",\"deflate, gzip, br, zstd\"]],\"body\":\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "connect_timeout accepts 1e-09",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "connect_timeout",
+                1e-9
+              ]
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/echo"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "application/json"
+                ]
+              ],
+              [
+                "Transfer-Encoding",
+                [
+                  "chunked"
+                ]
+              ]
+            ],
+            "body": "{\"method\":\"GET\",\"target\":\"/echo\",\"protocol\":\"HTTP/1.1\",\"headers\":[[\"Host\",\"${http}\"],[\"Accept\",\"*/*\"],[\"Accept-Encoding\",\"deflate, gzip, br, zstd\"]],\"body\":\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "connect_timeout accepts 2.5",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "connect_timeout",
+                2.5
+              ]
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/echo"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "application/json"
+                ]
+              ],
+              [
+                "Transfer-Encoding",
+                [
+                  "chunked"
+                ]
+              ]
+            ],
+            "body": "{\"method\":\"GET\",\"target\":\"/echo\",\"protocol\":\"HTTP/1.1\",\"headers\":[[\"Host\",\"${http}\"],[\"Accept\",\"*/*\"],[\"Accept-Encoding\",\"deflate, gzip, br, zstd\"]],\"body\":\"\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a negative redirect hop limit",
+      "op": "client.new",
+      "args": {
+        "with": [
+          [
+            "follow_redirects",
+            [
+              true,
+              -1
+            ]
+          ]
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "Redirect hop limit must be greater than or equal to zero."
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,1747 @@
+{
+  "lib": "audit",
+  "description": "utopia-php/audit: audit logs through Audit, stored by the Database adapter (a utopia-php/database collection, on MariaDB, SQLite or Memory) or the ClickHouse adapter (a MergeTree table over ClickHouse's HTTP interface, on a local ClickHouse or a recording client); Log and the lenient Query factories.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/audit/src"
+    ],
+    "tests": [
+      "packages/audit/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/audit"
+  },
+  "services": [
+    "audit-clickhouse",
+    "database-mariadb"
+  ],
+  "state": [],
+  "scrub": [
+    {
+      "kind": "now",
+      "reason": "logs carry the time they were written ($createdAt, $updatedAt and a default time), which differs between runs and runtimes"
+    },
+    {
+      "kind": "uniqid",
+      "reason": "Database ids are ID::unique() and ClickHouse ids uniqid('', true), both made from the clock"
+    }
+  ],
+  "ops": {
+    "clickhouse.new": {
+      "doc": "new ClickHouse(host, username, password, port, secure, client) as a handle: on service `audit-clickhouse` (host, port and credentials from its URL, then setDatabase(${ns})) unless `host` is given; over the test suite's recording client (`Tests\\Adapter\\Client`) with `fake`",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::__construct"
+      ],
+      "services": [
+        "audit-clickhouse"
+      ],
+      "services_unless": [
+        {
+          "host": [
+            "*"
+          ]
+        },
+        {
+          "fake": [
+            true
+          ]
+        }
+      ]
+    },
+    "database.new": {
+      "doc": "new Adapter\\Database(new Database(<engine>, new Cache(new None()))) as a handle, the database `database` (${ns}) with namespace `namespace` (`namespace`), created unless it exists (DatabaseTest::initializeAudit); engine mariadb (service database-mariadb), sqlite (a file under /tmp/compat-fs/${ns}/) or memory",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\Database::__construct"
+      ],
+      "services": [
+        "database-mariadb"
+      ],
+      "services_unless": [
+        {
+          "engine": [
+            "sqlite",
+            "memory"
+          ]
+        }
+      ]
+    },
+    "clickhouse.call": {
+      "doc": "One adapter.<method> call (args as that operation's) on a fresh new ClickHouse('clickhouse', 'user', 'secret', 8124) over the recording client, after the `config` setters (set_namespace, set_tenant, ...: value) and with `responses` queued ({status, body} or {fail: message}, a ConnectionException): {result, error: {class, message} | null, requests} (requests as fake.requests reports them)",
+      "fuzz": [
+        {
+          "name": "find: queries compiled to SQL and parameters, results parsed",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "method": {
+                "gen": "const",
+                "value": "find"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {
+                  "queries": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "ref",
+                      "name": "query"
+                    },
+                    "min": 0,
+                    "max": 5
+                  }
+                }
+              },
+              "config": {
+                "gen": "ref",
+                "name": "config"
+              },
+              "responses": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "response"
+                },
+                "min": 1,
+                "max": 2
+              }
+            }
+          },
+          "iterations": 1500
+        },
+        {
+          "name": "count with an optional max",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "method": {
+                "gen": "const",
+                "value": "count"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {
+                  "queries": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "ref",
+                      "name": "query"
+                    },
+                    "min": 0,
+                    "max": 4
+                  },
+                  "max": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "int",
+                        "min": 1,
+                        "max": 100
+                      },
+                      {
+                        "gen": "null"
+                      }
+                    ]
+                  }
+                }
+              },
+              "config": {
+                "gen": "ref",
+                "name": "config"
+              },
+              "responses": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "response"
+                },
+                "min": 1,
+                "max": 2
+              }
+            }
+          },
+          "iterations": 800
+        },
+        {
+          "name": "createBatch: rows built from logs (legacy names, data, parsed resources)",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "method": {
+                "gen": "const",
+                "value": "create_batch"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {
+                  "logs": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "ref",
+                      "name": "batch_log"
+                    },
+                    "min": 0,
+                    "max": 3
+                  }
+                }
+              },
+              "config": {
+                "gen": "ref",
+                "name": "config"
+              },
+              "responses": {
+                "gen": "const",
+                "value": [
+                  {
+                    "status": 200,
+                    "body": ""
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 1500
+        },
+        {
+          "name": "getByUser and friends with dates",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "method": {
+                "gen": "const",
+                "value": "get_by_user_and_events"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {
+                  "user_id": {
+                    "gen": "string",
+                    "min": 0,
+                    "max": 6,
+                    "alphabet": "alnum"
+                  },
+                  "events": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "string",
+                      "min": 0,
+                      "max": 5,
+                      "alphabet": "alnum"
+                    },
+                    "min": 0,
+                    "max": 3
+                  },
+                  "after": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "null"
+                      },
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "2024-06-15 12:00:00",
+                          "-1 hour",
+                          "@0"
+                        ]
+                      }
+                    ]
+                  },
+                  "before": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "null"
+                      },
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "2024-06-16 12:00:00.5",
+                          "now"
+                        ]
+                      }
+                    ]
+                  },
+                  "limit": {
+                    "gen": "int",
+                    "min": 0,
+                    "max": 50
+                  },
+                  "offset": {
+                    "gen": "int",
+                    "min": 0,
+                    "max": 50
+                  },
+                  "ascending": {
+                    "gen": "bool"
+                  }
+                }
+              },
+              "config": {
+                "gen": "ref",
+                "name": "config"
+              },
+              "responses": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "response"
+                },
+                "min": 1,
+                "max": 2
+              }
+            }
+          },
+          "iterations": 400
+        },
+        {
+          "name": "identifiers: namespace, database and table names",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "method": {
+                "gen": "const",
+                "value": "get_table"
+              },
+              "responses": {
+                "gen": "const",
+                "value": []
+              },
+              "config": {
+                "gen": "object",
+                "fields": {
+                  "set_namespace": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "string",
+                        "min": 0,
+                        "max": 8,
+                        "alphabet": "aZ_09`\n -",
+                        "tricky": 0.3
+                      },
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "select",
+                          "Table",
+                          "database1",
+                          "_x",
+                          "0"
+                        ]
+                      }
+                    ]
+                  },
+                  "set_database": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "string",
+                        "min": 0,
+                        "max": 8,
+                        "alphabet": "aZ_09`\n -",
+                        "tricky": 0.3
+                      },
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "DROP",
+                          "db",
+                          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                        ]
+                      }
+                    ]
+                  },
+                  "set_table": {
+                    "gen": "string",
+                    "min": 0,
+                    "max": 8,
+                    "alphabet": "aZ_09`\n -",
+                    "tricky": 0.3
+                  }
+                },
+                "optional": [
+                  "set_namespace",
+                  "set_database",
+                  "set_table"
+                ]
+              }
+            }
+          },
+          "iterations": 1500
+        },
+        {
+          "name": "column definitions",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "method": {
+                "gen": "const",
+                "value": "get_column_definition"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {
+                  "id": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "actorId",
+                          "event",
+                          "resource",
+                          "userAgent",
+                          "ip",
+                          "time",
+                          "data",
+                          "actorType",
+                          "actorInternalId",
+                          "resourceParent",
+                          "resourceType",
+                          "resourceId",
+                          "resourceInternalId",
+                          "country",
+                          "city",
+                          "projectId",
+                          "projectInternalId",
+                          "teamId",
+                          "teamInternalId",
+                          "hostname",
+                          "sdk",
+                          "sdkVersion",
+                          "osCode",
+                          "clientName",
+                          "deviceModel",
+                          "country",
+                          "osName",
+                          "osVersion",
+                          "userId"
+                        ]
+                      },
+                      {
+                        "gen": "string",
+                        "min": 0,
+                        "max": 6,
+                        "tricky": 0.2
+                      }
+                    ]
+                  }
+                }
+              },
+              "config": {
+                "gen": "ref",
+                "name": "config"
+              },
+              "responses": {
+                "gen": "const",
+                "value": []
+              }
+            }
+          },
+          "iterations": 300
+        },
+        {
+          "name": "resources split into type, id and parent",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "method": {
+                "gen": "const",
+                "value": "parse_resource"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {
+                  "resource": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "repeat",
+                        "part": {
+                          "gen": "string",
+                          "min": 0,
+                          "max": 3,
+                          "alphabet": "ab"
+                        },
+                        "sep": "/",
+                        "min": 1,
+                        "max": 8
+                      },
+                      {
+                        "gen": "string",
+                        "min": 0,
+                        "max": 10,
+                        "alphabet": "ab/",
+                        "tricky": 0.2
+                      }
+                    ]
+                  }
+                }
+              },
+              "config": {
+                "gen": "ref",
+                "name": "config"
+              },
+              "responses": {
+                "gen": "const",
+                "value": []
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "fake.respond": {
+      "doc": "Queues a response (status, body) on the recording client of a ClickHouse adapter (Client::respond)"
+    },
+    "fake.fail": {
+      "doc": "Queues a ConnectionException with `message` on the recording client (Client::fail)"
+    },
+    "fake.requests": {
+      "doc": "The requests the recording client received: {method, uri, headers (without Content-Type), content_type (without its boundary), fields (multipart form fields, read as ClickHouseTest::fields() reads them) | body}"
+    },
+    "clock.sleep": {
+      "doc": "Waits `ms` milliseconds: logs written one after the other get distinct times, so ClickHouse orders them the same way on both runtimes"
+    },
+    "audit.new": {
+      "doc": "new Audit(adapter) as a handle",
+      "covers": [
+        "Utopia\\Audit\\Audit::__construct"
+      ]
+    },
+    "audit.get_adapter": {
+      "doc": "$audit->getAdapter()->getName()",
+      "covers": [
+        "Utopia\\Audit\\Audit::getAdapter"
+      ]
+    },
+    "audit.setup": {
+      "doc": "$audit->setup(...): arguments by name (user_id, resource, events, after/before as `new \\DateTime()` strings, limit, offset, ascending, max, datetime, queries as {method, attribute, values}); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Audit::setup"
+      ]
+    },
+    "audit.log": {
+      "doc": "$audit->log(...): arguments by name (user_id, resource, events, after/before as `new \\DateTime()` strings, limit, offset, ascending, max, datetime, queries as {method, attribute, values}); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Audit::log"
+      ]
+    },
+    "audit.log_batch": {
+      "doc": "$audit->logBatch(...): arguments by name (user_id, resource, events, after/before as `new \\DateTime()` strings, limit, offset, ascending, max, datetime, queries as {method, attribute, values}); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Audit::logBatch"
+      ]
+    },
+    "audit.get_log_by_id": {
+      "doc": "$audit->getLogById(...): arguments by name (user_id, resource, events, after/before as `new \\DateTime()` strings, limit, offset, ascending, max, datetime, queries as {method, attribute, values}); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Audit::getLogById"
+      ]
+    },
+    "audit.get_logs_by_user": {
+      "doc": "$audit->getLogsByUser(...): arguments by name (user_id, resource, events, after/before as `new \\DateTime()` strings, limit, offset, ascending, max, datetime, queries as {method, attribute, values}); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Audit::getLogsByUser"
+      ]
+    },
+    "audit.count_logs_by_user": {
+      "doc": "$audit->countLogsByUser(...): arguments by name (user_id, resource, events, after/before as `new \\DateTime()` strings, limit, offset, ascending, max, datetime, queries as {method, attribute, values}); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Audit::countLogsByUser"
+      ]
+    },
+    "audit.get_logs_by_resource": {
+      "doc": "$audit->getLogsByResource(...): arguments by name (user_id, resource, events, after/before as `new \\DateTime()` strings, limit, offset, ascending, max, datetime, queries as {method, attribute, values}); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Audit::getLogsByResource"
+      ]
+    },
+    "audit.count_logs_by_resource": {
+      "doc": "$audit->countLogsByResource(...): arguments by name (user_id, resource, events, after/before as `new \\DateTime()` strings, limit, offset, ascending, max, datetime, queries as {method, attribute, values}); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Audit::countLogsByResource"
+      ]
+    },
+    "audit.get_logs_by_user_and_events": {
+      "doc": "$audit->getLogsByUserAndEvents(...): arguments by name (user_id, resource, events, after/before as `new \\DateTime()` strings, limit, offset, ascending, max, datetime, queries as {method, attribute, values}); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Audit::getLogsByUserAndEvents"
+      ]
+    },
+    "audit.count_logs_by_user_and_events": {
+      "doc": "$audit->countLogsByUserAndEvents(...): arguments by name (user_id, resource, events, after/before as `new \\DateTime()` strings, limit, offset, ascending, max, datetime, queries as {method, attribute, values}); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Audit::countLogsByUserAndEvents"
+      ]
+    },
+    "audit.get_logs_by_resource_and_events": {
+      "doc": "$audit->getLogsByResourceAndEvents(...): arguments by name (user_id, resource, events, after/before as `new \\DateTime()` strings, limit, offset, ascending, max, datetime, queries as {method, attribute, values}); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Audit::getLogsByResourceAndEvents"
+      ]
+    },
+    "audit.count_logs_by_resource_and_events": {
+      "doc": "$audit->countLogsByResourceAndEvents(...): arguments by name (user_id, resource, events, after/before as `new \\DateTime()` strings, limit, offset, ascending, max, datetime, queries as {method, attribute, values}); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Audit::countLogsByResourceAndEvents"
+      ]
+    },
+    "audit.cleanup": {
+      "doc": "$audit->cleanup(...): arguments by name (user_id, resource, events, after/before as `new \\DateTime()` strings, limit, offset, ascending, max, datetime, queries as {method, attribute, values}); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Audit::cleanup"
+      ]
+    },
+    "audit.find": {
+      "doc": "$audit->find(...): arguments by name (user_id, resource, events, after/before as `new \\DateTime()` strings, limit, offset, ascending, max, datetime, queries as {method, attribute, values}); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Audit::find"
+      ]
+    },
+    "audit.count": {
+      "doc": "$audit->count(...): arguments by name (user_id, resource, events, after/before as `new \\DateTime()` strings, limit, offset, ascending, max, datetime, queries as {method, attribute, values}); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Audit::count"
+      ]
+    },
+    "audit.ping": {
+      "doc": "$audit->ping(...): arguments by name (user_id, resource, events, after/before as `new \\DateTime()` strings, limit, offset, ascending, max, datetime, queries as {method, attribute, values}); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Audit::ping"
+      ]
+    },
+    "log.read": {
+      "doc": "Every getter of new Log(attributes), and getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Log::__construct",
+        "Utopia\\Audit\\Log::getArrayCopy",
+        "Utopia\\Audit\\Log::getId",
+        "Utopia\\Audit\\Log::getUserId",
+        "Utopia\\Audit\\Log::getActorId",
+        "Utopia\\Audit\\Log::getActorType",
+        "Utopia\\Audit\\Log::getActorInternalId",
+        "Utopia\\Audit\\Log::getEvent",
+        "Utopia\\Audit\\Log::getResource",
+        "Utopia\\Audit\\Log::getSdk",
+        "Utopia\\Audit\\Log::getSdkVersion",
+        "Utopia\\Audit\\Log::getOsCode",
+        "Utopia\\Audit\\Log::getOsName",
+        "Utopia\\Audit\\Log::getOsVersion",
+        "Utopia\\Audit\\Log::getClientType",
+        "Utopia\\Audit\\Log::getClientCode",
+        "Utopia\\Audit\\Log::getClientName",
+        "Utopia\\Audit\\Log::getClientVersion",
+        "Utopia\\Audit\\Log::getClientEngine",
+        "Utopia\\Audit\\Log::getClientEngineVersion",
+        "Utopia\\Audit\\Log::getDeviceName",
+        "Utopia\\Audit\\Log::getDeviceBrand",
+        "Utopia\\Audit\\Log::getDeviceModel",
+        "Utopia\\Audit\\Log::getUserAgent",
+        "Utopia\\Audit\\Log::getIp",
+        "Utopia\\Audit\\Log::getTime",
+        "Utopia\\Audit\\Log::getData",
+        "Utopia\\Audit\\Log::getTenant"
+      ],
+      "fuzz": [
+        {
+          "name": "every getter of any log",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "attributes": {
+                "gen": "ref",
+                "name": "log"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "log.attribute": {
+      "doc": "new Log(attributes)->getAttribute(key, default)",
+      "covers": [
+        "Utopia\\Audit\\Log::getAttribute"
+      ]
+    },
+    "log.set": {
+      "doc": "new Log(attributes)->setAttribute(key, value)->getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Log::setAttribute"
+      ]
+    },
+    "log.remove": {
+      "doc": "new Log(attributes)->removeAttribute(key)->getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Log::removeAttribute"
+      ]
+    },
+    "log.is_set": {
+      "doc": "new Log(attributes)->isSet(key)",
+      "covers": [
+        "Utopia\\Audit\\Log::isSet"
+      ]
+    },
+    "query.new": {
+      "doc": "new Query(method, attribute, values) as {method, attribute, values}",
+      "covers": [
+        "Utopia\\Audit\\Query::__construct"
+      ]
+    },
+    "query.equal": {
+      "doc": "Query::equal(attribute, value)",
+      "covers": [
+        "Utopia\\Audit\\Query::equal"
+      ],
+      "fuzz": [
+        {
+          "name": "a value or a list of them",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "attribute": {
+                "gen": "string",
+                "min": 0,
+                "max": 6,
+                "alphabet": "alnum"
+              },
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "scalar"
+                  },
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "ref",
+                      "name": "scalar"
+                    },
+                    "min": 0,
+                    "max": 3
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 500
+        }
+      ]
+    },
+    "query.less_than": {
+      "doc": "Query::lessThan(attribute, value)",
+      "covers": [
+        "Utopia\\Audit\\Query::lessThan"
+      ]
+    },
+    "query.greater_than": {
+      "doc": "Query::greaterThan(attribute, value)",
+      "covers": [
+        "Utopia\\Audit\\Query::greaterThan"
+      ]
+    },
+    "query.between": {
+      "doc": "Query::between(attribute, start, end)",
+      "covers": [
+        "Utopia\\Audit\\Query::between"
+      ],
+      "fuzz": [
+        {
+          "name": "any two values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "attribute": {
+                "gen": "string",
+                "min": 0,
+                "max": 6,
+                "alphabet": "alnum"
+              },
+              "start": {
+                "gen": "ref",
+                "name": "scalar"
+              },
+              "end": {
+                "gen": "ref",
+                "name": "scalar"
+              }
+            }
+          },
+          "iterations": 300
+        }
+      ]
+    },
+    "query.parse": {
+      "doc": "Query::parse(query) (the base library's, on Audit\\Query)"
+    },
+    "query.parse_queries": {
+      "doc": "Query::parseQueries(queries)"
+    },
+    "query.to_string": {
+      "doc": "(new Query(...))->toString()"
+    },
+    "query.get_value": {
+      "doc": "(new Query(...))->getValue(default)"
+    },
+    "adapter.get_name": {
+      "doc": "$adapter->getName(...): arguments as audit.* (log, logs for create/createBatch); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::getName",
+        "Utopia\\Audit\\Adapter\\Database::getName"
+      ]
+    },
+    "adapter.setup": {
+      "doc": "$adapter->setup(...): arguments as audit.* (log, logs for create/createBatch); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::setup",
+        "Utopia\\Audit\\Adapter\\Database::setup"
+      ]
+    },
+    "adapter.ping": {
+      "doc": "$adapter->ping(...): arguments as audit.* (log, logs for create/createBatch); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::ping",
+        "Utopia\\Audit\\Adapter\\Database::ping"
+      ]
+    },
+    "adapter.create": {
+      "doc": "$adapter->create(...): arguments as audit.* (log, logs for create/createBatch); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::create",
+        "Utopia\\Audit\\Adapter\\Database::create"
+      ]
+    },
+    "adapter.create_batch": {
+      "doc": "$adapter->createBatch(...): arguments as audit.* (log, logs for create/createBatch); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::createBatch",
+        "Utopia\\Audit\\Adapter\\Database::createBatch"
+      ]
+    },
+    "adapter.get_by_id": {
+      "doc": "$adapter->getById(...): arguments as audit.* (log, logs for create/createBatch); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::getById",
+        "Utopia\\Audit\\Adapter\\Database::getById"
+      ]
+    },
+    "adapter.get_by_user": {
+      "doc": "$adapter->getByUser(...): arguments as audit.* (log, logs for create/createBatch); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::getByUser",
+        "Utopia\\Audit\\Adapter\\Database::getByUser"
+      ]
+    },
+    "adapter.count_by_user": {
+      "doc": "$adapter->countByUser(...): arguments as audit.* (log, logs for create/createBatch); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::countByUser",
+        "Utopia\\Audit\\Adapter\\Database::countByUser"
+      ]
+    },
+    "adapter.get_by_resource": {
+      "doc": "$adapter->getByResource(...): arguments as audit.* (log, logs for create/createBatch); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::getByResource",
+        "Utopia\\Audit\\Adapter\\Database::getByResource"
+      ]
+    },
+    "adapter.count_by_resource": {
+      "doc": "$adapter->countByResource(...): arguments as audit.* (log, logs for create/createBatch); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::countByResource",
+        "Utopia\\Audit\\Adapter\\Database::countByResource"
+      ]
+    },
+    "adapter.get_by_user_and_events": {
+      "doc": "$adapter->getByUserAndEvents(...): arguments as audit.* (log, logs for create/createBatch); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::getByUserAndEvents",
+        "Utopia\\Audit\\Adapter\\Database::getByUserAndEvents"
+      ]
+    },
+    "adapter.count_by_user_and_events": {
+      "doc": "$adapter->countByUserAndEvents(...): arguments as audit.* (log, logs for create/createBatch); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::countByUserAndEvents",
+        "Utopia\\Audit\\Adapter\\Database::countByUserAndEvents"
+      ]
+    },
+    "adapter.get_by_resource_and_events": {
+      "doc": "$adapter->getByResourceAndEvents(...): arguments as audit.* (log, logs for create/createBatch); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::getByResourceAndEvents",
+        "Utopia\\Audit\\Adapter\\Database::getByResourceAndEvents"
+      ]
+    },
+    "adapter.count_by_resource_and_events": {
+      "doc": "$adapter->countByResourceAndEvents(...): arguments as audit.* (log, logs for create/createBatch); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::countByResourceAndEvents",
+        "Utopia\\Audit\\Adapter\\Database::countByResourceAndEvents"
+      ]
+    },
+    "adapter.cleanup": {
+      "doc": "$adapter->cleanup(...): arguments as audit.* (log, logs for create/createBatch); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::cleanup",
+        "Utopia\\Audit\\Adapter\\Database::cleanup"
+      ]
+    },
+    "adapter.find": {
+      "doc": "$adapter->find(...): arguments as audit.* (log, logs for create/createBatch); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::find",
+        "Utopia\\Audit\\Adapter\\Database::find"
+      ]
+    },
+    "adapter.count": {
+      "doc": "$adapter->count(...): arguments as audit.* (log, logs for create/createBatch); logs as getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::count",
+        "Utopia\\Audit\\Adapter\\Database::count"
+      ]
+    },
+    "adapter.get_attributes": {
+      "doc": "$adapter->getAttributes()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\SQL::getAttributes",
+        "Utopia\\Audit\\Adapter\\ClickHouse::getAttributes"
+      ]
+    },
+    "adapter.get_indexes": {
+      "doc": "$adapter->getIndexes()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\SQL::getIndexes",
+        "Utopia\\Audit\\Adapter\\ClickHouse::getIndexes"
+      ]
+    },
+    "adapter.get_attribute_documents": {
+      "doc": "$adapter->getAttributeDocuments(), each getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\SQL::getAttributeDocuments"
+      ]
+    },
+    "adapter.get_index_documents": {
+      "doc": "$adapter->getIndexDocuments(), each getArrayCopy()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\SQL::getIndexDocuments"
+      ]
+    },
+    "adapter.get_collection_name": {
+      "doc": "$adapter->getCollectionName()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\SQL::getCollectionName"
+      ]
+    },
+    "adapter.get_attribute": {
+      "doc": "The protected getAttribute(id), through reflection (as the PHP tests reach protected methods)"
+    },
+    "adapter.get_column_definition": {
+      "doc": "The protected getColumnDefinition(id), through reflection (ClickHouseTest does)"
+    },
+    "adapter.get_all_column_definitions": {
+      "doc": "The protected getAllColumnDefinitions(), through reflection"
+    },
+    "adapter.parse_resource": {
+      "doc": "The protected parseResource(resource), through reflection (ClickHouseTest does)"
+    },
+    "adapter.set_namespace": {
+      "doc": "$adapter->setNamespace(value); a fluent setter reports true",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::setNamespace"
+      ]
+    },
+    "adapter.get_namespace": {
+      "doc": "$adapter->getNamespace()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::getNamespace"
+      ]
+    },
+    "adapter.set_database": {
+      "doc": "$adapter->setDatabase(value); a fluent setter reports true",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::setDatabase"
+      ]
+    },
+    "adapter.set_table": {
+      "doc": "$adapter->setTable(value); a fluent setter reports true",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::setTable"
+      ]
+    },
+    "adapter.get_table": {
+      "doc": "$adapter->getTable()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::getTable"
+      ]
+    },
+    "adapter.set_secure": {
+      "doc": "$adapter->setSecure(value); a fluent setter reports true",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::setSecure"
+      ]
+    },
+    "adapter.set_tenant": {
+      "doc": "$adapter->setTenant(value); a fluent setter reports true",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::setTenant"
+      ]
+    },
+    "adapter.get_tenant": {
+      "doc": "$adapter->getTenant()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::getTenant"
+      ]
+    },
+    "adapter.set_shared_tables": {
+      "doc": "$adapter->setSharedTables(value); a fluent setter reports true",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::setSharedTables"
+      ]
+    },
+    "adapter.is_shared_tables": {
+      "doc": "$adapter->isSharedTables()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::isSharedTables"
+      ]
+    },
+    "adapter.set_async_cleanup": {
+      "doc": "$adapter->setAsyncCleanup(value); a fluent setter reports true",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::setAsyncCleanup"
+      ]
+    },
+    "adapter.is_async_cleanup": {
+      "doc": "$adapter->isAsyncCleanup()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::isAsyncCleanup"
+      ]
+    },
+    "adapter.set_retention": {
+      "doc": "$adapter->setRetention(value); a fluent setter reports true",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::setRetention"
+      ]
+    },
+    "adapter.get_retention": {
+      "doc": "$adapter->getRetention()",
+      "covers": [
+        "Utopia\\Audit\\Adapter\\ClickHouse::getRetention"
+      ]
+    }
+  },
+  "generators": {
+    "scalar": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "min": 0,
+          "max": 12,
+          "alphabet": "alnum",
+          "tricky": 0.4
+        },
+        {
+          "gen": "int",
+          "min": -1000,
+          "max": 1000
+        },
+        {
+          "gen": "float",
+          "min": -1000,
+          "max": 1000
+        },
+        {
+          "gen": "null"
+        },
+        {
+          "gen": "bool"
+        }
+      ]
+    },
+    "text": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "min": 0,
+          "max": 12,
+          "alphabet": "alnum",
+          "tricky": 0.3
+        },
+        {
+          "gen": "null"
+        }
+      ]
+    },
+    "date": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "2024-06-15 12:00:00.000",
+            "2024-06-15T12:00:00+02:00",
+            "2025-01-02 03:04:05.678",
+            "@1700000000",
+            "now",
+            "-10 seconds",
+            "",
+            "tomorrow",
+            "2024-13-45",
+            "garbage"
+          ]
+        },
+        {
+          "gen": "null"
+        },
+        {
+          "gen": "int",
+          "min": 0,
+          "max": 99
+        }
+      ]
+    },
+    "log": {
+      "gen": "object",
+      "fields": {
+        "$id": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "userId": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "actorId": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "actorType": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "actorInternalId": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "event": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "resource": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "sdk": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "sdkVersion": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "osCode": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "osName": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "osVersion": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "clientType": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "clientCode": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "clientName": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "clientVersion": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "clientEngine": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "clientEngineVersion": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "deviceName": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "deviceBrand": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "deviceModel": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "userAgent": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "ip": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "time": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "data": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "object",
+              "fields": {
+                "k": {
+                  "gen": "ref",
+                  "name": "scalar"
+                },
+                "userId": {
+                  "gen": "ref",
+                  "name": "scalar"
+                }
+              },
+              "optional": [
+                "k",
+                "userId"
+              ]
+            },
+            {
+              "gen": "ref",
+              "name": "scalar"
+            }
+          ]
+        },
+        "tenant": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "scalar"
+            },
+            {
+              "gen": "string",
+              "min": 0,
+              "max": 4,
+              "alphabet": "digits"
+            }
+          ]
+        }
+      },
+      "optional": [
+        "$id",
+        "userId",
+        "actorId",
+        "actorType",
+        "actorInternalId",
+        "event",
+        "resource",
+        "sdk",
+        "sdkVersion",
+        "osCode",
+        "osName",
+        "osVersion",
+        "clientType",
+        "clientCode",
+        "clientName",
+        "clientVersion",
+        "clientEngine",
+        "clientEngineVersion",
+        "deviceName",
+        "deviceBrand",
+        "deviceModel",
+        "userAgent",
+        "ip",
+        "time",
+        "data",
+        "tenant"
+      ]
+    },
+    "qvalue": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "2024-06-15 12:00:00.000",
+            "2024-06-15T12:00:00+02:00",
+            "2025-01-02 03:04:05.678",
+            "@1700000000",
+            "now",
+            "-10 seconds",
+            "",
+            "tomorrow",
+            "2024-13-45",
+            "garbage"
+          ]
+        }
+      ]
+    },
+    "cursor": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "object",
+          "fields": {
+            "id": {
+              "gen": "ref",
+              "name": "scalar"
+            },
+            "time": {
+              "gen": "pick",
+              "from": [
+                "2024-06-15 12:00:00.000",
+                "2024-06-15T12:00:00+02:00",
+                "2025-01-02 03:04:05.678",
+                "@1700000000",
+                "now",
+                "-10 seconds",
+                "",
+                "tomorrow",
+                "2024-13-45",
+                "garbage"
+              ]
+            },
+            "$id": {
+              "gen": "ref",
+              "name": "scalar"
+            },
+            "event": {
+              "gen": "ref",
+              "name": "scalar"
+            }
+          },
+          "optional": [
+            "id",
+            "time",
+            "$id",
+            "event"
+          ]
+        },
+        {
+          "gen": "ref",
+          "name": "scalar"
+        }
+      ]
+    },
+    "query": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "object",
+          "fields": {
+            "method": {
+              "gen": "pick",
+              "from": [
+                "equal",
+                "notEqual",
+                "lessThan",
+                "lessThanEqual",
+                "greaterThan",
+                "greaterThanEqual",
+                "between",
+                "notBetween",
+                "contains",
+                "notContains",
+                "isNull",
+                "isNotNull",
+                "startsWith",
+                "notStartsWith",
+                "endsWith",
+                "notEndsWith",
+                "regex",
+                "select",
+                "orderAsc",
+                "orderDesc",
+                "orderRandom",
+                "limit",
+                "offset",
+                "cursorAfter",
+                "cursorBefore",
+                "search",
+                "containsAny"
+              ]
+            },
+            "attribute": {
+              "gen": "pick",
+              "from": [
+                "actorId",
+                "event",
+                "resource",
+                "userAgent",
+                "ip",
+                "time",
+                "data",
+                "actorType",
+                "actorInternalId",
+                "resourceParent",
+                "resourceType",
+                "resourceId",
+                "resourceInternalId",
+                "country",
+                "city",
+                "projectId",
+                "projectInternalId",
+                "teamId",
+                "teamInternalId",
+                "hostname",
+                "sdk",
+                "sdkVersion",
+                "osCode",
+                "clientName",
+                "deviceModel",
+                "userId",
+                "id",
+                "tenant",
+                "bogus",
+                ""
+              ]
+            },
+            "values": {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "qvalue"
+              },
+              "min": 0,
+              "max": 3
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "method": {
+              "gen": "pick",
+              "from": [
+                "cursorAfter",
+                "cursorBefore"
+              ]
+            },
+            "values": {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "cursor"
+              },
+              "min": 0,
+              "max": 1
+            }
+          }
+        }
+      ]
+    },
+    "config": {
+      "gen": "object",
+      "fields": {
+        "set_shared_tables": {
+          "gen": "bool"
+        },
+        "set_tenant": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "int",
+              "min": 0,
+              "max": 99
+            },
+            {
+              "gen": "null"
+            }
+          ]
+        },
+        "set_namespace": {
+          "gen": "pick",
+          "from": [
+            "",
+            "ns1",
+            "0"
+          ]
+        },
+        "set_async_cleanup": {
+          "gen": "bool"
+        }
+      },
+      "optional": [
+        "set_shared_tables",
+        "set_tenant",
+        "set_namespace",
+        "set_async_cleanup"
+      ]
+    },
+    "response": {
+      "gen": "object",
+      "fields": {
+        "status": {
+          "gen": "pick",
+          "from": [
+            200,
+            200,
+            200,
+            500
+          ]
+        },
+        "body": {
+          "gen": "pick",
+          "from": [
+            "{\"data\":[]}",
+            "",
+            "0",
+            "null",
+            "[]",
+            "{\"data\":\"x\"}",
+            "not json",
+            "{\"data\":[{\"id\":\"a\",\"actorId\":\"u\",\"time\":\"2025-01-01 00:00:00.000\",\"data\":\"{\\\"k\\\":1}\",\"tenant\":\"7\"}]}",
+            "{\"data\":[{\"id\":\"a\",\"time\":\"2025-01-01T00:00:00.000+00:00\",\"data\":null,\"tenant\":\"\"},{\"time\":5,\"data\":\"[1,\",\"tenant\":\"x\"},\"scalar\"]}",
+            "{\"data\":[{\"actorId\":null,\"actorType\":\"t\",\"actorInternalId\":\"9\",\"userId\":\"keep\",\"data\":{\"a\":[1]},\"tenant\":3.7,\"time\":true}]}"
+          ]
+        }
+      }
+    },
+    "batch_log": {
+      "gen": "object",
+      "fields": {
+        "id": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "string",
+              "min": 1,
+              "max": 8,
+              "alphabet": "alnum"
+            },
+            {
+              "gen": "int",
+              "min": 0,
+              "max": 9
+            }
+          ]
+        },
+        "userId": {
+          "gen": "ref",
+          "name": "text"
+        },
+        "userType": {
+          "gen": "ref",
+          "name": "text"
+        },
+        "userInternalId": {
+          "gen": "ref",
+          "name": "text"
+        },
+        "actorId": {
+          "gen": "ref",
+          "name": "text"
+        },
+        "actorType": {
+          "gen": "ref",
+          "name": "text"
+        },
+        "event": {
+          "gen": "ref",
+          "name": "text"
+        },
+        "resource": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "string",
+                "min": 0,
+                "max": 3,
+                "alphabet": "abc"
+              },
+              "sep": "/",
+              "min": 1,
+              "max": 6
+            },
+            {
+              "gen": "ref",
+              "name": "scalar"
+            }
+          ]
+        },
+        "userAgent": {
+          "gen": "ref",
+          "name": "text"
+        },
+        "ip": {
+          "gen": "ref",
+          "name": "text"
+        },
+        "time": {
+          "gen": "ref",
+          "name": "date"
+        },
+        "data": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "object",
+              "fields": {
+                "userId": {
+                  "gen": "ref",
+                  "name": "scalar"
+                },
+                "actorType": {
+                  "gen": "ref",
+                  "name": "text"
+                },
+                "projectId": {
+                  "gen": "ref",
+                  "name": "text"
+                },
+                "extra": {
+                  "gen": "ref",
+                  "name": "scalar"
+                }
+              },
+              "optional": [
+                "userId",
+                "actorType",
+                "projectId",
+                "extra"
+              ]
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "scalar"
+              },
+              "min": 0,
+              "max": 2
+            },
+            {
+              "gen": "null"
+            }
+          ]
+        },
+        "resourceType": {
+          "gen": "ref",
+          "name": "text"
+        },
+        "resourceId": {
+          "gen": "ref",
+          "name": "text"
+        },
+        "projectId": {
+          "gen": "ref",
+          "name": "text"
+        },
+        "projectInternalId": {
+          "gen": "ref",
+          "name": "text"
+        },
+        "teamId": {
+          "gen": "ref",
+          "name": "text"
+        },
+        "teamInternalId": {
+          "gen": "ref",
+          "name": "text"
+        },
+        "hostname": {
+          "gen": "ref",
+          "name": "text"
+        },
+        "$tenant": {
+          "gen": "int",
+          "min": 0,
+          "max": 9
+        }
+      },
+      "optional": [
+        "id",
+        "userId",
+        "userType",
+        "userInternalId",
+        "actorId",
+        "actorType",
+        "event",
+        "resource",
+        "userAgent",
+        "ip",
+        "time",
+        "data",
+        "resourceType",
+        "resourceId",
+        "projectId",
+        "projectInternalId",
+        "teamId",
+        "teamInternalId",
+        "hostname",
+        "$tenant"
+      ]
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "tasks": {},
+  "tasks_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\Audit\\Adapter\\ClickHouse::cleanup",
+      "description": "With shared tables and a tenant, the DELETE carries the tenant filter as a typed parameter ({param0:UInt64}) but cleanup() sends only its own `datetime` parameter, never the builder's bindings: ClickHouse rejects the statement, so cleanup() fails with shared tables.",
+      "case": "ClickHouseSqlSnapshotTest.json#cleanup with shared tables binds no tenant parameter (quirk)"
+    },
+    {
+      "symbol": "Utopia\\Audit\\Adapter\\ClickHouse::setup",
+      "description": "Every request names the adapter's database (X-ClickHouse-Database), the CREATE DATABASE IF NOT EXISTS of setup() too: ClickHouse refuses it with UNKNOWN_DATABASE, so setup() only works on a database that exists already.",
+      "case": "ClickHouse.json#setup on a database that does not exist (quirk)"
+    },
+    {
+      "symbol": "Utopia\\Audit\\Adapter\\Database::setup",
+      "description": "On SQLite, Database::exists() of the database is false even after create(), so setup() refuses with `You need to create the database before running Audit setup`.",
+      "case": "Database.json#setup on SQLite: its exists() finds no database, so setup refuses"
+    }
+  ],
+  "bench": {
+    "bound": {
+      "clickhouse_count": "A ClickHouse round trip (the server scans the table), the same on both runtimes, dominates the call"
+    }
+  },
+  "deviations": [
+    {
+      "symbol": "Utopia\\Audit\\Adapter\\ClickHouse::find",
+      "php": "An array (or object) as the value of a date column (a `time` filter value, a cursor's `time`, a batch log's `time`) reaches the typed `formatDateTime(\\DateTime|string|null)`, which throws a TypeError whose message names the PHP file and line",
+      "reason": "Rust: \\Exception `Invalid datetime value: <type>`; scalars are coerced to strings as PHP's coercive mode does. The TypeError message quotes PHP source locations; both runtimes reject the input."
+    },
+    {
+      "symbol": "Utopia\\Audit\\Adapter\\Database::createBatch",
+      "php": "A log whose `time` is neither a string, a \\DateTime nor null fails `assert()` (or `DateTime::format()`'s type check) with an AssertionError or TypeError naming the PHP file and line",
+      "reason": "Rust: \\InvalidArgumentException `Log time must be a date string, <type> given`. Logs are arrays of plain values in Rust (no \\DateTime objects): a time is a date string, which both runtimes parse as `new \\DateTime()` does."
+    },
+    {
+      "symbol": "Utopia\\Audit\\Query::lessThan",
+      "php": "Query values may be \\DateTime objects (the adapters format them for the `time` column)",
+      "reason": "Rust: Query values are PHP values without \\DateTime: pass the date as a string (`Y-m-d H:i:s.v`), which the adapters parse and format to the same literal. The `getBy*()` methods take dates (`Range`). utopia-query's value model has no date object; a string formats to the same ClickHouse literal and the same database value."
+    }
+  ]
+}

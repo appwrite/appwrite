@@ -1,0 +1,1847 @@
+{
+  "source": [],
+  "cases": [
+    {
+      "name": "import 0",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN .\n@ IN SOA a. b. 1 2 3 4 5\ncom. IN NS x."
+          },
+          "expect": {
+            "name": ".",
+            "records": [
+              {
+                "name": "com",
+                "type": 2,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "x",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": ".",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "a b 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "$ORIGIN .\n@ IN SOA a. b. 1 2 3 4 5\ncom. IN NS x."
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 1",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$origin Example.COM.\n$ttl 60\n@ soa ns hm 1 2 3 4 5\nwww a 1.2.3.4"
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 60,
+                "rdata": "1.2.3.4",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 60,
+              "rdata": "ns.example.com hm.example.com 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "$origin Example.COM.\n$ttl 60\n@ soa ns hm 1 2 3 4 5\nwww a 1.2.3.4"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 2",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "Record is missing an owner name (line 1)."
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5"
+          },
+          "expect": {
+            "message": "Record is missing an owner name (line 1).",
+            "content": "@ IN SOA ns hm 1 2 3 4 5",
+            "previous": {
+              "class": "InvalidArgumentException",
+              "message": "Record is missing an owner name (line 1)."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import 3",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5",
+            "defaultOrigin": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "Default origin must not be empty"
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5",
+            "defaultOrigin": ""
+          },
+          "expect": {
+            "message": "Default origin must not be empty",
+            "content": "@ IN SOA ns hm 1 2 3 4 5",
+            "previous": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "import 4",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5",
+            "defaultOrigin": "..."
+          },
+          "expect": {
+            "name": ".",
+            "records": [],
+            "soa": {
+              "name": ".",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns hm 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5",
+            "defaultOrigin": "..."
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 5",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN\n@ IN SOA ns hm 1 2 3 4 5",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "name": "x.test",
+            "records": [],
+            "soa": {
+              "name": "x.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns.x.test hm.x.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "$ORIGIN\n@ IN SOA ns hm 1 2 3 4 5",
+            "defaultOrigin": "x.test"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 6",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN a b\n@ IN SOA ns hm 1 2 3 4 5",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "name": "x.test",
+            "records": [],
+            "soa": {
+              "name": "x.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns.x.test hm.x.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "$ORIGIN a b\n@ IN SOA ns hm 1 2 3 4 5",
+            "defaultOrigin": "x.test"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 7",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "  $ORIGIN y.test.\n@ IN SOA ns hm 1 2 3 4 5",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "name": "y.test",
+            "records": [],
+            "soa": {
+              "name": "y.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns.y.test hm.y.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "  $ORIGIN y.test.\n@ IN SOA ns hm 1 2 3 4 5",
+            "defaultOrigin": "x.test"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 8",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN y.test.\n$ORIGIN z.test.\n@ IN SOA ns hm 1 2 3 4 5"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SOA record name must match zone name: expected 'y.test', got 'z.test'"
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "$ORIGIN y.test.\n$ORIGIN z.test.\n@ IN SOA ns hm 1 2 3 4 5"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SOA record name must match zone name: expected 'y.test', got 'z.test'"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import 9",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$ORIGIN y.test.\n@ IN SOA ns hm 1 2 3 4 5",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "name": "y.test",
+            "records": [],
+            "soa": {
+              "name": "y.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns.y.test hm.y.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "$ORIGIN y.test.\n@ IN SOA ns hm 1 2 3 4 5",
+            "defaultOrigin": "x.test"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 10",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$TTL 99999999999999999999\n@ IN SOA ns hm 1 2 3 4 5\nw A 1.1.1.1",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "name": "x.test",
+            "records": [
+              {
+                "name": "w.x.test",
+                "type": 1,
+                "class": 1,
+                "ttl": 9223372036854775807,
+                "rdata": "1.1.1.1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "x.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 9223372036854775807,
+              "rdata": "ns.x.test hm.x.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "$TTL 99999999999999999999\n@ IN SOA ns hm 1 2 3 4 5\nw A 1.1.1.1",
+            "defaultOrigin": "x.test"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 11",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$TTL 1h\n@ IN SOA ns hm 1 2 3 4 5",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "name": "x.test",
+            "records": [],
+            "soa": {
+              "name": "x.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns.x.test hm.x.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "$TTL 1h\n@ IN SOA ns hm 1 2 3 4 5",
+            "defaultOrigin": "x.test"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 12",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$INCLUDEX\n@ IN SOA ns hm 1 2 3 4 5",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "name": "x.test",
+            "records": [],
+            "soa": {
+              "name": "x.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns.x.test hm.x.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "$INCLUDEX\n@ IN SOA ns hm 1 2 3 4 5",
+            "defaultOrigin": "x.test"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 13",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "$include file\n@ IN SOA ns hm 1 2 3 4 5",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "$INCLUDE directive is not supported"
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "$include file\n@ IN SOA ns hm 1 2 3 4 5",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "message": "$INCLUDE directive is not supported",
+            "content": "$include file\n@ IN SOA ns hm 1 2 3 4 5",
+            "previous": {
+              "class": "InvalidArgumentException",
+              "message": "$INCLUDE directive is not supported"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import 14",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\r\nw\tIN\tA\t1.1.1.1\rv A 2.2.2.2\u000bu A 3.3.3.3\ft A 4.4.4.4",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "name": "x.test",
+            "records": [
+              {
+                "name": "w.x.test",
+                "type": 1,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "1.1.1.1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "v.x.test",
+                "type": 1,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "2.2.2.2",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "u.x.test",
+                "type": 1,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "3.3.3.3",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "t.x.test",
+                "type": 1,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "4.4.4.4",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "x.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns.x.test hm.x.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\r\nw\tIN\tA\t1.1.1.1\rv A 2.2.2.2\u000bu A 3.3.3.3\ft A 4.4.4.4",
+            "defaultOrigin": "x.test"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 15",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN A",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "Record 'A' has no RDATA (line 2)."
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN A",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "message": "Record 'A' has no RDATA (line 2).",
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN A",
+            "previous": {
+              "class": "InvalidArgumentException",
+              "message": "Record 'A' has no RDATA (line 2)."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import 16",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw 300 IN",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "Invalid record type 'IN' (line 2)."
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw 300 IN",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "message": "Invalid record type 'IN' (line 2).",
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw 300 IN",
+            "previous": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid record type 'IN' (line 2)."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import 17",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw 300",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "Invalid record type '300' (line 2)."
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw 300",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "message": "Invalid record type '300' (line 2).",
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw 300",
+            "previous": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid record type '300' (line 2)."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import 18",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\n300 A 1.1.1.1",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "name": "x.test",
+            "records": [
+              {
+                "name": "300.x.test",
+                "type": 1,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "1.1.1.1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "x.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns.x.test hm.x.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\n300 A 1.1.1.1",
+            "defaultOrigin": "x.test"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 19",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN MX 99999 mx",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "name": "x.test",
+            "records": [
+              {
+                "name": "w.x.test",
+                "type": 15,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "mx.x.test",
+                "priority": 99999,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "x.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns.x.test hm.x.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN MX 99999 mx",
+            "defaultOrigin": "x.test"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 20",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN SRV 1 2 70000 t",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "name": "x.test",
+            "records": [
+              {
+                "name": "w.x.test",
+                "type": 33,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "t.x.test",
+                "priority": 1,
+                "weight": 2,
+                "port": 70000
+              }
+            ],
+            "soa": {
+              "name": "x.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns.x.test hm.x.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN SRV 1 2 70000 t",
+            "defaultOrigin": "x.test"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 21",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN CAA 256 issue \"x\"",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "CAA flag must be between 0 and 255 (line 2)."
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN CAA 256 issue \"x\"",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "message": "CAA flag must be between 0 and 255 (line 2).",
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN CAA 256 issue \"x\"",
+            "previous": {
+              "class": "InvalidArgumentException",
+              "message": "CAA flag must be between 0 and 255 (line 2)."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import 22",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN CAA 0 issue \"a b\"",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "name": "x.test",
+            "records": [
+              {
+                "name": "w.x.test",
+                "type": 257,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "0 issue \"a b\"",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "x.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns.x.test hm.x.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN CAA 0 issue \"a b\"",
+            "defaultOrigin": "x.test"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 23",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN CAA x issue \"a\"",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "CAA requires flag, tag, and quoted value (line 2)."
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN CAA x issue \"a\"",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "message": "CAA requires flag, tag, and quoted value (line 2).",
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN CAA x issue \"a\"",
+            "previous": {
+              "class": "InvalidArgumentException",
+              "message": "CAA requires flag, tag, and quoted value (line 2)."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import 24",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN TXT a \"b c\" 'd e' \\\"f",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "name": "x.test",
+            "records": [
+              {
+                "name": "w.x.test",
+                "type": 16,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "ab c'd e'\"f",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "x.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns.x.test hm.x.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN TXT a \"b c\" 'd e' \\\"f",
+            "defaultOrigin": "x.test"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 25",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN TXT \"x\\",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "name": "x.test",
+            "records": [
+              {
+                "name": "w.x.test",
+                "type": 16,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "\"x\\",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "x.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns.x.test hm.x.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN TXT \"x\\",
+            "defaultOrigin": "x.test"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 26",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN TXT \"\\999\\256\\0\"",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "name": "x.test",
+            "records": [
+              {
+                "name": "w.x.test",
+                "type": 16,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": {
+                  "$bytes": "5wAA"
+                },
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "x.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns.x.test hm.x.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN TXT \"\\999\\256\\0\"",
+            "defaultOrigin": "x.test"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 27",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN HINFO a b",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "name": "x.test",
+            "records": [
+              {
+                "name": "w.x.test",
+                "type": 13,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "a b",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "x.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns.x.test hm.x.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN HINFO a b",
+            "defaultOrigin": "x.test"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 28",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN NULL 0aff",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "name": "x.test",
+            "records": [
+              {
+                "name": "w.x.test",
+                "type": 10,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "0aff",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "x.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns.x.test hm.x.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN NULL 0aff",
+            "defaultOrigin": "x.test"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 29",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN CH 5 A 1.1.1.1\nv A 1.1.1.2",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "name": "x.test",
+            "records": [
+              {
+                "name": "w.x.test",
+                "type": 1,
+                "class": 3,
+                "ttl": 5,
+                "rdata": "1.1.1.1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "v.x.test",
+                "type": 1,
+                "class": 3,
+                "ttl": 5,
+                "rdata": "1.1.1.2",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "x.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns.x.test hm.x.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN CH 5 A 1.1.1.1\nv A 1.1.1.2",
+            "defaultOrigin": "x.test"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 30",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA (ns hm\n1 2 3\n4 5)",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "name": "x.test",
+            "records": [],
+            "soa": {
+              "name": "x.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns.x.test hm.x.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA (ns hm\n1 2 3\n4 5)",
+            "defaultOrigin": "x.test"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 31",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA (ns hm 1 2 3 4 5",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "name": "x.test",
+            "records": [],
+            "soa": {
+              "name": "x.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns.x.test hm.x.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA (ns hm 1 2 3 4 5",
+            "defaultOrigin": "x.test"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 32",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5 ; comment ( with paren\nw A 1.1.1.1",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "name": "x.test",
+            "records": [
+              {
+                "name": "w.x.test",
+                "type": 1,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "1.1.1.1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "x.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns.x.test hm.x.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5 ; comment ( with paren\nw A 1.1.1.1",
+            "defaultOrigin": "x.test"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 33",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN A 1.1.1.1 ; \"quoted ; comment",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "name": "x.test",
+            "records": [
+              {
+                "name": "w.x.test",
+                "type": 1,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "1.1.1.1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "x.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns.x.test hm.x.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN A 1.1.1.1 ; \"quoted ; comment",
+            "defaultOrigin": "x.test"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 34",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nW.X.TEST. IN A 1.1.1.1\nother.org. IN A 1.1.1.1",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Record name 'other.org' does not belong to zone 'x.test'"
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nW.X.TEST. IN A 1.1.1.1\nother.org. IN A 1.1.1.1",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Record name 'other.org' does not belong to zone 'x.test'"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import 35",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\n@ IN NS @\n@ IN CNAME .",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "name": "x.test",
+            "records": [
+              {
+                "name": "x.test",
+                "type": 2,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "x.test",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "x.test",
+                "type": 5,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": ".",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "x.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 3600,
+              "rdata": "ns.x.test hm.x.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\n@ IN NS @\n@ IN CNAME .",
+            "defaultOrigin": "x.test"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "import 36",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "\n\n   \n",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "No SOA record found in zone file"
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "\n\n   \n",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "message": "No SOA record found in zone file",
+            "content": "\n\n   \n",
+            "previous": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "import 37",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns. hm. 1 2 3 4 5\nw IN CNAME a."
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "Record is missing an owner name (line 1)."
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns. hm. 1 2 3 4 5\nw IN CNAME a."
+          },
+          "expect": {
+            "message": "Record is missing an owner name (line 1).",
+            "content": "@ IN SOA ns. hm. 1 2 3 4 5\nw IN CNAME a.",
+            "previous": {
+              "class": "InvalidArgumentException",
+              "message": "Record is missing an owner name (line 1)."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import 38",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN SOA ns hm 1 2 3 4 5",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "Multiple SOA records found (line 2)."
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN SOA ns hm 1 2 3 4 5",
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "message": "Multiple SOA records found (line 2).",
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw IN SOA ns hm 1 2 3 4 5",
+            "previous": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "import 39",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": {
+              "$bytes": "QCBJTiBTT0EgbnMgaG0gMSAyIDMgNCA1CncgSU4gVFhUICL/hSKFdiBBIDEuMS4xLjE="
+            },
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Zone\\ImportException",
+              "message": "Missing record type (line 3)."
+            }
+          }
+        },
+        {
+          "op": "file.import_error",
+          "args": {
+            "content": {
+              "$bytes": "QCBJTiBTT0EgbnMgaG0gMSAyIDMgNCA1CncgSU4gVFhUICL/hSKFdiBBIDEuMS4xLjE="
+            },
+            "defaultOrigin": "x.test"
+          },
+          "expect": {
+            "message": "Missing record type (line 3).",
+            "content": {
+              "$bytes": "QCBJTiBTT0EgbnMgaG0gMSAyIDMgNCA1CncgSU4gVFhUICL/hSKFdiBBIDEuMS4xLjE="
+            },
+            "previous": {
+              "class": "InvalidArgumentException",
+              "message": "Missing record type (line 3)."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "import with default TTL",
+      "steps": [
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw A 1.1.1.1",
+            "defaultOrigin": "x.test",
+            "defaultTTL": 42
+          },
+          "expect": {
+            "name": "x.test",
+            "records": [
+              {
+                "name": "w.x.test",
+                "type": 1,
+                "class": 1,
+                "ttl": 42,
+                "rdata": "1.1.1.1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "x.test",
+              "type": 6,
+              "class": 1,
+              "ttl": 42,
+              "rdata": "ns.x.test hm.x.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "file.import",
+          "args": {
+            "content": "@ IN SOA ns hm 1 2 3 4 5\nw A 1.1.1.1",
+            "defaultOrigin": "x.test",
+            "defaultTTL": -1
+          },
+          "expect": {
+            "name": "x.test",
+            "records": [
+              {
+                "name": "w.x.test",
+                "type": 1,
+                "class": 1,
+                "ttl": -1,
+                "rdata": "1.1.1.1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "x.test",
+              "type": 6,
+              "class": 1,
+              "ttl": -1,
+              "rdata": "ns.x.test hm.x.test 1 2 3 4 5",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "export edge cases",
+      "steps": [
+        {
+          "op": "file.export",
+          "args": {
+            "zone": {
+              "name": "x.test",
+              "records": [
+                {
+                  "name": "a.x.test",
+                  "type": 99,
+                  "ttl": 1,
+                  "rdata": "0aff"
+                },
+                {
+                  "name": "b.x.test",
+                  "type": 16,
+                  "ttl": 1,
+                  "rdata": "q\"\\"
+                },
+                {
+                  "name": "c.x.test",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "1.1.1.1",
+                  "class": 255
+                },
+                {
+                  "name": "x.test",
+                  "type": 257,
+                  "ttl": 1,
+                  "rdata": "0 issue \"x\""
+                }
+              ],
+              "soa": {
+                "name": "x.test",
+                "type": 6,
+                "ttl": 5,
+                "rdata": "ns.x.test. hm.x.test. 1 2 3 4 5"
+              }
+            },
+            "includeComments": false
+          },
+          "expect": [
+            "$ORIGIN x.test.",
+            "$TTL 5",
+            "",
+            "@\t5\tIN\tSOA\tns hm (",
+            "\t\t\t\t1\t; serial",
+            "\t\t\t\t2\t; refresh",
+            "\t\t\t\t3\t; retry",
+            "\t\t\t\t4\t; expire",
+            "\t\t\t\t5 )\t; minimum",
+            "",
+            "c\t1\tCLASS255\tA\t1.1.1.1",
+            "",
+            "b\t1\tIN\tTXT\t\"q\\\"\\\\\"",
+            "",
+            "a\t1\tIN\tTYPE99\t0aff",
+            "",
+            "@\t1\tIN\tCAA\t0 issue \"x\"",
+            ""
+          ]
+        },
+        {
+          "op": "file.export",
+          "args": {
+            "zone": {
+              "name": "x.test",
+              "records": [
+                {
+                  "name": "ns.x.test",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "other.org"
+                },
+                {
+                  "name": "m.x.test",
+                  "type": 15,
+                  "ttl": 1,
+                  "rdata": "x.test"
+                },
+                {
+                  "name": "s.x.test",
+                  "type": 33,
+                  "ttl": 1,
+                  "rdata": "xx.test",
+                  "priority": 1,
+                  "weight": 2,
+                  "port": 3
+                }
+              ],
+              "soa": {
+                "name": "x.test",
+                "type": 6,
+                "ttl": 5,
+                "rdata": "short soa"
+              }
+            },
+            "includeComments": false
+          },
+          "expect": [
+            "$ORIGIN x.test.",
+            "$TTL 5",
+            "",
+            "@\t5\tIN\tSOA\tshort soa",
+            "",
+            "ns\t1\tIN\tNS\tother.org.",
+            "",
+            "m\t1\tIN\tMX\t0 @",
+            "",
+            "s\t1\tIN\tSRV\t1 2 3 x",
+            ""
+          ]
+        },
+        {
+          "op": "file.export",
+          "args": {
+            "zone": {
+              "name": "x.test",
+              "records": [
+                {
+                  "name": "w.x.test",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "1.1.1.1"
+                }
+              ],
+              "soa": {
+                "name": "x.test",
+                "type": 6,
+                "ttl": 5,
+                "rdata": "ns.x.test. hm.x.test. 1 2 3 4 5"
+              }
+            },
+            "includeComments": true
+          },
+          "mask": {
+            "paths": [
+              "/1"
+            ],
+            "reason": "the comment line holds the export time"
+          },
+          "expect": [
+            "; Zone file for x.test",
+            "<masked>",
+            "",
+            "$ORIGIN x.test.",
+            "$TTL 5",
+            "",
+            "; SOA Record",
+            "@\t5\tIN\tSOA\tns hm (",
+            "\t\t\t\t1\t; serial",
+            "\t\t\t\t2\t; refresh",
+            "\t\t\t\t3\t; retry",
+            "\t\t\t\t4\t; expire",
+            "\t\t\t\t5 )\t; minimum",
+            "",
+            "; A Records",
+            "w\t1\tIN\tA\t1.1.1.1",
+            ""
+          ]
+        },
+        {
+          "op": "file.export",
+          "args": {
+            "zone": {
+              "name": ".",
+              "records": [
+                {
+                  "name": "com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "a."
+                }
+              ],
+              "soa": {
+                "name": ".",
+                "type": 6,
+                "ttl": 5,
+                "rdata": "a. b. 1 2 3 4 5"
+              }
+            },
+            "includeComments": false
+          },
+          "expect": [
+            "$ORIGIN .",
+            "$TTL 5",
+            "",
+            "@\t5\tIN\tSOA\ta b (",
+            "\t\t\t\t1\t; serial",
+            "\t\t\t\t2\t; refresh",
+            "\t\t\t\t3\t; retry",
+            "\t\t\t\t4\t; expire",
+            "\t\t\t\t5 )\t; minimum",
+            "",
+            "com\t1\tIN\tNS\ta",
+            ""
+          ]
+        }
+      ]
+    }
+  ]
+}

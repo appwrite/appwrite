@@ -1,0 +1,142 @@
+{
+  "cases": [
+    {
+      "name": "builds a response",
+      "op": "response.build",
+      "args": {
+        "status": 201,
+        "reason": "Created",
+        "headers": [
+          [
+            "X-A",
+            "1"
+          ],
+          [
+            "x-a",
+            "2"
+          ],
+          [
+            "X-B",
+            "3"
+          ]
+        ],
+        "body": "hi",
+        "protocol": "1.0"
+      },
+      "expect": {
+        "protocol": "1.0",
+        "status": 201,
+        "reason": "Created",
+        "headers": [
+          [
+            "X-A",
+            [
+              "1",
+              "2"
+            ]
+          ],
+          [
+            "X-B",
+            [
+              "3"
+            ]
+          ]
+        ],
+        "body": "hi"
+      }
+    },
+    {
+      "name": "rejects an invalid header name",
+      "op": "response.build",
+      "args": {
+        "status": 200,
+        "headers": [
+          [
+            "Bad Name",
+            "1"
+          ]
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid header name."
+        }
+      }
+    },
+    {
+      "name": "keeps an empty reason",
+      "op": "response.build",
+      "args": {
+        "status": 599,
+        "headers": []
+      },
+      "expect": {
+        "protocol": "1.1",
+        "status": 599,
+        "reason": "",
+        "headers": [],
+        "body": ""
+      }
+    },
+    {
+      "name": "an integer header name",
+      "op": "response.build",
+      "args": {
+        "status": 200,
+        "headers": [
+          [
+            "X-A",
+            "1"
+          ],
+          [
+            "123",
+            "x"
+          ],
+          [
+            "Bad Name",
+            "y"
+          ]
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "TypeError",
+          "message": "Utopia\\Psr7\\Message::withAddedHeader(): Argument #1 ($name) must be of type string, int given, called in /usr/src/code/packages/client/src/Response/Builder.php on line 36"
+        }
+      }
+    },
+    {
+      "name": "a status out of range",
+      "op": "response.build",
+      "args": {
+        "status": 600
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Invalid response status code."
+        }
+      }
+    },
+    {
+      "name": "binary bodies",
+      "op": "response.build",
+      "args": {
+        "status": 200,
+        "body": {
+          "$bytes": "/wA="
+        }
+      },
+      "expect": {
+        "protocol": "1.1",
+        "status": 200,
+        "reason": "",
+        "headers": [],
+        "body": {
+          "$bytes": "/wA="
+        }
+      }
+    }
+  ]
+}

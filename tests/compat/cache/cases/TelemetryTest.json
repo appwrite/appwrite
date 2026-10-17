@@ -1,0 +1,65 @@
+{
+  "source": "packages/cache/tests/TelemetryTest.php",
+  "cases": [
+    {
+      "name": "testCachePropagatesTelemetryToAdapter",
+      "steps": [
+        {
+          "op": "probe.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.new",
+          "args": {},
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.set_telemetry",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "probe.calls",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "calls": 1,
+            "same": true
+          }
+        }
+      ]
+    }
+  ]
+}

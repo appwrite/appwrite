@@ -1,0 +1,461 @@
+{
+  "source": "packages/agents/tests/Schema/SchemaObjectTest.php",
+  "cases": [
+    {
+      "name": "constructor and get properties",
+      "steps": [
+        {
+          "op": "schema_object.new",
+          "args": {
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "age": {
+                "type": "integer"
+              }
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema_object.inspect",
+          "args": {
+            "object": {
+              "$ref": "o"
+            }
+          },
+          "expect": {
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "age": {
+                "type": "integer"
+              }
+            },
+            "names": [
+              "id",
+              "age"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "get property",
+      "steps": [
+        {
+          "op": "schema_object.new",
+          "args": {
+            "properties": {
+              "id": {
+                "type": "string"
+              }
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema_object.inspect",
+          "args": {
+            "object": {
+              "$ref": "o"
+            },
+            "name": "id"
+          },
+          "expect": {
+            "properties": {
+              "id": {
+                "type": "string"
+              }
+            },
+            "names": [
+              "id"
+            ],
+            "property": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "op": "schema_object.inspect",
+          "args": {
+            "object": {
+              "$ref": "o"
+            },
+            "name": "nonexistent"
+          },
+          "expect": {
+            "properties": {
+              "id": {
+                "type": "string"
+              }
+            },
+            "names": [
+              "id"
+            ],
+            "property": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "add property and remove property",
+      "steps": [
+        {
+          "op": "schema_object.new",
+          "args": {},
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema_object.add",
+          "args": {
+            "object": {
+              "$ref": "o"
+            },
+            "name": "id",
+            "property": {
+              "type": "string"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "schema_object.inspect",
+          "args": {
+            "object": {
+              "$ref": "o"
+            }
+          },
+          "expect": {
+            "properties": {
+              "id": {
+                "type": "string"
+              }
+            },
+            "names": [
+              "id"
+            ]
+          }
+        },
+        {
+          "op": "schema_object.remove",
+          "args": {
+            "object": {
+              "$ref": "o"
+            },
+            "name": "id"
+          },
+          "expect": null
+        },
+        {
+          "op": "schema_object.inspect",
+          "args": {
+            "object": {
+              "$ref": "o"
+            }
+          },
+          "expect": {
+            "properties": [],
+            "names": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "add property invalid type",
+      "steps": [
+        {
+          "op": "schema_object.new",
+          "args": {},
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema_object.add",
+          "args": {
+            "object": {
+              "$ref": "o"
+            },
+            "name": "bad",
+            "property": {
+              "type": "invalid_type"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid type 'invalid_type' for property 'bad'. Must be one of: string, array, boolean, integer, number, object, null"
+            }
+          }
+        },
+        {
+          "op": "schema_object.add",
+          "args": {
+            "object": {
+              "$ref": "o"
+            },
+            "name": "none",
+            "property": {
+              "description": "no type"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid type NULL for property 'none'. Must be one of: string, array, boolean, integer, number, object, null"
+            }
+          }
+        },
+        {
+          "op": "schema_object.add",
+          "args": {
+            "object": {
+              "$ref": "o"
+            },
+            "name": "list",
+            "property": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid type array (\n  0 => 'string',\n  1 => 'null',\n) for property 'list'. Must be one of: string, array, boolean, integer, number, object, null"
+            }
+          }
+        },
+        {
+          "op": "schema_object.add",
+          "args": {
+            "object": {
+              "$ref": "o"
+            },
+            "name": "number",
+            "property": {
+              "type": 1.5
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid type 1.5 for property 'number'. Must be one of: string, array, boolean, integer, number, object, null"
+            }
+          }
+        },
+        {
+          "op": "schema_object.new",
+          "args": {
+            "properties": {
+              "ok": {
+                "type": "string"
+              },
+              "bad": {
+                "type": true
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid type true for property 'bad'. Must be one of: string, array, boolean, integer, number, object, null"
+            }
+          }
+        },
+        {
+          "op": "schema_object.inspect",
+          "args": {
+            "object": {
+              "$ref": "o"
+            }
+          },
+          "expect": {
+            "properties": [],
+            "names": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "get names",
+      "steps": [
+        {
+          "op": "schema_object.new",
+          "args": {
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "age": {
+                "type": "integer"
+              }
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema_object.inspect",
+          "args": {
+            "object": {
+              "$ref": "o"
+            }
+          },
+          "expect": {
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "age": {
+                "type": "integer"
+              }
+            },
+            "names": [
+              "id",
+              "age"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "get valid types",
+      "op": "schema_object.valid_types",
+      "expect": [
+        "string",
+        "array",
+        "boolean",
+        "integer",
+        "number",
+        "object",
+        "null"
+      ]
+    },
+    {
+      "name": "validate property",
+      "steps": [
+        {
+          "op": "schema_object.new",
+          "args": {},
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema_object.validate",
+          "args": {
+            "object": {
+              "$ref": "o"
+            },
+            "name": "x",
+            "property": {
+              "type": "number"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "schema_object.validate",
+          "args": {
+            "object": {
+              "$ref": "o"
+            },
+            "name": "x",
+            "property": {
+              "type": "NUMBER"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "schema_object.validate",
+          "args": {
+            "object": {
+              "$ref": "o"
+            },
+            "name": "x",
+            "property": {
+              "type": null
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "adding an existing property replaces it in place",
+      "steps": [
+        {
+          "op": "schema_object.new",
+          "args": {
+            "properties": {
+              "a": {
+                "type": "string"
+              },
+              "b": {
+                "type": "string"
+              }
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "schema_object.add",
+          "args": {
+            "object": {
+              "$ref": "o"
+            },
+            "name": "a",
+            "property": {
+              "type": "integer"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "schema_object.inspect",
+          "args": {
+            "object": {
+              "$ref": "o"
+            }
+          },
+          "expect": {
+            "properties": {
+              "a": {
+                "type": "integer"
+              },
+              "b": {
+                "type": "string"
+              }
+            },
+            "names": [
+              "a",
+              "b"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

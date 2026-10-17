@@ -1,0 +1,965 @@
+{
+  "source": "packages/queue/tests/BackgroundTest.php",
+  "cases": [
+    {
+      "name": "publish delegates synchronously",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.new",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            }
+          },
+          "bind": "bg",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.publish",
+          "args": {
+            "background": {
+              "$ref": "bg"
+            },
+            "queue": {
+              "name": "background",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LRANGE",
+              "${ns}.queue.background",
+              0,
+              -1
+            ]
+          },
+          "expect": [
+            "{\"pid\":\"pid0001\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":1}}"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "publishMany delegates synchronously",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.new",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            }
+          },
+          "bind": "bg",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.publish_many",
+          "args": {
+            "background": {
+              "$ref": "bg"
+            },
+            "queue": {
+              "name": "background",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "n": 1
+              },
+              {
+                "n": 2
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LRANGE",
+              "${ns}.queue.background",
+              0,
+              -1
+            ]
+          },
+          "expect": [
+            "{\"pid\":\"pid0002\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":2}}",
+            "{\"pid\":\"pid0001\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":1}}"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "enqueue falls back to a synchronous publish when not started",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.new",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            }
+          },
+          "bind": "bg",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.run",
+          "args": {
+            "background": {
+              "$ref": "bg"
+            },
+            "queue": {
+              "name": "background",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "n": 1
+              },
+              {
+                "n": 2
+              }
+            ],
+            "start": false
+          },
+          "expect": null
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LRANGE",
+              "${ns}.queue.background",
+              0,
+              -1
+            ]
+          },
+          "expect": [
+            "{\"pid\":\"pid0002\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":2}}",
+            "{\"pid\":\"pid0001\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":1}}"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "the reader drains the buffer into the publisher",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.new",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            }
+          },
+          "bind": "bg",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.run",
+          "args": {
+            "background": {
+              "$ref": "bg"
+            },
+            "queue": {
+              "name": "background",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "n": 1
+              },
+              {
+                "n": 2
+              },
+              {
+                "n": 3
+              },
+              {
+                "n": 4
+              },
+              {
+                "n": 5
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LRANGE",
+              "${ns}.queue.background",
+              0,
+              -1
+            ]
+          },
+          "expect": [
+            "{\"pid\":\"pid0005\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":5}}",
+            "{\"pid\":\"pid0004\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":4}}",
+            "{\"pid\":\"pid0003\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":3}}",
+            "{\"pid\":\"pid0002\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":2}}",
+            "{\"pid\":\"pid0001\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":1}}"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "back pressure delivers every message in order",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.new",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "capacity": 1
+          },
+          "bind": "bg",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.run",
+          "args": {
+            "background": {
+              "$ref": "bg"
+            },
+            "queue": {
+              "name": "background",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "n": 1
+              },
+              {
+                "n": 2
+              },
+              {
+                "n": 3
+              },
+              {
+                "n": 4
+              },
+              {
+                "n": 5
+              },
+              {
+                "n": 6
+              },
+              {
+                "n": 7
+              },
+              {
+                "n": 8
+              },
+              {
+                "n": 9
+              },
+              {
+                "n": 10
+              },
+              {
+                "n": 11
+              },
+              {
+                "n": 12
+              },
+              {
+                "n": 13
+              },
+              {
+                "n": 14
+              },
+              {
+                "n": 15
+              },
+              {
+                "n": 16
+              },
+              {
+                "n": 17
+              },
+              {
+                "n": 18
+              },
+              {
+                "n": 19
+              },
+              {
+                "n": 20
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LRANGE",
+              "${ns}.queue.background",
+              0,
+              -1
+            ]
+          },
+          "expect": [
+            "{\"pid\":\"pid0020\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":20}}",
+            "{\"pid\":\"pid0019\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":19}}",
+            "{\"pid\":\"pid0018\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":18}}",
+            "{\"pid\":\"pid0017\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":17}}",
+            "{\"pid\":\"pid0016\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":16}}",
+            "{\"pid\":\"pid0015\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":15}}",
+            "{\"pid\":\"pid0014\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":14}}",
+            "{\"pid\":\"pid0013\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":13}}",
+            "{\"pid\":\"pid0012\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":12}}",
+            "{\"pid\":\"pid0011\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":11}}",
+            "{\"pid\":\"pid0010\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":10}}",
+            "{\"pid\":\"pid0009\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":9}}",
+            "{\"pid\":\"pid0008\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":8}}",
+            "{\"pid\":\"pid0007\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":7}}",
+            "{\"pid\":\"pid0006\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":6}}",
+            "{\"pid\":\"pid0005\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":5}}",
+            "{\"pid\":\"pid0004\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":4}}",
+            "{\"pid\":\"pid0003\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":3}}",
+            "{\"pid\":\"pid0002\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":2}}",
+            "{\"pid\":\"pid0001\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":1}}"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "concurrent readers deliver every message",
+      "state": [],
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.new",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "capacity": 2,
+            "coroutines": 4
+          },
+          "bind": "bg",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.run",
+          "args": {
+            "background": {
+              "$ref": "bg"
+            },
+            "queue": {
+              "name": "background",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "n": 1
+              },
+              {
+                "n": 2
+              },
+              {
+                "n": 3
+              },
+              {
+                "n": 4
+              },
+              {
+                "n": 5
+              },
+              {
+                "n": 6
+              },
+              {
+                "n": 7
+              },
+              {
+                "n": 8
+              },
+              {
+                "n": 9
+              },
+              {
+                "n": 10
+              },
+              {
+                "n": 11
+              },
+              {
+                "n": 12
+              },
+              {
+                "n": 13
+              },
+              {
+                "n": 14
+              },
+              {
+                "n": 15
+              },
+              {
+                "n": 16
+              },
+              {
+                "n": 17
+              },
+              {
+                "n": 18
+              },
+              {
+                "n": 19
+              },
+              {
+                "n": 20
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "background.size",
+          "args": {
+            "background": {
+              "$ref": "bg"
+            },
+            "queue": {
+              "name": "background",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 20
+        }
+      ]
+    },
+    {
+      "name": "a batch flushes at the maximum message count",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.new",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "batch_interval": 5,
+            "batch_size": 3
+          },
+          "bind": "bg",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.run",
+          "args": {
+            "background": {
+              "$ref": "bg"
+            },
+            "queue": {
+              "name": "background",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "n": 1
+              },
+              {
+                "n": 2
+              },
+              {
+                "n": 3
+              },
+              {
+                "n": 4
+              },
+              {
+                "n": 5
+              },
+              {
+                "n": 6
+              },
+              {
+                "n": 7
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LRANGE",
+              "${ns}.queue.background",
+              0,
+              -1
+            ]
+          },
+          "expect": [
+            "{\"pid\":\"pid0007\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":7}}",
+            "{\"pid\":\"pid0006\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":6}}",
+            "{\"pid\":\"pid0005\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":5}}",
+            "{\"pid\":\"pid0004\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":4}}",
+            "{\"pid\":\"pid0003\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":3}}",
+            "{\"pid\":\"pid0002\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":2}}",
+            "{\"pid\":\"pid0001\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":1}}"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a batch flushes at the maximum interval",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.new",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "batch_interval": 0.01,
+            "batch_size": 100
+          },
+          "bind": "bg",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.run",
+          "args": {
+            "background": {
+              "$ref": "bg"
+            },
+            "queue": {
+              "name": "background",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "n": 1
+              },
+              {
+                "n": 2
+              },
+              {
+                "n": 3
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LRANGE",
+              "${ns}.queue.background",
+              0,
+              -1
+            ]
+          },
+          "expect": [
+            "{\"pid\":\"pid0003\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":3}}",
+            "{\"pid\":\"pid0002\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":2}}",
+            "{\"pid\":\"pid0001\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":1}}"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a batch preserves queue boundaries",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.new",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "batch_interval": 5,
+            "batch_size": 10
+          },
+          "bind": "bg",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.run",
+          "args": {
+            "background": {
+              "$ref": "bg"
+            },
+            "queue": {
+              "name": "background",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "n": 1
+              },
+              {
+                "n": 2
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "background.run",
+          "args": {
+            "background": {
+              "$ref": "bg"
+            },
+            "queue": {
+              "name": "other",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "n": 3
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LRANGE",
+              "${ns}.queue.background",
+              0,
+              -1
+            ]
+          },
+          "expect": [
+            "{\"pid\":\"pid0002\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":2}}",
+            "{\"pid\":\"pid0001\",\"queue\":\"background\",\"timestamp\":1700000000,\"payload\":{\"n\":1}}"
+          ]
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LRANGE",
+              "${ns}.queue.other",
+              0,
+              -1
+            ]
+          },
+          "expect": [
+            "{\"pid\":\"pid0003\",\"queue\":\"other\",\"timestamp\":1700000000,\"payload\":{\"n\":3}}"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "batch settings must be configured together",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.new",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "batch_interval": 1
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "maxBatchInterval and maxBatchSize must be configured together."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "the batch interval must be positive",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.new",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "batch_interval": 0,
+            "batch_size": 2
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "maxBatchInterval must be greater than zero."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "the batch size must be at least one",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.new",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "batch_interval": 1,
+            "batch_size": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "maxBatchSize must be at least one."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "management calls are delegated",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.new",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            }
+          },
+          "bind": "bg",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "RPUSH",
+              "${ns}.queue.background",
+              "x"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "RPUSH",
+              "${ns}.dead.background",
+              "y",
+              "z"
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "background.size",
+          "args": {
+            "background": {
+              "$ref": "bg"
+            },
+            "queue": {
+              "name": "background",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "background.size",
+          "args": {
+            "background": {
+              "$ref": "bg"
+            },
+            "queue": {
+              "name": "background",
+              "namespace": "${ns}"
+            },
+            "failed": true
+          },
+          "expect": 2
+        },
+        {
+          "op": "background.failed_count",
+          "args": {
+            "background": {
+              "$ref": "bg"
+            },
+            "queue": {
+              "name": "background",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "background.retry",
+          "args": {
+            "background": {
+              "$ref": "bg"
+            },
+            "queue": {
+              "name": "background",
+              "namespace": "${ns}"
+            },
+            "limit": 1
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

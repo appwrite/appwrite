@@ -1,0 +1,381 @@
+{
+  "source": "packages/user-agent/tests/MatomoCompatibilityTest.php",
+  "cases": [
+    {
+      "name": "core fields match Matomo 6.4: Firefox on Windows",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0",
+        "array": {
+          "os": {
+            "code": "WIN",
+            "name": "Windows",
+            "version": "7"
+          },
+          "client": {
+            "type": "browser",
+            "code": "FF",
+            "name": "Firefox",
+            "version": "47.0",
+            "engine": "Gecko",
+            "engineVersion": "47.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "core fields match Matomo 6.4: Mobile Safari on iPhone",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1",
+        "array": {
+          "os": {
+            "code": "IOS",
+            "name": "iOS",
+            "version": "17.4"
+          },
+          "client": {
+            "type": "browser",
+            "code": "MF",
+            "name": "Mobile Safari",
+            "version": "17.4",
+            "engine": "WebKit",
+            "engineVersion": "605.1.15"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Apple",
+            "model": "iPhone"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "core fields match Matomo 6.4: Chrome Mobile on Pixel",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 13; Pixel 7 Pro Build/TQ3A.230805.001) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 13; Pixel 7 Pro Build/TQ3A.230805.001) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "13"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "120.0",
+            "engine": "Blink",
+            "engineVersion": "120.0.0.0"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Google",
+            "model": "Pixel 7 Pro"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "core fields match Matomo 6.4: Chrome on Mac",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+        "array": {
+          "os": {
+            "code": "MAC",
+            "name": "Mac",
+            "version": "10.15"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CH",
+            "name": "Chrome",
+            "version": "126.0",
+            "engine": "Blink",
+            "engineVersion": "126.0.0.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": "Apple",
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "core fields match Matomo 6.4: Safari on iPad",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (iPad; CPU OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (iPad; CPU OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1",
+        "array": {
+          "os": {
+            "code": "IPA",
+            "name": "iPadOS",
+            "version": "17.4"
+          },
+          "client": {
+            "type": "browser",
+            "code": "MF",
+            "name": "Mobile Safari",
+            "version": "17.4",
+            "engine": "WebKit",
+            "engineVersion": "605.1.15"
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Apple",
+            "model": "iPad"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "core fields match Matomo 6.4: Firefox on Debian",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0 Debian/102.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0 Debian/102.0",
+        "array": {
+          "os": {
+            "code": "DEB",
+            "name": "Debian",
+            "version": "102.0"
+          },
+          "client": {
+            "type": "browser",
+            "code": "FF",
+            "name": "Firefox",
+            "version": "102.0",
+            "engine": "Gecko",
+            "engineVersion": "102.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "core fields match Matomo 6.4: Yandex Browser on Windows",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 YaBrowser/23.7.1.1140 Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 YaBrowser/23.7.1.1140 Safari/537.36",
+        "array": {
+          "os": {
+            "code": "WIN",
+            "name": "Windows",
+            "version": "10"
+          },
+          "client": {
+            "type": "browser",
+            "code": "YA",
+            "name": "Yandex Browser",
+            "version": "23.7",
+            "engine": "Blink",
+            "engineVersion": "114.0.0.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "bot decision matches Matomo 6.4: Googlebot",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "Googlebot",
+            "category": "search crawler"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "bot decision matches Matomo 6.4: Bingbot",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "Bingbot",
+            "category": "search crawler"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "bot decision matches Matomo 6.4: Chrome",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/126.0.0.0 Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/126.0.0.0 Safari/537.36",
+        "array": {
+          "os": {
+            "code": "WIN",
+            "name": "Windows",
+            "version": "10"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CH",
+            "name": "Chrome",
+            "version": "126.0",
+            "engine": "Blink",
+            "engineVersion": "126.0.0.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    }
+  ]
+}

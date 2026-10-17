@@ -1,0 +1,404 @@
+{
+  "service": "console",
+  "file": "tests/benchmarks/results/console.json",
+  "workload": {
+    "script": "tests/benchmarks/api/console.js",
+    "duration": "60s",
+    "hashing": false,
+    "seed": 200,
+    "run": "console-20261012-003636"
+  },
+  "environment": {
+    "date": "2026-10-11T23:38:52Z",
+    "commit": "ef1e9c030e",
+    "branch": "feat/rust-utopia-conversion",
+    "machine": {
+      "os": "Darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cores": 16,
+      "memory_gib": 128
+    },
+    "docker": "28.5.1",
+    "k6": "k6 v1.7.1",
+    "cpu_source": "docker stats",
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "88b87c5028a0",
+      "created": "2026-10-09T07:39:19.618591965Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "b0b46302463d",
+      "created": "2026-10-11T19:37:06.64190413Z"
+    },
+    "database": {
+      "container": "appwrite-postgresql",
+      "image": "appwrite/postgres:0.1.0",
+      "id": "77156232a16d",
+      "created": "2026-10-09T08:32:40.317530502Z"
+    },
+    "endpoint": {
+      "php": "http://localhost:9501/v1",
+      "rust": "http://localhost:9530/v1"
+    }
+  },
+  "steps": [
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 50,
+      "rps": 50.0,
+      "requests": 3001,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 2.367,
+        "p50": 2.11,
+        "p90": 3.367,
+        "p95": 4.059,
+        "p99": 5.539,
+        "max": 27.353
+      },
+      "cpu_ms_per_request": 1.859,
+      "db_cpu_ms_per_request": 0.876,
+      "memory_mib": {
+        "baseline": 3307.5,
+        "avg": 3311.4,
+        "peak": 3314.7
+      },
+      "endpoints": {
+        "console.redirects.root.get": {
+          "route": "GET /",
+          "note": "redirects (301, not followed) to the console, for a host other than the console's",
+          "count": 120,
+          "rps": 2.0,
+          "avg": 2.124,
+          "p50": 1.907,
+          "p90": 3.408,
+          "p95": 3.704,
+          "p99": 3.892,
+          "max": 4.472
+        },
+        "console.redirects.auth.get": {
+          "route": "GET /auth/*",
+          "note": "redirects (301, not followed) to the console, for a host other than the console's",
+          "count": 95,
+          "rps": 1.58,
+          "avg": 2.175,
+          "p50": 1.958,
+          "p90": 3.361,
+          "p95": 3.925,
+          "p99": 4.337,
+          "max": 5.145
+        },
+        "console.redirects.invite.get": {
+          "route": "GET /invite",
+          "note": "redirects (301, not followed) to the console, for a host other than the console's",
+          "count": 128,
+          "rps": 2.13,
+          "avg": 2.253,
+          "p50": 1.925,
+          "p90": 3.552,
+          "p95": 4.084,
+          "p99": 4.611,
+          "max": 13.131
+        },
+        "console.redirects.login.get": {
+          "route": "GET /login",
+          "note": "redirects (301, not followed) to the console, for a host other than the console's",
+          "count": 88,
+          "rps": 1.47,
+          "avg": 2.34,
+          "p50": 1.934,
+          "p90": 3.249,
+          "p95": 3.991,
+          "p99": 8.157,
+          "max": 15.743
+        },
+        "console.redirects.mfa.get": {
+          "route": "GET /mfa",
+          "note": "redirects (301, not followed) to the console, for a host other than the console's",
+          "count": 130,
+          "rps": 2.17,
+          "avg": 2.227,
+          "p50": 1.974,
+          "p90": 3.432,
+          "p95": 3.658,
+          "p99": 5.003,
+          "max": 6.641
+        },
+        "console.redirects.recover.get": {
+          "route": "GET /recover",
+          "note": "redirects (301, not followed) to the console, for a host other than the console's",
+          "count": 140,
+          "rps": 2.33,
+          "avg": 2.099,
+          "p50": 1.88,
+          "p90": 2.275,
+          "p95": 3.501,
+          "p99": 4.482,
+          "max": 12.119
+        },
+        "console.redirects.register.get": {
+          "route": "GET /register/*",
+          "note": "redirects (301, not followed) to the console, for a host other than the console's",
+          "count": 135,
+          "rps": 2.25,
+          "avg": 2.141,
+          "p50": 1.909,
+          "p90": 3.202,
+          "p95": 3.548,
+          "p99": 4.544,
+          "max": 6.42
+        },
+        "console.oauth2Providers.list": {
+          "route": "GET /v1/console/oauth2-providers",
+          "count": 334,
+          "rps": 5.57,
+          "avg": 2.898,
+          "p50": 2.532,
+          "p90": 3.584,
+          "p95": 5.372,
+          "p99": 6.784,
+          "max": 27.353
+        },
+        "console.resources.get": {
+          "route": "GET /v1/console/resources",
+          "note": "an available custom domain (204)",
+          "count": 347,
+          "rps": 5.78,
+          "avg": 2.848,
+          "p50": 2.585,
+          "p90": 3.337,
+          "p95": 4.885,
+          "p99": 5.683,
+          "max": 16.142
+        },
+        "console.scopes.organization.list": {
+          "route": "GET /v1/console/scopes/organization",
+          "count": 254,
+          "rps": 4.23,
+          "avg": 1.977,
+          "p50": 1.734,
+          "p90": 3.018,
+          "p95": 3.449,
+          "p99": 4.084,
+          "max": 13.98
+        },
+        "console.scopes.project.list": {
+          "route": "GET /v1/console/scopes/project",
+          "count": 254,
+          "rps": 4.23,
+          "avg": 2.434,
+          "p50": 2.173,
+          "p90": 3.544,
+          "p95": 4.586,
+          "p99": 5.006,
+          "max": 5.687
+        },
+        "console.templates.email.get": {
+          "route": "GET /v1/console/templates/email/:templateId",
+          "count": 357,
+          "rps": 5.95,
+          "avg": 2.607,
+          "p50": 2.3,
+          "p90": 4.244,
+          "p95": 4.667,
+          "p99": 5.504,
+          "max": 6.48
+        },
+        "console.variables.get": {
+          "route": "GET /v1/console/variables",
+          "count": 619,
+          "rps": 10.32,
+          "avg": 2.047,
+          "p50": 1.821,
+          "p90": 3.205,
+          "p95": 3.572,
+          "p99": 4.408,
+          "max": 11.748
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 50,
+      "rps": 4425.4,
+      "requests": 265526,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 11.182,
+        "p50": 8.649,
+        "p90": 20.352,
+        "p95": 27.523,
+        "p99": 49.464,
+        "max": 294.203
+      },
+      "cpu_ms_per_request": 2.211,
+      "db_cpu_ms_per_request": 0.236,
+      "memory_mib": {
+        "baseline": 3311.6,
+        "avg": 3300.6,
+        "peak": 3351.6
+      },
+      "endpoints": {
+        "console.redirects.root.get": {
+          "route": "GET /",
+          "note": "redirects (301, not followed) to the console, for a host other than the console's",
+          "count": 10476,
+          "rps": 174.6,
+          "avg": 8.935,
+          "p50": 7.072,
+          "p90": 15.617,
+          "p95": 21.235,
+          "p99": 39.804,
+          "max": 124.883
+        },
+        "console.redirects.auth.get": {
+          "route": "GET /auth/*",
+          "note": "redirects (301, not followed) to the console, for a host other than the console's",
+          "count": 10718,
+          "rps": 178.63,
+          "avg": 9.046,
+          "p50": 7.035,
+          "p90": 16.066,
+          "p95": 22.222,
+          "p99": 39.835,
+          "max": 115.242
+        },
+        "console.redirects.invite.get": {
+          "route": "GET /invite",
+          "note": "redirects (301, not followed) to the console, for a host other than the console's",
+          "count": 10650,
+          "rps": 177.5,
+          "avg": 8.81,
+          "p50": 6.954,
+          "p90": 15.47,
+          "p95": 20.974,
+          "p99": 37.984,
+          "max": 135.323
+        },
+        "console.redirects.login.get": {
+          "route": "GET /login",
+          "note": "redirects (301, not followed) to the console, for a host other than the console's",
+          "count": 10813,
+          "rps": 180.22,
+          "avg": 8.925,
+          "p50": 6.96,
+          "p90": 15.409,
+          "p95": 21.307,
+          "p99": 41.765,
+          "max": 143.049
+        },
+        "console.redirects.mfa.get": {
+          "route": "GET /mfa",
+          "note": "redirects (301, not followed) to the console, for a host other than the console's",
+          "count": 10502,
+          "rps": 175.03,
+          "avg": 8.992,
+          "p50": 7.04,
+          "p90": 15.824,
+          "p95": 21.868,
+          "p99": 40.348,
+          "max": 144.655
+        },
+        "console.redirects.recover.get": {
+          "route": "GET /recover",
+          "note": "redirects (301, not followed) to the console, for a host other than the console's",
+          "count": 10358,
+          "rps": 172.63,
+          "avg": 8.915,
+          "p50": 7.011,
+          "p90": 15.899,
+          "p95": 21.522,
+          "p99": 38.458,
+          "max": 111.253
+        },
+        "console.redirects.register.get": {
+          "route": "GET /register/*",
+          "note": "redirects (301, not followed) to the console, for a host other than the console's",
+          "count": 10612,
+          "rps": 176.87,
+          "avg": 8.945,
+          "p50": 7.018,
+          "p90": 15.79,
+          "p95": 20.706,
+          "p99": 40.226,
+          "max": 149.897
+        },
+        "console.oauth2Providers.list": {
+          "route": "GET /v1/console/oauth2-providers",
+          "count": 31856,
+          "rps": 530.93,
+          "avg": 11.86,
+          "p50": 9.39,
+          "p90": 20.563,
+          "p95": 28.096,
+          "p99": 49.823,
+          "max": 294.203
+        },
+        "console.resources.get": {
+          "route": "GET /v1/console/resources",
+          "note": "an available custom domain (204)",
+          "count": 31644,
+          "rps": 527.4,
+          "avg": 14.733,
+          "p50": 12.084,
+          "p90": 25.139,
+          "p95": 33.245,
+          "p99": 56.952,
+          "max": 173.235
+        },
+        "console.scopes.organization.list": {
+          "route": "GET /v1/console/scopes/organization",
+          "count": 21259,
+          "rps": 354.32,
+          "avg": 9.014,
+          "p50": 7.12,
+          "p90": 15.738,
+          "p95": 21.404,
+          "p99": 40.088,
+          "max": 131.741
+        },
+        "console.scopes.project.list": {
+          "route": "GET /v1/console/scopes/project",
+          "count": 21544,
+          "rps": 359.07,
+          "avg": 10.505,
+          "p50": 8.335,
+          "p90": 18.055,
+          "p95": 24.821,
+          "p99": 44.792,
+          "max": 146.325
+        },
+        "console.templates.email.get": {
+          "route": "GET /v1/console/templates/email/:templateId",
+          "count": 31789,
+          "rps": 529.82,
+          "avg": 17.276,
+          "p50": 13.945,
+          "p90": 30.355,
+          "p95": 39.956,
+          "p99": 64.562,
+          "max": 170.23
+        },
+        "console.variables.get": {
+          "route": "GET /v1/console/variables",
+          "count": 53305,
+          "rps": 888.42,
+          "avg": 9.292,
+          "p50": 7.276,
+          "p90": 16.159,
+          "p95": 22.127,
+          "p99": 42.193,
+          "max": 156.263
+        }
+      }
+    }
+  ]
+}

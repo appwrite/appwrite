@@ -1,0 +1,194 @@
+{
+  "lib": "telemetry",
+  "description": "utopia-php/telemetry: counters, histograms, gauges and observable gauges over the None, Test and OpenTelemetry (OTLP/HTTP) backends, and the keep-alive OTLP transport.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/telemetry/src"
+    ],
+    "tests": [
+      "packages/telemetry/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/telemetry"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "telemetry.memory": {
+      "doc": "new Test() as a handle",
+      "covers": []
+    },
+    "telemetry.none": {
+      "doc": "new None() as a handle",
+      "covers": []
+    },
+    "telemetry.otlp": {
+      "doc": "new OpenTelemetry(endpoint, namespace, service, instance, transport) with a transport that keeps every payload",
+      "covers": [
+        "Utopia\\Telemetry\\Adapter\\OpenTelemetry::__construct",
+        "Utopia\\Telemetry\\Adapter\\OpenTelemetry\\MetricExporter::__construct"
+      ]
+    },
+    "telemetry.collect": {
+      "doc": "$telemetry->collect()",
+      "covers": [
+        "Utopia\\Telemetry\\Adapter\\None::collect",
+        "Utopia\\Telemetry\\Adapter\\Test::collect",
+        "Utopia\\Telemetry\\Adapter\\OpenTelemetry::collect",
+        "Utopia\\Telemetry\\Adapter\\OpenTelemetry\\MetricExporter::export"
+      ]
+    },
+    "instrument.new": {
+      "doc": "create{Counter,UpDownCounter,Histogram,Gauge,ObservableGauge}(name, unit?, description?, advisory?) by `kind`; `lazy` uses the deprecated ::lazy() shim; `boundaries` is the ExplicitBucketBoundaries advisory",
+      "covers": [
+        "Utopia\\Telemetry\\Adapter\\None::createCounter",
+        "Utopia\\Telemetry\\Adapter\\None::createGauge",
+        "Utopia\\Telemetry\\Adapter\\None::createHistogram",
+        "Utopia\\Telemetry\\Adapter\\None::createObservableGauge",
+        "Utopia\\Telemetry\\Adapter\\None::createUpDownCounter",
+        "Utopia\\Telemetry\\Adapter\\Test::createCounter",
+        "Utopia\\Telemetry\\Adapter\\Test::createGauge",
+        "Utopia\\Telemetry\\Adapter\\Test::createHistogram",
+        "Utopia\\Telemetry\\Adapter\\Test::createObservableGauge",
+        "Utopia\\Telemetry\\Adapter\\Test::createUpDownCounter",
+        "Utopia\\Telemetry\\Adapter\\OpenTelemetry::createCounter",
+        "Utopia\\Telemetry\\Adapter\\OpenTelemetry::createGauge",
+        "Utopia\\Telemetry\\Adapter\\OpenTelemetry::createHistogram",
+        "Utopia\\Telemetry\\Adapter\\OpenTelemetry::createObservableGauge",
+        "Utopia\\Telemetry\\Adapter\\OpenTelemetry::createUpDownCounter",
+        "Utopia\\Telemetry\\Counter::lazy",
+        "Utopia\\Telemetry\\Gauge::lazy",
+        "Utopia\\Telemetry\\Histogram::lazy",
+        "Utopia\\Telemetry\\UpDownCounter::lazy"
+      ]
+    },
+    "instrument.record": {
+      "doc": "add(value, attributes) on a counter or up/down counter, record(value, attributes) on a histogram or gauge; attributes are [key, value] pairs; `sampled_span` records under an active sampled trace span (PHP only: Rust has no trace context)"
+    },
+    "instrument.observe": {
+      "doc": "$gauge->observe(callback) where the callback reports every observation in the `source` handle at collection"
+    },
+    "source.new": {
+      "doc": "fixture: a mutable list of observations {value, attributes} as a handle"
+    },
+    "source.set": {
+      "doc": "fixture: replaces a source's observations"
+    },
+    "memory.dump": {
+      "doc": "the Test backend's public arrays: {counters, upDownCounters, histograms, gauges} as [name, values] pairs, observableGauges as [name, callback count] pairs"
+    },
+    "memory.observe": {
+      "doc": "runs every callback of the Test backend's observable gauge `name`: [[value, attribute pairs], ...], null when it was never observed"
+    },
+    "otlp.payloads": {
+      "doc": "every OTLP request the backend sent, decoded: resources, scopes, metrics and points, timestamps as whether they are set"
+    },
+    "telemetry.replay": {
+      "doc": "records every {kind, name, value, attributes} of `records` on a fresh `backend` (memory, none, otlp), collects twice: {collected, held} (the Test arrays, or the decoded OTLP requests)",
+      "fuzz": [
+        {
+          "name": "records",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "backend": { "gen": "pick", "from": ["memory", "otlp", "none"] },
+              "records": {
+                "gen": "array",
+                "min": 0,
+                "max": 8,
+                "items": {
+                  "gen": "object",
+                  "fields": {
+                    "kind": { "gen": "pick", "from": ["counter", "up_down_counter", "histogram", "gauge"] },
+                    "name": { "gen": "pick", "from": ["a", "b", "requests.total"] },
+                    "value": { "gen": "ref", "name": "amount" },
+                    "attributes": {
+                      "gen": "object",
+                      "fields": { "route": { "gen": "ref", "name": "attribute" }, "method": { "gen": "ref", "name": "attribute" } },
+                      "optional": ["route", "method"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "iterations": 300
+        }
+      ]
+    },
+    "transport.new": {
+      "doc": "new Swoole(endpoint, contentType?, headers?, timeout?, poolSize?, socketBufferSize?)",
+      "covers": [
+        "Utopia\\Telemetry\\Adapter\\OpenTelemetry\\Transport\\Swoole::__construct"
+      ]
+    },
+    "transport.content_type": {
+      "doc": "$transport->contentType()",
+      "covers": [
+        "Utopia\\Telemetry\\Adapter\\OpenTelemetry\\Transport\\Swoole::contentType"
+      ]
+    },
+    "transport.shutdown": {
+      "doc": "$transport->shutdown()",
+      "covers": [
+        "Utopia\\Telemetry\\Adapter\\OpenTelemetry\\Transport\\Swoole::shutdown"
+      ]
+    },
+    "transport.force_flush": {
+      "doc": "$transport->forceFlush()",
+      "covers": [
+        "Utopia\\Telemetry\\Adapter\\OpenTelemetry\\Transport\\Swoole::forceFlush"
+      ]
+    },
+    "transport.send": {
+      "doc": "$transport->send(payload)->await()",
+      "covers": [
+        "Utopia\\Telemetry\\Adapter\\OpenTelemetry\\Transport\\Swoole::send"
+      ]
+    },
+    "transport.exchange": {
+      "doc": "a scripted local collector ({status, body, delay_ms} | {reset} | {hang_ms} per request) and a transport sending `sends` to it, in order or `concurrent`: {results, requests: [{payload, headers}]}",
+      "covers": [
+        "Utopia\\Telemetry\\Adapter\\OpenTelemetry\\Transport\\Swoole::send"
+      ]
+    }
+  },
+  "generators": {
+    "attribute": {
+      "gen": "one_of",
+      "of": [
+        { "gen": "string", "min": 0, "max": 12 },
+        { "gen": "int" },
+        { "gen": "bool" }
+      ]
+    },
+    "amount": {
+      "gen": "one_of",
+      "of": [
+        { "gen": "int", "min": -1000, "max": 1000 },
+        { "gen": "float", "min": -1000.0, "max": 1000.0 }
+      ]
+    }
+  },
+  "waivers": {
+    "Utopia\\Telemetry\\Adapter\\OpenTelemetry\\MetricExporter::temporality": "PHP runtime plumbing: the OpenTelemetry SDK's exporter interface, forwarding to the wrapped OTLP exporter; Rust has no SDK exporter layer (the temporality is always cumulative, as cases on otlp.payloads show)",
+    "Utopia\\Telemetry\\Adapter\\OpenTelemetry\\MetricExporter::forceFlush": "PHP runtime plumbing: the OpenTelemetry SDK's exporter interface, forwarding to the wrapped exporter, unreachable from the adapter's API",
+    "Utopia\\Telemetry\\Adapter\\OpenTelemetry\\MetricExporter::shutdown": "PHP runtime plumbing: the OpenTelemetry SDK's exporter interface, forwarding to the wrapped exporter, unreachable from the adapter's API"
+  },
+  "tests_waived": {},
+  "quirks": [],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Telemetry\\Adapter\\OpenTelemetry::createCounter",
+      "php": "Attribute values may be arrays or null (null and invalid ones are dropped by the SDK), and `$advisory` is passed to every instrument.",
+      "reason": "utopia_telemetry::Value has strings, integers, floats and booleans; the only advisory the SDK honours, histogram bucket boundaries, is Telemetry::histogram's `boundaries`."
+    },
+    {
+      "symbol": "Utopia\\Telemetry\\Adapter\\OpenTelemetry::__construct",
+      "php": "Without a transport, the SDK's PSR-18 OTLP HTTP transport is created for the endpoint, and the meter provider is registered globally.",
+      "reason": "Rust uses HttpTransport (the port of the Swoole transport) for the endpoint, and has no global meter provider; records under trace spans export no exemplars on either side."
+    }
+  ]
+}

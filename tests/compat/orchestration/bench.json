@@ -1,0 +1,77 @@
+{
+  "lib": "orchestration",
+  "environment": {
+    "date": "2026-10-12T11:41:02Z",
+    "commit": "e4e095988a",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "parse_command",
+      "description": "Split a runtime start command with a quoted script",
+      "php": {
+        "ns": 933.2153088810878,
+        "min": 495.40091998547393,
+        "max": 4529.18750756567,
+        "samples": 15,
+        "calls": 49566
+      },
+      "rust": {
+        "ns": 211.51634905543384,
+        "min": 136.97585879045926,
+        "max": 2143.097308916539,
+        "samples": 15,
+        "calls": 24191,
+        "allocations": 1.000002755845838,
+        "bytes": 64.00033070150056
+      },
+      "speedup": 4.412024474933199,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "filter_env_key",
+      "description": "Filter ten environment variable names",
+      "php": {
+        "ns": 2139.190625,
+        "min": 888.93125,
+        "max": 106235.2875,
+        "samples": 15,
+        "calls": 320
+      },
+      "rust": {
+        "ns": 365.70535714285717,
+        "min": 356.4017857142857,
+        "max": 1168.1607142857142,
+        "samples": 15,
+        "calls": 112,
+        "allocations": 11.000595238095238,
+        "bytes": 143.07142857142858
+      },
+      "speedup": 5.849492175101931,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

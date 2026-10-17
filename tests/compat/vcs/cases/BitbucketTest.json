@@ -1,0 +1,1028 @@
+{
+  "source": "packages/vcs/tests/BitbucketTest.php",
+  "cases": [
+    {
+      "name": "testWebhookHeaderNames",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "bitbucket",
+            "web": "${vcs}/~${ns}/bitbucket"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "endpoint": "${vcs}/~${ns}/bitbucket/2.0"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_event_header_name",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            }
+          },
+          "expect": "x-event-key"
+        },
+        {
+          "op": "vcs.get_signature_header_name",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            }
+          },
+          "expect": "x-hub-signature"
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetSupportedWebhookScopes",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "bitbucket",
+            "web": "${vcs}/~${ns}/bitbucket"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "endpoint": "${vcs}/~${ns}/bitbucket/2.0"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_supported_webhook_scopes",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            }
+          },
+          "expect": [
+            "repository"
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testValidateWebhookEvent",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "bitbucket",
+            "web": "${vcs}/~${ns}/bitbucket"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "endpoint": "${vcs}/~${ns}/bitbucket/2.0"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "payload": "{\"object_kind\":\"push\",\"action\":\"push\"}",
+            "signature": "sha256=718af7b3d959c91dd8ea8a59d671546e2ae178b3fd6e77e4c7a37369d9fc1658",
+            "signatureKey": "my-webhook-secret"
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "payload": "{\"object_kind\":\"push\",\"action\":\"push\"}",
+            "signature": "not-the-signature",
+            "signatureKey": "my-webhook-secret"
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "payload": "{\"object_kind\":\"push\",\"action\":\"push\"}",
+            "signature": "sha256=d00d7b7cbe8719f0b302f4d68162b046c2a6049730dbb3247d396eb49274c2d4",
+            "signatureKey": "my-webhook-secret"
+          },
+          "expect": false
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPush",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "bitbucket",
+            "web": "${vcs}/~${ns}/bitbucket"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "endpoint": "${vcs}/~${ns}/bitbucket/2.0"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "repo:push",
+            "payload": "{\"actor\":{\"display_name\":\"Tester\",\"links\":{\"html\":{\"href\":\"https:\\/\\/bitbucket.org\\/tester\"},\"avatar\":{\"href\":\"https:\\/\\/bitbucket.org\\/account\\/tester\\/avatar\\/\"}}},\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\",\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"workspace\":{\"slug\":\"test-owner\"},\"links\":{\"html\":{\"href\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-repo\"}}},\"push\":{\"changes\":[{\"created\":false,\"closed\":false,\"old\":{\"type\":\"branch\",\"name\":\"master\",\"target\":{\"hash\":\"def456\",\"message\":\"Test commit message\",\"author\":{\"raw\":\"Test Author <author@example.com>\"},\"links\":{\"html\":{\"href\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-repo\\/commits\\/def456\"}}}},\"new\":{\"type\":\"branch\",\"name\":\"master\",\"target\":{\"hash\":\"def456\",\"message\":\"Test commit message\",\"author\":{\"raw\":\"Test Author <author@example.com>\"},\"links\":{\"html\":{\"href\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-repo\\/commits\\/def456\"}}}}}]}}"
+          },
+          "expect": [
+            {
+              "branchCreated": false,
+              "branchDeleted": false,
+              "branch": "master",
+              "branchUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/branch/master",
+              "repositoryId": "test-owner/test-repo",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "https://bitbucket.org/tester",
+              "authorAvatarUrl": "https://bitbucket.org/account/tester/avatar/",
+              "headCommitAuthorName": "Test Author",
+              "headCommitAuthorEmail": "author@example.com",
+              "headCommitMessage": "Test commit message",
+              "headCommitUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/commits/def456",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPushDetectsBranchCreated",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "bitbucket",
+            "web": "${vcs}/~${ns}/bitbucket"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "endpoint": "${vcs}/~${ns}/bitbucket/2.0"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "repo:push",
+            "payload": "{\"actor\":{\"display_name\":\"Tester\",\"links\":{\"html\":{\"href\":\"https:\\/\\/bitbucket.org\\/tester\"},\"avatar\":{\"href\":\"https:\\/\\/bitbucket.org\\/account\\/tester\\/avatar\\/\"}}},\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\",\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"workspace\":{\"slug\":\"test-owner\"},\"links\":{\"html\":{\"href\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-repo\"}}},\"push\":{\"changes\":[{\"created\":true,\"closed\":false,\"old\":null,\"new\":{\"type\":\"branch\",\"name\":\"master\",\"target\":{\"hash\":\"def456\",\"message\":\"Test commit message\",\"author\":{\"raw\":\"Test Author <author@example.com>\"},\"links\":{\"html\":{\"href\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-repo\\/commits\\/def456\"}}}}}]}}"
+          },
+          "expect": [
+            {
+              "branchCreated": true,
+              "branchDeleted": false,
+              "branch": "master",
+              "branchUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/branch/master",
+              "repositoryId": "test-owner/test-repo",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "https://bitbucket.org/tester",
+              "authorAvatarUrl": "https://bitbucket.org/account/tester/avatar/",
+              "headCommitAuthorName": "Test Author",
+              "headCommitAuthorEmail": "author@example.com",
+              "headCommitMessage": "Test commit message",
+              "headCommitUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/commits/def456",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPushDetectsBranchDeleted",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "bitbucket",
+            "web": "${vcs}/~${ns}/bitbucket"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "endpoint": "${vcs}/~${ns}/bitbucket/2.0"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "repo:push",
+            "payload": "{\"actor\":{\"display_name\":\"Tester\",\"links\":{\"html\":{\"href\":\"https:\\/\\/bitbucket.org\\/tester\"},\"avatar\":{\"href\":\"https:\\/\\/bitbucket.org\\/account\\/tester\\/avatar\\/\"}}},\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\",\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"workspace\":{\"slug\":\"test-owner\"},\"links\":{\"html\":{\"href\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-repo\"}}},\"push\":{\"changes\":[{\"created\":false,\"closed\":true,\"old\":{\"type\":\"branch\",\"name\":\"master\",\"target\":{\"hash\":\"def456\",\"message\":\"Test commit message\",\"author\":{\"raw\":\"Test Author <author@example.com>\"},\"links\":{\"html\":{\"href\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-repo\\/commits\\/def456\"}}}},\"new\":null}]}}"
+          },
+          "expect": [
+            {
+              "branchCreated": false,
+              "branchDeleted": true,
+              "branch": "master",
+              "branchUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/branch/master",
+              "repositoryId": "test-owner/test-repo",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "",
+              "owner": "test-owner",
+              "authorUrl": "https://bitbucket.org/tester",
+              "authorAvatarUrl": "https://bitbucket.org/account/tester/avatar/",
+              "headCommitAuthorName": "",
+              "headCommitAuthorEmail": "",
+              "headCommitMessage": "",
+              "headCommitUrl": "",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPullRequest",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "bitbucket",
+            "web": "${vcs}/~${ns}/bitbucket"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "endpoint": "${vcs}/~${ns}/bitbucket/2.0"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pullrequest:created",
+            "payload": "{\"actor\":{\"display_name\":\"Tester\",\"links\":{\"html\":{\"href\":\"https:\\/\\/bitbucket.org\\/tester\"},\"avatar\":{\"href\":\"https:\\/\\/bitbucket.org\\/account\\/tester\\/avatar\\/\"}}},\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\",\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"workspace\":{\"slug\":\"test-owner\"},\"links\":{\"html\":{\"href\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-repo\"}}},\"pullrequest\":{\"id\":42,\"title\":\"Test PR\",\"state\":\"OPEN\",\"source\":{\"branch\":{\"name\":\"feature-branch\"},\"commit\":{\"hash\":\"def456\"},\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\"}},\"destination\":{\"branch\":{\"name\":\"master\"},\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\"}}}}"
+          },
+          "expect": [
+            {
+              "branch": "feature-branch",
+              "branchUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/branch/feature-branch",
+              "repositoryId": "test-owner/test-repo",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "https://bitbucket.org/tester",
+              "authorAvatarUrl": "https://bitbucket.org/account/tester/avatar/",
+              "headCommitUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/commits/def456",
+              "external": false,
+              "pullRequestNumber": 42,
+              "action": "opened"
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPullRequestDetectsExternal",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "bitbucket",
+            "web": "${vcs}/~${ns}/bitbucket"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "endpoint": "${vcs}/~${ns}/bitbucket/2.0"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pullrequest:created",
+            "payload": "{\"actor\":{\"display_name\":\"Tester\",\"links\":{\"html\":{\"href\":\"https:\\/\\/bitbucket.org\\/tester\"},\"avatar\":{\"href\":\"https:\\/\\/bitbucket.org\\/account\\/tester\\/avatar\\/\"}}},\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\",\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"workspace\":{\"slug\":\"test-owner\"},\"links\":{\"html\":{\"href\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-repo\"}}},\"pullrequest\":{\"id\":42,\"title\":\"Test PR\",\"state\":\"OPEN\",\"source\":{\"branch\":{\"name\":\"feature-branch\"},\"commit\":{\"hash\":\"def456\"},\"repository\":{\"uuid\":\"{99999999-2222-3333-4444-555555555555}\"}},\"destination\":{\"branch\":{\"name\":\"master\"},\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\"}}}}"
+          },
+          "expect": [
+            {
+              "branch": "feature-branch",
+              "branchUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/branch/feature-branch",
+              "repositoryId": "test-owner/test-repo",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "https://bitbucket.org/tester",
+              "authorAvatarUrl": "https://bitbucket.org/account/tester/avatar/",
+              "headCommitUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/commits/def456",
+              "external": true,
+              "pullRequestNumber": 42,
+              "action": "opened"
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventInvalidPayload",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "bitbucket",
+            "web": "${vcs}/~${ns}/bitbucket"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "endpoint": "${vcs}/~${ns}/bitbucket/2.0"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "push",
+            "payload": "invalid json"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid payload.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventUnsupportedEvent",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "bitbucket",
+            "web": "${vcs}/~${ns}/bitbucket"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "endpoint": "${vcs}/~${ns}/bitbucket/2.0"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "unsupported_event",
+            "payload": "{\"test\":\"data\"}"
+          },
+          "expect": []
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGenerateCloneCommandRejectsAnOptionAsTheVersion with data set \"branch\"",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "bitbucket",
+            "web": "${vcs}/~${ns}/bitbucket"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "endpoint": "${vcs}/~${ns}/bitbucket/2.0"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.generate_clone_command",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "version": "--upload-pack=id",
+            "versionType": "branch",
+            "directory": "/tmp/clone",
+            "rootDirectory": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid clone version: --upload-pack=id",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGenerateCloneCommandRejectsAnOptionAsTheVersion with data set \"commit\"",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "bitbucket",
+            "web": "${vcs}/~${ns}/bitbucket"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "endpoint": "${vcs}/~${ns}/bitbucket/2.0"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.generate_clone_command",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "version": "--upload-pack=id",
+            "versionType": "commit",
+            "directory": "/tmp/clone",
+            "rootDirectory": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid clone version: --upload-pack=id",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGenerateCloneCommandRejectsAnUnknownCloneType",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "bitbucket",
+            "web": "${vcs}/~${ns}/bitbucket"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "endpoint": "${vcs}/~${ns}/bitbucket/2.0"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.generate_clone_command",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "version": "main",
+            "versionType": "unknown",
+            "directory": "/tmp/clone",
+            "rootDirectory": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Unsupported clone type: unknown",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPushWithLinkedAuthor",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "bitbucket",
+            "web": "${vcs}/~${ns}/bitbucket"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "endpoint": "${vcs}/~${ns}/bitbucket/2.0"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "repo:push",
+            "payload": "{\"actor\":{\"display_name\":\"Tester\",\"links\":{\"html\":{\"href\":\"https:\\/\\/bitbucket.org\\/tester\"},\"avatar\":{\"href\":\"https:\\/\\/bitbucket.org\\/account\\/tester\\/avatar\\/\"}}},\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\",\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"workspace\":{\"slug\":\"test-owner\"},\"links\":{\"html\":{\"href\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-repo\"}}},\"push\":{\"changes\":[{\"created\":false,\"closed\":false,\"old\":{\"type\":\"branch\",\"name\":\"master\",\"target\":{\"hash\":\"def456\",\"message\":\"Test commit message\",\"author\":{\"raw\":\"Test Author <author@example.com>\"},\"links\":{\"html\":{\"href\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-repo\\/commits\\/def456\"}}}},\"new\":{\"type\":\"branch\",\"name\":\"master\",\"target\":{\"hash\":\"def456\",\"message\":\"Test commit message\",\"author\":{\"raw\":\"Test Author <author@example.com>\",\"user\":{\"display_name\":\"Linked User\"}},\"links\":{\"html\":{\"href\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-repo\\/commits\\/def456\"}}}}}]}}"
+          },
+          "expect": [
+            {
+              "branchCreated": false,
+              "branchDeleted": false,
+              "branch": "master",
+              "branchUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/branch/master",
+              "repositoryId": "test-owner/test-repo",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "https://bitbucket.org/tester",
+              "authorAvatarUrl": "https://bitbucket.org/account/tester/avatar/",
+              "headCommitAuthorName": "Linked User",
+              "headCommitAuthorEmail": "author@example.com",
+              "headCommitMessage": "Test commit message",
+              "headCommitUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/commits/def456",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventsReportsEveryPushedBranch",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "bitbucket",
+            "web": "${vcs}/~${ns}/bitbucket"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "endpoint": "${vcs}/~${ns}/bitbucket/2.0"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "repo:push",
+            "payload": "{\"actor\":{\"display_name\":\"Tester\",\"links\":{\"html\":{\"href\":\"https:\\/\\/bitbucket.org\\/tester\"},\"avatar\":{\"href\":\"https:\\/\\/bitbucket.org\\/account\\/tester\\/avatar\\/\"}}},\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\",\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"workspace\":{\"slug\":\"test-owner\"},\"links\":{\"html\":{\"href\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-repo\"}}},\"push\":{\"changes\":[{\"new\":{\"type\":\"branch\",\"name\":\"main\",\"target\":{\"hash\":\"aaa111\"}},\"created\":false,\"closed\":false},{\"new\":{\"type\":\"tag\",\"name\":\"v1.0.0\",\"target\":{\"hash\":\"bbb222\"}}},{\"new\":{\"type\":\"branch\",\"name\":\"feature\",\"target\":{\"hash\":\"ccc333\"}},\"created\":true,\"closed\":false}]}}"
+          },
+          "expect": [
+            {
+              "branchCreated": false,
+              "branchDeleted": false,
+              "branch": "main",
+              "branchUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/branch/main",
+              "repositoryId": "test-owner/test-repo",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "aaa111",
+              "owner": "test-owner",
+              "authorUrl": "https://bitbucket.org/tester",
+              "authorAvatarUrl": "https://bitbucket.org/account/tester/avatar/",
+              "headCommitAuthorName": "",
+              "headCommitAuthorEmail": "",
+              "headCommitMessage": "",
+              "headCommitUrl": "",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            },
+            {
+              "branchCreated": true,
+              "branchDeleted": false,
+              "branch": "feature",
+              "branchUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/branch/feature",
+              "repositoryId": "test-owner/test-repo",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "ccc333",
+              "owner": "test-owner",
+              "authorUrl": "https://bitbucket.org/tester",
+              "authorAvatarUrl": "https://bitbucket.org/account/tester/avatar/",
+              "headCommitAuthorName": "",
+              "headCommitAuthorEmail": "",
+              "headCommitMessage": "",
+              "headCommitUrl": "",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "repo:push",
+            "payload": "{\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\",\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"workspace\":{\"slug\":\"test-owner\"},\"links\":{\"html\":{\"href\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-repo\"}}},\"push\":{\"changes\":[{\"new\":{\"type\":\"tag\",\"name\":\"v1.0.0\",\"target\":{\"hash\":\"aaa111\"}}}]}}"
+          },
+          "expect": []
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventPullRequestActionMapping",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "bitbucket",
+            "web": "${vcs}/~${ns}/bitbucket"
+          },
+          "bind": "a1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.set_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "endpoint": "${vcs}/~${ns}/bitbucket/2.0"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pullrequest:created",
+            "payload": "{\"actor\":{\"display_name\":\"Tester\",\"links\":{\"html\":{\"href\":\"https:\\/\\/bitbucket.org\\/tester\"},\"avatar\":{\"href\":\"https:\\/\\/bitbucket.org\\/account\\/tester\\/avatar\\/\"}}},\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\",\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"workspace\":{\"slug\":\"test-owner\"},\"links\":{\"html\":{\"href\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-repo\"}}},\"pullrequest\":{\"id\":42,\"title\":\"Test PR\",\"state\":\"OPEN\",\"source\":{\"branch\":{\"name\":\"feature-branch\"},\"commit\":{\"hash\":\"def456\"},\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\"}},\"destination\":{\"branch\":{\"name\":\"master\"},\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\"}}}}"
+          },
+          "expect": [
+            {
+              "branch": "feature-branch",
+              "branchUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/branch/feature-branch",
+              "repositoryId": "test-owner/test-repo",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "https://bitbucket.org/tester",
+              "authorAvatarUrl": "https://bitbucket.org/account/tester/avatar/",
+              "headCommitUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/commits/def456",
+              "external": false,
+              "pullRequestNumber": 42,
+              "action": "opened"
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pullrequest:updated",
+            "payload": "{\"actor\":{\"display_name\":\"Tester\",\"links\":{\"html\":{\"href\":\"https:\\/\\/bitbucket.org\\/tester\"},\"avatar\":{\"href\":\"https:\\/\\/bitbucket.org\\/account\\/tester\\/avatar\\/\"}}},\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\",\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"workspace\":{\"slug\":\"test-owner\"},\"links\":{\"html\":{\"href\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-repo\"}}},\"pullrequest\":{\"id\":42,\"title\":\"Test PR\",\"state\":\"OPEN\",\"source\":{\"branch\":{\"name\":\"feature-branch\"},\"commit\":{\"hash\":\"def456\"},\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\"}},\"destination\":{\"branch\":{\"name\":\"master\"},\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\"}}}}"
+          },
+          "expect": [
+            {
+              "branch": "feature-branch",
+              "branchUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/branch/feature-branch",
+              "repositoryId": "test-owner/test-repo",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "https://bitbucket.org/tester",
+              "authorAvatarUrl": "https://bitbucket.org/account/tester/avatar/",
+              "headCommitUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/commits/def456",
+              "external": false,
+              "pullRequestNumber": 42,
+              "action": "synchronize"
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pullrequest:fulfilled",
+            "payload": "{\"actor\":{\"display_name\":\"Tester\",\"links\":{\"html\":{\"href\":\"https:\\/\\/bitbucket.org\\/tester\"},\"avatar\":{\"href\":\"https:\\/\\/bitbucket.org\\/account\\/tester\\/avatar\\/\"}}},\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\",\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"workspace\":{\"slug\":\"test-owner\"},\"links\":{\"html\":{\"href\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-repo\"}}},\"pullrequest\":{\"id\":42,\"title\":\"Test PR\",\"state\":\"OPEN\",\"source\":{\"branch\":{\"name\":\"feature-branch\"},\"commit\":{\"hash\":\"def456\"},\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\"}},\"destination\":{\"branch\":{\"name\":\"master\"},\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\"}}}}"
+          },
+          "expect": [
+            {
+              "branch": "feature-branch",
+              "branchUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/branch/feature-branch",
+              "repositoryId": "test-owner/test-repo",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "https://bitbucket.org/tester",
+              "authorAvatarUrl": "https://bitbucket.org/account/tester/avatar/",
+              "headCommitUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/commits/def456",
+              "external": false,
+              "pullRequestNumber": 42,
+              "action": "closed"
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a1"
+            },
+            "event": "pullrequest:rejected",
+            "payload": "{\"actor\":{\"display_name\":\"Tester\",\"links\":{\"html\":{\"href\":\"https:\\/\\/bitbucket.org\\/tester\"},\"avatar\":{\"href\":\"https:\\/\\/bitbucket.org\\/account\\/tester\\/avatar\\/\"}}},\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\",\"name\":\"test-repo\",\"full_name\":\"test-owner\\/test-repo\",\"workspace\":{\"slug\":\"test-owner\"},\"links\":{\"html\":{\"href\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-repo\"}}},\"pullrequest\":{\"id\":42,\"title\":\"Test PR\",\"state\":\"OPEN\",\"source\":{\"branch\":{\"name\":\"feature-branch\"},\"commit\":{\"hash\":\"def456\"},\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\"}},\"destination\":{\"branch\":{\"name\":\"master\"},\"repository\":{\"uuid\":\"{11111111-2222-3333-4444-555555555555}\"}}}}"
+          },
+          "expect": [
+            {
+              "branch": "feature-branch",
+              "branchUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/branch/feature-branch",
+              "repositoryId": "test-owner/test-repo",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo",
+              "installationId": "",
+              "commitHash": "def456",
+              "owner": "test-owner",
+              "authorUrl": "https://bitbucket.org/tester",
+              "authorAvatarUrl": "https://bitbucket.org/account/tester/avatar/",
+              "headCommitUrl": "${vcs}/~${ns}/bitbucket/test-owner/test-repo/commits/def456",
+              "external": false,
+              "pullRequestNumber": 42,
+              "action": "closed"
+            }
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": []
+        }
+      ]
+    }
+  ]
+}

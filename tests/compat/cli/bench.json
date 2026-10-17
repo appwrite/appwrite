@@ -1,0 +1,77 @@
+{
+  "lib": "cli",
+  "environment": {
+    "date": "2026-10-12T02:48:18Z",
+    "commit": "b5c0f44a39",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "parse",
+      "description": "Parse a command line with five arguments, one repeated",
+      "php": {
+        "ns": 923.2646434134139,
+        "min": 855.656393071223,
+        "max": 963.377731627885,
+        "samples": 15,
+        "calls": 21187
+      },
+      "rust": {
+        "ns": 589.1712447952272,
+        "min": 564.765769684917,
+        "max": 714.5078615375054,
+        "samples": 15,
+        "calls": 32182,
+        "allocations": 23.000002071551386,
+        "bytes": 2488.000248586166
+      },
+      "speedup": 1.567056524855188,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "run",
+      "description": "Run a task: resolve and validate two params and an injected resource, then call it",
+      "php": {
+        "ns": 941.5531096487163,
+        "min": 913.820418945222,
+        "max": 1013.7737046992307,
+        "samples": 15,
+        "calls": 21578
+      },
+      "rust": {
+        "ns": 505.72682544733556,
+        "min": 471.2924142657822,
+        "max": 532.2508016547132,
+        "samples": 15,
+        "calls": 40853,
+        "allocations": 29.0000016318671,
+        "bytes": 813.0001958240521
+      },
+      "speedup": 1.8617820180210432,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

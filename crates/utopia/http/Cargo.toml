@@ -1,0 +1,30 @@
+[package]
+name = "utopia-http"
+description = "An HTTP framework on hyper: routes, hooks, parameters with validators, requests and responses."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/http"
+publish.workspace = true
+
+[dependencies]
+bytes.workspace = true
+futures-util.workspace = true
+http.workspace = true
+http-body-util.workspace = true
+hyper.workspace = true
+indexmap.workspace = true
+php-std.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+utopia-async = { workspace = true, features = ["hyper"] }
+tracing.workspace = true
+utopia-compression.workspace = true
+utopia-system.workspace = true
+utopia-validators.workspace = true
+
+
+[package.metadata.utopia]
+category = "servers"
+php-sync = "8e9cf4c19b87e0ef1a9995343336df24f5f39353"

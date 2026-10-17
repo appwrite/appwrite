@@ -1,0 +1,742 @@
+{
+  "source": "packages/cache/tests/CircuitBreakerTest.php",
+  "cases": [
+    {
+      "name": "testPassesThroughHealthyCacheOperations",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.save",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key",
+            "data": "value"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.load",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key",
+            "ttl": 60
+          },
+          "expect": "value"
+        },
+        {
+          "op": "adapter.touch",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.size",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "adapter.ping",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.purge",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.load",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key",
+            "ttl": 60
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.list",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.flush",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.name",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            }
+          },
+          "expect": "memory"
+        },
+        {
+          "op": "adapter.load_many",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key",
+            "ttl": 60
+          },
+          "expect": {}
+        },
+        {
+          "op": "adapter.save_many",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key",
+            "data": [
+              [
+                "a",
+                "b"
+              ]
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.generation",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "expect": "0"
+        },
+        {
+          "op": "adapter.save_with_lease",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key",
+            "data": "v",
+            "hash": "key",
+            "generation": "0"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.load",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key",
+            "ttl": 60
+          },
+          "expect": "v"
+        }
+      ]
+    },
+    {
+      "name": "testReturnsFallbacksWhenCacheOperationsFail",
+      "steps": [
+        {
+          "op": "failing.new",
+          "args": {},
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "f"
+            },
+            "minimum_throughput": 1
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.load",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key",
+            "ttl": 60
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testReturnsFallbacksWhenCacheOperationsFail (each on a fresh breaker)",
+      "steps": [
+        {
+          "op": "failing.new",
+          "args": {},
+          "bind": "fsave",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "fsave"
+            },
+            "minimum_throughput": 1
+          },
+          "bind": "cbsave",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.save",
+          "args": {
+            "adapter": {
+              "$ref": "cbsave"
+            },
+            "key": "key",
+            "data": "value"
+          },
+          "expect": false
+        },
+        {
+          "op": "failing.new",
+          "args": {},
+          "bind": "ftouch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "ftouch"
+            },
+            "minimum_throughput": 1
+          },
+          "bind": "cbtouch",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.touch",
+          "args": {
+            "adapter": {
+              "$ref": "cbtouch"
+            },
+            "key": "key"
+          },
+          "expect": false
+        },
+        {
+          "op": "failing.new",
+          "args": {},
+          "bind": "flist",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "flist"
+            },
+            "minimum_throughput": 1
+          },
+          "bind": "cblist",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.list",
+          "args": {
+            "adapter": {
+              "$ref": "cblist"
+            },
+            "key": "key"
+          },
+          "expect": []
+        },
+        {
+          "op": "failing.new",
+          "args": {},
+          "bind": "fpurge",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "fpurge"
+            },
+            "minimum_throughput": 1
+          },
+          "bind": "cbpurge",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.purge",
+          "args": {
+            "adapter": {
+              "$ref": "cbpurge"
+            },
+            "key": "key"
+          },
+          "expect": false
+        },
+        {
+          "op": "failing.new",
+          "args": {},
+          "bind": "fflush",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "fflush"
+            },
+            "minimum_throughput": 1
+          },
+          "bind": "cbflush",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.flush",
+          "args": {
+            "adapter": {
+              "$ref": "cbflush"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "failing.new",
+          "args": {},
+          "bind": "fping",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "fping"
+            },
+            "minimum_throughput": 1
+          },
+          "bind": "cbping",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.ping",
+          "args": {
+            "adapter": {
+              "$ref": "cbping"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "failing.new",
+          "args": {},
+          "bind": "fsize",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "fsize"
+            },
+            "minimum_throughput": 1
+          },
+          "bind": "cbsize",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.size",
+          "args": {
+            "adapter": {
+              "$ref": "cbsize"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "testBreakerShortCircuitsAfterFailure",
+      "steps": [
+        {
+          "op": "counting_failing.new",
+          "args": {},
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "f"
+            },
+            "minimum_throughput": 1
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.load",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key",
+            "ttl": 60
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.load",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key",
+            "ttl": 60
+          },
+          "expect": false
+        },
+        {
+          "op": "counting_failing.loads",
+          "args": {
+            "adapter": {
+              "$ref": "f"
+            }
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "testTelemetryCanBeAttachedAfterConstruction",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.new",
+          "args": {},
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set_telemetry",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.load",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "missing",
+            "ttl": 60
+          },
+          "expect": false
+        },
+        {
+          "op": "telemetry.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "counter:breaker.calls": [
+              {
+                "value": 1,
+                "attributes": {
+                  "circuit_breaker.name": "default",
+                  "circuit_breaker.initial_state": "closed",
+                  "circuit_breaker.state": "closed",
+                  "circuit_breaker.outcome": "success"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testTelemetryPropagatesToInnerAdapter",
+      "steps": [
+        {
+          "op": "probe.new",
+          "args": {},
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "p"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.new",
+          "args": {},
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set_telemetry",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "probe.calls",
+          "args": {
+            "adapter": {
+              "$ref": "p"
+            },
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "calls": 1,
+            "same": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCacheTelemetryDoesNotPropagateThroughSharding",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "sharding.new",
+          "args": {
+            "adapters": [
+              {
+                "$ref": "cb"
+              }
+            ]
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "s"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.new",
+          "args": {},
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.set_telemetry",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "key",
+            "data": "value"
+          },
+          "expect": true
+        },
+        {
+          "op": "telemetry.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "histogram:cache.operation.duration": [
+              {
+                "value": 0,
+                "attributes": {
+                  "operation": "save",
+                  "adapter": "memory"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

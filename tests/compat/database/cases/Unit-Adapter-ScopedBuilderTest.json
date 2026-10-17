@@ -1,0 +1,1539 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/ScopedBuilderTest.php"
+  ],
+  "cases": [
+    {
+      "name": "ScopedBuilderTest::testABuilderThatReadACollectionRefusesAnother",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o980"
+          },
+          "bind": "s1773",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o980"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "namespace"
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o980"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o980"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 7
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o980"
+            },
+            "method": "builder",
+            "args": {},
+            "as": "o981"
+          },
+          "bind": "s1777",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o981"
+            },
+            "method": "from",
+            "args": {
+              "table": "_metadata"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o981"
+            },
+            "method": "from",
+            "args": {
+              "table": "authors"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "The builder reads collection '_metadata', not 'authors': start another builder"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ScopedBuilderTest::testABuilderThatReadACollectionRefusesTheMetadataCollection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o982"
+          },
+          "bind": "s1780",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o982"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "namespace"
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o982"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o982"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 7
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o982"
+            },
+            "method": "builder",
+            "args": {},
+            "as": "o983"
+          },
+          "bind": "s1784",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o983"
+            },
+            "method": "from",
+            "args": {
+              "table": "authors"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o983"
+            },
+            "method": "from",
+            "args": {
+              "table": "_metadata"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "The builder reads collection 'authors', not '_metadata': start another builder"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ScopedBuilderTest::testABuilderThatReadACollectionRefusesAStoredTable",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o984"
+          },
+          "bind": "s1787",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o984"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "namespace"
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o984"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o984"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 7
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o984"
+            },
+            "method": "builder",
+            "args": {},
+            "as": "o985"
+          },
+          "bind": "s1791",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o985"
+            },
+            "method": "from",
+            "args": {
+              "table": "authors"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o985"
+            },
+            "method": "fromTable",
+            "args": {
+              "table": "namespace_books"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "The builder reads collection 'authors' and cannot read table 'namespace_books': start another builder"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ScopedBuilderTest::testReadingTheSameCollectionAgainKeepsItsTenant",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o988"
+          },
+          "bind": "s1801",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o988"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "namespace"
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o988"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o988"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 7
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o988"
+            },
+            "method": "builder",
+            "args": {},
+            "as": "o989"
+          },
+          "bind": "s1805",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o989"
+            },
+            "method": "from",
+            "args": {
+              "table": "authors"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o989"
+            },
+            "method": "build",
+            "args": {},
+            "as": "o990"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Statement",
+            "fields": {
+              "query": "SELECT * FROM `namespace_authors` WHERE `namespace_authors`._tenant IN (?)",
+              "bindings": [
+                7
+              ],
+              "readOnly": true,
+              "namedBindings": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o989"
+            },
+            "method": "reset",
+            "args": {}
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o989"
+            },
+            "method": "from",
+            "args": {
+              "table": "authors"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o989"
+            },
+            "method": "select",
+            "args": {
+              "columns": [
+                "name"
+              ]
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o989"
+            },
+            "method": "build",
+            "args": {},
+            "as": "o991"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Statement",
+            "fields": {
+              "query": "SELECT `name` FROM `namespace_authors` WHERE `namespace_authors`._tenant IN (?)",
+              "bindings": [
+                7
+              ],
+              "readOnly": true,
+              "namedBindings": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ScopedBuilderTest::testJoinsNameCollectionsKeptToTheTenant",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o992"
+          },
+          "bind": "s1812",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o992"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "namespace"
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o992"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o992"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 7
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o992"
+            },
+            "method": "builder",
+            "args": {},
+            "as": "o993"
+          },
+          "bind": "s1816",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o993"
+            },
+            "method": "from",
+            "args": {
+              "table": "authors"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o993"
+            },
+            "method": "join",
+            "args": {
+              "table": "books",
+              "left": "namespace_authors._uid",
+              "right": "book.authorId",
+              "operator": "=",
+              "alias": "book"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o993"
+            },
+            "method": "select",
+            "args": {
+              "columns": [
+                "book.pages"
+              ]
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o993"
+            },
+            "method": "build",
+            "args": {},
+            "as": "o994"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Statement",
+            "fields": {
+              "query": "SELECT `book`.`pages` FROM `namespace_authors` JOIN `namespace_books` AS `book` ON `namespace_authors`.`_uid` COLLATE NOCASE = `book`.`authorId` AND `book`._tenant IN (?) WHERE `namespace_authors`._tenant IN (?)",
+              "bindings": [
+                7,
+                7
+              ],
+              "readOnly": true,
+              "namedBindings": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ScopedBuilderTest::testABuilderThatReadACollectionRefusesAnInsertIntoATable",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o995"
+          },
+          "bind": "s1821",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o995"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "namespace"
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o995"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o995"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 7
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o995"
+            },
+            "method": "builder",
+            "args": {},
+            "as": "o996"
+          },
+          "bind": "s1825",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o996"
+            },
+            "method": "from",
+            "args": {
+              "table": "authors"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o996"
+            },
+            "method": "into",
+            "args": {
+              "table": "namespace_books"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "The builder reads collection 'authors' and cannot insert into table 'namespace_books': start another builder"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ScopedBuilderTest::testABuilderThatReadACollectionRefusesAnotherAlias",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o997"
+          },
+          "bind": "s1828",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o997"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "namespace"
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o997"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o997"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 7
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o997"
+            },
+            "method": "builder",
+            "args": {},
+            "as": "o998"
+          },
+          "bind": "s1832",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o998"
+            },
+            "method": "from",
+            "args": {
+              "table": "authors"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o998"
+            },
+            "method": "reset",
+            "args": {}
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o998"
+            },
+            "method": "from",
+            "args": {
+              "table": "authors",
+              "alias": "author"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "The builder reads collection 'authors', not 'authors' as 'author': start another builder"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ScopedBuilderTest::testAJoinAddedBeforeFromNamesACollection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o1007"
+          },
+          "bind": "s1862",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1007"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "namespace"
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1007"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1007"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 7
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1007"
+            },
+            "method": "builder",
+            "args": {},
+            "as": "o1008"
+          },
+          "bind": "s1866",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1008"
+            },
+            "method": "join",
+            "args": {
+              "table": "books",
+              "left": "namespace_authors._uid",
+              "right": "book.authorId",
+              "operator": "=",
+              "alias": "book"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1008"
+            },
+            "method": "from",
+            "args": {
+              "table": "authors"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1008"
+            },
+            "method": "select",
+            "args": {
+              "columns": [
+                "book.pages"
+              ]
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1008"
+            },
+            "method": "build",
+            "args": {},
+            "as": "o1009"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Statement",
+            "fields": {
+              "query": "SELECT `book`.`pages` FROM `namespace_authors` JOIN `namespace_books` AS `book` ON `namespace_authors`.`_uid` COLLATE NOCASE = `book`.`authorId` AND `book`._tenant IN (?) WHERE `namespace_authors`._tenant IN (?)",
+              "bindings": [
+                7,
+                7
+              ],
+              "readOnly": true,
+              "namedBindings": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ScopedBuilderTest::testAResetBuilderKeepsTheTenantOfItsCollection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o1010"
+          },
+          "bind": "s1871",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1010"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "namespace"
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1010"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1010"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 7
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1010"
+            },
+            "method": "builder",
+            "args": {},
+            "as": "o1011"
+          },
+          "bind": "s1875",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1011"
+            },
+            "method": "from",
+            "args": {
+              "table": "authors"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1011"
+            },
+            "method": "rightJoin",
+            "args": {
+              "table": "books",
+              "left": "namespace_authors._uid",
+              "right": "book.authorId",
+              "operator": "=",
+              "alias": "book"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1011"
+            },
+            "method": "build",
+            "args": {},
+            "as": "o1012"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Statement",
+            "fields": {
+              "query": "SELECT * FROM `namespace_authors` RIGHT JOIN `namespace_books` AS `book` ON `namespace_authors`.`_uid` COLLATE NOCASE = `book`.`authorId` AND (`namespace_authors`._tenant IN (?) OR `namespace_authors`.`_uid` IS NULL) AND `book`._tenant IN (?) WHERE (`namespace_authors`._tenant IN (?) OR `namespace_authors`.`_uid` IS NULL) AND (`book`._tenant IN (?) OR `book`.`_uid` IS NULL)",
+              "bindings": [
+                7,
+                7,
+                7,
+                7
+              ],
+              "readOnly": true,
+              "namedBindings": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1011"
+            },
+            "method": "reset",
+            "args": {}
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1011"
+            },
+            "method": "from",
+            "args": {
+              "table": "authors"
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1011"
+            },
+            "method": "select",
+            "args": {
+              "columns": [
+                "name"
+              ]
+            }
+          },
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1011"
+            },
+            "method": "build",
+            "args": {},
+            "as": "o1013"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Statement",
+            "fields": {
+              "query": "SELECT `name` FROM `namespace_authors` WHERE `namespace_authors`._tenant IN (?)",
+              "bindings": [
+                7
+              ],
+              "readOnly": true,
+              "namedBindings": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ScopedBuilderTest::testDatabaseFromNamesTheCollectionByTheAlias",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o1014"
+          },
+          "bind": "s1883",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1014"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "namespace"
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1014"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1014"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 7
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1014"
+              },
+              "cache": "none"
+            },
+            "as": "o1015"
+          },
+          "bind": "s1887",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1016"
+          },
+          "bind": "s1888",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1015"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o1016"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1015"
+            },
+            "method": "getAuthorization",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1016"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1015"
+                      },
+                      "method": "from",
+                      "args": {
+                        "collection": "authors",
+                        "alias": "author"
+                      },
+                      "as": "o1017"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1017"
+                      },
+                      "method": "select",
+                      "args": {
+                        "columns": [
+                          "author.name"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o1017"
+                      },
+                      "method": "build",
+                      "args": {},
+                      "as": "o1018"
+                    }
+                  },
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "SELECT `author`.`name` FROM `namespace_authors` AS `author` WHERE `author`._tenant IN (?)"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s1891",
+          "expect": {
+            "result": "SELECT `author`.`name` FROM `namespace_authors` AS `author` WHERE `author`._tenant IN (?)",
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$builder": true
+                    },
+                    {
+                      "$builder": true
+                    },
+                    {
+                      "$value": "Query\\Builder\\Statement",
+                      "fields": {
+                        "query": "SELECT `author`.`name` FROM `namespace_authors` AS `author` WHERE `author`._tenant IN (?)",
+                        "bindings": [
+                          7
+                        ],
+                        "readOnly": true,
+                        "namedBindings": null
+                      }
+                    },
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

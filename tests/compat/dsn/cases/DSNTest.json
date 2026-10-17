@@ -1,0 +1,872 @@
+{
+  "source": "packages/dsn/tests/DSNTest.php",
+  "cases": [
+    {
+      "name": "success: full",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "mariadb://user:password@localhost:3306/database?charset=utf8&timezone=UTC",
+        "params": [
+          "charset",
+          "timezone",
+          "doesNotExist"
+        ]
+      },
+      "expect": {
+        "scheme": "mariadb",
+        "user": "user",
+        "password": "password",
+        "host": "localhost",
+        "port": "3306",
+        "path": "database",
+        "query": "charset=utf8&timezone=UTC",
+        "params": [
+          "utf8",
+          "UTC",
+          ""
+        ]
+      }
+    },
+    {
+      "name": "success: no password",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "mariadb://user@localhost:3306/database?charset=utf8&timezone=UTC",
+        "params": [
+          "charset",
+          "timezone",
+          "doesNotExist"
+        ]
+      },
+      "expect": {
+        "scheme": "mariadb",
+        "user": "user",
+        "password": null,
+        "host": "localhost",
+        "port": "3306",
+        "path": "database",
+        "query": "charset=utf8&timezone=UTC",
+        "params": [
+          "utf8",
+          "UTC",
+          ""
+        ]
+      }
+    },
+    {
+      "name": "success: no port",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "mariadb://user@localhost/database?charset=utf8&timezone=UTC",
+        "params": [
+          "charset",
+          "timezone",
+          "doesNotExist"
+        ]
+      },
+      "expect": {
+        "scheme": "mariadb",
+        "user": "user",
+        "password": null,
+        "host": "localhost",
+        "port": null,
+        "path": "database",
+        "query": "charset=utf8&timezone=UTC",
+        "params": [
+          "utf8",
+          "UTC",
+          ""
+        ]
+      }
+    },
+    {
+      "name": "success: no path",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "mariadb://user@localhost?charset=utf8&timezone=UTC",
+        "params": [
+          "charset",
+          "timezone",
+          "doesNotExist"
+        ]
+      },
+      "expect": {
+        "scheme": "mariadb",
+        "user": "user",
+        "password": null,
+        "host": "localhost",
+        "port": null,
+        "path": "",
+        "query": "charset=utf8&timezone=UTC",
+        "params": [
+          "utf8",
+          "UTC",
+          ""
+        ]
+      }
+    },
+    {
+      "name": "success: user only",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "mariadb://user@localhost"
+      },
+      "expect": {
+        "scheme": "mariadb",
+        "user": "user",
+        "password": null,
+        "host": "localhost",
+        "port": null,
+        "path": "",
+        "query": null
+      }
+    },
+    {
+      "name": "success: empty password",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "mariadb://user:@localhost"
+      },
+      "expect": {
+        "scheme": "mariadb",
+        "user": "user",
+        "password": "",
+        "host": "localhost",
+        "port": null,
+        "path": "",
+        "query": null
+      }
+    },
+    {
+      "name": "success: host only",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "mariadb://localhost"
+      },
+      "expect": {
+        "scheme": "mariadb",
+        "user": null,
+        "password": null,
+        "host": "localhost",
+        "port": null,
+        "path": "",
+        "query": null
+      }
+    },
+    {
+      "name": "success: host and port",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "mysql://localhost:3306"
+      },
+      "expect": {
+        "scheme": "mysql",
+        "user": null,
+        "password": null,
+        "host": "localhost",
+        "port": "3306",
+        "path": "",
+        "query": null
+      }
+    },
+    {
+      "name": "success: s3",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "s3://user:secret@host:3306/bucket?region=us-east-1",
+        "params": [
+          "region",
+          "doesNotExist"
+        ]
+      },
+      "expect": {
+        "scheme": "s3",
+        "user": "user",
+        "password": "secret",
+        "host": "host",
+        "port": "3306",
+        "path": "bucket",
+        "query": "region=us-east-1",
+        "params": [
+          "us-east-1",
+          ""
+        ]
+      }
+    },
+    {
+      "name": "success: encoded password",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "sms://user:sl%2Fsh%2B%24%40no%3Aher@localhost"
+      },
+      "expect": {
+        "scheme": "sms",
+        "user": "user",
+        "password": "sl/sh+$@no:her",
+        "host": "localhost",
+        "port": null,
+        "path": "",
+        "query": null
+      }
+    },
+    {
+      "name": "success: encoded user",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "sms://admin%40example.com@localhost"
+      },
+      "expect": {
+        "scheme": "sms",
+        "user": "admin@example.com",
+        "password": null,
+        "host": "localhost",
+        "port": null,
+        "path": "",
+        "query": null
+      }
+    },
+    {
+      "name": "success: encoded query value",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "sms://localhost?value=I+am+100%25+value%3D%3Ccomplex%3E%2C+%22right%22%3F%21",
+        "params": [
+          "value"
+        ]
+      },
+      "expect": {
+        "scheme": "sms",
+        "user": null,
+        "password": null,
+        "host": "localhost",
+        "port": null,
+        "path": "",
+        "query": "value=I+am+100%25+value%3D%3Ccomplex%3E%2C+%22right%22%3F%21",
+        "params": [
+          "I am 100% value=<complex>, \"right\"?!"
+        ]
+      }
+    },
+    {
+      "name": "getParam with defaults",
+      "steps": [
+        {
+          "op": "dsn.new",
+          "args": {
+            "dsn": "mariadb://user:password@localhost:3306/database?charset=utf8&timezone=UTC"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "dsn.get",
+          "args": {
+            "dsn": {
+              "$ref": "d"
+            }
+          },
+          "expect": {
+            "scheme": "mariadb",
+            "user": "user",
+            "password": "password",
+            "host": "localhost",
+            "port": "3306",
+            "path": "database",
+            "query": "charset=utf8&timezone=UTC"
+          }
+        },
+        {
+          "op": "dsn.param",
+          "args": {
+            "dsn": {
+              "$ref": "d"
+            },
+            "key": "charset"
+          },
+          "expect": "utf8"
+        },
+        {
+          "op": "dsn.param",
+          "args": {
+            "dsn": {
+              "$ref": "d"
+            },
+            "key": "timezone"
+          },
+          "expect": "UTC"
+        },
+        {
+          "op": "dsn.param",
+          "args": {
+            "dsn": {
+              "$ref": "d"
+            },
+            "key": "doesNotExist"
+          },
+          "expect": ""
+        },
+        {
+          "op": "dsn.param",
+          "args": {
+            "dsn": {
+              "$ref": "d"
+            },
+            "key": "region",
+            "default": "us-east-1"
+          },
+          "expect": "us-east-1"
+        },
+        {
+          "op": "dsn.param",
+          "args": {
+            "dsn": {
+              "$ref": "d"
+            },
+            "key": "region",
+            "default": "us-east-2"
+          },
+          "expect": "us-east-2"
+        },
+        {
+          "op": "dsn.param",
+          "args": {
+            "dsn": {
+              "$ref": "d"
+            },
+            "key": "charset",
+            "default": "ignored"
+          },
+          "expect": "utf8"
+        }
+      ]
+    },
+    {
+      "name": "fail: no host",
+      "op": "dsn.new",
+      "args": {
+        "dsn": "mariadb://"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to parse DSN: malformed"
+        }
+      }
+    },
+    {
+      "name": "refusal omits credentials: unparseable",
+      "op": "dsn.new",
+      "args": {
+        "dsn": "s3://AKIAKEY:SECRETKEY@/backups?region=us-east-1"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to parse DSN: malformed"
+        }
+      }
+    },
+    {
+      "name": "refusal omits credentials: no scheme",
+      "op": "dsn.new",
+      "args": {
+        "dsn": "//AKIAKEY:SECRETKEY@localhost/database"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to parse DSN: scheme is required"
+        }
+      }
+    },
+    {
+      "name": "refusal omits credentials: no host",
+      "op": "dsn.new",
+      "args": {
+        "dsn": "AKIAKEY:SECRETKEY@localhost/database"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to parse DSN: host is required"
+        }
+      }
+    },
+    {
+      "name": "uncaught refusal prints no credentials",
+      "op": "dsn.refusal_printed",
+      "args": {
+        "dsn": "s3://AKIAKEY:SECRETKEY@/backups?region=us-east-1",
+        "secrets": [
+          "AKIAKEY",
+          "SECRETKEY"
+        ]
+      },
+      "expect": true
+    },
+    {
+      "name": "scheme or host 0 is missing",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "0://localhost"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to parse DSN: scheme is required"
+        }
+      }
+    },
+    {
+      "name": "host 0 is missing",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "mysql://0:3306"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to parse DSN: host is required"
+        }
+      }
+    },
+    {
+      "name": "query 0 is ignored",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "x://h?0",
+        "params": [
+          "0"
+        ]
+      },
+      "expect": {
+        "scheme": "x",
+        "user": null,
+        "password": null,
+        "host": "h",
+        "port": null,
+        "path": "",
+        "query": "0",
+        "params": [
+          ""
+        ]
+      }
+    },
+    {
+      "name": "empty query",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "x://h?",
+        "params": [
+          "a"
+        ]
+      },
+      "expect": {
+        "scheme": "x",
+        "user": null,
+        "password": null,
+        "host": "h",
+        "port": null,
+        "path": "",
+        "query": "",
+        "params": [
+          ""
+        ]
+      }
+    },
+    {
+      "name": "array parameter is a TypeError",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "x://h?a[b]=1&c=2&t[]=1",
+        "params": [
+          "a",
+          "c",
+          "t",
+          "b"
+        ]
+      },
+      "expect": {
+        "scheme": "x",
+        "user": null,
+        "password": null,
+        "host": "h",
+        "port": null,
+        "path": "",
+        "query": "a[b]=1&c=2&t[]=1",
+        "params": [
+          {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\DSN\\DSN::getParam(): Return value must be of type string, array returned"
+            }
+          },
+          "2",
+          {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\DSN\\DSN::getParam(): Return value must be of type string, array returned"
+            }
+          },
+          ""
+        ]
+      }
+    },
+    {
+      "name": "parameter names like parse_str",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "x://h?a.b=1&c+d=2&e%20f=3&1=one",
+        "params": [
+          "a.b",
+          "a_b",
+          "c d",
+          "c_d",
+          "e_f",
+          "1"
+        ]
+      },
+      "expect": {
+        "scheme": "x",
+        "user": null,
+        "password": null,
+        "host": "h",
+        "port": null,
+        "path": "",
+        "query": "a.b=1&c+d=2&e%20f=3&1=one",
+        "params": [
+          "",
+          "1",
+          "",
+          "2",
+          "3",
+          "one"
+        ]
+      }
+    },
+    {
+      "name": "port zero and leading zeros",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "x://h:00080/p",
+        "params": []
+      },
+      "expect": {
+        "scheme": "x",
+        "user": null,
+        "password": null,
+        "host": "h",
+        "port": "80",
+        "path": "p",
+        "query": null,
+        "params": []
+      }
+    },
+    {
+      "name": "invalid port is malformed",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "x://h:65536"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to parse DSN: malformed"
+        }
+      }
+    },
+    {
+      "name": "non-numeric port is malformed",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "x://h:80a"
+      },
+      "expect": {
+        "scheme": "x",
+        "user": null,
+        "password": null,
+        "host": "h",
+        "port": "80",
+        "path": "",
+        "query": null
+      }
+    },
+    {
+      "name": "double slashes in path",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "x://h//a/b/"
+      },
+      "expect": {
+        "scheme": "x",
+        "user": null,
+        "password": null,
+        "host": "h",
+        "port": null,
+        "path": "a/b/",
+        "query": null
+      }
+    },
+    {
+      "name": "fragment is dropped",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "x://u:p@h/db?a=1#frag",
+        "params": [
+          "a"
+        ]
+      },
+      "expect": {
+        "scheme": "x",
+        "user": "u",
+        "password": "p",
+        "host": "h",
+        "port": null,
+        "path": "db",
+        "query": "a=1",
+        "params": [
+          "1"
+        ]
+      }
+    },
+    {
+      "name": "control characters become underscores",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "x://u\u0001:p@h\u0002/d\u0003?a=\u0004",
+        "params": [
+          "a"
+        ]
+      },
+      "expect": {
+        "scheme": "x",
+        "user": "u_",
+        "password": "p",
+        "host": "h_",
+        "port": null,
+        "path": "d_",
+        "query": "a=_",
+        "params": [
+          "_"
+        ]
+      }
+    },
+    {
+      "name": "decoded credentials can be binary",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "x://%FF:%FE%00@h"
+      },
+      "expect": {
+        "scheme": "x",
+        "user": {
+          "$bytes": "/w=="
+        },
+        "password": {
+          "$bytes": "/gA="
+        },
+        "host": "h",
+        "port": null,
+        "path": "",
+        "query": null
+      }
+    },
+    {
+      "name": "at sign in password",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "x://user:p@ss@host/db"
+      },
+      "expect": {
+        "scheme": "x",
+        "user": "user",
+        "password": "p@ss",
+        "host": "host",
+        "port": null,
+        "path": "db",
+        "query": null
+      }
+    },
+    {
+      "name": "ipv6 host",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "postgresql://user@[::1]:5432/db"
+      },
+      "expect": {
+        "scheme": "postgresql",
+        "user": "user",
+        "password": null,
+        "host": "[::1]",
+        "port": "5432",
+        "path": "db",
+        "query": null
+      }
+    },
+    {
+      "name": "no scheme separator",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "database_db_main"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to parse DSN: scheme is required"
+        }
+      }
+    },
+    {
+      "name": "empty string",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": ""
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to parse DSN: scheme is required"
+        }
+      }
+    },
+    {
+      "name": "scheme without slashes",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "mailto:user@example.com"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to parse DSN: host is required"
+        }
+      }
+    },
+    {
+      "name": "empty user",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "x://@h",
+        "params": [
+          "a"
+        ]
+      },
+      "expect": {
+        "scheme": "x",
+        "user": "",
+        "password": null,
+        "host": "h",
+        "port": null,
+        "path": "",
+        "query": null,
+        "params": [
+          ""
+        ]
+      }
+    },
+    {
+      "name": "empty port",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "x://h:",
+        "params": [
+          "a"
+        ]
+      },
+      "expect": {
+        "scheme": "x",
+        "user": null,
+        "password": null,
+        "host": "h",
+        "port": null,
+        "path": "",
+        "query": null,
+        "params": [
+          ""
+        ]
+      }
+    },
+    {
+      "name": "scheme only",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "a:",
+        "params": [
+          "a"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to parse DSN: host is required"
+        }
+      }
+    },
+    {
+      "name": "query only",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "?a=1",
+        "params": [
+          "a"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to parse DSN: scheme is required"
+        }
+      }
+    },
+    {
+      "name": "fragment only",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "#f",
+        "params": [
+          "a"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to parse DSN: scheme is required"
+        }
+      }
+    },
+    {
+      "name": "port without host",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "x://:80",
+        "params": [
+          "a"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to parse DSN: malformed"
+        }
+      }
+    },
+    {
+      "name": "triple slash",
+      "op": "dsn.parse",
+      "args": {
+        "dsn": "x:///db",
+        "params": [
+          "a"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Unable to parse DSN: malformed"
+        }
+      }
+    }
+  ]
+}

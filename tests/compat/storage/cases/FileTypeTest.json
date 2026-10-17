@@ -1,0 +1,235 @@
+{
+  "source": "packages/storage/tests/Validator/FileTypeTest.php",
+  "cases": [
+    {
+      "name": "values",
+      "steps": [
+        {
+          "op": "file_type.validate",
+          "args": {
+            "allowed": [
+              "jpeg"
+            ],
+            "value": "packages/storage/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "expect": {
+            "valid": true,
+            "description": "File mime-type is not allowed ",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_type.validate",
+          "args": {
+            "allowed": [
+              "jpeg"
+            ],
+            "value": "packages/storage/tests/resources/disk-a/kitten-2.jpg"
+          },
+          "expect": {
+            "valid": true,
+            "description": "File mime-type is not allowed ",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_type.validate",
+          "args": {
+            "allowed": [
+              "jpeg"
+            ],
+            "value": "packages/storage/tests/resources/disk-b/kitten-1.png"
+          },
+          "expect": {
+            "valid": false,
+            "description": "File mime-type is not allowed ",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_type.validate",
+          "args": {
+            "allowed": [
+              "jpeg"
+            ],
+            "value": "packages/storage/tests/resources/disk-b/kitten-2.png"
+          },
+          "expect": {
+            "valid": false,
+            "description": "File mime-type is not allowed ",
+            "type": "string",
+            "array": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "other types and paths",
+      "steps": [
+        {
+          "op": "file_type.validate",
+          "args": {
+            "allowed": [
+              "png",
+              "gif"
+            ],
+            "value": "packages/storage/tests/resources/disk-b/kitten-1.png"
+          },
+          "expect": {
+            "valid": true,
+            "description": "File mime-type is not allowed ",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_type.validate",
+          "args": {
+            "allowed": [
+              "gif"
+            ],
+            "value": "packages/storage/tests/resources/disk-a/kitten-3.gif"
+          },
+          "expect": {
+            "valid": true,
+            "description": "File mime-type is not allowed ",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_type.validate",
+          "args": {
+            "allowed": [
+              "gz"
+            ],
+            "value": "packages/storage/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "expect": {
+            "valid": false,
+            "description": "File mime-type is not allowed ",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_type.validate",
+          "args": {
+            "allowed": [
+              "jpeg"
+            ],
+            "value": "packages/storage/tests/resources/disk-a/missing.jpg"
+          },
+          "expect": {
+            "valid": false,
+            "description": "File mime-type is not allowed ",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_type.validate",
+          "args": {
+            "allowed": [
+              "jpeg"
+            ],
+            "value": null
+          },
+          "expect": {
+            "valid": false,
+            "description": "File mime-type is not allowed ",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_type.validate",
+          "args": {
+            "allowed": [
+              "jpeg"
+            ],
+            "value": "packages/storage/tests/resources/disk-a"
+          },
+          "expect": {
+            "valid": false,
+            "description": "File mime-type is not allowed ",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/empty",
+            "data": ""
+          },
+          "expect": true
+        },
+        {
+          "op": "file_type.validate",
+          "args": {
+            "allowed": [
+              "jpeg"
+            ],
+            "value": "/tmp/compat-fs/${ns}/empty"
+          },
+          "expect": {
+            "valid": false,
+            "description": "File mime-type is not allowed ",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/gzip.gz",
+            "data": {
+              "$bytes": "H4sIAAAAAAAAA0vLz+cCAKjDdDcEAAAA"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "file_type.validate",
+          "args": {
+            "allowed": [
+              "gz"
+            ],
+            "value": "/tmp/compat-fs/${ns}/gzip.gz"
+          },
+          "expect": {
+            "valid": false,
+            "description": "File mime-type is not allowed ",
+            "type": "string",
+            "array": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "unknown type",
+      "steps": [
+        {
+          "op": "file_type.validate",
+          "args": {
+            "allowed": [
+              "jpeg",
+              "bmp"
+            ],
+            "value": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Unknown file mime type"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

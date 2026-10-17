@@ -1,0 +1,570 @@
+{
+  "cases": [
+    {
+      "name": "a failing factory is not cached",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "n",
+            "factory": {
+              "kind": "counter"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "broken",
+            "factory": {
+              "kind": "fail",
+              "message": "cannot connect"
+            },
+            "dependencies": [
+              "n"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "broken"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DI\\Exceptions\\ContainerException",
+              "message": "cannot connect"
+            }
+          }
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "broken"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DI\\Exceptions\\ContainerException",
+              "message": "cannot connect"
+            }
+          }
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "n"
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "a missing dependency fails the build",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "service",
+            "factory": {
+              "kind": "list"
+            },
+            "dependencies": [
+              "config",
+              "missing"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "service"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DI\\Exceptions\\NotFoundException",
+              "message": "Dependency config not found"
+            }
+          }
+        },
+        {
+          "op": "di.has",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "service"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "a dependency is resolved once for every dependent",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "n",
+            "factory": {
+              "kind": "counter"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "a",
+            "factory": {
+              "kind": "list"
+            },
+            "dependencies": [
+              "n",
+              "n"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "b",
+            "factory": {
+              "kind": "list"
+            },
+            "dependencies": [
+              "n"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "a"
+          },
+          "expect": [
+            1,
+            1
+          ]
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "b"
+          },
+          "expect": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a parent set after the child exists",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.new",
+          "bind": "c",
+          "args": {
+            "parent": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "late",
+            "factory": {
+              "kind": "value",
+              "value": "value"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.has",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "late"
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "late"
+          },
+          "expect": "value"
+        }
+      ]
+    },
+    {
+      "name": "an override in the parent drops its cache only",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "n",
+            "factory": {
+              "kind": "counter"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.new",
+          "bind": "c",
+          "args": {
+            "parent": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "n",
+            "factory": {
+              "kind": "counter"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "n"
+          },
+          "expect": 1
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "n"
+          },
+          "expect": 1
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "n",
+            "factory": {
+              "kind": "value",
+              "value": "reset"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "n"
+          },
+          "expect": 1
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "n"
+          },
+          "expect": "reset"
+        }
+      ]
+    },
+    {
+      "name": "empty id",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "",
+            "factory": {
+              "kind": "value",
+              "value": "empty"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.has",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": ""
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": ""
+          },
+          "expect": "empty"
+        },
+        {
+          "op": "di.has",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "0"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "script",
+      "op": "di.script",
+      "args": {
+        "calls": [
+          {
+            "op": "set",
+            "container": 0,
+            "id": "c",
+            "dependencies": [
+              1
+            ]
+          },
+          {
+            "op": "get",
+            "container": 2,
+            "id": "c"
+          },
+          {
+            "op": "set",
+            "container": 1,
+            "id": "d",
+            "dependencies": []
+          },
+          {
+            "op": "get",
+            "container": 2,
+            "id": "c"
+          },
+          {
+            "op": "set",
+            "container": 0,
+            "id": "d",
+            "dependencies": [
+              1,
+              5
+            ]
+          },
+          {
+            "op": "get",
+            "container": 3,
+            "id": "c"
+          },
+          {
+            "op": "set",
+            "container": 0,
+            "id": "d",
+            "dependencies": []
+          },
+          {
+            "op": "get",
+            "container": 3,
+            "id": "c"
+          },
+          {
+            "op": "get",
+            "container": 2,
+            "id": "d"
+          },
+          {
+            "op": "set",
+            "container": 2,
+            "id": "a",
+            "dependencies": [
+              2,
+              3
+            ]
+          },
+          {
+            "op": "get",
+            "container": 2,
+            "id": "a"
+          },
+          {
+            "op": "get",
+            "container": 2,
+            "id": "a"
+          },
+          {
+            "op": "has",
+            "container": 3,
+            "id": "a"
+          },
+          {
+            "op": "has",
+            "container": 2,
+            "id": "d"
+          }
+        ]
+      },
+      "expect": [
+        true,
+        {
+          "$error": {
+            "class": "Utopia\\DI\\Exceptions\\NotFoundException",
+            "message": "Dependency d not found"
+          }
+        },
+        true,
+        {
+          "$error": {
+            "class": "Utopia\\DI\\Exceptions\\NotFoundException",
+            "message": "Dependency d not found"
+          }
+        },
+        true,
+        {
+          "$error": {
+            "class": "Utopia\\DI\\Exceptions\\NotFoundException",
+            "message": "Dependency e not found"
+          }
+        },
+        true,
+        "c#1(d#1())",
+        "d#1()",
+        true,
+        "a#1(c#1(d#1()),d#1())",
+        "a#1(c#1(d#1()),d#1())",
+        false,
+        true
+      ]
+    }
+  ]
+}

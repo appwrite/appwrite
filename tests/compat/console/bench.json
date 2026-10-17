@@ -1,0 +1,77 @@
+{
+  "lib": "console",
+  "environment": {
+    "date": "2026-10-12T02:48:11Z",
+    "commit": "b5c0f44a39",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "build",
+      "description": "Build a plain command with a flag, two options and an argument",
+      "php": {
+        "ns": 651.6206384814495,
+        "min": 591.3186540120794,
+        "max": 813.4225021570319,
+        "samples": 15,
+        "calls": 28975
+      },
+      "rust": {
+        "ns": 140.26354060845853,
+        "min": 135.1922151526493,
+        "max": 147.53120488691653,
+        "samples": 15,
+        "calls": 149624,
+        "allocations": 13.000000445561318,
+        "bytes": 376.00005346735816
+      },
+      "speedup": 4.645687936114696,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "render",
+      "description": "Render a redirected pipeline of two commands as a quoted shell string",
+      "php": {
+        "ns": 550.1593276879651,
+        "min": 501.47975365665894,
+        "max": 667.711290736464,
+        "samples": 15,
+        "calls": 38970
+      },
+      "rust": {
+        "ns": 179.14008553771572,
+        "min": 168.57723935536214,
+        "max": 198.03508648924767,
+        "samples": 15,
+        "calls": 99839,
+        "allocations": 10.00000066774173,
+        "bytes": 197.0000801290077
+      },
+      "speedup": 3.071112342257623,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

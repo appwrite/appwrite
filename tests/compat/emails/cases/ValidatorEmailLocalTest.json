@@ -1,0 +1,212 @@
+{
+  "source": "packages/emails/tests/Validator/EmailLocalTest.php",
+  "cases": [
+    {
+      "name": "valid email local",
+      "steps": [
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "local",
+            "value": "test@example.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "local",
+            "value": "user.name+tag@example.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "local",
+            "value": "user-name@example.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "local",
+            "value": "user_name@example.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "local",
+            "value": "user123@example.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "local",
+            "value": "user.name.last@example.com"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "invalid email local",
+      "steps": [
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "local",
+            "value": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "local",
+            "value": "invalid-email"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "local",
+            "value": "user..name@example.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "local",
+            "value": ".user@example.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "local",
+            "value": "user.@example.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "local",
+            "value": "user!@example.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "non string input",
+      "steps": [
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "local",
+            "value": null
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "local",
+            "value": 123
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "local",
+            "value": []
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "local",
+            "value": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "local",
+            "value": true
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "local",
+            "value": false
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "validatordescription",
+      "steps": [
+        {
+          "op": "validator.describe",
+          "args": {
+            "validator": "local"
+          },
+          "expect": {
+            "description": "Value must be a valid email address with a valid local part",
+            "type": "string",
+            "array": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "validatortype",
+      "steps": [
+        {
+          "op": "validator.describe",
+          "args": {
+            "validator": "local"
+          },
+          "expect": {
+            "description": "Value must be a valid email address with a valid local part",
+            "type": "string",
+            "array": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "validator is array",
+      "steps": [
+        {
+          "op": "validator.describe",
+          "args": {
+            "validator": "local"
+          },
+          "expect": {
+            "description": "Value must be a valid email address with a valid local part",
+            "type": "string",
+            "array": false
+          }
+        }
+      ]
+    }
+  ]
+}

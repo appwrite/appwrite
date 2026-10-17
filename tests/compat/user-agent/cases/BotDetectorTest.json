@@ -1,0 +1,864 @@
+{
+  "source": "packages/user-agent/tests/BotDetectorTest.php",
+  "cases": [
+    {
+      "name": "known bot Bing",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "Bingbot",
+            "category": "search crawler"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "known bot Facebook",
+      "op": "agent.inspect",
+      "args": {
+        "value": "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)"
+      },
+      "expect": {
+        "raw": "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "Facebook External Hit",
+            "category": "social preview"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "known bot OpenAI",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 AppleWebKit/537.36; compatible; GPTBot/1.2; +https://openai.com/gptbot"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 AppleWebKit/537.36; compatible; GPTBot/1.2; +https://openai.com/gptbot",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "GPTBot",
+            "category": "ai crawler"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "known bot Anthropic",
+      "op": "agent.inspect",
+      "args": {
+        "value": "ClaudeBot/1.0; +https://anthropic.com/claudebot"
+      },
+      "expect": {
+        "raw": "ClaudeBot/1.0; +https://anthropic.com/claudebot",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "ClaudeBot",
+            "category": "ai crawler"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "known bot monitor",
+      "op": "agent.inspect",
+      "args": {
+        "value": "UptimeRobot/2.0"
+      },
+      "expect": {
+        "raw": "UptimeRobot/2.0",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "UptimeRobot",
+            "category": "site monitor"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "known bot Perplexity",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "PerplexityBot",
+            "category": "ai crawler"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "known bot Meta",
+      "op": "agent.inspect",
+      "args": {
+        "value": "meta-externalagent/1.1 (+https://developers.facebook.com/docs/sharing/webmasters/crawler)"
+      },
+      "expect": {
+        "raw": "meta-externalagent/1.1 (+https://developers.facebook.com/docs/sharing/webmasters/crawler)",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "Meta External Agent",
+            "category": "ai crawler"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "known bot Yahoo",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (compatible; Yahoo! Slurp; http://help.yahoo.com/help/us/ysearch/slurp)"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (compatible; Yahoo! Slurp; http://help.yahoo.com/help/us/ysearch/slurp)",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "Yahoo! Slurp",
+            "category": "search crawler"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "known bot Seznam",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (compatible; SeznamBot/4.0; +http://napoveda.seznam.cz/seznambot-intro/)"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (compatible; SeznamBot/4.0; +http://napoveda.seznam.cz/seznambot-intro/)",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "SeznamBot",
+            "category": "search crawler"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "known bot GoogleOther",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (compatible; GoogleOther)"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (compatible; GoogleOther)",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "GoogleOther",
+            "category": "search crawler"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "known bot CommonCrawl",
+      "op": "agent.inspect",
+      "args": {
+        "value": "CCBot/2.0 (https://commoncrawl.org/faq/)"
+      },
+      "expect": {
+        "raw": "CCBot/2.0 (https://commoncrawl.org/faq/)",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "CCBot",
+            "category": "ai crawler"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "known bot Pinterest",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Pinterest/0.2 (+https://www.pinterest.com/bot.html)"
+      },
+      "expect": {
+        "raw": "Pinterest/0.2 (+https://www.pinterest.com/bot.html)",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "Pinterest",
+            "category": "social preview"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "known bot Sogou spider",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Sogou web spider/4.0(+http://www.sogou.com/docs/help/webmasters.htm)"
+      },
+      "expect": {
+        "raw": "Sogou web spider/4.0(+http://www.sogou.com/docs/help/webmasters.htm)",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "Sogou Spider",
+            "category": "search crawler"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "known bot generic crawler",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Acme-Crawler/1.0"
+      },
+      "expect": {
+        "raw": "Acme-Crawler/1.0",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "Acme-Crawler",
+            "category": "crawler"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "known bot generic bot suffix",
+      "op": "agent.inspect",
+      "args": {
+        "value": "CustomBot/1.0"
+      },
+      "expect": {
+        "raw": "CustomBot/1.0",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": {
+            "name": "CustomBot",
+            "category": "crawler"
+          }
+        },
+        "isBot": true,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "human Chrome",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/126.0.0.0 Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/126.0.0.0 Safari/537.36",
+        "array": {
+          "os": {
+            "code": "WIN",
+            "name": "Windows",
+            "version": "10"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CH",
+            "name": "Chrome",
+            "version": "126.0",
+            "engine": "Blink",
+            "engineVersion": "126.0.0.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "human robotics product",
+      "op": "agent.inspect",
+      "args": {
+        "value": "AcmeRobotics/2.0"
+      },
+      "expect": {
+        "raw": "AcmeRobotics/2.0",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "human bot substring",
+      "op": "agent.inspect",
+      "args": {
+        "value": "BottomNavigationClient/1.0"
+      },
+      "expect": {
+        "raw": "BottomNavigationClient/1.0",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "human Sogou browser",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 12) AppleWebKit/537.36 SogouMobileBrowser/5.28.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 12) AppleWebKit/537.36 SogouMobileBrowser/5.28.0",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "12"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "human Pinterest app",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) Pinterest/11.20 (iPhone; iOS 16.0)"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) Pinterest/11.20 (iPhone; iOS 16.0)",
+        "array": {
+          "os": {
+            "code": "IOS",
+            "name": "iOS",
+            "version": "16.0"
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Apple",
+            "model": "iPhone"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "human WhatsApp in-app browser",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36 WhatsApp/2.24.6"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36 WhatsApp/2.24.6",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "13"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "116.0",
+            "engine": "Blink",
+            "engineVersion": "116.0.0.0"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Samsung",
+            "model": "SM-G991B"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "human empty",
+      "op": "agent.inspect",
+      "args": {
+        "value": ""
+      },
+      "expect": {
+        "raw": "",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": null,
+            "code": null,
+            "name": null,
+            "version": null,
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": false,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    }
+  ]
+}

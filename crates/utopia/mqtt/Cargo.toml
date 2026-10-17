@@ -1,0 +1,35 @@
+[package]
+name = "utopia-mqtt"
+description = "Building blocks for MQTT 5.0 and 3.1.1 brokers: the packet codec, a subscription trie, per-connection delivery state, a broker over adapters (Network on TCP, TLS and WebSocket; in-memory) with keep-alive timers, and a client."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/mqtt"
+publish.workspace = true
+
+[features]
+default = ["network"]
+# The network adapter (`Network`: TCP, TLS and WebSocket listeners), the timing
+# wheel's heartbeat and the client, on utopia-async, tokio-rustls and
+# tokio-tungstenite.
+network = ["dep:utopia-async", "dep:tokio-rustls", "dep:rustls", "dep:tokio-tungstenite", "dep:futures-util"]
+
+[dependencies]
+foldhash.workspace = true
+indexmap.workspace = true
+php-std.workspace = true
+thiserror.workspace = true
+utopia-telemetry.workspace = true
+futures-util = { workspace = true, optional = true, features = ["sink"] }
+rustls = { workspace = true, optional = true }
+utopia-async = { workspace = true, optional = true }
+tokio-rustls = { workspace = true, optional = true }
+tokio-tungstenite = { workspace = true, optional = true }
+
+[dev-dependencies]
+utopia-async.workspace = true
+
+[package.metadata.utopia]
+category = "servers"
+php-sync = "8dcc039b80b2606a78505e96201f55240acae70c"

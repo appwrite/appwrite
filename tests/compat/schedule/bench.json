@@ -1,0 +1,119 @@
+{
+  "lib": "schedule",
+  "environment": {
+    "date": "2026-10-11T19:33:03Z",
+    "commit": "e2c3406452",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "cron_parse",
+      "description": "Parse a cron expression with lists, ranges, steps and names",
+      "php": {
+        "ns": 5129.747444527549,
+        "min": 4951.70580902518,
+        "max": 6489.902767389678,
+        "samples": 15,
+        "calls": 4011
+      },
+      "rust": {
+        "ns": 1953.2805128707057,
+        "min": 1913.314475873544,
+        "max": 2043.8851913477538,
+        "samples": 15,
+        "calls": 10217,
+        "allocations": 49.00000652507259,
+        "bytes": 25489.000783008712
+      },
+      "speedup": 2.626221585034113,
+      "bound": null
+    },
+    {
+      "name": "cron_day",
+      "description": "List a day of */5 cron occurrences (288)",
+      "php": {
+        "ns": 608444.03125,
+        "min": 590074.21875,
+        "max": 667910.15625,
+        "samples": 15,
+        "calls": 32
+      },
+      "rust": {
+        "ns": 73493.9,
+        "min": 70826.63571428572,
+        "max": 75670.83214285714,
+        "samples": 15,
+        "calls": 280,
+        "allocations": 1786.000238095238,
+        "bytes": 250134.0285714286
+      },
+      "speedup": 8.278837172200687,
+      "bound": null
+    },
+    {
+      "name": "interval_day",
+      "description": "List a day of one-minute interval occurrences (1440)",
+      "php": {
+        "ns": 812706.625,
+        "min": 809562.5,
+        "max": 1112871.5,
+        "samples": 15,
+        "calls": 24
+      },
+      "rust": {
+        "ns": 466199.62790697673,
+        "min": 457691.8604651163,
+        "max": 473002.9069767442,
+        "samples": 15,
+        "calls": 43,
+        "allocations": 12974.001550387597,
+        "bytes": 1117500.1860465116
+      },
+      "speedup": 1.7432588452476492,
+      "bound": null
+    },
+    {
+      "name": "tick",
+      "description": "Tick and commit a minute over 1000 minutely schedules (1000 occurrences)",
+      "php": {
+        "ns": 1545479.1666666667,
+        "min": 1490635.4166666667,
+        "max": 2034218.75,
+        "samples": 15,
+        "calls": 12
+      },
+      "rust": {
+        "ns": 521062.5,
+        "min": 509952.84210526315,
+        "max": 559688.6052631579,
+        "samples": 15,
+        "calls": 38,
+        "allocations": 13112.001754385965,
+        "bytes": 2236745.210526316
+      },
+      "speedup": 2.966014953420495,
+      "bound": null
+    }
+  ]
+}

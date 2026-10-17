@@ -1,0 +1,545 @@
+{
+  "source": "packages/agents/tests/Adapters/AnthropicTest.php",
+  "cases": [
+    {
+      "name": "adapter identity and default model",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "anthropic",
+            "model": "claude-3-haiku-20240307",
+            "schema": true,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 7,
+            "modelListed": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "models contract",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "models": true
+          },
+          "expect": {
+            "name": "anthropic",
+            "model": "claude-3-haiku-20240307",
+            "schema": true,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 7,
+            "modelListed": true,
+            "models": [
+              "claude-opus-4-0",
+              "claude-3-opus-latest",
+              "claude-sonnet-4-0",
+              "claude-3-7-sonnet-latest",
+              "claude-3-5-sonnet-latest",
+              "claude-3-5-haiku-latest",
+              "claude-3-haiku-20240307"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "set model round trip with known model",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "models": true
+          },
+          "bind": "info",
+          "expect": {
+            "name": "anthropic",
+            "model": "claude-3-haiku-20240307",
+            "schema": true,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 7,
+            "modelListed": true,
+            "models": [
+              "claude-opus-4-0",
+              "claude-3-opus-latest",
+              "claude-sonnet-4-0",
+              "claude-3-7-sonnet-latest",
+              "claude-3-5-sonnet-latest",
+              "claude-3-5-haiku-latest",
+              "claude-3-haiku-20240307"
+            ]
+          }
+        },
+        {
+          "op": "adapter.set_model",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "model": {
+              "$ref": "info",
+              "path": "/models/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "anthropic",
+            "model": "claude-opus-4-0",
+            "schema": true,
+            "embeddings": false,
+            "timeout": 90000,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 7,
+            "modelListed": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "timeout round trip",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.set",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "timeout": 12345
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.inspect",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "name": "anthropic",
+            "model": "claude-3-haiku-20240307",
+            "schema": true,
+            "embeddings": false,
+            "timeout": 12345,
+            "attachments": {
+              "supported": true,
+              "maxPerMessage": 10,
+              "maxBytes": 5000000,
+              "maxTotalBytes": 20000000,
+              "mimeTypes": [
+                "image/png",
+                "image/jpeg",
+                "image/webp",
+                "image/gif"
+              ]
+            },
+            "tokens": {
+              "input": 0,
+              "output": 0,
+              "cacheCreation": 0,
+              "cacheRead": 0,
+              "total": 0
+            },
+            "modelCount": 7,
+            "modelListed": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "token counters accumulate and total is consistent",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.count",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "input": 3,
+            "output": 5,
+            "cacheCreation": 7,
+            "cacheRead": 11
+          },
+          "expect": {
+            "input": 3,
+            "output": 5,
+            "cacheCreation": 7,
+            "cacheRead": 11,
+            "total": 26
+          }
+        }
+      ]
+    },
+    {
+      "name": "agent reference round trip",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.agent",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.agent",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "agent.inspect",
+          "args": {
+            "agent": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "description": "",
+            "instructions": [],
+            "schema": null,
+            "adapter": "anthropic"
+          }
+        }
+      ]
+    },
+    {
+      "name": "embed behavior matches embedding support",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.embed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "text": "test"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Embeddings are not supported for this adapter."
+            }
+          }
+        },
+        {
+          "op": "adapter.bulk_embed",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "texts": [
+              "test"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Embeddings are not supported for this adapter."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "get embedding dimension when not supported throws",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.embedding_dimension",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Embeddings are not supported for this adapter."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "request carries api key and version headers",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "kind": "anthropic",
+            "args": {
+              "apiKey": "secret"
+            },
+            "client": {
+              "queue": [
+                {
+                  "status": 200,
+                  "chunks": [
+                    "data: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\"hi\"}}\n"
+                  ]
+                }
+              ]
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "agent.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "messages": [
+              "hi"
+            ]
+          },
+          "expect": {
+            "content": "hi",
+            "role": "user"
+          }
+        },
+        {
+          "op": "adapter.requests",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            {
+              "method": "POST",
+              "uri": "https://api.anthropic.com/v1/messages",
+              "headers": [
+                [
+                  "x-api-key",
+                  "secret"
+                ],
+                [
+                  "anthropic-version",
+                  "2023-06-01"
+                ],
+                [
+                  "Content-Type",
+                  "application/json"
+                ],
+                [
+                  "Accept",
+                  "application/json"
+                ]
+              ],
+              "body": "{\"model\":\"claude-3-haiku-20240307\",\"system\":[],\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"max_tokens\":1024,\"temperature\":1,\"stream\":true}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

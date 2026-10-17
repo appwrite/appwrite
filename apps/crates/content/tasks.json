@@ -1,0 +1,413 @@
+{
+  "updated": "2026-10-17T19:12:00Z",
+  "tasks": [
+    {
+      "id": "audit-fuzz",
+      "title": "audit: one ClickHouse batch fuzz input differs",
+      "area": "Libraries",
+      "status": "todo",
+      "updated": "2026-10-17T19:12:00Z",
+      "note": "bin/compat fuzz audit --op clickhouse.call --seed 11509, input 600: createBatch with a log whose data is {\"userId\": false, \"projectId\": \"\"} and userId \"\" builds a different request body in PHP and Rust. Reproducible locally; the legacy-name renaming, isset checks and column filling read the same, so the difference is in a part the truncated diff does not show."
+    },
+    {
+      "id": "db838",
+      "title": "database: main's 8.3.8 not yet ported",
+      "area": "Database 8",
+      "status": "todo",
+      "updated": "2026-10-17T17:45:00Z",
+      "note": "After syncing the branch with main (6edaf6d185), PHP runs utopia-php/database 8.3.8 while Rust follows 8.3.6. Uncovered: Builder\\RaisesFloatOverflow::compileAggregate. PHP tests not ported: tests/unit/IDTest.php, QueryCacheTest.php, Validator/IndexedQueriesTest.php. SQL.php line numbers in TypeError messages moved. Every other library is still at 100% with all PHP tests ported."
+    },
+    {
+      "id": "usage-gauge-tie",
+      "title": "usage: gauge total under a millisecond tie",
+      "area": "Libraries",
+      "status": "todo",
+      "updated": "2026-10-17T15:46:00Z",
+      "note": "DatabaseTest \"addBatch gauge\" writes two gauge rows stamped with the current time to the millisecond, then reads the newest. When both land in the same millisecond, which one wins depends on the tie-break order; PHP returned 100 and Rust 200 in one CI run, after passing in every earlier one. Check that the database tie-break on equal times matches PHP."
+    },
+    {
+      "id": "debug-stack",
+      "title": "Debug build overflows its stack on DELETE /v1/account",
+      "area": "Services",
+      "status": "todo",
+      "updated": "2026-10-17T15:00:00Z",
+      "note": "The debug appwrite-rust aborts with a stack overflow on account deletion even with 8 MiB worker stacks, which stops full local parity runs. Release builds (CI, production) are not affected."
+    },
+    {
+      "id": "db-known-gaps",
+      "title": "Database: known gaps after 8.3.6",
+      "area": "Database 8",
+      "status": "todo",
+      "updated": "2026-10-17T17:20:00Z",
+      "note": "CollectionTests::testKeywords on postgres and mysql: PHP loses a metadata transaction under lane load (passes alone). Join aliases: main relaxed PHP's alias rule (leading digits, hyphens) after the freeze, and CI runs PHP merged with main. Vector $distance: CI's pgvector returns fewer digits than the recording machine; PHP and Rust agree. The DateTime::formatTz fuzz differs by milliseconds of wall time. Memory testDeleteBulkDocuments is timing-dependent. SQL.php line numbers: main moved PHP to database 8.3.8, so TypeError messages quote lines 4234 and 5821 where the frozen 8.3.6 recordings and Rust say 4213 and 5779; the errors themselves match."
+    },
+    {
+      "id": "async-compat",
+      "title": "Async: compat cases for Promise, Timer and Parallel",
+      "area": "Libraries",
+      "status": "todo",
+      "updated": "2026-10-15T23:30:00Z",
+      "note": "tests/compat/async/spec.json points at the crate but has no operations yet; write the ops and cases against utopia-php/async 0.2 to mark it complete."
+    },
+    {
+      "id": "users-purge-flake",
+      "title": "Users parity on dedicated tables",
+      "area": "Services",
+      "status": "done",
+      "updated": "2026-10-17T15:00:00Z",
+      "note": "Rust updated a key's access time in the background after answering; PHP does it before the action, so on CI only one of three cache purges landed in the diff window. It now runs inline, as in PHP. The twins' JWTs expired mid-run (900s), so they now last 3600s."
+    },
+    {
+      "id": "db836",
+      "title": "Database: follow PHP from 8.3.0 to 8.3.6",
+      "area": "Database 8",
+      "status": "done",
+      "updated": "2026-10-17T11:50:00Z",
+      "note": "Ported 8.3.6 within its two-hour time box. Local lanes: sqlite 10,330, redis 4,958 and mongo 3,693 passed with 0 differences; postgres and mysql differ only in testKeywords under load; the Rust replay passes."
+    },
+    {
+      "id": "abuse-sync",
+      "title": "abuse: database 8 schema from main",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-10-17T06:40:00Z",
+      "note": "TimeLimit\\Database's attributes() and indexes() as utopia-database models, a Unique error for a counter that already exists, and the TablesDB schema and fixture tests. 100% API, 20 of 20 PHP tests, 285 cases with 0 differences."
+    },
+    {
+      "id": "storage-sync",
+      "title": "Storage and client: S3 streaming from main",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-10-17T03:14:00Z",
+      "note": "client hands over the response head before a streamed body (Http, Client, Retry); storage streams a file to a sink as it is read, S3 in one request with its head checked before any byte. client 471 cases and storage 190 cases, 0 differences."
+    },
+    {
+      "id": "lib-sync-2",
+      "title": "Sync usage, query, http, queue and validators with main again",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-10-17T02:39:00Z",
+      "note": "usage realigns drifted skip indexes; query reads a join without an alias under its collection; http counts and aborts streamed chunks; queue publishes without provisioning and reconnects its receive side; validators' Integer bounds are exact. All five CONVERTED with 0 differences."
+    },
+    {
+      "id": "rust-197",
+      "title": "CI on Rust 1.97",
+      "area": "CI",
+      "status": "done",
+      "updated": "2026-10-17T01:39:00Z",
+      "note": "Rust 1.88's code generation never finished on utopia-database 8.3.0 (over 3 hours on one crate; 1.97 takes under 2 minutes), so every compiling job timed out. CI, the Rust image and the MSRV moved to 1.97; Build / Rust and Checks / Rust pass again."
+    },
+    {
+      "id": "users-memberships",
+      "title": "Users: membership list cursor and total",
+      "area": "Services",
+      "status": "done",
+      "updated": "2026-10-17T01:39:00Z",
+      "note": "Followed main's fix: a cursor resolves to its membership (general_cursor_not_found for an unknown one) and total counts every matching membership."
+    },
+    {
+      "id": "query-sync",
+      "title": "Sync utopia-query with main",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-10-16T14:03:00Z",
+      "note": "Spatial validation (malformed shapes, open rings, NaN or infinite distances refused), distinct with an attribute refused, limit and offset parsed as PHP's toInteger. 5,896 cases and 26,000 fuzz inputs, 0 differences; the spatial database cases pass. The database replay without services is down to 1 case."
+    },
+    {
+      "id": "db83",
+      "title": "Database: follow PHP from 8.1.3 to 8.3.0",
+      "area": "Database 8",
+      "status": "done",
+      "updated": "2026-10-16T12:07:00Z",
+      "note": "8.1.4's race-free bulk delete, 8.2.0's relationship queries with per-parent paging, and 8.3.0's typed aggregates, row counts over grouped reads and float overflow checks. 26,086 cases re-recorded on 8.3.0; 557 of 557 PHP tests ported; the replay is down to 4 cases, all spatial validation from main's query package."
+    },
+    {
+      "id": "users-ci-parity",
+      "title": "Users parity on CI's stack",
+      "area": "Services",
+      "status": "done",
+      "updated": "2026-10-16T06:47:00Z",
+      "note": "Three causes: _APP_RULES_FORMAT was given to the Rust API only, so it looked rules up by md5 where PHP used the domain; main's utopia-php/http now coerces Boolean params, which the API's own param reads skipped; and shared-table sequence numbering in the diff normalizer. 0 of 2,135 different on shared and dedicated tables."
+    },
+    {
+      "id": "php-image",
+      "title": "Rebuild the local PHP image",
+      "area": "Environment",
+      "status": "done",
+      "note": "The local stack rebuilt the way CI builds it, with main's packages.",
+      "updated": "2026-10-16T06:47:00Z"
+    },
+    {
+      "id": "db8-mirror",
+      "title": "Database 8: Mirror in Rust",
+      "area": "Database 8",
+      "status": "done",
+      "note": "Mirror is a Database over its source, dispatching every method PHP's Mirror overrides; filters, onError and PHP's aliasing of bulk-write inputs reproduced. Unit-Mirror, MirrorTest and core-Mirror: 0 differences; 1,276 Scope-Mirror cases pass when each runs alone.",
+      "updated": "2026-10-15T22:43:00Z"
+    },
+    {
+      "id": "db-lanes-ci",
+      "title": "Database lanes as CI runs them",
+      "area": "Database 8",
+      "status": "done",
+      "updated": "2026-10-15T22:25:00Z",
+      "note": "Aggregates typed as PHP 8.3.0's Aggregation class types them (int, float, or cast as the attribute), and the runner retries a case once, logged, when PHP loses a transaction under load. Lands with the 8.3.0 re-record, since the 8.1.3 recordings hold strings."
+    },
+    {
+      "id": "db8-recordings",
+      "title": "Database 8: the last recording fixes",
+      "area": "Database 8",
+      "status": "done",
+      "updated": "2026-10-15T22:19:00Z",
+      "note": "WithCacheTest re-recorded, the last connection id masked, a $sequence checked by reference, SQLSchemaBuilder dropped (its schema objects are self-referencing), and tied join rows masked by a new recorder/ties.py: 512 steps in 18 join files."
+    },
+    {
+      "id": "async-adapter",
+      "title": "Async engine behind an adapter (utopia-async)",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-10-15T23:30:00Z",
+      "note": "utopia-async (crates/utopia/async) ports utopia-php/async: Promise, Timer and Parallel over one engine Adapter (Tokio). Every other crate spawns, sleeps, connects and tests through it; bin/monorepo validate fails on a tokio dependency elsewhere. The websocket, mqtt and dns network adapters are Network now."
+    },
+    {
+      "id": "migration-newer",
+      "title": "Migration: synced with packages/migration on main",
+      "area": "Libraries",
+      "status": "done",
+      "note": "Project environments, SDK 30.4.0, password and passkey policies, topic QoS and expiry, messaging reply-to and channelId, redirect refusal, pinned addresses and allowed destinations. 284 cases, 0 differences; 36 of 36 PHP tests ported.",
+      "updated": "2026-10-15T21:11:00Z"
+    },
+    {
+      "id": "lib-sync",
+      "title": "Sync http, usage and queue with main",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-10-15T21:05:00Z",
+      "note": "usage: column codecs, migrate(), column convergence and a retry-safe accumulator flush; http: loose booleans reach actions as bools; queue: the NATS dead-letter advisory subscribed on first receive. messaging, abuse and audit already matched. main merged into the branch (188 commits)."
+    },
+    {
+      "id": "async-callbacks",
+      "title": "Callbacks as async closures, without Box::pin",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-10-15T22:03:00Z",
+      "note": "utopia-http actions take async |scope| { .. } and platform callbacks take Callback::http, ::task and ::worker, so guides read like PHP's ->action(function () { .. }). A callback that cannot fail returns nothing; only one that uses ? ends with Ok(()). CONVERSION.md makes it the rule."
+    },
+    {
+      "id": "async-traits",
+      "title": "Adapter traits take async fn, without BoxFuture",
+      "area": "Libraries",
+      "status": "todo",
+      "updated": "2026-10-15T20:20:00Z",
+      "note": "Implementing a Transport, Client, Consumer or other adapter still means BoxFuture return types and Box::pin bodies (agents, abuse and domains guides show it). Move them to async fn with an object-safe companion trait, as utopia-cache's Adapter and DynAdapter do."
+    },
+    {
+      "id": "filters-mutate",
+      "title": "Database filters that change the document (enum, range)",
+      "area": "Database 8",
+      "status": "todo",
+      "note": "PHP 8.x's enum and range filters edit the attribute document; the Rust Filter trait gets it read-only, so both pass values through. Only user databases' attributes use them, and no Rust service reads those yet.",
+      "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "hooks-rest",
+      "title": "The remaining cross-cutting hooks",
+      "area": "Hooks",
+      "status": "todo",
+      "note": "15 missing and 7 partial in crates/appwrite/hooks.json; they arrive with the services that need them.",
+      "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "next-services",
+      "title": "Migrate the next services",
+      "area": "Services",
+      "status": "todo",
+      "note": "After Users, Teams and Account: the next services to port, each with its parity diff matrix and benchmarks.",
+      "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "account-dedupe",
+      "title": "Account: dedupe the shared helpers",
+      "area": "Services",
+      "status": "todo",
+      "note": "13 helpers are duplicated between the sign-in and profile halves of the account crate (base/mod.rs, base/profile.rs).",
+      "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "bench-rerun",
+      "title": "Re-run the vcs, agents and messaging benchmarks",
+      "area": "Benchmarks",
+      "status": "todo",
+      "note": "On a quiet machine; the last container runs were taken under load.",
+      "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "pr-ready",
+      "title": "Ready the PR for merge",
+      "area": "Release",
+      "status": "todo",
+      "note": "Delete .github/ci/focus.json and mark the PR ready for review.",
+      "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "facts-page",
+      "title": "Facts and figures page",
+      "area": "Docs",
+      "status": "done",
+      "updated": "2026-10-15T19:14:00Z",
+      "note": "/appwrite/facts: the project in numbers for the write-up, kept current with the board."
+    },
+    {
+      "id": "db8-identity",
+      "title": "Database 8: the remaining PHP-vs-Rust differences",
+      "area": "Database 8",
+      "status": "done",
+      "note": "Object identity, garbage-input TypeErrors, enums in documents, the Relationship query type and the recorder artifacts fixed on the Rust side: the database replay went from 324 failing steps to 80 (55 Mirror, 20 a SQLite join under load, 5 left).",
+      "updated": "2026-10-15T19:14:00Z"
+    },
+    {
+      "id": "db8-php-enter",
+      "title": "Database 8: PHP harness registry bug and flaky recordings",
+      "area": "Database 8",
+      "status": "done",
+      "note": "Core::enter() keeps a case's registrations, and recordings that held PHP load flakes are re-recorded: 60 cases (42 unit, 18 e2e). Nine cases keep a \"transaction was lost\" error because it is the behaviour they test.",
+      "updated": "2026-10-15T18:18:00Z"
+    },
+    {
+      "id": "db8-push",
+      "title": "Push the database 8 merge and get CI green",
+      "area": "Database 8",
+      "status": "done",
+      "note": "Pushed as c78de73e6c: the whole database 8 port merged into feat/rust-utopia-conversion. Users (Rust) parity and the PHP database 7 PHPStan errors are fixed by it.",
+      "updated": "2026-10-15T17:16:00Z"
+    },
+    {
+      "id": "db8-compat-rust",
+      "title": "Database 8: Rust side of the compat harness",
+      "area": "Database 8",
+      "status": "done",
+      "note": "The new op vocabulary dispatched onto the Rust database 8, the old ops removed, per-case registry isolation, a session leak fixed. mongo: 3,480 cases with 0 differences; every library but database replays clean. 12 parity fixes in the database and query crates.",
+      "updated": "2026-10-15T17:16:00Z"
+    },
+    {
+      "id": "audit-cursor",
+      "title": "Audit: the last compat difference",
+      "area": "Database 8",
+      "status": "done",
+      "note": "value::from_query makes Documents only of document classes, as PHP's cursor validator does.",
+      "updated": "2026-10-15T17:16:00Z"
+    },
+    {
+      "id": "db8-core",
+      "title": "Database 8: the core in Rust",
+      "area": "Database 8",
+      "status": "done",
+      "note": "Database.php, every trait, the caches, the Permissions and Relationships hooks and the event dispatch. Cache keys are byte-identical to PHP. 2,819 tests pass.",
+      "updated": "2026-10-15T12:40:00Z"
+    },
+    {
+      "id": "db8-sql",
+      "title": "Database 8: SQL adapters",
+      "area": "Database 8",
+      "status": "done",
+      "note": "Postgres, MariaDB, MySQL and SQLite, with the utopia-query builders.",
+      "updated": "2026-10-15T08:00:00Z"
+    },
+    {
+      "id": "db8-adapters",
+      "title": "Database 8: Mongo, Memory, Redis and Pool adapters",
+      "area": "Database 8",
+      "status": "done",
+      "note": "Mongo on the official Rust driver.",
+      "updated": "2026-10-15T06:00:00Z"
+    },
+    {
+      "id": "db8-php-harness",
+      "title": "Database 8: PHP side of the compat harness",
+      "area": "Database 8",
+      "status": "done",
+      "note": "25,175 cases and 736,324 steps recorded from 8.1.3, 338 unit-test classes ported, API coverage 100%, PHPStan clean.",
+      "updated": "2026-10-15T15:00:00Z"
+    },
+    {
+      "id": "db8-appwrite",
+      "title": "Database 8: the Appwrite crates",
+      "area": "Database 8",
+      "status": "done",
+      "note": "core, users, teams, account and server. The Users parity diff: 2,135 of 2,135 scenarios identical.",
+      "updated": "2026-10-15T14:00:00Z"
+    },
+    {
+      "id": "db8-migration",
+      "title": "Database 8: migration",
+      "area": "Database 8",
+      "status": "done",
+      "note": "250 of 250 compat cases, the 45 that were blocked on database 8 included.",
+      "updated": "2026-10-15T13:00:00Z"
+    },
+    {
+      "id": "db8-audit-usage",
+      "title": "Database 8: audit and usage",
+      "area": "Database 8",
+      "status": "done",
+      "note": "usage converted; audit has one difference left (see above).",
+      "updated": "2026-10-15T13:30:00Z"
+    },
+    {
+      "id": "osv-fflate",
+      "title": "Dependency scan: fflate",
+      "area": "CI",
+      "status": "done",
+      "note": "fflate pinned to 0.7.5 under satori (GHSA-px8p-9vwx-vf98).",
+      "updated": "2026-10-15T15:10:00Z"
+    },
+    {
+      "id": "account",
+      "title": "Account service in Rust",
+      "area": "Services",
+      "status": "done",
+      "note": "About 88 routes: sessions, tokens, JWTs, MFA, passkeys, profile, recovery, verifications, identities and targets.",
+      "updated": "2026-10-14T00:00:00Z"
+    },
+    {
+      "id": "teams",
+      "title": "Teams service in Rust",
+      "area": "Services",
+      "status": "done",
+      "note": "13 routes.",
+      "updated": "2026-10-14T00:00:00Z"
+    },
+    {
+      "id": "hooks-guards",
+      "title": "Global hooks for Teams and Account",
+      "area": "Hooks",
+      "status": "done",
+      "note": "Abuse limits, active session, MFA freshness, recent session, auth methods, custom-domain CORS, database listeners, disabled metrics, onboarding and the dev timeout.",
+      "updated": "2026-10-14T00:00:00Z"
+    },
+    {
+      "id": "users-perf",
+      "title": "Users: close the performance gaps",
+      "area": "Services",
+      "status": "done",
+      "note": "The Users API benchmark on a fresh stack and a quiet machine.",
+      "updated": "2026-10-14T00:00:00Z"
+    },
+    {
+      "id": "libraries",
+      "title": "Utopia libraries converted",
+      "area": "Libraries",
+      "status": "done",
+      "note": "Every library proven with bin/compat check; utopia-php/async is not converted, by design.",
+      "updated": "2026-10-13T00:00:00Z"
+    },
+    {
+      "id": "audit-migration-sync",
+      "title": "Sync audit and migration with PHP",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-10-17T19:30:00Z",
+      "note": "Both crates showed as behind on composer.json changes only: audit's utopia-php/database floor ^8.3 → ^8.3.4, migration's ^8.1.2 → ^8.3.4. migration's destinations policy (b1de3c2eba) was already ported. Cases re-run against PHP (audit all match; migration 284/284 with its services up) and php-sync moved to 2ca9a38d36."
+    }
+  ]
+}

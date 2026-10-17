@@ -1,0 +1,2849 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Joins/FullOuterJoinOrderColumnTest.php"
+  ],
+  "cases": [
+    {
+      "name": "FullOuterJoinOrderColumnTest::testAttributeNamedLikeAnOrderColumnIsRead#dedicated tables",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1"
+          },
+          "bind": "s0",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o2"
+          },
+          "bind": "s1",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o3"
+          },
+          "bind": "s4",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3"
+              },
+              "cache": "none"
+            },
+            "as": "o4"
+          },
+          "bind": "s5",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o1"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "order_columns"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "order_columns_u000000000001"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o5"
+          },
+          "bind": "s9",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o5"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o6"
+          },
+          "bind": "s12",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o6"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o7"
+          },
+          "bind": "s14",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o7"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "link",
+              "size": 16,
+              "required": true
+            },
+            "as": "o8"
+          },
+          "bind": "s16",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "link",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "foj_ord_note",
+              "size": 64,
+              "required": false
+            },
+            "as": "o9"
+          },
+          "bind": "s17",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "foj_ord_note",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "main",
+              "attributes": [
+                {
+                  "$obj": "o8"
+                },
+                {
+                  "$obj": "o9"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o10"
+          },
+          "bind": "s18",
+          "expect": {
+            "$document": {
+              "$id": "main",
+              "name": "main",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "foj_ord_note",
+                    "key": "foj_ord_note",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o10"
+              }
+            },
+            "as": "o11"
+          },
+          "expect": {
+            "$document": {
+              "$id": "main",
+              "name": "main",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "foj_ord_note",
+                    "key": "foj_ord_note",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "link",
+              "size": 16,
+              "required": true
+            },
+            "as": "o12"
+          },
+          "bind": "s20",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "link",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "score",
+              "required": true
+            },
+            "as": "o13"
+          },
+          "bind": "s21",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "joined",
+              "attributes": [
+                {
+                  "$obj": "o12"
+                },
+                {
+                  "$obj": "o13"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o14"
+          },
+          "bind": "s22",
+          "expect": {
+            "$document": {
+              "$id": "joined",
+              "name": "joined",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o14"
+              }
+            },
+            "as": "o15"
+          },
+          "expect": {
+            "$document": {
+              "$id": "joined",
+              "name": "joined",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "m1",
+                "link": "1",
+                "foj_ord_note": "first"
+              }
+            },
+            "as": "o16"
+          },
+          "bind": "s24",
+          "expect": {
+            "$document": {
+              "$id": "m1",
+              "link": "1",
+              "foj_ord_note": "first"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "main",
+              "document": {
+                "$obj": "o16"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m1",
+              "link": "1",
+              "foj_ord_note": "first",
+              "$collection": "main",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "m2",
+                "link": "2",
+                "foj_ord_note": "second"
+              }
+            },
+            "as": "o17"
+          },
+          "bind": "s26",
+          "expect": {
+            "$document": {
+              "$id": "m2",
+              "link": "2",
+              "foj_ord_note": "second"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "main",
+              "document": {
+                "$obj": "o17"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2",
+              "link": "2",
+              "foj_ord_note": "second",
+              "$collection": "main",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "j1",
+                "link": "1",
+                "score": 1
+              }
+            },
+            "as": "o18"
+          },
+          "bind": "s28",
+          "expect": {
+            "$document": {
+              "$id": "j1",
+              "link": "1",
+              "score": 1
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "joined",
+              "document": {
+                "$obj": "o18"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "j1",
+              "link": "1",
+              "score": 1,
+              "$collection": "joined",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "j2",
+                "link": "3",
+                "score": 3
+              }
+            },
+            "as": "o19"
+          },
+          "bind": "s30",
+          "expect": {
+            "$document": {
+              "$id": "j2",
+              "link": "3",
+              "score": 3
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "joined",
+              "document": {
+                "$obj": "o19"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "j2",
+              "link": "3",
+              "score": 3,
+              "$collection": "joined",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "main",
+              "id": "m1"
+            },
+            "as": "o20"
+          },
+          "bind": "s32",
+          "expect": {
+            "$document": {
+              "link": "1",
+              "foj_ord_note": "first",
+              "$sequence": "1",
+              "$id": "m1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "main"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o20"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "foj_ord_note"
+            }
+          },
+          "expect": "first"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "foj_ord_note"
+              ]
+            },
+            "as": "o21"
+          },
+          "bind": "s34",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "foj_ord_note"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "main",
+              "id": "m1",
+              "queries": [
+                {
+                  "$obj": "o21"
+                }
+              ]
+            },
+            "as": "o22"
+          },
+          "bind": "s35",
+          "expect": {
+            "$document": {
+              "foj_ord_note": "first",
+              "$sequence": "1",
+              "$id": "m1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "main"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o22"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "foj_ord_note"
+            }
+          },
+          "expect": "first"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4"
+            },
+            "method": "find",
+            "args": {
+              "collection": "main"
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "link": "1",
+                "foj_ord_note": "first",
+                "$id": "m1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "main"
+              }
+            },
+            {
+              "$document": {
+                "link": "2",
+                "foj_ord_note": "second",
+                "$id": "m2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "main"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "link": "1",
+                "foj_ord_note": "first",
+                "$id": "m1",
+                "$sequence": "1",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "main"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "foj_ord_note"
+            }
+          },
+          "expect": "first"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "link": "2",
+                "foj_ord_note": "second",
+                "$id": "m2",
+                "$sequence": "2",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "main"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "foj_ord_note"
+            }
+          },
+          "expect": "second"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4"
+            },
+            "method": "getAuthorization",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o4"
+                      },
+                      "method": "find",
+                      "args": {
+                        "collection": "main"
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "link": "1",
+                  "foj_ord_note": "first",
+                  "$id": "m1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "main"
+                }
+              },
+              {
+                "$document": {
+                  "link": "2",
+                  "foj_ord_note": "second",
+                  "$id": "m2",
+                  "$sequence": "2",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "main"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "link": "1",
+                          "foj_ord_note": "first",
+                          "$id": "m1",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "main"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "link": "2",
+                          "foj_ord_note": "second",
+                          "$id": "m2",
+                          "$sequence": "2",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "main"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "link": "1",
+                "foj_ord_note": "first",
+                "$id": "m1",
+                "$sequence": "1",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "main"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "foj_ord_note"
+            }
+          },
+          "expect": "first"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "link": "2",
+                "foj_ord_note": "second",
+                "$id": "m2",
+                "$sequence": "2",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "main"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "foj_ord_note"
+            }
+          },
+          "expect": "second"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "foj_ord_note",
+              "values": [
+                "second"
+              ]
+            },
+            "as": "o23"
+          },
+          "bind": "s44",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "foj_ord_note",
+              "values": [
+                "second"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4"
+            },
+            "method": "find",
+            "args": {
+              "collection": "main",
+              "queries": [
+                {
+                  "$obj": "o23"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "link": "2",
+                "foj_ord_note": "second",
+                "$id": "m2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "main"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "link": "2",
+                "foj_ord_note": "second",
+                "$id": "m2",
+                "$sequence": "2",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "main"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "foj_ord_note"
+            }
+          },
+          "expect": "second"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderDesc",
+            "args": {
+              "attribute": "foj_ord_note"
+            },
+            "as": "o24"
+          },
+          "bind": "s47",
+          "expect": {
+            "$query": {
+              "method": "orderDesc",
+              "attribute": "foj_ord_note",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4"
+            },
+            "method": "find",
+            "args": {
+              "collection": "main",
+              "queries": [
+                {
+                  "$obj": "o24"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "link": "2",
+                "foj_ord_note": "second",
+                "$id": "m2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "main"
+              }
+            },
+            {
+              "$document": {
+                "link": "1",
+                "foj_ord_note": "first",
+                "$id": "m1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "main"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "link": "2",
+                "foj_ord_note": "second",
+                "$id": "m2",
+                "$sequence": "2",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "main"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "foj_ord_note"
+            }
+          },
+          "expect": "second"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "link": "1",
+                "foj_ord_note": "first",
+                "$id": "m1",
+                "$sequence": "1",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "main"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "foj_ord_note"
+            }
+          },
+          "expect": "first"
+        }
+      ]
+    },
+    {
+      "name": "FullOuterJoinOrderColumnTest::testAttributeNamedLikeAnOrderColumnIsRead#shared tables",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o25"
+          },
+          "bind": "s51",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o26"
+          },
+          "bind": "s52",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o26"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o25"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o27"
+          },
+          "bind": "s55",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o27"
+              },
+              "cache": "none"
+            },
+            "as": "o28"
+          },
+          "bind": "s56",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o28"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o25"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o28"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "order_columns"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o28"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "order_columns_u000000000002"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o28"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o28"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": null
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o29"
+          },
+          "bind": "s62",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o28"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o29"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o28"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o30"
+          },
+          "bind": "s65",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o30"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o31"
+          },
+          "bind": "s67",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o31"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "link",
+              "size": 16,
+              "required": true
+            },
+            "as": "o32"
+          },
+          "bind": "s69",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "link",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "foj_ord_note",
+              "size": 64,
+              "required": false
+            },
+            "as": "o33"
+          },
+          "bind": "s70",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "foj_ord_note",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "main",
+              "attributes": [
+                {
+                  "$obj": "o32"
+                },
+                {
+                  "$obj": "o33"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o34"
+          },
+          "bind": "s71",
+          "expect": {
+            "$document": {
+              "$id": "main",
+              "name": "main",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "foj_ord_note",
+                    "key": "foj_ord_note",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o28"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o34"
+              }
+            },
+            "as": "o35"
+          },
+          "expect": {
+            "$document": {
+              "$id": "main",
+              "name": "main",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "foj_ord_note",
+                    "key": "foj_ord_note",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": null,
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "link",
+              "size": 16,
+              "required": true
+            },
+            "as": "o36"
+          },
+          "bind": "s73",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "link",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "score",
+              "required": true
+            },
+            "as": "o37"
+          },
+          "bind": "s74",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "joined",
+              "attributes": [
+                {
+                  "$obj": "o36"
+                },
+                {
+                  "$obj": "o37"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o38"
+          },
+          "bind": "s75",
+          "expect": {
+            "$document": {
+              "$id": "joined",
+              "name": "joined",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o28"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o38"
+              }
+            },
+            "as": "o39"
+          },
+          "expect": {
+            "$document": {
+              "$id": "joined",
+              "name": "joined",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": null,
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o28"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 7
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "m1",
+                "link": "1",
+                "foj_ord_note": "first"
+              }
+            },
+            "as": "o40"
+          },
+          "bind": "s78",
+          "expect": {
+            "$document": {
+              "$id": "m1",
+              "link": "1",
+              "foj_ord_note": "first"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o28"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "main",
+              "document": {
+                "$obj": "o40"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m1",
+              "link": "1",
+              "foj_ord_note": "first",
+              "$collection": "main",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$tenant": "7",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "m2",
+                "link": "2",
+                "foj_ord_note": "second"
+              }
+            },
+            "as": "o41"
+          },
+          "bind": "s80",
+          "expect": {
+            "$document": {
+              "$id": "m2",
+              "link": "2",
+              "foj_ord_note": "second"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o28"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "main",
+              "document": {
+                "$obj": "o41"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2",
+              "link": "2",
+              "foj_ord_note": "second",
+              "$collection": "main",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$tenant": "7",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "j1",
+                "link": "1",
+                "score": 1
+              }
+            },
+            "as": "o42"
+          },
+          "bind": "s82",
+          "expect": {
+            "$document": {
+              "$id": "j1",
+              "link": "1",
+              "score": 1
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o28"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "joined",
+              "document": {
+                "$obj": "o42"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "j1",
+              "link": "1",
+              "score": 1,
+              "$collection": "joined",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$tenant": "7",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "j2",
+                "link": "3",
+                "score": 3
+              }
+            },
+            "as": "o43"
+          },
+          "bind": "s84",
+          "expect": {
+            "$document": {
+              "$id": "j2",
+              "link": "3",
+              "score": 3
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o28"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "joined",
+              "document": {
+                "$obj": "o43"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "j2",
+              "link": "3",
+              "score": 3,
+              "$collection": "joined",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$tenant": "7",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o28"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "main",
+              "id": "m1"
+            },
+            "as": "o44"
+          },
+          "bind": "s86",
+          "expect": {
+            "$document": {
+              "link": "1",
+              "foj_ord_note": "first",
+              "$sequence": "1",
+              "$id": "m1",
+              "$tenant": "7",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "main"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o44"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "foj_ord_note"
+            }
+          },
+          "expect": "first"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "foj_ord_note"
+              ]
+            },
+            "as": "o45"
+          },
+          "bind": "s88",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "foj_ord_note"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o28"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "main",
+              "id": "m1",
+              "queries": [
+                {
+                  "$obj": "o45"
+                }
+              ]
+            },
+            "as": "o46"
+          },
+          "bind": "s89",
+          "expect": {
+            "$document": {
+              "foj_ord_note": "first",
+              "$sequence": "1",
+              "$id": "m1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "main"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o46"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "foj_ord_note"
+            }
+          },
+          "expect": "first"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o28"
+            },
+            "method": "find",
+            "args": {
+              "collection": "main"
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "link": "1",
+                "foj_ord_note": "first",
+                "$id": "m1",
+                "$sequence": "1",
+                "$tenant": "7",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "main"
+              }
+            },
+            {
+              "$document": {
+                "link": "2",
+                "foj_ord_note": "second",
+                "$id": "m2",
+                "$sequence": "2",
+                "$tenant": "7",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "main"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "link": "1",
+                "foj_ord_note": "first",
+                "$id": "m1",
+                "$sequence": "1",
+                "$tenant": "7",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "main"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "foj_ord_note"
+            }
+          },
+          "expect": "first"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "link": "2",
+                "foj_ord_note": "second",
+                "$id": "m2",
+                "$sequence": "2",
+                "$tenant": "7",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "main"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "foj_ord_note"
+            }
+          },
+          "expect": "second"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o28"
+            },
+            "method": "getAuthorization",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o25"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o28"
+                      },
+                      "method": "find",
+                      "args": {
+                        "collection": "main"
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "link": "1",
+                  "foj_ord_note": "first",
+                  "$id": "m1",
+                  "$sequence": "1",
+                  "$tenant": "7",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "main"
+                }
+              },
+              {
+                "$document": {
+                  "link": "2",
+                  "foj_ord_note": "second",
+                  "$id": "m2",
+                  "$sequence": "2",
+                  "$tenant": "7",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "main"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "link": "1",
+                          "foj_ord_note": "first",
+                          "$id": "m1",
+                          "$sequence": "1",
+                          "$tenant": "7",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "main"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "link": "2",
+                          "foj_ord_note": "second",
+                          "$id": "m2",
+                          "$sequence": "2",
+                          "$tenant": "7",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "main"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "link": "1",
+                "foj_ord_note": "first",
+                "$id": "m1",
+                "$sequence": "1",
+                "$tenant": "7",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "main"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "foj_ord_note"
+            }
+          },
+          "expect": "first"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "link": "2",
+                "foj_ord_note": "second",
+                "$id": "m2",
+                "$sequence": "2",
+                "$tenant": "7",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "main"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "foj_ord_note"
+            }
+          },
+          "expect": "second"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "foj_ord_note",
+              "values": [
+                "second"
+              ]
+            },
+            "as": "o47"
+          },
+          "bind": "s98",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "foj_ord_note",
+              "values": [
+                "second"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o28"
+            },
+            "method": "find",
+            "args": {
+              "collection": "main",
+              "queries": [
+                {
+                  "$obj": "o47"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "link": "2",
+                "foj_ord_note": "second",
+                "$id": "m2",
+                "$sequence": "2",
+                "$tenant": "7",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "main"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "link": "2",
+                "foj_ord_note": "second",
+                "$id": "m2",
+                "$sequence": "2",
+                "$tenant": "7",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "main"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "foj_ord_note"
+            }
+          },
+          "expect": "second"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderDesc",
+            "args": {
+              "attribute": "foj_ord_note"
+            },
+            "as": "o48"
+          },
+          "bind": "s101",
+          "expect": {
+            "$query": {
+              "method": "orderDesc",
+              "attribute": "foj_ord_note",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o28"
+            },
+            "method": "find",
+            "args": {
+              "collection": "main",
+              "queries": [
+                {
+                  "$obj": "o48"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "link": "2",
+                "foj_ord_note": "second",
+                "$id": "m2",
+                "$sequence": "2",
+                "$tenant": "7",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "main"
+              }
+            },
+            {
+              "$document": {
+                "link": "1",
+                "foj_ord_note": "first",
+                "$id": "m1",
+                "$sequence": "1",
+                "$tenant": "7",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "main"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "link": "2",
+                "foj_ord_note": "second",
+                "$id": "m2",
+                "$sequence": "2",
+                "$tenant": "7",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "main"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "foj_ord_note"
+            }
+          },
+          "expect": "second"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "link": "1",
+                "foj_ord_note": "first",
+                "$id": "m1",
+                "$sequence": "1",
+                "$tenant": "7",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "main"
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "foj_ord_note"
+            }
+          },
+          "expect": "first"
+        }
+      ]
+    }
+  ]
+}

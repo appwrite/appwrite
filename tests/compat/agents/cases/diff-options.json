@@ -1,0 +1,403 @@
+{
+  "cases": [
+    {
+      "name": "defaults",
+      "op": "diff.options",
+      "args": {},
+      "expect": {
+        "maxDiffLines": 500,
+        "excludePaths": [],
+        "ignoreAllSpace": true,
+        "ignoreBlankLines": true,
+        "schema": null,
+        "instructions": [],
+        "description": "",
+        "userId": "diff-check-user",
+        "trimResponse": true
+      }
+    },
+    {
+      "name": "every setter",
+      "op": "diff.options",
+      "args": {
+        "calls": [
+          [
+            "setMaxDiffLines",
+            3
+          ],
+          [
+            "setExcludePaths",
+            [
+              " a ",
+              "",
+              "b/**",
+              "  "
+            ]
+          ],
+          [
+            "addExcludePath",
+            " c "
+          ],
+          [
+            "addExcludePath",
+            ""
+          ],
+          [
+            "setIgnoreAllSpace",
+            false
+          ],
+          [
+            "setIgnoreBlankLines",
+            false
+          ],
+          [
+            "setInstructions",
+            [
+              [
+                "x",
+                "1"
+              ],
+              [
+                "y",
+                "2"
+              ]
+            ]
+          ],
+          [
+            "addInstruction",
+            [
+              "x",
+              "3"
+            ]
+          ],
+          [
+            "addInstruction",
+            [
+              "z",
+              "4"
+            ]
+          ],
+          [
+            "setDescription",
+            "d"
+          ],
+          [
+            "setUserId",
+            " u "
+          ],
+          [
+            "setTrimResponse",
+            false
+          ]
+        ]
+      },
+      "expect": {
+        "maxDiffLines": 3,
+        "excludePaths": [
+          "a",
+          "b/**",
+          "c"
+        ],
+        "ignoreAllSpace": false,
+        "ignoreBlankLines": false,
+        "schema": null,
+        "instructions": [
+          [
+            "x",
+            "3"
+          ],
+          [
+            "y",
+            "2"
+          ],
+          [
+            "z",
+            "4"
+          ]
+        ],
+        "description": "d",
+        "userId": "u",
+        "trimResponse": false
+      }
+    },
+    {
+      "name": "max diff lines must be positive",
+      "op": "diff.options",
+      "args": {
+        "calls": [
+          [
+            "setMaxDiffLines",
+            0
+          ]
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "maxDiffLines must be greater than 0"
+        }
+      }
+    },
+    {
+      "name": "user id must not be empty",
+      "op": "diff.options",
+      "args": {
+        "calls": [
+          [
+            "setUserId",
+            " \t\n"
+          ]
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "userId must not be empty"
+        }
+      }
+    },
+    {
+      "name": "repositories",
+      "steps": [
+        {
+          "op": "fs.write",
+          "args": {
+            "dir": "/tmp/compat-fs/${ns}/repo",
+            "files": {
+              "f.txt": "x"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "diff.repository",
+          "args": {
+            "how": "new",
+            "source": "  https://example.test/r.git  ",
+            "remote": true,
+            "ref": "main"
+          },
+          "expect": {
+            "source": "https://example.test/r.git",
+            "remote": true,
+            "ref": "main"
+          }
+        },
+        {
+          "op": "diff.repository",
+          "args": {
+            "how": "new",
+            "source": " \n"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Repository source must not be empty"
+            }
+          }
+        },
+        {
+          "op": "diff.repository",
+          "args": {
+            "how": "local",
+            "source": "/tmp/compat-fs/${ns}/repo/../repo",
+            "ref": "dev"
+          },
+          "expect": {
+            "source": "/tmp/compat-fs/${ns}/repo",
+            "remote": false,
+            "ref": "dev"
+          }
+        },
+        {
+          "op": "diff.repository",
+          "args": {
+            "how": "local",
+            "source": "/tmp/compat-fs/${ns}/repo/f.txt"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Local repository path does not exist: /tmp/compat-fs/${ns}/repo/f.txt"
+            }
+          }
+        },
+        {
+          "op": "diff.repository",
+          "args": {
+            "how": "local",
+            "source": "/tmp/compat-fs/${ns}/missing"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Local repository path does not exist: /tmp/compat-fs/${ns}/missing"
+            }
+          }
+        },
+        {
+          "op": "diff.repository",
+          "args": {
+            "how": "remote",
+            "source": "git@github.com:appwrite/appwrite.git",
+            "ref": "1.6.x"
+          },
+          "expect": {
+            "source": "git@github.com:appwrite/appwrite.git",
+            "remote": true,
+            "ref": "1.6.x"
+          }
+        },
+        {
+          "op": "diff.repository",
+          "args": {
+            "how": "from",
+            "source": " /tmp/compat-fs/${ns}/repo "
+          },
+          "expect": {
+            "source": "/tmp/compat-fs/${ns}/repo",
+            "remote": false,
+            "ref": null
+          }
+        },
+        {
+          "op": "diff.repository",
+          "args": {
+            "how": "from",
+            "source": "https://github.com/appwrite/appwrite"
+          },
+          "expect": {
+            "source": "https://github.com/appwrite/appwrite",
+            "remote": true,
+            "ref": null
+          }
+        },
+        {
+          "op": "diff.repository",
+          "args": {
+            "how": "from",
+            "source": "ssh://git@example.test/r"
+          },
+          "expect": {
+            "source": "ssh://git@example.test/r",
+            "remote": true,
+            "ref": null
+          }
+        },
+        {
+          "op": "diff.repository",
+          "args": {
+            "how": "from",
+            "source": "git://example.test/r"
+          },
+          "expect": {
+            "source": "git://example.test/r",
+            "remote": true,
+            "ref": null
+          }
+        },
+        {
+          "op": "diff.repository",
+          "args": {
+            "how": "from",
+            "source": "file:///nowhere"
+          },
+          "expect": {
+            "source": "file:///nowhere",
+            "remote": true,
+            "ref": null
+          }
+        },
+        {
+          "op": "diff.repository",
+          "args": {
+            "how": "from",
+            "source": "deploy@host:path/to/repo"
+          },
+          "expect": {
+            "source": "deploy@host:path/to/repo",
+            "remote": true,
+            "ref": null
+          }
+        },
+        {
+          "op": "diff.repository",
+          "args": {
+            "how": "from",
+            "source": "user@host:"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Repository source is not a valid local path or remote URL: user@host:"
+            }
+          }
+        },
+        {
+          "op": "diff.repository",
+          "args": {
+            "how": "from",
+            "source": "user@ho st:repo"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Repository source is not a valid local path or remote URL: user@ho st:repo"
+            }
+          }
+        },
+        {
+          "op": "diff.repository",
+          "args": {
+            "how": "from",
+            "source": "ftp://example.test/r"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Repository source is not a valid local path or remote URL: ftp://example.test/r"
+            }
+          }
+        },
+        {
+          "op": "diff.repository",
+          "args": {
+            "how": "from",
+            "source": "user@host:repo\n"
+          },
+          "expect": {
+            "source": "user@host:repo",
+            "remote": true,
+            "ref": null
+          }
+        },
+        {
+          "op": "diff.repository",
+          "args": {
+            "how": "from",
+            "source": "user@host:re\npo"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Repository source is not a valid local path or remote URL: user@host:re\npo"
+            }
+          }
+        },
+        {
+          "op": "diff.repository",
+          "args": {
+            "how": "from",
+            "source": "  "
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Repository source must not be empty"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,169 @@
+{
+  "lib": "mongo",
+  "environment": {
+    "date": "2026-10-12T22:39:05Z",
+    "commit": "88e2f8ed53",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "insert",
+      "description": "Insert one document (a fresh UUIDv7 id) and return it",
+      "php": {
+        "ns": 1654053.5714285714,
+        "min": 1105380.857142857,
+        "max": 2157232.1428571427,
+        "samples": 15,
+        "calls": 7
+      },
+      "rust": {
+        "ns": 1489294.4666666666,
+        "min": 979083.3333333334,
+        "max": 1900508.3333333333,
+        "samples": 15,
+        "calls": 15,
+        "allocations": 195.00444444444443,
+        "bytes": 54517.53333333333
+      },
+      "speedup": 1.1106289645530396,
+      "bound": "One insert command on MongoDB: the round trip, the same server and network for both runtimes, dominates the call",
+      "compat": null
+    },
+    {
+      "name": "find",
+      "description": "Find one document by id",
+      "php": {
+        "ns": 388200.7454545455,
+        "min": 207139.4,
+        "max": 714965.9090909091,
+        "samples": 15,
+        "calls": 55
+      },
+      "rust": {
+        "ns": 144866.80327868852,
+        "min": 61420.770491803276,
+        "max": 278605.868852459,
+        "samples": 15,
+        "calls": 61,
+        "allocations": 186.00109289617487,
+        "bytes": 54498.13114754098
+      },
+      "speedup": 2.6797080950819465,
+      "bound": "One find command on MongoDB: the round trip dominates the call",
+      "compat": null
+    },
+    {
+      "name": "update",
+      "description": "Update one document by id ($inc)",
+      "php": {
+        "ns": 1063620.1176470588,
+        "min": 980191.1764705882,
+        "max": 1250360.294117647,
+        "samples": 15,
+        "calls": 17
+      },
+      "rust": {
+        "ns": 1075747.0,
+        "min": 927232.1428571428,
+        "max": 1414127.9285714286,
+        "samples": 15,
+        "calls": 14,
+        "allocations": 196.0047619047619,
+        "bytes": 56282.57142857143
+      },
+      "speedup": 0.9887270126219816,
+      "bound": "One update command on MongoDB: the round trip dominates the call",
+      "compat": null
+    },
+    {
+      "name": "count",
+      "description": "Count the documents matching a filter",
+      "php": {
+        "ns": 250252.37142857144,
+        "min": 206877.38571428572,
+        "max": 389172.6285714286,
+        "samples": 15,
+        "calls": 70
+      },
+      "rust": {
+        "ns": 204237.84722222222,
+        "min": 152148.15277777778,
+        "max": 237181.70833333334,
+        "samples": 15,
+        "calls": 72,
+        "allocations": 167.0009259259259,
+        "bytes": 52507.11111111111
+      },
+      "speedup": 1.2252987133980258,
+      "bound": "One count command on MongoDB: the round trip dominates the call",
+      "compat": null
+    },
+    {
+      "name": "write_concern",
+      "description": "Build a write concern from options (no I/O)",
+      "php": {
+        "ns": 87.3858567282299,
+        "min": 74.35360794191732,
+        "max": 111.34583336964954,
+        "samples": 15,
+        "calls": 229466
+      },
+      "rust": {
+        "ns": 49.71192629766152,
+        "min": 49.165013594666746,
+        "max": 52.01101143333679,
+        "samples": 15,
+        "calls": 405306,
+        "allocations": 1.000000164484776,
+        "bytes": 8.000019738173133
+      },
+      "speedup": 1.7578449124056692,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "scram",
+      "description": "Answer a SCRAM-SHA-256 challenge (4096 PBKDF2 rounds)",
+      "php": {
+        "ns": 13850042.0,
+        "min": 12276167.0,
+        "max": 14925250.0,
+        "samples": 15,
+        "calls": 1
+      },
+      "rust": {
+        "ns": 3716741.8,
+        "min": 3654775.0,
+        "max": 5727408.4,
+        "samples": 15,
+        "calls": 5,
+        "allocations": 4156.013333333333,
+        "bytes": 135004.6
+      },
+      "speedup": 3.7263933695905376,
+      "bound": "4096 HMAC-SHA-256 rounds (PBKDF2), the same algorithm on both runtimes, dominate the call",
+      "compat": null
+    }
+  ]
+}

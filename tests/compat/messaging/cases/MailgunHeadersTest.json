@@ -1,0 +1,773 @@
+{
+  "source": "packages/messaging/tests/Adapter/Email/MailgunHeadersTest.php",
+  "cases": [
+    {
+      "name": "message headers are sent as header fields",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "mailgun",
+            "args": {
+              "apiKey": "key",
+              "domain": "example.com"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@example.com"
+              ],
+              "subject": "Subject",
+              "content": "Body",
+              "from_name": "Sender",
+              "from_email": "from@example.com",
+              "headers": {
+                "List-Unsubscribe": "<https://example.test/u>",
+                "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+              }
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": []
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.mailgun.net/v3/example.com/messages",
+                "headers": [
+                  "Authorization: Basic YXBpOmtleQ==",
+                  "Content-Type: application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "to": "a@example.com",
+                  "from": "Sender <from@example.com>",
+                  "subject": "Subject",
+                  "text": "Body",
+                  "html": null,
+                  "h:Reply-To": "Sender <from@example.com>",
+                  "h:List-Unsubscribe": "<https://example.test/u>",
+                  "h:List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "batches carry recipient variables, CC and BCC; the EU region",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "mailgun",
+            "args": {
+              "apiKey": "key",
+              "domain": "mg.example.com",
+              "isEU": true
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "a@example.com",
+                  "name": "Doe, A"
+                },
+                "b@example.com",
+                "a@example.com"
+              ],
+              "cc": [
+                {
+                  "email": "c@example.com",
+                  "name": "C"
+                },
+                "d@example.com"
+              ],
+              "bcc": [
+                "e@example.com",
+                {
+                  "email": "f@example.com",
+                  "name": "F"
+                }
+              ],
+              "html": true,
+              "content": "<p>x</p>",
+              "from_name": "Acme \"Labs\"",
+              "reply_to_email": ""
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 3,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "b@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.eu.mailgun.net/v3/mg.example.com/messages",
+                "headers": [
+                  "Authorization: Basic YXBpOmtleQ==",
+                  "Content-Type: application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "to": "\"Doe, A\" <a@example.com>,b@example.com,a@example.com",
+                  "from": "\"Acme \\\"Labs\\\"\" <sender@example.test>",
+                  "subject": "Subject",
+                  "text": null,
+                  "html": "<p>x</p>",
+                  "h:Reply-To": "\"Acme \\\"Labs\\\"\" <>",
+                  "recipient-variables": "{\"a@example.com\":[],\"b@example.com\":[]}",
+                  "cc": "C <c@example.com>,d@example.com",
+                  "bcc": "e@example.com,F <f@example.com>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4xx failures carry the provider's answer, other failures report nothing",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "mailgun",
+            "args": {
+              "apiKey": "key",
+              "domain": "example.com"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@example.com",
+                "b@example.com"
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 400,
+                "response": {
+                  "message": "'from' parameter is not a valid address"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "failure",
+                  "error": "'from' parameter is not a valid address",
+                  "permanent": false
+                },
+                {
+                  "recipient": "b@example.com",
+                  "status": "failure",
+                  "error": "'from' parameter is not a valid address",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.mailgun.net/v3/example.com/messages",
+                "headers": [
+                  "Authorization: Basic YXBpOmtleQ==",
+                  "Content-Type: application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "to": "a@example.com,b@example.com",
+                  "from": "Sender <sender@example.test>",
+                  "subject": "Subject",
+                  "text": "Body",
+                  "html": null,
+                  "h:Reply-To": "Sender <sender@example.test>",
+                  "recipient-variables": "{\"a@example.com\":[],\"b@example.com\":[]}"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@example.com"
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 401,
+                "response": "Forbidden"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "failure",
+                  "error": "Forbidden",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.mailgun.net/v3/example.com/messages",
+                "headers": [
+                  "Authorization: Basic YXBpOmtleQ==",
+                  "Content-Type: application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "to": "a@example.com",
+                  "from": "Sender <sender@example.test>",
+                  "subject": "Subject",
+                  "text": "Body",
+                  "html": null,
+                  "h:Reply-To": "Sender <sender@example.test>"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@example.com"
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 404,
+                "response": {
+                  "error": "x"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "failure",
+                  "error": "Unknown error",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.mailgun.net/v3/example.com/messages",
+                "headers": [
+                  "Authorization: Basic YXBpOmtleQ==",
+                  "Content-Type: application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "to": "a@example.com",
+                  "from": "Sender <sender@example.test>",
+                  "subject": "Subject",
+                  "text": "Body",
+                  "html": null,
+                  "h:Reply-To": "Sender <sender@example.test>"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@example.com"
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 500,
+                "response": {
+                  "message": "down"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": []
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.mailgun.net/v3/example.com/messages",
+                "headers": [
+                  "Authorization: Basic YXBpOmtleQ==",
+                  "Content-Type: application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "to": "a@example.com",
+                  "from": "Sender <sender@example.test>",
+                  "subject": "Subject",
+                  "text": "Body",
+                  "html": null,
+                  "h:Reply-To": "Sender <sender@example.test>"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@example.com"
+              ]
+            },
+            "replies": [
+              {
+                "statusCode": 404,
+                "response": {
+                  "message": 12.5
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "failure",
+                  "error": "12.5",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.mailgun.net/v3/example.com/messages",
+                "headers": [
+                  "Authorization: Basic YXBpOmtleQ==",
+                  "Content-Type: application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "to": "a@example.com",
+                  "from": "Sender <sender@example.test>",
+                  "subject": "Subject",
+                  "text": "Body",
+                  "html": null,
+                  "h:Reply-To": "Sender <sender@example.test>"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "attachments make it multipart",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "mailgun",
+            "args": {
+              "apiKey": "key",
+              "domain": "example.com"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@example.com"
+              ],
+              "attachments": [
+                {
+                  "name": "image.png",
+                  "path": "packages/messaging/tests/assets/image.png",
+                  "type": "image/png"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.mailgun.net/v3/example.com/messages",
+                "headers": [
+                  "Authorization: Basic YXBpOmtleQ==",
+                  "Content-Type: multipart/form-data"
+                ],
+                "body": {
+                  "to": "a@example.com",
+                  "from": "Sender <sender@example.test>",
+                  "subject": "Subject",
+                  "text": "Body",
+                  "html": null,
+                  "h:Reply-To": "Sender <sender@example.test>",
+                  "attachment[0]": {
+                    "$part": {
+                      "name": "attachment[0]",
+                      "filename": "image.png",
+                      "type": "image/png",
+                      "path": "packages/messaging/tests/assets/image.png"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@example.com"
+              ],
+              "attachments": [
+                {
+                  "name": "n.txt",
+                  "path": "",
+                  "type": "text/plain",
+                  "content": "ignored"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Unable to read multipart file."
+            },
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "sends through the fixture server, as a form and as multipart",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "mailgun",
+            "args": {
+              "apiKey": "key",
+              "domain": "example.com"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                {
+                  "email": "a@example.com",
+                  "name": "Å"
+                },
+                "b@example.com"
+              ],
+              "subject": "Hi & bye",
+              "content": "Body + more",
+              "headers": {
+                "X-Tag": "a b"
+              }
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "id": "<1@example.com>",
+                  "message": "Queued. Thank you."
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 2,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                },
+                {
+                  "recipient": "b@example.com",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.mailgun.net/v3/example.com/messages",
+                "headers": [
+                  [
+                    "Accept",
+                    "*/*"
+                  ],
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Authorization",
+                    "Basic YXBpOmtleQ=="
+                  ],
+                  [
+                    "Content-Type",
+                    "application/x-www-form-urlencoded"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Mailgun Message Sender"
+                  ],
+                  [
+                    "Content-Length",
+                    "295"
+                  ]
+                ],
+                "body": "to=%C3%85%20%3Ca%40example.com%3E%2Cb%40example.com&from=Sender%20%3Csender%40example.test%3E&subject=Hi%20%26%20bye&text=Body%20%2B%20more&h%3AReply-To=Sender%20%3Csender%40example.test%3E&h%3AX-Tag=a%20b&recipient-variables=%7B%22a%40example.com%22%3A%5B%5D%2C%22b%40example.com%22%3A%5B%5D%7D"
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "email",
+              "to": [
+                "a@example.com"
+              ],
+              "html": true,
+              "content": "<p>x</p>",
+              "attachments": [
+                {
+                  "name": "image.png",
+                  "path": "packages/messaging/tests/assets/image.png",
+                  "type": "image/png"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "status": 400,
+                "body": "Bad Request: from parameter is missing"
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "email",
+              "results": [
+                {
+                  "recipient": "a@example.com",
+                  "status": "failure",
+                  "error": "Bad Request: from parameter is missing",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.mailgun.net/v3/example.com/messages",
+                "headers": [
+                  [
+                    "Accept",
+                    "*/*"
+                  ],
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Authorization",
+                    "Basic YXBpOmtleQ=="
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite Mailgun Message Sender"
+                  ],
+                  [
+                    "Content-Type",
+                    "multipart/form-data; boundary=<boundary>"
+                  ],
+                  [
+                    "Content-Length",
+                    "25274"
+                  ]
+                ],
+                "body": {
+                  "$bytes": "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"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

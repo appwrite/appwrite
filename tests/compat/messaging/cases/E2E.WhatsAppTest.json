@@ -1,0 +1,1005 @@
+{
+  "source": "packages/messaging/tests/E2E/Adapter/SMS/WhatsAppTest.php",
+  "cases": [
+    {
+      "name": "lists every language of a template with its status",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "whatsapp",
+            "args": {
+              "accessToken": "compat-token",
+              "phoneNumberId": "1234567890",
+              "template": "utopia_messaging_test"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "get_template",
+            "args": {
+              "businessAccountId": "9876543210",
+              "name": "hello_world"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "1",
+                      "name": "hello_world",
+                      "language": "en_US",
+                      "status": "APPROVED",
+                      "category": "UTILITY"
+                    },
+                    {
+                      "id": "2",
+                      "name": "hello_world",
+                      "language": "pt_BR",
+                      "status": "APPROVED",
+                      "category": "UTILITY"
+                    }
+                  ],
+                  "paging": {
+                    "cursors": {
+                      "before": "a",
+                      "after": "b"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": [
+              {
+                "id": "1",
+                "name": "hello_world",
+                "language": "en_US",
+                "status": "APPROVED",
+                "category": "UTILITY"
+              },
+              {
+                "id": "2",
+                "name": "hello_world",
+                "language": "pt_BR",
+                "status": "APPROVED",
+                "category": "UTILITY"
+              }
+            ],
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://graph.facebook.com/v26.0/9876543210/message_templates?name=hello_world&fields=id%2Cname%2Clanguage%2Cstatus%2Ccategory",
+                "headers": [
+                  [
+                    "Accept",
+                    "*/*"
+                  ],
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer compat-token"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite WhatsApp Message Sender"
+                  ]
+                ],
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "lists nothing for an unknown template",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "whatsapp",
+            "args": {
+              "accessToken": "compat-token",
+              "phoneNumberId": "1234567890",
+              "template": "utopia_messaging_test"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "get_template",
+            "args": {
+              "businessAccountId": "9876543210"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "data": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": [],
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://graph.facebook.com/v26.0/9876543210/message_templates?name=utopia_messaging_test&fields=id%2Cname%2Clanguage%2Cstatus%2Ccategory",
+                "headers": [
+                  [
+                    "Accept",
+                    "*/*"
+                  ],
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer compat-token"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite WhatsApp Message Sender"
+                  ]
+                ],
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "surfaces a rejected template creation as an exception",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "whatsapp",
+            "args": {
+              "accessToken": "compat-token",
+              "phoneNumberId": "1234567890",
+              "template": "utopia_messaging_test"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "upsert_template",
+            "args": {
+              "businessAccountId": "9876543210",
+              "languages": [
+                "en_US"
+              ]
+            },
+            "replies": [
+              {
+                "status": 400,
+                "json": {
+                  "error": {
+                    "message": "(#200002) Template creation is not allowed for test accounts",
+                    "type": "OAuthException",
+                    "code": 200002,
+                    "error_data": {
+                      "messaging_product": "whatsapp",
+                      "details": "Test accounts cannot create templates"
+                    },
+                    "fbtrace_id": "Ab1"
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Error 200002: (#200002) Template creation is not allowed for test accounts: Test accounts cannot create templates"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://graph.facebook.com/v26.0/9876543210/upsert_message_templates",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer compat-token"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite WhatsApp Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "217"
+                  ]
+                ],
+                "body": "{\"name\":\"utopia_messaging_test\",\"category\":\"authentication\",\"components\":[{\"type\":\"body\",\"add_security_recommendation\":true},{\"type\":\"buttons\",\"buttons\":[{\"type\":\"otp\",\"otp_type\":\"copy_code\"}]}],\"languages\":[\"en_US\"]}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "reports a missing template",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "whatsapp",
+            "args": {
+              "accessToken": "compat-token",
+              "phoneNumberId": "1234567890",
+              "template": "utopia_messaging_test"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+1 (555) 000-0001"
+              ],
+              "content": "123456"
+            },
+            "replies": [
+              {
+                "status": 404,
+                "json": {
+                  "error": {
+                    "message": "(#132001) Template name does not exist in the translation",
+                    "type": "OAuthException",
+                    "code": 132001,
+                    "error_data": {
+                      "messaging_product": "whatsapp",
+                      "details": "template name (utopia_messaging_test) does not exist in en_US"
+                    },
+                    "fbtrace_id": "Ab1"
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+1 (555) 000-0001",
+                  "status": "failure",
+                  "error": "Error 132001: (#132001) Template name does not exist in the translation: template name (utopia_messaging_test) does not exist in en_US",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://graph.facebook.com/v26.0/1234567890/messages",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer compat-token"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite WhatsApp Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "343"
+                  ]
+                ],
+                "body": "{\"messaging_product\":\"whatsapp\",\"recipient_type\":\"individual\",\"to\":\"15550000001\",\"type\":\"template\",\"template\":{\"name\":\"utopia_messaging_test\",\"language\":{\"code\":\"en_US\"},\"components\":[{\"type\":\"body\",\"parameters\":[{\"type\":\"text\",\"text\":\"123456\"}]},{\"type\":\"button\",\"sub_type\":\"url\",\"index\":\"0\",\"parameters\":[{\"type\":\"text\",\"text\":\"123456\"}]}]}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "overrides the template per message",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "whatsapp",
+            "args": {
+              "accessToken": "compat-token",
+              "phoneNumberId": "1234567890",
+              "template": "hello_world"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15550000001"
+              ],
+              "content": "123456",
+              "set_metadata": {
+                "template": "utopia_messaging_test",
+                "language": "en_US",
+                "callbackData": "utopia-messaging-e2e"
+              }
+            },
+            "replies": [
+              {
+                "status": 404,
+                "json": {
+                  "error": {
+                    "message": "(#132001) Template name does not exist in the translation",
+                    "type": "OAuthException",
+                    "code": 132001,
+                    "fbtrace_id": "Ab1"
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15550000001",
+                  "status": "failure",
+                  "error": "Error 132001: (#132001) Template name does not exist in the translation",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://graph.facebook.com/v26.0/1234567890/messages",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer compat-token"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite WhatsApp Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "393"
+                  ]
+                ],
+                "body": "{\"messaging_product\":\"whatsapp\",\"recipient_type\":\"individual\",\"to\":\"15550000001\",\"type\":\"template\",\"template\":{\"name\":\"utopia_messaging_test\",\"language\":{\"code\":\"en_US\"},\"components\":[{\"type\":\"body\",\"parameters\":[{\"type\":\"text\",\"text\":\"123456\"}]},{\"type\":\"button\",\"sub_type\":\"url\",\"index\":\"0\",\"parameters\":[{\"type\":\"text\",\"text\":\"123456\"}]}]},\"biz_opaque_callback_data\":\"utopia-messaging-e2e\"}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "reports a recipient outside the allow list",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "whatsapp",
+            "args": {
+              "accessToken": "compat-token",
+              "phoneNumberId": "1234567890",
+              "template": "utopia_messaging_test"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15550000001"
+              ],
+              "content": "123456"
+            },
+            "replies": [
+              {
+                "status": 400,
+                "json": {
+                  "error": {
+                    "message": "(#131030) Recipient phone number not in allowed list",
+                    "type": "OAuthException",
+                    "code": 131030,
+                    "error_data": {
+                      "messaging_product": "whatsapp",
+                      "details": "Recipient phone number not in allowed list"
+                    },
+                    "fbtrace_id": "Ab1"
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15550000001",
+                  "status": "failure",
+                  "error": "Error 131030: (#131030) Recipient phone number not in allowed list: Recipient phone number not in allowed list",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://graph.facebook.com/v26.0/1234567890/messages",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer compat-token"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite WhatsApp Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "343"
+                  ]
+                ],
+                "body": "{\"messaging_product\":\"whatsapp\",\"recipient_type\":\"individual\",\"to\":\"15550000001\",\"type\":\"template\",\"template\":{\"name\":\"utopia_messaging_test\",\"language\":{\"code\":\"en_US\"},\"components\":[{\"type\":\"body\",\"parameters\":[{\"type\":\"text\",\"text\":\"123456\"}]},{\"type\":\"button\",\"sub_type\":\"url\",\"index\":\"0\",\"parameters\":[{\"type\":\"text\",\"text\":\"123456\"}]}]}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "reports an invalid token",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "whatsapp",
+            "args": {
+              "accessToken": "not-a-token",
+              "phoneNumberId": "1234567890",
+              "template": "utopia_messaging_test"
+            },
+            "transport": "fixture"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+15550000001"
+              ],
+              "content": "123456"
+            },
+            "replies": [
+              {
+                "status": 401,
+                "json": {
+                  "error": {
+                    "message": "Invalid OAuth access token - Cannot parse access token",
+                    "type": "OAuthException",
+                    "code": 190,
+                    "fbtrace_id": "Ab1"
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 0,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+15550000001",
+                  "status": "failure",
+                  "error": "Error 190: Invalid OAuth access token - Cannot parse access token",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://graph.facebook.com/v26.0/1234567890/messages",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer not-a-token"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite WhatsApp Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "343"
+                  ]
+                ],
+                "body": "{\"messaging_product\":\"whatsapp\",\"recipient_type\":\"individual\",\"to\":\"15550000001\",\"type\":\"template\",\"template\":{\"name\":\"utopia_messaging_test\",\"language\":{\"code\":\"en_US\"},\"components\":[{\"type\":\"body\",\"parameters\":[{\"type\":\"text\",\"text\":\"123456\"}]},{\"type\":\"button\",\"sub_type\":\"url\",\"index\":\"0\",\"parameters\":[{\"type\":\"text\",\"text\":\"123456\"}]}]}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "delivers a code, deletes a template, and upserts one with every option (through a client factory)",
+      "requires": [
+        "services"
+      ],
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "whatsapp",
+            "args": {
+              "accessToken": "compat-token",
+              "phoneNumberId": "1234567890",
+              "template": "utopia_messaging_test",
+              "language": "pt_BR",
+              "version": "v21.0"
+            },
+            "transport": "custom"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+44 7700 900000"
+              ],
+              "content": "A1b2C3"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "messaging_product": "whatsapp",
+                  "messages": [
+                    {
+                      "id": "wamid.1"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "sms",
+              "results": [
+                {
+                  "recipient": "+44 7700 900000",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://graph.facebook.com/v21.0/1234567890/messages",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer compat-token"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite WhatsApp Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "344"
+                  ]
+                ],
+                "body": "{\"messaging_product\":\"whatsapp\",\"recipient_type\":\"individual\",\"to\":\"447700900000\",\"type\":\"template\",\"template\":{\"name\":\"utopia_messaging_test\",\"language\":{\"code\":\"pt_BR\"},\"components\":[{\"type\":\"body\",\"parameters\":[{\"type\":\"text\",\"text\":\"A1b2C3\"}]},{\"type\":\"button\",\"sub_type\":\"url\",\"index\":\"0\",\"parameters\":[{\"type\":\"text\",\"text\":\"A1b2C3\"}]}]}}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "delete_template",
+            "args": {
+              "businessAccountId": "9876543210",
+              "name": "old one"
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "InvalidArgumentException",
+              "message": "WhatsApp template names must be 1 to 512 lowercase letters, digits and underscores."
+            },
+            "requests": []
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "delete_template",
+            "args": {
+              "businessAccountId": "9876543210",
+              "name": "old_one"
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "success": true
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "DELETE",
+                "url": "https://graph.facebook.com/v21.0/9876543210/message_templates?name=old_one",
+                "headers": [
+                  [
+                    "Accept",
+                    "*/*"
+                  ],
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer compat-token"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite WhatsApp Message Sender"
+                  ]
+                ],
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "upsert_template",
+            "args": {
+              "businessAccountId": "9876543210",
+              "expirationMinutes": 10,
+              "securityRecommendation": false,
+              "timeToLive": -1,
+              "otpType": "zero_tap",
+              "apps": [
+                {
+                  "package_name": "com.example.app",
+                  "signature_hash": "K8a/AINcGX7"
+                }
+              ]
+            },
+            "replies": [
+              {
+                "status": 200,
+                "json": {
+                  "data": [
+                    {
+                      "id": "1",
+                      "status": "APPROVED",
+                      "language": "en_US"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "data": [
+                {
+                  "id": "1",
+                  "status": "APPROVED",
+                  "language": "en_US"
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://graph.facebook.com/v21.0/9876543210/upsert_message_templates",
+                "headers": [
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer compat-token"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite WhatsApp Message Sender"
+                  ],
+                  [
+                    "Accept",
+                    "application/json"
+                  ],
+                  [
+                    "Content-Length",
+                    "389"
+                  ]
+                ],
+                "body": "{\"name\":\"utopia_messaging_test\",\"category\":\"authentication\",\"components\":[{\"type\":\"body\",\"add_security_recommendation\":false},{\"type\":\"footer\",\"code_expiration_minutes\":10},{\"type\":\"buttons\",\"buttons\":[{\"type\":\"otp\",\"otp_type\":\"zero_tap\",\"supported_apps\":[{\"package_name\":\"com.example.app\",\"signature_hash\":\"K8a\\/AINcGX7\"}],\"zero_tap_terms_accepted\":true}]}],\"message_send_ttl_seconds\":-1}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "delete_template",
+            "args": {
+              "businessAccountId": "9876543210"
+            },
+            "replies": [
+              {
+                "status": 500,
+                "body": "not json"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Unknown error"
+            },
+            "requests": [
+              {
+                "method": "DELETE",
+                "url": "https://graph.facebook.com/v21.0/9876543210/message_templates?name=utopia_messaging_test",
+                "headers": [
+                  [
+                    "Accept",
+                    "*/*"
+                  ],
+                  [
+                    "Accept-Encoding",
+                    "deflate, gzip, br, zstd"
+                  ],
+                  [
+                    "Content-Type",
+                    "application/json"
+                  ],
+                  [
+                    "Authorization",
+                    "Bearer compat-token"
+                  ],
+                  [
+                    "User-Agent",
+                    "Appwrite WhatsApp Message Sender"
+                  ]
+                ],
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

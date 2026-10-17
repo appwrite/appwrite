@@ -1,0 +1,2037 @@
+{
+  "source": "packages/http/tests/RequestTest.php",
+  "cases": [
+    {
+      "name": "headers",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Custom",
+              "value1"
+            ],
+            [
+              "Custom-New",
+              "value2"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": [
+              "header",
+              "custom"
+            ]
+          },
+          {
+            "get": [
+              "header",
+              "Custom-New"
+            ]
+          },
+          {
+            "get": [
+              "header_line",
+              "custom"
+            ]
+          },
+          {
+            "get": [
+              "has_header",
+              "CUSTOM"
+            ]
+          },
+          {
+            "get": [
+              "has_header",
+              "missing"
+            ]
+          },
+          {
+            "get": [
+              "header",
+              "missing"
+            ]
+          },
+          {
+            "get": [
+              "header_line",
+              "missing",
+              "fallback"
+            ]
+          },
+          {
+            "get": "headers"
+          }
+        ]
+      },
+      "expect": [
+        [
+          "value1"
+        ],
+        [
+          "value2"
+        ],
+        "value1",
+        true,
+        false,
+        [],
+        "fallback",
+        {
+          "custom": [
+            "value1"
+          ],
+          "custom-new": [
+            "value2"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "add headers",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/"
+        },
+        "steps": [
+          {
+            "add_header": [
+              "custom",
+              "value1"
+            ]
+          },
+          {
+            "add_header": [
+              "custom-new",
+              "value2"
+            ]
+          },
+          {
+            "get": [
+              "header",
+              "custom"
+            ]
+          },
+          {
+            "get": [
+              "header",
+              "custom-new"
+            ]
+          },
+          {
+            "add_header": [
+              "Custom",
+              "value3"
+            ]
+          },
+          {
+            "get": [
+              "header",
+              "custom"
+            ]
+          },
+          {
+            "get": [
+              "header_line",
+              "custom"
+            ]
+          },
+          {
+            "set_header": [
+              "custom",
+              "only"
+            ]
+          },
+          {
+            "get": [
+              "header",
+              "custom"
+            ]
+          },
+          {
+            "get": "headers"
+          }
+        ]
+      },
+      "expect": [
+        [
+          "value1"
+        ],
+        [
+          "value2"
+        ],
+        [
+          "value1",
+          "value3"
+        ],
+        "value1, value3",
+        [
+          "only"
+        ],
+        {
+          "custom": [
+            "only"
+          ],
+          "custom-new": [
+            "value2"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "remove headers",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/"
+        },
+        "steps": [
+          {
+            "add_header": [
+              "custom",
+              "value1"
+            ]
+          },
+          {
+            "add_header": [
+              "custom-new",
+              "value2"
+            ]
+          },
+          {
+            "remove_header": "Custom"
+          },
+          {
+            "get": [
+              "has_header",
+              "custom"
+            ]
+          },
+          {
+            "get": [
+              "header",
+              "custom"
+            ]
+          },
+          {
+            "get": [
+              "header",
+              "custom-new"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        false,
+        [],
+        [
+          "value2"
+        ]
+      ]
+    },
+    {
+      "name": "query parameter",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/?key=value"
+        },
+        "steps": [
+          {
+            "get": [
+              "query",
+              "key"
+            ]
+          },
+          {
+            "get": [
+              "query",
+              "unknown",
+              "test"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        "value",
+        "test"
+      ]
+    },
+    {
+      "name": "set query string",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/"
+        },
+        "steps": [
+          {
+            "set_query": {
+              "key": "value"
+            }
+          },
+          {
+            "get": [
+              "query",
+              "key"
+            ]
+          },
+          {
+            "get": [
+              "query",
+              "unknown",
+              "test"
+            ]
+          },
+          {
+            "get": "params"
+          }
+        ]
+      },
+      "expect": [
+        "value",
+        "test",
+        {
+          "key": "value"
+        }
+      ]
+    },
+    {
+      "name": "payload default",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/"
+        },
+        "steps": [
+          {
+            "get": [
+              "payload",
+              "unknown",
+              "test"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        "test"
+      ]
+    },
+    {
+      "name": "set payload",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "POST",
+          "uri": "/"
+        },
+        "steps": [
+          {
+            "set_payload": {
+              "key": "value"
+            }
+          },
+          {
+            "get": [
+              "payload",
+              "key"
+            ]
+          },
+          {
+            "get": [
+              "payload",
+              "unknown",
+              "test"
+            ]
+          },
+          {
+            "get": "params"
+          }
+        ]
+      },
+      "expect": [
+        "value",
+        "test",
+        {
+          "key": "value"
+        }
+      ]
+    },
+    {
+      "name": "raw payload",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/"
+        },
+        "steps": [
+          {
+            "get": "raw_payload"
+          }
+        ]
+      },
+      "expect": [
+        ""
+      ]
+    },
+    {
+      "name": "server",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/x?y=1",
+          "protocol": "HTTP/1.0"
+        },
+        "steps": [
+          {
+            "get": [
+              "server",
+              "unknown",
+              "test"
+            ]
+          },
+          {
+            "set_server": [
+              "key",
+              "value"
+            ]
+          },
+          {
+            "get": [
+              "server",
+              "key"
+            ]
+          },
+          {
+            "get": [
+              "server",
+              "request_uri"
+            ]
+          },
+          {
+            "get": [
+              "server",
+              "request_method"
+            ]
+          },
+          {
+            "get": [
+              "server",
+              "query_string"
+            ]
+          },
+          {
+            "get": [
+              "server",
+              "server_protocol"
+            ]
+          },
+          {
+            "get": [
+              "server",
+              "path_info"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        "test",
+        "value",
+        "/x",
+        "GET",
+        "y=1",
+        "HTTP/1.0",
+        "/x"
+      ]
+    },
+    {
+      "name": "cookie",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Cookie",
+              "key=value"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": [
+              "cookie",
+              "key"
+            ]
+          },
+          {
+            "get": [
+              "cookie",
+              "unknown",
+              "test"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        "value",
+        "test"
+      ]
+    },
+    {
+      "name": "cookie params",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Cookie",
+              "key=value; other=second"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "cookies"
+          },
+          {
+            "get": [
+              "header",
+              "cookie"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "key": "value",
+          "other": "second"
+        },
+        []
+      ]
+    },
+    {
+      "name": "set cookie params",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/"
+        },
+        "steps": [
+          {
+            "set_cookies": {
+              "key": "value"
+            }
+          },
+          {
+            "get": "cookies"
+          },
+          {
+            "get": [
+              "cookie",
+              "key"
+            ]
+          },
+          {
+            "get": [
+              "cookie",
+              "unknown",
+              "test"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "key": "value"
+        },
+        "value",
+        "test"
+      ]
+    },
+    {
+      "name": "protocol from the request line",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/"
+        },
+        "steps": [
+          {
+            "get": "protocol"
+          }
+        ]
+      },
+      "expect": [
+        "http"
+      ]
+    },
+    {
+      "name": "protocol from an HTTP/1.0 request line",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "protocol": "HTTP/1.0"
+        },
+        "steps": [
+          {
+            "get": "protocol"
+          }
+        ]
+      },
+      "expect": [
+        "https"
+      ]
+    },
+    {
+      "name": "forwarded protocol",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "X-Forwarded-Proto",
+              "https"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "protocol"
+          }
+        ]
+      },
+      "expect": [
+        "https"
+      ]
+    },
+    {
+      "name": "stop trusting the forwarded protocol",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "X-Forwarded-Proto",
+              "https"
+            ]
+          ],
+          "trusted": {
+            "proto": [
+              "x-cdn-proto"
+            ]
+          }
+        },
+        "steps": [
+          {
+            "get": "protocol"
+          }
+        ]
+      },
+      "expect": [
+        "http"
+      ]
+    },
+    {
+      "name": "trust a protocol header of any name",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "X-CDN-Proto",
+              "https"
+            ]
+          ],
+          "trusted": {
+            "proto": [
+              "x-cdn-proto"
+            ]
+          }
+        },
+        "steps": [
+          {
+            "get": "protocol"
+          }
+        ]
+      },
+      "expect": [
+        "https"
+      ]
+    },
+    {
+      "name": "trusted protocol headers in order",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "X-CDN-Proto",
+              "https"
+            ],
+            [
+              "X-Forwarded-Proto",
+              "http"
+            ]
+          ],
+          "trusted": {
+            "proto": [
+              "x-cdn-proto",
+              "x-forwarded-proto"
+            ]
+          }
+        },
+        "steps": [
+          {
+            "get": "protocol"
+          }
+        ]
+      },
+      "expect": [
+        "https"
+      ]
+    },
+    {
+      "name": "skip a protocol header naming no known scheme",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "X-CDN-Proto",
+              "gopher"
+            ],
+            [
+              "X-Forwarded-Proto",
+              "https"
+            ]
+          ],
+          "trusted": {
+            "proto": [
+              "x-cdn-proto",
+              "x-forwarded-proto"
+            ]
+          }
+        },
+        "steps": [
+          {
+            "get": "protocol"
+          }
+        ]
+      },
+      "expect": [
+        "https"
+      ]
+    },
+    {
+      "name": "client scheme from a chain of proxies",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "X-Forwarded-Proto",
+              "https, http"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "protocol"
+          }
+        ]
+      },
+      "expect": [
+        "https"
+      ]
+    },
+    {
+      "name": "socket address until a header is trusted",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "X-Forwarded-For",
+              "203.0.113.7"
+            ]
+          ],
+          "remote_addr": "10.0.0.1"
+        },
+        "steps": [
+          {
+            "get": "ip"
+          }
+        ]
+      },
+      "expect": [
+        "10.0.0.1"
+      ]
+    },
+    {
+      "name": "client address from a trusted header",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "X-Forwarded-For",
+              "203.0.113.7, 10.0.0.1"
+            ]
+          ],
+          "remote_addr": "10.0.0.1",
+          "trusted": {
+            "ip": [
+              "x-forwarded-for"
+            ]
+          }
+        },
+        "steps": [
+          {
+            "get": "ip"
+          }
+        ]
+      },
+      "expect": [
+        "203.0.113.7"
+      ]
+    },
+    {
+      "name": "invalid trusted address falls through",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "X-Real-IP",
+              "nope"
+            ],
+            [
+              "X-Forwarded-For",
+              "::1"
+            ]
+          ],
+          "remote_addr": "10.0.0.1",
+          "trusted": {
+            "ip": [
+              "x-real-ip",
+              "x-forwarded-for"
+            ]
+          }
+        },
+        "steps": [
+          {
+            "get": "ip"
+          }
+        ]
+      },
+      "expect": [
+        "::1"
+      ]
+    },
+    {
+      "name": "no socket address",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/"
+        },
+        "steps": [
+          {
+            "get": "ip"
+          }
+        ]
+      },
+      "expect": [
+        "0.0.0.0"
+      ]
+    },
+    {
+      "name": "method",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/"
+        },
+        "steps": [
+          {
+            "get": "method"
+          },
+          {
+            "set_method": "PATCH"
+          },
+          {
+            "get": "method"
+          }
+        ]
+      },
+      "expect": [
+        "GET",
+        "PATCH"
+      ]
+    },
+    {
+      "name": "uri",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/index.html"
+        },
+        "steps": [
+          {
+            "get": "uri"
+          }
+        ]
+      },
+      "expect": [
+        "/index.html"
+      ]
+    },
+    {
+      "name": "set uri",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/"
+        },
+        "steps": [
+          {
+            "set_uri": "/page.html"
+          },
+          {
+            "get": "uri"
+          }
+        ]
+      },
+      "expect": [
+        "/page.html"
+      ]
+    },
+    {
+      "name": "port",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Host",
+              "localhost:8080"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "port"
+          }
+        ]
+      },
+      "expect": [
+        "8080"
+      ]
+    },
+    {
+      "name": "no port",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Host",
+              "localhost"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "port"
+          }
+        ]
+      },
+      "expect": [
+        ""
+      ]
+    },
+    {
+      "name": "forwarded port and host",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Host",
+              "localhost:8080"
+            ],
+            [
+              "X-Forwarded-Host",
+              "Example.COM:9000"
+            ],
+            [
+              "X-Forwarded-Port",
+              "443"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "port"
+          },
+          {
+            "get": "hostname"
+          }
+        ]
+      },
+      "expect": [
+        "443",
+        "example.com"
+      ]
+    },
+    {
+      "name": "hostname",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Host",
+              "localhost"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "hostname"
+          }
+        ]
+      },
+      "expect": [
+        "localhost"
+      ]
+    },
+    {
+      "name": "hostname with port",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Host",
+              "localhost:8080"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "hostname"
+          }
+        ]
+      },
+      "expect": [
+        "localhost"
+      ]
+    },
+    {
+      "name": "referer",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Referer",
+              "referer"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": [
+              "referer",
+              "default"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        "referer"
+      ]
+    },
+    {
+      "name": "referer default",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/"
+        },
+        "steps": [
+          {
+            "get": [
+              "referer",
+              "default"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        "default"
+      ]
+    },
+    {
+      "name": "origin",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Origin",
+              "origin"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": [
+              "origin",
+              "default"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        "origin"
+      ]
+    },
+    {
+      "name": "origin default",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/"
+        },
+        "steps": [
+          {
+            "get": [
+              "origin",
+              "default"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        "default"
+      ]
+    },
+    {
+      "name": "user_agent",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "User-Agent",
+              "user_agent"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": [
+              "user_agent",
+              "default"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        "user_agent"
+      ]
+    },
+    {
+      "name": "user_agent default",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/"
+        },
+        "steps": [
+          {
+            "get": [
+              "user_agent",
+              "default"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        "default"
+      ]
+    },
+    {
+      "name": "accept",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Accept",
+              "accept"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": [
+              "accept",
+              "default"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        "accept"
+      ]
+    },
+    {
+      "name": "accept default",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/"
+        },
+        "steps": [
+          {
+            "get": [
+              "accept",
+              "default"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        "default"
+      ]
+    },
+    {
+      "name": "content range bytes 0-499/2000",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Content-Range",
+              "bytes 0-499/2000"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "content_range_unit"
+          },
+          {
+            "get": "content_range_start"
+          },
+          {
+            "get": "content_range_end"
+          },
+          {
+            "get": "content_range_size"
+          }
+        ]
+      },
+      "expect": [
+        "bytes",
+        0,
+        499,
+        2000
+      ]
+    },
+    {
+      "name": "content range  0-499/2000",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Content-Range",
+              " 0-499/2000"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "content_range_unit"
+          },
+          {
+            "get": "content_range_start"
+          },
+          {
+            "get": "content_range_end"
+          },
+          {
+            "get": "content_range_size"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "content range bytes 0-499/",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Content-Range",
+              "bytes 0-499/"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "content_range_unit"
+          },
+          {
+            "get": "content_range_start"
+          },
+          {
+            "get": "content_range_end"
+          },
+          {
+            "get": "content_range_size"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "content range bytes 0--499/2000",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Content-Range",
+              "bytes 0--499/2000"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "content_range_unit"
+          },
+          {
+            "get": "content_range_start"
+          },
+          {
+            "get": "content_range_end"
+          },
+          {
+            "get": "content_range_size"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "content range bytes 0-499test/2000",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Content-Range",
+              "bytes 0-499test/2000"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "content_range_unit"
+          },
+          {
+            "get": "content_range_start"
+          },
+          {
+            "get": "content_range_end"
+          },
+          {
+            "get": "content_range_size"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "content range bytes 0-49.9/200.0",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Content-Range",
+              "bytes 0-49.9/200.0"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "content_range_unit"
+          },
+          {
+            "get": "content_range_start"
+          },
+          {
+            "get": "content_range_end"
+          },
+          {
+            "get": "content_range_size"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "content range bytes 0-49,9/200,0",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Content-Range",
+              "bytes 0-49,9/200,0"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "content_range_unit"
+          },
+          {
+            "get": "content_range_start"
+          },
+          {
+            "get": "content_range_end"
+          },
+          {
+            "get": "content_range_size"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "content range bytes 5-4/10",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Content-Range",
+              "bytes 5-4/10"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "content_range_unit"
+          },
+          {
+            "get": "content_range_start"
+          },
+          {
+            "get": "content_range_end"
+          },
+          {
+            "get": "content_range_size"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "content range bytes 0-20/10",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Content-Range",
+              "bytes 0-20/10"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "content_range_unit"
+          },
+          {
+            "get": "content_range_start"
+          },
+          {
+            "get": "content_range_end"
+          },
+          {
+            "get": "content_range_size"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "range bytes=0-499",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Range",
+              "bytes=0-499"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "range_unit"
+          },
+          {
+            "get": "range_start"
+          },
+          {
+            "get": "range_end"
+          }
+        ]
+      },
+      "expect": [
+        "bytes",
+        0,
+        499
+      ]
+    },
+    {
+      "name": "range  0-499",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Range",
+              " 0-499"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "range_unit"
+          },
+          {
+            "get": "range_start"
+          },
+          {
+            "get": "range_end"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "range bytes=0-",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Range",
+              "bytes=0-"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "range_unit"
+          },
+          {
+            "get": "range_start"
+          },
+          {
+            "get": "range_end"
+          }
+        ]
+      },
+      "expect": [
+        "bytes",
+        0,
+        null
+      ]
+    },
+    {
+      "name": "range bytes=0-0",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Range",
+              "bytes=0-0"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "range_unit"
+          },
+          {
+            "get": "range_start"
+          },
+          {
+            "get": "range_end"
+          }
+        ]
+      },
+      "expect": [
+        "bytes",
+        0,
+        0
+      ]
+    },
+    {
+      "name": "range bytes=499-499",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Range",
+              "bytes=499-499"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "range_unit"
+          },
+          {
+            "get": "range_start"
+          },
+          {
+            "get": "range_end"
+          }
+        ]
+      },
+      "expect": [
+        "bytes",
+        499,
+        499
+      ]
+    },
+    {
+      "name": "range bytes=5-4",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Range",
+              "bytes=5-4"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "range_unit"
+          },
+          {
+            "get": "range_start"
+          },
+          {
+            "get": "range_end"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "range bytes=0--499",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Range",
+              "bytes=0--499"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "range_unit"
+          },
+          {
+            "get": "range_start"
+          },
+          {
+            "get": "range_end"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "range bytes=0-499test",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Range",
+              "bytes=0-499test"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "range_unit"
+          },
+          {
+            "get": "range_start"
+          },
+          {
+            "get": "range_end"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "range bytes=0-49.9",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Range",
+              "bytes=0-49.9"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "range_unit"
+          },
+          {
+            "get": "range_start"
+          },
+          {
+            "get": "range_end"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "range bytes=0-49,9",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Range",
+              "bytes=0-49,9"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "range_unit"
+          },
+          {
+            "get": "range_start"
+          },
+          {
+            "get": "range_end"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "range =0-1",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Range",
+              "=0-1"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "range_unit"
+          },
+          {
+            "get": "range_start"
+          },
+          {
+            "get": "range_end"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "range bytes=-5",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/",
+          "headers": [
+            [
+              "Range",
+              "bytes=-5"
+            ]
+          ]
+        },
+        "steps": [
+          {
+            "get": "range_unit"
+          },
+          {
+            "get": "range_start"
+          },
+          {
+            "get": "range_end"
+          }
+        ]
+      },
+      "expect": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "size with array headers",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "method": "GET",
+          "uri": "/"
+        },
+        "steps": [
+          {
+            "add_header": [
+              "content-type",
+              "application/json"
+            ]
+          },
+          {
+            "add_header": [
+              "accept",
+              "application/json"
+            ]
+          },
+          {
+            "add_header": [
+              "accept",
+              "text/html"
+            ]
+          },
+          {
+            "add_header": [
+              "x-custom",
+              "value1"
+            ]
+          },
+          {
+            "add_header": [
+              "x-custom",
+              "value2"
+            ]
+          },
+          {
+            "add_header": [
+              "x-custom",
+              "value3"
+            ]
+          },
+          {
+            "get": "size"
+          }
+        ]
+      },
+      "expect": [
+        99
+      ]
+    }
+  ]
+}

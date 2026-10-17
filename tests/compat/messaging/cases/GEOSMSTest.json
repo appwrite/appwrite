@@ -1,0 +1,1281 @@
+{
+  "source": "packages/messaging/tests/Adapter/SMS/GEOSMSTest.php",
+  "cases": [
+    {
+      "name": "send SMS using default adapter",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "name": "default",
+              "response": {
+                "deliveredTo": 1,
+                "type": "sms",
+                "results": [
+                  {
+                    "recipient": "+11234567890",
+                    "status": "success",
+                    "error": "",
+                    "permanent": false
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "default",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "geosms",
+            "args": {
+              "defaultAdapter": {
+                "$ref": "default"
+              }
+            }
+          },
+          "bind": "geo",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "geo"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+11234567890"
+              ],
+              "content": "Test Content",
+              "from": "Sender"
+            }
+          },
+          "expect": {
+            "result": {
+              "default": {
+                "deliveredTo": 1,
+                "type": "sms",
+                "results": [
+                  {
+                    "recipient": "+11234567890",
+                    "status": "success",
+                    "error": "",
+                    "permanent": false
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "scripted.messages",
+          "args": {
+            "adapter": {
+              "$ref": "default"
+            }
+          },
+          "expect": [
+            {
+              "to": [
+                "+11234567890"
+              ],
+              "content": "Test Content",
+              "from": "Sender",
+              "attachments": null,
+              "metadata": null,
+              "origin": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "send SMS using local adapter",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "name": ""
+            }
+          },
+          "bind": "default",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "name": "local",
+              "response": {
+                "deliveredTo": 1,
+                "type": "sms",
+                "results": [
+                  {
+                    "recipient": "+911234567890",
+                    "status": "success",
+                    "error": "",
+                    "permanent": false
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "local",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "geosms",
+            "args": {
+              "defaultAdapter": {
+                "$ref": "default"
+              }
+            }
+          },
+          "bind": "geo",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "geo"
+            },
+            "method": "set_local",
+            "args": {
+              "code": "91",
+              "adapter": {
+                "$ref": "local"
+              }
+            }
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "geo"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+911234567890"
+              ],
+              "content": "Test Content",
+              "from": "Sender"
+            }
+          },
+          "expect": {
+            "result": {
+              "local": {
+                "deliveredTo": 1,
+                "type": "sms",
+                "results": [
+                  {
+                    "recipient": "+911234567890",
+                    "status": "success",
+                    "error": "",
+                    "permanent": false
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "send SMS using local adapter and default",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "name": "default",
+              "response": {
+                "deliveredTo": 1,
+                "type": "sms",
+                "results": [
+                  {
+                    "recipient": "+11234567890",
+                    "status": "success",
+                    "error": "",
+                    "permanent": false
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "default",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "name": "local",
+              "response": {
+                "deliveredTo": 1,
+                "type": "sms",
+                "results": [
+                  {
+                    "recipient": "+911234567890",
+                    "status": "success",
+                    "error": "",
+                    "permanent": false
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "local",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "geosms",
+            "args": {
+              "defaultAdapter": {
+                "$ref": "default"
+              }
+            }
+          },
+          "bind": "geo",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "geo"
+            },
+            "method": "set_local",
+            "args": {
+              "code": "91",
+              "adapter": {
+                "$ref": "local"
+              }
+            }
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "geo"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+911234567890",
+                "+11234567890"
+              ],
+              "content": "Test Content",
+              "from": "Sender"
+            }
+          },
+          "expect": {
+            "result": {
+              "local": {
+                "deliveredTo": 1,
+                "type": "sms",
+                "results": [
+                  {
+                    "recipient": "+911234567890",
+                    "status": "success",
+                    "error": "",
+                    "permanent": false
+                  }
+                ]
+              },
+              "default": {
+                "deliveredTo": 1,
+                "type": "sms",
+                "results": [
+                  {
+                    "recipient": "+11234567890",
+                    "status": "success",
+                    "error": "",
+                    "permanent": false
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "scripted.messages",
+          "args": {
+            "adapter": {
+              "$ref": "local"
+            }
+          },
+          "expect": [
+            {
+              "to": [
+                "+911234567890"
+              ],
+              "content": "Test Content",
+              "from": "Sender",
+              "attachments": null,
+              "metadata": null,
+              "origin": null
+            }
+          ]
+        },
+        {
+          "op": "scripted.messages",
+          "args": {
+            "adapter": {
+              "$ref": "default"
+            }
+          },
+          "expect": [
+            {
+              "to": [
+                "+11234567890"
+              ],
+              "content": "Test Content",
+              "from": "Sender",
+              "attachments": null,
+              "metadata": null,
+              "origin": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "send SMS using grouped local adapter",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "name": ""
+            }
+          },
+          "bind": "default",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "name": "local",
+              "response": {
+                "deliveredTo": 2,
+                "type": "sms",
+                "results": [
+                  {
+                    "recipient": "+911234567890",
+                    "status": "success",
+                    "error": "",
+                    "permanent": false
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "local",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "geosms",
+            "args": {
+              "defaultAdapter": {
+                "$ref": "default"
+              }
+            }
+          },
+          "bind": "geo",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "geo"
+            },
+            "method": "set_local",
+            "args": {
+              "code": "91",
+              "adapter": {
+                "$ref": "local"
+              }
+            }
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "geo"
+            },
+            "method": "set_local",
+            "args": {
+              "code": "1",
+              "adapter": {
+                "$ref": "local"
+              }
+            }
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "geo"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+911234567890",
+                "+11234567890"
+              ],
+              "content": "Test Content",
+              "from": "Sender"
+            }
+          },
+          "expect": {
+            "result": {
+              "local": {
+                "deliveredTo": 2,
+                "type": "sms",
+                "results": [
+                  {
+                    "recipient": "+911234567890",
+                    "status": "success",
+                    "error": "",
+                    "permanent": false
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "scripted.messages",
+          "args": {
+            "adapter": {
+              "$ref": "local"
+            }
+          },
+          "expect": [
+            {
+              "to": [
+                "+911234567890",
+                "+11234567890"
+              ],
+              "content": "Test Content",
+              "from": "Sender",
+              "attachments": null,
+              "metadata": null,
+              "origin": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "send SMS handles metadata",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "name": "default",
+              "response": {
+                "deliveredTo": 1,
+                "type": "sms",
+                "results": [
+                  {
+                    "recipient": "+11234567890",
+                    "status": "success",
+                    "error": "",
+                    "permanent": false
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "single",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "geosms",
+            "args": {
+              "defaultAdapter": {
+                "$ref": "single"
+              }
+            }
+          },
+          "bind": "geo1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "geo1"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+11234567890"
+              ],
+              "content": "Test Content",
+              "metadata": {
+                "clientId": "client-123",
+                "CRQID": "request_123",
+                "UUID": "uuid.123"
+              }
+            }
+          },
+          "expect": {
+            "result": {
+              "default": {
+                "deliveredTo": 1,
+                "type": "sms",
+                "results": [
+                  {
+                    "recipient": "+11234567890",
+                    "status": "success",
+                    "error": "",
+                    "permanent": false
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "scripted.messages",
+          "args": {
+            "adapter": {
+              "$ref": "single"
+            }
+          },
+          "expect": [
+            {
+              "to": [
+                "+11234567890"
+              ],
+              "content": "Test Content",
+              "from": null,
+              "attachments": null,
+              "metadata": {
+                "clientId": "client-123",
+                "CRQID": "request_123",
+                "UUID": "uuid.123"
+              },
+              "origin": null
+            }
+          ]
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "name": "default",
+              "response": {
+                "deliveredTo": 1,
+                "type": "sms",
+                "results": [
+                  {
+                    "recipient": "+11234567890",
+                    "status": "success",
+                    "error": "",
+                    "permanent": false
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "default",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "name": "local",
+              "response": {
+                "deliveredTo": 1,
+                "type": "sms",
+                "results": [
+                  {
+                    "recipient": "+911234567890",
+                    "status": "success",
+                    "error": "",
+                    "permanent": false
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "local",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "geosms",
+            "args": {
+              "defaultAdapter": {
+                "$ref": "default"
+              }
+            }
+          },
+          "bind": "geo",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "geo"
+            },
+            "method": "set_local",
+            "args": {
+              "code": "91",
+              "adapter": {
+                "$ref": "local"
+              }
+            }
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "geo"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+911234567890",
+                "+11234567890"
+              ],
+              "content": "Test Content",
+              "metadata": {
+                "clientId": "client-123",
+                "CRQID": "request_123",
+                "UUID": "uuid.123"
+              }
+            }
+          },
+          "expect": {
+            "result": {
+              "local": {
+                "deliveredTo": 1,
+                "type": "sms",
+                "results": [
+                  {
+                    "recipient": "+911234567890",
+                    "status": "success",
+                    "error": "",
+                    "permanent": false
+                  }
+                ]
+              },
+              "default": {
+                "deliveredTo": 1,
+                "type": "sms",
+                "results": [
+                  {
+                    "recipient": "+11234567890",
+                    "status": "success",
+                    "error": "",
+                    "permanent": false
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "scripted.messages",
+          "args": {
+            "adapter": {
+              "$ref": "default"
+            }
+          },
+          "expect": [
+            {
+              "to": [
+                "+11234567890"
+              ],
+              "content": "Test Content",
+              "from": null,
+              "attachments": null,
+              "metadata": {
+                "clientId": "client-123",
+                "CRQID": "request_123-2",
+                "UUID": "uuid.123-2"
+              },
+              "origin": null
+            }
+          ]
+        },
+        {
+          "op": "scripted.messages",
+          "args": {
+            "adapter": {
+              "$ref": "local"
+            }
+          },
+          "expect": [
+            {
+              "to": [
+                "+911234567890"
+              ],
+              "content": "Test Content",
+              "from": null,
+              "attachments": null,
+              "metadata": {
+                "clientId": "client-123",
+                "CRQID": "request_123-1",
+                "UUID": "uuid.123-1"
+              },
+              "origin": null
+            }
+          ]
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "geo"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+911234567890",
+                "+11234567890"
+              ],
+              "content": "Test Content",
+              "metadata": {
+                "CRQID": []
+              }
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "InvalidArgumentException",
+              "message": "Msg91 CRQID metadata must be a string."
+            }
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "geo"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+911234567890",
+                "+11234567890"
+              ],
+              "content": "Test Content",
+              "metadata": {
+                "CRQID": ""
+              }
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "InvalidArgumentException",
+              "message": "Msg91 CRQID metadata must be 80 characters or less and contain only alphanumeric characters, underscores, dots, or hyphens."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "long tracking IDs are cut to fit their batch suffix",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "name": "default"
+            }
+          },
+          "bind": "default",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "name": "local"
+            }
+          },
+          "bind": "local",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "geosms",
+            "args": {
+              "defaultAdapter": {
+                "$ref": "default"
+              }
+            }
+          },
+          "bind": "geo",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "geo"
+            },
+            "method": "set_local",
+            "args": {
+              "code": "44",
+              "adapter": {
+                "$ref": "local"
+              }
+            }
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "geo"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+11234567890",
+                "+447700900000",
+                "+11234567891",
+                "+447700900001"
+              ],
+              "content": "Hi",
+              "metadata": {
+                "UUID": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "other": 1
+              }
+            }
+          },
+          "expect": {
+            "result": {
+              "default": {
+                "deliveredTo": 0,
+                "type": "sms",
+                "results": []
+              },
+              "local": {
+                "deliveredTo": 0,
+                "type": "sms",
+                "results": []
+              }
+            }
+          }
+        },
+        {
+          "op": "scripted.messages",
+          "args": {
+            "adapter": {
+              "$ref": "default"
+            }
+          },
+          "expect": [
+            {
+              "to": [
+                "+11234567890",
+                "+11234567891"
+              ],
+              "content": "Hi",
+              "from": null,
+              "attachments": null,
+              "metadata": {
+                "UUID": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-1",
+                "other": 1
+              },
+              "origin": null
+            }
+          ]
+        },
+        {
+          "op": "scripted.messages",
+          "args": {
+            "adapter": {
+              "$ref": "local"
+            }
+          },
+          "expect": [
+            {
+              "to": [
+                "+447700900000",
+                "+447700900001"
+              ],
+              "content": "Hi",
+              "from": null,
+              "attachments": null,
+              "metadata": {
+                "UUID": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-2",
+                "other": 1
+              },
+              "origin": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "an adapter that throws becomes an error entry, and duplicates go once",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "name": "default",
+              "error": "Provider down"
+            }
+          },
+          "bind": "default",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "name": "local",
+              "max": 1
+            }
+          },
+          "bind": "local",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "geosms",
+            "args": {
+              "defaultAdapter": {
+                "$ref": "default"
+              }
+            }
+          },
+          "bind": "geo",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "geo"
+            },
+            "method": "set_local",
+            "args": {
+              "code": "91",
+              "adapter": {
+                "$ref": "local"
+              }
+            }
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "geo"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "+911",
+                "+1",
+                "+911",
+                "+912",
+                "+1"
+              ],
+              "content": "Hi"
+            }
+          },
+          "expect": {
+            "result": {
+              "local": {
+                "type": "error",
+                "message": "local can only send 1 messages per request."
+              },
+              "default": {
+                "type": "error",
+                "message": "Provider down"
+              }
+            }
+          }
+        },
+        {
+          "op": "scripted.messages",
+          "args": {
+            "adapter": {
+              "$ref": "default"
+            }
+          },
+          "expect": [
+            {
+              "to": [
+                "+1",
+                "+1"
+              ],
+              "content": "Hi",
+              "from": null,
+              "attachments": null,
+              "metadata": null,
+              "origin": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "numbers without a known calling code go to the default adapter",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "name": "default"
+            }
+          },
+          "bind": "default",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "geosms",
+            "args": {
+              "defaultAdapter": {
+                "$ref": "default"
+              }
+            }
+          },
+          "bind": "geo",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.info",
+          "args": {
+            "adapter": {
+              "$ref": "geo"
+            }
+          },
+          "expect": {
+            "name": "GEOSMS",
+            "type": "sms",
+            "messageType": "Utopia\\Messaging\\Messages\\SMS",
+            "maxMessagesPerRequest": 9223372036854775807
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "geo"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [
+                "2",
+                "",
+                "0",
+                "abc"
+              ],
+              "content": "Hi"
+            }
+          },
+          "expect": {
+            "result": {
+              "default": {
+                "deliveredTo": 0,
+                "type": "sms",
+                "results": []
+              }
+            }
+          }
+        },
+        {
+          "op": "scripted.messages",
+          "args": {
+            "adapter": {
+              "$ref": "default"
+            }
+          },
+          "expect": [
+            {
+              "to": [
+                "2",
+                "",
+                "0",
+                "abc"
+              ],
+              "content": "Hi",
+              "from": null,
+              "attachments": null,
+              "metadata": null,
+              "origin": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "no recipient at all calls a method on nothing",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "scripted",
+            "args": {
+              "name": "default"
+            }
+          },
+          "bind": "default",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "geosms",
+            "args": {
+              "defaultAdapter": {
+                "$ref": "default"
+              }
+            }
+          },
+          "bind": "geo",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "geo"
+            },
+            "message": {
+              "kind": "sms",
+              "to": [],
+              "content": "Hi"
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Error",
+              "message": "Call to a member function getName() on null"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

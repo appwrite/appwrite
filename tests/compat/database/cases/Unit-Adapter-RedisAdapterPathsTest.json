@@ -1,0 +1,65 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/RedisAdapterPathsTest.php"
+  ],
+  "cases": [
+    {
+      "name": "RedisAdapterPathsTest::testRollbackRefusesAnUnknownJournalEntry",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o531"
+          },
+          "bind": "s1034",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o532"
+          },
+          "bind": "s1035",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o532"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o531"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        }
+      ]
+    }
+  ]
+}

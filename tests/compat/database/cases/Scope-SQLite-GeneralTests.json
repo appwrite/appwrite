@@ -1,0 +1,6551 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/GeneralTests.php",
+    "vendor/utopia-php/database/tests/e2e/Adapter/SQLiteTest.php"
+  ],
+  "cases": [
+    {
+      "name": "GeneralTests::testPing",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.ping",
+          "args": {},
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testQueryTimeout",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Timeouts"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testSharedTablesUpdateTenant",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.has_shared_tables",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.get_namespace",
+          "args": {},
+          "expect": "compat"
+        },
+        {
+          "op": "database.get_database",
+          "args": {},
+          "expect": "${ns}"
+        },
+        {
+          "op": "database.get_tenant",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Schemas"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testSharedTablesTenantPerDocument",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.has_shared_tables",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.is_tenant_per_document",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.get_namespace",
+          "args": {},
+          "expect": "compat"
+        },
+        {
+          "op": "database.get_database",
+          "args": {},
+          "expect": "${ns}"
+        },
+        {
+          "op": "database.get_tenant",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Schemas"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testSharedTablesTenantPerDocumentUpsertRefreshesTheQueryCache",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.has_shared_tables",
+          "args": {},
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testSharedTablesReadsScopeToTheSelectedTenant",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.has_shared_tables",
+          "args": {},
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testCacheFallbackOnFailure",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "cacheFallback_u000000000062",
+                "name": "cacheFallback_u000000000062",
+                "attributes": [
+                  {
+                    "$id": "string",
+                    "key": "string",
+                    "type": "string",
+                    "size": 767,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "cacheFallback_u000000000062",
+              "name": "cacheFallback_u000000000062",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "string",
+                    "key": "string",
+                    "type": "string",
+                    "size": 767,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "cacheFallback_u000000000062",
+            "document": {
+              "$document": {
+                "$id": "doc1",
+                "string": "text📝"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc1",
+              "string": "text📝",
+              "$collection": "cacheFallback_u000000000062",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "cacheFallback_u000000000062",
+            "index": {
+              "$value": "Index",
+              "fields": {
+                "key": "index1",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "string"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "index1",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "string"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "cacheFallback_u000000000062",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "string",
+                  "values": [
+                    "text📝"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "string": "text📝",
+                "$id": "doc1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "cacheFallback_u000000000062"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.get_cache",
+          "args": {
+            "as": "o923"
+          },
+          "bind": "s12453",
+          "expect": {
+            "$cache": true
+          }
+        },
+        {
+          "op": "database.set_cache",
+          "args": {
+            "cache": "unreachable"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "cacheFallback_u000000000062",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "string",
+                  "values": [
+                    "text📝"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "string": "text📝",
+                "$id": "doc1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "cacheFallback_u000000000062"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "cacheFallback_u000000000062",
+            "id": "doc1"
+          },
+          "expect": {
+            "$document": {
+              "string": "text📝",
+              "$sequence": "1",
+              "$id": "doc1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "cacheFallback_u000000000062"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "cacheFallback_u000000000062",
+            "id": "doc1",
+            "document": {
+              "$document": {
+                "string": "text📝 updated"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RedisException",
+              "message": "Redis server went away"
+            }
+          }
+        },
+        {
+          "op": "database.delete_document",
+          "args": {
+            "collection": "cacheFallback_u000000000062",
+            "id": "doc1"
+          },
+          "expect": {
+            "$error": {
+              "class": "RedisException",
+              "message": "Redis server went away"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "cacheFallback_u000000000062",
+            "id": "doc1"
+          },
+          "expect": {
+            "$document": {
+              "string": "text📝",
+              "$sequence": "1",
+              "$id": "doc1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "cacheFallback_u000000000062"
+            }
+          }
+        },
+        {
+          "op": "database.set_cache",
+          "args": {
+            "cache": {
+              "$obj": "o923"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "cacheFallback_u000000000062",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "string",
+                  "values": [
+                    "text📝"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "string": "text📝",
+                "$id": "doc1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "cacheFallback_u000000000062"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "cacheFallback_u000000000062",
+            "id": "doc1",
+            "document": {
+              "$document": {
+                "string": "text📝 updated"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string": "text📝 updated",
+              "$sequence": "1",
+              "$id": "doc1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "cacheFallback_u000000000062"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "cacheFallback_u000000000062",
+            "id": "doc1"
+          },
+          "expect": {
+            "$document": {
+              "string": "text📝 updated",
+              "$sequence": "1",
+              "$id": "doc1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "cacheFallback_u000000000062"
+            }
+          }
+        },
+        {
+          "op": "database.delete_document",
+          "args": {
+            "collection": "cacheFallback_u000000000062",
+            "id": "doc1"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "cacheFallback_u000000000062",
+            "id": "doc1"
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "cacheFallback_u000000000062"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testTransactionAtomicity",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "transactionAtomicity",
+                "name": "transactionAtomicity",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "transactionAtomicity",
+              "name": "transactionAtomicity",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "transactionAtomicity",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "title",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 128,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "transactionAtomicity",
+                    "document": {
+                      "$document": {
+                        "$id": "tx_success",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "title": "Committed"
+                      }
+                    }
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "tx_success",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "title": "Committed",
+                "$collection": "transactionAtomicity",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "1"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "tx_success",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "title": "Committed",
+                        "$collection": "transactionAtomicity",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "transactionAtomicity",
+            "id": "tx_success"
+          },
+          "expect": {
+            "$document": {
+              "title": "Committed",
+              "$sequence": "1",
+              "$id": "tx_success",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "transactionAtomicity"
+            }
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "transactionAtomicity",
+                    "document": {
+                      "$document": {
+                        "$id": "tx_fail",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "title": "Should be rolled back"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "$throw",
+                  "args": {
+                    "class": "Exception",
+                    "message": "Intentional failure to trigger rollback"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Intentional failure to trigger rollback"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "transactionAtomicity",
+            "id": "tx_fail"
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "transactionAtomicity"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testReadersSeeTheNewDocumentAfterATransactionCommits",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Caching"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "txDocumentCacheCommit",
+                "name": "txDocumentCacheCommit",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "txDocumentCacheCommit",
+              "name": "txDocumentCacheCommit",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "txDocumentCacheCommit",
+            "document": {
+              "$document": {
+                "$id": "user",
+                "name": "original"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "user",
+              "name": "original",
+              "$collection": "txDocumentCacheCommit",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "txDocumentCacheCommit",
+            "id": "user"
+          },
+          "expect": {
+            "$document": {
+              "name": "original",
+              "$sequence": "1",
+              "$id": "user",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "txDocumentCacheCommit"
+            }
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.update_document",
+                  "args": {
+                    "collection": "txDocumentCacheCommit",
+                    "id": "user",
+                    "document": {
+                      "$document": {
+                        "name": "updated"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.get_document",
+                  "args": {
+                    "collection": "txDocumentCacheCommit",
+                    "id": "user"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "name": "updated",
+                        "$sequence": "1",
+                        "$id": "user",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "txDocumentCacheCommit"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "updated",
+                        "$sequence": "1",
+                        "$id": "user",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "txDocumentCacheCommit"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "txDocumentCacheCommit",
+            "id": "user"
+          },
+          "expect": {
+            "$document": {
+              "name": "updated",
+              "$sequence": "1",
+              "$id": "user",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "txDocumentCacheCommit"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "txDocumentCacheCommit"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testReadersSeeTheOriginalDocumentAfterATransactionRollsBack",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Caching"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "txDocumentCacheRollback",
+                "name": "txDocumentCacheRollback",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "txDocumentCacheRollback",
+              "name": "txDocumentCacheRollback",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "txDocumentCacheRollback",
+            "document": {
+              "$document": {
+                "$id": "user",
+                "name": "original"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "user",
+              "name": "original",
+              "$collection": "txDocumentCacheRollback",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "txDocumentCacheRollback",
+            "id": "user"
+          },
+          "expect": {
+            "$document": {
+              "name": "original",
+              "$sequence": "1",
+              "$id": "user",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "txDocumentCacheRollback"
+            }
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.update_document",
+                  "args": {
+                    "collection": "txDocumentCacheRollback",
+                    "id": "user",
+                    "document": {
+                      "$document": {
+                        "name": "rolled-back"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.get_document",
+                  "args": {
+                    "collection": "txDocumentCacheRollback",
+                    "id": "user"
+                  }
+                },
+                {
+                  "op": "$throw",
+                  "args": {
+                    "class": "Utopia\\Database\\Exception\\Conflict",
+                    "message": "rollback"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Conflict",
+              "message": "rollback"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "txDocumentCacheRollback",
+            "id": "user"
+          },
+          "expect": {
+            "$document": {
+              "name": "original",
+              "$sequence": "1",
+              "$id": "user",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "txDocumentCacheRollback"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "txDocumentCacheRollback",
+            "id": "user"
+          },
+          "expect": {
+            "$document": {
+              "name": "original",
+              "$sequence": "1",
+              "$id": "user",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "txDocumentCacheRollback"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "txDocumentCacheRollback"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testReadersSeeTheNewDocumentAfterANestedTransactionCommits",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Caching"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::TransactionNested"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "txNestedDocumentCache",
+                "name": "txNestedDocumentCache",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "txNestedDocumentCache",
+              "name": "txNestedDocumentCache",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "txNestedDocumentCache",
+            "document": {
+              "$document": {
+                "$id": "user",
+                "name": "original"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "user",
+              "name": "original",
+              "$collection": "txNestedDocumentCache",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "txNestedDocumentCache",
+            "id": "user"
+          },
+          "expect": {
+            "$document": {
+              "name": "original",
+              "$sequence": "1",
+              "$id": "user",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "txNestedDocumentCache"
+            }
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.with_transaction",
+                  "args": {
+                    "callback": {
+                      "steps": [
+                        {
+                          "op": "database.update_document",
+                          "args": {
+                            "collection": "txNestedDocumentCache",
+                            "id": "user",
+                            "document": {
+                              "$document": {
+                                "name": "updated"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "op": "database.get_document",
+                  "args": {
+                    "collection": "txNestedDocumentCache",
+                    "id": "user"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "result": null,
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "name": "updated",
+                                  "$sequence": "1",
+                                  "$id": "user",
+                                  "$createdAt": "<now>",
+                                  "$updatedAt": "<now>",
+                                  "$permissions": [],
+                                  "$collection": "txNestedDocumentCache"
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "updated",
+                        "$sequence": "1",
+                        "$id": "user",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "txNestedDocumentCache"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "txNestedDocumentCache",
+            "id": "user"
+          },
+          "expect": {
+            "$document": {
+              "name": "updated",
+              "$sequence": "1",
+              "$id": "user",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "txNestedDocumentCache"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "txNestedDocumentCache"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testASiblingReadAfterAWriteRunsNoStatement",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Caching"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\RawQuery"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "siblingDocumentCache",
+                "name": "siblingDocumentCache",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "siblingDocumentCache",
+              "name": "siblingDocumentCache",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "siblingDocumentCache",
+            "document": {
+              "$document": {
+                "$id": "user",
+                "name": "original"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "user",
+              "name": "original",
+              "$collection": "siblingDocumentCache",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "siblingDocumentCache",
+            "id": "user"
+          },
+          "expect": {
+            "$document": {
+              "name": "original",
+              "$sequence": "1",
+              "$id": "user",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "siblingDocumentCache"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "siblingDocumentCache",
+            "document": {
+              "$document": {
+                "$id": "sibling",
+                "name": "sibling"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "sibling",
+              "name": "sibling",
+              "$collection": "siblingDocumentCache",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "siblingDocumentCache",
+            "id": "sibling"
+          },
+          "expect": {
+            "$document": {
+              "name": "sibling",
+              "$sequence": "2",
+              "$id": "sibling",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "siblingDocumentCache"
+            }
+          }
+        },
+        {
+          "op": "database.set_profiling",
+          "args": {
+            "profiling": true
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_profiler",
+          "args": {},
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "siblingDocumentCache",
+            "id": "user",
+            "document": {
+              "$document": {
+                "name": "updated"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "updated",
+              "$sequence": "1",
+              "$id": "user",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "siblingDocumentCache"
+            }
+          }
+        },
+        {
+          "op": "db.profiler",
+          "args": {
+            "method": "reset",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "siblingDocumentCache",
+            "id": "sibling"
+          },
+          "expect": {
+            "$document": {
+              "name": "sibling",
+              "$sequence": "2",
+              "$id": "sibling",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "siblingDocumentCache"
+            }
+          }
+        },
+        {
+          "op": "db.profiler",
+          "args": {
+            "method": "getQueryCount",
+            "args": {}
+          },
+          "expect": 0
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "siblingDocumentCache",
+            "id": "user"
+          },
+          "expect": {
+            "$document": {
+              "name": "updated",
+              "$sequence": "1",
+              "$id": "user",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "siblingDocumentCache"
+            }
+          }
+        },
+        {
+          "op": "db.profiler",
+          "args": {
+            "method": "getQueryCount",
+            "args": {}
+          },
+          "expect": 1
+        },
+        {
+          "op": "database.set_profiling",
+          "args": {
+            "profiling": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "siblingDocumentCache"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testCacheInvalidationDoesNotAddRedisKeysPerWrite",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Caching"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "ownerKeys6ad064ed1f654ec5a765",
+                "name": "ownerKeys6ad064ed1f654ec5a765",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "ownerKeys6ad064ed1f654ec5a765",
+              "name": "ownerKeys6ad064ed1f654ec5a765",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.get_cache",
+          "args": {},
+          "expect": {
+            "$cache": true
+          }
+        },
+        {
+          "op": "database.get_query_cache",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.set_cache",
+          "args": {
+            "cache": "memory"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_cache",
+          "args": {
+            "as": "o936"
+          },
+          "expect": {
+            "$cache": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testTransactionStateAfterKnownException",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "txKnownException",
+                "name": "txKnownException",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "txKnownException",
+              "name": "txKnownException",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "txKnownException",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "title",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 128,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "txKnownException",
+            "document": {
+              "$document": {
+                "$id": "existing_doc",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "title": "Original"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "existing_doc",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "title": "Original",
+              "$collection": "txKnownException",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "txKnownException",
+                    "document": {
+                      "$document": {
+                        "$id": "existing_doc",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "title": "Duplicate"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "inTransaction",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "txKnownException",
+            "id": "existing_doc"
+          },
+          "expect": {
+            "$document": {
+              "title": "Original",
+              "$sequence": "1",
+              "$id": "existing_doc",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "txKnownException"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "txKnownException"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testTransactionStateAfterRetriesExhausted",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::TransactionRetries"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "$throw",
+                  "args": {
+                    "class": "Utopia\\Database\\Exception\\Contention",
+                    "message": "Deadlock detected"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Contention",
+              "message": "Deadlock detected"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "inTransaction",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testInvalidDocumentInATransactionIsNotRetried",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "txInvalidDocument",
+                "name": "txInvalidDocument",
+                "attributes": [
+                  {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 128,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "txInvalidDocument",
+              "name": "txInvalidDocument",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 128,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "txInvalidDocument",
+                    "document": {
+                      "$document": {
+                        "$id": "invalid"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Missing required attribute \"title\""
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "txInvalidDocument"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "inTransaction",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testNestedTransactionState",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::TransactionNested"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "txNested",
+                "name": "txNested",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "txNested",
+              "name": "txNested",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "txNested",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "title",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 128,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "txNested",
+            "document": {
+              "$document": {
+                "$id": "nested_existing",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "title": "Original"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "nested_existing",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "title": "Original",
+              "$collection": "txNested",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "txNested",
+                    "document": {
+                      "$document": {
+                        "$id": "outer_doc",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "title": "Outer"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.with_transaction",
+                  "args": {
+                    "callback": {
+                      "steps": [
+                        {
+                          "op": "database.create_document",
+                          "args": {
+                            "collection": "txNested",
+                            "document": {
+                              "$document": {
+                                "$id": "nested_existing",
+                                "$permissions": [
+                                  "read(\"any\")"
+                                ],
+                                "title": "Duplicate"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "catch": true
+                },
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": true
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": true,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "outer_doc",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "title": "Outer",
+                        "$collection": "txNested",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "2"
+                      }
+                    },
+                    {
+                      "$error": {
+                        "class": "Utopia\\Database\\Exception\\Duplicate",
+                        "message": "Document already exists"
+                      }
+                    },
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "inTransaction",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "txNested",
+            "id": "outer_doc"
+          },
+          "expect": {
+            "$document": {
+              "title": "Outer",
+              "$sequence": "2",
+              "$id": "outer_doc",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "txNested"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "txNested",
+            "id": "nested_existing"
+          },
+          "expect": {
+            "$document": {
+              "title": "Original",
+              "$sequence": "1",
+              "$id": "nested_existing",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "txNested"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "txNested"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testCountTimeout",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Timeouts"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testFindOrderByAfterException",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "cursorCollection_u000000000063",
+                "name": "cursorCollection_u000000000063",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "cursorCollection_u000000000063",
+              "name": "cursorCollection_u000000000063",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "cursorCollection_u000000000063",
+            "queries": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    2
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "offset",
+                  "attribute": "",
+                  "values": [
+                    0
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorAfter",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "$id": "cursor",
+                        "$sequence": "1",
+                        "$collection": "other collection"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "cursor Document must be from the same Collection."
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "cursorCollection_u000000000063"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testGetAttributeLimit",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "limits",
+            "args": {}
+          },
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 4294967295,
+              "varchar": 16381,
+              "integer": 4294967295,
+              "bigInteger": 9223372036854775807,
+              "attributes": 1017,
+              "indexes": 64,
+              "defaultAttributes": 7,
+              "defaultIndexes": 6,
+              "indexLength": 768,
+              "uidLength": 36,
+              "documentSize": 65535,
+              "minDateTime": {
+                "$datetime": "1000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [
+                "ABORT",
+                "ACTION",
+                "ADD",
+                "AFTER",
+                "ALL",
+                "ALTER",
+                "ALWAYS",
+                "ANALYZE",
+                "AND",
+                "AS",
+                "ASC",
+                "ATTACH",
+                "AUTOINCREMENT",
+                "BEFORE",
+                "BEGIN",
+                "BETWEEN",
+                "BY",
+                "CASCADE",
+                "CASE",
+                "CAST",
+                "CHECK",
+                "COLLATE",
+                "COLUMN",
+                "COMMIT",
+                "CONFLICT",
+                "CONSTRAINT",
+                "CREATE",
+                "CROSS",
+                "CURRENT",
+                "CURRENT_DATE",
+                "CURRENT_TIME",
+                "CURRENT_TIMESTAMP",
+                "DATABASE",
+                "DEFAULT",
+                "DEFERRABLE",
+                "DEFERRED",
+                "DELETE",
+                "DESC",
+                "DETACH",
+                "DISTINCT",
+                "DO",
+                "DROP",
+                "EACH",
+                "ELSE",
+                "END",
+                "ESCAPE",
+                "EXCEPT",
+                "EXCLUDE",
+                "EXCLUSIVE",
+                "EXISTS",
+                "EXPLAIN",
+                "FAIL",
+                "FILTER",
+                "FIRST",
+                "FOLLOWING",
+                "FOR",
+                "FOREIGN",
+                "FROM",
+                "FULL",
+                "GENERATED",
+                "GLOB",
+                "GROUP",
+                "GROUPS",
+                "HAVING",
+                "IF",
+                "IGNORE",
+                "IMMEDIATE",
+                "IN",
+                "INDEX",
+                "INDEXED",
+                "INITIALLY",
+                "INNER",
+                "INSERT",
+                "INSTEAD",
+                "INTERSECT",
+                "INTO",
+                "IS",
+                "ISNULL",
+                "JOIN",
+                "KEY",
+                "LAST",
+                "LEFT",
+                "LIKE",
+                "LIMIT",
+                "MATCH",
+                "MATERIALIZED",
+                "NATURAL",
+                "NO",
+                "NOT",
+                "NOTHING",
+                "NOTNULL",
+                "NULL",
+                "NULLS",
+                "OF",
+                "OFFSET",
+                "ON",
+                "OR",
+                "ORDER",
+                "OTHERS",
+                "OUTER",
+                "OVER",
+                "PARTITION",
+                "PLAN",
+                "PRAGMA",
+                "PRECEDING",
+                "PRIMARY",
+                "QUERY",
+                "RAISE",
+                "RANGE",
+                "RECURSIVE",
+                "REFERENCES",
+                "REGEXP",
+                "REINDEX",
+                "RELEASE",
+                "RENAME",
+                "REPLACE",
+                "RESTRICT",
+                "RETURNING",
+                "RIGHT",
+                "ROLLBACK",
+                "ROW",
+                "ROWS",
+                "SAVEPOINT",
+                "SELECT",
+                "SET",
+                "TABLE",
+                "TEMP",
+                "TEMPORARY",
+                "THEN",
+                "TIES",
+                "TO",
+                "TRANSACTION",
+                "TRIGGER",
+                "UNBOUNDED",
+                "UNION",
+                "UNIQUE",
+                "UPDATE",
+                "USING",
+                "VACUUM",
+                "VALUES",
+                "VIEW",
+                "VIRTUAL",
+                "WHEN",
+                "WHERE",
+                "WINDOW",
+                "WITH",
+                "WITHOUT"
+              ],
+              "internalIndexKeys": [
+                "primary",
+                "_created_at",
+                "_updated_at",
+                "_tenant_id"
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "limits",
+            "args": {}
+          },
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 4294967295,
+              "varchar": 16381,
+              "integer": 4294967295,
+              "bigInteger": 9223372036854775807,
+              "attributes": 1017,
+              "indexes": 64,
+              "defaultAttributes": 7,
+              "defaultIndexes": 6,
+              "indexLength": 768,
+              "uidLength": 36,
+              "documentSize": 65535,
+              "minDateTime": {
+                "$datetime": "1000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [
+                "ABORT",
+                "ACTION",
+                "ADD",
+                "AFTER",
+                "ALL",
+                "ALTER",
+                "ALWAYS",
+                "ANALYZE",
+                "AND",
+                "AS",
+                "ASC",
+                "ATTACH",
+                "AUTOINCREMENT",
+                "BEFORE",
+                "BEGIN",
+                "BETWEEN",
+                "BY",
+                "CASCADE",
+                "CASE",
+                "CAST",
+                "CHECK",
+                "COLLATE",
+                "COLUMN",
+                "COMMIT",
+                "CONFLICT",
+                "CONSTRAINT",
+                "CREATE",
+                "CROSS",
+                "CURRENT",
+                "CURRENT_DATE",
+                "CURRENT_TIME",
+                "CURRENT_TIMESTAMP",
+                "DATABASE",
+                "DEFAULT",
+                "DEFERRABLE",
+                "DEFERRED",
+                "DELETE",
+                "DESC",
+                "DETACH",
+                "DISTINCT",
+                "DO",
+                "DROP",
+                "EACH",
+                "ELSE",
+                "END",
+                "ESCAPE",
+                "EXCEPT",
+                "EXCLUDE",
+                "EXCLUSIVE",
+                "EXISTS",
+                "EXPLAIN",
+                "FAIL",
+                "FILTER",
+                "FIRST",
+                "FOLLOWING",
+                "FOR",
+                "FOREIGN",
+                "FROM",
+                "FULL",
+                "GENERATED",
+                "GLOB",
+                "GROUP",
+                "GROUPS",
+                "HAVING",
+                "IF",
+                "IGNORE",
+                "IMMEDIATE",
+                "IN",
+                "INDEX",
+                "INDEXED",
+                "INITIALLY",
+                "INNER",
+                "INSERT",
+                "INSTEAD",
+                "INTERSECT",
+                "INTO",
+                "IS",
+                "ISNULL",
+                "JOIN",
+                "KEY",
+                "LAST",
+                "LEFT",
+                "LIKE",
+                "LIMIT",
+                "MATCH",
+                "MATERIALIZED",
+                "NATURAL",
+                "NO",
+                "NOT",
+                "NOTHING",
+                "NOTNULL",
+                "NULL",
+                "NULLS",
+                "OF",
+                "OFFSET",
+                "ON",
+                "OR",
+                "ORDER",
+                "OTHERS",
+                "OUTER",
+                "OVER",
+                "PARTITION",
+                "PLAN",
+                "PRAGMA",
+                "PRECEDING",
+                "PRIMARY",
+                "QUERY",
+                "RAISE",
+                "RANGE",
+                "RECURSIVE",
+                "REFERENCES",
+                "REGEXP",
+                "REINDEX",
+                "RELEASE",
+                "RENAME",
+                "REPLACE",
+                "RESTRICT",
+                "RETURNING",
+                "RIGHT",
+                "ROLLBACK",
+                "ROW",
+                "ROWS",
+                "SAVEPOINT",
+                "SELECT",
+                "SET",
+                "TABLE",
+                "TEMP",
+                "TEMPORARY",
+                "THEN",
+                "TIES",
+                "TO",
+                "TRANSACTION",
+                "TRIGGER",
+                "UNBOUNDED",
+                "UNION",
+                "UNIQUE",
+                "UPDATE",
+                "USING",
+                "VACUUM",
+                "VALUES",
+                "VIEW",
+                "VIRTUAL",
+                "WHEN",
+                "WHERE",
+                "WINDOW",
+                "WITH",
+                "WITHOUT"
+              ],
+              "internalIndexKeys": [
+                "primary",
+                "_created_at",
+                "_updated_at",
+                "_tenant_id"
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "limits",
+            "args": {}
+          },
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 4294967295,
+              "varchar": 16381,
+              "integer": 4294967295,
+              "bigInteger": 9223372036854775807,
+              "attributes": 1017,
+              "indexes": 64,
+              "defaultAttributes": 7,
+              "defaultIndexes": 6,
+              "indexLength": 768,
+              "uidLength": 36,
+              "documentSize": 65535,
+              "minDateTime": {
+                "$datetime": "1000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [
+                "ABORT",
+                "ACTION",
+                "ADD",
+                "AFTER",
+                "ALL",
+                "ALTER",
+                "ALWAYS",
+                "ANALYZE",
+                "AND",
+                "AS",
+                "ASC",
+                "ATTACH",
+                "AUTOINCREMENT",
+                "BEFORE",
+                "BEGIN",
+                "BETWEEN",
+                "BY",
+                "CASCADE",
+                "CASE",
+                "CAST",
+                "CHECK",
+                "COLLATE",
+                "COLUMN",
+                "COMMIT",
+                "CONFLICT",
+                "CONSTRAINT",
+                "CREATE",
+                "CROSS",
+                "CURRENT",
+                "CURRENT_DATE",
+                "CURRENT_TIME",
+                "CURRENT_TIMESTAMP",
+                "DATABASE",
+                "DEFAULT",
+                "DEFERRABLE",
+                "DEFERRED",
+                "DELETE",
+                "DESC",
+                "DETACH",
+                "DISTINCT",
+                "DO",
+                "DROP",
+                "EACH",
+                "ELSE",
+                "END",
+                "ESCAPE",
+                "EXCEPT",
+                "EXCLUDE",
+                "EXCLUSIVE",
+                "EXISTS",
+                "EXPLAIN",
+                "FAIL",
+                "FILTER",
+                "FIRST",
+                "FOLLOWING",
+                "FOR",
+                "FOREIGN",
+                "FROM",
+                "FULL",
+                "GENERATED",
+                "GLOB",
+                "GROUP",
+                "GROUPS",
+                "HAVING",
+                "IF",
+                "IGNORE",
+                "IMMEDIATE",
+                "IN",
+                "INDEX",
+                "INDEXED",
+                "INITIALLY",
+                "INNER",
+                "INSERT",
+                "INSTEAD",
+                "INTERSECT",
+                "INTO",
+                "IS",
+                "ISNULL",
+                "JOIN",
+                "KEY",
+                "LAST",
+                "LEFT",
+                "LIKE",
+                "LIMIT",
+                "MATCH",
+                "MATERIALIZED",
+                "NATURAL",
+                "NO",
+                "NOT",
+                "NOTHING",
+                "NOTNULL",
+                "NULL",
+                "NULLS",
+                "OF",
+                "OFFSET",
+                "ON",
+                "OR",
+                "ORDER",
+                "OTHERS",
+                "OUTER",
+                "OVER",
+                "PARTITION",
+                "PLAN",
+                "PRAGMA",
+                "PRECEDING",
+                "PRIMARY",
+                "QUERY",
+                "RAISE",
+                "RANGE",
+                "RECURSIVE",
+                "REFERENCES",
+                "REGEXP",
+                "REINDEX",
+                "RELEASE",
+                "RENAME",
+                "REPLACE",
+                "RESTRICT",
+                "RETURNING",
+                "RIGHT",
+                "ROLLBACK",
+                "ROW",
+                "ROWS",
+                "SAVEPOINT",
+                "SELECT",
+                "SET",
+                "TABLE",
+                "TEMP",
+                "TEMPORARY",
+                "THEN",
+                "TIES",
+                "TO",
+                "TRANSACTION",
+                "TRIGGER",
+                "UNBOUNDED",
+                "UNION",
+                "UNIQUE",
+                "UPDATE",
+                "USING",
+                "VACUUM",
+                "VALUES",
+                "VIEW",
+                "VIRTUAL",
+                "WHEN",
+                "WHERE",
+                "WINDOW",
+                "WITH",
+                "WITHOUT"
+              ],
+              "internalIndexKeys": [
+                "primary",
+                "_created_at",
+                "_updated_at",
+                "_tenant_id"
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.get_limit_for_attributes",
+          "args": {},
+          "expect": 1010
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testGetIndexLimit",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.get_limit_for_indexes",
+          "args": {},
+          "expect": 58
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testNestedQueryValidation",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "testNestedQueryValidation",
+                "name": "testNestedQueryValidation",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "testNestedQueryValidation",
+              "name": "testNestedQueryValidation",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_documents",
+          "args": {
+            "collection": "testNestedQueryValidation",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "u0000000000000000064",
+                  "name": "test1"
+                }
+              },
+              {
+                "$document": {
+                  "$id": "u0000000000000000065",
+                  "name": "doc2"
+                }
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "testNestedQueryValidation",
+            "queries": [
+              {
+                "$query": {
+                  "method": "or",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "name",
+                        "values": [
+                          "test1"
+                        ]
+                      }
+                    },
+                    {
+                      "$query": {
+                        "method": "search",
+                        "attribute": "name",
+                        "values": [
+                          "doc"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Searching by attribute \"name\" requires a fulltext index."
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "testNestedQueryValidation"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testPreserveDatesCreate",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.authorization.disable",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.set_preserve_dates",
+          "args": {
+            "preserve": true
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "preserve_create_dates",
+                "name": "preserve_create_dates",
+                "attributes": [
+                  {
+                    "$id": "attr1",
+                    "key": "attr1",
+                    "type": "string",
+                    "size": 10,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "preserve_create_dates",
+              "name": "preserve_create_dates",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "attr1",
+                    "key": "attr1",
+                    "type": "string",
+                    "size": 10,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "preserve_create_dates",
+            "document": {
+              "$document": {
+                "$id": "doc1",
+                "$permissions": [],
+                "attr1": "value1",
+                "$createdAt": ""
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Missing required attribute \"$createdAt\""
+            }
+          }
+        },
+        {
+          "op": "database.create_documents",
+          "args": {
+            "collection": "preserve_create_dates",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "doc2",
+                  "$permissions": [],
+                  "attr1": "value2",
+                  "$createdAt": ""
+                }
+              },
+              {
+                "$document": {
+                  "$id": "doc3",
+                  "$permissions": [],
+                  "attr1": "value3",
+                  "$createdAt": ""
+                }
+              }
+            ],
+            "batchSize": 2
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Missing required attribute \"$createdAt\""
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "preserve_create_dates",
+            "document": {
+              "$document": {
+                "$id": "doc1",
+                "$permissions": [],
+                "attr1": "value1",
+                "$createdAt": "2000-01-01T10:00:00.000+00:00"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc1",
+              "$permissions": [],
+              "attr1": "value1",
+              "$createdAt": "2000-01-01T10:00:00.000+00:00",
+              "$collection": "preserve_create_dates",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_documents",
+          "args": {
+            "collection": "preserve_create_dates",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "doc2",
+                  "$permissions": [],
+                  "attr1": "value2",
+                  "$createdAt": "2000-01-01T10:00:00.000+00:00"
+                }
+              },
+              {
+                "$document": {
+                  "$id": "doc3",
+                  "$permissions": [],
+                  "attr1": "value3",
+                  "$createdAt": "2000-01-01T10:00:00.000+00:00"
+                }
+              },
+              {
+                "$document": {
+                  "$id": "doc4",
+                  "$permissions": [],
+                  "attr1": "value3",
+                  "$createdAt": null
+                }
+              },
+              {
+                "$document": {
+                  "$id": "doc5",
+                  "$permissions": [],
+                  "attr1": "value3"
+                }
+              }
+            ],
+            "batchSize": 2
+          },
+          "expect": 4
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "preserve_create_dates",
+            "id": "doc1"
+          },
+          "expect": {
+            "$document": {
+              "attr1": "value1",
+              "$sequence": "1",
+              "$id": "doc1",
+              "$createdAt": "2000-01-01T10:00:00.000+00:00",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "preserve_create_dates"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "preserve_create_dates",
+            "id": "doc2"
+          },
+          "expect": {
+            "$document": {
+              "attr1": "value2",
+              "$sequence": "2",
+              "$id": "doc2",
+              "$createdAt": "2000-01-01T10:00:00.000+00:00",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "preserve_create_dates"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "preserve_create_dates",
+            "id": "doc3"
+          },
+          "expect": {
+            "$document": {
+              "attr1": "value3",
+              "$sequence": "3",
+              "$id": "doc3",
+              "$createdAt": "2000-01-01T10:00:00.000+00:00",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "preserve_create_dates"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "preserve_create_dates",
+            "id": "doc4"
+          },
+          "expect": {
+            "$document": {
+              "attr1": "value3",
+              "$sequence": "4",
+              "$id": "doc4",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "preserve_create_dates"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "preserve_create_dates",
+            "id": "doc5"
+          },
+          "expect": {
+            "$document": {
+              "attr1": "value3",
+              "$sequence": "5",
+              "$id": "doc5",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "preserve_create_dates"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "preserve_create_dates"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.set_preserve_dates",
+          "args": {
+            "preserve": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "db.authorization.reset",
+          "args": {},
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testPreserveDatesUpdate",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.authorization.disable",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.set_preserve_dates",
+          "args": {
+            "preserve": true
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "preserve_update_dates",
+                "name": "preserve_update_dates",
+                "attributes": [
+                  {
+                    "$id": "attr1",
+                    "key": "attr1",
+                    "type": "string",
+                    "size": 10,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "preserve_update_dates",
+              "name": "preserve_update_dates",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "attr1",
+                    "key": "attr1",
+                    "type": "string",
+                    "size": 10,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "preserve_update_dates",
+            "document": {
+              "$document": {
+                "$id": "doc1",
+                "$permissions": [],
+                "attr1": "value1"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc1",
+              "$permissions": [],
+              "attr1": "value1",
+              "$collection": "preserve_update_dates",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "preserve_update_dates",
+            "document": {
+              "$document": {
+                "$id": "doc2",
+                "$permissions": [],
+                "attr1": "value2"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc2",
+              "$permissions": [],
+              "attr1": "value2",
+              "$collection": "preserve_update_dates",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "preserve_update_dates",
+            "document": {
+              "$document": {
+                "$id": "doc3",
+                "$permissions": [],
+                "attr1": "value3"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc3",
+              "$permissions": [],
+              "attr1": "value3",
+              "$collection": "preserve_update_dates",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "preserve_update_dates",
+            "id": "doc1",
+            "document": {
+              "$document": {
+                "$id": "doc1",
+                "$permissions": [],
+                "attr1": "value1",
+                "$collection": "preserve_update_dates",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": "",
+                "$sequence": "1"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Missing required attribute \"$updatedAt\""
+            }
+          }
+        },
+        {
+          "op": "database.update_documents",
+          "args": {
+            "collection": "preserve_update_dates",
+            "updates": {
+              "$document": {
+                "$updatedAt": ""
+              }
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "doc2",
+                    "doc3"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Missing required attribute \"$updatedAt\""
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "preserve_update_dates",
+            "id": "doc1",
+            "document": {
+              "$document": {
+                "$id": "doc1",
+                "$permissions": [],
+                "attr1": "value1",
+                "$collection": "preserve_update_dates",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": "2000-01-01T10:00:00.000+00:00",
+                "$sequence": "1"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "attr1": "value1",
+              "$sequence": "1",
+              "$id": "doc1",
+              "$createdAt": "<now>",
+              "$updatedAt": "2000-01-01T10:00:00.000+00:00",
+              "$permissions": [],
+              "$collection": "preserve_update_dates"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "preserve_update_dates",
+            "id": "doc1"
+          },
+          "expect": {
+            "$document": {
+              "attr1": "value1",
+              "$sequence": "1",
+              "$id": "doc1",
+              "$createdAt": "<now>",
+              "$updatedAt": "2000-01-01T10:00:00.000+00:00",
+              "$permissions": [],
+              "$collection": "preserve_update_dates"
+            }
+          }
+        },
+        {
+          "op": "database.update_documents",
+          "args": {
+            "collection": "preserve_update_dates",
+            "updates": {
+              "$document": {
+                "$updatedAt": "2000-01-01T10:00:00.000+00:00"
+              }
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "doc2",
+                    "doc3"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "preserve_update_dates",
+            "id": "doc2"
+          },
+          "expect": {
+            "$document": {
+              "attr1": "value2",
+              "$sequence": "2",
+              "$id": "doc2",
+              "$createdAt": "<now>",
+              "$updatedAt": "2000-01-01T10:00:00.000+00:00",
+              "$permissions": [],
+              "$collection": "preserve_update_dates"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "preserve_update_dates",
+            "id": "doc3"
+          },
+          "expect": {
+            "$document": {
+              "attr1": "value3",
+              "$sequence": "3",
+              "$id": "doc3",
+              "$createdAt": "<now>",
+              "$updatedAt": "2000-01-01T10:00:00.000+00:00",
+              "$permissions": [],
+              "$collection": "preserve_update_dates"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "preserve_update_dates"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.set_preserve_dates",
+          "args": {
+            "preserve": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "db.authorization.reset",
+          "args": {},
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testLostConnectionInsideANestedTransactionFailsTheOuterTransaction",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Connection"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\RawQuery"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testWritesReadTheirCollectionDefinitionFromTheCache",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Caching"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\RawQuery"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "transactionDocumentCache",
+                "name": "transactionDocumentCache",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "transactionDocumentCache",
+              "name": "transactionDocumentCache",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "transactionDocumentCache",
+            "document": {
+              "$document": {
+                "$id": "user",
+                "name": "original"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "user",
+              "name": "original",
+              "$collection": "transactionDocumentCache",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "transactionDocumentCache",
+            "id": "user"
+          },
+          "expect": {
+            "$document": {
+              "name": "original",
+              "$sequence": "1",
+              "$id": "user",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "transactionDocumentCache"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "transactionDocumentCache",
+            "document": {
+              "$document": {
+                "$id": "sibling",
+                "name": "sibling"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "sibling",
+              "name": "sibling",
+              "$collection": "transactionDocumentCache",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "transactionDocumentCache",
+            "id": "sibling"
+          },
+          "expect": {
+            "$document": {
+              "name": "sibling",
+              "$sequence": "2",
+              "$id": "sibling",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "transactionDocumentCache"
+            }
+          }
+        },
+        {
+          "op": "database.set_profiling",
+          "args": {
+            "profiling": true
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_profiler",
+          "args": {},
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "database.get_namespace",
+          "args": {},
+          "expect": "compat"
+        },
+        {
+          "op": "db.profiler",
+          "args": {
+            "method": "reset",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "transactionDocumentCache",
+            "id": "user",
+            "document": {
+              "$document": {
+                "name": "updated"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "updated",
+              "$sequence": "1",
+              "$id": "user",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "transactionDocumentCache"
+            }
+          }
+        },
+        {
+          "op": "db.profiler",
+          "args": {
+            "method": "getLogs",
+            "args": {}
+          },
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          },
+          "expect": [
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `compat_transactionDocumentCache` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "user"
+                },
+                "durationMs": "<masked>",
+                "collection": "transactionDocumentCache",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "UPDATE `compat_transactionDocumentCache` SET `name` = ?, `_createdAt` = ?, `_updatedAt` = ?, `_permissions` = ? WHERE `_uid` COLLATE NOCASE IN (?)",
+                "bindings": [
+                  "updated",
+                  "<now>",
+                  "<now>",
+                  "[]",
+                  "user"
+                ],
+                "durationMs": "<masked>",
+                "collection": "",
+                "operation": "document_update",
+                "backtrace": "<masked>"
+              }
+            }
+          ]
+        },
+        {
+          "op": "db.profiler",
+          "args": {
+            "method": "reset",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.update_document",
+                  "args": {
+                    "collection": "transactionDocumentCache",
+                    "id": "user",
+                    "document": {
+                      "$document": {
+                        "name": "renamed"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.get_document",
+                  "args": {
+                    "collection": "transactionDocumentCache",
+                    "id": "sibling"
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "name": "sibling",
+                "$sequence": "2",
+                "$id": "sibling",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "transactionDocumentCache"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "name": "renamed",
+                        "$sequence": "1",
+                        "$id": "user",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "transactionDocumentCache"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "sibling",
+                        "$sequence": "2",
+                        "$id": "sibling",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "transactionDocumentCache"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.profiler",
+          "args": {
+            "method": "getLogs",
+            "args": {}
+          },
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          },
+          "expect": [
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `compat_transactionDocumentCache` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "user"
+                },
+                "durationMs": "<masked>",
+                "collection": "transactionDocumentCache",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "UPDATE `compat_transactionDocumentCache` SET `name` = ?, `_createdAt` = ?, `_updatedAt` = ?, `_permissions` = ? WHERE `_uid` COLLATE NOCASE IN (?)",
+                "bindings": [
+                  "renamed",
+                  "<now>",
+                  "<now>",
+                  "[]",
+                  "user"
+                ],
+                "durationMs": "<masked>",
+                "collection": "",
+                "operation": "document_update",
+                "backtrace": "<masked>"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "transactionDocumentCache",
+            "id": "user"
+          },
+          "expect": {
+            "$document": {
+              "name": "renamed",
+              "$sequence": "1",
+              "$id": "user",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "transactionDocumentCache"
+            }
+          }
+        },
+        {
+          "op": "database.set_profiling",
+          "args": {
+            "profiling": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "transactionDocumentCache"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testDocumentCacheRoundTripsStayWithinSevenThreeCounts",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Caching"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "GeneralTests::testTenantPerDocumentRejectsATenantThatIsNotAnIntegerOrString",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Schemas"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

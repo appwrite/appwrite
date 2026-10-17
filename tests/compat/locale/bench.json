@@ -1,0 +1,115 @@
+{
+  "lib": "locale",
+  "environment": {
+    "date": "2026-10-11T09:07:18Z",
+    "commit": "efd6922f03",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "new",
+      "description": "Create a request locale for German with an English fallback",
+      "php": {
+        "ns": 93.1078453983721,
+        "min": 92.61614822075514,
+        "max": 94.95772671798272,
+        "samples": 15,
+        "calls": 208122
+      },
+      "rust": {
+        "ns": 38.20880225568546,
+        "min": 37.734897165631814,
+        "max": 38.94095268703485,
+        "samples": 15,
+        "calls": 535181,
+        "allocations": 2.000000124568448,
+        "bytes": 4.0000149482137815
+      },
+      "speedup": 2.4368166469944152
+    },
+    {
+      "name": "text",
+      "description": "Translate a key of a 313-key language",
+      "php": {
+        "ns": 107.414035756075,
+        "min": 106.4226237448638,
+        "max": 110.1658113145936,
+        "samples": 15,
+        "calls": 183745
+      },
+      "rust": {
+        "ns": 56.06964771785869,
+        "min": 55.45842045051087,
+        "max": 59.02541097704615,
+        "samples": 15,
+        "calls": 354886,
+        "allocations": 1.8785375209691752e-7,
+        "bytes": 0.0000225424502516301
+      },
+      "speedup": 1.9157251762411671
+    },
+    {
+      "name": "placeholders",
+      "description": "Translate a session alert email line with six placeholders",
+      "php": {
+        "ns": 900.1180888530572,
+        "min": 845.0305087622523,
+        "max": 934.489964781262,
+        "samples": 15,
+        "calls": 23567
+      },
+      "rust": {
+        "ns": 493.7456110323243,
+        "min": 481.93982590835736,
+        "max": 501.9397770062106,
+        "samples": 15,
+        "calls": 40898,
+        "allocations": 4.00000163007156,
+        "bytes": 1041.0001956085873
+      },
+      "speedup": 1.823040182516435
+    },
+    {
+      "name": "fallback",
+      "description": "Translate a key the default language lacks from the English fallback",
+      "php": {
+        "ns": 106.32425017313942,
+        "min": 104.31916253795748,
+        "max": 108.0476532949763,
+        "samples": 15,
+        "calls": 187710
+      },
+      "rust": {
+        "ns": 59.23885865568466,
+        "min": 58.625777320194146,
+        "max": 60.73380791292837,
+        "samples": 15,
+        "calls": 339950,
+        "allocations": 1.9610727067706035e-7,
+        "bytes": 0.000023532872481247244
+      },
+      "speedup": 1.7948396134896898
+    }
+  ]
+}

@@ -1,0 +1,5033 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/QueryValidatorCoverageTest.php"
+  ],
+  "cases": [
+    {
+      "name": "QueryValidatorCoverageTest::testAJoinAliasOfAnUnknownCollectionKeepsTheValueLimit",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o4194"
+          },
+          "bind": "s6521",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 3,
+                "array": false
+              }
+            },
+            "as": "o4195"
+          },
+          "bind": "s6522",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "size": 3,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "author",
+                "key": "author",
+                "type": "relationship",
+                "array": false,
+                "options": {
+                  "relatedCollection": "authors",
+                  "relationType": "manyToOne",
+                  "twoWay": false,
+                  "twoWayKey": "books",
+                  "side": "parent"
+                }
+              }
+            },
+            "as": "o4196"
+          },
+          "bind": "s6523",
+          "expect": {
+            "$document": {
+              "$id": "author",
+              "key": "author",
+              "type": "relationship",
+              "array": false,
+              "options": {
+                "relatedCollection": "authors",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": "books",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4194"
+                },
+                {
+                  "$obj": "o4195"
+                },
+                {
+                  "$obj": "o4196"
+                }
+              ],
+              "idAttributeType": "integer",
+              "maxValuesCount": 2,
+              "supportForAttributes": true
+            },
+            "as": "o4197"
+          },
+          "bind": "s6524",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4197"
+            },
+            "method": "allowJoinAliases",
+            "args": {
+              "aliases": [
+                "joined"
+              ]
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "joined.anything",
+              "values": [
+                "a",
+                "b"
+              ]
+            },
+            "as": "o4198"
+          },
+          "bind": "s6526",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "joined.anything",
+              "values": [
+                "a",
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4197"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4198"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4197"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "joined.anything",
+              "values": [
+                "a",
+                "b",
+                "c"
+              ]
+            },
+            "as": "o4199"
+          },
+          "bind": "s6529",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "joined.anything",
+              "values": [
+                "a",
+                "b",
+                "c"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4197"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4199"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4197"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query on attribute has greater than 2 values: joined.anything"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAnUndeclaredAttributeInSchemalessModeKeepsTheValueLimit",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o4200"
+          },
+          "bind": "s6532",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 3,
+                "array": false
+              }
+            },
+            "as": "o4201"
+          },
+          "bind": "s6533",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "size": 3,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "author",
+                "key": "author",
+                "type": "relationship",
+                "array": false,
+                "options": {
+                  "relatedCollection": "authors",
+                  "relationType": "manyToOne",
+                  "twoWay": false,
+                  "twoWayKey": "books",
+                  "side": "parent"
+                }
+              }
+            },
+            "as": "o4202"
+          },
+          "bind": "s6534",
+          "expect": {
+            "$document": {
+              "$id": "author",
+              "key": "author",
+              "type": "relationship",
+              "array": false,
+              "options": {
+                "relatedCollection": "authors",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": "books",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4200"
+                },
+                {
+                  "$obj": "o4201"
+                },
+                {
+                  "$obj": "o4202"
+                }
+              ],
+              "idAttributeType": "integer",
+              "maxValuesCount": 2,
+              "supportForAttributes": false
+            },
+            "as": "o4203"
+          },
+          "bind": "s6535",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "undeclared",
+              "values": [
+                "a",
+                "b"
+              ]
+            },
+            "as": "o4204"
+          },
+          "bind": "s6536",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "undeclared",
+              "values": [
+                "a",
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4203"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4204"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4203"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "undeclared",
+              "values": [
+                "a",
+                "b",
+                "c"
+              ]
+            },
+            "as": "o4205"
+          },
+          "bind": "s6539",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "undeclared",
+              "values": [
+                "a",
+                "b",
+                "c"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4203"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4205"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4203"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Query on attribute has greater than 2 values: undeclared"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAnAttributeTypeWithoutAValueRuleIsRefused#decimal",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "amount",
+                "key": "amount",
+                "type": "decimal",
+                "array": false
+              }
+            },
+            "as": "o4206"
+          },
+          "bind": "s6542",
+          "expect": {
+            "$document": {
+              "$id": "amount",
+              "key": "amount",
+              "type": "decimal",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4206"
+                }
+              ],
+              "idAttributeType": "integer",
+              "maxValuesCount": 2
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Unknown attribute type: decimal"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAnAttributeTypeWithoutAValueRuleIsRefused#json",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "amount",
+                "key": "amount",
+                "type": "json",
+                "array": false
+              }
+            },
+            "as": "o4207"
+          },
+          "bind": "s6544",
+          "expect": {
+            "$document": {
+              "$id": "amount",
+              "key": "amount",
+              "type": "json",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4207"
+                }
+              ],
+              "idAttributeType": "integer",
+              "maxValuesCount": 2
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Unknown attribute type: json"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAnAttributeTypeWithoutAValueRuleIsRefused#unknown name",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "amount",
+                "key": "amount",
+                "type": "mystery",
+                "array": false
+              }
+            },
+            "as": "o4208"
+          },
+          "bind": "s6546",
+          "expect": {
+            "$document": {
+              "$id": "amount",
+              "key": "amount",
+              "type": "mystery",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4208"
+                }
+              ],
+              "idAttributeType": "integer",
+              "maxValuesCount": 2
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Unknown attribute type: mystery"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAnElemMatchWithAnInvalidNestedFilterIsRejected",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o4209"
+          },
+          "bind": "s6548",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 3,
+                "array": false
+              }
+            },
+            "as": "o4210"
+          },
+          "bind": "s6549",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "size": 3,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "author",
+                "key": "author",
+                "type": "relationship",
+                "array": false,
+                "options": {
+                  "relatedCollection": "authors",
+                  "relationType": "manyToOne",
+                  "twoWay": false,
+                  "twoWayKey": "books",
+                  "side": "parent"
+                }
+              }
+            },
+            "as": "o4211"
+          },
+          "bind": "s6550",
+          "expect": {
+            "$document": {
+              "$id": "author",
+              "key": "author",
+              "type": "relationship",
+              "array": false,
+              "options": {
+                "relatedCollection": "authors",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": "books",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4209"
+                },
+                {
+                  "$obj": "o4210"
+                },
+                {
+                  "$obj": "o4211"
+                }
+              ],
+              "idAttributeType": "integer",
+              "maxValuesCount": 2,
+              "supportForAttributes": false
+            },
+            "as": "o4212"
+          },
+          "bind": "s6551",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "sku",
+              "values": [
+                "a"
+              ]
+            },
+            "as": "o4213"
+          },
+          "bind": "s6552",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "sku",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::ElemMatch"
+              },
+              "attribute": "items",
+              "values": [
+                {
+                  "$obj": "o4213"
+                }
+              ]
+            },
+            "as": "o4214"
+          },
+          "bind": "s6553",
+          "expect": {
+            "$query": {
+              "method": "elemMatch",
+              "attribute": "items",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "sku",
+                    "values": [
+                      "a"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4212"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4214"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4212"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "sku",
+              "values": [
+                "a"
+              ]
+            },
+            "as": "o4215"
+          },
+          "bind": "s6556",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "sku",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Equal"
+              },
+              "attribute": "sku",
+              "values": []
+            },
+            "as": "o4216"
+          },
+          "bind": "s6557",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "sku",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::ElemMatch"
+              },
+              "attribute": "items",
+              "values": [
+                {
+                  "$obj": "o4215"
+                },
+                {
+                  "$obj": "o4216"
+                }
+              ]
+            },
+            "as": "o4217"
+          },
+          "bind": "s6558",
+          "expect": {
+            "$query": {
+              "method": "elemMatch",
+              "attribute": "items",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "sku",
+                    "values": [
+                      "a"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "sku",
+                    "values": []
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4212"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4217"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4212"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Equal queries require at least one value."
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAnElemMatchChildMustBeAQuery",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o4218"
+          },
+          "bind": "s6561",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 3,
+                "array": false
+              }
+            },
+            "as": "o4219"
+          },
+          "bind": "s6562",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "size": 3,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "author",
+                "key": "author",
+                "type": "relationship",
+                "array": false,
+                "options": {
+                  "relatedCollection": "authors",
+                  "relationType": "manyToOne",
+                  "twoWay": false,
+                  "twoWayKey": "books",
+                  "side": "parent"
+                }
+              }
+            },
+            "as": "o4220"
+          },
+          "bind": "s6563",
+          "expect": {
+            "$document": {
+              "$id": "author",
+              "key": "author",
+              "type": "relationship",
+              "array": false,
+              "options": {
+                "relatedCollection": "authors",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": "books",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4218"
+                },
+                {
+                  "$obj": "o4219"
+                },
+                {
+                  "$obj": "o4220"
+                }
+              ],
+              "idAttributeType": "integer",
+              "maxValuesCount": 2,
+              "supportForAttributes": false
+            },
+            "as": "o4221"
+          },
+          "bind": "s6564",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::ElemMatch"
+              },
+              "attribute": "items",
+              "values": [
+                "{\"method\":\"equal\",\"attribute\":\"sku\",\"values\":[\"a\"]}"
+              ]
+            },
+            "as": "o4222"
+          },
+          "bind": "s6565",
+          "expect": {
+            "$query": {
+              "method": "elemMatch",
+              "attribute": "items",
+              "values": [
+                "{\"method\":\"equal\",\"attribute\":\"sku\",\"values\":[\"a\"]}"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4221"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4222"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4221"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "elemMatch queries can only contain filter queries"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testASpatialQueryNeedsAValue#crosses",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o4223"
+          },
+          "bind": "s6568",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 3,
+                "array": false
+              }
+            },
+            "as": "o4224"
+          },
+          "bind": "s6569",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "size": 3,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "author",
+                "key": "author",
+                "type": "relationship",
+                "array": false,
+                "options": {
+                  "relatedCollection": "authors",
+                  "relationType": "manyToOne",
+                  "twoWay": false,
+                  "twoWayKey": "books",
+                  "side": "parent"
+                }
+              }
+            },
+            "as": "o4225"
+          },
+          "bind": "s6570",
+          "expect": {
+            "$document": {
+              "$id": "author",
+              "key": "author",
+              "type": "relationship",
+              "array": false,
+              "options": {
+                "relatedCollection": "authors",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": "books",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4223"
+                },
+                {
+                  "$obj": "o4224"
+                },
+                {
+                  "$obj": "o4225"
+                }
+              ],
+              "idAttributeType": "integer",
+              "maxValuesCount": 2,
+              "supportForAttributes": true
+            },
+            "as": "o4226"
+          },
+          "bind": "s6571",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Crosses"
+              },
+              "attribute": "location",
+              "values": []
+            },
+            "as": "o4227"
+          },
+          "bind": "s6572",
+          "expect": {
+            "$query": {
+              "method": "crosses",
+              "attribute": "location",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4226"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4227"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4226"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Crosses queries require at least one value."
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Crosses"
+              },
+              "attribute": "location",
+              "values": [
+                [
+                  1.0,
+                  2.0
+                ]
+              ]
+            },
+            "as": "o4228"
+          },
+          "bind": "s6575",
+          "expect": {
+            "$query": {
+              "method": "crosses",
+              "attribute": "location",
+              "values": [
+                [
+                  1.0,
+                  2.0
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4226"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4228"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4226"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Crosses queries require at least one value."
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testASpatialQueryNeedsAValue#intersects",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o4229"
+          },
+          "bind": "s6578",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 3,
+                "array": false
+              }
+            },
+            "as": "o4230"
+          },
+          "bind": "s6579",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "size": 3,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "author",
+                "key": "author",
+                "type": "relationship",
+                "array": false,
+                "options": {
+                  "relatedCollection": "authors",
+                  "relationType": "manyToOne",
+                  "twoWay": false,
+                  "twoWayKey": "books",
+                  "side": "parent"
+                }
+              }
+            },
+            "as": "o4231"
+          },
+          "bind": "s6580",
+          "expect": {
+            "$document": {
+              "$id": "author",
+              "key": "author",
+              "type": "relationship",
+              "array": false,
+              "options": {
+                "relatedCollection": "authors",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": "books",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4229"
+                },
+                {
+                  "$obj": "o4230"
+                },
+                {
+                  "$obj": "o4231"
+                }
+              ],
+              "idAttributeType": "integer",
+              "maxValuesCount": 2,
+              "supportForAttributes": true
+            },
+            "as": "o4232"
+          },
+          "bind": "s6581",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Intersects"
+              },
+              "attribute": "location",
+              "values": []
+            },
+            "as": "o4233"
+          },
+          "bind": "s6582",
+          "expect": {
+            "$query": {
+              "method": "intersects",
+              "attribute": "location",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4232"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4233"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4232"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Intersects queries require at least one value."
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Intersects"
+              },
+              "attribute": "location",
+              "values": [
+                [
+                  1.0,
+                  2.0
+                ]
+              ]
+            },
+            "as": "o4234"
+          },
+          "bind": "s6585",
+          "expect": {
+            "$query": {
+              "method": "intersects",
+              "attribute": "location",
+              "values": [
+                [
+                  1.0,
+                  2.0
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4232"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4234"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4232"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Intersects queries require at least one value."
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testASpatialQueryNeedsAValue#overlaps",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o4235"
+          },
+          "bind": "s6588",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 3,
+                "array": false
+              }
+            },
+            "as": "o4236"
+          },
+          "bind": "s6589",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "size": 3,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "author",
+                "key": "author",
+                "type": "relationship",
+                "array": false,
+                "options": {
+                  "relatedCollection": "authors",
+                  "relationType": "manyToOne",
+                  "twoWay": false,
+                  "twoWayKey": "books",
+                  "side": "parent"
+                }
+              }
+            },
+            "as": "o4237"
+          },
+          "bind": "s6590",
+          "expect": {
+            "$document": {
+              "$id": "author",
+              "key": "author",
+              "type": "relationship",
+              "array": false,
+              "options": {
+                "relatedCollection": "authors",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": "books",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4235"
+                },
+                {
+                  "$obj": "o4236"
+                },
+                {
+                  "$obj": "o4237"
+                }
+              ],
+              "idAttributeType": "integer",
+              "maxValuesCount": 2,
+              "supportForAttributes": true
+            },
+            "as": "o4238"
+          },
+          "bind": "s6591",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Overlaps"
+              },
+              "attribute": "location",
+              "values": []
+            },
+            "as": "o4239"
+          },
+          "bind": "s6592",
+          "expect": {
+            "$query": {
+              "method": "overlaps",
+              "attribute": "location",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4238"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4239"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4238"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Overlaps queries require at least one value."
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Overlaps"
+              },
+              "attribute": "location",
+              "values": [
+                [
+                  1.0,
+                  2.0
+                ]
+              ]
+            },
+            "as": "o4240"
+          },
+          "bind": "s6595",
+          "expect": {
+            "$query": {
+              "method": "overlaps",
+              "attribute": "location",
+              "values": [
+                [
+                  1.0,
+                  2.0
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4238"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4240"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4238"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Overlaps queries require at least one value."
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testASpatialQueryNeedsAValue#touches",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o4241"
+          },
+          "bind": "s6598",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 3,
+                "array": false
+              }
+            },
+            "as": "o4242"
+          },
+          "bind": "s6599",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "size": 3,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "author",
+                "key": "author",
+                "type": "relationship",
+                "array": false,
+                "options": {
+                  "relatedCollection": "authors",
+                  "relationType": "manyToOne",
+                  "twoWay": false,
+                  "twoWayKey": "books",
+                  "side": "parent"
+                }
+              }
+            },
+            "as": "o4243"
+          },
+          "bind": "s6600",
+          "expect": {
+            "$document": {
+              "$id": "author",
+              "key": "author",
+              "type": "relationship",
+              "array": false,
+              "options": {
+                "relatedCollection": "authors",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": "books",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4241"
+                },
+                {
+                  "$obj": "o4242"
+                },
+                {
+                  "$obj": "o4243"
+                }
+              ],
+              "idAttributeType": "integer",
+              "maxValuesCount": 2,
+              "supportForAttributes": true
+            },
+            "as": "o4244"
+          },
+          "bind": "s6601",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::NotTouches"
+              },
+              "attribute": "location",
+              "values": []
+            },
+            "as": "o4245"
+          },
+          "bind": "s6602",
+          "expect": {
+            "$query": {
+              "method": "notTouches",
+              "attribute": "location",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4244"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4245"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4244"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "NotTouches queries require at least one value."
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::NotTouches"
+              },
+              "attribute": "location",
+              "values": [
+                [
+                  1.0,
+                  2.0
+                ]
+              ]
+            },
+            "as": "o4246"
+          },
+          "bind": "s6605",
+          "expect": {
+            "$query": {
+              "method": "notTouches",
+              "attribute": "location",
+              "values": [
+                [
+                  1.0,
+                  2.0
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4244"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4246"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4244"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "NotTouches queries require at least one value."
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testASpatialQueryNeedsAValue#covers",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o4247"
+          },
+          "bind": "s6608",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 3,
+                "array": false
+              }
+            },
+            "as": "o4248"
+          },
+          "bind": "s6609",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "size": 3,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "author",
+                "key": "author",
+                "type": "relationship",
+                "array": false,
+                "options": {
+                  "relatedCollection": "authors",
+                  "relationType": "manyToOne",
+                  "twoWay": false,
+                  "twoWayKey": "books",
+                  "side": "parent"
+                }
+              }
+            },
+            "as": "o4249"
+          },
+          "bind": "s6610",
+          "expect": {
+            "$document": {
+              "$id": "author",
+              "key": "author",
+              "type": "relationship",
+              "array": false,
+              "options": {
+                "relatedCollection": "authors",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": "books",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4247"
+                },
+                {
+                  "$obj": "o4248"
+                },
+                {
+                  "$obj": "o4249"
+                }
+              ],
+              "idAttributeType": "integer",
+              "maxValuesCount": 2,
+              "supportForAttributes": true
+            },
+            "as": "o4250"
+          },
+          "bind": "s6611",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Covers"
+              },
+              "attribute": "location",
+              "values": []
+            },
+            "as": "o4251"
+          },
+          "bind": "s6612",
+          "expect": {
+            "$query": {
+              "method": "covers",
+              "attribute": "location",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4250"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4251"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4250"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Covers queries require at least one value."
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Covers"
+              },
+              "attribute": "location",
+              "values": [
+                [
+                  1.0,
+                  2.0
+                ]
+              ]
+            },
+            "as": "o4252"
+          },
+          "bind": "s6615",
+          "expect": {
+            "$query": {
+              "method": "covers",
+              "attribute": "location",
+              "values": [
+                [
+                  1.0,
+                  2.0
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4250"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4252"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4250"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Covers queries require at least one value."
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testASpatialQueryNeedsAValue#spatial equals",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o4253"
+          },
+          "bind": "s6618",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 3,
+                "array": false
+              }
+            },
+            "as": "o4254"
+          },
+          "bind": "s6619",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "size": 3,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "author",
+                "key": "author",
+                "type": "relationship",
+                "array": false,
+                "options": {
+                  "relatedCollection": "authors",
+                  "relationType": "manyToOne",
+                  "twoWay": false,
+                  "twoWayKey": "books",
+                  "side": "parent"
+                }
+              }
+            },
+            "as": "o4255"
+          },
+          "bind": "s6620",
+          "expect": {
+            "$document": {
+              "$id": "author",
+              "key": "author",
+              "type": "relationship",
+              "array": false,
+              "options": {
+                "relatedCollection": "authors",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": "books",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4253"
+                },
+                {
+                  "$obj": "o4254"
+                },
+                {
+                  "$obj": "o4255"
+                }
+              ],
+              "idAttributeType": "integer",
+              "maxValuesCount": 2,
+              "supportForAttributes": true
+            },
+            "as": "o4256"
+          },
+          "bind": "s6621",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::SpatialEquals"
+              },
+              "attribute": "location",
+              "values": []
+            },
+            "as": "o4257"
+          },
+          "bind": "s6622",
+          "expect": {
+            "$query": {
+              "method": "spatialEquals",
+              "attribute": "location",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4256"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4257"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4256"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "SpatialEquals queries require at least one value."
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::SpatialEquals"
+              },
+              "attribute": "location",
+              "values": [
+                [
+                  1.0,
+                  2.0
+                ]
+              ]
+            },
+            "as": "o4258"
+          },
+          "bind": "s6625",
+          "expect": {
+            "$query": {
+              "method": "spatialEquals",
+              "attribute": "location",
+              "values": [
+                [
+                  1.0,
+                  2.0
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4256"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4258"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4256"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "SpatialEquals queries require at least one value."
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAVectorQueryTakesExactlyOneVector",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o4259"
+          },
+          "bind": "s6628",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 3,
+                "array": false
+              }
+            },
+            "as": "o4260"
+          },
+          "bind": "s6629",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "size": 3,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "author",
+                "key": "author",
+                "type": "relationship",
+                "array": false,
+                "options": {
+                  "relatedCollection": "authors",
+                  "relationType": "manyToOne",
+                  "twoWay": false,
+                  "twoWayKey": "books",
+                  "side": "parent"
+                }
+              }
+            },
+            "as": "o4261"
+          },
+          "bind": "s6630",
+          "expect": {
+            "$document": {
+              "$id": "author",
+              "key": "author",
+              "type": "relationship",
+              "array": false,
+              "options": {
+                "relatedCollection": "authors",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": "books",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4259"
+                },
+                {
+                  "$obj": "o4260"
+                },
+                {
+                  "$obj": "o4261"
+                }
+              ],
+              "idAttributeType": "integer",
+              "maxValuesCount": 2,
+              "supportForAttributes": true
+            },
+            "as": "o4262"
+          },
+          "bind": "s6631",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::VectorDot"
+              },
+              "attribute": "embedding",
+              "values": [
+                [
+                  1.0,
+                  2.0,
+                  3.0
+                ]
+              ]
+            },
+            "as": "o4263"
+          },
+          "bind": "s6632",
+          "expect": {
+            "$query": {
+              "method": "vectorDot",
+              "attribute": "embedding",
+              "values": [
+                [
+                  1.0,
+                  2.0,
+                  3.0
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4262"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4263"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4262"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::VectorDot"
+              },
+              "attribute": "embedding",
+              "values": [
+                [
+                  1.0,
+                  2.0,
+                  3.0
+                ],
+                [
+                  4.0,
+                  5.0,
+                  6.0
+                ]
+              ]
+            },
+            "as": "o4264"
+          },
+          "bind": "s6635",
+          "expect": {
+            "$query": {
+              "method": "vectorDot",
+              "attribute": "embedding",
+              "values": [
+                [
+                  1.0,
+                  2.0,
+                  3.0
+                ],
+                [
+                  4.0,
+                  5.0,
+                  6.0
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4262"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4264"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4262"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "VectorDot queries require exactly one vector value."
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAVectorQueryOnAJoinedAttributeTakesExactlyOneVectorAndIsThenRefused",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o4265"
+          },
+          "bind": "s6638",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 3,
+                "array": false
+              }
+            },
+            "as": "o4266"
+          },
+          "bind": "s6639",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "size": 3,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "author",
+                "key": "author",
+                "type": "relationship",
+                "array": false,
+                "options": {
+                  "relatedCollection": "authors",
+                  "relationType": "manyToOne",
+                  "twoWay": false,
+                  "twoWayKey": "books",
+                  "side": "parent"
+                }
+              }
+            },
+            "as": "o4267"
+          },
+          "bind": "s6640",
+          "expect": {
+            "$document": {
+              "$id": "author",
+              "key": "author",
+              "type": "relationship",
+              "array": false,
+              "options": {
+                "relatedCollection": "authors",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": "books",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4265"
+                },
+                {
+                  "$obj": "o4266"
+                },
+                {
+                  "$obj": "o4267"
+                }
+              ],
+              "idAttributeType": "integer",
+              "maxValuesCount": 2,
+              "supportForAttributes": true
+            },
+            "as": "o4268"
+          },
+          "bind": "s6641",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4268"
+            },
+            "method": "allowJoinAliases",
+            "args": {
+              "aliases": [
+                "joined"
+              ]
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::VectorCosine"
+              },
+              "attribute": "joined.embedding",
+              "values": [
+                [
+                  1.0,
+                  2.0,
+                  3.0
+                ],
+                [
+                  4.0,
+                  5.0,
+                  6.0
+                ]
+              ]
+            },
+            "as": "o4269"
+          },
+          "bind": "s6643",
+          "expect": {
+            "$query": {
+              "method": "vectorCosine",
+              "attribute": "joined.embedding",
+              "values": [
+                [
+                  1.0,
+                  2.0,
+                  3.0
+                ],
+                [
+                  4.0,
+                  5.0,
+                  6.0
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4268"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4269"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4268"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "VectorCosine queries require exactly one vector value."
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::VectorCosine"
+              },
+              "attribute": "joined.embedding",
+              "values": [
+                [
+                  1.0,
+                  2.0,
+                  3.0
+                ]
+              ]
+            },
+            "as": "o4270"
+          },
+          "bind": "s6646",
+          "expect": {
+            "$query": {
+              "method": "vectorCosine",
+              "attribute": "joined.embedding",
+              "values": [
+                [
+                  1.0,
+                  2.0,
+                  3.0
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4268"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4270"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4268"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Vector queries cannot be used on a joined attribute: joined.embedding"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAVectorQueryOnARelationshipPathIsCheckedAgainstTheRelationship",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o4271"
+          },
+          "bind": "s6649",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 3,
+                "array": false
+              }
+            },
+            "as": "o4272"
+          },
+          "bind": "s6650",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "size": 3,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "author",
+                "key": "author",
+                "type": "relationship",
+                "array": false,
+                "options": {
+                  "relatedCollection": "authors",
+                  "relationType": "manyToOne",
+                  "twoWay": false,
+                  "twoWayKey": "books",
+                  "side": "parent"
+                }
+              }
+            },
+            "as": "o4273"
+          },
+          "bind": "s6651",
+          "expect": {
+            "$document": {
+              "$id": "author",
+              "key": "author",
+              "type": "relationship",
+              "array": false,
+              "options": {
+                "relatedCollection": "authors",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": "books",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4271"
+                },
+                {
+                  "$obj": "o4272"
+                },
+                {
+                  "$obj": "o4273"
+                }
+              ],
+              "idAttributeType": "integer",
+              "maxValuesCount": 2,
+              "supportForAttributes": true
+            },
+            "as": "o4274"
+          },
+          "bind": "s6652",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::VectorEuclidean"
+              },
+              "attribute": "author.embedding",
+              "values": [
+                [
+                  1.0,
+                  2.0,
+                  3.0
+                ]
+              ]
+            },
+            "as": "o4275"
+          },
+          "bind": "s6653",
+          "expect": {
+            "$query": {
+              "method": "vectorEuclidean",
+              "attribute": "author.embedding",
+              "values": [
+                [
+                  1.0,
+                  2.0,
+                  3.0
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4274"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4275"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4274"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Vector queries can only be used on vector attributes"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testStringQueriesAreCheckedAgainstTheIndexesLikeQueryObjects",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o4276"
+          },
+          "bind": "s6656",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4276"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4277"
+          },
+          "bind": "s6657",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Indexed",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4276"
+                }
+              ],
+              "indexes": [],
+              "validators": [
+                {
+                  "$obj": "o4277"
+                }
+              ]
+            },
+            "as": "o4278"
+          },
+          "bind": "s6658",
+          "expect": {
+            "$value": "Validator\\Queries\\Indexed",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4278"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "{\"method\":\"search\",\"attribute\":\"name\",\"values\":[\"phrase\"]}"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4278"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Searching by attribute \"name\" requires a fulltext index."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"search\",\"attribute\":\"name\",\"values\":[\"phrase\"]}"
+            },
+            "as": "o4279"
+          },
+          "bind": "s6661",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "name",
+              "values": [
+                "phrase"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4278"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o4279"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4278"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Searching by attribute \"name\" requires a fulltext index."
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "type": "fulltext",
+                "attributes": [
+                  "name"
+                ]
+              }
+            },
+            "as": "o4280"
+          },
+          "bind": "s6664",
+          "expect": {
+            "$document": {
+              "type": "fulltext",
+              "attributes": [
+                "name"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4276"
+                }
+              ],
+              "idAttributeType": "integer"
+            },
+            "as": "o4281"
+          },
+          "bind": "s6665",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Indexed",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4276"
+                }
+              ],
+              "indexes": [
+                {
+                  "$obj": "o4280"
+                }
+              ],
+              "validators": [
+                {
+                  "$obj": "o4281"
+                }
+              ]
+            },
+            "as": "o4282"
+          },
+          "bind": "s6666",
+          "expect": {
+            "$value": "Validator\\Queries\\Indexed",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4282"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "{\"method\":\"search\",\"attribute\":\"name\",\"values\":[\"phrase\"]}"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4282"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid queries"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4282"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "{\"method\":\"search\""
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4282"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: Invalid query: Syntax error"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testStringChildrenOfALogicalQueryAreParsedAndAnUnparseableOneIsRejected",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "array": false
+              }
+            },
+            "as": "o4283"
+          },
+          "bind": "s6671",
+          "expect": {
+            "$document": {
+              "$id": "location",
+              "key": "location",
+              "type": "point",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 3,
+                "array": false
+              }
+            },
+            "as": "o4284"
+          },
+          "bind": "s6672",
+          "expect": {
+            "$document": {
+              "$id": "embedding",
+              "key": "embedding",
+              "type": "vector",
+              "size": 3,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "author",
+                "key": "author",
+                "type": "relationship",
+                "array": false,
+                "options": {
+                  "relatedCollection": "authors",
+                  "relationType": "manyToOne",
+                  "twoWay": false,
+                  "twoWayKey": "books",
+                  "side": "parent"
+                }
+              }
+            },
+            "as": "o4285"
+          },
+          "bind": "s6673",
+          "expect": {
+            "$document": {
+              "$id": "author",
+              "key": "author",
+              "type": "relationship",
+              "array": false,
+              "options": {
+                "relatedCollection": "authors",
+                "relationType": "manyToOne",
+                "twoWay": false,
+                "twoWayKey": "books",
+                "side": "parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Filter",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o4283"
+                },
+                {
+                  "$obj": "o4284"
+                },
+                {
+                  "$obj": "o4285"
+                }
+              ],
+              "idAttributeType": "integer",
+              "maxValuesCount": 2,
+              "supportForAttributes": true
+            },
+            "as": "o4286"
+          },
+          "bind": "s6674",
+          "expect": {
+            "$value": "Validator\\Query\\Filter",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Base",
+            "args": {
+              "validators": [
+                {
+                  "$obj": "o4286"
+                }
+              ]
+            },
+            "as": "o4287"
+          },
+          "bind": "s6675",
+          "expect": {
+            "$value": "Validator\\Queries\\Base",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Or"
+              },
+              "attribute": "",
+              "values": [
+                "{\"method\":\"equal\",\"attribute\":\"embedding\",\"values\":[[1,2,3]]}",
+                "{\"method\":\"equal\""
+              ]
+            },
+            "as": "o4288"
+          },
+          "bind": "s6676",
+          "expect": {
+            "$query": {
+              "method": "or",
+              "attribute": "",
+              "values": [
+                "{\"method\":\"equal\",\"attribute\":\"embedding\",\"values\":[[1,2,3]]}",
+                "{\"method\":\"equal\""
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4287"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o4288"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4287"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: Invalid query: Syntax error"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4287"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: Invalid query: Syntax error"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::And"
+              },
+              "attribute": "",
+              "values": [
+                "{\"method\":\"equal\",\"attribute\":\"embedding\",\"values\":[[1,2,3]]}",
+                5
+              ]
+            },
+            "as": "o4289"
+          },
+          "bind": "s6680",
+          "expect": {
+            "$query": {
+              "method": "and",
+              "attribute": "",
+              "values": [
+                "{\"method\":\"equal\",\"attribute\":\"embedding\",\"values\":[[1,2,3]]}",
+                5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4287"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o4289"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4287"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: nested query must be a string"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Or"
+              },
+              "attribute": "",
+              "values": [
+                "{\"method\":\"equal\",\"attribute\":\"embedding\",\"values\":[[1,2,3]]}",
+                "{\"method\":\"equal\",\"attribute\":\"embedding\",\"values\":[[1,2,3]]}"
+              ]
+            },
+            "as": "o4290"
+          },
+          "bind": "s6683",
+          "expect": {
+            "$query": {
+              "method": "or",
+              "attribute": "",
+              "values": [
+                "{\"method\":\"equal\",\"attribute\":\"embedding\",\"values\":[[1,2,3]]}",
+                "{\"method\":\"equal\",\"attribute\":\"embedding\",\"values\":[[1,2,3]]}"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4287"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o4290"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4287"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: Or queries can only contain filter queries"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAQueryMethodValidatorGivenANonQueryRefusesIt#aggregate given a string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Aggregate",
+            "args": {},
+            "as": "o4291"
+          },
+          "bind": "s6686",
+          "expect": {
+            "$value": "Validator\\Query\\Aggregate",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4291"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "limit(1)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4291"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a Query"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAQueryMethodValidatorGivenANonQueryRefusesIt#aggregate given an array",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Aggregate",
+            "args": {},
+            "as": "o4292"
+          },
+          "bind": "s6689",
+          "expect": {
+            "$value": "Validator\\Query\\Aggregate",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4292"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "method": "limit",
+                "values": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4292"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a Query"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAQueryMethodValidatorGivenANonQueryRefusesIt#aggregate given null",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Aggregate",
+            "args": {},
+            "as": "o4293"
+          },
+          "bind": "s6692",
+          "expect": {
+            "$value": "Validator\\Query\\Aggregate",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4293"
+            },
+            "method": "isValid",
+            "args": {
+              "value": null
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4293"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a Query"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAQueryMethodValidatorGivenANonQueryRefusesIt#distinct given a string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Distinct",
+            "args": {},
+            "as": "o4294"
+          },
+          "bind": "s6695",
+          "expect": {
+            "$value": "Validator\\Query\\Distinct",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4294"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "limit(1)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4294"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a Query"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAQueryMethodValidatorGivenANonQueryRefusesIt#distinct given an array",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Distinct",
+            "args": {},
+            "as": "o4295"
+          },
+          "bind": "s6698",
+          "expect": {
+            "$value": "Validator\\Query\\Distinct",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4295"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "method": "limit",
+                "values": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4295"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a Query"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAQueryMethodValidatorGivenANonQueryRefusesIt#distinct given null",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Distinct",
+            "args": {},
+            "as": "o4296"
+          },
+          "bind": "s6701",
+          "expect": {
+            "$value": "Validator\\Query\\Distinct",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4296"
+            },
+            "method": "isValid",
+            "args": {
+              "value": null
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4296"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a Query"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAQueryMethodValidatorGivenANonQueryRefusesIt#group by given a string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\GroupBy",
+            "args": {},
+            "as": "o4297"
+          },
+          "bind": "s6704",
+          "expect": {
+            "$value": "Validator\\Query\\GroupBy",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4297"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "limit(1)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4297"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a Query"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAQueryMethodValidatorGivenANonQueryRefusesIt#group by given an array",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\GroupBy",
+            "args": {},
+            "as": "o4298"
+          },
+          "bind": "s6707",
+          "expect": {
+            "$value": "Validator\\Query\\GroupBy",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4298"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "method": "limit",
+                "values": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4298"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a Query"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAQueryMethodValidatorGivenANonQueryRefusesIt#group by given null",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\GroupBy",
+            "args": {},
+            "as": "o4299"
+          },
+          "bind": "s6710",
+          "expect": {
+            "$value": "Validator\\Query\\GroupBy",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4299"
+            },
+            "method": "isValid",
+            "args": {
+              "value": null
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4299"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a Query"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAQueryMethodValidatorGivenANonQueryRefusesIt#having given a string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Having",
+            "args": {},
+            "as": "o4300"
+          },
+          "bind": "s6713",
+          "expect": {
+            "$value": "Validator\\Query\\Having",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4300"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "limit(1)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4300"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a Query"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAQueryMethodValidatorGivenANonQueryRefusesIt#having given an array",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Having",
+            "args": {},
+            "as": "o4301"
+          },
+          "bind": "s6716",
+          "expect": {
+            "$value": "Validator\\Query\\Having",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4301"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "method": "limit",
+                "values": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4301"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a Query"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAQueryMethodValidatorGivenANonQueryRefusesIt#having given null",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Having",
+            "args": {},
+            "as": "o4302"
+          },
+          "bind": "s6719",
+          "expect": {
+            "$value": "Validator\\Query\\Having",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4302"
+            },
+            "method": "isValid",
+            "args": {
+              "value": null
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4302"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a Query"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAQueryMethodValidatorGivenANonQueryRefusesIt#join given a string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o4303"
+          },
+          "bind": "s6722",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4303"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "limit(1)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4303"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a Query"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAQueryMethodValidatorGivenANonQueryRefusesIt#join given an array",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o4304"
+          },
+          "bind": "s6725",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4304"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "method": "limit",
+                "values": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4304"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a Query"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAQueryMethodValidatorGivenANonQueryRefusesIt#join given null",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o4305"
+          },
+          "bind": "s6728",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4305"
+            },
+            "method": "isValid",
+            "args": {
+              "value": null
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4305"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a Query"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAJoinWithoutATableNameIsRefused#empty",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o4306"
+          },
+          "bind": "s6731",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "authorId",
+              "right": "id"
+            },
+            "as": "o4307"
+          },
+          "bind": "s6732",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "authorId",
+                "=",
+                "id"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "",
+              "alias": "author",
+              "on": [
+                {
+                  "$obj": "o4307"
+                }
+              ]
+            },
+            "as": "o4308"
+          },
+          "bind": "s6733",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "authorId",
+                      "=",
+                      "id"
+                    ]
+                  }
+                }
+              ],
+              "alias": "author"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4306"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4308"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4306"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Join requires a table name"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "authorId",
+              "right": "id"
+            },
+            "as": "o4309"
+          },
+          "bind": "s6736",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "authorId",
+                "=",
+                "id"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "authors",
+              "alias": "author",
+              "on": [
+                {
+                  "$obj": "o4309"
+                }
+              ]
+            },
+            "as": "o4310"
+          },
+          "bind": "s6737",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "authors",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "authorId",
+                      "=",
+                      "id"
+                    ]
+                  }
+                }
+              ],
+              "alias": "author"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4306"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4310"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4306"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Join requires a table name"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testAJoinWithoutATableNameIsRefused#zero",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o4311"
+          },
+          "bind": "s6740",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "authorId",
+              "right": "id"
+            },
+            "as": "o4312"
+          },
+          "bind": "s6741",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "authorId",
+                "=",
+                "id"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "0",
+              "alias": "author",
+              "on": [
+                {
+                  "$obj": "o4312"
+                }
+              ]
+            },
+            "as": "o4313"
+          },
+          "bind": "s6742",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "0",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "authorId",
+                      "=",
+                      "id"
+                    ]
+                  }
+                }
+              ],
+              "alias": "author"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4311"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4313"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4311"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Join requires a table name"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "authorId",
+              "right": "id"
+            },
+            "as": "o4314"
+          },
+          "bind": "s6745",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "authorId",
+                "=",
+                "id"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "authors",
+              "alias": "author",
+              "on": [
+                {
+                  "$obj": "o4314"
+                }
+              ]
+            },
+            "as": "o4315"
+          },
+          "bind": "s6746",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "authors",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "authorId",
+                      "=",
+                      "id"
+                    ]
+                  }
+                }
+              ],
+              "alias": "author"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4311"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4315"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4311"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Join requires a table name"
+        }
+      ]
+    },
+    {
+      "name": "QueryValidatorCoverageTest::testTheLimitValidatorRefusesAnotherMethodAndANonNumericLimit",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Limit",
+            "args": {},
+            "as": "o4316"
+          },
+          "bind": "s6749",
+          "expect": {
+            "$value": "Validator\\Query\\Limit",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "offset",
+            "args": {
+              "value": 5
+            },
+            "as": "o4317"
+          },
+          "bind": "s6750",
+          "expect": {
+            "$query": {
+              "method": "offset",
+              "attribute": "",
+              "values": [
+                5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4316"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4317"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4316"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query method: offset"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Limit"
+              },
+              "attribute": "",
+              "values": [
+                "abc"
+              ]
+            },
+            "as": "o4318"
+          },
+          "bind": "s6753",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                "abc"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4316"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4318"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4316"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid limit: Value must be a valid number"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4316"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "limit(5)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 5
+            },
+            "as": "o4319"
+          },
+          "bind": "s6757",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4316"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4319"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4316"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid limit: Value must be a valid number"
+        }
+      ]
+    }
+  ]
+}

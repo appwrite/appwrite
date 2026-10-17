@@ -1,0 +1,119 @@
+{
+  "lib": "lock",
+  "environment": {
+    "date": "2026-10-11T09:11:21Z",
+    "commit": "efd6922f03",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "mutex",
+      "description": "Acquire and release an uncontended in-process mutex",
+      "php": {
+        "ns": 82.26560693394086,
+        "min": 77.89638914344933,
+        "max": 109.11864181776137,
+        "samples": 15,
+        "calls": 233518
+      },
+      "rust": {
+        "ns": 42.37985216986994,
+        "min": 41.36430002303056,
+        "max": 43.32551959987659,
+        "samples": 15,
+        "calls": 460258,
+        "allocations": 1.0000001448462963,
+        "bytes": 312.00001738155555
+      },
+      "speedup": 1.941148982875117,
+      "bound": null
+    },
+    {
+      "name": "semaphore",
+      "description": "Acquire and release one permit of an in-process semaphore of four",
+      "php": {
+        "ns": 77.1904670026472,
+        "min": 76.63237530002856,
+        "max": 81.84428614427611,
+        "samples": 15,
+        "calls": 259142
+      },
+      "rust": {
+        "ns": 25.18418330503347,
+        "min": 24.756279641665202,
+        "max": 25.913992817690342,
+        "samples": 15,
+        "calls": 819792,
+        "allocations": 1.000000081321441,
+        "bytes": 312.0000097585729
+      },
+      "speedup": 3.065037530409788,
+      "bound": null
+    },
+    {
+      "name": "with_lock",
+      "description": "Run a section under an uncontended in-process mutex",
+      "php": {
+        "ns": 144.74534188125818,
+        "min": 143.27542042782505,
+        "max": 148.59107184973948,
+        "samples": 15,
+        "calls": 139917
+      },
+      "rust": {
+        "ns": 23.626255383624237,
+        "min": 23.54671971748649,
+        "max": 23.816199191114187,
+        "samples": 15,
+        "calls": 838190,
+        "allocations": 1.0000000795364614,
+        "bytes": 320.00000954437536
+      },
+      "speedup": 6.126461410452021,
+      "bound": null
+    },
+    {
+      "name": "distributed",
+      "description": "Acquire and release an uncontended Redis lock: SET NX EX, then the release script",
+      "php": {
+        "ns": 103152.85263157895,
+        "min": 98698.24736842106,
+        "max": 108782.02105263158,
+        "samples": 15,
+        "calls": 190
+      },
+      "rust": {
+        "ns": 105921.67213114754,
+        "min": 79730.64480874316,
+        "max": 107609.97267759562,
+        "samples": 15,
+        "calls": 183,
+        "allocations": 31.001457194899817,
+        "bytes": 4319.07868852459
+      },
+      "speedup": 0.9738597451884977,
+      "bound": "Two Redis round trips, the same on both runtimes, dominate the call"
+    }
+  ]
+}

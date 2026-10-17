@@ -1,0 +1,77 @@
+{
+  "lib": "bus",
+  "environment": {
+    "date": "2026-10-12T02:48:04Z",
+    "commit": "b5c0f44a39",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "dispatch",
+      "description": "Dispatch an event to three listeners with one dependency each",
+      "php": {
+        "ns": 355.9813821764923,
+        "min": 338.6874350638469,
+        "max": 442.16074002077954,
+        "samples": 15,
+        "calls": 59674
+      },
+      "rust": {
+        "ns": 325.4327152561043,
+        "min": 303.77195398078453,
+        "max": 342.52099014748177,
+        "samples": 15,
+        "calls": 65364,
+        "allocations": 18.00000101992942,
+        "bytes": 558.0001223915305
+      },
+      "speedup": 1.0938709155173512,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "miss",
+      "description": "Dispatch an event no listener handles",
+      "php": {
+        "ns": 32.117536941888716,
+        "min": 29.827274649117165,
+        "max": 41.74409220842487,
+        "samples": 15,
+        "calls": 652782
+      },
+      "rust": {
+        "ns": 6.406504706190684,
+        "min": 5.77519326985678,
+        "max": 7.128759408527236,
+        "samples": 15,
+        "calls": 3373004,
+        "allocations": 1.976477545436254e-8,
+        "bytes": 2.3717730545235047e-6
+      },
+      "speedup": 5.0132698585007125,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

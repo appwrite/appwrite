@@ -1,0 +1,1309 @@
+{
+  "source": "vendor/utopia-php/database/src/Database/Adapter/MySQL.php",
+  "cases": [
+    {
+      "name": "decoding geometries",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "POINT(1 2)",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": [
+            1.0,
+            2.0
+          ]
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "point(1.5 -2)",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": [
+            1.5,
+            -2.0
+          ]
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "POINT( 3 )",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": [
+            3.0,
+            0.0
+          ]
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "POINT(1 2",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "0101000020E6100000000000000000F03F0000000000000040",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Only little-endian WKB supported"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "0101000020e6100000000000000000f03f0000000000000040",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Only little-endian WKB supported"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "00000000013FF00000000000004000000000000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Only little-endian WKB supported"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "0101",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid WKB: too short for POINT"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "zz",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid WKB: too short for POINT"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "0101000020E6100000000000000000F03F00000000000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Only little-endian WKB supported"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "01010000000000000000000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Only little-endian WKB supported"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "010100000000000000000000000000000000000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Only little-endian WKB supported"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": {
+                "$bytes": "AQEAAAA="
+              },
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid WKB: too short for POINT"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid WKB: too short for POINT"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "LINESTRING(0 0,1 1, 2 3)",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              1.0,
+              1.0
+            ],
+            [
+              2.0,
+              3.0
+            ]
+          ]
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "linestring(1 1)",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": [
+            [
+              1.0,
+              1.0
+            ]
+          ]
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "LINESTRING()",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": [
+            [
+              0.0,
+              0.0
+            ]
+          ]
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "0102000020E610000002000000000000000000000000000000000000000000000000000000000000000000F03F",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid WKB: cannot unpack point coordinates"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "01020000000200000000000000000000000000000000000000000000000000F03F000000000000F03F",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid WKB: cannot unpack point coordinates"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "0102000020E6100000020000000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid WKB: cannot unpack point coordinates"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "000000000200000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid WKB: cannot unpack point coordinates"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "0302000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid WKB: cannot unpack number of points"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "0101000000000000000000000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid WKB: cannot unpack point coordinates"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "0101000020E6100000000000000000F03F0000000000000040",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid WKB: cannot unpack point coordinates"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "abc",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid WKB: cannot unpack number of points"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "01020000000300000000000000000000000000000000000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid WKB: cannot unpack point coordinates"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": {
+                "$bytes": "AQIAAAABAAAAAAAAAAAA8D8="
+              },
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid WKB: cannot unpack number of points"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "POLYGON((0 0,1 0,1 1,0 0),(2 2,3 3))",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": [
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                1.0,
+                0.0
+              ],
+              [
+                1.0,
+                1.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                2.0,
+                2.0
+              ],
+              [
+                3.0,
+                3.0
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "POLYGON((1 2))",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": [
+            [
+              [
+                1.0,
+                2.0
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "polygon((1 2))",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "WKB too short to be a POLYGON"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "0103000020E61000000100000004000000000000000000000000000000000000000000000000000000000000000000F03F000000000000F03F000000000000F03F00000000000000000000000000000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Only little-endian WKB supported"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "0103000020E61000000100000004000000000000000000000000000000000000000000000000000000000000000000F03F000000000000F03F000000000000F03F00000000000000000000000000000000\n",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Only little-endian WKB supported"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "0103000020E61000000100000004000000000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "WKB too short to be a POLYGON"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "0101000020E6100000000000000000F03F0000000000000040",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Only little-endian WKB supported"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "0103000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "WKB too short to be a POLYGON"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "010300000001000000020000000000",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "WKB too short to be a POLYGON"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "xyz",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "WKB too short to be a POLYGON"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": "",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "WKB too short to be a POLYGON"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": {
+                "$bytes": "AQMAAAABAAAAAQAAAAAAAAAAAPA/AAAAAAAAAEA="
+              },
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Only little-endian WKB supported"
+            }
+          }
+        }
+      ],
+      "state": [
+        "mysql@database-mysql"
+      ]
+    },
+    {
+      "name": "decoding geometries PostGIS returns",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "create",
+            "args": {
+              "name": "${ns}"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "p",
+                "key": "p",
+                "type": "point",
+                "size": 0,
+                "signed": true,
+                "array": false,
+                "required": false
+              }
+            },
+            "as": "a391"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "p",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "point"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "l",
+                "key": "l",
+                "type": "linestring",
+                "size": 0,
+                "signed": true,
+                "array": false,
+                "required": false
+              }
+            },
+            "as": "a392"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "l",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "linestring"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "a",
+                "key": "a",
+                "type": "polygon",
+                "size": 0,
+                "signed": true,
+                "array": false,
+                "required": false
+              }
+            },
+            "as": "a393"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "a",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "polygon"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "g",
+              "attributes": [
+                {
+                  "$obj": "a391"
+                },
+                {
+                  "$obj": "a392"
+                },
+                {
+                  "$obj": "a393"
+                }
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "g",
+                  "attributes": [
+                    {
+                      "$document": {
+                        "$id": "p",
+                        "type": "point",
+                        "size": 0,
+                        "required": false,
+                        "signed": true,
+                        "array": false
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "l",
+                        "type": "linestring",
+                        "size": 0,
+                        "required": false,
+                        "signed": true,
+                        "array": false
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "a",
+                        "type": "polygon",
+                        "size": 0,
+                        "required": false,
+                        "signed": true,
+                        "array": false
+                      }
+                    }
+                  ]
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "g1",
+                  "$permissions": [],
+                  "p": "POINT(1.5 -2.25)",
+                  "l": "LINESTRING(0 0, 1 2, 3 4)",
+                  "a": "POLYGON((0 0, 4 0, 4 4, 0 4, 0 0), (1 1, 2 1, 2 2, 1 1))"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "g1",
+              "$permissions": [],
+              "p": "POINT(1.5 -2.25)",
+              "l": "LINESTRING(0 0, 1 2, 3 4)",
+              "a": "POLYGON((0 0, 4 0, 4 4, 0 4, 0 0), (1 1, 2 1, 2 2, 1 1))",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "roles": [],
+                "status": false
+              }
+            }
+          },
+          "expect": {
+            "$adapter": "MySQL"
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "find",
+            "args": {
+              "collection": {
+                "$id": "g"
+              }
+            }
+          },
+          "bind": "rows",
+          "expect": [
+            {
+              "$document": {
+                "p": {
+                  "$bytes": "5hAAAAEBAAAAAAAAAAAA+D8AAAAAAAACwA=="
+                },
+                "l": {
+                  "$bytes": "5hAAAAECAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwPwAAAAAAAABAAAAAAAAACEAAAAAAAAAQQA=="
+                },
+                "a": {
+                  "$bytes": "5hAAAAEDAAAAAgAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEEAAAAAAAAAAAAAAAAAAABBAAAAAAAAAEEAAAAAAAAAAAAAAAAAAABBAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAADwPwAAAAAAAPA/AAAAAAAAAEAAAAAAAADwPwAAAAAAAABAAAAAAAAAAEAAAAAAAADwPwAAAAAAAPA/"
+                },
+                "$id": "g1",
+                "$sequence": "1",
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": []
+              }
+            }
+          ]
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": {
+                "$ref": "rows",
+                "path": "/0/$document/p"
+              },
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              }
+            }
+          },
+          "expect": [
+            1.5,
+            -2.25
+          ]
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": {
+                "$ref": "rows",
+                "path": "/0/$document/l"
+              },
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              }
+            }
+          },
+          "expect": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              1.0,
+              2.0
+            ],
+            [
+              3.0,
+              4.0
+            ]
+          ]
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "decode",
+            "args": {
+              "value": {
+                "$ref": "rows",
+                "path": "/0/$document/a"
+              },
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              }
+            }
+          },
+          "expect": [
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                4.0,
+                0.0
+              ],
+              [
+                4.0,
+                4.0
+              ],
+              [
+                0.0,
+                4.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                1.0,
+                1.0
+              ],
+              [
+                2.0,
+                1.0
+              ],
+              [
+                2.0,
+                2.0
+              ],
+              [
+                1.0,
+                1.0
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "delete",
+            "args": {
+              "name": "${ns}"
+            }
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "mysql@database-mysql"
+      ]
+    }
+  ]
+}

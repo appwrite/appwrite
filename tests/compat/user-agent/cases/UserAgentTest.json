@@ -1,0 +1,495 @@
+{
+  "source": "packages/user-agent/tests/UserAgentTest.php",
+  "cases": [
+    {
+      "name": "Firefox on Windows matches reference contract",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0",
+        "array": {
+          "os": {
+            "code": "WIN",
+            "name": "Windows",
+            "version": "7"
+          },
+          "client": {
+            "type": "browser",
+            "code": "FF",
+            "name": "Firefox",
+            "version": "47.0",
+            "engine": "Gecko",
+            "engineVersion": "47.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "iPhone Safari matches activity dimensions",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1",
+        "array": {
+          "os": {
+            "code": "IOS",
+            "name": "iOS",
+            "version": "17.4"
+          },
+          "client": {
+            "type": "browser",
+            "code": "MF",
+            "name": "Mobile Safari",
+            "version": "17.4",
+            "engine": "WebKit",
+            "engineVersion": "605.1.15"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Apple",
+            "model": "iPhone"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "Android Chrome detects model and brand",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 13; Pixel 7 Pro Build/TQ3A.230805.001) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 13; Pixel 7 Pro Build/TQ3A.230805.001) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "13"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "120.0",
+            "engine": "Blink",
+            "engineVersion": "120.0.0.0"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Google",
+            "model": "Pixel 7 Pro"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "tablet does not require mobile token",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 12; SM-T970 Build/SP1A.210812.016) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 12; SM-T970 Build/SP1A.210812.016) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "12"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "109.0",
+            "engine": "Blink",
+            "engineVersion": "109.0.0.0"
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Samsung",
+            "model": "SM-T970"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "tablet model overrides mobile token",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 14; SM-X910) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 14; SM-X910) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "14"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "120.0",
+            "engine": "Blink",
+            "engineVersion": "120.0.0.0"
+          },
+          "device": {
+            "type": "tablet",
+            "brand": "Samsung",
+            "model": "SM-X910"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "bot detection does not suppress client and device",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.96 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.96 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+        "array": {
+          "os": {
+            "code": "AND",
+            "name": "Android",
+            "version": "6.0.1"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CM",
+            "name": "Chrome Mobile",
+            "version": "41.0",
+            "engine": "Blink",
+            "engineVersion": "41.0.2272.96"
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Google",
+            "model": "Nexus 5X"
+          },
+          "bot": {
+            "name": "Googlebot",
+            "category": "search crawler"
+          }
+        },
+        "isBot": true,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "library is not a browser",
+      "op": "agent.inspect",
+      "args": {
+        "value": "curl/8.7.1"
+      },
+      "expect": {
+        "raw": "curl/8.7.1",
+        "array": {
+          "os": {
+            "code": null,
+            "name": null,
+            "version": null
+          },
+          "client": {
+            "type": "library",
+            "code": null,
+            "name": "curl",
+            "version": "8.7",
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": null,
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": false,
+        "clientKnown": true,
+        "clientBrowser": false,
+        "deviceKnown": false,
+        "memoized": true
+      }
+    },
+    {
+      "name": "native app is mobile app",
+      "op": "agent.inspect",
+      "args": {
+        "value": "com.example.myapp/1.0.0 iPhone17,1 iOS/18.1"
+      },
+      "expect": {
+        "raw": "com.example.myapp/1.0.0 iPhone17,1 iOS/18.1",
+        "array": {
+          "os": {
+            "code": "IOS",
+            "name": "iOS",
+            "version": "18"
+          },
+          "client": {
+            "type": "mobile app",
+            "code": null,
+            "name": "com.example.myapp",
+            "version": "1.0",
+            "engine": null,
+            "engineVersion": null
+          },
+          "device": {
+            "type": "smartphone",
+            "brand": "Apple",
+            "model": "iPhone"
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": false,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "unknown and malformed values are safe",
+      "steps": [
+        {
+          "op": "agent.inspect",
+          "args": {
+            "value": ""
+          },
+          "expect": {
+            "raw": "",
+            "array": {
+              "os": {
+                "code": null,
+                "name": null,
+                "version": null
+              },
+              "client": {
+                "type": null,
+                "code": null,
+                "name": null,
+                "version": null,
+                "engine": null,
+                "engineVersion": null
+              },
+              "device": {
+                "type": null,
+                "brand": null,
+                "model": null
+              },
+              "bot": null
+            },
+            "isBot": false,
+            "osKnown": false,
+            "clientKnown": false,
+            "clientBrowser": false,
+            "deviceKnown": false,
+            "memoized": true
+          }
+        },
+        {
+          "op": "agent.inspect",
+          "args": {
+            "value": "UNKNOWN"
+          },
+          "expect": {
+            "raw": "UNKNOWN",
+            "array": {
+              "os": {
+                "code": null,
+                "name": null,
+                "version": null
+              },
+              "client": {
+                "type": null,
+                "code": null,
+                "name": null,
+                "version": null,
+                "engine": null,
+                "engineVersion": null
+              },
+              "device": {
+                "type": null,
+                "brand": null,
+                "model": null
+              },
+              "bot": null
+            },
+            "isBot": false,
+            "osKnown": false,
+            "clientKnown": false,
+            "clientBrowser": false,
+            "deviceKnown": false,
+            "memoized": true
+          }
+        },
+        {
+          "op": "agent.inspect",
+          "args": {
+            "value": {
+              "$bytes": "AP8gaW52YWxpZCB1c2VyIGFnZW50"
+            }
+          },
+          "expect": {
+            "raw": {
+              "$bytes": "AP8gaW52YWxpZCB1c2VyIGFnZW50"
+            },
+            "array": {
+              "os": {
+                "code": null,
+                "name": null,
+                "version": null
+              },
+              "client": {
+                "type": null,
+                "code": null,
+                "name": null,
+                "version": null,
+                "engine": null,
+                "engineVersion": null
+              },
+              "device": {
+                "type": null,
+                "brand": null,
+                "model": null
+              },
+              "bot": null
+            },
+            "isBot": false,
+            "osKnown": false,
+            "clientKnown": false,
+            "clientBrowser": false,
+            "deviceKnown": false,
+            "memoized": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "categories are memoized",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (X11; Linux x86_64) Firefox/120.0"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (X11; Linux x86_64) Firefox/120.0",
+        "array": {
+          "os": {
+            "code": "LIN",
+            "name": "GNU/Linux",
+            "version": null
+          },
+          "client": {
+            "type": "browser",
+            "code": "FF",
+            "name": "Firefox",
+            "version": "120.0",
+            "engine": "Gecko",
+            "engineVersion": "120.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": null,
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    },
+    {
+      "name": "nested serialization",
+      "op": "agent.inspect",
+      "args": {
+        "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+      },
+      "expect": {
+        "raw": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+        "array": {
+          "os": {
+            "code": "MAC",
+            "name": "Mac",
+            "version": "10.15"
+          },
+          "client": {
+            "type": "browser",
+            "code": "CH",
+            "name": "Chrome",
+            "version": "126.0",
+            "engine": "Blink",
+            "engineVersion": "126.0.0.0"
+          },
+          "device": {
+            "type": "desktop",
+            "brand": "Apple",
+            "model": null
+          },
+          "bot": null
+        },
+        "isBot": false,
+        "osKnown": true,
+        "clientKnown": true,
+        "clientBrowser": true,
+        "deviceKnown": true,
+        "memoized": true
+      }
+    }
+  ]
+}

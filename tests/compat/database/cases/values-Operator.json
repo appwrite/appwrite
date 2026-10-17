@@ -1,0 +1,5266 @@
+{
+  "source": "vendor/utopia-php/database/src/Database/Operator.php",
+  "cases": [
+    {
+      "name": "constructors with edge numbers",
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "increment",
+            "args": {
+              "value": 0
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                0
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "increment",
+            "args": {
+              "value": -1.5,
+              "max": null
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": [
+                -1.5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "decrement",
+            "args": {
+              "value": 9223372036854775807
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "decrement",
+              "attribute": "",
+              "values": [
+                9223372036854775807
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "divide",
+            "args": {
+              "divisor": 0.0
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Division by zero is not allowed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "divide",
+            "args": {
+              "divisor": -0.0
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Division by zero is not allowed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "modulo",
+            "args": {
+              "divisor": 0.0
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Modulo by zero is not allowed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "divide",
+            "args": {
+              "divisor": {
+                "$float": "NAN"
+              }
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "divide",
+              "attribute": "",
+              "values": [
+                {
+                  "$float": "NAN"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "modulo",
+            "args": {
+              "divisor": {
+                "$float": "INF"
+              }
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "modulo",
+              "attribute": "",
+              "values": [
+                {
+                  "$float": "INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "divide",
+            "args": {
+              "divisor": 1e-300,
+              "min": 0
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "divide",
+              "attribute": "",
+              "values": [
+                1e-300,
+                0
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": -2
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                -2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "multiply",
+            "args": {
+              "factor": 1.0,
+              "max": 2.0
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "multiply",
+              "attribute": "",
+              "values": [
+                1.0,
+                2.0
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "arrayInsert",
+            "args": {
+              "index": -1,
+              "value": {
+                "k": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "arrayInsert",
+              "attribute": "",
+              "values": [
+                -1,
+                {
+                  "k": [
+                    1
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "stringConcat",
+            "args": {
+              "value": [
+                "a",
+                "b"
+              ]
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "stringConcat",
+              "attribute": "",
+              "values": [
+                [
+                  "a",
+                  "b"
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "stringConcat",
+            "args": {
+              "value": null
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "stringConcat",
+              "attribute": "",
+              "values": [
+                null
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "arrayFilter",
+            "args": {
+              "condition": "",
+              "value": 1.5
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "arrayFilter",
+              "attribute": "",
+              "values": [
+                "",
+                1.5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "dateAddDays",
+            "args": {
+              "days": -9223372036854775808
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "dateAddDays",
+              "attribute": "",
+              "values": [
+                -9223372036854775808
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "stringReplace",
+            "args": {
+              "search": "",
+              "replace": "é"
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "stringReplace",
+              "attribute": "",
+              "values": [
+                "",
+                "é"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "parse errors",
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": ""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator: Syntax error"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "{"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator: Syntax error"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "null"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator. Must be an array, got NULL"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "1"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator. Must be an array, got integer"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "[]"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator method: "
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "{}"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator method: "
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "{\"method\":\"increment\"}"
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "{\"method\":null}"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator method: "
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "{\"method\":1.5}"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator method. Must be a string, got double"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "{\"method\":[]}"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator method. Must be a string, got array"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "{\"method\":\"Increment\"}"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator method: Increment"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "{\"method\":\"increment\",\"attribute\":null,\"values\":null}"
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "{\"method\":\"increment\",\"attribute\":[]}"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator attribute. Must be a string, got array"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "{\"method\":\"increment\",\"values\":\"x\"}"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator values. Must be an array, got string"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "{\"method\":\"increment\",\"values\":{\"a\":1,\"0\":2}}"
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "",
+              "values": {
+                "a": 1,
+                "0": 2
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "{\"method\":\"toggle\",\"values\":[{\"method\":\"increment\"}]}"
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "toggle",
+              "attribute": "",
+              "values": [
+                {
+                  "method": "increment"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator: Maximum stack depth exceeded"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": {
+                "$bytes": "/w=="
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator: Malformed UTF-8 characters, possibly incorrectly encoded"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parseOperator",
+            "args": {
+              "operator": {}
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Database\\Operator::parseOperator(): Argument #1 ($operator) must be of type array, stdClass given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parseOperator",
+            "args": {
+              "operator": {
+                "method": "increment",
+                "attribute": {
+                  "$bytes": "YQ=="
+                }
+              }
+            }
+          },
+          "expect": {
+            "$operator": {
+              "method": "increment",
+              "attribute": "a",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parseOperators",
+            "args": {
+              "operators": []
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parseOperators",
+            "args": {
+              "operators": [
+                "{\"method\":\"toggle\"}",
+                "{\"method\":\"nope\"}"
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator method: nope"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "keyed values and getValue",
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "{\"method\":\"arrayAppend\",\"values\":{\"x\":1,\"0\":null}}"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "$operator": {
+              "method": "arrayAppend",
+              "attribute": "",
+              "values": {
+                "x": 1,
+                "0": null
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$ref": "k"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::ArrayAppend"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$ref": "k"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$ref": "k"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": {
+            "x": 1,
+            "0": null
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$ref": "k"
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$ref": "k"
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$ref": "k"
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$ref": "k"
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$ref": "k"
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$ref": "k"
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$ref": "k"
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$ref": "k"
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "method": "arrayAppend",
+            "attribute": "",
+            "values": {
+              "x": 1,
+              "0": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$ref": "k"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "{\"method\":\"arrayAppend\",\"attribute\":\"\",\"values\":{\"x\":1,\"0\":null}}"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": [
+                  null,
+                  5
+                ]
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::Increment"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": [
+                  null,
+                  5
+                ]
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": [
+                  null,
+                  5
+                ]
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            null,
+            5
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": [
+                  null,
+                  5
+                ]
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": [
+                  null,
+                  5
+                ]
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": [
+                  null,
+                  5
+                ]
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": [
+                  null,
+                  5
+                ]
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": [
+                  null,
+                  5
+                ]
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": [
+                  null,
+                  5
+                ]
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": [
+                  null,
+                  5
+                ]
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": {
+                  "1": 5
+                }
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::Increment"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": {
+                  "1": 5
+                }
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": {
+                  "1": 5
+                }
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": {
+            "1": 5
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": {
+                  "1": 5
+                }
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": {
+                  "1": 5
+                }
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": {
+                  "1": 5
+                }
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": {
+                  "1": 5
+                }
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": {
+                  "1": 5
+                }
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": {
+                  "1": 5
+                }
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": {
+                  "1": 5
+                }
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "nope",
+                "attribute": "x",
+                "values": [
+                  1
+                ]
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"nope\" is not a valid backing value for enum Utopia\\Database\\OperatorType"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "nope",
+                "attribute": "x",
+                "values": [
+                  1
+                ]
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"nope\" is not a valid backing value for enum Utopia\\Database\\OperatorType"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "nope",
+                "attribute": "x",
+                "values": [
+                  1
+                ]
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"nope\" is not a valid backing value for enum Utopia\\Database\\OperatorType"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "nope",
+                "attribute": "x",
+                "values": [
+                  1
+                ]
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"nope\" is not a valid backing value for enum Utopia\\Database\\OperatorType"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "nope",
+                "attribute": "x",
+                "values": [
+                  1
+                ]
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"nope\" is not a valid backing value for enum Utopia\\Database\\OperatorType"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "nope",
+                "attribute": "x",
+                "values": [
+                  1
+                ]
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"nope\" is not a valid backing value for enum Utopia\\Database\\OperatorType"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "nope",
+                "attribute": "x",
+                "values": [
+                  1
+                ]
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"nope\" is not a valid backing value for enum Utopia\\Database\\OperatorType"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "nope",
+                "attribute": "x",
+                "values": [
+                  1
+                ]
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"nope\" is not a valid backing value for enum Utopia\\Database\\OperatorType"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "nope",
+                "attribute": "x",
+                "values": [
+                  1
+                ]
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"nope\" is not a valid backing value for enum Utopia\\Database\\OperatorType"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "nope",
+                "attribute": "x",
+                "values": [
+                  1
+                ]
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"nope\" is not a valid backing value for enum Utopia\\Database\\OperatorType"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Operator",
+            "args": {
+              "method": "whatever",
+              "attribute": "",
+              "values": []
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"whatever\" is not a valid backing value for enum Utopia\\Database\\OperatorType"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "toggle",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "setValues",
+            "args": {
+              "values": {
+                "a": 1
+              }
+            },
+            "as": "op26"
+          },
+          "expect": {
+            "$operator": {
+              "method": "toggle",
+              "attribute": "",
+              "values": {
+                "a": 1
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "op26"
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "method": "toggle",
+            "attribute": "",
+            "values": {
+              "a": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "serialization edge cases",
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "stringConcat",
+                "attribute": "é",
+                "values": [
+                  "😀",
+                  {
+                    "$bytes": "gA=="
+                  }
+                ]
+              }
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid Json: Malformed UTF-8 characters, possibly incorrectly encoded"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "stringConcat",
+                "attribute": "a",
+                "values": [
+                  "😀",
+                  1.0,
+                  -0.0,
+                  0.1
+                ]
+              }
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "{\"method\":\"stringConcat\",\"attribute\":\"a\",\"values\":[\"\\ud83d\\ude00\",1,-0,0.1]}"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayAppend",
+                "attribute": "a",
+                "values": [
+                  {
+                    "$document": {
+                      "$id": "d"
+                    }
+                  },
+                  {
+                    "$query": {
+                      "method": "limit",
+                      "attribute": "",
+                      "values": [
+                        1
+                      ]
+                    }
+                  },
+                  {
+                    "$operator": {
+                      "method": "toggle",
+                      "attribute": "",
+                      "values": []
+                    }
+                  },
+                  {
+                    "$object": {
+                      "a": 1
+                    }
+                  },
+                  {}
+                ]
+              }
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "{\"method\":\"arrayAppend\",\"attribute\":\"a\",\"values\":[{\"$id\":\"d\"},{},{},{\"a\":1},{}]}"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayAppend",
+                "attribute": "a",
+                "values": [
+                  {
+                    "$document": {
+                      "$id": "d"
+                    }
+                  }
+                ]
+              }
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "method": "arrayAppend",
+            "attribute": "a",
+            "values": [
+              {
+                "$document": {
+                  "$id": "d"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": [
+                  {
+                    "$float": "NAN"
+                  }
+                ]
+              }
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid Json: Inf and NaN cannot be JSON encoded"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "extractOperators edge cases",
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "extractOperators",
+            "args": {
+              "data": []
+            }
+          },
+          "expect": {
+            "operators": [],
+            "updates": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "extractOperators",
+            "args": {
+              "data": [
+                {
+                  "$operator": {
+                    "method": "increment",
+                    "attribute": "",
+                    "values": []
+                  }
+                },
+                "x",
+                {
+                  "$operator": {
+                    "method": "toggle",
+                    "attribute": "set",
+                    "values": []
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "operators": {
+              "0": {
+                "$operator": {
+                  "method": "increment",
+                  "attribute": "0",
+                  "values": []
+                }
+              },
+              "2": {
+                "$operator": {
+                  "method": "toggle",
+                  "attribute": "set",
+                  "values": []
+                }
+              }
+            },
+            "updates": {
+              "1": "x"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "extractOperators",
+            "args": {
+              "data": {
+                "0": {
+                  "$operator": {
+                    "method": "toggle",
+                    "attribute": "0",
+                    "values": []
+                  }
+                },
+                "a": {
+                  "$operator": {
+                    "method": "toggle",
+                    "attribute": " ",
+                    "values": []
+                  }
+                },
+                "5": {
+                  "$operator": {
+                    "method": "increment",
+                    "attribute": "",
+                    "values": []
+                  }
+                },
+                "q": {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "a",
+                    "values": [
+                      1
+                    ]
+                  }
+                },
+                "d": {
+                  "$document": {
+                    "$id": "x"
+                  }
+                },
+                "n": null
+              }
+            }
+          },
+          "expect": {
+            "operators": {
+              "0": {
+                "$operator": {
+                  "method": "toggle",
+                  "attribute": "0",
+                  "values": []
+                }
+              },
+              "a": {
+                "$operator": {
+                  "method": "toggle",
+                  "attribute": " ",
+                  "values": []
+                }
+              },
+              "5": {
+                "$operator": {
+                  "method": "increment",
+                  "attribute": "5",
+                  "values": []
+                }
+              }
+            },
+            "updates": {
+              "q": {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "a",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              "d": {
+                "$document": {
+                  "$id": "x"
+                }
+              },
+              "n": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "constants and type checks",
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "OperatorType",
+            "method": "cases",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$enum": "OperatorType::Increment"
+            },
+            {
+              "$enum": "OperatorType::Decrement"
+            },
+            {
+              "$enum": "OperatorType::Modulo"
+            },
+            {
+              "$enum": "OperatorType::Power"
+            },
+            {
+              "$enum": "OperatorType::Multiply"
+            },
+            {
+              "$enum": "OperatorType::Divide"
+            },
+            {
+              "$enum": "OperatorType::ArrayAppend"
+            },
+            {
+              "$enum": "OperatorType::ArrayPrepend"
+            },
+            {
+              "$enum": "OperatorType::ArrayInsert"
+            },
+            {
+              "$enum": "OperatorType::ArrayRemove"
+            },
+            {
+              "$enum": "OperatorType::ArrayUnique"
+            },
+            {
+              "$enum": "OperatorType::ArrayIntersect"
+            },
+            {
+              "$enum": "OperatorType::ArrayDiff"
+            },
+            {
+              "$enum": "OperatorType::ArrayFilter"
+            },
+            {
+              "$enum": "OperatorType::StringConcat"
+            },
+            {
+              "$enum": "OperatorType::StringReplace"
+            },
+            {
+              "$enum": "OperatorType::Toggle"
+            },
+            {
+              "$enum": "OperatorType::DateAddDays"
+            },
+            {
+              "$enum": "OperatorType::DateSubDays"
+            },
+            {
+              "$enum": "OperatorType::DateSetNow"
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "isMethod",
+            "args": {
+              "value": "and"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::Increment"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "increment",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "decrement",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::Decrement"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "decrement",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "decrement",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "decrement",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "decrement",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "decrement",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "decrement",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "decrement",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "decrement",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "decrement",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "multiply",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::Multiply"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "multiply",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "multiply",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "multiply",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "multiply",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "multiply",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "multiply",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "multiply",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "multiply",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "multiply",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "divide",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::Divide"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "divide",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "divide",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "divide",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "divide",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "divide",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "divide",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "divide",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "divide",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "divide",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "modulo",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::Modulo"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "modulo",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "modulo",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "modulo",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "modulo",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "modulo",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "modulo",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "modulo",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "modulo",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "modulo",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "power",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::Power"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "power",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "power",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "power",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "power",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "power",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "power",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "power",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "power",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "power",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayAppend",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::ArrayAppend"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayAppend",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayAppend",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayAppend",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayAppend",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayAppend",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayAppend",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayAppend",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayAppend",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayAppend",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayPrepend",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::ArrayPrepend"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayPrepend",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayPrepend",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayPrepend",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayPrepend",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayPrepend",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayPrepend",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayPrepend",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayPrepend",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayPrepend",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayInsert",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::ArrayInsert"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayInsert",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayInsert",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayInsert",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayInsert",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayInsert",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayInsert",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayInsert",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayInsert",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayInsert",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayRemove",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::ArrayRemove"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayRemove",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayRemove",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayRemove",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayRemove",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayRemove",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayRemove",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayRemove",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayRemove",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayRemove",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayUnique",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::ArrayUnique"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayUnique",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayUnique",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayUnique",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayUnique",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayUnique",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayUnique",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayUnique",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayUnique",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayUnique",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayIntersect",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::ArrayIntersect"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayIntersect",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayIntersect",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayIntersect",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayIntersect",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayIntersect",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayIntersect",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayIntersect",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayIntersect",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayIntersect",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayDiff",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::ArrayDiff"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayDiff",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayDiff",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayDiff",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayDiff",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayDiff",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayDiff",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayDiff",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayDiff",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayDiff",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayFilter",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::ArrayFilter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayFilter",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayFilter",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayFilter",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayFilter",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayFilter",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayFilter",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayFilter",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayFilter",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "arrayFilter",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "stringConcat",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::StringConcat"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "stringConcat",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "stringConcat",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "stringConcat",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "stringConcat",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "stringConcat",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "stringConcat",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "stringConcat",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "stringConcat",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "stringConcat",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "stringReplace",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::StringReplace"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "stringReplace",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "stringReplace",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "stringReplace",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "stringReplace",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "stringReplace",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "stringReplace",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "stringReplace",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "stringReplace",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "stringReplace",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "toggle",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::Toggle"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "toggle",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "toggle",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "toggle",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "toggle",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "toggle",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "toggle",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "toggle",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "toggle",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "toggle",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateAddDays",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::DateAddDays"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateAddDays",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateAddDays",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateAddDays",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateAddDays",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateAddDays",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateAddDays",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateAddDays",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateAddDays",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateAddDays",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateSubDays",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::DateSubDays"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateSubDays",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateSubDays",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateSubDays",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateSubDays",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateSubDays",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateSubDays",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateSubDays",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateSubDays",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateSubDays",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateSetNow",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "OperatorType::DateSetNow"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateSetNow",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateSetNow",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateSetNow",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateSetNow",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": "default"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateSetNow",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateSetNow",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateSetNow",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateSetNow",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "dateSetNow",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "nope",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"nope\" is not a valid backing value for enum Utopia\\Database\\OperatorType"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "nope",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"nope\" is not a valid backing value for enum Utopia\\Database\\OperatorType"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "nope",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"nope\" is not a valid backing value for enum Utopia\\Database\\OperatorType"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "nope",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"nope\" is not a valid backing value for enum Utopia\\Database\\OperatorType"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "nope",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "getValue",
+            "args": {
+              "default": "default"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"nope\" is not a valid backing value for enum Utopia\\Database\\OperatorType"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "nope",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isNumericOperation",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"nope\" is not a valid backing value for enum Utopia\\Database\\OperatorType"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "nope",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isArrayOperation",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"nope\" is not a valid backing value for enum Utopia\\Database\\OperatorType"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "nope",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isStringOperation",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"nope\" is not a valid backing value for enum Utopia\\Database\\OperatorType"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "nope",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isBooleanOperation",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"nope\" is not a valid backing value for enum Utopia\\Database\\OperatorType"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$operator": {
+                "method": "nope",
+                "attribute": "",
+                "values": []
+              }
+            },
+            "method": "isDateOperation",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"nope\" is not a valid backing value for enum Utopia\\Database\\OperatorType"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "isOperator",
+            "args": {
+              "value": {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "a",
+                  "values": [
+                    1
+                  ]
+                }
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "isOperator",
+            "args": {
+              "value": {
+                "$document": {}
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "isOperator",
+            "args": {
+              "value": {
+                "method": "increment"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,141 @@
+{
+  "lib": "client",
+  "environment": {
+    "date": "2026-10-11T19:33:03Z",
+    "commit": "e2c3406452",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "resolve",
+      "description": "Resolve a relative redirect location against a request URI",
+      "php": {
+        "ns": 2328.874261083744,
+        "min": 2300.307881773399,
+        "max": 2511.786699507389,
+        "samples": 15,
+        "calls": 8120
+      },
+      "rust": {
+        "ns": 317.63341247303816,
+        "min": 309.4032711078007,
+        "max": 327.7166177862607,
+        "samples": 15,
+        "calls": 64443,
+        "allocations": 18.000001034505946,
+        "bytes": 239.0001241407135
+      },
+      "speedup": 7.331956178512633,
+      "bound": null
+    },
+    {
+      "name": "public_internet",
+      "description": "Check a connected address against PublicInternet",
+      "php": {
+        "ns": 1667.6229863156072,
+        "min": 1624.826779837173,
+        "max": 2029.5015589814655,
+        "samples": 15,
+        "calls": 11546
+      },
+      "rust": {
+        "ns": 434.923812686815,
+        "min": 425.53599025794307,
+        "max": 601.0886084357356,
+        "samples": 15,
+        "calls": 45165,
+        "allocations": 20.000001476069226,
+        "bytes": 98.00017712830731
+      },
+      "speedup": 3.8342876100841337,
+      "bound": null
+    },
+    {
+      "name": "backoff",
+      "description": "Decide the delay after a 503 response",
+      "php": {
+        "ns": 215.0208264300529,
+        "min": 211.2030484886418,
+        "max": 241.0635838150289,
+        "samples": 15,
+        "calls": 81483
+      },
+      "rust": {
+        "ns": 6.556229790017525,
+        "min": 6.285685709543286,
+        "max": 6.689776339313922,
+        "samples": 15,
+        "calls": 3054493,
+        "allocations": 2.1825771631058464e-8,
+        "bytes": 2.619092595727016e-6
+      },
+      "speedup": 32.796413993518385,
+      "bound": null
+    },
+    {
+      "name": "round_trip",
+      "description": "Send a GET to the fixture server on a reused connection and read its JSON response",
+      "php": {
+        "ns": 73134.47653429603,
+        "min": 70078.6714801444,
+        "max": 109740.37545126354,
+        "samples": 15,
+        "calls": 277
+      },
+      "rust": {
+        "ns": 55200.88547486033,
+        "min": 32391.061452513968,
+        "max": 81348.93016759776,
+        "samples": 15,
+        "calls": 358,
+        "allocations": 48.00018621973929,
+        "bytes": 7212.022346368715
+      },
+      "speedup": 1.3248786845566642,
+      "bound": "A loopback round trip to the fixture server (request out, a Swoole coroutine answers, response back), the same on both runtimes, dominates the call"
+    },
+    {
+      "name": "raw_response",
+      "description": "Send a GET answered with a fixed response on a fresh connection",
+      "php": {
+        "ns": 264380.28571428574,
+        "min": 253376.31746031746,
+        "max": 300739.4126984127,
+        "samples": 15,
+        "calls": 63
+      },
+      "rust": {
+        "ns": 236554.01234567902,
+        "min": 230649.6913580247,
+        "max": 255051.95061728396,
+        "samples": 15,
+        "calls": 81,
+        "allocations": 57.00082304526749,
+        "bytes": 24404.0987654321
+      },
+      "speedup": 1.1176317961918307,
+      "bound": "A new TCP connection and a round trip to the fixture server, the same on both runtimes, dominate the call"
+    }
+  ]
+}

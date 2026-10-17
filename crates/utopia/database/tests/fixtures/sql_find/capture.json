@@ -1,0 +1,2524 @@
+[
+ {
+  "name": "sql_find/join_without_select_leaves_joined_internals_out",
+  "engines": [
+   "mysql"
+  ],
+  "queries": [
+   {
+    "method": "leftJoin",
+    "attribute": "orders",
+    "alias": "j0",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "customerId"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "sql_find/nested_join_on_compiles_predicates_onto_join",
+  "engines": [
+   "mysql"
+  ],
+  "queries": [
+   {
+    "method": "leftJoin",
+    "attribute": "orders",
+    "alias": "ord",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "customerId"
+      ]
+     },
+     {
+      "method": "equal",
+      "attribute": "ord.status",
+      "values": [
+       "paid"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "sql_find/emulates_full_outer_join_with_outer_limit",
+  "engines": [
+   "mysql"
+  ],
+  "limit": 2,
+  "queries": [
+   {
+    "method": "fullOuterJoin",
+    "attribute": "orders",
+    "alias": "j0",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "customerId"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "sql_find/emulates_full_outer_join_order_by_is_unambiguous_after_union",
+  "engines": [
+   "mysql"
+  ],
+  "limit": 2,
+  "orderAttributes": [
+   "$sequence"
+  ],
+  "orderTypes": [
+   "ASC"
+  ],
+  "queries": [
+   {
+    "method": "fullOuterJoin",
+    "attribute": "orders",
+    "alias": "j0",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "customerId"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "sql_find/emulates_full_outer_join_order_by_matches_projected_union_output",
+  "engines": [
+   "mysql"
+  ],
+  "limit": 2,
+  "orderAttributes": [
+   "$sequence"
+  ],
+  "orderTypes": [
+   "ASC"
+  ],
+  "queries": [
+   {
+    "method": "fullOuterJoin",
+    "attribute": "orders",
+    "alias": "j0",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "customerId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "select",
+    "values": [
+     "name"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "sql_find/emulates_full_outer_join_order_by_handles_multiple_attributes",
+  "engines": [
+   "mysql"
+  ],
+  "limit": 2,
+  "orderAttributes": [
+   "name",
+   "$sequence"
+  ],
+  "orderTypes": [
+   "ASC",
+   "ASC"
+  ],
+  "queries": [
+   {
+    "method": "fullOuterJoin",
+    "attribute": "orders",
+    "alias": "j0",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "customerId"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "sql_find/distinct_select_id_projects_main_uid",
+  "engines": [
+   "mysql"
+  ],
+  "queries": [
+   {
+    "method": "distinct",
+    "values": []
+   },
+   {
+    "method": "join",
+    "attribute": "orders",
+    "alias": "b",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "customerId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "select",
+    "values": [
+     "$id",
+     "name",
+     "b.label"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "sql_find/selected_join_identity_is_projected_as_qualified_internal",
+  "engines": [
+   "mysql"
+  ],
+  "queries": [
+   {
+    "method": "join",
+    "attribute": "peers",
+    "alias": "alpha",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "mainId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "select",
+    "values": [
+     "name",
+     "alpha.$id",
+     "alpha.label"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "sql_find/remap_row_preserves_selected_join_identity",
+  "engines": [
+   "mysql"
+  ],
+  "queries": [
+   {
+    "method": "join",
+    "attribute": "peers",
+    "alias": "alpha",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "mainId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "join",
+    "attribute": "peers",
+    "alias": "beta",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "peerKey",
+       "=",
+       "$id"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "select",
+    "values": [
+     "name",
+     "alpha.$id",
+     "beta.$id",
+     "alpha.label",
+     "beta.label",
+     "alpha.score"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "sql_find/join_side_search_uses_join_alias",
+  "queries": [
+   {
+    "method": "leftJoin",
+    "attribute": "meta",
+    "alias": "meta",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "mainId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "search",
+    "attribute": "meta.body",
+    "values": [
+     "needle"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "sql_find/sqlite_main_search_quotes_main_alias",
+  "engines": [
+   "sqlite"
+  ],
+  "queries": [
+   {
+    "method": "leftJoin",
+    "attribute": "meta",
+    "alias": "meta",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "mainId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "search",
+    "attribute": "body",
+    "values": [
+     "needle"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "sql_find/emulates_full_outer_join_cursor_after_uses_join_qualified_order",
+  "limit": 1,
+  "orderAttributes": [
+   "meta.score",
+   "$sequence"
+  ],
+  "orderTypes": [
+   "ASC",
+   "ASC"
+  ],
+  "cursor": {
+   "meta.score": 10,
+   "$sequence": "5"
+  },
+  "queries": [
+   {
+    "method": "fullOuterJoin",
+    "attribute": "meta",
+    "alias": "meta",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "mainId"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "sql_find/qualify_dotted_attribute_keeps_nested_object_paths",
+  "engines": [
+   "mysql"
+  ],
+  "collection": {
+   "$id": "collection",
+   "attributes": [
+    {
+     "$id": "meta.score",
+     "key": "meta.score",
+     "type": "integer"
+    }
+   ]
+  },
+  "queries": [
+   {
+    "method": "join",
+    "attribute": "orders",
+    "alias": "orders",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "customerId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "equal",
+    "attribute": "meta.score",
+    "values": [
+     1
+    ]
+   },
+   {
+    "method": "equal",
+    "attribute": "orders.email",
+    "values": [
+     "a@b.co"
+    ]
+   },
+   {
+    "method": "equal",
+    "attribute": "orders.$id",
+    "values": [
+     "order-1"
+    ]
+   },
+   {
+    "method": "equal",
+    "attribute": "profile.user.email",
+    "values": [
+     "c@d.co"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "sql_find/join_document_security/disabled_under_the_collection_id",
+  "engines": [
+   "mysql"
+  ],
+  "database": "appwrite",
+  "namespace": "_5",
+  "auth": [
+   "any"
+  ],
+  "collection": {
+   "$id": "database_1_collection_1",
+   "joinDocumentSecurity": {
+    "database_1_collection_2": false
+   }
+  },
+  "queries": [
+   {
+    "method": "join",
+    "attribute": "database_1_collection_2",
+    "alias": "j0",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "mainId"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "sql_find/join_document_security/disabled_under_the_qualified_physical_name",
+  "engines": [
+   "mysql"
+  ],
+  "database": "appwrite",
+  "namespace": "_5",
+  "auth": [
+   "any"
+  ],
+  "collection": {
+   "$id": "database_1_collection_1",
+   "joinDocumentSecurity": {
+    "appwrite._5_database_1_collection_2": false
+   }
+  },
+  "queries": [
+   {
+    "method": "join",
+    "attribute": "database_1_collection_2",
+    "alias": "j0",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "mainId"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "sql_find/join_document_security/disabled_under_the_physical_table_name",
+  "engines": [
+   "mysql"
+  ],
+  "database": "appwrite",
+  "namespace": "_5",
+  "auth": [
+   "any"
+  ],
+  "collection": {
+   "$id": "database_1_collection_1",
+   "joinDocumentSecurity": {
+    "_5_database_1_collection_2": false
+   }
+  },
+  "queries": [
+   {
+    "method": "join",
+    "attribute": "database_1_collection_2",
+    "alias": "j0",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "mainId"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "sql_find/join_document_security/enabled_under_the_qualified_physical_name",
+  "engines": [
+   "mysql"
+  ],
+  "database": "appwrite",
+  "namespace": "_5",
+  "auth": [
+   "any"
+  ],
+  "collection": {
+   "$id": "database_1_collection_1",
+   "joinDocumentSecurity": {
+    "appwrite._5_database_1_collection_2": true
+   }
+  },
+  "queries": [
+   {
+    "method": "join",
+    "attribute": "database_1_collection_2",
+    "alias": "j0",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "mainId"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "sql_find/join_document_security/disabled_for_another_collection_only",
+  "engines": [
+   "mysql"
+  ],
+  "database": "appwrite",
+  "namespace": "_5",
+  "auth": [
+   "any"
+  ],
+  "collection": {
+   "$id": "database_1_collection_1",
+   "joinDocumentSecurity": {
+    "database_1_collection_9": false
+   }
+  },
+  "queries": [
+   {
+    "method": "join",
+    "attribute": "database_1_collection_2",
+    "alias": "j0",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "mainId"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "sql_find/join_document_security/no_entries",
+  "engines": [
+   "mysql"
+  ],
+  "database": "appwrite",
+  "namespace": "_5",
+  "auth": [
+   "any"
+  ],
+  "collection": {
+   "$id": "database_1_collection_1",
+   "joinDocumentSecurity": {}
+  },
+  "queries": [
+   {
+    "method": "join",
+    "attribute": "database_1_collection_2",
+    "alias": "j0",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "mainId"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "sql_find/fast_path",
+  "engines": [
+   "mysql"
+  ],
+  "orderAttributes": [
+   "$sequence"
+  ],
+  "orderTypes": [
+   "ASC"
+  ],
+  "queries": []
+ },
+ {
+  "name": "sql_find/builder_path",
+  "engines": [
+   "mysql"
+  ],
+  "orderAttributes": [
+   "$sequence"
+  ],
+  "orderTypes": [
+   "ASC"
+  ],
+  "queries": [
+   {
+    "method": "equal",
+    "attribute": "title",
+    "values": [
+     "value"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "postgres_vector_cursor/without_its_distance_is_refused",
+  "engines": [
+   "postgres"
+  ],
+  "collection": {
+   "$id": "items"
+  },
+  "limit": 2,
+  "orderAttributes": [
+   "rank"
+  ],
+  "orderTypes": [
+   "ASC"
+  ],
+  "cursor": {
+   "rank": 3
+  },
+  "queries": [
+   {
+    "method": "vectorCosine",
+    "attribute": "embedding",
+    "values": [
+     [
+      1.0,
+      0.0,
+      0.0
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "name": "postgres_vector_cursor/without_an_order_attribute_is_refused",
+  "engines": [
+   "postgres"
+  ],
+  "collection": {
+   "$id": "items"
+  },
+  "limit": 2,
+  "cursor": {
+   "$distance": 0.25
+  },
+  "queries": [
+   {
+    "method": "vectorCosine",
+    "attribute": "embedding",
+    "values": [
+     [
+      1.0,
+      0.0,
+      0.0
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "name": "postgres_vector_cursor/missing_an_order_value_is_refused",
+  "engines": [
+   "postgres"
+  ],
+  "collection": {
+   "$id": "items"
+  },
+  "limit": 2,
+  "orderAttributes": [
+   "rank",
+   "$sequence"
+  ],
+  "orderTypes": [
+   "ASC",
+   "ASC"
+  ],
+  "cursor": {
+   "$sequence": "5",
+   "$distance": 0.25
+  },
+  "queries": [
+   {
+    "method": "vectorCosine",
+    "attribute": "embedding",
+    "values": [
+     [
+      1.0,
+      0.0,
+      0.0
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "name": "postgres_vector_cursor/missing_a_later_order_value_is_refused",
+  "engines": [
+   "postgres"
+  ],
+  "collection": {
+   "$id": "items"
+  },
+  "limit": 2,
+  "orderAttributes": [
+   "rank",
+   "$sequence"
+  ],
+  "orderTypes": [
+   "ASC",
+   "ASC"
+  ],
+  "cursor": {
+   "rank": 3,
+   "$distance": 0.25
+  },
+  "queries": [
+   {
+    "method": "vectorCosine",
+    "attribute": "embedding",
+    "values": [
+     [
+      1.0,
+      0.0,
+      0.0
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "name": "postgres_vector_cursor/descending_after",
+  "engines": [
+   "postgres"
+  ],
+  "collection": {
+   "$id": "items"
+  },
+  "limit": 2,
+  "orderAttributes": [
+   "rank"
+  ],
+  "orderTypes": [
+   "DESC"
+  ],
+  "cursor": {
+   "rank": 3,
+   "$distance": 0.25
+  },
+  "cursorDirection": "after",
+  "queries": [
+   {
+    "method": "vectorCosine",
+    "attribute": "embedding",
+    "values": [
+     [
+      1.0,
+      0.0,
+      0.0
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "name": "postgres_vector_cursor/descending_before",
+  "engines": [
+   "postgres"
+  ],
+  "collection": {
+   "$id": "items"
+  },
+  "limit": 2,
+  "orderAttributes": [
+   "rank"
+  ],
+  "orderTypes": [
+   "DESC"
+  ],
+  "cursor": {
+   "rank": 3,
+   "$distance": 0.25
+  },
+  "cursorDirection": "before",
+  "queries": [
+   {
+    "method": "vectorCosine",
+    "attribute": "embedding",
+    "values": [
+     [
+      1.0,
+      0.0,
+      0.0
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "name": "postgres_vector_cursor/ascending_after",
+  "engines": [
+   "postgres"
+  ],
+  "collection": {
+   "$id": "items"
+  },
+  "limit": 2,
+  "orderAttributes": [
+   "rank"
+  ],
+  "orderTypes": [
+   "ASC"
+  ],
+  "cursor": {
+   "rank": 3,
+   "$distance": 0.25
+  },
+  "cursorDirection": "after",
+  "queries": [
+   {
+    "method": "vectorCosine",
+    "attribute": "embedding",
+    "values": [
+     [
+      1.0,
+      0.0,
+      0.0
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "name": "postgres_vector_cursor/ascending_before",
+  "engines": [
+   "postgres"
+  ],
+  "collection": {
+   "$id": "items"
+  },
+  "limit": 2,
+  "orderAttributes": [
+   "rank"
+  ],
+  "orderTypes": [
+   "ASC"
+  ],
+  "cursor": {
+   "rank": 3,
+   "$distance": 0.25
+  },
+  "cursorDirection": "before",
+  "queries": [
+   {
+    "method": "vectorCosine",
+    "attribute": "embedding",
+    "values": [
+     [
+      1.0,
+      0.0,
+      0.0
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "name": "postgres_vector_cursor/joined_nullable",
+  "engines": [
+   "postgres"
+  ],
+  "collection": {
+   "$id": "items"
+  },
+  "limit": 2,
+  "orderAttributes": [
+   "j.rank",
+   "$sequence"
+  ],
+  "orderTypes": [
+   "DESC",
+   "ASC"
+  ],
+  "cursor": {
+   "j.rank": null,
+   "$sequence": 4,
+   "$distance": 0.5
+  },
+  "queries": [
+   {
+    "method": "vectorDot",
+    "attribute": "embedding",
+    "values": [
+     [
+      1.0,
+      0.0,
+      0.0
+     ]
+    ]
+   },
+   {
+    "method": "leftJoin",
+    "attribute": "ranks",
+    "alias": "j",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "sqlite_vector_query/vector_queries_are_left_out",
+  "engines": [
+   "sqlite",
+   "mariadb"
+  ],
+  "collection": {
+   "$id": "items"
+  },
+  "limit": 2,
+  "queries": [
+   {
+    "method": "vectorCosine",
+    "attribute": "embedding",
+    "values": [
+     [
+      1.0,
+      0.0,
+      0.0
+     ]
+    ]
+   },
+   {
+    "method": "equal",
+    "attribute": "label",
+    "values": [
+     "x"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "aggregate/unfiltered_count",
+  "call": "count",
+  "modes": [
+   "plain",
+   "shared"
+  ],
+  "auth": [
+   "any"
+  ],
+  "collection": {
+   "$id": "items",
+   "documentSecurity": true
+  },
+  "queries": []
+ },
+ {
+  "name": "aggregate/unfiltered_count_max",
+  "call": "count",
+  "modes": [
+   "plain",
+   "shared"
+  ],
+  "auth": [
+   "any"
+  ],
+  "collection": {
+   "$id": "items",
+   "documentSecurity": true
+  },
+  "max": 7,
+  "queries": []
+ },
+ {
+  "name": "aggregate/unfiltered_sum",
+  "call": "sum",
+  "attribute": "price",
+  "modes": [
+   "plain",
+   "shared"
+  ],
+  "auth": [
+   "any"
+  ],
+  "collection": {
+   "$id": "items",
+   "documentSecurity": true
+  },
+  "queries": []
+ },
+ {
+  "name": "aggregate/filtered_count",
+  "call": "count",
+  "modes": [
+   "plain",
+   "shared"
+  ],
+  "auth": [
+   "any",
+   "user:1"
+  ],
+  "collection": {
+   "$id": "items",
+   "documentSecurity": true
+  },
+  "queries": [
+   {
+    "method": "greaterThan",
+    "attribute": "price",
+    "values": [
+     5
+    ]
+   },
+   {
+    "method": "or",
+    "values": [
+     {
+      "method": "equal",
+      "attribute": "$id",
+      "values": [
+       "a"
+      ]
+     },
+     {
+      "method": "isNull",
+      "attribute": "label",
+      "values": []
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "aggregate/filtered_sum_max",
+  "call": "sum",
+  "attribute": "price",
+  "modes": [
+   "plain",
+   "shared"
+  ],
+  "auth": [
+   "any"
+  ],
+  "collection": {
+   "$id": "items",
+   "documentSecurity": true
+  },
+  "max": 3,
+  "queries": [
+   {
+    "method": "between",
+    "attribute": "price",
+    "values": [
+     1,
+     9
+    ]
+   }
+  ]
+ },
+ {
+  "name": "aggregate/metadata_count",
+  "call": "count",
+  "modes": [
+   "plain",
+   "shared"
+  ],
+  "collection": {
+   "$id": "_metadata"
+  },
+  "auth": [
+   "any"
+  ],
+  "queries": [
+   {
+    "method": "equal",
+    "attribute": "name",
+    "values": [
+     "x"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "aggregate/filtered_count_ordered",
+  "call": "count",
+  "modes": [
+   "plain",
+   "shared"
+  ],
+  "collection": {
+   "$id": "items"
+  },
+  "queries": [
+   {
+    "method": "greaterThan",
+    "attribute": "price",
+    "values": [
+     5
+    ]
+   },
+   {
+    "method": "orderAsc",
+    "attribute": "price",
+    "values": []
+   }
+  ]
+ },
+ {
+  "name": "aggregate/sum_dotted",
+  "call": "sum",
+  "attribute": "meta.price",
+  "collection": {
+   "$id": "items",
+   "attributes": [
+    {
+     "$id": "meta.price",
+     "key": "meta.price",
+     "type": "integer"
+    }
+   ]
+  },
+  "queries": [
+   {
+    "method": "greaterThan",
+    "attribute": "meta.price",
+    "values": [
+     5
+    ]
+   }
+  ]
+ },
+ {
+  "name": "aggregate/count_join_search",
+  "call": "count",
+  "modes": [
+   "plain",
+   "shared"
+  ],
+  "collection": {
+   "$id": "items",
+   "documentSecurity": true
+  },
+  "auth": [
+   "any"
+  ],
+  "queries": [
+   {
+    "method": "join",
+    "attribute": "meta",
+    "alias": "meta",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "search",
+    "attribute": "meta.body",
+    "values": [
+     "needle"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "joins/bounded_sort",
+  "modes": [
+   "plain",
+   "shared"
+  ],
+  "collection": {
+   "$id": "items",
+   "documentSecurity": true,
+   "joinIndexed": {
+    "meta": [
+     "itemId"
+    ]
+   }
+  },
+  "auth": [
+   "any"
+  ],
+  "limit": 5,
+  "offset": 2,
+  "orderAttributes": [
+   "$createdAt",
+   "$id",
+   "meta.rank"
+  ],
+  "orderTypes": [
+   "DESC",
+   "ASC",
+   "ASC"
+  ],
+  "cursor": {
+   "$createdAt": "2026-01-01 00:00:00.000",
+   "$id": "x",
+   "meta.rank": 4
+  },
+  "queries": [
+   {
+    "method": "leftJoin",
+    "attribute": "meta",
+    "alias": "meta",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "equal",
+    "attribute": "label",
+    "values": [
+     "x"
+    ]
+   },
+   {
+    "method": "search",
+    "attribute": "body",
+    "values": [
+     "needle"
+    ]
+   },
+   {
+    "method": "exists",
+    "values": [
+     "label"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "joins/bounded_sort_refused_by_joined_condition",
+  "modes": [
+   "plain"
+  ],
+  "engines": [
+   "mariadb"
+  ],
+  "collection": {
+   "$id": "items"
+  },
+  "limit": 5,
+  "orderAttributes": [
+   "$sequence",
+   "meta.rank"
+  ],
+  "orderTypes": [
+   "ASC",
+   "ASC"
+  ],
+  "queries": [
+   {
+    "method": "leftJoin",
+    "attribute": "meta",
+    "alias": "meta",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "equal",
+    "attribute": "meta.rank",
+    "values": [
+     1
+    ]
+   }
+  ]
+ },
+ {
+  "name": "joins/unindexed_join_tenant_range",
+  "modes": [
+   "shared"
+  ],
+  "collection": {
+   "$id": "items",
+   "joinIndexed": {
+    "meta": [
+     "label"
+    ],
+    "tags": [
+     "itemId"
+    ]
+   }
+  },
+  "queries": [
+   {
+    "method": "join",
+    "attribute": "meta",
+    "alias": "meta",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "join",
+    "attribute": "tags",
+    "alias": "tag",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "join",
+    "attribute": "other",
+    "alias": "other",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "meta.$id",
+       "=",
+       "$id"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "joins/large_join_permission_subqueries",
+  "auth": [
+   "any"
+  ],
+  "collection": {
+   "$id": "items",
+   "documentSecurity": true
+  },
+  "queries": [
+   {
+    "method": "join",
+    "attribute": "a",
+    "alias": "a",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "join",
+    "attribute": "b",
+    "alias": "b",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "join",
+    "attribute": "c",
+    "alias": "c",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "join",
+    "attribute": "d",
+    "alias": "d",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "leftJoin",
+    "attribute": "e",
+    "alias": "e",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "joins/aggregate_qualifies_by_declaring_join",
+  "collection": {
+   "$id": "items",
+   "attributes": [
+    {
+     "$id": "price",
+     "key": "price",
+     "type": "integer"
+    }
+   ],
+   "joinAttributes": {
+    "meta": [
+     "rank",
+     "label"
+    ],
+    "tags": [
+     "label"
+    ]
+   }
+  },
+  "queries": [
+   {
+    "method": "join",
+    "attribute": "meta",
+    "alias": "meta",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "count",
+    "attribute": "*",
+    "alias": "total",
+    "values": []
+   },
+   {
+    "method": "sum",
+    "attribute": "rank",
+    "alias": "",
+    "values": []
+   },
+   {
+    "method": "avg",
+    "attribute": "price",
+    "alias": "avgPrice",
+    "values": []
+   },
+   {
+    "method": "groupBy",
+    "values": [
+     "price",
+     "meta.price",
+     "rank"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "joins/aggregate_ambiguous",
+  "collection": {
+   "$id": "items",
+   "joinAttributes": {
+    "meta": [
+     "label"
+    ],
+    "tags": [
+     "label"
+    ]
+   }
+  },
+  "queries": [
+   {
+    "method": "join",
+    "attribute": "meta",
+    "alias": "meta",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "join",
+    "attribute": "tags",
+    "alias": "tag",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "count",
+    "attribute": "label",
+    "alias": "n",
+    "values": []
+   }
+  ]
+ },
+ {
+  "name": "joins/aggregate_unknown",
+  "collection": {
+   "$id": "items",
+   "joinAttributes": {
+    "meta": [
+     "label"
+    ]
+   }
+  },
+  "queries": [
+   {
+    "method": "join",
+    "attribute": "meta",
+    "alias": "meta",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "min",
+    "attribute": "nope",
+    "alias": "n",
+    "values": []
+   }
+  ]
+ },
+ {
+  "name": "joins/bare_order_ambiguous",
+  "collection": {
+   "$id": "items",
+   "joinAttributes": {
+    "meta": [
+     "rank"
+    ],
+    "tags": [
+     "rank"
+    ]
+   }
+  },
+  "orderAttributes": [
+   "rank"
+  ],
+  "orderTypes": [
+   "ASC"
+  ],
+  "queries": [
+   {
+    "method": "join",
+    "attribute": "meta",
+    "alias": "meta",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "join",
+    "attribute": "tags",
+    "alias": "tag",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "joins/full_outer_join_aggregate_having_order",
+  "modes": [
+   "plain",
+   "shared"
+  ],
+  "auth": [
+   "any"
+  ],
+  "collection": {
+   "$id": "items",
+   "documentSecurity": true,
+   "attributes": [
+    {
+     "$id": "price",
+     "key": "price",
+     "type": "integer"
+    }
+   ],
+   "joinAttributes": {
+    "meta": [
+     "rank",
+     "price"
+    ]
+   }
+  },
+  "limit": 4,
+  "offset": 1,
+  "orderAttributes": [
+   "price",
+   "meta.rank"
+  ],
+  "orderTypes": [
+   "DESC",
+   "ASC"
+  ],
+  "queries": [
+   {
+    "method": "fullOuterJoin",
+    "attribute": "meta",
+    "alias": "meta",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "count",
+    "attribute": "*",
+    "alias": "total",
+    "values": []
+   },
+   {
+    "method": "max",
+    "attribute": "meta.rank",
+    "alias": "",
+    "values": []
+   },
+   {
+    "method": "groupBy",
+    "values": [
+     "price",
+     "meta.price",
+     "meta.rank"
+    ]
+   },
+   {
+    "method": "having",
+    "values": [
+     {
+      "method": "greaterThan",
+      "attribute": "total",
+      "values": [
+       1
+      ]
+     }
+    ]
+   },
+   {
+    "method": "distinct",
+    "values": []
+   },
+   {
+    "method": "greaterThan",
+    "attribute": "price",
+    "values": [
+     0
+    ]
+   }
+  ]
+ },
+ {
+  "name": "joins/full_outer_join_aggregate_bitwise",
+  "engines": [
+   "mariadb",
+   "mysql"
+  ],
+  "collection": {
+   "$id": "items",
+   "attributes": [
+    {
+     "$id": "flags",
+     "key": "flags",
+     "type": "integer"
+    }
+   ]
+  },
+  "queries": [
+   {
+    "method": "fullOuterJoin",
+    "attribute": "meta",
+    "alias": "meta",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "bitAnd",
+    "attribute": "flags",
+    "alias": "",
+    "values": []
+   },
+   {
+    "method": "bitXor",
+    "attribute": "meta.flags",
+    "alias": "x",
+    "values": []
+   },
+   {
+    "method": "stddev",
+    "attribute": "flags",
+    "alias": "sd",
+    "values": []
+   }
+  ]
+ },
+ {
+  "name": "joins/full_outer_join_right_join_second_half",
+  "collection": {
+   "$id": "items"
+  },
+  "queries": [
+   {
+    "method": "join",
+    "attribute": "pre",
+    "alias": "pre",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "fullOuterJoin",
+    "attribute": "meta",
+    "alias": "meta",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "leftJoin",
+    "attribute": "mid",
+    "alias": "mid",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "meta.$id",
+       "=",
+       "metaId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "rightJoin",
+    "attribute": "tail",
+    "alias": "tail",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "meta.$id",
+       "=",
+       "metaId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "rightJoin",
+    "attribute": "head",
+    "alias": "head",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "pre.$id",
+       "=",
+       "preId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "crossJoin",
+    "attribute": "any",
+    "alias": "any",
+    "values": []
+   }
+  ]
+ },
+ {
+  "name": "joins/full_outer_join_right_join_undecidable",
+  "collection": {
+   "$id": "items"
+  },
+  "queries": [
+   {
+    "method": "fullOuterJoin",
+    "attribute": "meta",
+    "alias": "meta",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "rightJoin",
+    "attribute": "tail",
+    "alias": "tail",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "meta.$id",
+       "=",
+       "metaId"
+      ]
+     },
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "joins/full_outer_join_distinct_order_not_selected",
+  "collection": {
+   "$id": "items"
+  },
+  "orderAttributes": [
+   "label"
+  ],
+  "orderTypes": [
+   "ASC"
+  ],
+  "queries": [
+   {
+    "method": "fullOuterJoin",
+    "attribute": "meta",
+    "alias": "meta",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "distinct",
+    "values": []
+   },
+   {
+    "method": "select",
+    "values": [
+     "price"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "joins/invalid_alias",
+  "collection": {
+   "$id": "items"
+  },
+  "queries": [
+   {
+    "method": "join",
+    "attribute": "meta",
+    "alias": "1bad",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "joins/authorized_right_join_outer_chain",
+  "modes": [
+   "plain",
+   "shared"
+  ],
+  "auth": [
+   "any"
+  ],
+  "collection": {
+   "$id": "items",
+   "documentSecurity": true
+  },
+  "queries": [
+   {
+    "method": "rightJoin",
+    "attribute": "a",
+    "alias": "a",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "crossJoin",
+    "attribute": "b",
+    "alias": "b",
+    "values": []
+   },
+   {
+    "method": "rightJoin",
+    "attribute": "c",
+    "alias": "c",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "joins/read_permission_update",
+  "auth": [
+   "any"
+  ],
+  "forPermission": "update",
+  "collection": {
+   "$id": "items",
+   "documentSecurity": true
+  },
+  "queries": [
+   {
+    "method": "join",
+    "attribute": "a",
+    "alias": "a",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "itemId"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "find/select_star_with_extras",
+  "collection": {
+   "$id": "items"
+  },
+  "queries": [
+   {
+    "method": "select",
+    "values": [
+     "*",
+     "*.*",
+     "label"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "find/offset_only",
+  "collection": {
+   "$id": "items"
+  },
+  "limit": null,
+  "offset": 3,
+  "queries": [
+   {
+    "method": "equal",
+    "attribute": "label",
+    "values": [
+     "x"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "find/limit_null",
+  "collection": {
+   "$id": "items"
+  },
+  "limit": null,
+  "queries": [
+   {
+    "method": "equal",
+    "attribute": "label",
+    "values": [
+     "x"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "find/float_bindings",
+  "collection": {
+   "$id": "items"
+  },
+  "queries": [
+   {
+    "method": "greaterThan",
+    "attribute": "price",
+    "values": [
+     0.1
+    ]
+   }
+  ]
+ },
+ {
+  "name": "find/group_without_join",
+  "collection": {
+   "$id": "items"
+  },
+  "queries": [
+   {
+    "method": "count",
+    "attribute": "*",
+    "alias": "n",
+    "values": []
+   },
+   {
+    "method": "groupBy",
+    "values": [
+     "$createdAt",
+     "label"
+    ]
+   },
+   {
+    "method": "select",
+    "values": [
+     "label"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "join_without_validation/joined_sum_of_internal_attribute",
+  "call": "sum",
+  "attribute": "$sequence",
+  "collection": {
+   "$id": "customers"
+  },
+  "queries": [
+   {
+    "method": "join",
+    "attribute": "notes",
+    "alias": "note",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "customerId"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "join_without_validation/non_string_column",
+  "collection": {
+   "$id": "customers"
+  },
+  "queries": [
+   {
+    "method": "leftJoin",
+    "attribute": "notes",
+    "alias": "note",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       5
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "join_without_validation/sum_unknown_prefix_beside_join",
+  "call": "sum",
+  "attribute": "other.body",
+  "collection": {
+   "$id": "customers"
+  },
+  "queries": [
+   {
+    "method": "join",
+    "attribute": "notes",
+    "alias": "note",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "customerId"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "join_without_validation/sum_quote_char_beside_join",
+  "call": "sum",
+  "attribute": "other`.body",
+  "collection": {
+   "$id": "customers"
+  },
+  "queries": [
+   {
+    "method": "join",
+    "attribute": "notes",
+    "alias": "note",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "customerId"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "join_without_validation/sum_quote_char_without_join",
+  "call": "sum",
+  "attribute": "other`.body",
+  "collection": {
+   "$id": "customers"
+  },
+  "queries": []
+ },
+ {
+  "name": "filtered_aggregate/elem_match_refused",
+  "call": "count",
+  "engines": [
+   "mariadb"
+  ],
+  "collection": {
+   "$id": "books"
+  },
+  "queries": [
+   {
+    "method": "elemMatch",
+    "attribute": "tags",
+    "values": [
+     {
+      "method": "equal",
+      "attribute": "name",
+      "values": [
+       "x"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "filtered_aggregate/null_tenant",
+  "call": "count",
+  "modes": [
+   "shared"
+  ],
+  "tenant": null,
+  "collection": {
+   "$id": "books",
+   "documentSecurity": true
+  },
+  "auth": [
+   "any"
+  ],
+  "queries": [
+   {
+    "method": "equal",
+    "attribute": "category",
+    "values": [
+     "c3"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "joined_reads/full_outer_join_then_nested_left_join",
+  "collection": {
+   "$id": "posts"
+  },
+  "orderAttributes": [
+   "$sequence"
+  ],
+  "orderTypes": [
+   "ASC"
+  ],
+  "queries": [
+   {
+    "method": "fullOuterJoin",
+    "attribute": "comments",
+    "alias": "comment",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "postId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "leftJoin",
+    "attribute": "replies",
+    "alias": "reply",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "comment.$id",
+       "=",
+       "commentId"
+      ]
+     },
+     {
+      "method": "equal",
+      "attribute": "reply.body",
+      "values": [
+       "x"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "joined_reads/full_outer_join_then_nested_right_join",
+  "collection": {
+   "$id": "posts"
+  },
+  "queries": [
+   {
+    "method": "fullOuterJoin",
+    "attribute": "comments",
+    "alias": "comment",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "postId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "rightJoin",
+    "attribute": "replies",
+    "alias": "reply",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "comment.$id",
+       "=",
+       "commentId"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "joined_reads/distinct_full_outer_join_without_selects",
+  "collection": {
+   "$id": "posts"
+  },
+  "orderAttributes": [
+   "comment.$id",
+   "$id"
+  ],
+  "orderTypes": [
+   "ASC",
+   "DESC"
+  ],
+  "queries": [
+   {
+    "method": "fullOuterJoin",
+    "attribute": "comments",
+    "alias": "comment",
+    "values": [
+     {
+      "method": "on",
+      "values": [
+       "$id",
+       "=",
+       "postId"
+      ]
+     }
+    ]
+   },
+   {
+    "method": "distinct",
+    "values": []
+   }
+  ]
+ }
+]

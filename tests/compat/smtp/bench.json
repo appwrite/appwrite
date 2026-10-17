@@ -1,0 +1,119 @@
+{
+  "lib": "smtp",
+  "environment": {
+    "date": "2026-10-11T19:33:03Z",
+    "commit": "e2c3406452",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "message",
+      "description": "Build and render a message with text, HTML and a 4 KiB attachment",
+      "php": {
+        "ns": 13416.114569536423,
+        "min": 13049.641059602649,
+        "max": 14483.74701986755,
+        "samples": 15,
+        "calls": 1510
+      },
+      "rust": {
+        "ns": 6025.291731186126,
+        "min": 5988.954475069681,
+        "max": 7688.835552802725,
+        "samples": 15,
+        "calls": 3229,
+        "allocations": 117.0000206462269,
+        "bytes": 46096.00247754723
+      },
+      "speedup": 2.226633193559137,
+      "bound": null
+    },
+    {
+      "name": "header",
+      "description": "Encode and fold a long non-ASCII subject",
+      "php": {
+        "ns": 3631.178762696214,
+        "min": 3602.300646352724,
+        "max": 3879.701385041551,
+        "samples": 15,
+        "calls": 5415
+      },
+      "rust": {
+        "ns": 176.91381096050796,
+        "min": 174.15454586391678,
+        "max": 187.58612149322286,
+        "samples": 15,
+        "calls": 111035,
+        "allocations": 6.000000600411282,
+        "bytes": 690.0000720493538
+      },
+      "speedup": 20.525128835231488,
+      "bound": null
+    },
+    {
+      "name": "ehlo",
+      "description": "Read a ten-line EHLO reply into capabilities",
+      "php": {
+        "ns": 1623.5952801412748,
+        "min": 1599.363862578263,
+        "max": 1690.8679563332798,
+        "samples": 15,
+        "calls": 12458
+      },
+      "rust": {
+        "ns": 859.4640181802879,
+        "min": 838.4079622927363,
+        "max": 921.1486406868108,
+        "samples": 15,
+        "calls": 23762,
+        "allocations": 46.000002805599976,
+        "bytes": 2356.0003366719975
+      },
+      "speedup": 1.889078827964031,
+      "bound": null
+    },
+    {
+      "name": "send",
+      "description": "Send a message to Mailpit over an open session",
+      "php": {
+        "ns": 43726792.0,
+        "min": 41830250.0,
+        "max": 46134709.0,
+        "samples": 15,
+        "calls": 1
+      },
+      "rust": {
+        "ns": 282845.15,
+        "min": 194480.55,
+        "max": 330292.36666666664,
+        "samples": 15,
+        "calls": 60,
+        "allocations": 58.00111111111111,
+        "bytes": 4353.133333333333
+      },
+      "speedup": 154.5962234105835,
+      "bound": "A Mailpit round trip (MAIL, RCPT, DATA and the stored message), the same on both runtimes, dominates the call"
+    }
+  ]
+}
