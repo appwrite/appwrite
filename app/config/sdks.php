@@ -225,6 +225,7 @@ $platforms = [
                 'gitBranch' => 'dev',
                 'gitRepoName' => '',
                 'gitUserName' => '',
+                'gettingStarted' => \realpath(__DIR__ . '/../../docs/sdks/console/GETTING_STARTED.md'),
                 'changelog' => \realpath(__DIR__ . '/../../docs/sdks/console/CHANGELOG.md'),
             ],
             [
