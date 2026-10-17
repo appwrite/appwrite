@@ -145,12 +145,30 @@ impl Adapter for Http {
     async fn send(&self, request: Request) -> Result<Response, Error> {
         let mut body = BytesMut::new();
         let mut collect = |chunk: &[u8]| body.extend_from_slice(chunk);
-        let response = self.transfer(request, &mut collect).await?;
+        let response = self.transfer(request, &mut collect, None).await?;
         Ok(Response::from_parts(response.protocol, response.status, response.reason, response.headers, body.freeze()))
     }
 
     async fn stream<S: Sink>(&self, request: Request, sink: &mut S) -> Result<Response, Error> {
-        let response = self.transfer(request, sink).await?;
+        let response = self.transfer(request, sink, None).await?;
+        Ok(Response::from_parts(response.protocol, response.status, response.reason, response.headers, Bytes::new()))
+    }
+
+    fn supports_response_streaming(&self) -> bool {
+        true
+    }
+
+    async fn stream_with_response<S, R>(
+        &self,
+        request: Request,
+        sink: &mut S,
+        on_response: &mut R,
+    ) -> Result<Response, Error>
+    where
+        S: Sink,
+        R: FnMut(&Response) -> Result<(), Error> + Send,
+    {
+        let response = self.transfer(request, sink, Some(on_response)).await?;
         Ok(Response::from_parts(response.protocol, response.status, response.reason, response.headers, Bytes::new()))
     }
 
@@ -160,6 +178,39 @@ impl Adapter for Http {
 
     fn with_options(&self, options: Options) -> Http {
         Http { options, pins: self.pins.clone(), kept: Arc::default() }
+    }
+}
+
+/// The caller's `on_response`.
+type OnResponse<'a> = &'a mut (dyn FnMut(&Response) -> Result<(), Error> + Send + 'a);
+
+/// Told of the final response's head before its body reaches the sink.
+type Notify<'a> = &'a mut (dyn FnMut(&Head) -> Result<(), Error> + Send + 'a);
+
+/// A sink that tells of the response's head before passing on its first
+/// chunk. When that fails, nothing more reaches the sink and the failure is
+/// kept for the transfer to return.
+///
+/// PHP: the sink `transfer()` wraps around `$notify()`.
+struct Notifying<'a, 'n, S: ?Sized> {
+    sink: &'a mut S,
+    notify: Option<Notify<'n>>,
+    head: &'a Head,
+    failed: Option<Error>,
+}
+
+impl<S: Sink + ?Sized> Sink for Notifying<'_, '_, S> {
+    fn write(&mut self, chunk: &[u8]) {
+        if self.failed.is_some() {
+            return;
+        }
+        if let Some(notify) = self.notify.take()
+            && let Err(error) = notify(self.head)
+        {
+            self.failed = Some(error);
+            return;
+        }
+        self.sink.write(chunk);
     }
 }
 
@@ -206,7 +257,12 @@ impl Clock {
 }
 
 impl Http {
-    async fn transfer<S: Sink + ?Sized>(&self, request: Request, sink: &mut S) -> Result<Head, Error> {
+    async fn transfer<S: Sink + ?Sized>(
+        &self,
+        request: Request,
+        sink: &mut S,
+        on_response: Option<OnResponse<'_>>,
+    ) -> Result<Head, Error> {
         let uri = request.uri();
         if !matches!(uri.scheme(), "http" | "https") || uri.host().is_empty() {
             return Err(Error::InvalidUri("Requests must use an absolute URI.".into()));
@@ -221,13 +277,41 @@ impl Http {
         let mut hops = 0u32;
         let mut bodiless = false;
         let mut received = Vec::new();
+        // Tells `on_response` of the final response's head once, checked and
+        // decoded as the returned response is: before the first body chunk,
+        // or, for an empty body, once the response checks out.
+        let mut notified = false;
+        let mut notify = on_response.map(|on_response| {
+            move |head: &Head| -> Result<(), Error> {
+                if std::mem::replace(&mut notified, true) {
+                    return Ok(());
+                }
+                if !(200..=599).contains(&head.status) {
+                    return Err(Error::InvalidResponse("Received an invalid final HTTP response.".into()));
+                }
+                let headers = decoded(head.headers.clone(), decompress)?;
+                headers.check()?;
+                on_response(&Response::from_parts(
+                    head.protocol.clone(),
+                    head.status,
+                    head.reason.clone(),
+                    headers,
+                    Bytes::new(),
+                ))
+            }
+        });
         loop {
             let follow = self.options.follow;
             let decode = decompress && self.options.negotiate_encoding;
-            let (head, location) = self.exchange(&current, sink, decode, clock, follow, bodiless).await?;
+            let hop = notify.as_mut().map(|n| n as Notify<'_>);
+            let (head, location) = self.exchange(&current, sink, hop, decode, clock, follow, bodiless).await?;
             received.extend_from_slice(&head.raw);
             let Some(location) = location else {
-                return self.complete(head, &received, decompress);
+                let head = self.complete(head, &received, decompress)?;
+                if let Some(notify) = notify.as_mut() {
+                    notify(&head)?;
+                }
+                return Ok(head);
             };
             if hops == self.options.max_hops {
                 return Err(Error::Protocol(format!("Maximum ({}) redirects followed", self.options.max_hops)));
@@ -255,13 +339,7 @@ impl Http {
         if head.trailed || !(100..=599).contains(&head.status) {
             return Err(Error::InvalidResponse("Received an invalid HTTP response.".into()));
         }
-        if decompress && head.headers.iter().any(|(name, _)| php_std::types::numeric_key(name.as_bytes()).is_some()) {
-            return Err(Error::Type("strcasecmp(): Argument #1 ($string1) must be of type string, int given".into()));
-        }
-        if decompress && head.headers.has("Content-Encoding") {
-            head.headers.remove("Content-Encoding");
-            head.headers.remove("Content-Length");
-        }
+        head.headers = decoded(std::mem::take(&mut head.headers), decompress)?;
         head.headers.check()?;
         Ok(head)
     }
@@ -269,10 +347,12 @@ impl Http {
     /// One request and its response. Returns the redirect location to follow
     /// next, when following redirects and the response is one; its body is
     /// then discarded instead of reaching the sink.
+    #[allow(clippy::too_many_arguments)]
     async fn exchange<S: Sink + ?Sized>(
         &self,
         request: &Request,
         sink: &mut S,
+        mut notify: Option<Notify<'_>>,
         decompress: bool,
         clock: Clock,
         follow: bool,
@@ -296,10 +376,23 @@ impl Http {
 
         // A kept connection the server closed while idle fails before any
         // response byte arrives: send again on a fresh one, as cURL does.
-        let outcome = match self.attempt(&mut connection, request, &head, size, sink, decompress, clock, follow).await {
+        let attempt = self
+            .attempt(
+                &mut connection,
+                request,
+                &head,
+                size,
+                sink,
+                notify.as_mut().map(|n| &mut **n as Notify<'_>),
+                decompress,
+                clock,
+                follow,
+            )
+            .await;
+        let outcome = match attempt {
             Err(Retry::Fresh) => {
                 connection = self.connect(uri, &key, clock).await?;
-                self.attempt(&mut connection, request, &head, size, sink, decompress, clock, follow).await
+                self.attempt(&mut connection, request, &head, size, sink, notify, decompress, clock, follow).await
             }
             other => other,
         };
@@ -326,6 +419,7 @@ impl Http {
         head: &[u8],
         size: u64,
         sink: &mut S,
+        notify: Option<Notify<'_>>,
         decompress: bool,
         clock: Clock,
         follow: bool,
@@ -399,13 +493,19 @@ impl Http {
         } else {
             let decodes = decompress && !matches!(framing, Framing::None);
             let mut decoder = if decodes { Decoder::for_headers(&head.headers).map_err(Retry::Fail)? } else { None };
-            let (trailers, bytes) =
-                connection.read_body(framing, sink, decoder.as_mut(), clock).await.map_err(Retry::Fail)?;
-            head.trailed = trailers;
-            let received = bytes > 0;
-            if let Some(decoder) = decoder {
-                decoder.finish(sink, received).map_err(Retry::Fail)?;
+            // The head is told of right before the first chunk reaches the
+            // sink; an empty body's, by `transfer` once the response checks out.
+            let mut sink = Notifying { sink, notify, head: &head, failed: None };
+            let read = connection.read_body(framing, &mut sink, decoder.as_mut(), clock).await;
+            let read = read.and_then(|(trailers, bytes)| match decoder {
+                Some(decoder) => decoder.finish(&mut sink, bytes > 0).map(|()| trailers),
+                None => Ok(trailers),
+            });
+            if let Some(error) = sink.failed {
+                connection.open = false;
+                return Err(Retry::Fail(error));
             }
+            head.trailed = read.map_err(Retry::Fail)?;
         }
         if head.headers.line("Connection").eq_ignore_ascii_case("close") || head.protocol == "1.0" {
             connection.open = false;
@@ -489,6 +589,25 @@ impl Http {
             capture: None,
         })
     }
+}
+
+/// The headers of a response the transport decodes: without
+/// `Content-Encoding` and `Content-Length`, which describe the encoded body.
+///
+/// PHP: `decoded($headers)`, whose `strcasecmp()` refuses the integer keys
+/// PHP makes of numeric header names.
+fn decoded(mut headers: Headers, decompress: bool) -> Result<Headers, Error> {
+    if !decompress {
+        return Ok(headers);
+    }
+    if headers.iter().any(|(name, _)| php_std::types::numeric_key(name.as_bytes()).is_some()) {
+        return Err(Error::Type("strcasecmp(): Argument #1 ($string1) must be of type string, int given".into()));
+    }
+    if headers.has("Content-Encoding") {
+        headers.remove("Content-Encoding");
+        headers.remove("Content-Length");
+    }
+    Ok(headers)
 }
 
 /// Rejects a host name cURL's URL parser refuses.
@@ -1343,5 +1462,59 @@ mod tests {
         assert!(check_host("example.com").is_ok());
         assert!(check_host("[::1]").is_ok());
         assert_eq!(check_host("exa{mple").unwrap_err().message(), "URL rejected: Bad hostname");
+    }
+
+    /// Answers one request with `response`, then closes the connection.
+    async fn serve(response: &'static [u8]) -> String {
+        let listener = utopia_async::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        utopia_async::spawn(async move {
+            let (mut socket, _) = listener.accept().await.unwrap();
+            let mut head = Vec::new();
+            while !head.ends_with(b"\r\n\r\n") {
+                head.push(socket.read_u8().await.unwrap());
+            }
+            socket.write_all(response).await.unwrap();
+        });
+        format!("http://{address}/")
+    }
+
+    #[utopia_async::test]
+    async fn the_head_arrives_before_the_body() {
+        let uri =
+            serve(b"HTTP/1.1 206 Partial Content\r\nContent-Range: bytes 2-5/8\r\nContent-Length: 4\r\n\r\ncdef").await;
+        let range = Mutex::new(String::new());
+        let mut body = Vec::new();
+        let mut sink = |chunk: &[u8]| {
+            assert_eq!(*range.lock().unwrap(), "bytes 2-5/8", "a chunk arrived before the head");
+            body.extend_from_slice(chunk);
+        };
+        let mut on_response = |response: &Response| {
+            assert_eq!(response.status(), 206);
+            *range.lock().unwrap() = response.headers().line("Content-Range");
+            Ok(())
+        };
+
+        let response =
+            Http::new().stream_with_response(Request::new("GET", &uri).unwrap(), &mut sink, &mut on_response).await;
+
+        assert!(response.unwrap().bytes().is_empty());
+        assert_eq!(body, b"cdef");
+    }
+
+    #[utopia_async::test]
+    async fn a_refused_head_keeps_the_body_from_the_sink() {
+        let uri = serve(b"HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\nabcd").await;
+        let mut body = Vec::new();
+        let mut sink = |chunk: &[u8]| body.extend_from_slice(chunk);
+        let mut on_response = |_: &Response| Err(Error::InvalidResponse("Not the range asked for.".into()));
+
+        let error = Http::new()
+            .stream_with_response(Request::new("GET", &uri).unwrap(), &mut sink, &mut on_response)
+            .await
+            .unwrap_err();
+
+        assert_eq!(error.message(), "Not the range asked for.");
+        assert!(body.is_empty());
     }
 }
