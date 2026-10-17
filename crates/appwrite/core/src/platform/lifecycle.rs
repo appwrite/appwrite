@@ -363,7 +363,7 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
             } else {
                 KeyOwner::Team { id: key.team_id.clone(), sequence: ctx.project.team_internal_id.clone() }
             };
-            track_key_usage(ctx, owner, stored);
+            track_key_usage(ctx, owner, stored).await;
         }
         // An organization key acts as the organization's owner.
         if key.kind == KeyType::Organization {
@@ -737,8 +737,10 @@ async fn account_key_user(ctx: &mut Context) -> Result<()> {
     Ok(())
 }
 
-/// Updates `accessedAt` / `sdks` of a stored key (once per 24h or new SDK).
-fn track_key_usage(ctx: &Context, owner: KeyOwner, key: crate::database::project::Key) {
+/// Updates `accessedAt` / `sdks` of a stored key (once per 24h or new SDK),
+/// before the action as in PHP: the update and its cache purges are done
+/// by the time the response is sent.
+async fn track_key_usage(ctx: &Context, owner: KeyOwner, key: crate::database::project::Key) {
     const SERVERS: [&str; 13] = [
         "node.js",
         "php",
@@ -763,45 +765,43 @@ fn track_key_usage(ctx: &Context, owner: KeyOwner, key: crate::database::project
     }
     let state = ctx.state.clone();
     let project = ctx.project.clone();
-    utopia_async::spawn(async move {
-        let Ok(db) = state.databases.platform(Databases::unchecked()) else { return };
-        let owner_sequence = match &owner {
-            KeyOwner::Project => project.sequence.clone(),
-            KeyOwner::User { sequence, .. } | KeyOwner::Team { sequence, .. } => sequence.clone(),
-        };
-        let lock_key = format!("lock:platform:{owner_sequence}:keys:{}", key.id);
-        let state2 = state.clone();
-        let _ = state
-            .lock
-            .try_with_key(&lock_key, async move {
-                let mut updates = Document::default();
-                updates.put("accessedAt", datetime::value(&now));
-                if new_sdk {
-                    let mut sdks = key.sdks.clone();
-                    sdks.push(sdk);
-                    updates.put("sdks", list(sdks.iter().map(|s| utopia_database::Value::from(s.as_str()))));
-                }
-                match db.update_document("keys", &key.id, updates).await {
-                    Ok(_) => {
-                        // The document whose `keys` sub-query holds the key.
-                        let (collection, id) = match &owner {
-                            KeyOwner::Project => ("projects", project.id.as_str()),
-                            KeyOwner::User { id, .. } => ("users", id.as_str()),
-                            KeyOwner::Team { id, .. } => ("teams", id.as_str()),
-                        };
-                        let purged = db.authorization().skip(db.purge_cached_document(collection, id)).await;
-                        if let Err(e) = purged {
-                            tracing::warn!(error = %e, collection, "key owner cache purge failed");
-                        }
-                        if matches!(owner, KeyOwner::Project) {
-                            state2.projects.forget(&project.id);
-                        }
+    let Ok(db) = state.databases.platform(Databases::unchecked()) else { return };
+    let owner_sequence = match &owner {
+        KeyOwner::Project => project.sequence.clone(),
+        KeyOwner::User { sequence, .. } | KeyOwner::Team { sequence, .. } => sequence.clone(),
+    };
+    let lock_key = format!("lock:platform:{owner_sequence}:keys:{}", key.id);
+    let state2 = state.clone();
+    let _ = state
+        .lock
+        .try_with_key(&lock_key, async move {
+            let mut updates = Document::default();
+            updates.put("accessedAt", datetime::value(&now));
+            if new_sdk {
+                let mut sdks = key.sdks.clone();
+                sdks.push(sdk);
+                updates.put("sdks", list(sdks.iter().map(|s| utopia_database::Value::from(s.as_str()))));
+            }
+            match db.update_document("keys", &key.id, updates).await {
+                Ok(_) => {
+                    // The document whose `keys` sub-query holds the key.
+                    let (collection, id) = match &owner {
+                        KeyOwner::Project => ("projects", project.id.as_str()),
+                        KeyOwner::User { id, .. } => ("users", id.as_str()),
+                        KeyOwner::Team { id, .. } => ("teams", id.as_str()),
+                    };
+                    let purged = db.authorization().skip(db.purge_cached_document(collection, id)).await;
+                    if let Err(e) = purged {
+                        tracing::warn!(error = %e, collection, "key owner cache purge failed");
                     }
-                    Err(e) => tracing::warn!(error = %e, "key usage update failed"),
+                    if matches!(owner, KeyOwner::Project) {
+                        state2.projects.forget(&project.id);
+                    }
                 }
-            })
-            .await;
-    });
+                Err(e) => tracing::warn!(error = %e, "key usage update failed"),
+            }
+        })
+        .await;
 }
 
 /// Updates project and user `accessedAt` (once per 24h), without the

@@ -460,7 +460,11 @@ async fn twin(
     )
     .await?;
     let session = post("/users/u1/sessions", json!({})).await?["secret"].as_str().unwrap_or_default().to_owned();
-    let jwt = post("/users/u1/jwts", json!({})).await?["jwt"].as_str().unwrap_or_default().to_owned();
+    // The longest a JWT lives: a run outlasts the default 15 minutes, and the
+    // PHP twin's token, made first, would expire a few seconds before the
+    // Rust twin's, the scenarios in between seeing different identities.
+    let jwt =
+        post("/users/u1/jwts", json!({"duration": JWT_DURATION})).await?["jwt"].as_str().unwrap_or_default().to_owned();
     let (accounts, vars) = seed_accounts(api, stack, console, &project, &server, &session).await?;
     let sequence = db
         .query_one("SELECT _id::text FROM appwrite._console_projects WHERE _uid = $1", &[&project])
@@ -621,7 +625,8 @@ async fn seed_accounts(
             .as_str()
             .unwrap_or_default()
             .to_owned();
-        let jwt = send("POST", format!("/users/{id}/jwts"), server.to_vec(), json!({})).await?["jwt"]
+        let jwt = send("POST", format!("/users/{id}/jwts"), server.to_vec(), json!({"duration": JWT_DURATION})).await?
+            ["jwt"]
             .as_str()
             .unwrap_or_default()
             .to_owned();
@@ -718,6 +723,10 @@ const ORIGINS: [Origin; 3] = [Origin::None, Origin::Platform, Origin::Foreign];
 /// the project, not on who calls).
 const RULE_ORIGINS: [Origin; 2] = [Origin::Rule, Origin::OtherRule];
 const RULE_IDENTITIES: [Identity; 3] = [Identity::Guest, Identity::Key, Identity::Session];
+
+/// The twins' JWT lifetime in seconds: the most `POST /users/:userId/jwts`
+/// accepts, longer than a run.
+const JWT_DURATION: u32 = 3600;
 
 /// The twins' project ID prefix (`COMPAT_DIFF_PREFIX`, `diff` by default):
 /// runs on one stack with different prefixes leave each other's twins alone.
