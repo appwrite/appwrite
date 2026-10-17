@@ -25,6 +25,7 @@ use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Counter;
+use Utopia\Telemetry\Histogram;
 
 class Screenshots extends Action
 {
@@ -72,6 +73,7 @@ class Screenshots extends Action
 
         $screenshotMessage = Screenshot::fromArray($payload);
         $counter = $telemetry->createCounter('worker.screenshots.capture');
+        $duration = $telemetry->createHistogram('worker.screenshots.capture.duration', 's');
 
         $deploymentId = $screenshotMessage->deploymentId;
         Span::add('deployment.id', $deploymentId);
@@ -110,11 +112,15 @@ class Screenshots extends Action
                 Query::equal("projectInternalId", [$project->getSequence()]),
                 Query::equal("type", ["deployment"]),
                 Query::equal('deploymentInternalId', [$deployment->getSequence()]),
+                Query::orderAsc('$sequence'),
             ]);
 
             if ($rule->isEmpty()) {
                 throw new \Exception("Rule for deployment not found");
             }
+
+            Span::add('rule.domain', $rule->getAttribute('domain', ''));
+            Span::add('rule.trigger', $rule->getAttribute('trigger', ''));
 
             $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
 
@@ -159,12 +165,22 @@ class Screenshots extends Action
 
             $captures = [];
             foreach (['screenshotLight' => 'light', 'screenshotDark' => 'dark'] as $key => $theme) {
-                $captures[$key] = $screenshots->create(
-                    url: $routerHost . '/',
-                    theme: $theme,
-                    headers: $headers,
-                    sleep: $sleep,
-                );
+                $captureStart = \microtime(true);
+                $result = 'failure';
+
+                try {
+                    $captures[$key] = $screenshots->create(
+                        url: $routerHost . '/',
+                        theme: $theme,
+                        headers: $headers,
+                        sleep: $sleep,
+                    );
+                    $result = 'success';
+                } finally {
+                    // The first capture pays the site's cold start and the second
+                    // finds it warm, so record them separately rather than as a total.
+                    $this->recordDuration($duration, \microtime(true) - $captureStart, $theme, $result);
+                }
             }
 
             Span::add('screenshot.count', \count($captures));
@@ -236,7 +252,8 @@ class Screenshots extends Action
             ]));
         } catch (\Throwable $th) {
             $date = \date('H:i:s');
-            $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed. Deployment will continue. [0m\n");
+            $reason = $th->getMessage() === '' ? \get_class($th) : $th->getMessage();
+            $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed. Deployment will continue. Reason: {$reason} [0m\n");
 
             $this->recordTelemetry($counter, 'failure');
 
@@ -260,6 +277,19 @@ class Screenshots extends Action
         try {
             $counter->add(1, [
                 'resourceType' => RESOURCE_TYPE_SITES,
+                'result' => $result,
+            ]);
+        } catch (\Throwable) {
+            // Telemetry should never affect screenshot processing.
+        }
+    }
+
+    protected function recordDuration(Histogram $duration, float $seconds, string $theme, string $result): void
+    {
+        try {
+            $duration->record($seconds, [
+                'resourceType' => RESOURCE_TYPE_SITES,
+                'theme' => $theme,
                 'result' => $result,
             ]);
         } catch (\Throwable) {
