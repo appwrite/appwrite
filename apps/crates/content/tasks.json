@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-17T15:46:00Z",
+  "updated": "2026-10-17T17:20:00Z",
   "tasks": [
     {
       "id": "usage-gauge-tie",
@@ -22,8 +22,8 @@
       "title": "Database: known gaps after 8.3.6",
       "area": "Database 8",
       "status": "todo",
-      "updated": "2026-10-17T12:43:00Z",
-      "note": "CollectionTests::testKeywords on postgres and mysql: PHP loses a metadata transaction under lane load (passes alone). Join aliases: main relaxed PHP's alias rule (leading digits, hyphens) after the freeze, and CI runs PHP merged with main. Vector $distance: CI's pgvector returns fewer digits than the recording machine; PHP and Rust agree. The DateTime::formatTz fuzz differs by milliseconds of wall time. Memory testDeleteBulkDocuments is timing-dependent."
+      "updated": "2026-10-17T17:20:00Z",
+      "note": "CollectionTests::testKeywords on postgres and mysql: PHP loses a metadata transaction under lane load (passes alone). Join aliases: main relaxed PHP's alias rule (leading digits, hyphens) after the freeze, and CI runs PHP merged with main. Vector $distance: CI's pgvector returns fewer digits than the recording machine; PHP and Rust agree. The DateTime::formatTz fuzz differs by milliseconds of wall time. Memory testDeleteBulkDocuments is timing-dependent. SQL.php line numbers: main moved PHP to database 8.3.8, so TypeError messages quote lines 4234 and 5821 where the frozen 8.3.6 recordings and Rust say 4213 and 5779; the errors themselves match."
     },
     {
       "id": "async-compat",
