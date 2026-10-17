@@ -370,9 +370,7 @@ impl IndexDefinition {
                 index_length = database::MAX_ARRAY_INDEX_LENGTH;
             }
             if index_length > size {
-                return Ok(
-                    self.fail(format!("Index length {index_length} is larger than the size for {name}: {size}\""))
-                );
+                return Ok(self.fail(format!("Index length {index_length} is larger than the size for {name}: {size}")));
             }
             total = total.wrapping_add(index_length);
         }

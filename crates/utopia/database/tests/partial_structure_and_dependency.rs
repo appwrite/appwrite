@@ -110,8 +110,9 @@ fn index_definition_edges() {
         ),
         (key("t", &["tags"], vec![]), false, "Index length for array not specified"),
         (key("t", &["a"], vec![Some(-1)]), false, "Negative index length provided for a"),
-        (key("t", &["a"], vec![Some(300)]), false, "Index length 300 is larger than the size for a: 255\""),
-        (key("t", &["a", "tags"], vec![None, Some(10)]), true, "Index length 300 is larger than the size for a: 255\""),
+        // 8.3.6 Validator/IndexDefinition.php:515: no stray quote after the size.
+        (key("t", &["a"], vec![Some(300)]), false, "Index length 300 is larger than the size for a: 255"),
+        (key("t", &["a", "tags"], vec![None, Some(10)]), true, "Index length 300 is larger than the size for a: 255"),
         (
             key("t", &["a"], vec![Some(1), Some(2)]),
             false,

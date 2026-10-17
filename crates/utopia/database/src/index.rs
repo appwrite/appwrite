@@ -2,6 +2,7 @@
 //!
 //! PHP: `Utopia\Database\Index`.
 
+use std::borrow::Cow;
 use utopia_query::OrderDirection;
 use utopia_query::schema::IndexType;
 
@@ -188,12 +189,14 @@ impl Index {
     pub fn from_document(document: &Document) -> Result<Self> {
         let key = stored_key(document);
         let kind = document.get(TYPE);
+        let [attributes, lengths, orders] =
+            without_dropped_attributes(document.get(ATTRIBUTES), document.get(LENGTHS), document.get(ORDERS));
         Index::hydrate(
             key.map_or(Stored::Missing, Stored::Value),
             kind,
-            document.get(ATTRIBUTES),
-            document.get(LENGTHS),
-            document.get(ORDERS),
+            attributes.as_deref(),
+            lengths.as_deref(),
+            orders.as_deref(),
             document.get(TTL),
             document.id(),
         )
@@ -448,4 +451,32 @@ fn stored_order(order: &Value) -> Result<std::result::Result<Option<OrderDirecti
         }
         _ => Err("Index orders must be OrderDirection cases or null".to_owned()),
     })
+}
+
+/// `withoutDroppedAttributes()` (8.3.6): 7.x left `null` in a stored
+/// index's attributes when an attribute it covered was deleted, while the
+/// engine dropped that column from the index. Such an index is read as
+/// covering the attributes it still has, with the lengths and orders at
+/// their positions (when they have one per attribute).
+fn without_dropped_attributes<'a>(
+    attributes: Option<&'a Value>,
+    lengths: Option<&'a Value>,
+    orders: Option<&'a Value>,
+) -> [Option<Cow<'a, Value>>; 3] {
+    let unchanged = [attributes.map(Cow::Borrowed), lengths.map(Cow::Borrowed), orders.map(Cow::Borrowed)];
+    let Some(Value::Array(list)) = attributes else { return unchanged };
+    if !list.values().any(|v| matches!(v, Value::Null)) {
+        return unchanged;
+    }
+    let kept: Vec<_> = list.iter().filter(|(_, v)| !matches!(v, Value::Null)).map(|(k, _)| k.to_owned()).collect();
+    let pick = |values: &crate::value::Array| {
+        Cow::Owned(Value::Array(crate::value::Array::from_list(
+            kept.iter().filter_map(|k| values.get(k).cloned()).collect(),
+        )))
+    };
+    let alongside = |values: Option<&'a Value>| match values {
+        Some(Value::Array(values)) if values.len() == list.len() => Some(pick(values)),
+        other => other.map(Cow::Borrowed),
+    };
+    [Some(pick(list)), alongside(lengths), alongside(orders)]
 }

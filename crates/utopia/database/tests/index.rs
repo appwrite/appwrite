@@ -45,6 +45,43 @@ fn test_from_document_reads_the_stored_shape() {
     assert_eq!(index.ttl, None);
 }
 
+// LegacyDroppedAttributeIndexTest (8.3.6; Index.php:135-139, 192-204): a stored index reads past the null 7.x left
+// for a deleted attribute, keeping each length and order at its attribute; one a caller defines still refuses it.
+#[test]
+fn test_from_document_reads_past_a_dropped_attribute() {
+    let index = Index::from_document(&document! {
+        "$id" => "mixed",
+        "key" => "mixed",
+        "type" => "key",
+        "attributes" => list!["a", (), "c"],
+        "orders" => list!["ASC", "DESC", "DESC"],
+        "lengths" => list![10, 20, 30],
+    })
+    .unwrap();
+    assert_eq!(index.attributes, ["a", "c"]);
+    assert_eq!(index.lengths, [Some(10), Some(30)]);
+    assert_eq!(index.orders, [ASC, DESC]);
+
+    let unique = Index::from_document(&document! {
+        "$id" => "index_2",
+        "key" => "index_2",
+        "type" => "unique",
+        "attributes" => list!["playId", ()],
+        "orders" => list!["ASC", "ASC"],
+        "lengths" => list![(), ()],
+    })
+    .unwrap();
+    assert_eq!(unique.attributes, ["playId"]);
+    assert_eq!(unique.lengths, [None]);
+    assert_eq!(unique.orders, [ASC]);
+
+    let mut bad = Array::new();
+    bad.set(utopia_database::value::ArrayKey::from("$id"), v("bad"));
+    bad.set(utopia_database::value::ArrayKey::from("type"), v("key"));
+    bad.set(utopia_database::value::ArrayKey::from("attributes"), Value::Array(list!["playId", ()]));
+    assert_error(Index::from_array(&bad), Kind::Index, "Index attributes must be strings");
+}
+
 #[test]
 fn test_from_document_drops_the_legacy_lengths_and_orders_of_a_fulltext_index() {
     let index = Index::from_document(&document! {
