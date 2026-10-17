@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-17T03:14:00Z",
+  "updated": "2026-10-17T06:40:00Z",
   "tasks": [
     {
       "id": "db836",
@@ -24,6 +24,14 @@
       "status": "todo",
       "updated": "2026-10-15T23:30:00Z",
       "note": "tests/compat/async/spec.json points at the crate but has no operations yet; write the ops and cases against utopia-php/async 0.2 to mark it complete."
+    },
+    {
+      "id": "abuse-sync",
+      "title": "abuse: database 8 schema from main",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-10-17T06:40:00Z",
+      "note": "TimeLimit\\Database's attributes() and indexes() as utopia-database models, a Unique error for a counter that already exists, and the TablesDB schema and fixture tests. 100% API, 20 of 20 PHP tests, 285 cases with 0 differences."
     },
     {
       "id": "storage-sync",
