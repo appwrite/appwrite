@@ -93,6 +93,74 @@ final class S3CustomServerTest extends Scope
         $this->assertSame($parts[1] . $parts[2], $object['body']);
     }
 
+    #[Group('s3')]
+    public function testNativeReadDuringOverwrite(): void
+    {
+        $bucketId = $this->setupBucket();
+        $key = 'native-stream.bin';
+        $body = \str_repeat('a', 100 * 1024 * 1024);
+        $replacement = 'replacement';
+
+        foreach (['view', 'download'] as $endpoint) {
+            $uploadId = $this->createMultipartUpload($bucketId, $key);
+            $etags = [];
+            for ($offset = 0; $offset < \strlen($body); $offset += self::PART_SIZE) {
+                $partNumber = \count($etags) + 1;
+                $etags[$partNumber] = $this->uploadPart($bucketId, $key, $uploadId, $partNumber, \substr($body, $offset, self::PART_SIZE));
+            }
+            $complete = $this->completeMultipartUpload($bucketId, $key, $uploadId, $etags);
+            $this->assertSame(200, $complete['headers']['status-code'], $complete['body']);
+            $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files', \array_merge([
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertSame(200, $files['headers']['status-code']);
+            $this->assertCount(1, $files['body']['files']);
+            $fileId = $files['body']['files'][0]['$id'];
+            $path = '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/' . $endpoint;
+
+            $hash = \hash_init('sha256');
+            $bytes = 0;
+            $overwrite = null;
+            $download = \curl_init($this->client->getEndpoint() . $path);
+            \curl_setopt_array($download, [
+                CURLOPT_HTTPHEADER => [
+                    'X-Appwrite-Project: ' . $this->getProject()['$id'],
+                    'X-Appwrite-Key: ' . $this->getProject()['apiKey'],
+                    'Accept-Encoding: identity',
+                ],
+                CURLOPT_TIMEOUT => 60,
+                CURLOPT_WRITEFUNCTION => function ($handle, string $chunk) use ($bucketId, $key, $replacement, $hash, &$bytes, &$overwrite): int {
+                    \hash_update($hash, $chunk);
+                    $bytes += \strlen($chunk);
+                    if ($overwrite === null) {
+                        // Stop consuming the response while the writer commits. A range-per-chunk
+                        // reader loses its old path here; one backend GET retains the original bytes.
+                        $overwrite = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, body: $replacement);
+                    }
+                    return \strlen($chunk);
+                },
+            ]);
+            try {
+                $result = \curl_exec($download);
+                $error = \curl_error($download);
+                $status = \curl_getinfo($download, CURLINFO_RESPONSE_CODE);
+            } finally {
+                \curl_close($download);
+            }
+            $this->assertNotNull($overwrite);
+            $this->assertSame(200, $overwrite['headers']['status-code'], $overwrite['body']);
+            $this->assertNotFalse($result, $error);
+            $this->assertSame(200, $status);
+            $this->assertSame(\strlen($body), $bytes);
+            $this->assertSame(\hash('sha256', $body), \hash_final($hash));
+            $next = $this->client->call(Client::METHOD_GET, $path, \array_merge([
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), decode: false);
+            $this->assertSame(200, $next['headers']['status-code']);
+            $this->assertSame($replacement, $next['body']);
+        }
+    }
+
     private function setupBucket(): string
     {
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', \array_merge([
@@ -101,6 +169,7 @@ final class S3CustomServerTest extends Scope
         ], $this->getHeaders()), [
             'bucketId' => Id::unique(),
             'name' => 'S3 Bucket',
+            'maximumFileSize' => 128 * 1024 * 1024,
             'fileSecurity' => false,
             // The S3 gateway serves only buckets that store objects as is.
             'encryption' => false,
