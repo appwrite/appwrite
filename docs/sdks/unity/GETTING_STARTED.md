@@ -1,101 +1,135 @@
 ## Getting Started
 
-Before you begin, create an Appwrite project and add a Unity platform in your Appwrite Console.
+### Install dependencies
 
-This SDK requires the following Unity packages and libraries:
+The SDK depends on two packages that are installed separately:
 
-- [**UniTask**](https://github.com/Cysharp/UniTask): For async/await support in Unity.
-- [**NativeWebSocket**](https://github.com/endel/NativeWebSocket): For WebSocket realtime subscriptions.
-- **System.Text.Json**: For JSON serialization, provided as a DLL in the project.
+- [**UniTask**](https://github.com/Cysharp/UniTask) for async/await support.
+- [**NativeWebSocket**](https://github.com/endel/NativeWebSocket) for realtime subscriptions.
 
-After installing the SDK, open **Appwrite → Setup Assistant** in Unity and install the required dependencies.
+When you first import the SDK, the **Appwrite Setup Assistant** opens and offers to install them. You can reopen it at any time from **Appwrite > Setup Assistant**. The SDK's runtime code stays disabled until UniTask is installed. `System.Text.Json` and its dependencies ship with the SDK as DLLs.
 
-### Configure the SDK
+### Configure your project
 
-Create an Appwrite configuration using the **QuickStart** window in the **Appwrite Setup Assistant**, or through **Appwrite → Create Configuration**.
+Create a project in the [Appwrite Console](https://cloud.appwrite.io/). Find your endpoint and project ID in the project's **Settings** page.
 
-### Using AppwriteManager
+If you build for WebGL, add a **Web** platform to your project with the hostname that serves your build, so Appwrite accepts requests from it.
+
+Then create an `AppwriteConfig` asset with **Appwrite > Create Configuration**, or click **Setup Current Scene** in the Setup Assistant to create the asset and add an `AppwriteManager` to the open scene. Set the endpoint (for example `https://<REGION>.cloud.appwrite.io/v1`), your project ID, and the services you want `AppwriteManager` to create.
+
+### Make your first request with AppwriteManager
+
+`AppwriteManager` creates the client and the services selected in your configuration, and can open the realtime connection.
 
 ```csharp
-[SerializeField] private AppwriteConfig config;
-private AppwriteManager _manager;
+using Appwrite;
+using Appwrite.Services;
+using Cysharp.Threading.Tasks;
+using UnityEngine;
 
-private async UniTask ExampleWithManager()
+public class AppwriteExample : MonoBehaviour
 {
-    _manager = AppwriteManager.Instance ?? new GameObject("AppwriteManager").AddComponent<AppwriteManager>();
-    _manager.SetConfig(config);
+    [SerializeField] private AppwriteConfig config;
 
-    var success = await _manager.Initialize(needRealtime: true);
-    if (!success)
+    private RealtimeSubscription subscription;
+
+    private async void Start()
     {
-        Debug.LogError("Failed to initialize AppwriteManager");
-        return;
+        var manager = AppwriteManager.Instance;
+        if (manager == null)
+        {
+            manager = new GameObject("AppwriteManager").AddComponent<AppwriteManager>();
+        }
+
+        manager.SetConfig(config);
+
+        if (!await manager.Initialize(needRealtime: true))
+        {
+            Debug.LogError("Failed to initialize AppwriteManager");
+            return;
+        }
+
+        var tablesDB = manager.GetService<TablesDB>();
+        var rows = await tablesDB.ListRows(
+            databaseId: "<DATABASE_ID>",
+            tableId: "<TABLE_ID>");
+        Debug.Log($"Found {rows.Total} rows");
+
+        subscription = manager.Realtime.Subscribe(
+            Channel.TablesDB("<DATABASE_ID>").Table("<TABLE_ID>").Row(),
+            response => Debug.Log($"Realtime event: {response.Events[0]}"));
     }
 
-    var client = _manager.Client;
-    var pingResult = await client.Ping();
-    Debug.Log($"Ping result: {pingResult}");
-
-    var realtime = _manager.Realtime;
-    var subscription = realtime.Subscribe(
-        new[] { "databases.*.collections.*.documents" },
-        response =>
-        {
-            var eventName = response.Events != null && response.Events.Length > 0
-                ? response.Events[0]
-                : "unknown";
-
-            Debug.Log($"Realtime event: {eventName}");
-        }
-    );
-
-    // Keep a reference to close the subscription when your MonoBehaviour is destroyed.
-    // subscription.Close();
+    private void OnDestroy()
+    {
+        subscription?.Close();
+    }
 }
 ```
 
-### Using Client directly
+`GetService<T>()` throws if the service is not selected in your `AppwriteConfig`.
+
+### Using the client directly
+
+You can also create a client and services yourself, without `AppwriteManager`:
 
 ```csharp
-private async UniTask ExampleWithDirectClient()
-{
-    var client = Client.From(
-        projectId: "<PROJECT_ID>",
-        endpoint: "https://<REGION>.cloud.appwrite.io/v1",
-        endpointRealtime: "wss://<REGION>.cloud.appwrite.io/v1");
+var client = Client.From(
+    projectId: "<PROJECT_ID>",
+    endpoint: "https://<REGION>.cloud.appwrite.io/v1");
 
-    var pingResult = await client.Ping();
-    Debug.Log($"Direct client ping: {pingResult}");
-}
+var account = new Account(client);
+var session = await account.CreateAnonymousSession();
+Debug.Log($"Signed in as {session.UserId}");
 ```
 
-You can also create authenticated clients with `Client.FromSession` or `Client.FromImpersonation` when those authentication flows are needed.
+`Client.FromSession`, `Client.FromJWT` and `Client.FromImpersonation` create clients that are already authenticated.
+
+### OAuth sign-in
+
+`account.CreateOAuth2Session()` opens the provider's sign-in page and waits for Appwrite to redirect back to your app on the `appwrite-callback-<PROJECT_ID>` URL scheme. Appwrite accepts this scheme for your project without extra Console setup, but your build must handle it:
+
+- **Android**: add an intent filter for the scheme to your project's main manifest at `Assets/Plugins/Android/AndroidManifest.xml` (enable **Custom Main Manifest** under **Project Settings > Player > Android > Publishing Settings**):
+
+  ```xml
+  <intent-filter>
+      <action android:name="android.intent.action.VIEW" />
+      <category android:name="android.intent.category.DEFAULT" />
+      <category android:name="android.intent.category.BROWSABLE" />
+      <data android:scheme="appwrite-callback-<PROJECT_ID>" />
+  </intent-filter>
+  ```
+
+- **iOS**: add `appwrite-callback-<PROJECT_ID>` to **Supported URL schemes** under **Project Settings > Player > iOS > Other Settings**.
+- **WebGL**: the sign-in page opens in the same tab, so register a **Web** platform for your build's hostname.
 
 ### Error handling
+
+The SDK throws an `AppwriteException` when a request fails. It exposes `Message`, `Code`, `Type`, and `Response` properties that you can use to inspect the error.
 
 ```csharp
 try
 {
-    var result = await client.Ping();
+    var user = await account.Get();
 }
 catch (AppwriteException ex)
 {
-    Debug.LogError($"Appwrite Error: {ex.Message}");
-    Debug.LogError($"Status Code: {ex.Code}");
+    Debug.LogError($"Appwrite error: {ex.Message}");
+    Debug.LogError($"Status code: {ex.Code}");
     Debug.LogError($"Response: {ex.Response}");
 }
 ```
 
-## Preparing Models for Databases API
+### Preparing models for TablesDB
 
-When working with the Databases API in Unity, models should be prepared for serialization using the System.Text.Json library. System.Text.Json uses CLR property names by default unless a naming policy is configured. If your project or SDK configuration serializes property names differently from your Appwrite collection attributes, this can cause errors due to mismatches between serialized property names and actual attribute names in your collection.
+The SDK serializes request data with `System.Text.Json` and converts property names from `PascalCase` to `camelCase`. If your table's column names are not in `camelCase`, the serialized names will not match your columns.
 
-To avoid this, add the `JsonPropertyName` attribute to each property in your model class to match the attribute name in Appwrite:
+Add the `JsonPropertyName` attribute to each property of your model so it serializes to the column name:
 
 ```csharp
 using System.Text.Json.Serialization;
 
-public class TestModel
+public class Movie
 {
     [JsonPropertyName("name")]
     public string Name { get; set; }
@@ -105,12 +139,9 @@ public class TestModel
 }
 ```
 
-The `JsonPropertyName` attribute ensures your data object is serialized with the correct attribute names for Appwrite databases.
-
 ### Learn more
 You can use the following resources to learn more and get help:
 
-- 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-client)
+- 🚀 [Appwrite Quick Starts](https://appwrite.io/docs/quick-starts)
 - 📜 [Appwrite Docs](https://appwrite.io/docs)
 - 💬 [Discord Community](https://appwrite.io/discord)
-- 🧰 [Appwrite SDK Generator](https://github.com/appwrite/sdk-generator)

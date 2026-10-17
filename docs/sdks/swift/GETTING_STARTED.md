@@ -2,152 +2,103 @@
 
 ### Init your SDK
 
-Initialize your SDK with your Appwrite server API endpoint and project ID which can be found in your project settings page and your new API secret Key project API keys section.
+Initialize the SDK with your Appwrite API endpoint, project ID and an API key. You can find your project ID on your project's **Settings** page in the Appwrite Console. Create an [API key](https://appwrite.io/docs/advanced/platform/api-keys) in the Console with the scopes your code needs. API keys grant access to your project's data, so only use this SDK in server-side code and never ship a key in a client app.
 
 ```swift
 import Appwrite
 
-func main() {
-    let client = Client()
-        .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
-        .setProject("5df5acd0d48c2") // Your project ID
-        .setKey("919c2d184...a2ae413dad2") // Your secret API key
-        .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
-}
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API endpoint
+    .setProject("<PROJECT_ID>") // Your project ID
+    .setKey("<API_KEY>") // Your secret API key
 ```
 
-### Make Your First Request
+If you are self-hosting Appwrite, set the endpoint to `https://<HOSTNAME_OR_IP>/v1`. Call `.setSelfSigned()` only during development, when your server uses a self-signed SSL certificate.
 
-Once your SDK object is initialized, create any of the Appwrite service objects and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the [API References](https://appwrite.io/docs) section.
+### Make your first request
+
+Once your client is initialized, create a service object and call any of its methods. Every method is `async` and `throws`. Full documentation for each method is in the [API references](https://appwrite.io/docs/references).
 
 ```swift
 let users = Users(client)
 
-do {
-    let user = try await users.create(
-        userId: ID.unique(),
-        email: "email@example.com",
-        phone: "+123456789",
-        password: "password",
-        name: "Walter O'Brien"
-    )
-    print(String(describing: user.toMap()))
-} catch {
-    print(error.localizedDescription)
-}
+let user = try await users.create(
+    userId: ID.unique(),
+    email: "email@example.com",
+    password: "password",
+    name: "Walter O'Brien"
+)
+
+print(user.name)
 ```
 
-### Full Example
+### Type safety with models
 
-```swift
-import Appwrite
-
-func main() {
-    let client = Client()
-        .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
-        .setProject("5df5acd0d48c2") // Your project ID
-        .setKey("919c2d18fb5d4...a2ae413da83346ad2") // Your secret API key
-        .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
-
-    let users = Users(client)
-    
-    do {
-        let user = try await users.create(
-            userId: ID.unique(),
-            email: "email@example.com",
-            phone: "+123456789",
-            password: "password",
-            name: "Walter O'Brien"
-        )
-        print(String(describing: user.toMap()))
-    } catch {
-        print(error.localizedDescription)
-    }
-}
-```
-
-### Type Safety with Models
-
-The Appwrite Swift SDK provides type safety when working with table rows through generic methods. Methods like `listRows`, `getRow`, and others accept a `nestedType` parameter that allows you to specify your custom model type for full type safety.
+Methods that return rows, such as `listRows` and `getRow`, accept a `nestedType` parameter so you can decode each row's data into your own `Codable` type.
 
 ```swift
 struct Book: Codable {
     let name: String
     let author: String
-    let releaseYear: String?
-    let category: String?
+    let releaseYear: Int?
     let genre: [String]?
     let isCheckedOut: Bool
 }
 
 let tablesDB = TablesDB(client)
 
-do {
-    let result = try await tablesDB.listRows(
-        databaseId: "your-database-id",
-        tableId: "your-table-id",
-        nestedType: Book.self // Pass in your custom model type
-    )
-    
-    for row in result.rows {
-        let book = row.data
-        print("Book: \(book.name) by \(book.author)") // Now you have full type safety
-    }
-} catch {
-    print(error.localizedDescription)
+let result = try await tablesDB.listRows(
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+    nestedType: Book.self
+)
+
+for row in result.rows {
+    let book = row.data
+    print("\(book.name) by \(book.author)")
 }
 ```
 
-**Tip**: You can use the `appwrite types` command to automatically generate model definitions based on your Appwrite database schema. Learn more about [type generation](https://appwrite.io/docs/products/databases/type-generation).
+You can use the `appwrite types` command of the [Appwrite CLI](https://appwrite.io/docs/tooling/command-line/installation) to generate these models from your database schema. Learn more about [type generation](https://appwrite.io/docs/products/databases/type-generation).
 
-### Working with Model Methods
+### Working with model methods
 
-All Appwrite models come with built-in methods for data conversion and manipulation:
+All models provide helpers for converting data:
 
-**`toMap()`** - Converts a model instance to a dictionary format, useful for debugging or manual data manipulation:
+- `toMap()` converts a model to a dictionary, which is useful for debugging or manual data manipulation.
+- `from(map:)` creates a model from a dictionary.
+- Models conform to `Codable`, so you can encode them with `JSONEncoder`.
+
 ```swift
-let user = try await account.get()
-let userMap = user.toMap()
-print(userMap) // Prints all user properties as a dictionary
+let user = try await users.get(userId: "<USER_ID>")
+
+print(user.toMap())
+
+let copy = User<[String: AnyCodable]>.from(map: user.toMap())
+
+let json = try JSONEncoder().encode(user)
+print(String(decoding: json, as: UTF8.self))
 ```
 
-**`from(map:)`** - Creates a model instance from a dictionary, useful when working with raw data:
-```swift
-let userData: [String: Any] = ["$id": "123", "name": "John", "email": "john@example.com"]
-let user = User.from(map: userData)
-```
+### Error handling
 
-**`encode(to:)`** - Encodes the model to JSON format (part of Swift's Codable protocol), useful for serialization:
-```swift
-let user = try await account.get()
-let jsonData = try JSONEncoder().encode(user)
-let jsonString = String(data: jsonData, encoding: .utf8)
-```
-
-### Error Handling
-
-When an error occurs, the Appwrite Swift SDK throws an `AppwriteError` object with `message` and `code` properties. You can handle any errors in a catch block and present the `message` or `localizedDescription` to the user or handle it yourself based on the provided error information. Below is an example.
+When a request fails, the SDK throws an `AppwriteError` with `message`, `code`, `type` and `response` properties.
 
 ```swift
-import Appwrite
-
-func main() {
-    let users = Users(client)
-    
-    do {
-        let users = try await users.list()
-        print(String(describing: users.toMap()))
-    } catch {
-        print(error.localizedDescription)
-    }
+do {
+    let list = try await users.list()
+    print(list.total)
+} catch let error as AppwriteError {
+    print(error.message)
+    print(error.code ?? 0)
+    print(error.type ?? "")
 }
 ```
 
 ### Learn more
 
-You can use the following resources to learn more and get help
-
-- 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-server)
-- 📜 [Appwrite Docs](https://appwrite.io/docs)
-- 💬 [Discord Community](https://appwrite.io/discord)
-- 🚂 [Appwrite Swift Playground](https://github.com/appwrite/playground-for-swift-server)
+- [Swift quick start](https://appwrite.io/docs/quick-starts/swift)
+- [Swift API references](https://appwrite.io/docs/references/cloud/server-swift/users)
+- [Appwrite documentation](https://appwrite.io/docs)
+- [Swift playground](https://github.com/appwrite/playground-for-swift)
+- [Discord community](https://appwrite.io/discord)
