@@ -1390,5 +1390,10 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Suggested app': 'אפליקציה מומלצת',
   'App key copied': 'מפתח האפליקציה הועתק',
   'Load more': 'טעינת עוד',
+
+  // Shared description field and the settings card that pairs it with a name
+  'Name and description': 'שם ותיאור',
+  'Description (optional)': 'תיאור (אופציונלי)',
+  'What is this for?': 'למה זה משמש?',
   'Loading more failed. Try again.': 'טעינת פריטים נוספים נכשלה. נסו שוב.',
 }

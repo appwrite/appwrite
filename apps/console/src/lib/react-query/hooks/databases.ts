@@ -16,8 +16,11 @@ import { useEffect, useMemo } from 'react'
 import {
   Query,
   ID,
+  DocumentsDB,
   DocumentsDBIndexType,
+  TablesDB,
   TablesDBIndexType,
+  VectorsDB,
   VectorsDBIndexType,
   OrderBy,
   RelationshipType,
@@ -30,10 +33,15 @@ import {
   engineFromDatabaseTypeValue,
   toSdkDatabaseType,
 } from '@/lib/databases/database-type'
-import type { Models } from '@appwrite.io/console'
+import type { Client, Models } from '@appwrite.io/console'
 import type { Database, Collection } from '@/lib/utils/mock-data'
 import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  normalizeDescription,
+  readDescription,
+  withDescription,
+} from '@/lib/appwrite/resource-descriptions'
 import {
   getActiveProfileFeatures,
   getActiveProfileId,
@@ -536,6 +544,15 @@ function buildProjectDatabaseDetail(db: Models.Database) {
   return {
     $id: db.$id,
     name: db.name || 'Unnamed Database',
+    // Read off the raw model: the pinned SDK's `Models.Database` predates
+    // `description`, and the settings card needs it to load the saved value.
+    // `fetchProjectDatabase` casts this object to a fixed intersection that
+    // leaves `description` out, so consumers go back through
+    // `readDescription`, which takes `unknown` and owns the field's type.
+    // Listing it on that intersection instead would reprint it inside four
+    // already-baselined error messages, and a reworded key reads as a brand
+    // new allowance to `lint:types --against`.
+    description: readDescription(db),
     tables: 0,
     rows: 0,
     enabled: db.enabled !== false,
@@ -1565,12 +1582,19 @@ export async function waitForCreatedDatabasePitrReady(
 }
 
 /**
- * Update database metadata (name, enabled) on the correct product SDK.
+ * Update database metadata (name, enabled, description) on the correct
+ * product SDK.
+ *
+ * `enabled` is required, not optional: the update endpoint declares it
+ * non-nullable with a `true` default and writes it unconditionally, so a
+ * payload that omits it re-enables a disabled database. `name` and
+ * `description` are nullable there and keep their saved value when omitted,
+ * which is why a caller that is not editing the description leaves it out.
  */
 export async function updateProjectDatabase(
   projectId: string,
   databaseId: string,
-  data: { name: string; enabled?: boolean },
+  data: { name: string; enabled: boolean; description?: string },
   dbKind: DatabaseRouteKind,
 ) {
   if (!projectId || !databaseId) {
@@ -1581,16 +1605,32 @@ export async function updateProjectDatabase(
   const payload = {
     databaseId,
     name: data.name.trim(),
-    ...(data.enabled !== undefined ? { enabled: data.enabled } : {}),
+    enabled: data.enabled,
   }
 
-  if (kind === DatabaseType.Documentsdb) {
-    return await projectSdk.documentsDB.update(payload)
+  // One dispatch on the product, two ways in: the description path needs the
+  // class, because the pinned SDK drops the param and `withDescription` has
+  // to build its own instance. A caller that omits the description uses the
+  // shared service and keeps whatever is saved.
+  const [Service, service]: [
+    new (client: Client) => TablesDB | DocumentsDB | VectorsDB,
+    TablesDB | DocumentsDB | VectorsDB,
+  ] =
+    kind === DatabaseType.Documentsdb
+      ? [DocumentsDB, projectSdk.documentsDB]
+      : kind === DatabaseType.Vectorsdb
+        ? [VectorsDB, projectSdk.vectorsDB]
+        : [TablesDB, projectSdk.tablesDB]
+
+  if (data.description !== undefined) {
+    return await withDescription(
+      projectId,
+      normalizeDescription(data.description),
+      Service,
+    ).update(payload)
   }
-  if (kind === DatabaseType.Vectorsdb) {
-    return await projectSdk.vectorsDB.update(payload)
-  }
-  return await projectSdk.tablesDB.update(payload)
+
+  return await service.update(payload)
 }
 
 /**
