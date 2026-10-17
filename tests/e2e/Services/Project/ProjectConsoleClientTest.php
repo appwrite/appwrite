@@ -125,6 +125,7 @@ final class ProjectConsoleClientTest extends Scope
                 ...$headers,
             ], [
                 'code' => new CURLFile($code, 'application/x-gzip', 'code.tar.gz'),
+                'activate' => true,
             ]);
         } finally {
             if (\is_file($code)) {
@@ -132,7 +133,7 @@ final class ProjectConsoleClientTest extends Scope
             }
         }
 
-        $this->assertSame(202, $deployment['headers']['status-code']);
+        $this->assertSame(202, $deployment['headers']['status-code'], \json_encode($deployment['body']));
 
         $deploymentId = $deployment['body']['$id'];
 
