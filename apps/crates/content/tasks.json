@@ -1,6 +1,14 @@
 {
-  "updated": "2026-10-17T15:00:00Z",
+  "updated": "2026-10-17T15:46:00Z",
   "tasks": [
+    {
+      "id": "usage-gauge-tie",
+      "title": "usage: gauge total under a millisecond tie",
+      "area": "Libraries",
+      "status": "todo",
+      "updated": "2026-10-17T15:46:00Z",
+      "note": "DatabaseTest \"addBatch gauge\" writes two gauge rows stamped with the current time to the millisecond, then reads the newest. When both land in the same millisecond, which one wins depends on the tie-break order; PHP returned 100 and Rust 200 in one CI run, after passing in every earlier one. Check that the database tie-break on equal times matches PHP."
+    },
     {
       "id": "debug-stack",
       "title": "Debug build overflows its stack on DELETE /v1/account",
