@@ -840,6 +840,40 @@ final class S3Test extends TestCase
         $this->assertCount(0, $client->requests, 'no DeleteBucket and no listing may be sent before the path is validated');
     }
 
+    public function testRecursiveDeleteFollowsTheContinuationToken(): void
+    {
+        $page = '<?xml version="1.0" encoding="UTF-8"?><ListBucketResult><KeyCount>1</KeyCount><IsTruncated>true</IsTruncated><NextContinuationToken>page-2</NextContinuationToken>'
+            . '<Contents><Key>root/a/1.txt</Key><Size>1</Size></Contents></ListBucketResult>';
+        $client = new ScriptedClient([
+            new Response(204),
+            new Response(200, body: new Stream($page))->withHeader('content-type', 'application/xml'),
+            new Response(200),
+            $this->objectListing('root/a/2.txt'),
+            new Response(200),
+        ]);
+
+        $this->assertTrue($this->device($client)->delete('/root/a', true));
+
+        $this->assertCount(5, $client->requests);
+        [, $first, $firstBatch, $second, $secondBatch] = $client->requests;
+        $this->assertSame('GET', $first->getMethod());
+        $this->assertArrayNotHasKey('continuation-token', $this->queryOf($first));
+        $this->assertSame('GET', $second->getMethod());
+        $this->assertSame('page-2', $this->queryOf($second)['continuation-token'] ?? null);
+        $this->assertSame('root/a/', $this->queryOf($second)['prefix'] ?? null);
+
+        foreach ([[$firstBatch, ['root/a/1.txt']], [$secondBatch, ['root/a/2.txt']]] as [$batch, $expected]) {
+            $this->assertSame('POST', $batch->getMethod());
+            $xml = simplexml_load_string((string) $batch->getBody());
+            $this->assertNotFalse($xml);
+            $keys = [];
+            foreach ($xml->Object as $object) {
+                $keys[] = (string) $object->Key;
+            }
+            $this->assertSame($expected, $keys, 'each batch deletes the keys of its own page');
+        }
+    }
+
     /**
      * @return \Iterator<string, array{string, int}>
      */

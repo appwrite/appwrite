@@ -22,6 +22,8 @@ final class S3Test extends S3Base
 
     private string $secretKey;
 
+    private string $host;
+
     private ?string $pathHost = null;
 
     private string $pathBucket;
@@ -49,14 +51,26 @@ final class S3Test extends S3Base
         $this->region = $this->env('S3_REGION', 'us-east-1');
         $this->pathHost = $this->configured('S3_PATH_HOST');
         $this->pathBucket = $this->env('S3_PATH_BUCKET', $this->bucket);
-        $host = $this->env('S3_HOST', "http://{$this->bucket}.localhost:9805");
+        $this->host = $this->env('S3_HOST', "http://{$this->bucket}.localhost:9805");
 
-        $this->object = new S3($this->root, $this->accessKey, $this->secretKey, $host, $this->region, Acl::Private, bucket: $this->bucket);
+        $this->object = new S3($this->root, $this->accessKey, $this->secretKey, $this->host, $this->region, Acl::Private, bucket: $this->bucket);
     }
 
     protected function withRoot(string $root): S3
     {
-        return new S3($root, $this->accessKey, $this->secretKey, $this->env('S3_HOST', "http://{$this->bucket}.localhost:9805"), $this->region, Acl::Private, bucket: $this->bucket);
+        return new S3($root, $this->accessKey, $this->secretKey, $this->host, $this->region, Acl::Private, bucket: $this->bucket);
+    }
+
+    /**
+     * The endpoint that addresses the service rather than the bucket. Overriding one MinIO endpoint without the other would compare unrelated services.
+     */
+    private function pathHost(): string
+    {
+        if (($this->pathHost === null) !== ($this->configured('S3_HOST') === null)) {
+            self::markTestSkipped('S3_HOST and S3_PATH_HOST must both be configured when overriding the local MinIO endpoints');
+        }
+
+        return $this->pathHost ?? 'http://localhost:9805';
     }
 
     protected function getAdapterType(): DeviceType
@@ -106,15 +120,7 @@ final class S3Test extends S3Base
 
     public function testPathStyleEndpointSharesVirtualHostedBucket(): void
     {
-        $pathHost = $this->pathHost;
-        $virtualHost = $this->configured('S3_HOST');
-        if (($pathHost === null) !== ($virtualHost === null)) {
-            self::markTestSkipped('S3_HOST and S3_PATH_HOST must both be configured when overriding the local MinIO endpoints');
-        }
-
-        if ($pathHost === null) {
-            $pathHost = 'http://localhost:9805';
-        }
+        $pathHost = $this->pathHost();
 
         $this->assertSame($this->bucket, $this->pathBucket, 'S3_PATH_BUCKET and S3_BUCKET must identify the same bucket for cross-visibility');
 
@@ -254,7 +260,7 @@ final class S3Test extends S3Base
 
     public function testWritesWithoutAnAcl(): void
     {
-        $device = new S3($this->root, $this->accessKey, $this->secretKey, $this->env('S3_HOST', "http://{$this->bucket}.localhost:9805"), $this->region, null, bucket: $this->bucket);
+        $device = new S3($this->root, $this->accessKey, $this->secretKey, $this->host, $this->region, null, bucket: $this->bucket);
         $path = $device->getPath('no-acl/' . bin2hex(random_bytes(8)) . '.txt');
 
         try {
@@ -271,16 +277,16 @@ final class S3Test extends S3Base
             root: $root,
             accessKey: $this->accessKey,
             secretKey: $this->secretKey,
-            host: $this->env('S3_PATH_HOST', 'http://localhost:9805'),
+            host: $this->pathHost(),
             region: $this->region,
-            bucket: $this->bucket,
+            bucket: $this->pathBucket,
             pathStyle: true,
         );
     }
 
     public function testPathStyleCopy(): void
     {
-        $root = $this->bucket . '/ps-' . bin2hex(random_bytes(8));
+        $root = $this->pathBucket . '/ps-' . bin2hex(random_bytes(8));
         $device = $this->pathStyleDevice($root);
         $source = $device->getPath('source.txt');
         $copy = $device->getPath('copy.txt');
@@ -306,14 +312,14 @@ final class S3Test extends S3Base
     public function testPathStyleRecursiveDelete(): void
     {
         $directory = 'ps-' . bin2hex(random_bytes(8));
-        $root = $this->bucket . '/' . $directory;
+        $root = $this->pathBucket . '/' . $directory;
         $device = $this->pathStyleDevice($root);
         $nested = [
             $root . '/a.txt',
             $root . '/dir/b.txt',
             $root . '/dir/sub/c.txt',
         ];
-        $sibling = $this->bucket . '/' . $directory . '-b/d.txt';
+        $sibling = $this->pathBucket . '/' . $directory . '-b/d.txt';
 
         try {
             foreach ([...$nested, $sibling] as $path) {
