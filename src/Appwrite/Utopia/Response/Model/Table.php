@@ -48,6 +48,12 @@ class Table extends Model
                 'default' => '',
                 'example' => 'My Table',
             ])
+            ->addRule('description', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Optional description for the table.',
+                'default' => '',
+                'example' => 'Movies available in the catalog.',
+            ])
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Table enabled. Can be \'enabled\' or \'disabled\'. When disabled, the table is inaccessible to users, but remains accessible to Server SDKs using API keys.',

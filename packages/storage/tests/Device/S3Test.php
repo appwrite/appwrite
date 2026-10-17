@@ -60,7 +60,7 @@ class TestableS3 extends S3
     public array $amzHeadersByOperation = [];
 
     #[\Override]
-    protected function call(string $method, string $uri, StreamInterface|string $data = '', array $parameters = [], array $headers = [], array $amzHeaders = [], bool $decode = true, ?callable $sink = null): S3Response
+    protected function call(string $method, string $uri, StreamInterface|string $data = '', array $parameters = [], array $headers = [], array $amzHeaders = [], bool $decode = true, ?callable $sink = null, ?callable $onResponse = null): S3Response
     {
         $operation = match (true) {
             $method === 'HEAD' => 's3:info',
@@ -473,6 +473,19 @@ final class S3Test extends TestCase
 
         $this->assertCount(1, $client->requests);
         $this->assertArrayNotHasKey('uploadId', $metadata);
+    }
+
+    public function testWrappedLegacyClientRetainsBufferedStreamingFallback(): void
+    {
+        $legacy = new ScriptedClient([new Response(200, body: new Stream('original'))]);
+        $client = new Retry(new \Utopia\Client\Client($legacy));
+        $device = new S3('/root', 'key', 'secret', 'https://s3.example.com', 'us-east-1', client: $client);
+        $body = '';
+        $device->stream('/root/object', static function (string $chunk) use (&$body): void {
+            $body .= $chunk;
+        });
+        $this->assertSame('original', $body);
+        $this->assertCount(1, $legacy->requests);
     }
 
     public function testNoSuchKeyBecomesNotFoundException(): void

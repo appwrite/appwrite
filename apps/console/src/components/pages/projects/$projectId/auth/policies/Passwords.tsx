@@ -6,6 +6,7 @@ import {
   PasswordPwnedCard,
   MfaFactorsCard,
 } from '../Security'
+import { PasswordRotationCard } from './PasswordRotationCard'
 import { PasswordStrengthCard } from './PasswordStrengthCard'
 import {
   SettingsCardsList,
@@ -22,6 +23,7 @@ export function PasswordsPolicies({ projectId }: PasswordsProps) {
   const security = useAuthSecuritySnapshot(projectId)
   const mfaFactors = security.mfaFactors
   const passwordPwned = security.authPasswordPwned
+  const passwordRotation = security.authPasswordRotation
 
   const cards: SettingsCardItem[] = [
     {
@@ -86,6 +88,31 @@ export function PasswordsPolicies({ projectId }: PasswordsProps) {
         />
       ),
     },
+    ...(passwordRotation
+      ? [
+          {
+            id: 'password-rotation',
+            search: {
+              title: 'Periodic password change',
+              keywords: [
+                'rotation',
+                'rotate',
+                'expiry',
+                'expire',
+                'maximum age',
+                'reset',
+                'periodic',
+              ],
+            },
+            node: (
+              <PasswordRotationCard
+                projectId={projectId}
+                currentPolicy={passwordRotation}
+              />
+            ),
+          },
+        ]
+      : []),
     // Like MFA factors below, servers without a password-pwned policy report
     // none, so the card is hidden rather than showing defaults it cannot save.
     ...(passwordPwned

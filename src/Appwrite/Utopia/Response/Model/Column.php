@@ -16,6 +16,12 @@ class Column extends Model
                 'default' => '',
                 'example' => 'fullName',
             ])
+            ->addRule('description', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Optional description for the column.',
+                'default' => '',
+                'example' => 'Name shown on the public profile.',
+            ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Column type.',
