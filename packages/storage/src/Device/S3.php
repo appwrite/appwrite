@@ -667,6 +667,7 @@ class S3 extends Device
      * Delete every object whose key begins with the prefix, a page of keys per DeleteObjects request.
      *
      * @throws StorageException
+     * @throws RemoteException When the service reports keys it failed to delete
      */
     private function deletePrefix(string $uri, string $prefix): void
     {
@@ -698,7 +699,17 @@ class S3 extends Device
             }
             $body .= '<Quiet>true</Quiet>';
             $body .= '</Delete>';
-            $this->call(Method::POST, $uri, $body, ['delete' => ''], headers: ['content-type' => 'application/xml']);
+            $response = $this->call(Method::POST, $uri, $body, ['delete' => ''], headers: ['content-type' => 'application/xml']);
+
+            // Quiet mode answers 200 and lists only the keys that failed, one associative entry or a list of them.
+            $errors = \is_array($response->body) ? ($response->body['Error'] ?? []) : [];
+            $errors = \is_array($errors) ? (isset($errors['Key']) || isset($errors['Code']) ? [$errors] : $errors) : [];
+            if ($errors !== []) {
+                $first = \is_array($errors[0] ?? null) ? $errors[0] : [];
+                $code = \is_string($first['Code'] ?? null) ? $first['Code'] : null;
+
+                throw new RemoteException('Failed to delete ' . \count($errors) . ' objects under ' . $prefix, $response->code, $code);
+            }
         } while ($continuationToken !== '');
     }
 

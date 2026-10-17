@@ -840,6 +840,42 @@ final class S3Test extends TestCase
         $this->assertCount(0, $client->requests, 'no DeleteBucket and no listing may be sent before the path is validated');
     }
 
+    /**
+     * @return \Iterator<string, array{string, int}>
+     */
+    public static function failedBatchDeletes(): \Iterator
+    {
+        yield 'one key' => ['<Error><Key>root/a/1.txt</Key><Code>AccessDenied</Code><Message>Access Denied</Message></Error>', 1];
+        yield 'two keys' => [
+            '<Error><Key>root/a/1.txt</Key><Code>AccessDenied</Code><Message>Access Denied</Message></Error>'
+            . '<Error><Key>root/a/2.txt</Key><Code>InternalError</Code><Message>Internal Error</Message></Error>',
+            2,
+        ];
+    }
+
+    #[DataProvider('failedBatchDeletes')]
+    public function testKeysTheServiceFailedToDeleteAreAnError(string $errors, int $count): void
+    {
+        $page = '<?xml version="1.0" encoding="UTF-8"?><ListBucketResult><KeyCount>2</KeyCount><IsTruncated>true</IsTruncated><NextContinuationToken>page-2</NextContinuationToken>'
+            . '<Contents><Key>root/a/1.txt</Key><Size>1</Size></Contents><Contents><Key>root/a/2.txt</Key><Size>1</Size></Contents></ListBucketResult>';
+        $result = '<?xml version="1.0" encoding="UTF-8"?><DeleteResult>' . $errors . '</DeleteResult>';
+        $client = new ScriptedClient([
+            new Response(200, body: new Stream($page))->withHeader('content-type', 'application/xml'),
+            new Response(200, body: new Stream($result))->withHeader('content-type', 'application/xml'),
+            $this->objectListing(),
+        ]);
+
+        try {
+            $this->device($client)->deletePath('a');
+            self::fail('Keys the service could not delete must not be reported as deleted');
+        } catch (RemoteException $error) {
+            $this->assertSame('Failed to delete ' . $count . ' objects under root/a/', $error->getMessage());
+            $this->assertSame('AccessDenied', $error->errorCode);
+        }
+
+        $this->assertCount(2, $client->requests, 'no further page is listed once a batch failed');
+    }
+
     public function testDeleteWithoutRecursionSendsOneRequest(): void
     {
         $client = new ScriptedClient([new Response(204)]);
