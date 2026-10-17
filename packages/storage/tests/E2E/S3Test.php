@@ -59,6 +59,46 @@ final class S3Test extends S3Base
         return $this->object->getType();
     }
 
+    public function testStreamingSurvivesQueuedDeletionOfItsBackendPath(): void
+    {
+        if (!extension_loaded('swoole')) {
+            $this->markTestSkipped('This concurrency drill requires Swoole.');
+        }
+        $path = $this->object->getPath('testing/stream-' . bin2hex(random_bytes(8)));
+        $original = str_repeat('snapshot-', 4 * 1024 * 1024);
+        $this->object->write($path, new Stream($original), 'application/octet-stream');
+        $hash = hash_init('sha256');
+        $received = 0;
+        $queued = false;
+        $deleted = false;
+        $flags = \Swoole\Runtime::getHookFlags();
+        \Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+        try {
+            \Swoole\Coroutine\run(function () use ($path, $hash, &$received, &$queued, &$deleted): void {
+                $this->object->stream($path, function (string $chunk) use ($path, $hash, &$received, &$queued, &$deleted): void {
+                    $received += strlen($chunk);
+                    hash_update($hash, $chunk);
+                    if (!$queued) {
+                        $queued = true;
+                        \Swoole\Coroutine::create(function () use ($path, &$deleted): void {
+                            $this->object->delete($path);
+                            $deleted = true;
+                        });
+                        $this->assertLessThan(1024 * 1024, $received);
+                    }
+                });
+            });
+            $this->assertTrue($queued);
+            $this->assertTrue($deleted);
+            $this->assertSame(strlen($original), $received);
+            $this->assertSame(hash('sha256', $original), hash_final($hash));
+            $this->assertFalse($this->object->exists($path));
+        } finally {
+            \Swoole\Runtime::enableCoroutine($flags);
+            $this->object->delete($path);
+        }
+    }
+
     public function testPathStyleEndpointSharesVirtualHostedBucket(): void
     {
         $pathHost = $this->pathHost;

@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 const EXECUTIONS = [
   { id: '68a4e2f91b0c', status: 'completed', trigger: 'event', method: 'POST', path: '/', duration: '342ms' },
   { id: '68a4d8c03f21', status: 'completed', trigger: 'schedule', method: 'POST', path: '/', duration: '1.2s' },
+  { id: '68a4d2e19a44', status: 'completed', trigger: 'email', method: 'POST', path: '/', duration: '890ms' },
   { id: '68a4c1aa7e55', status: 'completed', trigger: 'http', method: 'POST', path: '/webhook', duration: '89ms', selected: true },
   { id: '68a4b9024d18', status: 'failed', trigger: 'event', method: 'POST', path: '/', duration: '410ms' },
   { id: '68a4a11fc873', status: 'completed', trigger: 'http', method: 'GET', path: '/health', duration: '12ms' },
@@ -28,6 +29,7 @@ type Execution = (typeof EXECUTIONS)[number]
 function triggerLabel(trigger: Execution['trigger']) {
   if (trigger === 'event') return 'Event'
   if (trigger === 'schedule') return 'Schedule'
+  if (trigger === 'email') return 'Email'
   return 'HTTP'
 }
 

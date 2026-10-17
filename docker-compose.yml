@@ -84,6 +84,7 @@ services:
       - ${_APP_DB_HOST:-postgresql}
       - appwrite-geo
       - appwrite-autogravity
+      - appwrite-exiftool
     environment:
       - _APP_DNS_EXTERNAL
       - _APP_ALLOWED_INTERNAL_ADDRESSES
@@ -173,10 +174,10 @@ services:
       - _APP_STORAGE_LIMIT
       - _APP_STORAGE_PREVIEW_LIMIT
       - _APP_AUTOGRAVITY_HOST
+      - _APP_EXIFTOOL_HOST
       - _APP_STORAGE_ANTIVIRUS
       - _APP_STORAGE_ANTIVIRUS_HOST
       - _APP_STORAGE_ANTIVIRUS_PORT
-      - _APP_STORAGE_EXIFTOOL_POOL_SIZE
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
       - _APP_STORAGE_S3_SECRET
@@ -282,6 +283,7 @@ services:
       - appwrite
     environment:
       - VITE_CONSOLE_PROFILE=self-hosted
+      - VITE_APPWRITE_VERSION=${_APP_VERSION:-}
       - APPWRITE_ENDPOINT_SAME_ORIGIN=true
     labels:
       - traefik.enable=true
@@ -1682,6 +1684,13 @@ services:
     image: ghcr.io/appwrite/autogravity:0.0.11
     environment:
       - MODEL_BACKEND=focalnet
+    restart: unless-stopped
+    networks:
+      - appwrite
+
+  appwrite-exiftool:
+    container_name: appwrite-exiftool
+    image: ghcr.io/appwrite/exiftool:0.1.0
     restart: unless-stopped
     networks:
       - appwrite

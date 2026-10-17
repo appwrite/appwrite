@@ -994,6 +994,16 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_EXIFTOOL_HOST',
+                'description' => 'The host of the ExifTool service (for example `http://appwrite-exiftool:8080`) used to remove metadata from images uploaded to buckets with `stripMetadata` enabled. Leave empty to disable stripping; those images are then stored as uploaded.',
+                'introduction' => '2.6.0',
+                'default' => '',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_STORAGE_ANTIVIRUS',
                 'description' => 'This variable allows you to disable the internal anti-virus scans. This value is set to \'disabled\' by default, to enable the scans set the value to \'enabled\'. Before enabling, you must add the ClamAV service and depend on it on main Appwrite service.',
                 'introduction' => '',
@@ -1016,15 +1026,6 @@ return [
                 'description' => 'ClamAV server TCP port. Default value is: \'3310\'.',
                 'introduction' => '0.7.0',
                 'default' => '3310',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_STORAGE_EXIFTOOL_POOL_SIZE',
-                'description' => 'Number of exiftool processes each API worker keeps running to strip metadata from uploaded images. Each process uses about 20MB of memory. Default value is: \'1\'.',
-                'introduction' => '2.5.0',
-                'default' => '1',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files;
 use Appwrite\ClamAV\Network;
 use Appwrite\ClamAV\ScanResult;
 use Appwrite\Event\Event;
+use Appwrite\Exiftool\Client as ExiftoolClient;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
@@ -12,7 +13,6 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Storage\ExifTool;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Folder;
@@ -40,7 +40,6 @@ use Utopia\Lock\Distributed;
 use Utopia\Lock\Exception\Contention as LockContention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Pools\Pool;
 use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
 use Utopia\Storage\DeviceType;
@@ -148,7 +147,7 @@ class Create extends Action
         Device $deviceForLocal,
         Authorization $authorization,
         callable $locks,
-        Pool $exiftool
+        ExiftoolClient $exiftool
     ) {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -313,6 +312,11 @@ class Create extends Action
 
                 $this->assertResumeAllowed($bucket, $file, $authorization, $user);
 
+                // The chunk count and size were fixed by the first chunk.
+                if ((int) $file->getAttribute('sizeOriginal', 0) !== $fileSize) {
+                    throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
+                }
+
                 if ($uploaded === $chunks) {
                     $response
                         ->setStatusCode(Response::STATUS_CODE_OK)
@@ -400,6 +404,17 @@ class Create extends Action
 
             if ($chunksUploaded === $chunks && $uploaded < $chunks) {
                 $deviceForFiles->finalize($path, $chunks, $metadata);
+
+                // A chunk can carry more or fewer bytes than its range announces.
+                if (!empty($contentRange) && $deviceForFiles->getFileSize($path) !== $fileSize) {
+                    $removed = $deviceForFiles->delete($path);
+
+                    if ($removed && !$file->isEmpty() && !$authorization->skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId))) {
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove file from DB');
+                    }
+
+                    throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
+                }
 
                 if (System::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && $deviceForFiles->getType() === DeviceType::Local) {
                     $antivirus = new Network(
@@ -645,31 +660,10 @@ class Create extends Action
     /**
      * Returns the stripped size, or null when the file is kept as uploaded.
      */
-    private function stripMetadata(Pool $exiftool, Device $deviceForFiles, string $path, string $mimeType): ?int
+    private function stripMetadata(ExiftoolClient $exiftool, Device $deviceForFiles, string $path, string $mimeType): ?int
     {
-        // No extension, so exiftool detects the format from content and a renamed JPEG is still stripped.
-        $copy = \tempnam(\sys_get_temp_dir(), 'strip');
-        if ($copy === false) {
-            Console::warning("Image metadata was not removed from {$path}: a temporary file could not be created.");
-            return null;
-        }
-
         try {
-            if (\file_put_contents($copy, $deviceForFiles->read($path)) === false) {
-                Console::warning("Image metadata was not removed from {$path}: the file could not be copied.");
-                return null;
-            }
-
-            if (!$exiftool->use(fn (ExifTool $tool) => $tool->strip($copy))) {
-                Console::warning("Image metadata was not removed from {$path}: exiftool could not rewrite the file.");
-                return null;
-            }
-
-            $stripped = \file_get_contents($copy);
-            if ($stripped === false || $stripped === '') {
-                Console::warning("Image metadata was not removed from {$path}: the stripped file could not be read.");
-                return null;
-            }
+            $stripped = $exiftool->strip($deviceForFiles->read($path));
 
             if (!$deviceForFiles->write($path, new Stream($stripped), $mimeType)) {
                 Console::warning("Image metadata was not removed from {$path}: the stripped file could not be saved.");
@@ -683,8 +677,6 @@ class Create extends Action
         } catch (\Throwable $th) {
             Console::warning("Image metadata was not removed from {$path}: {$th->getMessage()}");
             return null;
-        } finally {
-            @\unlink($copy);
         }
     }
 

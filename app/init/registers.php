@@ -5,7 +5,6 @@ use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\Hooks\Hooks;
 use Appwrite\PubSub\Adapter\Redis as PubSub;
-use Appwrite\Storage\ExifTool;
 use Appwrite\URL\URL as AppwriteURL;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Redis as RedisCache;
@@ -368,15 +367,6 @@ $register->set('smtp', function () {
             keepAlive: true,
             timelimit: 30,
         ),
-        timeout: (float) System::getEnv('_APP_CONNECTIONS_TIMEOUT', 10),
-    );
-});
-$register->set('exiftool', function () {
-    return new Pool(
-        adapter: new SwoolePool(),
-        name: 'exiftool',
-        size: max(1, (int) System::getEnv('_APP_STORAGE_EXIFTOOL_POOL_SIZE', 1)),
-        init: fn () => new ExifTool(),
         timeout: (float) System::getEnv('_APP_CONNECTIONS_TIMEOUT', 10),
     );
 });

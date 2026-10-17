@@ -11,10 +11,12 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Usage\Operations;
+use Appwrite\Utopia\Database\Documents\Aggregate;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
@@ -141,6 +143,10 @@ class XList extends Action
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
             }
 
+            if ($cursorDocument->isEmpty() && $transactionId !== null) {
+                $cursorDocument = $transactionState->getDocument($database, $collectionTableId, (string) $documentId, $transactionId);
+            }
+
             if ($cursorDocument->isEmpty()) {
                 $type = ucfirst($this->getContext());
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "$type '{$documentId}' for the 'cursor' value not found.");
@@ -153,18 +159,22 @@ class XList extends Action
 
         try {
             $parsed = Query::groupByType($queries);
+            $readsRecords = !$parsed->isAggregation() && !$parsed->distinct;
+            $hydrate = static fn (array $row): Document => $readsRecords ? new Document($row) : new Aggregate($row);
+            $read = $parsed->selections !== []
+                ? fn (): array => $dbForDatabases->find($collectionTableId, $queries)
+                : fn (): array => $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->find($collectionTableId, $queries));
             $find = match (true) {
-                $parsed->isAggregation() => fn (): array => \array_map(
-                    static fn (array $row): Document => new Document($row),
-                    $dbForDatabases->aggregate($collectionTableId, $queries),
-                ),
-                $parsed->selections !== [] => fn (): array => $dbForDatabases->find($collectionTableId, $queries),
-                default => fn (): array => $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->find($collectionTableId, $queries)),
+                $parsed->isAggregation() => fn (): array => \array_map($hydrate, $dbForDatabases->aggregate($collectionTableId, $queries)),
+                $parsed->distinct => fn (): array => \array_map(static fn (Document $row): Aggregate => new Aggregate($row->getArrayCopy()), $read()),
+                default => $read,
             };
 
             if ($transactionId !== null) {
                 $documents = \array_map(
-                    fn (Document $document): Document => $this->stampTransactionRead($document, $databaseId, $collectionId),
+                    fn (Document $document): Document => $readsRecords
+                        ? $this->stampTransactionRead($document, $databaseId, $collectionId)
+                        : new Aggregate($document->getArrayCopy()),
                     $transactionState->listDocuments($database, $collectionTableId, $transactionId, $queries),
                 );
                 $total = $includeTotal ? $transactionState->countDocuments($database, $collectionTableId, $transactionId, $queries) : 0;
@@ -183,7 +193,7 @@ class XList extends Action
                 }
 
                 if (\is_array($cachedDocuments)) {
-                    $documents = \array_map(fn (array $document): Document => new Document($document), $cachedDocuments);
+                    $documents = \array_map($hydrate, $cachedDocuments);
                     $documentsCacheHit = true;
 
                     try {
@@ -242,6 +252,8 @@ class XList extends Action
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        } catch (LimitException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_OUT_OF_RANGE, previous: $e);
         } catch (Timeout) {
             throw new Exception(Exception::DATABASE_TIMEOUT);
         }

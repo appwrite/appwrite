@@ -1,0 +1,15 @@
+---
+layout: changelog
+title: "Cron schedules move to paid plans on Appwrite Cloud"
+date: 2026-10-15
+description: "From October 19, 2026, functions on the Appwrite Cloud Free and Education plans run on intervals instead of cron expressions."
+tags: functions
+---
+
+From **Monday, October 19, 2026**, cron schedules for functions on Appwrite Cloud will need a paid plan. Functions on the Free and Education plans run on an [interval](/docs/products/functions/execute#interval) of 60 minutes or longer, and their existing cron schedules become intervals close to how often they run today. For example, `*/5 * * * *` becomes every 60 minutes.
+
+To keep cron, upgrade to a paid plan before October 19. To choose the interval yourself, select **Interval** in your function's **Settings** > **Executions** > **Schedule**, or replace `schedule` with `interval` in your SDK calls, CLI config, or Terraform resource.
+
+{% arrow_link href="/docs/products/functions/execute#interval" %}
+Learn about function intervals
+{% /arrow_link %}
