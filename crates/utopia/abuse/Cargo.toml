@@ -28,8 +28,10 @@ redis = { workspace = true, optional = true }
 rustls = { workspace = true, optional = true }
 thiserror.workspace = true
 utopia-async = { workspace = true, features = ["hyper"] }
+# The schema of the `abuse` collection, as utopia-database's Attribute and Index models.
+utopia-database.workspace = true
 
 
 [package.metadata.utopia]
 category = "security"
-php-sync = "13eb67db5fd3c88f728dd89d23350e75be9db6a3"
+php-sync = "2ca9a38d36e32854844a172bf7238ec7cb8b5f05"

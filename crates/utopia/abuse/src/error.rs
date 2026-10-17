@@ -40,6 +40,13 @@ pub enum Error {
     /// PHP: `Utopia\Database\Exception\Duplicate`.
     #[error("{0}")]
     Duplicate(String),
+    /// A document that breaks a unique index, such as a second counter for
+    /// the same key and window. A kind of [`Error::Duplicate`]: what PHP
+    /// catches as `Duplicate` matches both.
+    ///
+    /// PHP: `Utopia\Database\Exception\Unique`, a subclass of `Duplicate`.
+    #[error("{0}")]
+    Unique(String),
     /// An Appwrite API error, with its type (`row_already_exists`, ...).
     ///
     /// PHP: `Appwrite\AppwriteException`.
@@ -85,6 +92,7 @@ impl Error {
             Error::DivisionByZero(_) => "DivisionByZeroError",
             Error::Type(_) => "TypeError",
             Error::Duplicate(_) => "Utopia\\Database\\Exception\\Duplicate",
+            Error::Unique(_) => "Utopia\\Database\\Exception\\Unique",
             Error::Appwrite { .. } => "Appwrite\\AppwriteException",
             Error::Client(_) => "Psr\\Http\\Client\\ClientExceptionInterface",
             #[cfg(feature = "redis")]

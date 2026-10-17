@@ -43,7 +43,7 @@
 //! | `Utopia\Abuse\Result` | [`Verdict`] |
 //! | `Adapter\TimeLimit` | [`TimeLimit`] over a [`time_limit::Store`] |
 //! | `Adapter\TimeLimit\None`, `Redis`, `RedisCluster`, `RedisPool` | [`time_limit::None`], [`time_limit::Redis`], [`time_limit::RedisCluster`], [`time_limit::RedisPool`] |
-//! | `Adapter\TimeLimit\Database` | [`time_limit::Database`] over a [`time_limit::Documents`] store |
+//! | `Adapter\TimeLimit\Database` | [`time_limit::Database`] over a [`time_limit::Documents`] store; `attributes()`, `indexes()` are [`time_limit::database::attributes`], [`time_limit::database::indexes`] |
 //! | `Adapter\TimeLimit\Appwrite\TablesDB` | [`time_limit::TablesDb`] over a [`time_limit::Tables`] client |
 //! | `Adapter\SlidingWindow` and its `None`, `Redis`, `RedisCluster`, `RedisPool` | [`SlidingWindow`] over [`sliding_window::None`], [`sliding_window::Redis`], ... |
 //! | `Adapter\TokenBucket` and its `None`, `Redis`, `RedisCluster`, `RedisPool` | [`TokenBucket`] over [`token_bucket::None`], [`token_bucket::Redis`], ... |
