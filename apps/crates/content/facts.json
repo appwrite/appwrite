@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-17T01:39:00Z",
+  "updated": "2026-10-17T11:50:00Z",
   "summary": "Appwrite's API, a PHP 8.5 and Swoole monolith, is moving to Rust one service at a time. First every Utopia library it stands on is converted and proven identical to PHP, then each API service is ported and run side by side with PHP behind Traefik, on the same database, Redis, queues and caches.",
   "sections": [
     {
@@ -56,9 +56,9 @@
       "title": "The database 8 upgrade",
       "facts": [
         {
-          "value": "7.4 → 8.3.0",
+          "value": "7.4 → 8.3.6",
           "label": "a rewrite, followed",
-          "note": "main moved utopia-php/database from 7.4 to 8.1.3, close to a rewrite, then to 8.3.0 two days later; the Rust port, its adapters and every crate that uses it followed both times."
+          "note": "main moved utopia-php/database from 7.4 to 8.1.3, close to a rewrite, then to 8.3.0 and 8.3.6 within days; the Rust port, its adapters and every crate that uses it followed each time."
         },
         {
           "value": "2,942",
@@ -143,6 +143,11 @@
       "date": "2026-10-16",
       "title": "utopia-database 8.3.0 and Mirror",
       "note": "Race-free bulk deletes, relationship queries with per-parent paging, typed aggregates, and Mirror, the last part of the library, ported; every database case re-recorded on 8.3.0."
+    },
+    {
+      "date": "2026-10-17",
+      "title": "Target frozen at database 8.3.6",
+      "note": "After following PHP through four database versions in three days, the PR stops merging main until it lands; the 8.3.6 port is time-boxed to two hours and its leftovers recorded as known gaps."
     }
   ],
   "lessons": [
@@ -153,6 +158,7 @@
     "A moving target: the PHP side keeps changing on main, so the compat recordings are regenerated from PHP whenever a dependency moves, and Rust follows.",
     "Watch the tooling, too: wait loops that poll for a log line outlive the work they wait on; background commands that report when they exit do not.",
     "Run the comparison on the stack CI runs: a parity diff that was clean on a hand-patched local stack showed 44 differences on CI's, from one environment variable given to only one runtime.",
-    "Pin the toolchain CI uses and test it cold: Rust 1.88 type-checked the new database crate fine (clippy passed) but its code generation never finished, which showed up only as silent CI timeouts."
+    "Pin the toolchain CI uses and test it cold: Rust 1.88 type-checked the new database crate fine (clippy passed) but its code generation never finished, which showed up only as silent CI timeouts.",
+    "Freeze the target: chasing every upstream release of a dependency while porting it restarts the work each time; agree a version, time-box the catch-up, and record what is left."
   ]
 }
