@@ -102,7 +102,6 @@
         "Utopia\\Query\\Query::fingerprint",
         "Utopia\\Query\\Query::fullOuterJoin",
         "Utopia\\Query\\Query::getAlias",
-        "Utopia\\Query\\Query::isAliasDefaulted",
         "Utopia\\Query\\Query::getAttribute",
         "Utopia\\Query\\Query::getAttributeType",
         "Utopia\\Query\\Query::getByType",
