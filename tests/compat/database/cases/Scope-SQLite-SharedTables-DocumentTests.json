@@ -305397,7 +305397,14 @@
                 "$collection": "distinct_rows_d91e25"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "rows": true,
+            "reason": "a distinct() read without an order returns its rows in the order the engine deduplicates them in (a hash on PostgreSQL), so its rows are compared as a set"
+          }
         },
         {
           "op": "database.find",
@@ -305514,7 +305521,14 @@
                 "$collection": "distinct_rows_d91e25"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "rows": true,
+            "reason": "a distinct() read without an order returns its rows in the order the engine deduplicates them in (a hash on PostgreSQL), so its rows are compared as a set"
+          }
         },
         {
           "op": "database.find",
@@ -305569,7 +305583,14 @@
                 "$collection": "distinct_rows_d91e25"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "rows": true,
+            "reason": "a distinct() read without an order returns its rows in the order the engine deduplicates them in (a hash on PostgreSQL), so its rows are compared as a set"
+          }
         },
         {
           "op": "database.find",

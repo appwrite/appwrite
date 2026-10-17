@@ -191876,6 +191876,13 @@
               "class": "Utopia\\Database\\Exception\\Query",
               "message": "Invalid query: Invalid query method: distinct"
             }
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "rows": true,
+            "reason": "a distinct() read without an order returns its rows in the order the engine deduplicates them in (a hash on PostgreSQL), so its rows are compared as a set"
           }
         },
         {

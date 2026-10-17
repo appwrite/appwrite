@@ -12930,10 +12930,41 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create collection metadata for 'orphanTags6ad2f28563cae0166112': Failed to execute transaction: the transaction was lost before it could commit"
-            }
+            "$document": {
+              "$id": "orphanTags6ad2f28563cae0166112",
+              "name": "orphanTags6ad2f28563cae0166112",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "6"
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -13173,9 +13204,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Related collection not found"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "orphanTags6ad2f28563cae0166112",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": false,
+              "key": "tags",
+              "twoWayKey": "article",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Cascade"
+              }
             }
           }
         },
@@ -13388,6 +13428,7 @@
                   "$collection": "orphanEditors6ad2f28563cae0166112"
                 }
               },
+              "tags": [],
               "topics": []
             }
           }
@@ -13460,6 +13501,7 @@
                   "$collection": "orphanEditors6ad2f28563cae0166112"
                 }
               },
+              "tags": [],
               "topics": []
             }
           }
@@ -13546,6 +13588,7 @@
                     }
                   },
                   "$collection": "orphanArticles6ad2f28563cae0166112",
+                  "tags": [],
                   "topics": []
                 }
               }
@@ -13634,6 +13677,7 @@
                     }
                   },
                   "$collection": "orphanArticles6ad2f28563cae0166112",
+                  "tags": [],
                   "topics": []
                 }
               }
@@ -13659,9 +13703,20 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$id": "tag1",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "tag",
+              "$collection": "orphanTags6ad2f28563cae0166112",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
             }
           }
         },
@@ -13727,6 +13782,25 @@
                   "$collection": "orphanEditors6ad2f28563cae0166112"
                 }
               },
+              "tags": [
+                {
+                  "$document": {
+                    "name": "tag",
+                    "$id": "tag1",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "create(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "orphanTags6ad2f28563cae0166112"
+                  }
+                }
+              ],
               "topics": [
                 {
                   "$document": {
@@ -14062,20 +14136,20 @@
             }
           },
           "expect": {
-            "result": false,
+            "result": true,
             "calls": {
               "callback": [
                 {
                   "args": [],
                   "steps": [
                     {
-                      "result": false,
+                      "result": true,
                       "calls": {
                         "callback": [
                           {
                             "args": [],
                             "steps": [
-                              false
+                              true
                             ]
                           }
                         ]

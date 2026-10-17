@@ -87259,7 +87259,14 @@
                 "$collection": "distinct_search_relevance"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "rows": true,
+            "reason": "a distinct() read without an order returns its rows in the order the engine deduplicates them in (a hash on PostgreSQL), so its rows are compared as a set"
+          }
         },
         {
           "op": "database.find",

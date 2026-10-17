@@ -155796,9 +155796,24 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for index creation 'uniqueIndex': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Index",
+            "fields": {
+              "key": "uniqueIndex",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [
+                null
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                }
+              ],
+              "ttl": null
             }
           }
         },
@@ -155836,37 +155851,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$permissions": [
-                "read(\"any\")",
-                "read(\"user:1\")",
-                "read(\"user:2\")",
-                "create(\"any\")",
-                "create(\"user:1x\")",
-                "create(\"user:2x\")",
-                "update(\"any\")",
-                "update(\"user:1x\")",
-                "update(\"user:2x\")",
-                "delete(\"any\")",
-                "delete(\"user:1x\")",
-                "delete(\"user:2x\")"
-              ],
-              "name": "Frozen",
-              "director": "Chris Buck & Jennifer Lee",
-              "year": 2013,
-              "price": 39.5,
-              "active": true,
-              "genres": [
-                "animation",
-                "kids"
-              ],
-              "with-dash": "Works4",
-              "$id": "<uniqid>",
-              "$collection": "movies_u000000000045",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "7",
-              "nullable": null
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
             }
           }
         },
@@ -156025,37 +156012,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "name": "Frozen",
-              "director": "Chris Buck & Jennifer Lee",
-              "year": 2013,
-              "price": 39.5,
-              "active": true,
-              "genres": [
-                "animation",
-                "kids"
-              ],
-              "with-dash": "Works4",
-              "nullable": null,
-              "$sequence": "8",
-              "$id": "<uniqid>",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")",
-                "read(\"user:1\")",
-                "read(\"user:2\")",
-                "create(\"any\")",
-                "create(\"user:1x\")",
-                "create(\"user:2x\")",
-                "update(\"any\")",
-                "update(\"user:1x\")",
-                "update(\"user:2x\")",
-                "delete(\"any\")",
-                "delete(\"user:1x\")",
-                "delete(\"user:2x\")"
-              ],
-              "$collection": "movies_u000000000045"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
             }
           }
         },
@@ -156346,40 +156305,6 @@
                 ],
                 "$collection": "movies_u000000000045"
               }
-            },
-            {
-              "$document": {
-                "name": "Frozen",
-                "director": "Chris Buck & Jennifer Lee",
-                "year": 2013,
-                "price": 39.5,
-                "active": true,
-                "genres": [
-                  "animation",
-                  "kids"
-                ],
-                "with-dash": "Works4",
-                "nullable": null,
-                "$id": "<uniqid>",
-                "$sequence": "7",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "$collection": "movies_u000000000045"
-              }
             }
           ]
         },
@@ -156575,40 +156500,6 @@
                 "$updatedAt": "<now>",
                 "$permissions": [
                   "read(\"user:x\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "$collection": "movies_u000000000045"
-              }
-            },
-            {
-              "$document": {
-                "name": "Frozen",
-                "director": "Chris Buck & Jennifer Lee",
-                "year": 2013,
-                "price": 39.5,
-                "active": true,
-                "genres": [
-                  "animation",
-                  "kids"
-                ],
-                "with-dash": "Works4",
-                "nullable": null,
-                "$id": "<uniqid>",
-                "$sequence": "7",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
                   "create(\"any\")",
                   "create(\"user:1x\")",
                   "create(\"user:2x\")",
@@ -156844,40 +156735,6 @@
                 ],
                 "$collection": "movies_u000000000045"
               }
-            },
-            {
-              "$document": {
-                "name": "Frozen",
-                "director": "Chris Buck & Jennifer Lee",
-                "year": 2013,
-                "price": 39.5,
-                "active": true,
-                "genres": [
-                  "animation",
-                  "kids"
-                ],
-                "with-dash": "Works4",
-                "nullable": null,
-                "$id": "<uniqid>",
-                "$sequence": "7",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "$collection": "movies_u000000000045"
-              }
             }
           ]
         },
@@ -157016,40 +156873,6 @@
                 "$updatedAt": "<now>",
                 "$permissions": [
                   "read(\"user:x\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "$collection": "movies_u000000000045"
-              }
-            },
-            {
-              "$document": {
-                "name": "Frozen",
-                "director": "Chris Buck & Jennifer Lee",
-                "year": 2013,
-                "price": 39.5,
-                "active": true,
-                "genres": [
-                  "animation",
-                  "kids"
-                ],
-                "with-dash": "Works4",
-                "nullable": null,
-                "$id": "<uniqid>",
-                "$sequence": "7",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
                   "create(\"any\")",
                   "create(\"user:1x\")",
                   "create(\"user:2x\")",
@@ -298981,7 +298804,14 @@
                 "$collection": "distinct_rows_85914f"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "rows": true,
+            "reason": "a distinct() read without an order returns its rows in the order the engine deduplicates them in (a hash on PostgreSQL), so its rows are compared as a set"
+          }
         },
         {
           "op": "database.find",
@@ -299098,7 +298928,14 @@
                 "$collection": "distinct_rows_85914f"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "rows": true,
+            "reason": "a distinct() read without an order returns its rows in the order the engine deduplicates them in (a hash on PostgreSQL), so its rows are compared as a set"
+          }
         },
         {
           "op": "database.find",
@@ -299153,7 +298990,14 @@
                 "$collection": "distinct_rows_85914f"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "rows": true,
+            "reason": "a distinct() read without an order returns its rows in the order the engine deduplicates them in (a hash on PostgreSQL), so its rows are compared as a set"
+          }
         },
         {
           "op": "database.find",

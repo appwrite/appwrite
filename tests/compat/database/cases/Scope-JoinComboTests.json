@@ -30369,13 +30369,17 @@
                 "c.secret": "c-open-token",
                 "c.score": 1,
                 "$id": "ha1",
-                "$sequence": null,
-                "$collection": "jh_a",
-                "$createdAt": null,
-                "$updatedAt": null
+                "$collection": "jh_a"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "rows": true,
+            "reason": "a distinct() read without an order returns its rows in the order the engine deduplicates them in (a hash on PostgreSQL), so its rows are compared as a set"
+          }
         },
         {
           "op": "db.authorization.clean_roles",

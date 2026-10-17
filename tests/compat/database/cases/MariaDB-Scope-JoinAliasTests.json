@@ -8006,10 +8006,53 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create collection metadata for 'jda_staff': Failed to execute transaction: the transaction was lost before it could commit"
-            }
+            "$document": {
+              "$id": "jda_staff",
+              "name": "jda_staff",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "managerId",
+                    "key": "managerId",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "4"
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -8420,9 +8463,17 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$id": "ann",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "Ann",
+              "managerId": "",
+              "$collection": "jda_staff",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
             }
           }
         },
@@ -8442,9 +8493,17 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$id": "cal",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "Cal",
+              "managerId": "ann",
+              "$collection": "jda_staff",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
             }
           }
         },
@@ -8464,9 +8523,17 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$id": "dee",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "Dee",
+              "managerId": "cal",
+              "$collection": "jda_staff",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
             }
           }
         },
@@ -8681,19 +8748,14 @@
           "args": {
             "collection": "jda_staff"
           },
-          "expect": false
+          "expect": true
         },
         {
           "op": "database.delete_collection",
           "args": {
             "collection": "jda_staff"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
-            }
-          }
+          "expect": null
         },
         {
           "op": "database.collection_exists",
