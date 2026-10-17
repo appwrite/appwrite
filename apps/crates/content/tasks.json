@@ -1,6 +1,22 @@
 {
-  "updated": "2026-10-17T19:35:00Z",
+  "updated": "2026-10-17T19:50:00Z",
   "tasks": [
+    {
+      "id": "signatures",
+      "title": "One Rust method per PHP method",
+      "area": "Libraries",
+      "status": "progress",
+      "updated": "2026-10-17T19:50:00Z",
+      "note": "An optional PHP parameter becomes an explicit Rust argument, never a second method or a with_* builder. registry is converted in the working tree (set and get take fresh; set_fresh and get_fresh are gone), and CONVERSION.md gets the rule in §4 and on the checklist. Not committed yet; the other crates follow."
+    },
+    {
+      "id": "account-route",
+      "title": "Account: route it to Rust",
+      "area": "Services",
+      "status": "todo",
+      "updated": "2026-10-17T19:50:00Z",
+      "note": "36 of Account's 63 routes are implemented in Rust, but Traefik still sends all of them to PHP. The last committed parity diff (d90c55d2f0, Oct 15) had 28 of 2,006 scenarios differ, all in account.sessions (19) and account.mfa (9) and mostly purge counts; re-run it after the Users purge fix, then add the routers."
+    },
     {
       "id": "migration-dashboard",
       "title": "Migration dashboard at /migration",
@@ -230,8 +246,8 @@
       "title": "Migrate the next services",
       "area": "Services",
       "status": "todo",
-      "note": "After Users, Teams and Account: the next services to port, each with its parity diff matrix and benchmarks.",
-      "updated": "2026-10-15T16:30:00Z"
+      "note": "After Users and Teams, which Rust serves, and Account, implemented but not routed yet: the next services to port, each with its parity diff matrix and benchmarks.",
+      "updated": "2026-10-17T19:50:00Z"
     },
     {
       "id": "account-dedupe",
@@ -253,9 +269,9 @@
       "id": "pr-ready",
       "title": "Ready the PR for merge",
       "area": "Release",
-      "status": "todo",
-      "note": "Delete .github/ci/focus.json and mark the PR ready for review.",
-      "updated": "2026-10-15T16:30:00Z"
+      "status": "done",
+      "note": ".github/ci/focus.json is deleted (13110093ae), so CI runs every lane again, and the PR is marked ready for review.",
+      "updated": "2026-10-17T17:23:04Z"
     },
     {
       "id": "facts-page",
