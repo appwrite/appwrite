@@ -132,6 +132,7 @@ final class Adapter implements Base, Benchmarks
             'client.stream' => fn (array $a, Session $s) => self::traced($a, function () use ($a, $s) {
                 [$client, $sleeps] = isset($a['client']) ? $s->get($a['client']) : self::client([], $s);
                 $streamed = '';
+                /** @var list<mixed> $notified */
                 $notified = [];
                 $ordered = true;
                 $sink = function (string $chunk) use (&$streamed, &$notified, &$ordered) {
