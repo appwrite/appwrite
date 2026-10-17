@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-17T19:58:00Z",
+  "updated": "2026-10-17T20:11:00Z",
   "tasks": [
     {
       "id": "signatures",
@@ -8,6 +8,14 @@
       "status": "progress",
       "updated": "2026-10-17T19:50:00Z",
       "note": "An optional PHP parameter becomes an explicit Rust argument, never a second method or a with_* builder. registry is converted in the working tree (set and get take fresh; set_fresh and get_fresh are gone), and CONVERSION.md gets the rule in §4 and on the checklist. Not committed yet; the other crates follow."
+    },
+    {
+      "id": "cdn-fuzz",
+      "title": "cdn: a TypeError names its file differently",
+      "area": "Libraries",
+      "status": "todo",
+      "updated": "2026-10-17T20:11:00Z",
+      "note": "bin/compat fuzz cdn, certificates.once[fastly tls subscriptions], seed 11510 input 3852: retrySubscription() gets a null subscription id. PHP's TypeError says \"called in /usr/src/code/packages/cdn/src/Certificates/Provider/FastlyTls.php on line 44\", Rust's \"called in FastlyTls.php on line 44\"."
     },
     {
       "id": "avatars-mariadb",
