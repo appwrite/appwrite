@@ -7,8 +7,10 @@ use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Usage\Connection;
 use Swoole\Coroutine as Co;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Platform\Action;
+use Utopia\Pools\Group;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -30,7 +32,8 @@ class Schedule extends Action
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('telemetry')
-            ->inject('locks');
+            ->inject('locks')
+            ->inject('pools');
 
         if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
             $this
@@ -51,8 +54,9 @@ class Schedule extends Action
         callable $getProjectDB,
         Telemetry $telemetry,
         callable $locks,
+        Group $pools,
     ): never {
-        $this->start($publisherForFunctions, $publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks);
+        $this->start($publisherForFunctions, $publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks, $pools);
     }
 
     public function actionWithUsage(
@@ -63,6 +67,7 @@ class Schedule extends Action
         callable $getProjectDB,
         Telemetry $telemetry,
         callable $locks,
+        Group $pools,
         StatsResourcesPublisher $publisherForStatsResources,
         Connection $usageConnection,
     ): never {
@@ -74,6 +79,7 @@ class Schedule extends Action
             $getProjectDB,
             $telemetry,
             $locks,
+            $pools,
             $publisherForStatsResources,
             $usageConnection,
         );
@@ -87,12 +93,13 @@ class Schedule extends Action
         callable $getProjectDB,
         Telemetry $telemetry,
         callable $locks,
+        Group $pools,
         ?StatsResourcesPublisher $publisherForStatsResources = null,
         ?Connection $usageConnection = null,
     ): never {
-        $this->loop(fn () => (new ScheduleFunctions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
-        $this->loop(fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
-        $this->loop(fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks));
+        $this->loop(fn () => (new ScheduleFunctions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $pools));
+        $this->loop(fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $pools));
+        $this->loop(fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks, $pools));
 
         if ($publisherForStatsResources !== null && $usageConnection !== null) {
             $this->loop(fn () => (new StatsResources())->action($dbForPlatform, $publisherForStatsResources, $usageConnection, $telemetry));
@@ -106,15 +113,27 @@ class Schedule extends Action
     private function loop(\Closure $task): void
     {
         Co::create(function () use ($task): void {
-            Span::init('schedule.combined.loop');
-            $error = null;
+            // A task that throws (a lost Redis connection ends a scheduler
+            // loop) starts again, as its own container would be restarted.
+            while (true) {
+                // Held by reference: the task's own spans replace the current one.
+                $span = Span::init('schedule.combined.loop');
+                $error = null;
 
-            try {
-                $task();
-            } catch (\Throwable $th) {
-                $error = $th;
-            } finally {
-                Span::current()?->finish(error: $error);
+                try {
+                    $task();
+                } catch (\Throwable $th) {
+                    $error = $th;
+                } finally {
+                    $span->finish(error: $error);
+                }
+
+                if ($error === null) {
+                    return;
+                }
+
+                Console::error('Scheduler loop failed, restarting in 5s: ' . $error->getMessage());
+                sleep(5);
             }
         });
     }
