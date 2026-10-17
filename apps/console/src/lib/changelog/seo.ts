@@ -1,5 +1,5 @@
 import { MARKETING_SITE_ORIGIN } from '@/lib/marketing/urls'
-import { getSeoSiteOrigin } from '@/lib/marketing/site-origin'
+import { getSeoSiteOrigin, resolveSiteAssetUrl } from '@/lib/marketing/site-origin'
 import { getCoverImageDimensions } from '@/lib/seo/cover-dimensions'
 import {
   buildOgCoverUrl,
@@ -99,7 +99,7 @@ export function getChangelogEntrySchema(entry: ChangelogEntry) {
       '@id': canonical,
     },
     ...(entry.cover
-      ? { image: [getChangelogEntryOgImage(entry, MARKETING_SITE_ORIGIN)] }
+      ? { image: [resolveSiteAssetUrl(entry.cover, MARKETING_SITE_ORIGIN)] }
       : {}),
     author: getOrganizationSchema(),
     publisher: getOrganizationSchema(),

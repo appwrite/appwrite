@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
-import { getChangelogEntryMetaTags } from '@/lib/changelog/seo'
+import { getChangelogEntryMetaTags, getChangelogEntrySchema } from '@/lib/changelog/seo'
 import type { ChangelogEntry } from '@/lib/changelog/types'
+import { getCoverImageDimensions } from '@/lib/seo/cover-dimensions'
 import { buildOgCoverUrl } from '@/lib/seo/og-image'
 
 const origin = 'https://appwrite.io'
@@ -32,7 +33,7 @@ describe('buildOgCoverUrl', () => {
   })
 })
 
-describe('getChangelogEntryMetaTags', () => {
+describe('changelog seo', () => {
   test('card image is not AVIF', () => {
     const entry = {
       title: 'Passkeys',
@@ -49,5 +50,24 @@ describe('getChangelogEntryMetaTags', () => {
     expect(getContent(tags, 'og:image')).toBe(jpeg)
     expect(getContent(tags, 'twitter:image')).toBe(jpeg)
     expect(getContent(tags, 'og:image:width')).toBe('1920')
+  })
+
+  test('structured data keeps the original cover', () => {
+    const entry = {
+      title: 'Passkeys',
+      description: 'Passkeys',
+      cover,
+      href: '/changelog/entry/2026-10-16',
+      date: '2026-10-16',
+    } as unknown as ChangelogEntry
+
+    expect(getChangelogEntrySchema(entry).image).toEqual([`${origin}${cover}`])
+  })
+})
+
+describe('getCoverImageDimensions', () => {
+  test('ignores inherited object keys', () => {
+    expect(getCoverImageDimensions('constructor')).toBeUndefined()
+    expect(getCoverImageDimensions('toString')).toBeUndefined()
   })
 })
