@@ -27,7 +27,22 @@ pub fn normalize(value: &Value, ns: &str) -> Value {
 }
 
 fn replace_ns(s: &str, ns: &str) -> String {
-    if ns.is_empty() || !s.contains(ns) { s.to_owned() } else { s.replace(ns, "${ns}") }
+    let mut out = if ns.is_empty() || !s.contains(ns) { s.to_owned() } else { s.replace(ns, "${ns}") };
+    // libpq's error position cuts the statement line to `...` and a tail
+    // of the namespace (`LINE 1: ...005399p"."t" ...`): the tail is the
+    // namespace too, however short, up to the identifier's closing quote.
+    if !ns.is_empty() && out.contains("...") {
+        'cut: for i in 1..ns.len() {
+            for quote in ['"', '`'] {
+                let tail = format!("...{}{quote}", &ns[i..]);
+                if out.contains(&tail) {
+                    out = out.replace(&tail, &format!("...${{ns}}{quote}"));
+                    break 'cut;
+                }
+            }
+        }
+    }
+    out
 }
 
 /// Replaces the values at `paths` (JSON pointers; `*` matches any key or
@@ -36,6 +51,17 @@ pub fn mask(value: &mut Value, paths: &[String]) {
     for path in paths {
         let segments: Vec<&str> = path.split('/').skip(1).collect();
         mask_at(value, &segments);
+    }
+}
+
+/// Sorts the elements of the lists at `paths` by their JSON, so the order of
+/// rows no longer counts there.
+pub fn sort_rows(value: &mut Value, paths: &[String]) {
+    for path in paths {
+        let target = if path.is_empty() || path == "/" { Some(&mut *value) } else { value.pointer_mut(path) };
+        if let Some(Value::Array(rows)) = target {
+            rows.sort_by_cached_key(|row| row.to_string());
+        }
     }
 }
 
@@ -258,6 +284,17 @@ mod tests {
     fn normalizes_namespaces_and_handles() {
         let v = normalize(&json!({"cxab:key": "cxab:v", "h": {"$handle": "h9"}}), "cxab");
         assert_eq!(v, json!({"${ns}:key": "${ns}:v", "h": {"$handle": "*"}}));
+        let cut = normalize(&json!("LINE 1: ...005399p\".\"t\" WHERE"), "cx7005399p");
+        assert_eq!(cut, json!("LINE 1: ...${ns}\".\"t\" WHERE"));
+        let cut = normalize(&json!("LINE 1: ...p\".\"t\" WHERE ...p"), "cx7005399p");
+        assert_eq!(cut, json!("LINE 1: ...${ns}\".\"t\" WHERE ...p"));
+    }
+
+    #[test]
+    fn sorts_rows() {
+        let mut v = json!([{"k": "b"}, {"k": "a"}]);
+        sort_rows(&mut v, &[String::new()]);
+        assert_eq!(v, json!([{"k": "a"}, {"k": "b"}]));
     }
 
     #[test]

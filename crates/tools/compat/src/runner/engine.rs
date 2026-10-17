@@ -7,7 +7,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use serde_json::{Value, json};
 
 use super::cases::{self, Case, CaseFile, Step};
-use super::compare::{diff, mask, normalize, short, sort_keys, substitute};
+use super::compare::{diff, mask, normalize, short, sort_keys, sort_rows, substitute};
 use super::config::Config;
 use super::generate::{self, Rng};
 use super::process::Driver;
@@ -97,6 +97,8 @@ fn comparable(result: &Outcome, ns: &str, masks: &[&Mask], scrub: &Scrubber) -> 
     for m in masks {
         if m.order {
             sort_keys(&mut v, &m.paths);
+        } else if m.rows {
+            sort_rows(&mut v, &m.paths);
         } else {
             mask(&mut v, &m.paths);
         }

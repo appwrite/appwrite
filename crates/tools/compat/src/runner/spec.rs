@@ -200,6 +200,11 @@ pub struct Mask {
     /// service's hash iteration order).
     #[serde(default)]
     pub order: bool,
+    /// Instead of hiding the values at `paths`, compare the lists there as
+    /// sets of rows: for rows an engine returns in no fixed order (a
+    /// `distinct()` read without an order).
+    #[serde(default)]
+    pub rows: bool,
 }
 
 #[derive(Debug, Deserialize)]

@@ -486,6 +486,8 @@ final class Cases
     /** @var list<string> the stored objects that are random-order queries */
     private static array $random = [];
 
+    private const UNORDERED_DISTINCT = 'a distinct() read without an order returns its rows in the order the engine deduplicates them in (a hash on PostgreSQL), so its rows are compared as a set';
+
     private static function mask(Step $step): ?array
     {
         $args = (string) json_encode($step->args);
@@ -500,6 +502,9 @@ final class Cases
         }
         if (str_contains($args, '"method":"orderRandom"')) {
             return ['paths' => [''], 'reason' => 'Query::orderRandom() returns the documents in a random order'];
+        }
+        if ($step->op === 'database.find' && str_contains($args, '"method":"distinct"') && !str_contains($args, '"method":"order')) {
+            return ['paths' => [''], 'rows' => true, 'reason' => self::UNORDERED_DISTINCT];
         }
         if (str_contains($args, '"method":"cursor') && (str_contains($args, '"attribute":"$createdAt"') || str_contains($args, '"attribute":"$updatedAt"'))) {
             return ['paths' => [''], 'reason' => 'documents written within one millisecond tie on $createdAt/$updatedAt, so the page after a cursor depends on timing'];
