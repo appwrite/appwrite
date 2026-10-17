@@ -2,7 +2,7 @@
 
 use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicI64, Ordering};
-use std::sync::{Arc, Mutex as StdMutex};
+use std::sync::{Arc, LazyLock, Mutex as StdMutex};
 use std::time::{Duration, Instant};
 
 use async_nats::jetstream::consumer::pull::Config as PullConfig;
@@ -40,6 +40,17 @@ const PROVISION_ATTEMPTS: u32 = 5;
 const PROVISION_BACKOFF_MS: u64 = 500;
 const PUBLISH_RETRY_DELAYS: [f64; 4] = [0.0, 0.25, 1.0, 2.0];
 const PUBLISH_RETRY_BUDGET: f64 = 10.0;
+
+/// Work streams this process has seen owned by the queue publishing to them,
+/// as account => stream => identity. Process-wide, not per broker: a pool
+/// builds a broker per connection, and the point is one identity read per
+/// queue per process rather than per connection. Keyed by account (see
+/// [`Nats::account`]), because a stream name means a different stream on
+/// another cluster or account, and a confirmation there says nothing here.
+static OWNED_STREAMS: LazyLock<StdMutex<HashMap<String, HashMap<String, String>>>> = LazyLock::new(Default::default);
+
+/// Hands each broker built on a live client its own account key.
+static CLIENT_SOURCES: AtomicI64 = AtomicI64::new(0);
 
 /// Derives a message's deduplication id from its payload.
 pub type MessageId = Arc<dyn Fn(&Array) -> String + Send + Sync>;
@@ -194,8 +205,9 @@ impl NatsConfig {
 enum Source {
     /// A server URL: the broker connects, and reconnects after a failure.
     Url(String),
-    /// A live client: the only connection the broker will ever have.
-    Client(Client),
+    /// A live client: the only connection the broker will ever have, and a
+    /// process-unique number standing in for its account.
+    Client(Client, i64),
 }
 
 #[derive(Default)]
@@ -275,6 +287,13 @@ fn publish_error(error: async_nats::jetstream::context::PublishError) -> Error {
     nats_error(class, error)
 }
 
+/// Whether a failure means the connection is gone: a closed socket, or the
+/// server reporting it stale.
+fn lost_connection(error: &Error) -> bool {
+    matches!(error, Error::Nats { class, message }
+        if *class == "Utopia\\NATS\\Exception\\ConnectionException" || message.to_ascii_lowercase().contains("stale connection"))
+}
+
 fn not_found(e: &impl std::fmt::Display) -> bool {
     let text = e.to_string();
     text.contains("not found") || text.contains("10059") || text.contains("10014")
@@ -288,7 +307,7 @@ impl Nats {
 
     /// A broker on a live client, which it can never replace.
     pub fn with_client(client: Client, config: NatsConfig) -> Result<Self> {
-        Self::build(Source::Client(client), config)
+        Self::build(Source::Client(client, CLIENT_SOURCES.fetch_add(1, Ordering::SeqCst)), config)
     }
 
     fn build(source: Source, config: NatsConfig) -> Result<Self> {
@@ -323,7 +342,7 @@ impl Nats {
             return Ok(c.clone());
         }
         let client = match &self.source {
-            Source::Client(c) => c.clone(),
+            Source::Client(c, _) => c.clone(),
             Source::Url(url) => async_nats::connect(url.as_str())
                 .await
                 .map_err(|e| nats_error("Utopia\\NATS\\Exception\\ConnectionException", e))?,
@@ -433,8 +452,10 @@ impl Nats {
     }
 
     /// Publishes on the stream with [`Nats::republishing`]. With a queue, it
-    /// is provisioned inside each attempt, not before: in a rolling restart
-    /// the provisioning request is what meets the next server going away.
+    /// is provisioned only when the stream is missing (see
+    /// [`Nats::provisioning_if_absent`]), and inside each attempt rather than
+    /// before: in a rolling restart the provisioning request is what meets
+    /// the next server going away.
     async fn publish_acked(
         &self,
         queue: Option<&Queue>,
@@ -445,13 +466,93 @@ impl Nats {
         self.republishing(|| {
             let headers = headers.clone();
             async move {
-                if let Some(queue) = queue {
-                    self.ensure(queue).await?;
+                match queue {
+                    Some(queue) => {
+                        self.provisioning_if_absent(queue, || self.publish_once(subject, data, headers.clone())).await
+                    }
+                    None => self.publish_once(subject, data, headers).await,
                 }
-                self.publish_once(subject, data, headers).await
             }
         })
         .await
+    }
+
+    /// Publishes without provisioning first, and provisions only if no
+    /// stream took it. A publisher needs the stream to exist and nothing
+    /// else: the durable consumer, the spare delivery and the dead-letter
+    /// advisory are the consumer's, provisioned on its first receive.
+    ///
+    /// A No Responders says nothing listens on the work subject: a missing
+    /// stream, or an existing one electing a leader. Only the first may be
+    /// provisioned (provisioning during an election writes this publisher's
+    /// settings over the stream and its consumer), so it is followed by one
+    /// read of the stream, and only a 404 provisions and publishes again.
+    /// Anything else is left to [`Nats::republishing`] to wait out. The
+    /// stream-name collision guard still runs before the first publish, as
+    /// one read per queue per process ([`Nats::guard_once`]).
+    async fn provisioning_if_absent<T, F, Fut>(&self, queue: &Queue, publish: F) -> Result<T>
+    where
+        F: Fn() -> Fut,
+        Fut: std::future::Future<Output = Result<T>>,
+    {
+        self.guard_once(queue).await?;
+        match publish().await {
+            Err(Error::Nats { class, message }) if class == "Utopia\\NATS\\Exception\\NoRespondersException" => {
+                if self.state().provisioned.contains(&identity(queue)) || !self.stream_is_absent(queue).await {
+                    return Err(Error::Nats { class, message });
+                }
+            }
+            other => return other,
+        }
+        self.ensure(queue).await?;
+        publish().await
+    }
+
+    /// Whether the work stream is known not to exist, as opposed to existing
+    /// without a leader: only JetStream's 404 says absent. A read that fails
+    /// otherwise (a timeout while the meta leader is elected) is not one.
+    async fn stream_is_absent(&self, queue: &Queue) -> bool {
+        let Ok(js) = self.js().await else { return false };
+        match js.get_stream(work_stream(queue)).await {
+            Ok(_) => false,
+            Err(e) => not_found(&e),
+        }
+    }
+
+    /// Refuses to publish into a stream another queue owns, at the cost of
+    /// one read per queue per process. Only a stream confirmed to be this
+    /// queue's is remembered; an absent one is not, so the publish meets No
+    /// Responders and [`Nats::ensure`] guards and creates it.
+    async fn guard_once(&self, queue: &Queue) -> Result<()> {
+        let account = self.account();
+        let stream = work_stream(queue);
+        let key = identity(queue);
+        let owned = OWNED_STREAMS
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .get(&account)
+            .and_then(|streams| streams.get(&stream))
+            .is_some_and(|owner| *owner == key);
+        if owned {
+            return Ok(());
+        }
+        if self.guard_stream_name(queue, &key).await?.as_deref() == Some(key.as_str()) {
+            OWNED_STREAMS.lock().unwrap_or_else(|e| e.into_inner()).entry(account).or_default().insert(stream, key);
+        }
+        Ok(())
+    }
+
+    /// Which JetStream a stream name refers to, as far as the broker can
+    /// say: the URL it connects to, credentials included, hashed so no
+    /// credential sits in the map. A live client's account cannot be read
+    /// back, so each such broker counts as its own (over-splitting costs a
+    /// read; merging two accounts is the bug).
+    fn account(&self) -> String {
+        use sha1::Digest;
+        match &self.source {
+            Source::Url(url) => hex::encode(sha1::Sha1::digest(url.as_bytes())),
+            Source::Client(_, n) => format!("client:{n}"),
+        }
     }
 
     async fn publish_envelope(&self, queue: &Queue, subject: &str, pid: &str, value: &Value) -> Result<()> {
@@ -485,8 +586,12 @@ impl Nats {
             self.state().consumers.get(&key).cloned().ok_or_else(|| Error::Runtime("consumer missing".into()))?;
         let mut deliveries = self.fetch(&consumer, 1, timeout as f64, false).await?;
         if !deliveries.is_empty() && deliveries.len() < max {
-            let more = self.fetch(&consumer, max - deliveries.len(), 0.25, true).await?;
-            deliveries.extend(more);
+            // A failed top-up keeps the deliveries already fetched: dropped,
+            // they would wait out ackWait before anyone saw them again.
+            match self.fetch(&consumer, max - deliveries.len(), 0.25, true).await {
+                Ok(more) => deliveries.extend(more),
+                Err(e) => self.report(e),
+            }
         }
         let mut spare = self.state().spare.get(&key).copied().flatten();
         let mut messages = Vec::with_capacity(deliveries.len());
@@ -663,14 +768,42 @@ impl Nats {
     }
 
     /// Drops the connection and everything derived from it; `false` when the
-    /// broker was built on a live client it cannot replace.
+    /// broker was built on a live client it cannot replace. In-flight
+    /// deliveries are kept: each holds the connection it arrived on, which
+    /// stays open (and reconnects itself) until the last of them is
+    /// settled, so a handler still running can still acknowledge.
     pub async fn reconnect(&self) -> bool {
-        self.close_client().await;
-        if matches!(self.source, Source::Client(_)) {
+        if matches!(self.source, Source::Client(..)) {
+            self.close_client().await;
             return false;
         }
-        *self.state() = State::default();
+        if self.state().in_flight.is_empty() {
+            self.close_client().await;
+        } else {
+            self.client.lock().await.take();
+        }
+        {
+            let mut state = self.state();
+            let in_flight = std::mem::take(&mut state.in_flight);
+            *state = State { in_flight, ..State::default() };
+        }
         self.commands_closed.store(false, Ordering::SeqCst);
+        true
+    }
+
+    /// Rebuilds only the receive side after it lost its connection; the
+    /// in-flight deliveries keep theirs. `false` for a broker on a live
+    /// client, whose one connection only [`Nats::reconnect`] may replace.
+    async fn reconnect_receive(&self) -> bool {
+        if matches!(self.source, Source::Client(..)) {
+            return false;
+        }
+        self.client.lock().await.take();
+        let mut state = self.state();
+        state.consumers.clear();
+        state.advisories.clear();
+        state.spare.clear();
+        state.provisioned.clear();
         true
     }
 
@@ -902,7 +1035,9 @@ impl Nats {
         Ok(())
     }
 
-    async fn guard_stream_name(&self, queue: &Queue, identity: &str) -> Result<()> {
+    /// Refuses a queue whose stream another queue owns. Returns the identity
+    /// that owns the stream, or `None` when it is absent.
+    async fn guard_stream_name(&self, queue: &Queue, identity: &str) -> Result<Option<String>> {
         let longest = dead_stream(queue);
         if longest.len() > MAX_STREAM_NAME {
             return Err(Error::Runtime(format!(
@@ -917,14 +1052,14 @@ impl Nats {
             Err(e) if not_found(&e) => None,
             Err(e) => return Err(jetstream_error(e)),
         };
-        if let Some(owner) = owner
+        if let Some(owner) = &owner
             && owner != identity
         {
             return Err(Error::Runtime(format!(
                 "NATS stream \"{stream}\" already belongs to queue \"{owner}\", not \"{identity}\"; rename one queue."
             )));
         }
-        Ok(())
+        Ok(owner)
     }
 
     /// Moves messages that exhausted `max_deliver` (per the advisory) to the dead stream.
@@ -1042,13 +1177,12 @@ impl Publisher for Nats {
             let _guard = self.receive.lock().await;
             // One round trip per window: the whole batch is written before any
             // ack is read, and republished whole (every payload keeps its id,
-            // so the ones that did land collapse), provisioned inside the
-            // republish for the reason publish_acked() gives.
+            // so the ones that did land collapse), provisioned only when the
+            // stream is missing, for the reasons publish_acked() gives.
             let acks = self
                 .republishing(|| {
                     let (subject, prepared) = (&subject, &prepared);
-                    async move {
-                        self.ensure(queue).await?;
+                    self.provisioning_if_absent(queue, move || async move {
                         let js = self.js().await?;
                         let mut pending = Vec::with_capacity(prepared.len());
                         for (pid, data) in prepared {
@@ -1064,7 +1198,7 @@ impl Publisher for Nats {
                             acks.push(ack.await.map_err(publish_error)?);
                         }
                         Ok(acks)
-                    }
+                    })
                 })
                 .await?;
             for ack in acks {
@@ -1110,7 +1244,13 @@ impl Consumer for Nats {
             }
             let result = {
                 let _guard = self.receive.lock().await;
-                self.pull(queue, timeout, n.max(1) as usize).await
+                match self.pull(queue, timeout, n.max(1) as usize).await {
+                    // Once: only the first fetch fails here, and it handed nothing over.
+                    Err(e) if lost_connection(&e) && self.reconnect_receive().await => {
+                        self.pull(queue, timeout, n.max(1) as usize).await
+                    }
+                    other => other,
+                }
             };
             self.flush_reports();
             result
