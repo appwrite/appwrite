@@ -644,6 +644,179 @@
           "expect": true
         }
       ]
+    },
+    {
+      "name": "streams an object the service holds",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/snapshot.bin",
+            "data": "snapshot-",
+            "repeat": 200000
+          },
+          "expect": true
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}",
+            "bucket": "compat"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.new",
+          "args": {
+            "device": {
+              "$ref": "s"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/stream/snapshot.bin",
+            "file": "/tmp/compat-fs/${ns}/snapshot.bin",
+            "content_type": "application/octet-stream"
+          },
+          "expect": "5bf9a95c79b4915b9898259eaebee80c"
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/stream/snapshot.bin",
+            "digest": true
+          },
+          "expect": {
+            "received": {
+              "size": 1800000,
+              "md5": "5bf9a95c79b4915b9898259eaebee80c"
+            },
+            "result": null
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/stream/snapshot.bin",
+            "offset": 9,
+            "length": 8
+          },
+          "expect": {
+            "received": "snapshot",
+            "result": null
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/stream/snapshot.bin",
+            "offset": 1799991
+          },
+          "expect": {
+            "received": "snapshot-",
+            "result": null
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/stream/snapshot.bin",
+            "offset": 1799991,
+            "length": 100
+          },
+          "expect": {
+            "received": "snapshot-",
+            "result": null
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/stream/snapshot.bin",
+            "cancel": true
+          },
+          "expect": {
+            "received": true,
+            "result": {
+              "cancelled": "Downstream disconnected"
+            }
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/stream/missing.bin",
+            "catch": true
+          },
+          "mask": {
+            "paths": [
+              "/result/message"
+            ],
+            "reason": "MinIO puts a random request ID in every error message"
+          },
+          "expect": {
+            "received": "",
+            "result": {
+              "class": "Utopia\\Storage\\Exception\\NotFoundException",
+              "message": "<masked>",
+              "code": 404,
+              "error_code": null,
+              "previous": false
+            }
+          }
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/stream/snapshot.bin"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/stream/snapshot.bin"
+          },
+          "expect": false
+        }
+      ]
     }
   ]
 }

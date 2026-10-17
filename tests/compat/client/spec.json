@@ -500,7 +500,7 @@
       ]
     },
     "client.new": {
-      "doc": "new Client(new Curl() or new Retry(new Curl(), backoff(retry), recorded sleep), destinations?), then each [setting, value] of `with`: destinations, timeout, connect_timeout, ssl_verification, custom_ca, certificate [cert, key, pass], min_tls (Tls case name), connection_reuse, follow_redirects [enabled, hops], headers, base_uri, basic_auth [user, pass], bearer_auth, trace; a handle",
+      "doc": "new Client(new Curl() or new Retry(new Curl(), backoff(retry), recorded sleep), destinations?), then each [setting, value] of `with`: destinations, timeout, connect_timeout, ssl_verification, custom_ca, certificate [cert, key, pass], min_tls (Tls case name), connection_reuse, follow_redirects [enabled, hops], headers, base_uri, basic_auth [user, pass], bearer_auth, trace; with `legacy`, the Curl adapter is wrapped in a fixture decorator without response streaming that counts its requests; a handle",
       "covers": [
         "Utopia\\Client\\Client::__construct",
         "Utopia\\Client\\Client::withDestinations",
@@ -645,7 +645,7 @@
       ]
     },
     "client.stream": {
-      "doc": "$client->stream(request, sink): the response (its body empty) and `streamed`, what reached the sink",
+      "doc": "$client->stream(request, sink): the response (its body empty) and `streamed`, what reached the sink; with `on_response`, $client->stream(request, sink, onResponse), adding `notified` (each response onResponse was given) and `ordered` (whether every chunk reached the sink after a notification)",
       "covers": [
         "Utopia\\Client\\Client::stream",
         "Utopia\\Client\\Adapter\\Curl\\Client::stream",
@@ -677,8 +677,48 @@
             }
           },
           "iterations": 300
+        },
+        {
+          "name": "responses_notified",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "on_response": {
+                "gen": "const",
+                "value": true
+              },
+              "request": {
+                "gen": "object",
+                "fields": {
+                  "method": {
+                    "gen": "pick",
+                    "from": [
+                      "GET",
+                      "HEAD"
+                    ]
+                  },
+                  "raw": {
+                    "gen": "ref",
+                    "name": "raw"
+                  }
+                }
+              }
+            }
+          },
+          "iterations": 300
         }
       ]
+    },
+    "client.supports_response_streaming": {
+      "doc": "$client->supportsResponseStreaming(): Client asks its adapter, Retry the adapter it decorates, the Curl adapter always can",
+      "covers": [
+        "Utopia\\Client\\Client::supportsResponseStreaming",
+        "Utopia\\Client\\Adapter\\Curl\\Client::supportsResponseStreaming",
+        "Utopia\\Client\\Decorator\\Retry::supportsResponseStreaming"
+      ]
+    },
+    "client.record": {
+      "doc": "fixture: {sleeps, calls} of a client handle: the sleeps its Retry recorded and the requests its legacy adapter sent (null without one)"
     },
     "pool.send": {
       "doc": "new Pool(new Connections(new Stack(), 'test', size, fn () => new Curl() (counted), 0.0)), then sendRequest (or stream, with `stream`) each of `requests`: {responses, created}",

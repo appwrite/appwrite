@@ -49,7 +49,7 @@
       ]
     },
     "scripted.new": {
-      "doc": "fixture: a PSR-18 client replaying `responses` ({status, headers: [[name, value]], body} or {error: dns|connection|timeout|tls|network, message, code})"
+      "doc": "fixture: a PSR-18 client replaying `responses` ({status, headers: [[name, value]], body} or {error: dns|connection|timeout|tls|network, message, code}); with `response_streaming`, it hands each response over before its body (supportsResponseStreaming(), the onResponse of stream())"
     },
     "scripted.requests": {
       "doc": "fixture: the requests the scripted client received: method, URL, headers (lowercase names, sorted) and body",
@@ -173,6 +173,14 @@
     },
     "device.read_stream": {
       "doc": "$device->read(...) kept open as a handle"
+    },
+    "device.stream": {
+      "doc": "$device->stream(path, sink, offset, length, etag): {received: what reached the sink ({size, md5} with `digest`; whether anything did, with `cancel`, where the sink throws RuntimeException(\"Downstream disconnected\") on its first chunk), result: run() of the call, or {cancelled: message}}",
+      "covers": [
+        "Utopia\\Storage\\Device::stream",
+        "Utopia\\Storage\\Device\\S3::stream",
+        "Utopia\\Storage\\Device\\Telemetry::stream"
+      ]
     },
     "stream.read": {
       "doc": "$stream->read(length) on a handle from device.read_stream"

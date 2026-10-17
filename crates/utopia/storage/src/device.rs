@@ -2,8 +2,10 @@
 //! operations take and return.
 
 use std::any::Any;
+use std::io;
 
 use async_trait::async_trait;
+use bytes::Bytes;
 use chrono::{DateTime, FixedOffset};
 use indexmap::IndexMap;
 
@@ -262,6 +264,26 @@ pub trait Device: Send + Sync + Any {
     /// PHP: `read()`.
     async fn read(&self, path: &str, offset: u64, length: Option<u64>, etag: Option<&str>) -> Result<Body>;
 
+    /// Delivers `length` bytes (to the end when `None`) from `offset` to
+    /// `sink` as they are read, without keeping the file in memory. With an
+    /// ETag, delivers only while the file still carries it. An error from
+    /// the sink stops the transfer and comes back as [`Error::Body`].
+    ///
+    /// By default the file is [read](Device::read) and passed on in pieces
+    /// of 512 KiB ([`stream`]).
+    ///
+    /// PHP: `stream()`.
+    async fn stream(
+        &self,
+        path: &str,
+        sink: &mut dyn Sink,
+        offset: u64,
+        length: Option<u64>,
+        etag: Option<&str>,
+    ) -> Result<()> {
+        stream(self, path, sink, offset, length, etag).await
+    }
+
     /// Writes a file, replacing whatever was there. Returns its ETag.
     ///
     /// PHP: `write()`.
@@ -333,6 +355,85 @@ pub trait Device: Send + Sync + Any {
 
     /// The device as [`Any`], to reach a concrete device's own methods.
     fn as_any(&self) -> &dyn Any;
+}
+
+/// How much of a file [`stream`] reads at a time: 512 KiB.
+const STREAM_CHUNK_SIZE: usize = 524_288;
+
+/// Where [`Device::stream`] delivers a file, chunk by chunk. An error stops
+/// the transfer.
+///
+/// Any `FnMut(Bytes) -> io::Result<()> + Send` closure is a sink; implement
+/// it on a type of your own to write each chunk asynchronously (to a
+/// response body, a socket).
+///
+/// ```
+/// use bytes::Bytes;
+/// use utopia_storage::{Device, Local};
+///
+/// # utopia_async::run(async {
+/// let device = Local::new("/tmp");
+/// device.write("/tmp/sink.txt", "Hello World".into(), "text/plain").await?;
+/// let mut received = Vec::new();
+/// let mut sink = |chunk: Bytes| {
+///     received.extend_from_slice(&chunk);
+///     Ok(())
+/// };
+/// device.stream("/tmp/sink.txt", &mut sink, 6, None, None).await?;
+/// assert_eq!(received, b"World");
+/// # Ok::<(), utopia_storage::Error>(())
+/// # }).unwrap();
+/// ```
+///
+/// ```php
+/// use Utopia\Psr7\Stream;
+/// use Utopia\Storage\Device\Local;
+///
+/// $device = new Local('/tmp');
+/// $device->write('/tmp/sink.txt', new Stream('Hello World'), 'text/plain');
+/// $received = '';
+/// $device->stream('/tmp/sink.txt', function (string $chunk) use (&$received): void {
+///     $received .= $chunk;
+/// }, 6);
+/// echo $received, "\n"; // World
+/// ```
+///
+/// PHP: the `callable(string): void $sink` of `stream()`; an exception it
+/// throws stops the transfer and propagates.
+#[async_trait]
+pub trait Sink: Send {
+    /// Takes the next chunk.
+    async fn write(&mut self, chunk: Bytes) -> io::Result<()>;
+}
+
+#[async_trait]
+impl<F: FnMut(Bytes) -> io::Result<()> + Send> Sink for F {
+    async fn write(&mut self, chunk: Bytes) -> io::Result<()> {
+        self(chunk)
+    }
+}
+
+/// The streamed read every device can fall back to: [`Device::read`], then
+/// its body passed to `sink` 512 KiB at a time. The default
+/// [`Device::stream`].
+///
+/// PHP: the base `Device::stream()`.
+pub async fn stream<D: Device + ?Sized>(
+    device: &D,
+    path: &str,
+    sink: &mut dyn Sink,
+    offset: u64,
+    length: Option<u64>,
+    etag: Option<&str>,
+) -> Result<()> {
+    let mut body = device.read(path, offset, length, etag).await?;
+    loop {
+        let chunk = body.read(STREAM_CHUNK_SIZE).await.map_err(Error::Body)?;
+        if chunk.is_empty() {
+            return Ok(());
+        }
+        sink.write(chunk).await.map_err(Error::Body)?;
+    }
 }
 
 /// Resolves `.`, `..` and repeated separators in a path, without touching

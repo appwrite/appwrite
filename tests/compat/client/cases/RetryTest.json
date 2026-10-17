@@ -645,6 +645,150 @@
           }
         }
       ]
+    },
+    {
+      "name": "unsupported response streaming does not spend the retry budget",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [],
+            "legacy": true,
+            "retry": {
+              "random": 1.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.stream",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "on_response": true,
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/flaky?key=${ns}:a&fail=2&mode=drop"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Client\\Exception\\AdapterPreconditionException",
+              "message": "This adapter cannot expose response headers before streaming."
+            }
+          }
+        },
+        {
+          "op": "client.record",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "sleeps": [],
+            "calls": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "retries a response-aware stream and notifies each attempt",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [],
+            "retry": {
+              "random": 1.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.stream",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "on_response": true,
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/flaky?key=${ns}:b&fail=2&mode=drop"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "text/plain;charset=UTF-8"
+                ]
+              ],
+              [
+                "Content-Length",
+                [
+                  "10"
+                ]
+              ]
+            ],
+            "body": "",
+            "streamed": "ok after 3",
+            "notified": [
+              {
+                "protocol": "1.1",
+                "status": 200,
+                "reason": "OK",
+                "headers": [
+                  [
+                    "Content-Type",
+                    [
+                      "text/plain;charset=UTF-8"
+                    ]
+                  ],
+                  [
+                    "Content-Length",
+                    [
+                      "10"
+                    ]
+                  ]
+                ],
+                "body": ""
+              }
+            ],
+            "ordered": true,
+            "sleeps": [
+              0.1,
+              0.2
+            ]
+          }
+        },
+        {
+          "op": "client.record",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "sleeps": [
+              0.1,
+              0.2
+            ],
+            "calls": null
+          }
+        }
+      ]
     }
   ]
 }

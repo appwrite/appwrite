@@ -245,7 +245,7 @@ final class Harness
                 'iframe' => $env->response()->iframe($a[0], self::eval($a[1], $env)),
                 'redirect' => $env->response()->redirect($a[0], $a[1] ?? 301),
                 'no_content' => $env->response()->noContent(),
-                'abort' => $env->response()->abort(),
+                'abort' => $env->response() instanceof Capture ? $env->response()->abort() : throw new Fault('abort needs the capturing response'),
                 'chunk' => $env->response()->chunk((string) self::eval($a[0], $env), (bool) ($a[1] ?? false)),
                 'status' => $env->response()->setStatusCode($a),
                 'content_type' => $env->response()->setContentType($a[0], $a[1] ?? ''),

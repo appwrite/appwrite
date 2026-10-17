@@ -12070,6 +12070,536 @@
           }
         }
       ]
+    },
+    {
+      "name": "hands over the response head before the streamed body",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [],
+            "retry": {
+              "random": 0.5
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.stream",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "on_response": true,
+            "request": {
+              "method": "GET",
+              "raw": "HTTP/1.1 206 Partial Content\r\nContent-Length: 4\r\nContent-Range: bytes 2-5/8\r\nConnection: close\r\n\r\ncdef"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 206,
+            "reason": "Partial Content",
+            "headers": [
+              [
+                "Content-Length",
+                [
+                  "4"
+                ]
+              ],
+              [
+                "Content-Range",
+                [
+                  "bytes 2-5/8"
+                ]
+              ],
+              [
+                "Connection",
+                [
+                  "close"
+                ]
+              ]
+            ],
+            "body": "",
+            "streamed": "cdef",
+            "notified": [
+              {
+                "protocol": "1.1",
+                "status": 206,
+                "reason": "Partial Content",
+                "headers": [
+                  [
+                    "Content-Length",
+                    [
+                      "4"
+                    ]
+                  ],
+                  [
+                    "Content-Range",
+                    [
+                      "bytes 2-5/8"
+                    ]
+                  ],
+                  [
+                    "Connection",
+                    [
+                      "close"
+                    ]
+                  ]
+                ],
+                "body": ""
+              }
+            ],
+            "ordered": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "notifies only the final redirect hop",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "follow_redirects",
+                [
+                  true,
+                  5
+                ]
+              ]
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.stream",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "on_response": true,
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/redirect?to=/chunked"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "text/plain"
+                ]
+              ],
+              [
+                "Transfer-Encoding",
+                [
+                  "chunked"
+                ]
+              ]
+            ],
+            "body": "",
+            "streamed": "chunk0-cchunk1-cchunk2-cchunk3-cchunk4-c",
+            "notified": [
+              {
+                "protocol": "1.1",
+                "status": 200,
+                "reason": "OK",
+                "headers": [
+                  [
+                    "Content-Type",
+                    [
+                      "text/plain"
+                    ]
+                  ],
+                  [
+                    "Transfer-Encoding",
+                    [
+                      "chunked"
+                    ]
+                  ]
+                ],
+                "body": ""
+              }
+            ],
+            "ordered": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "notifies a redirect it does not follow",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": []
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.stream",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "on_response": true,
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/redirect?to=/echo"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 302,
+            "reason": "Found",
+            "headers": [
+              [
+                "Location",
+                [
+                  "/echo"
+                ]
+              ],
+              [
+                "Content-Type",
+                [
+                  "text/plain;charset=UTF-8"
+                ]
+              ],
+              [
+                "Content-Length",
+                [
+                  "8"
+                ]
+              ]
+            ],
+            "body": "",
+            "streamed": "redirect",
+            "notified": [
+              {
+                "protocol": "1.1",
+                "status": 302,
+                "reason": "Found",
+                "headers": [
+                  [
+                    "Location",
+                    [
+                      "/echo"
+                    ]
+                  ],
+                  [
+                    "Content-Type",
+                    [
+                      "text/plain;charset=UTF-8"
+                    ]
+                  ],
+                  [
+                    "Content-Length",
+                    [
+                      "8"
+                    ]
+                  ]
+                ],
+                "body": ""
+              }
+            ],
+            "ordered": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "notifies the head of an empty response",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": []
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.stream",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "on_response": true,
+            "request": {
+              "method": "GET",
+              "raw": "HTTP/1.1 204 No Content\r\nConnection: close\r\n\r\n"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 204,
+            "reason": "No Content",
+            "headers": [
+              [
+                "Connection",
+                [
+                  "close"
+                ]
+              ]
+            ],
+            "body": "",
+            "streamed": "",
+            "notified": [
+              {
+                "protocol": "1.1",
+                "status": 204,
+                "reason": "No Content",
+                "headers": [
+                  [
+                    "Connection",
+                    [
+                      "close"
+                    ]
+                  ]
+                ],
+                "body": ""
+              }
+            ],
+            "ordered": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "notifies decoded headers of a compressed response",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": []
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.stream",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "on_response": true,
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/encoded?enc=gzip"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "text/plain;charset=UTF-8"
+                ]
+              ],
+              [
+                "X-Accept-Encoding",
+                [
+                  "deflate, gzip, br, zstd"
+                ]
+              ]
+            ],
+            "body": "",
+            "streamed": "utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia utopia ",
+            "notified": [
+              {
+                "protocol": "1.1",
+                "status": 200,
+                "reason": "OK",
+                "headers": [
+                  [
+                    "Content-Type",
+                    [
+                      "text/plain;charset=UTF-8"
+                    ]
+                  ],
+                  [
+                    "X-Accept-Encoding",
+                    [
+                      "deflate, gzip, br, zstd"
+                    ]
+                  ]
+                ],
+                "body": ""
+              }
+            ],
+            "ordered": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "supports response streaming on cURL and through Retry",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": []
+          },
+          "bind": "plain",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.supports_response_streaming",
+          "args": {
+            "client": {
+              "$ref": "plain"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "with": [],
+            "retry": {
+              "random": 0.5
+            }
+          },
+          "bind": "retrying",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.supports_response_streaming",
+          "args": {
+            "client": {
+              "$ref": "retrying"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "refuses response streaming over an adapter without it",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [],
+            "legacy": true
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.supports_response_streaming",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "client.stream",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "on_response": true,
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/echo"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Client\\Exception\\AdapterPreconditionException",
+              "message": "This adapter cannot expose response headers before streaming."
+            }
+          }
+        },
+        {
+          "op": "client.record",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "sleeps": [],
+            "calls": 0
+          }
+        },
+        {
+          "op": "client.stream",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/echo"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "application/json"
+                ]
+              ],
+              [
+                "Transfer-Encoding",
+                [
+                  "chunked"
+                ]
+              ]
+            ],
+            "body": "",
+            "streamed": "{\"method\":\"GET\",\"target\":\"/echo\",\"protocol\":\"HTTP/1.1\",\"headers\":[[\"Host\",\"${http}\"],[\"Accept\",\"*/*\"],[\"Accept-Encoding\",\"deflate, gzip, br, zstd\"]],\"body\":\"\"}"
+          }
+        },
+        {
+          "op": "client.record",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "sleeps": [],
+            "calls": 1
+          }
+        }
+      ]
     }
   ]
 }

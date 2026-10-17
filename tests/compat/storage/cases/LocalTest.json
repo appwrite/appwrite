@@ -5349,6 +5349,126 @@
           }
         }
       ]
+    },
+    {
+      "name": "streams a file in pieces",
+      "steps": [
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/large.bin",
+            "data": "abcd",
+            "repeat": 300000
+          },
+          "expect": true
+        },
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/large.bin",
+            "digest": true
+          },
+          "expect": {
+            "received": {
+              "size": 1200000,
+              "md5": "7b144ad5a2eb2259c0d2b0f8171d797d"
+            },
+            "result": null
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/large.bin",
+            "offset": 2,
+            "length": 6
+          },
+          "expect": {
+            "received": "cdabcd",
+            "result": null
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/large.bin",
+            "offset": 1199998
+          },
+          "expect": {
+            "received": "cd",
+            "result": null
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/large.bin",
+            "length": 0
+          },
+          "expect": {
+            "received": "",
+            "result": null
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/large.bin",
+            "cancel": true
+          },
+          "expect": {
+            "received": true,
+            "result": {
+              "cancelled": "Downstream disconnected"
+            }
+          }
+        },
+        {
+          "op": "device.stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/missing.bin",
+            "catch": true
+          },
+          "expect": {
+            "received": "",
+            "result": {
+              "class": "Utopia\\Storage\\Exception\\NotFoundException",
+              "message": "File not found",
+              "code": 0,
+              "error_code": null,
+              "previous": false
+            }
+          }
+        }
+      ]
     }
   ]
 }

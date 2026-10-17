@@ -23,10 +23,12 @@ pub enum Error {
     /// PHP: `AdapterInitializationException`.
     #[error("{0}")]
     AdapterInitialization(String),
-    /// Something the transport needs is missing.
+    /// Something the transport needs is missing: here, the ability to hand
+    /// over a response's head before its body
+    /// ([`Adapter::stream_with_response`](crate::Adapter::stream_with_response)).
     ///
-    /// PHP: `AdapterPreconditionException` (a missing `curl` or `swoole`
-    /// extension; nothing in Rust raises it).
+    /// PHP: `AdapterPreconditionException` (also a missing `curl` or
+    /// `swoole` extension, which Rust has no counterpart of).
     #[error("{0}")]
     AdapterPrecondition(String),
     /// The server answered with something that is not an HTTP response.

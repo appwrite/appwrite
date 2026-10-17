@@ -8288,7 +8288,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Query::parse(): Argument #1 ($query) must be of type string, Utopia\\Database\\Query given, called in /usr/src/code/packages/query/src/Query.php on line 336"
+              "message": "Utopia\\Database\\Query::parse(): Argument #1 ($query) must be of type string, Utopia\\Database\\Query given, called in /usr/src/code/packages/query/src/Query.php on line 348"
             }
           }
         },

@@ -12,7 +12,8 @@
 //!
 //! | PHP | Rust |
 //! |---|---|
-//! | `Utopia\Storage\Device` (abstract) | [`Device`] (trait); the base `copy()` and `move()` are [`copy`] and [`move_file`] |
+//! | `Utopia\Storage\Device` (abstract) | [`Device`] (trait); the base `copy()`, `move()` and `stream()` are [`copy`], [`move_file`] and [`stream`] |
+//! | the `callable(string): void $sink` of `Device::stream()` | [`Sink`] |
 //! | `Device::getAbsolutePath()` | [`absolute_path`] |
 //! | `Device::COPY_CHUNK_SIZE` | [`COPY_CHUNK_SIZE`] |
 //! | `$metadata` (`UploadMetadata` array) | [`Metadata`], [`Part`] |
@@ -48,8 +49,8 @@ pub mod validator;
 
 pub use body::{Body, Source};
 pub use device::{
-    Acl, COPY_CHUNK_SIZE, Device, DeviceType, FileInfo, FileList, Metadata, Part, UploadInfo, UploadList,
-    absolute_path, copy, move_file,
+    Acl, COPY_CHUNK_SIZE, Device, DeviceType, FileInfo, FileList, Metadata, Part, Sink, UploadInfo, UploadList,
+    absolute_path, copy, move_file, stream,
 };
 pub use error::{Error, Result};
 pub use local::Local;

@@ -340,6 +340,19 @@ pub trait Client: Send + Sync {
         let Response { status, headers, body } = self.send(request).await?;
         Ok(Response { status, headers, body: Body::from(body) })
     }
+
+    /// Whether [`Client::stream`] hands the response over as soon as its
+    /// head arrives, before the body. When it does, [`S3`](crate::S3)'s
+    /// [`Device::stream`](crate::Device::stream) checks the head and
+    /// delivers the body as it arrives; otherwise it reads the object
+    /// through [`Device::read`](crate::Device::read) first. Default `false`,
+    /// as the default [`Client::stream`] reads the body whole.
+    ///
+    /// PHP: `ResponseStreamingClientInterface::supportsResponseStreaming()`
+    /// (a client without the interface does not).
+    fn supports_response_streaming(&self) -> bool {
+        false
+    }
 }
 
 #[async_trait]
@@ -350,6 +363,10 @@ impl<C: Client + ?Sized> Client for std::sync::Arc<C> {
 
     async fn stream(&self, request: &Request) -> Result<Response<Body>, TransportError> {
         (**self).stream(request).await
+    }
+
+    fn supports_response_streaming(&self) -> bool {
+        (**self).supports_response_streaming()
     }
 }
 
@@ -426,6 +443,10 @@ impl<C: Client> Client for Retry<C> {
             }
             attempt += 1;
         }
+    }
+
+    fn supports_response_streaming(&self) -> bool {
+        self.inner.supports_response_streaming()
     }
 }
 
@@ -525,6 +546,10 @@ impl Client for HttpClient {
     async fn stream(&self, request: &Request) -> Result<Response<Body>, TransportError> {
         let (status, headers, body) = self.request(request).await?;
         Ok(Response { status, headers, body: Body::new(Incoming { body, pending: Bytes::new() }) })
+    }
+
+    fn supports_response_streaming(&self) -> bool {
+        true
     }
 }
 

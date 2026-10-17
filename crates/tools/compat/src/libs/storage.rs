@@ -40,6 +40,7 @@ pub const OPS: &[&str] = &[
     "device.read",
     "device.read_digest",
     "device.read_stream",
+    "device.stream",
     "stream.read",
     "device.write",
     "device.create",
@@ -171,11 +172,13 @@ struct Handle {
 }
 
 /// Replays scripted responses and records every request, with the body it
-/// sent.
+/// sent; with `response_streaming`, it says it hands each response over
+/// before its body, as the HTTP client does.
 #[derive(Default)]
 struct Scripted {
     responses: Mutex<VecDeque<Value>>,
     requests: Mutex<Vec<(Request, Bytes)>>,
+    response_streaming: bool,
 }
 
 #[async_trait]
@@ -192,6 +195,10 @@ impl Client for Scripted {
             return Err(client_error(&next));
         }
         Ok(response(&next))
+    }
+
+    fn supports_response_streaming(&self) -> bool {
+        self.response_streaming
     }
 }
 
@@ -572,7 +579,11 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         }
         "scripted.new" => {
             let responses = a.opt("responses").and_then(Value::as_array).cloned().unwrap_or_default();
-            let scripted = Scripted { responses: Mutex::new(responses.into()), ..Scripted::default() };
+            let scripted = Scripted {
+                responses: Mutex::new(responses.into()),
+                response_streaming: a.opt_bool("response_streaming")?.unwrap_or(false),
+                ..Scripted::default()
+            };
             Outcome::Ok(session.handle(Arc::new(scripted)))
         }
         "scripted.requests" => {
@@ -703,6 +714,44 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                 return result(&a, read, |b| bytes_value(&b));
             }
             return result(&a, read, |b| json!({ "size": b.len(), "md5": php_std::string::hash(b"md5", &b) }));
+        }
+        "device.stream" => {
+            let d = device(session)?;
+            let cancel = a.opt_bool("cancel")?.unwrap_or(false);
+            let mut received = Vec::new();
+            let mut sink = |chunk: Bytes| {
+                received.extend_from_slice(&chunk);
+                if cancel {
+                    return Err(io::Error::other("Downstream disconnected"));
+                }
+                Ok(())
+            };
+            let streamed = d
+                .stream(
+                    path()?,
+                    &mut sink,
+                    a.opt_i64("offset")?.unwrap_or(0).max(0) as u64,
+                    a.opt_i64("length")?.map(|l| l.max(0) as u64),
+                    a.opt_str("etag")?,
+                )
+                .await;
+            let result = match streamed {
+                Err(Error::Body(e)) if cancel && e.to_string() == "Downstream disconnected" => {
+                    json!({ "cancelled": e.to_string() })
+                }
+                streamed => match result(&a, streamed, |()| Value::Null)? {
+                    Outcome::Ok(v) => v,
+                    other => return Ok(other),
+                },
+            };
+            let received = if cancel {
+                Value::Bool(!received.is_empty())
+            } else if a.opt_bool("digest")?.unwrap_or(false) {
+                json!({ "size": received.len(), "md5": php_std::string::hash(b"md5", &received) })
+            } else {
+                bytes_value(&received)
+            };
+            Outcome::Ok(json!({ "received": received, "result": result }))
         }
         "stream.read" => {
             let stream = session.get::<utopia_async::sync::Mutex<Body>>(a.value("stream")?)?;

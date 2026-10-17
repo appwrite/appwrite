@@ -278,3 +278,216 @@ async fn the_http_client_reads_a_streamed_error() {
     assert!(error.is_not_found());
     assert_eq!(error.to_string(), "Gone.");
 }
+
+/// A backend answering each connection with `respond(socket)`, and counting
+/// the requests it received.
+async fn backend<F, Fut>(respond: F) -> (String, Arc<AtomicUsize>)
+where
+    F: Fn(TcpStream) -> Fut + Send + Sync + 'static,
+    Fut: std::future::Future<Output = ()> + Send + 'static,
+{
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let address = listener.local_addr().unwrap();
+    let requests = Arc::new(AtomicUsize::new(0));
+    let counted = requests.clone();
+    utopia_async::spawn(async move {
+        while let Ok((mut socket, _)) = listener.accept().await {
+            head(&mut socket).await;
+            counted.fetch_add(1, Ordering::SeqCst);
+            utopia_async::spawn(respond(socket));
+        }
+    });
+    (format!("http://{address}"), requests)
+}
+
+/// An S3 device on `endpoint`, measured by telemetry as in production.
+fn measured(endpoint: &str) -> crate::Telemetry {
+    let telemetry = utopia_telemetry::MemoryTelemetry::new();
+    crate::Telemetry::new(&telemetry, Arc::new(S3::new("", "key", "secret", endpoint, "us-east-1").unwrap()))
+}
+
+#[utopia_async::test]
+async fn streamed_bytes_reach_the_sink_before_the_backend_finishes() {
+    const PIECE: usize = 1 << 16;
+    const SIZE: usize = 8 << 20;
+    let (read, wait) = utopia_async::sync::oneshot::channel::<()>();
+    let wait = std::sync::Mutex::new(Some(wait));
+    let (endpoint, requests) = backend(move |mut socket| {
+        let wait = wait.lock().unwrap().take();
+        async move {
+            let head =
+                format!("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {SIZE}\r\n\r\n");
+            socket.write_all(head.as_bytes()).await.unwrap();
+            socket.write_all(&[b'x'; PIECE]).await.unwrap();
+            // The rest only goes out once the sink has seen the first bytes:
+            // a buffered read would wait here forever.
+            if let Some(wait) = wait {
+                let _ = wait.await;
+            }
+            for _ in 1..SIZE / PIECE {
+                socket.write_all(&[b'x'; PIECE]).await.unwrap();
+            }
+        }
+    })
+    .await;
+    let device = measured(&endpoint);
+    let mut read = Some(read);
+    let mut received = 0;
+    let mut largest = 0;
+    let mut sink = |chunk: Bytes| {
+        if let Some(read) = read.take() {
+            let _ = read.send(());
+        }
+        assert!(chunk.iter().all(|b| *b == b'x'));
+        received += chunk.len();
+        largest = largest.max(chunk.len());
+        Ok(())
+    };
+
+    utopia_async::timeout(Duration::from_secs(10), device.stream("/object", &mut sink, 0, None, None))
+        .await
+        .expect("the transfer waited for the whole object")
+        .unwrap();
+
+    assert_eq!(received, SIZE);
+    assert!(largest <= client::CHUNK_SIZE, "a chunk of {largest} bytes");
+    assert_eq!(requests.load(Ordering::SeqCst), 1);
+}
+
+#[utopia_async::test]
+async fn backend_error_bytes_never_reach_the_sink() {
+    let (endpoint, _) = backend(|mut socket| async move {
+        let body = "<Error><Code>NoSuchKey</Code></Error>";
+        let response = format!(
+            "HTTP/1.1 404 Not Found\r\nContent-Type: application/octet-stream\r\nContent-Length: {}\r\n\r\n{body}",
+            body.len()
+        );
+        socket.write_all(response.as_bytes()).await.unwrap();
+    })
+    .await;
+    let mut received = Vec::new();
+    let mut sink = |chunk: Bytes| {
+        received.extend_from_slice(&chunk);
+        Ok(())
+    };
+
+    let error = measured(&endpoint).stream("/missing", &mut sink, 0, None, None).await.unwrap_err();
+
+    assert!(error.is_not_found(), "{error:?}");
+    assert!(received.is_empty());
+}
+
+#[utopia_async::test]
+async fn an_ignored_range_is_refused_before_delivery() {
+    let (endpoint, _) = backend(|mut socket| async move {
+        socket.write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 8\r\n\r\nabcdefgh").await.unwrap();
+    })
+    .await;
+    let mut received = Vec::new();
+    let mut sink = |chunk: Bytes| {
+        received.extend_from_slice(&chunk);
+        Ok(())
+    };
+
+    let error = measured(&endpoint).stream("/ignores-range", &mut sink, 2, Some(4), None).await.unwrap_err();
+
+    assert_eq!(error.php_class(), "Utopia\\Storage\\Exception\\RemoteException");
+    assert_eq!(error.to_string(), "Backend did not honor the requested byte range.");
+    assert!(received.is_empty());
+}
+
+#[utopia_async::test]
+async fn a_truncated_response_is_not_replayed() {
+    let (endpoint, requests) = backend(|mut socket| async move {
+        socket.write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 65536\r\n\r\n").await.unwrap();
+        socket.write_all(&[b'x'; 12345]).await.unwrap();
+    })
+    .await;
+    let mut received = Vec::new();
+    let mut sink = |chunk: Bytes| {
+        received.extend_from_slice(&chunk);
+        Ok(())
+    };
+
+    let error = measured(&endpoint).stream("/truncated", &mut sink, 0, None, None).await.unwrap_err();
+
+    assert_eq!(error.php_class(), "Utopia\\Storage\\Exception\\TransportException");
+    assert_eq!(received, vec![b'x'; 12345]);
+    assert_eq!(requests.load(Ordering::SeqCst), 1);
+}
+
+#[utopia_async::test]
+async fn a_cancelled_sink_stops_the_transfer_without_replay() {
+    let (endpoint, requests) = backend(|mut socket| async move {
+        let size = 8 << 20;
+        socket.write_all(format!("HTTP/1.1 200 OK\r\nContent-Length: {size}\r\n\r\n").as_bytes()).await.unwrap();
+        for _ in 0..size / 65536 {
+            if socket.write_all(&[b'x'; 65536]).await.is_err() {
+                return;
+            }
+        }
+    })
+    .await;
+    let mut received = 0;
+    let mut sink = |chunk: Bytes| {
+        received += chunk.len();
+        Err(io::Error::other("Downstream disconnected"))
+    };
+
+    let error = measured(&endpoint).stream("/object", &mut sink, 0, None, None).await.unwrap_err();
+
+    assert!(matches!(&error, Error::Body(e) if e.to_string() == "Downstream disconnected"), "{error:?}");
+    assert!(received > 0);
+    assert!(received <= client::CHUNK_SIZE);
+    assert_eq!(requests.load(Ordering::SeqCst), 1);
+}
+
+/// Answers every request with `original`, and cannot hand the head over
+/// before the body.
+#[derive(Default)]
+struct Legacy {
+    requests: std::sync::Mutex<Vec<Request>>,
+}
+
+#[async_trait]
+impl Client for Legacy {
+    async fn send(&self, request: &Request) -> std::result::Result<Response, TransportError> {
+        self.requests.lock().unwrap().push(request.clone());
+        Ok(Response::new(200).with_body("original"))
+    }
+}
+
+#[utopia_async::test]
+async fn a_wrapped_legacy_client_keeps_the_buffered_fallback() {
+    let legacy = Arc::new(Legacy::default());
+    let device = S3::new("/root", "key", "secret", "https://s3.example.com", "us-east-1")
+        .unwrap()
+        .with_client(Retry::new(legacy.clone(), RetryStrategy::default()));
+    let mut received = Vec::new();
+    let mut sink = |chunk: Bytes| {
+        received.extend_from_slice(&chunk);
+        Ok(())
+    };
+
+    device.stream("/root/object", &mut sink, 0, None, None).await.unwrap();
+
+    assert_eq!(received, b"original");
+    let requests = legacy.requests.lock().unwrap();
+    assert_eq!(requests.len(), 1);
+    assert_eq!(requests[0].header("accept-encoding"), None);
+}
+
+#[test]
+fn a_range_is_honoured_as_php_checks_it() {
+    assert!(honours_range(206, "bytes 2-5/8", 2, Some(4)));
+    assert!(honours_range(206, "bytes 6-7/8", 6, Some(4)));
+    assert!(honours_range(206, "bytes 3-7/8", 3, None));
+    assert!(!honours_range(200, "bytes 2-5/8", 2, Some(4)));
+    assert!(!honours_range(206, "bytes 2-4/8", 2, Some(4)));
+    assert!(!honours_range(206, "bytes 1-5/8", 2, Some(4)));
+    assert!(!honours_range(206, "bytes 2-5/5", 2, Some(4)));
+    assert!(!honours_range(206, "bytes 2-5/*", 2, Some(4)));
+    assert!(!honours_range(206, "items 2-5/8", 2, Some(4)));
+    assert!(!honours_range(206, "bytes +2-5/8", 2, Some(4)));
+    assert!(!honours_range(206, "", 2, Some(4)));
+}
