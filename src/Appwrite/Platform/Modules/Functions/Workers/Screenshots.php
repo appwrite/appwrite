@@ -105,6 +105,8 @@ class Screenshots extends Action
         $date = \date('H:i:s');
         $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n");
 
+        $captured = false;
+
         try {
             $rule = $dbForPlatform->findOne('rules', [
                 Query::equal("projectInternalId", [$project->getSequence()]),
@@ -166,6 +168,8 @@ class Screenshots extends Action
                     sleep: $sleep,
                 );
             }
+
+            $captured = true;
 
             Span::add('screenshot.count', \count($captures));
 
@@ -236,7 +240,13 @@ class Screenshots extends Action
             ]));
         } catch (\Throwable $th) {
             $date = \date('H:i:s');
-            $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed. Deployment will continue. [0m\n");
+            $failure = $captured ? 'Screenshot was captured but could not be applied.' : 'Screenshot capturing failed.';
+
+            try {
+                $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][33m {$failure} Deployment will continue. Reason: {$th->getMessage()} [0m\n");
+            } catch (\Throwable) {
+                // Logging the failure must not replace the failure itself.
+            }
 
             $this->recordTelemetry($counter, 'failure');
 
