@@ -187,7 +187,7 @@ class Create extends Action
             }
         }
 
-        $maximumFileSize = $bucket->getAttribute('maximumFileSize', 0);
+        $maximumFileSize = $bucket->getAttribute('maximumFileSize', 0) ?: (int) System::getEnv('_APP_STORAGE_LIMIT', 0);
         if ($maximumFileSize > (int) System::getEnv('_APP_STORAGE_LIMIT', 0)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Maximum bucket file size is larger than _APP_STORAGE_LIMIT');
         }
