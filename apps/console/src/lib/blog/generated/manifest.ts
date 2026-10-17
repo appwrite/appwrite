@@ -45,6 +45,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "announcing-mcp-events",
+    "href": "/blog/post/announcing-mcp-events",
+    "title": "Announcing MCP Events: your agent hears about changes in your Appwrite project",
+    "description": "The Appwrite MCP server now supports MCP Events. Agents can subscribe to new users, failed function executions, finished deployments, new rows, and uploaded files, and react the moment they happen.",
+    "date": "2026-10-13",
+    "lastUpdated": "2026-10-13",
+    "timeToRead": 7,
+    "author": "chirag-aggarwal",
+    "category": "announcements, ai",
+    "featured": false,
+    "cover": "/images/blog/announcing-mcp-events/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-function-intervals",
     "href": "/blog/post/announcing-function-intervals",
     "title": "Announcing function intervals: run functions every N minutes",

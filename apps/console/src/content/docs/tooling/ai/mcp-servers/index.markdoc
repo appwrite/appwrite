@@ -31,6 +31,7 @@ The server also provides:
 - **Direct API interaction**: Enables LLMs to perform actions directly on your Appwrite project
 - **Real-time data access**: Allows LLMs to fetch and manipulate live data from your Appwrite instance
 - **Documentation search**: Lets LLMs semantically search the Appwrite documentation for accurate, up-to-date context
+- **Events**: Lets agents subscribe to changes in your project, such as new users or failed executions, and react when they happen. See [Events](#events)
 - **Automatic service discovery**: All supported Appwrite services are automatically registered, no configuration needed
 - **No local setup**: Runs as a hosted HTTP service, so there is nothing to install or keep updated
 
@@ -64,6 +65,80 @@ The MCP server starts in a compact workflow where only a small set of MCP tools 
 - `appwrite_search_docs` - Semantically searches the Appwrite documentation
 
 The full Appwrite tool catalog stays internal and is searched at runtime, using less of the model's context.
+
+# Events {% #events %}
+
+The MCP server supports [MCP Events](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3415), an extension to the Model Context Protocol that lets an agent subscribe to changes in your Appwrite project. Instead of polling with tool calls, the agent is told about each event when it happens, so you can ask it to "tell me when the deployment finishes" or "investigate any failed execution of the `checkout` function" and walk away.
+
+Events need an MCP client that supports them. [Pi](https://pi.dev) supports them through the [`pi-mcp-events`](https://github.com/mikekelly/pi-mcp-events) extension.
+
+## Available events
+
+Every event takes a required `project_id`. Payloads contain IDs and metadata only, so the agent fetches any details it needs with a normal tool call.
+
+| Event | Arguments | Delivered when | Payload |
+| --- | --- | --- | --- |
+| `users.user.created` | `project_id` | A user is created | `user_id`, `created_at` |
+| `functions.execution.failed` | `project_id`, `function_id` | An execution of the function fails | `function_id`, `execution_id`, `status`, `trigger`, `response_status_code`, `created_at` |
+| `functions.deployment.completed` | `project_id`, `function_id`, `status` (optional) | A deployment becomes `ready` or `failed` | `function_id`, `deployment_id`, `status`, `updated_at` |
+| `sites.deployment.completed` | `project_id`, `site_id`, `status` (optional) | A site deployment becomes `ready` or `failed` | `site_id`, `deployment_id`, `status`, `updated_at` |
+| `tablesdb.row.created` | `project_id`, `database_id`, `table_id` | A row is created in the table | `database_id`, `table_id`, `row_id`, `created_at` |
+| `storage.file.created` | `project_id`, `bucket_id` | A file is uploaded to the bucket | `bucket_id`, `file_id`, `mime_type`, `size`, `created_at` |
+
+Each subscription is scoped to the exact project and resource you name. IDs can contain only letters, digits, `_`, and `-`, so a subscription cannot be widened with wildcards.
+
+## Delivery
+
+The server supports both delivery modes from the MCP Events proposal:
+
+- **Push** (`events/stream`): for agents that run on your machine and have no public URL. The agent holds one request open, and the server streams each event back on it, with a heartbeat every 25 seconds.
+- **Webhook** (`events/subscribe`): for clients with a public HTTPS endpoint. The server verifies the endpoint with a challenge, then sends a POST signed with [Standard Webhooks](https://www.standardwebhooks.com/) for every event. A subscription lasts one hour by default, between 5 minutes and 24 hours on request, and the client refreshes it before it expires.
+
+## Subscriptions and permissions
+
+Each subscription is one Appwrite [webhook](/docs/apis/webhooks) in the project you subscribe to, created with your OAuth token. You can see these webhooks in the Appwrite Console, named `MCP events` or `MCP events push`. They are deleted when you unsubscribe or close the stream, and a webhook left behind by a client that disconnected expires on its own.
+
+The server checks that you can read the watched resource when you subscribe and again every time the subscription is renewed, so revoking access ends the subscription.
+
+## Limits
+
+- Each active subscription or open stream uses one webhook in the project. The Free plan allows 2 webhooks per project, and Pro allows unlimited webhooks. When you reach the limit, the server returns an error that tells the agent to upgrade or unsubscribe from another event.
+- Each user can keep up to 25 streams open on each server instance.
+- Events that happen while a stream is reconnecting are not replayed. For critical workflows, have the agent re-check the current state after it reconnects.
+
+## Use events with Pi
+
+1. Install the MCP adapter and the events extension:
+
+    ```bash
+    pi install npm:pi-mcp-adapter@^5.1.0
+    pi install npm:@realmikekelly/pi-mcp-events@^0.2.0
+    ```
+
+2. Add the Appwrite MCP server to `~/.pi/agent/mcp-adapter.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "appwrite": {
+          "url": "https://mcp.appwrite.io/",
+          "auth": "oauth"
+        }
+      }
+    }
+    ```
+
+3. Start Pi with `pi` and sign in to Appwrite when your browser opens.
+
+4. Ask Pi to subscribe:
+
+    ```
+    Subscribe with mcp_events to users.user.created on the appwrite server for project_id <PROJECT_ID>, then finish your turn and wait. Whenever an event arrives, look up that user and tell me their name and email.
+    ```
+
+When a user is created in the project, Pi wakes up without a new prompt and reports the user's details.
+
+![Pi receives a users.user.created event and looks up the new user](/images/docs/mcp/events/pi-event-wakeup.avif)
 
 # Authenticate from a remote machine {% #remote %}
 
