@@ -44,6 +44,7 @@ pub struct Query {
     on_array: bool,
     values: Array,
     alias: String,
+    alias_defaulted: bool,
 }
 
 /// The queries grouped by what they do, as builders compile them.
@@ -193,14 +194,10 @@ impl Query {
     ///
     /// PHP: `new Query($method, $attribute, $values, $alias)`.
     pub fn new(method: Method, attribute: impl Into<String>, values: Array, alias: impl Into<String>) -> Self {
-        Query {
-            method,
-            attribute: attribute.into(),
-            attribute_type: String::new(),
-            on_array: false,
-            values,
-            alias: alias.into(),
-        }
+        let attribute = attribute.into();
+        let alias = alias.into();
+        let alias_defaulted = method.is_join() && !alias.is_empty() && alias == attribute;
+        Query { method, attribute, attribute_type: String::new(), on_array: false, values, alias, alias_defaulted }
     }
 
     fn of(method: Method, attribute: impl Into<String>, values: Vec<Value>) -> Self {
@@ -240,6 +237,15 @@ impl Query {
     /// PHP: `getAlias()`.
     pub fn alias(&self) -> &str {
         &self.alias
+    }
+
+    /// Whether a join is read under the name of the collection it joins, as
+    /// a join given no alias is. Decided when the query is built, so it
+    /// holds after the collection is renamed.
+    ///
+    /// PHP: `isAliasDefaulted()`.
+    pub fn is_alias_defaulted(&self) -> bool {
+        self.alias_defaulted
     }
 
     /// Whether the attribute holds arrays (set by the database layer).
@@ -443,7 +449,7 @@ impl Query {
             let mut parsed = Array::with_capacity(values.len());
             for (key, value) in values.iter() {
                 let child =
-                    Param::method("Utopia\\Query\\Query::parseQuery", 1, "query", "Query.php", 273).array(value)?;
+                    Param::method("Utopia\\Query\\Query::parseQuery", 1, "query", "Query.php", 285).array(value)?;
                 parsed.set(key.to_owned(), Value::from(Query::parse_query(child, allow_raw)?));
             }
             values = parsed;
@@ -1317,6 +1323,7 @@ impl Query {
         let mut conditions = Vec::with_capacity(on.len());
         let collection = collection.into();
         let alias = alias.into();
+        let alias = if alias.is_empty() { collection.clone() } else { alias };
         Query::check_join_alias(method, &collection, &alias, on.is_empty())?;
         for value in on.values() {
             match value {
@@ -1329,6 +1336,7 @@ impl Query {
 
     fn check_join_alias(method: Method, collection: &str, alias: &str, empty: bool) -> Result<()> {
         if alias.is_empty() {
+            // Only when the collection is empty too: an empty alias reads as the collection.
             return Err(Error::Validation(format!("Join alias is required: {} {}", method.as_str(), collection)));
         }
         let unconditioned = method == Method::CrossJoin || method == Method::NaturalJoin;
@@ -1341,7 +1349,9 @@ impl Query {
         Ok(())
     }
 
+    /// A join given no alias is read under the collection it joins.
     fn create_join(method: Method, collection: String, alias: String, on: Vec<Query>) -> Result<Self> {
+        let alias = if alias.is_empty() { collection.clone() } else { alias };
         Query::check_join_alias(method, &collection, &alias, on.is_empty())?;
         for condition in &on {
             Query::assert_join_condition(condition)?;
