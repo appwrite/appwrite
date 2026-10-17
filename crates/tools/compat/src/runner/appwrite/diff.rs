@@ -1828,8 +1828,10 @@ impl Normalizer {
             let value = match serde_json::from_str::<Value>(&v) {
                 Ok(json @ (Value::Object(_) | Value::Array(_))) => self.value(&json).to_string(),
                 _ if SECRET_KEYS.contains(&k.as_str()) && !v.is_empty() => {
+                    // A known value becomes a whole placeholder; a random one
+                    // that only contains, say, a sequence is still a secret.
                     let text = self.text(&v);
-                    if text == v { self.number(v, "secret") } else { text }
+                    if whole_placeholder(&text) { text } else { self.number(v, "secret") }
                 }
                 _ => self.text(&v),
             };
@@ -2010,10 +2012,10 @@ impl Normalizer {
                                 // Generated secrets: OTPs, codes, token secrets, phrases.
                                 (k, Value::String(v)) if SECRET_KEYS.contains(&k) && !v.is_empty() => {
                                     let text = self.text(v);
-                                    if text == *v {
-                                        Value::String(self.number(v.clone(), "secret"))
-                                    } else {
+                                    if whole_placeholder(&text) {
                                         Value::String(text)
+                                    } else {
+                                        Value::String(self.number(v.clone(), "secret"))
                                     }
                                 }
                                 ("recoveryCodes", Value::Array(codes)) => Value::Array(
@@ -2080,6 +2082,13 @@ fn session_shape(s: &str) -> Option<(String, String, usize)> {
 /// The fields whose string values are generated secrets (OTPs, codes,
 /// token secrets, security phrases, TOTP secrets): numbered like IDs.
 const SECRET_KEYS: &[&str] = &["otp", "code", "content", "secret", "phrase", "challenge"];
+
+/// Whether a normalized value is one placeholder or shape as a whole
+/// (`{recovery-secret}`, `{url ...}`), not random text that merely contains
+/// one.
+fn whole_placeholder(text: &str) -> bool {
+    text.starts_with('{') && text.ends_with('}')
+}
 
 /// A JWT (`header.payload.signature`): its header and its claims' keys,
 /// which are not random.
