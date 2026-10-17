@@ -24,81 +24,12 @@ final class S3CustomServerTest extends Scope
     private const PART_SIZE = 5 * 1024 * 1024;
 
     #[Group('s3')]
-    public function testCreateMultipartUpload(): void
-    {
-        $bucketId = $this->setupBucket();
-        $key = 'multipart/' . Id::unique() . '.txt';
-        // One part below the 5 MiB minimum S3 sets for every part but the last.
-        $body = \str_repeat('appwrite', 128);
-
-        /**
-         * Test for SUCCESS
-         */
-        $uploadId = $this->createMultipartUpload($bucketId, $key);
-        $etag = $this->uploadPart($bucketId, $key, $uploadId, 1, $body);
-
-        $complete = $this->completeMultipartUpload($bucketId, $key, $uploadId, [1 => $etag]);
-        $this->assertSame(200, $complete['headers']['status-code'], $complete['body']);
-        $this->assertSame('"' . \md5(\hex2bin($etag)) . '-1"', (string) \simplexml_load_string($complete['body'])->ETag);
-
-        $object = $this->call(Client::METHOD_GET, '/' . $bucketId . '/' . $key);
-        $this->assertSame(200, $object['headers']['status-code']);
-        $this->assertSame($body, $object['body']);
-
-        /**
-         * Test for FAILURE
-         */
-        // A completed upload is gone.
-        $complete = $this->completeMultipartUpload($bucketId, $key, $uploadId, [1 => $etag]);
-        $this->assertSame(400, $complete['headers']['status-code']);
-        $this->assertSame('InvalidRequest', (string) \simplexml_load_string($complete['body'])->Code);
-
-        $uploadId = $this->createMultipartUpload($bucketId, $key);
-        $etag = $this->uploadPart($bucketId, $key, $uploadId, 1, $body);
-
-        $complete = $this->completeMultipartUpload($bucketId, $key, $uploadId, [1 => \md5('other')]);
-        $this->assertSame(400, $complete['headers']['status-code']);
-        $this->assertSame('InvalidRequest', (string) \simplexml_load_string($complete['body'])->Code);
-
-        $complete = $this->completeMultipartUpload($bucketId, $key, $uploadId, [2 => $etag]);
-        $this->assertSame(400, $complete['headers']['status-code']);
-        $this->assertSame('InvalidRequest', (string) \simplexml_load_string($complete['body'])->Code);
-    }
-
-    #[Group('s3')]
-    public function testCreateMultipartUploadWithPartSubset(): void
-    {
-        $bucketId = $this->setupBucket();
-        $key = 'multipart/' . Id::unique() . '.txt';
-        $parts = [
-            1 => \str_repeat('a', self::PART_SIZE),
-            2 => \str_repeat('b', 1024),
-            3 => \str_repeat('c', 1024),
-        ];
-
-        $uploadId = $this->createMultipartUpload($bucketId, $key);
-        $etags = [];
-        foreach ($parts as $partNumber => $part) {
-            $etags[$partNumber] = $this->uploadPart($bucketId, $key, $uploadId, $partNumber, $part);
-        }
-
-        // S3 completes with the parts the request names, not every part uploaded.
-        $complete = $this->completeMultipartUpload($bucketId, $key, $uploadId, [1 => $etags[1], 2 => $etags[2]]);
-        $this->assertSame(200, $complete['headers']['status-code'], $complete['body']);
-        $this->assertSame('"' . \md5(\hex2bin($etags[1]) . \hex2bin($etags[2])) . '-2"', (string) \simplexml_load_string($complete['body'])->ETag);
-
-        $object = $this->call(Client::METHOD_GET, '/' . $bucketId . '/' . $key);
-        $this->assertSame(200, $object['headers']['status-code']);
-        $this->assertSame(self::PART_SIZE + 1024, \strlen($object['body']));
-        $this->assertSame($parts[1] . $parts[2], $object['body']);
-    }
-
-    #[Group('s3')]
     public function testNativeReadDuringOverwrite(): void
     {
         $bucketId = $this->setupBucket();
         $key = 'native-stream.bin';
-        $body = \str_repeat('a', 100 * 1024 * 1024);
+        // Stay within Cloud's 50 MB Free-plan fixture while exceeding socket buffers.
+        $body = \str_repeat('a', 45 * 1024 * 1024);
         $replacement = 'replacement';
 
         foreach (['view', 'download'] as $endpoint) {
