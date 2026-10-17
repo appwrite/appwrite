@@ -18,6 +18,7 @@ use Utopia\Client\Exception\DnsException;
 use Utopia\Client\Exception\NetworkException;
 use Utopia\Client\Exception\TimeoutException;
 use Utopia\Client\Exception\TlsException;
+use Utopia\Client\Psr18\ResponseStreamingClientInterface;
 use Utopia\Client\Redirect;
 use Utopia\Client\Tls;
 use Utopia\Psr7\Request;
@@ -111,7 +112,7 @@ final class Adapter implements Base, Benchmarks
 
                 return $s->handle($device);
             },
-            'scripted.new' => fn (array $a, Session $s) => $s->handle(new ScriptedClient($a['responses'] ?? [])),
+            'scripted.new' => fn (array $a, Session $s) => $s->handle(new ScriptedClient($a['responses'] ?? [], $a['response_streaming'] ?? false)),
             'scripted.requests' => fn (array $a, Session $s) => array_map(self::request(...), self::scripted($a, $s)->requests),
             'metadata.new' => fn (array $a, Session $s) => $s->handle(new \ArrayObject(self::metadataIn($a['value'] ?? []))),
             'metadata.get' => fn (array $a, Session $s) => self::metadataOut(self::metadata($a, $s)->getArrayCopy()),
@@ -187,6 +188,30 @@ final class Adapter implements Base, Benchmarks
                 return ['size' => \strlen($data), 'md5' => md5($data)];
             }),
             'device.read_stream' => fn (array $a, Session $s) => $s->handle(self::read($a, $s)),
+            'device.stream' => function (array $a, Session $s) {
+                $received = '';
+                $cancel = $a['cancel'] ?? false;
+                $sink = static function (string $chunk) use (&$received, $cancel): void {
+                    $received .= $chunk;
+                    if ($cancel) {
+                        throw new \RuntimeException('Downstream disconnected');
+                    }
+                };
+                try {
+                    $result = self::run($a, fn () => self::device($a, $s)->stream($a['path'], $sink, $a['offset'] ?? 0, $a['length'] ?? null, $a['etag'] ?? null));
+                } catch (\RuntimeException $e) {
+                    if (!$cancel || $e->getMessage() !== 'Downstream disconnected') {
+                        throw $e;
+                    }
+                    $result = ['cancelled' => $e->getMessage()];
+                }
+
+                return match (true) {
+                    $cancel => ['received' => $received !== '', 'result' => $result],
+                    $a['digest'] ?? false => ['received' => ['size' => \strlen($received), 'md5' => md5($received)], 'result' => $result],
+                    default => ['received' => $received, 'result' => $result],
+                };
+            },
             'stream.read' => fn (array $a, Session $s) => self::stream($a, $s)->read($a['length']),
             'device.write' => fn (array $a, Session $s) => self::run($a, fn () => self::device($a, $s)->write($a['path'], self::body($a), $a['content_type'] ?? '')),
             'device.create' => fn (array $a, Session $s) => self::run($a, fn () => self::device($a, $s)->create($a['path'], self::body($a), $a['content_type'] ?? '')),
@@ -604,16 +629,22 @@ final class Adapter implements Base, Benchmarks
 /**
  * Replays scripted responses and records every request.
  */
-final class ScriptedClient implements ClientAdapter
+final class ScriptedClient implements ClientAdapter, ResponseStreamingClientInterface
 {
     /** @var array<RequestInterface> */
     public array $requests = [];
 
     /**
      * @param  array<array<string, mixed>>  $responses
+     * @param  bool  $responseStreaming  whether it hands each response over before its body, as the cURL adapter does
      */
-    public function __construct(private array $responses)
+    public function __construct(private array $responses, private readonly bool $responseStreaming = false)
     {
+    }
+
+    public function supportsResponseStreaming(): bool
+    {
+        return $this->responseStreaming;
     }
 
     public function sendRequest(RequestInterface $request): ResponseInterface
@@ -630,9 +661,12 @@ final class ScriptedClient implements ClientAdapter
         return Adapter::psrResponse($next);
     }
 
-    public function stream(RequestInterface $request, callable $sink): ResponseInterface
+    public function stream(RequestInterface $request, callable $sink, ?callable $onResponse = null): ResponseInterface
     {
         $response = $this->sendRequest($request);
+        if ($onResponse !== null) {
+            $onResponse($response->withBody(new Stream('')));
+        }
         $sink((string) $response->getBody());
 
         return $response;
