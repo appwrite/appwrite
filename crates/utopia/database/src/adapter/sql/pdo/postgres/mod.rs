@@ -32,7 +32,6 @@ mod wire;
 use std::time::Duration;
 
 use bytes::Bytes;
-use php_std::number;
 
 use super::emulate::{self, Found, Placeholder};
 use super::{Binding, Control, PdoError, Results, Rowset, dsn};
@@ -110,7 +109,10 @@ impl Conn {
             .iter()
             .map(|row| outcome.columns.iter().zip(row).map(|(c, v)| fetch(c.oid, v.as_ref())).collect())
             .collect();
-        Ok(Some(Results { sets: vec![Rowset { columns, rows, count, insert_id: 0 }], failure: None }))
+        Ok(Some(Results {
+            sets: vec![Rowset { columns, rows, count, insert_id: 0, print_floats: true }],
+            failure: None,
+        }))
     }
 
     /// `beginTransaction()`, `commit()`, `rollBack()`.
@@ -326,7 +328,8 @@ fn next_token(s: &[u8], pos: usize) -> (Token, usize) {
     best
 }
 
-/// One fetched value (`pgsql_stmt_get_col`, then PDO's stringify).
+/// One fetched value (`pgsql_stmt_get_col`, then PDO's stringify; a float
+/// is printed when the row is fetched, see [`super::Statement::fetch_exactly`]).
 fn fetch(oid: u32, value: Option<&Bytes>) -> Value {
     let Some(v) = value else { return Value::Null };
     match oid {
@@ -346,7 +349,8 @@ fn fetch(oid: u32, value: Option<&Bytes>) -> Value {
             } else {
                 php_std::format::str_to_float(v)
             };
-            Value::Str(Str::from(number::to_string(f)))
+            // Printed when it is fetched, at the precision then set.
+            Value::Float(f)
         }
         // bytea
         17 => Value::Str(Str::from(unescape_bytea(v))),

@@ -142,7 +142,6 @@ pub struct Sql {
     pub(crate) state: State,
     pub(crate) engine: Engine,
     pub(crate) connection: exec::Connection,
-    pub(crate) float_precision: Mutex<i64>,
     pub(crate) timeouts: TimeoutState,
     pub(crate) engine_state: Mutex<EngineState>,
 }
@@ -164,7 +163,6 @@ impl Sql {
             state: State::default(),
             engine,
             connection: utopia_async::sync::Mutex::new(pdo),
-            float_precision: Mutex::new(17),
             timeouts: TimeoutState::default(),
             engine_state: Mutex::new(EngineState { local_timeout: Some(0), ..EngineState::default() }),
         }
@@ -184,12 +182,6 @@ impl Sql {
     /// The engine.
     pub fn engine(&self) -> Engine {
         self.engine
-    }
-
-    /// `setFloatPrecision()`: the fractional digits floats are bound with
-    /// in finds (17 by default).
-    pub fn set_float_precision(&self, precision: i64) {
-        *self.float_precision.lock().unwrap_or_else(|e| e.into_inner()) = precision;
     }
 
     /// SQLite's `$emulateMySQL`: MariaDB-shaped column metadata, attribute

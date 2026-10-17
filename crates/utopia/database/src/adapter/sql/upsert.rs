@@ -462,7 +462,7 @@ impl Sql {
         );
         let mut statement = self.prepare_statement(&sql, Some(Event::DocumentsUpsert)).await?;
         for (key, value) in bind_values {
-            let ty = self.pdo_type(&value)?;
+            let (value, ty) = self.bindable(value)?;
             statement.bind_value(key, value, ty)?;
         }
         let mut op_index = 0usize;

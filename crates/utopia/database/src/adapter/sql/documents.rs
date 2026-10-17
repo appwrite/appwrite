@@ -475,7 +475,7 @@ impl Sql {
         let result = builder.build().map_err(crate::query::query_error)?;
         let mut statement = self.execute_result(&result, Some(Event::DocumentRead), "").await?;
         self.execute(&mut statement).await?;
-        let rows = statement.statement.fetch_all_num();
+        let rows = statement.statement.fetch_exactly(|s| s.fetch_all_num());
         statement.statement.close_cursor();
         Ok(rows)
     }
@@ -541,12 +541,12 @@ impl Sql {
                 let mut statement = self.prepare_statement(&sql, Some(Event::DocumentRead)).await?;
                 let outcome = async {
                     for (parameter, value) in bindings.iter() {
-                        let ty = self.pdo_type(value)?;
-                        statement.bind_value(key_string(&parameter.to_owned()), value.clone(), ty)?;
+                        let (value, ty) = self.bindable(value.clone())?;
+                        statement.bind_value(key_string(&parameter.to_owned()), value, ty)?;
                     }
                     self.describe_statement(&mut statement, bindings.clone(), &name);
                     self.execute(&mut statement).await?;
-                    Ok::<_, Error>(statement.statement.fetch_assoc())
+                    Ok::<_, Error>(statement.statement.fetch_exactly(|s| s.fetch_assoc()))
                 }
                 .await;
                 statement.statement.close_cursor();
@@ -949,13 +949,13 @@ impl Sql {
         let run = async {
             for (i, value) in bindings.values().enumerate() {
                 let value = crate::value::from_query(value);
-                let ty = self.pdo_type(&value)?;
+                let (value, ty) = self.bindable(value)?;
                 statement.bind_value(i + 1, value, ty)?;
             }
             self.execute(&mut statement).await
         };
         run.await.map_err(|e| self.process_exception(e))?;
-        let rows = statement.statement.fetch_all()?;
+        let rows = statement.statement.fetch_exactly(|s| s.fetch_all())?;
         statement.statement.close_cursor();
         let mut documents = Vec::with_capacity(rows.len());
         for row in rows.values().cloned() {
@@ -974,7 +974,7 @@ impl Sql {
         let run = async {
             for (i, value) in bindings.values().enumerate() {
                 let value = crate::value::from_query(value);
-                let ty = self.pdo_type(&value)?;
+                let (value, ty) = self.bindable(value)?;
                 statement.bind_value(i + 1, value, ty)?;
             }
             self.execute(&mut statement).await

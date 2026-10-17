@@ -251,8 +251,8 @@ fn aggregates_are_typed_by_method_and_attribute() {
         let books = &rows[0];
         assert_eq!(books.get_str("category"), Some(&s("books")));
         assert_eq!(books.get_str("n"), Some(&Value::Int(3)));
-        // SQLite's driver reads a REAL as PHP's PDO does, its text of 14 digits.
-        assert_eq!(books.get_str("mean"), Some(&Value::Float(28.333333333333)));
+        // A read fetches a REAL at the round-trip precision (8.3.6 SQL.php:249, `fetchExactly()`).
+        assert_eq!(books.get_str("mean"), Some(&Value::Float(28.333333333333332)));
         assert_eq!(books.get_str("total"), Some(&Value::Int(85)));
         assert_eq!(books.get_str("lowest"), Some(&Value::Int(10)));
     });

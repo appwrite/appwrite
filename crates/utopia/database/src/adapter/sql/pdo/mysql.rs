@@ -168,7 +168,7 @@ impl Conn {
                 failure = Some(e);
                 break;
             }
-            sets.push(Rowset { columns, rows, count, insert_id });
+            sets.push(Rowset { columns, rows, count, insert_id, print_floats: false });
             if result.columns().is_none() {
                 // No further result. A query failing after this one leaves
                 // its error on the connection instead: surface it.

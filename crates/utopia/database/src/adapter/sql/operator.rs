@@ -1056,7 +1056,7 @@ impl Sql {
                             Value::Bool(b) => Value::Int(i64::from(b)),
                             other => other,
                         };
-                        let ty = self.pdo_type(&value)?;
+                        let (value, ty) = self.bindable(value)?;
                         statement.bind_value(format!(":{key}"), value, ty)?;
                     }
                 }
@@ -1065,9 +1065,9 @@ impl Sql {
         }
         let mut bind = |statement: &mut Prepared, value: Value, ty: Option<ParamType>| -> Result<()> {
             let key = next(bind_index);
-            let ty = match ty {
-                Some(ty) => ty,
-                None => self.pdo_type(&value)?,
+            let (value, ty) = match ty {
+                Some(ty) => (value, ty),
+                None => self.bindable(value)?,
             };
             statement.bind_value(format!(":{key}"), value, ty)
         };

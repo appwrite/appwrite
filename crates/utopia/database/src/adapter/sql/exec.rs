@@ -13,7 +13,7 @@
 //! `Postgres::execute()`, `MariaDB::execute()`, `SQLite::execute()`),
 //! `executeAndProfile()`, `describeStatement()`, `executeStatement()`
 //! (and `MariaDB`'s), `executeSelect()`, `runSelect()`, `getPdoType()`,
-//! `getFloatPrecision()`, `setTimeout()`, `clearTimeout()`.
+//! `bind()`, `formatFloat()`, `setTimeout()`, `clearTimeout()`.
 
 use std::time::Instant;
 
@@ -28,6 +28,23 @@ use crate::error::{Error, Result};
 use crate::event::Event;
 use crate::hook::SqlBuilder;
 use crate::value::{Array, Value};
+
+/// `formatFloat()`: a decimal that reads back as exactly this double, in as
+/// few digits as PHP writes it when they suffice, else 16 or 17 significant
+/// digits (`%H` ignores the locale) (8.3.4).
+pub(crate) fn format_float(value: f64) -> String {
+    let formatted = php_std::number::to_string(value);
+    if php_std::format::str_to_float(formatted.as_bytes()) == value {
+        return formatted;
+    }
+    let digits = |precision: &[u8]| {
+        php_std::format::sprintf(precision, &[php_std::format::Arg::Float(value)])
+            .map(|out| String::from_utf8_lossy(&out).into_owned())
+            .unwrap_or_default()
+    };
+    let formatted = digits(b"%.16H");
+    if php_std::format::str_to_float(formatted.as_bytes()) == value { formatted } else { digits(b"%.17H") }
+}
 
 /// The connection an adapter runs on.
 pub type Connection = utopia_async::sync::Mutex<Pdo>;
@@ -155,19 +172,22 @@ impl Sql {
         })
     }
 
-    /// `getFloatPrecision()`: `sprintf('%.{precision}F', $value)`.
-    pub(crate) fn float_precision(&self, value: f64) -> Result<String> {
-        let precision = *self.float_precision.lock().unwrap_or_else(|e| e.into_inner());
-        let format = format!("%.{precision}F");
-        let out = php_std::format::sprintf(format.as_bytes(), &[php_std::format::Arg::Float(value)])
-            .map_err(|e| Error::new(crate::Kind::ValueError, e.message().to_owned()))?;
-        Ok(String::from_utf8_lossy(&out).into_owned())
+    /// `bind()`: a value with the parameter type it binds as, a double as
+    /// its exact decimal ([`format_float`]): PDO would write it at the
+    /// `precision` ini (8.3.4).
+    pub(crate) fn bindable(&self, value: Value) -> Result<(Value, ParamType)> {
+        match value {
+            Value::Float(f) => Ok((Value::Str(format_float(f).into()), ParamType::Str)),
+            other => {
+                let ty = self.pdo_type(&other)?;
+                Ok((other, ty))
+            }
+        }
     }
 
     /// `executeResult()`: a builder's statement prepared, with its
-    /// positional bindings bound as 7.x bound them (booleans as integers on
-    /// engines storing them so; floats as strings, in fixed point for a
-    /// `find()`).
+    /// positional bindings bound by [`Sql::bindable`] (booleans as integers
+    /// on engines storing them so).
     pub(crate) async fn execute_result(
         &self,
         result: &Statement,
@@ -186,20 +206,8 @@ impl Sql {
                 Value::Bool(b) if integer_booleans => Value::Int(i64::from(b)),
                 other => other,
             };
-            match value {
-                // A bulk delete binds them as a find() does, so its filters
-                // match the rows the find() of the documents it deletes
-                // matched.
-                Value::Float(f) if matches!(event, Some(Event::DocumentFind | Event::DocumentsDelete)) => {
-                    let text = self.float_precision(f)?;
-                    prepared.bind_value(i + 1, Value::Str(text.as_str().into()), ParamType::Str)?;
-                }
-                Value::Float(_) => prepared.bind_value(i + 1, value, ParamType::Str)?,
-                other => {
-                    let ty = self.pdo_type(&other)?;
-                    prepared.bind_value(i + 1, other, ty)?;
-                }
-            }
+            let (value, ty) = self.bindable(value)?;
+            prepared.bind_value(i + 1, value, ty)?;
         }
         Ok(prepared)
     }
@@ -365,7 +373,7 @@ impl Sql {
         let run = async {
             let mut prepared = self.execute_result(result, Some(event), collection).await?;
             self.execute(&mut prepared).await?;
-            let rows = prepared.statement.fetch_all_assoc();
+            let rows = prepared.statement.fetch_exactly(|s| s.fetch_all_assoc());
             prepared.statement.close_cursor();
             Ok::<_, Error>(rows)
         };
@@ -399,5 +407,29 @@ fn php_type(value: &Value) -> &'static str {
         Value::Str(_) => "string",
         Value::Array(_) => "array",
         _ => "object",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::format_float;
+
+    /// PHP 8.3.6 Adapter/SQL.php:212-222 (`formatFloat()`) and
+    /// FloatBindingTest::floats(): the digits PHP writes when they read back
+    /// as the double, else 16 or 17 significant ones.
+    #[test]
+    fn a_double_binds_as_a_decimal_that_round_trips() {
+        for (value, bound) in [
+            (0.1 + 0.2, "0.30000000000000004"),
+            (std::f64::consts::PI, "3.141592653589793"),
+            (123456789.12345679, "123456789.12345679"),
+            (5e-324, "4.9406564584125E-324"),
+            (1e-300, "1.0E-300"),
+            (-2.5e-20, "-2.5E-20"),
+            (1.7976931348623157e308, "1.7976931348623157E+308"),
+            (0.1, "0.1"),
+        ] {
+            assert_eq!(format_float(value), bound);
+        }
     }
 }

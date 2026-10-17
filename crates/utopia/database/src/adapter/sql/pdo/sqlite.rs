@@ -172,7 +172,10 @@ impl Conn {
             }
         }
         let count = if out.is_empty() { self.conn.changes() as i64 } else { 0 };
-        Ok(Some(Results { sets: vec![Rowset { columns, rows: out, count, insert_id: 0 }], failure: None }))
+        Ok(Some(Results {
+            sets: vec![Rowset { columns, rows: out, count, insert_id: 0, print_floats: self.stringify }],
+            failure: None,
+        }))
     }
 
     /// `beginTransaction()`, `commit()`, `rollBack()`.
@@ -233,7 +236,9 @@ fn fetch(value: ValueRef<'_>, stringify: bool) -> Value {
         ValueRef::Integer(i) if !stringify => Value::Int(i),
         ValueRef::Real(f) if !stringify => Value::Float(f),
         ValueRef::Integer(i) => Value::Str(Str::from(i.to_string())),
-        ValueRef::Real(f) => Value::Str(Str::from(php_std::number::to_string(f))),
+        // Printed when the row is fetched, at the precision then set
+        // (`Statement::fetch_exactly`).
+        ValueRef::Real(f) => Value::Float(f),
         ValueRef::Text(t) | ValueRef::Blob(t) => Value::Str(Str::from(t.to_vec())),
     }
 }

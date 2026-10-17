@@ -585,7 +585,7 @@ impl Sql {
             let mut prepared = self.prepare_statement(&sql, Some(Event::DocumentFind)).await?;
             self.describe_statement(&mut prepared, Array::new(), name);
             self.execute(&mut prepared).await?;
-            let rows = prepared.statement.fetch_all_assoc();
+            let rows = prepared.statement.fetch_exactly(|s| s.fetch_all_assoc());
             prepared.statement.close_cursor();
             Ok::<_, Error>(rows)
         };

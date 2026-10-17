@@ -19,8 +19,10 @@
 //!   when the statement executes, as `pdo_sqlite` does.
 //! - **Values.** Every fetched value is a string or `null`, as
 //!   `ATTR_STRINGIFY_FETCHES` makes them: PostgreSQL booleans are `"1"`/`"0"`,
-//!   floats of every engine are printed as PHP prints them (precision 14),
-//!   integers and text are the bytes the engine sent.
+//!   floats of PostgreSQL and SQLite are printed as PHP prints them when they
+//!   are fetched, at the `precision` ini (14, or the round-trip digits while
+//!   [`Statement::fetch_exactly`] runs), integers and text are the bytes the
+//!   engine sent.
 //! - **Errors** are [`Kind::Pdo`](crate::Kind::Pdo) errors carrying PHP's
 //!   exact `PDOException` message, the SQLSTATE ([`crate::Error::state`],
 //!   `errorInfo[0]`), the driver's code ([`crate::Error::driver_code`],
@@ -405,12 +407,17 @@ pub(crate) struct Binding {
 pub(crate) struct Rowset {
     /// Column names as the engine sent them.
     pub(crate) columns: Vec<Str>,
-    /// Rows: one value per column (a string or `null`).
+    /// Rows: one value per column (a string or `null`, or a float PDO
+    /// prints when it is fetched).
     pub(crate) rows: Vec<Vec<Value>>,
     /// `rowCount()`.
     pub(crate) count: i64,
     /// MySQL: the insert id the result reported (`mysql_insert_id()`).
     pub(crate) insert_id: u64,
+    /// Whether a float of a row is printed when it is fetched (PDO's
+    /// stringify of PostgreSQL's and SQLite's doubles); otherwise a float
+    /// stays one (SQLite without `ATTR_STRINGIFY_FETCHES`).
+    pub(crate) print_floats: bool,
 }
 
 /// What a statement produced: one rowset per query of its text (MySQL),
@@ -1031,6 +1038,9 @@ pub struct Statement {
     /// Held while results after the current one are unread (MySQL), which
     /// refuses other statements on the connection, as mysqlnd does.
     pending: Option<Arc<Link>>,
+    /// The `precision` ini a fetched float is printed at (14; -1 while
+    /// [`Statement::fetch_exactly`] runs).
+    precision: i32,
 }
 
 impl Statement {
@@ -1045,7 +1055,21 @@ impl Statement {
             set: 0,
             row: 0,
             pending: None,
+            precision: 14,
         }
+    }
+
+    /// Runs `fetch` at the precision that round-trips every double: PDO
+    /// prints a float it fetches (from PostgreSQL and SQLite) at the
+    /// `precision` ini, 14 significant digits by default.
+    ///
+    /// PHP: `SQL::fetchExactly()` (utopia-php/database 8.3.4), which sets
+    /// `precision` to `-1` around the fetch.
+    pub fn fetch_exactly<T>(&mut self, fetch: impl FnOnce(&mut Self) -> T) -> T {
+        let precision = std::mem::replace(&mut self.precision, -1);
+        let fetched = fetch(self);
+        self.precision = precision;
+        fetched
     }
 
     /// The SQL as prepared.
@@ -1148,8 +1172,16 @@ impl Statement {
     }
 
     fn next_row(&mut self) -> Option<(Vec<Str>, Vec<Value>)> {
+        let precision = self.precision;
         let set = self.current()?;
-        let row = set.rows.get(self.row)?.clone();
+        let mut row = set.rows.get(self.row)?.clone();
+        if set.print_floats {
+            for value in &mut row {
+                if let Value::Float(f) = value {
+                    *value = Value::Str(Str::from(php_std::number::gcvt(*f, precision, 'E')));
+                }
+            }
+        }
         let names = set.columns.clone();
         self.row += 1;
         Some((names, row))

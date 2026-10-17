@@ -2913,8 +2913,10 @@ mod sql_array_writes_contains {
 mod float_binding_find {
     use super::*;
 
+    // 8.3.6 SQL.php:212-237 (`formatFloat()`, `bind()`): a find binds a double as a decimal that reads back as
+    // it, as every other statement does; 8.3.0 bound `%.17F`, which rounds 1e-300 to zero.
     #[utopia_async::test]
-    async fn a_find_binds_a_float_in_fixed_point() {
+    async fn a_find_binds_a_float_that_round_trips() {
         let Some(fx) = fx(Engine::MariaDb, "bdocs_float_find", false).await else { return };
         without_authorization(&fx.adapter);
         fx.create_table("numbers", &[("f", Col::Double)]).await;
@@ -2936,8 +2938,8 @@ mod float_binding_find {
             }
         };
         // The profiler keeps the value as given; what is bound shows in the
-        // rows: 1e-300 in fixed point (`0.00000000000000000`) is not above 0.
+        // rows: 1e-300 (`1.0E-300`) is above 0.
         assert_eq!(below(0.5).await, 1);
-        assert_eq!(below(1e-300).await, 0);
+        assert_eq!(below(1e-300).await, 1);
     }
 }

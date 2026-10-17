@@ -36,3 +36,17 @@ async fn a_pattern_that_does_not_compile_is_an_invalid_query() {
     assert_eq!((error.kind(), error.message()), (utopia_database::Kind::Query, "Invalid regular expression"));
     assert!(pdo.query(QUERY).await.is_ok());
 }
+
+/// PHP 8.3.6 Adapter/SQL.php:249-261 (`fetchExactly()`): PDO prints a fetched
+/// double at the `precision` ini, 14 digits, and the round-trip digits while
+/// it is set to -1.
+#[utopia_async::test]
+async fn a_double_is_fetched_exactly_at_the_round_trip_precision() {
+    let mut pdo = Pdo::connect_with("sqlite::memory:", None, None, Options::default()).await.unwrap();
+    let mut statement = pdo.query("SELECT 0.1 + 0.2 AS a, 0.1 + 0.2 AS b").await.unwrap();
+    let printed = statement.fetch_num().unwrap();
+    assert_eq!(printed.values().next().unwrap().to_php_string().unwrap().as_bytes(), b"0.3");
+    let mut statement = pdo.query("SELECT 0.1 + 0.2 AS a").await.unwrap();
+    let exact = statement.fetch_exactly(|s| s.fetch_num()).unwrap();
+    assert_eq!(exact.values().next().unwrap().to_php_string().unwrap().as_bytes(), b"0.30000000000000004");
+}
