@@ -83,6 +83,10 @@ for (const book of result.rows) {
 In JavaScript, the same types are available through JSDoc:
 
 ```js
+import { TablesDB } from 'appwrite';
+
+const tablesDB = new TablesDB(client);
+
 /**
  * @typedef {import('appwrite').Models.Row & {
  *     name: string,
