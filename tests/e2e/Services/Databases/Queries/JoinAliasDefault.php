@@ -10,6 +10,14 @@ use Utopia\Database\Role;
 
 trait JoinAliasDefault
 {
+    private const string UNIQUE_CUSTOMERS = '6ad1e9ed691819ab52ee';
+
+    private const string HYPHENATED_CUSTOMERS = 'vip-customers';
+
+    private const string LONG_CUSTOMERS = 'customers_with_the_longest_id_allowd';
+
+    private const string LONG_KEY = 'name_with_the_longest_key_allowed_xx';
+
     /**
      * @var array<string, array{databaseId: string}>
      */
@@ -75,6 +83,21 @@ trait JoinAliasDefault
         $this->assertSame(6, $result['body']['total']);
     }
 
+    public function testJoinWithoutAliasToAUniqueTableIdIsNamedAfterTheTable(): void
+    {
+        $this->assertJoinWithoutAliasReadsNames(self::UNIQUE_CUSTOMERS, 'name');
+    }
+
+    public function testJoinWithoutAliasToAHyphenatedTableIdIsNamedAfterTheTable(): void
+    {
+        $this->assertJoinWithoutAliasReadsNames(self::HYPHENATED_CUSTOMERS, 'name');
+    }
+
+    public function testJoinWithoutAliasReadsAColumnWhoseLabelExceedsTheIdentifierLimit(): void
+    {
+        $this->assertJoinWithoutAliasReadsNames(self::LONG_CUSTOMERS, self::LONG_KEY);
+    }
+
     public function testJoinWithoutAliasToATableIdThatCannotBeAnAliasIsRefused(): void
     {
         $databaseId = $this->setupJoinAliasFixture();
@@ -97,6 +120,26 @@ trait JoinAliasDefault
 
         $this->assertSame(400, $result['headers']['status-code']);
         $this->assertStringContainsString('customers', $result['body']['message']);
+    }
+
+    private function assertJoinWithoutAliasReadsNames(string $tableId, string $key): void
+    {
+        $databaseId = $this->setupJoinAliasFixture();
+
+        $result = $this->listOrders($databaseId, [
+            \json_encode([
+                'method' => 'join',
+                'attribute' => $tableId,
+                'values' => [['method' => 'on', 'values' => ['customerId', '=', $tableId . '.$id']]],
+            ]),
+            Query::select(['$id', $tableId . '.' . $key])->toString(),
+            Query::orderAsc('$id')->toString(),
+        ]);
+
+        $this->assertSame(200, $result['headers']['status-code'], $result['body']['message'] ?? '');
+        $rows = $result['body'][$this->getRecordResource()];
+        $this->assertSame(['o1', 'o2', 'o3'], \array_column($rows, '$id'));
+        $this->assertSame(['Alice', 'Alice', 'Bob'], \array_column($rows, $tableId . '.' . $key));
     }
 
     /**
@@ -137,7 +180,14 @@ trait JoinAliasDefault
         $this->assertSame(201, $database['headers']['status-code']);
         $databaseId = $database['body']['$id'];
 
-        foreach (['customers', 'orders', 'my.customers'] as $containerId) {
+        $customers = [
+            'customers' => 'name',
+            self::UNIQUE_CUSTOMERS => 'name',
+            self::HYPHENATED_CUSTOMERS => 'name',
+            self::LONG_CUSTOMERS => self::LONG_KEY,
+        ];
+
+        foreach ([...\array_keys($customers), 'orders', 'my.customers'] as $containerId) {
             $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
                 $this->getContainerIdParam() => $containerId,
                 'name' => $containerId,
@@ -146,7 +196,8 @@ trait JoinAliasDefault
             $this->assertSame(201, $container['headers']['status-code'], $container['body']['message'] ?? '');
         }
 
-        foreach ([['customers', 'name'], ['orders', 'customerId'], ['my.customers', 'name']] as [$containerId, $key]) {
+        $attributes = [...$customers, 'orders' => 'customerId', 'my.customers' => 'name'];
+        foreach ($attributes as $containerId => $key) {
             $attribute = $this->createAttribute($databaseId, $containerId, 'string', [
                 'key' => $key,
                 'size' => 36,
@@ -156,14 +207,18 @@ trait JoinAliasDefault
             $this->waitForAttribute($databaseId, $containerId, $key);
         }
 
-        $records = [
-            ['customers', 'alice', ['name' => 'Alice']],
-            ['customers', 'bob', ['name' => 'Bob']],
+        $records = [];
+        foreach ($customers as $containerId => $key) {
+            $records[] = [$containerId, 'alice', [$key => 'Alice']];
+            $records[] = [$containerId, 'bob', [$key => 'Bob']];
+        }
+        \array_push(
+            $records,
             ['orders', 'o1', ['customerId' => 'alice']],
             ['orders', 'o2', ['customerId' => 'alice']],
             ['orders', 'o3', ['customerId' => 'bob']],
             ['orders', 'o4', ['customerId' => 'zed']],
-        ];
+        );
         foreach ($records as [$containerId, $recordId, $data]) {
             $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), $headers, [
                 $this->getRecordIdParam() => $recordId,
