@@ -42,7 +42,9 @@ impl Database {
                 continue;
             }
 
-            let related = self.silent(self.get_collection(&related_collection)).await?;
+            // A relationship whose related collection was deleted is not
+            // checked (8.3.6, `findCollection()`).
+            let Some(related) = self.silent(self.find_collection(&related_collection)).await? else { continue };
             let mut attributes = related.attributes()?.to_vec();
             attributes.extend_from_slice(internal_attributes());
             let validator = Select::new(

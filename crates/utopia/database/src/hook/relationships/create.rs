@@ -296,7 +296,11 @@ impl Relationships {
                     continue;
                 }
 
-                let related_collection = self.collection(db, prepared, &relationship.related_collection).await?;
+                let Some(related_collection) =
+                    self.related_collection(db, &relationship.related_collection, Some(prepared)).await?
+                else {
+                    continue;
+                };
                 if depth as i64 >= RELATION_MAX_DEPTH - 1 && write_stack[depth - 1] != related_collection.id() {
                     continue;
                 }
@@ -366,6 +370,31 @@ impl Relationships {
 
     /// A collection read once for the whole prepared create, as it cannot
     /// change while the create's transaction is open (`collection()`).
+    /// The collection a relationship relates to, or `None` when it was
+    /// deleted while the relationship was left behind, as 7.x could leave
+    /// it: such a relationship is not related, populated or cascaded, and
+    /// keeps its stored value (`relatedCollection()`, 8.3.6).
+    pub(super) async fn related_collection(
+        &self,
+        db: &Database,
+        id: &str,
+        prepared: Option<&Prepared>,
+    ) -> Result<Option<Collection>> {
+        if let Some(prepared) = prepared
+            && let Some(collection) = lock(prepared).collection(id)
+        {
+            return Ok(Some(collection.clone()));
+        }
+        let collection = db.find_collection(id).await?;
+        if let (Some(prepared), Some(collection)) = (prepared, &collection) {
+            let mut p = lock(prepared);
+            if p.collection(id).is_none() {
+                p.collections.push((id.to_owned(), collection.clone()));
+            }
+        }
+        Ok(collection)
+    }
+
     pub(super) async fn collection(&self, db: &Database, prepared: &Prepared, id: &str) -> Result<Collection> {
         if let Some(collection) = lock(prepared).collection(id) {
             return Ok(collection.clone());
@@ -461,9 +490,9 @@ impl Relationships {
         for attribute in attributes(collection)? {
             let Some(relation) = Relation::of(&attribute) else { continue };
             let related_name = &attribute.relationship.as_ref().expect("a relationship").related_collection;
-            let related_collection = match &prepared {
-                None => db.get_collection(related_name).await?,
-                Some(p) => self.collection(&db, p, related_name).await?,
+            let Some(related_collection) = self.related_collection(&db, related_name, prepared.as_ref()).await? else {
+                detach(&relation, &mut document);
+                continue;
             };
 
             if stack_count as i64 >= RELATION_MAX_DEPTH - 1 && write_stack[stack_count - 1] != related_collection.id() {
@@ -753,5 +782,26 @@ impl Relationships {
             db.skip_relationships(db.update_document(related_collection.id(), relation_id, related)).await?;
         }
         Ok(())
+    }
+}
+
+/// Keeps the value written to a relationship whose related collection was
+/// deleted as the side holding its key stores it, by ID, and drops it from
+/// a side that stores nothing (`detach()`, 8.3.6).
+pub(super) fn detach(relation: &Relation<'_>, document: &mut Document) {
+    let parent = relation.side == RelationshipSide::Parent;
+    let stores_key = match relation.kind {
+        RelationshipType::OneToOne => parent || relation.two_way,
+        RelationshipType::OneToMany => !parent,
+        RelationshipType::ManyToOne => parent,
+        RelationshipType::ManyToMany => false,
+    };
+    if !stores_key {
+        document.remove(relation.key);
+        return;
+    }
+    if let Some(Value::Ext(Ext::Document(related))) = document.get(relation.key) {
+        let id = related.id().to_owned();
+        document.put(relation.key, Value::Str(id.as_str().into()));
     }
 }

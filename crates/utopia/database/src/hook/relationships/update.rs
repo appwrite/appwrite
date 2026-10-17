@@ -149,7 +149,6 @@ impl Relationships {
                     _ => None,
                 };
                 let related_name = &attribute.relationship.as_ref().expect("a relationship").related_collection;
-                let related_collection = db.get_collection(related_name).await?;
 
                 if let Some(Value::Ext(Ext::Operator(operator))) = &value
                     && operator.is_array_operation()
@@ -185,6 +184,11 @@ impl Relationships {
                     }
                     continue;
                 }
+
+                let Some(related_collection) = self.related_collection(&db, related_name, None).await? else {
+                    super::create::detach(&relation, &mut document);
+                    continue;
+                };
 
                 if stack_count as i64 >= RELATION_MAX_DEPTH - 1
                     && write_stack[stack_count - 1] != related_collection.id()

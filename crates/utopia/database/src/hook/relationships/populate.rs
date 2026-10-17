@@ -263,12 +263,20 @@ impl Relationships {
                             continue;
                         }
 
+                        // A relationship whose related collection was deleted
+                        // keeps its stored value (`relatedCollection()`, 8.3.6).
+                        let Some(related_collection) = db.find_collection(&relationship.related_collection).await?
+                        else {
+                            continue;
+                        };
+
                         let related = self
                             .populate_single_relationship_batch(
                                 &db,
                                 &mut tree,
                                 &level.docs,
                                 &level.collection,
+                                &related_collection,
                                 key,
                                 relationship,
                                 side,
@@ -281,21 +289,17 @@ impl Relationships {
                         let nested = selected.is_some();
 
                         if !related.is_empty() && (nested || !level.explicit) {
-                            let related_collection =
-                                db.silent(db.find_collection(&relationship.related_collection)).await?;
-                            if let Some(related_collection) = related_collection {
-                                let mut relationship_queries = if nested { queries.clone() } else { Vec::new() };
-                                let next_selects = self
-                                    .process_queries(&relationships(&related_collection)?, &mut relationship_queries)?;
-                                let selects = relationship_queries.iter().any(|q| q.method() == Method::Select);
-                                next.push(Level {
-                                    docs: related.clone(),
-                                    collection: related_collection,
-                                    selects: next_selects,
-                                    skip_key: two_way.then(|| two_way_key.clone()),
-                                    explicit: level.explicit || selects,
-                                });
-                            }
+                            let mut relationship_queries = if nested { queries.clone() } else { Vec::new() };
+                            let next_selects =
+                                self.process_queries(&relationships(&related_collection)?, &mut relationship_queries)?;
+                            let selects = relationship_queries.iter().any(|q| q.method() == Method::Select);
+                            next.push(Level {
+                                docs: related.clone(),
+                                collection: related_collection,
+                                selects: next_selects,
+                                skip_key: two_way.then(|| two_way_key.clone()),
+                                explicit: level.explicit || selects,
+                            });
                         }
 
                         if two_way {
@@ -332,13 +336,15 @@ impl Relationships {
         tree: &mut Tree,
         docs: &[usize],
         collection: &Collection,
+        related_collection: &Collection,
         key: &str,
         relationship: &Relationship,
         side: RelationshipSide,
         queries: &[Query],
     ) -> Result<Vec<usize>> {
+        let related = related_collection;
         match relationship.kind {
-            RelationshipType::OneToOne => self.populate_one_to_one(db, tree, docs, key, relationship, queries).await,
+            RelationshipType::OneToOne => self.populate_one_to_one(db, tree, docs, related, key, queries).await,
             RelationshipType::OneToMany => {
                 if side == RelationshipSide::Child {
                     if !relationship.two_way {
@@ -347,13 +353,13 @@ impl Relationships {
                         }
                         return Ok(Vec::new());
                     }
-                    return self.populate_one_to_one(db, tree, docs, key, relationship, queries).await;
+                    return self.populate_one_to_one(db, tree, docs, related, key, queries).await;
                 }
-                self.populate_back_referenced(db, tree, docs, key, relationship, queries).await
+                self.populate_back_referenced(db, tree, docs, related, key, relationship, queries).await
             }
             RelationshipType::ManyToOne => {
                 if side == RelationshipSide::Parent {
-                    return self.populate_one_to_one(db, tree, docs, key, relationship, queries).await;
+                    return self.populate_one_to_one(db, tree, docs, related, key, queries).await;
                 }
                 if !relationship.two_way {
                     for &node in docs {
@@ -361,10 +367,10 @@ impl Relationships {
                     }
                     return Ok(Vec::new());
                 }
-                self.populate_back_referenced(db, tree, docs, key, relationship, queries).await
+                self.populate_back_referenced(db, tree, docs, related, key, relationship, queries).await
             }
             RelationshipType::ManyToMany => {
-                self.populate_many_to_many(db, tree, docs, collection, key, relationship, side, queries).await
+                self.populate_many_to_many(db, tree, docs, collection, related, key, relationship, side, queries).await
             }
         }
     }
@@ -397,12 +403,10 @@ impl Relationships {
         db: &Database,
         tree: &mut Tree,
         docs: &[usize],
+        related_collection: &Collection,
         key: &str,
-        relationship: &Relationship,
         queries: &[Query],
     ) -> Result<Vec<usize>> {
-        let related_collection = db.get_collection(&relationship.related_collection).await?;
-
         let mut related_ids = Vec::new();
         let mut by_related: Vec<(String, Vec<usize>)> = Vec::new();
         for &node in docs {
@@ -434,7 +438,7 @@ impl Relationships {
             }
         }
 
-        let selects = self.selects_of_related(&related_collection, &select_queries)?;
+        let selects = self.selects_of_related(related_collection, &select_queries)?;
         db.apply_select_filters_to_documents(&mut tree.docs[range.clone()], &selects);
 
         for (related_id, holders) in by_related {
@@ -459,17 +463,18 @@ impl Relationships {
     /// related documents whose two-way key holds each document's id
     /// (`populateOneToManyRelationshipsBatch()`,
     /// `populateManyToOneRelationshipsBatch()`).
+    #[allow(clippy::too_many_arguments)]
     async fn populate_back_referenced(
         &self,
         db: &Database,
         tree: &mut Tree,
         docs: &[usize],
+        related_collection: &Collection,
         key: &str,
         relationship: &Relationship,
         queries: &[Query],
     ) -> Result<Vec<usize>> {
         let two_way_key = relationship.two_way_key.clone().unwrap_or_default();
-        let related_collection = db.get_collection(&relationship.related_collection).await?;
 
         let ids = unique(docs.iter().map(|&node| tree.docs[node].id().to_owned()).collect());
         if ids.is_empty() {
@@ -488,7 +493,7 @@ impl Relationships {
             }
         }
 
-        let selects = self.selects_of_related(&related_collection, &select_queries)?;
+        let selects = self.selects_of_related(related_collection, &select_queries)?;
         db.apply_select_filters_to_documents(&mut tree.docs[range.clone()], &selects);
 
         Ok(assign_pages(tree, docs, key, &by_holder, page.as_ref()))
@@ -503,13 +508,13 @@ impl Relationships {
         tree: &mut Tree,
         docs: &[usize],
         collection: &Collection,
+        related_collection: &Collection,
         key: &str,
         relationship: &Relationship,
         side: RelationshipSide,
         queries: &[Query],
     ) -> Result<Vec<usize>> {
         let two_way_key = relationship.two_way_key.clone().unwrap_or_default();
-        let related_collection = db.get_collection(&relationship.related_collection).await?;
 
         if !relationship.two_way && side == RelationshipSide::Child {
             return Ok(Vec::new());
@@ -520,7 +525,7 @@ impl Relationships {
             return Ok(Vec::new());
         }
 
-        let junction = junction(collection, &related_collection, side);
+        let junction = junction(collection, related_collection, side);
         let reads: Vec<BoxFuture<'_, Result<Vec<Document>>>> = document_ids
             .chunks(self.relation_query_chunk_size(db))
             .map(|chunk| -> BoxFuture<'_, Result<Vec<Document>>> {
@@ -566,7 +571,7 @@ impl Relationships {
                 }
             }
 
-            let selects = self.selects_of_related(&related_collection, &select_queries)?;
+            let selects = self.selects_of_related(related_collection, &select_queries)?;
             db.apply_select_filters_to_documents(&mut tree.docs[range.clone()], &selects);
 
             // Chunks are read and ordered one by one, so an order the queries

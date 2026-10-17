@@ -81,7 +81,11 @@ impl Relationships {
                     continue;
                 }
 
-                let related_collection = db.get_collection(&relationship.related_collection).await?;
+                // A relationship whose related collection was deleted is
+                // left as it is (`relatedCollection()`, 8.3.6).
+                let Some(related_collection) = db.find_collection(&relationship.related_collection).await? else {
+                    continue;
+                };
                 if depth as i64 >= RELATION_MAX_DEPTH - 1 && write_stack[depth - 1] != related_collection.id() {
                     continue;
                 }

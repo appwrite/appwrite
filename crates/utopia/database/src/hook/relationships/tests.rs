@@ -71,6 +71,74 @@ fn select_values(query: &Query) -> Vec<String> {
     query.values().values().map(|v| String::from_utf8_lossy(&v.to_php_string().unwrap()).into_owned()).collect()
 }
 
+// ----- orphaned relationships (8.3.6) -----
+
+/// `articles` with a many-to-one `author` to `authors`, a collection the
+/// stub does not know (deleted while the relationship was left behind).
+fn orphaned() -> (Database, Arc<StubAdapter>) {
+    let articles = collection(
+        "articles",
+        2,
+        vec![
+            Attribute::string("name", 32),
+            relation(
+                "author",
+                Relationship::new("authors", crate::relationship::RelationshipType::ManyToOne).key("author"),
+                RelationshipSide::Parent,
+            ),
+        ],
+        any_permissions(),
+    );
+    let adapter = StubAdapter::new();
+    let definitions = definitions(vec![articles]);
+    adapter.on(move |call| match call {
+        Call::GetDocument { collection: c, id, .. } if c.id() == "articles" => Some(Reply::Document(doc(vec![
+            ("$id", string(id.as_str())),
+            ("$collection", string("articles")),
+            ("$permissions", list([string(Permission::read(&Role::any()).as_str())])),
+            ("name", string("first")),
+            ("author", string("author1")),
+        ]))),
+        other => definitions(other),
+    });
+    let (db, _) = attached(adapter.clone());
+    (db, adapter)
+}
+
+// PHP 8.3.6 OrphanedTests::testOrphanedRelationshipGetDocument (Hook/Relationships.php:1800-1803): a relationship
+// whose related collection was deleted keeps its stored value unpopulated.
+#[test]
+fn an_orphaned_relationship_keeps_its_stored_value() {
+    block_on(async {
+        let (db, _) = orphaned();
+        let article = db.get_document("articles", "article1", Vec::new(), false).await.unwrap();
+        assert_eq!(article.get("name"), Some(&string("first")));
+        assert_eq!(article.get("author"), Some(&string("author1")));
+    });
+}
+
+// Hook/Relationships.php:711-756 (`detach()`): a side holding the key keeps the written value by ID, one that stores
+// nothing drops it.
+#[test]
+fn detach_keeps_the_id_where_the_key_is_held() {
+    let author = relation(
+        "author",
+        Relationship::new("authors", crate::relationship::RelationshipType::ManyToOne).key("author"),
+        RelationshipSide::Parent,
+    );
+    let tags = relation(
+        "tags",
+        Relationship::new("tags", crate::relationship::RelationshipType::ManyToMany).key("tags"),
+        RelationshipSide::Parent,
+    );
+    let mut document =
+        doc(vec![("author", Value::from(doc(vec![("$id", string("author2"))]))), ("tags", list([string("t")]))]);
+    super::create::detach(&super::create::Relation::of(&author).unwrap(), &mut document);
+    super::create::detach(&super::create::Relation::of(&tags).unwrap(), &mut document);
+    assert_eq!(document.get("author"), Some(&string("author2")));
+    assert!(!document.has("tags"));
+}
+
 // ----- attach -----
 
 #[test]

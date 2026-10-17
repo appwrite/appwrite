@@ -69,7 +69,11 @@ impl Relationships {
                 let relationship = attribute.relationship.as_ref().expect("a relationship");
                 let key = relation.key;
                 let value = document.get(key).cloned();
-                let related_collection = db.get_collection(&relationship.related_collection).await?;
+                let Some(related_collection) =
+                    self.related_collection(&db, &relationship.related_collection, None).await?
+                else {
+                    continue;
+                };
                 let (kind, side, two_way) = (relation.kind, relation.side, relation.two_way);
                 let two_way_key = relation.two_way_key.as_str();
                 let on_delete = relationship.on_delete;
