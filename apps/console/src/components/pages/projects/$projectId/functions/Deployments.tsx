@@ -140,7 +140,7 @@ import { DeploymentsToolbarContext } from './Layout'
 import { getQueryParam, queryParamToMap } from '@/lib/table-filters'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
-import { domainUrl } from '@/lib/domains/url'
+import { useDomainUrl } from '@/hooks/use-domain-url'
 
 function formatSize(bytes: number | bigint): string {
   return formatDecimalBytes(bytes)
@@ -215,6 +215,7 @@ function detectVcsProvider(
 
 export function View() {
   const t = useT()
+  const domainUrl = useDomainUrl()
   const { projectId, functionId } = useParams({ strict: false })
   const queryClient = useQueryClient()
   const { project } = useProject(projectId)

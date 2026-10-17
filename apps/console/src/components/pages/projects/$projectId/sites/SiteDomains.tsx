@@ -41,10 +41,11 @@ import type { Models } from '@appwrite.io/console'
 import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
-import { domainUrl } from '@/lib/domains/url'
+import { useDomainUrl } from '@/hooks/use-domain-url'
 
 export function SiteDomainsView() {
   const t = useT()
+  const domainUrl = useDomainUrl()
   const { projectId, siteId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { project } = useProject(projectId)

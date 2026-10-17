@@ -59,6 +59,8 @@ import { useNavigate } from '@tanstack/react-router'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
 import { useT } from '@/lib/i18n/translate'
+import { useIsZeroAccount } from '@/hooks/use-zero-account'
+import { ClaimToUnlock } from '@/components/global/shared/ClaimToUnlock'
 import {
   INITIAL_LOADER_SHELL_GATE,
   resetInitialLoaderShellGate,
@@ -252,7 +254,8 @@ export function ProjectSelector({
 }: ProjectSelectorProps) {
   const t = useT()
   const { features, isCloud } = useConsoleProfile()
-  const canCreateOrganization = features.multiTenancy
+  const zeroLocked = useIsZeroAccount()
+  const canCreateOrganization = features.multiTenancy && !zeroLocked
   const selectionMode = typeof onProjectSelect === 'function'
   const navigate = useNavigate()
   const { account, isAuthenticated, isFetched: authFetched } = useAuth()
@@ -829,6 +832,7 @@ export function ProjectSelector({
     onCreateOrganization: canCreateOrganization
       ? handleCreateOrganization
       : undefined,
+    zeroLocked,
     prefetchTeamProjects,
     selectionMode,
   }
@@ -1105,6 +1109,8 @@ interface ProjectSelectorContentProps {
   onCreateProject: () => void
   /** Absent on profiles that block creating another organization */
   onCreateOrganization?: () => void
+  /** Signed in as an unclaimed Zero project's owner: creating waits for the claim. */
+  zeroLocked?: boolean
   /** Preload pinned + paginated projects when the user hovers an organization row */
   prefetchTeamProjects: (teamId: string) => void
   /** When true, project rows select via callback instead of navigating */
@@ -1134,6 +1140,7 @@ function ProjectSelectorContent({
   billingOrgReadonly,
   onCreateProject,
   onCreateOrganization,
+  zeroLocked = false,
   prefetchTeamProjects,
   selectionMode = false,
 }: ProjectSelectorContentProps) {
@@ -1411,17 +1418,23 @@ function ProjectSelectorContent({
 
         {!selectionMode ? (
           <div className="border-t border-border p-1.5">
-            <button
-              type="button"
-              {...analyticsAttrs('create-project')}
-              onClick={onCreateProject}
-              className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            <ClaimToUnlock
+              locked={zeroLocked}
+              reason={t('Claim this project to create more projects')}
             >
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
-                <Plus className="h-3.5 w-3.5" />
-              </div>
-              <span className="text-[13px]">{t('Create Project')}</span>
-            </button>
+              <button
+                type="button"
+                {...analyticsAttrs('create-project')}
+                onClick={onCreateProject}
+                disabled={zeroLocked}
+                className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-start text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
+                  <Plus className="h-3.5 w-3.5" />
+                </div>
+                <span className="text-[13px]">{t('Create Project')}</span>
+              </button>
+            </ClaimToUnlock>
           </div>
         ) : null}
       </div>
@@ -1453,6 +1466,7 @@ function MobileProjectSelectorContent({
   billingOrgReadonly,
   onCreateProject,
   onCreateOrganization,
+  zeroLocked = false,
   prefetchTeamProjects,
   selectionMode = false,
 }: ProjectSelectorContentProps) {
@@ -1775,17 +1789,23 @@ function MobileProjectSelectorContent({
 
           {!selectionMode ? (
             <div className="border-t border-border p-2">
-              <button
-                type="button"
-                {...analyticsAttrs('create-project')}
-                onClick={onCreateProject}
-                className="flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-start text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              <ClaimToUnlock
+                locked={zeroLocked}
+                reason={t('Claim this project to create more projects')}
               >
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
-                  <Plus className="h-4 w-4" />
-                </div>
-                <span className="text-[14px]">{t('Create Project')}</span>
-              </button>
+                <button
+                  type="button"
+                  {...analyticsAttrs('create-project')}
+                  onClick={onCreateProject}
+                  disabled={zeroLocked}
+                  className="flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-start text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50">
+                    <Plus className="h-4 w-4" />
+                  </div>
+                  <span className="text-[14px]">{t('Create Project')}</span>
+                </button>
+              </ClaimToUnlock>
             </div>
           ) : null}
         </div>
