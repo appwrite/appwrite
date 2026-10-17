@@ -81,9 +81,9 @@ RealtimeSubscription subscription = realtime.subscribe(['account']);
 subscription.stream.listen((event) {
   print(event.payload);
 });
-
-await subscription.close();
 ```
+
+Keep the subscription while you need events, and call `subscription.close()` when you stop listening, for example in your widget's `dispose()`.
 
 Handle errors:
 

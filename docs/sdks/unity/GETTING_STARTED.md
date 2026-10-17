@@ -89,19 +89,9 @@ Debug.Log($"Signed in as {session.UserId}");
 
 `account.CreateOAuth2Session()` opens the provider's sign-in page and waits for Appwrite to redirect back to your app on the `appwrite-callback-<PROJECT_ID>` URL scheme. Appwrite accepts this scheme for your project without extra Console setup, but your build must handle it:
 
-- **Android**: add an intent filter for the scheme to your project's main manifest at `Assets/Plugins/Android/AndroidManifest.xml` (enable **Custom Main Manifest** under **Project Settings > Player > Android > Publishing Settings**):
-
-  ```xml
-  <intent-filter>
-      <action android:name="android.intent.action.VIEW" />
-      <category android:name="android.intent.category.DEFAULT" />
-      <category android:name="android.intent.category.BROWSABLE" />
-      <data android:scheme="appwrite-callback-<PROJECT_ID>" />
-  </intent-filter>
-  ```
-
+- **Android**: see [OAuth on Android](#oauth-on-android).
 - **iOS**: add `appwrite-callback-<PROJECT_ID>` to **Supported URL schemes** under **Project Settings > Player > iOS > Other Settings**.
-- **WebGL**: the sign-in page opens in the same tab, so register a **Web** platform for your build's hostname.
+- **WebGL**: not supported. The sign-in page replaces your build in the same tab, and a browser cannot return to it on the callback scheme, so the call never completes. Use another sign-in method, such as email and password, in WebGL builds.
 
 ### Error handling
 
