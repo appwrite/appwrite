@@ -116,25 +116,13 @@ impl Integer {
         format!("{}{}", if self.unsigned { "uint" } else { "int" }, self.bits)
     }
 
-    /// The bounds as PHP computes them: `2 ** 63` overflows to a float.
+    /// The exact bounds of the configured size and sign.
+    ///
+    /// PHP: `getMin()` and `getMax()` (private).
     fn bounds(&self) -> (Number, Number) {
-        // `2 ** $bits`: an integer while it fits, a float beyond.
-        let pow2 =
-            |bits: u32| if bits < 63 { Number::Int(1i64 << bits) } else { Number::Float(2f64.powi(bits as i32)) };
-        let minus_one = |n: Number| match n {
-            Number::Int(i) => Number::Int(i - 1),
-            Number::Float(f) => Number::Float(f - 1.0),
-        };
-        if self.unsigned {
-            (Number::Int(0), minus_one(pow2(self.bits)))
-        } else {
-            let half = pow2(self.bits.saturating_sub(1));
-            let min = match half {
-                Number::Int(i) => Number::Int(-i),
-                Number::Float(f) => Number::Float(-f),
-            };
-            (min, minus_one(half))
-        }
+        let max = if self.unsigned { (1i64 << self.bits) - 1 } else { i64::MAX >> (64 - self.bits) };
+        let min = if self.unsigned { 0 } else { -max - 1 };
+        (Number::Int(min), Number::Int(max))
     }
 
     fn number(&self, value: Input<'_>) -> Option<Number> {

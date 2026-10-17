@@ -78,7 +78,7 @@ fn scalars() {
     assert_eq!(i.description(), "Value must be a valid signed 32-bit integer between -2,147,483,648 and 2,147,483,647");
     assert_eq!(
         Integer::new(false, 64, false).unwrap().description(),
-        "Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,808"
+        "Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,807"
     );
     assert_eq!(Integer::new(false, 8, true).unwrap().format(), "uint8");
     assert_eq!(Integer::new(false, 7, false).unwrap_err().php_class(), "InvalidArgumentException");

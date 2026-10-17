@@ -1356,7 +1356,7 @@
           },
           "expect": {
             "valid": false,
-            "description": "Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,808"
+            "description": "Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,807"
           }
         },
         {
@@ -1375,7 +1375,7 @@
           },
           "expect": {
             "valid": false,
-            "description": "Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,808"
+            "description": "Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,807"
           }
         },
         {
@@ -1392,7 +1392,7 @@
           },
           "expect": {
             "valid": true,
-            "description": "Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,808"
+            "description": "Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,807"
           }
         },
         {
@@ -1409,7 +1409,7 @@
           },
           "expect": {
             "valid": false,
-            "description": "Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,808"
+            "description": "Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,807"
           }
         },
         {
@@ -1426,7 +1426,7 @@
           },
           "expect": {
             "valid": false,
-            "description": "Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,808"
+            "description": "Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,807"
           }
         },
         {
@@ -1443,7 +1443,7 @@
           },
           "expect": {
             "valid": true,
-            "description": "Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,808"
+            "description": "Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,807"
           }
         }
       ]
@@ -3649,7 +3649,7 @@
               "$ref": "j"
             }
           },
-          "expect": "Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,808"
+          "expect": "Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,807"
         },
         {
           "op": "validator.new",
