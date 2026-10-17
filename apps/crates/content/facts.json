@@ -1,19 +1,19 @@
 {
-  "updated": "2026-10-17T11:50:00Z",
+  "updated": "2026-10-17T18:30:00Z",
   "summary": "Appwrite's API, a PHP 8.5 and Swoole monolith, is moving to Rust one service at a time. First every Utopia library it stands on is converted and proven identical to PHP, then each API service is ported and run side by side with PHP behind Traefik, on the same database, Redis, queues and caches.",
   "sections": [
     {
       "title": "Proof of identical behaviour",
       "facts": [
         {
-          "value": "41,337",
+          "value": "43,075",
           "label": "compat cases",
-          "note": "Recorded from PHP and replayed against Rust, across 54 libraries (778,267 steps)."
+          "note": "Recorded from PHP and replayed against Rust, across 50 libraries (852,708 steps)."
         },
         {
-          "value": "26,086",
+          "value": "26,711",
           "label": "database cases",
-          "note": "utopia-database 8.3.0 alone, recorded from PHP over Postgres, MySQL, MariaDB, SQLite, MongoDB and Redis; 557 of 557 PHP test files ported."
+          "note": "utopia-database alone: 810,183 steps over Postgres, MySQL, MariaDB, SQLite, MongoDB and Redis."
         },
         {
           "value": "2,135 / 2,135",
@@ -81,9 +81,9 @@
       "title": "How it was built",
       "facts": [
         {
-          "value": "842",
+          "value": "979",
           "label": "commits on the branch",
-          "note": "Since it last left main, between 2026-10-09 and 2026-10-15."
+          "note": "Since it last left main, between 2026-10-09 and 2026-10-17."
         },
         {
           "value": "255",
@@ -145,9 +145,19 @@
       "note": "Race-free bulk deletes, relationship queries with per-parent paging, typed aggregates, and Mirror, the last part of the library, ported; every database case re-recorded on 8.3.0."
     },
     {
+      "date": "2026-10-16",
+      "title": "CI on Rust 1.97",
+      "note": "Rust 1.88's code generation never finished on the new database crate, so every compiling CI job timed out; CI, the Rust image and the minimum Rust version moved to 1.97."
+    },
+    {
       "date": "2026-10-17",
       "title": "Target frozen at database 8.3.6",
       "note": "After following PHP through four database versions in three days, the PR stops merging main until it lands; the 8.3.6 port is time-boxed to two hours and its leftovers recorded as known gaps."
+    },
+    {
+      "date": "2026-10-17",
+      "title": "Synced with main; one library behind",
+      "note": "The branch took main's latest 43 commits. Every converted library but database stays at 100% API coverage with all PHP tests ported; database's move to 8.3.8 is listed as a known gap."
     }
   ],
   "lessons": [
