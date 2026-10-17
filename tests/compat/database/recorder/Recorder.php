@@ -809,6 +809,7 @@ final class Recorder
             str_ends_with($class, '\\Support\\EventRecorder') => ['$hook' => 'Log', 'name' => $prop($hook, 'name')],
             $hook instanceof \Utopia\Database\Hook\Transform && str_contains($file, 'CollectionTests.php') => ['$hook' => 'Transform', 'table' => self::encode($prop($hook, 'table')), 'event' => 'document_read', 'append' => ' AND 1 = 0'],
             $hook instanceof \Utopia\Database\Hook\Nested && str_contains($file, 'NestedPreparationTests.php') => ['$hook' => 'Nested', 'marker' => $prop($hook, 'marker')],
+            str_ends_with($class, '\\Support\\JoinTables') => ['$hook' => 'JoinTables', 'tables' => (object) $prop($hook, 'tables')],
             default => null,
         };
 

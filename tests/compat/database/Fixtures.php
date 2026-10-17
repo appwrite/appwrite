@@ -253,12 +253,17 @@ namespace Tests\Compat\Database {
                     'callback' => static fn (mixed $attribute): Range => new Range($attribute['formatOptions']['min'] ?? 0, $attribute['formatOptions']['max'] ?? 0, Range::TYPE_INTEGER),
                     'type' => ColumnType::Integer,
                 ],
-                // Unit Documents\CounterRangeRaceTest::range(): a Range of `formatOptions` (unbounded where not given).
-                'raceIntegerRange' => [
+                // Unit Documents\CounterRangeRaceTest::range() and DocumentTests::counterRange(): a Range of
+                // `formatOptions` (unbounded where not given).
+                'raceIntegerRange', 'counterIntegerRange' => [
                     'callback' => static fn (array $attribute): Range => new Range($attribute['formatOptions']['min'] ?? -INF, $attribute['formatOptions']['max'] ?? INF, Range::TYPE_INTEGER),
                     'type' => ColumnType::Integer,
                 ],
-                'raceDoubleRange' => [
+                'counterBigIntegerRange' => [
+                    'callback' => static fn (array $attribute): Range => new Range($attribute['formatOptions']['min'] ?? -INF, $attribute['formatOptions']['max'] ?? INF, Range::TYPE_INTEGER),
+                    'type' => ColumnType::BigInteger,
+                ],
+                'raceDoubleRange', 'counterDoubleRange' => [
                     'callback' => static fn (array $attribute): Range => new Range($attribute['formatOptions']['min'] ?? -INF, $attribute['formatOptions']['max'] ?? INF, Range::TYPE_FLOAT),
                     'type' => ColumnType::Double,
                 ],
@@ -299,6 +304,9 @@ namespace Tests\Compat\Database {
      *                  a Hook\Queries appending Query::limit(limit) when the
      *                  read has none, logging `{"rewrite": <event value>,
      *                  "collection", "queries": <count>}`
+     *   JoinTables     {tables: {<collection>: <table>}}
+     *                  a Hook\Queries pointing each join at the table its
+     *                  collection maps to (the suites' Support\JoinTables)
      */
     final class Hooks
     {
@@ -310,6 +318,7 @@ namespace Tests\Compat\Database {
             'Nested' => Fixture\NestedHook::class,
             'Decorator' => Fixture\DecoratorHook::class,
             'Queries' => Fixture\QueriesHook::class,
+            'JoinTables' => Fixture\JoinTablesHook::class,
         ];
 
         public static function make(mixed $spec): \Utopia\Query\Hook
@@ -336,6 +345,7 @@ namespace Tests\Compat\Database {
                 'Nested' => new Fixture\NestedHook((string) ($spec['marker'] ?? '')),
                 'Decorator' => new Fixture\DecoratorHook((string) ($spec['attribute'] ?? ''), Values::decode($spec['value'] ?? null)),
                 'Queries' => new Fixture\QueriesHook((int) ($spec['limit'] ?? 25)),
+                'JoinTables' => new Fixture\JoinTablesHook(array_map('strval', (array) ($spec['tables'] ?? []))),
                 default => throw new Fault("no hook fixture `{$name}`"),
             };
         }
@@ -578,6 +588,29 @@ namespace Tests\Compat\Database\Fixture {
             }
 
             return [...$queries, Query::limit($this->limit)];
+        }
+    }
+
+    /** The suites' Support\JoinTables: each join pointed at the table its collection maps to. */
+    final class JoinTablesHook implements Queries
+    {
+        /**
+         * @param array<string, string> $tables
+         */
+        public function __construct(private readonly array $tables)
+        {
+        }
+
+        public function rewrite(Event $event, Collection $collection, array $queries): array
+        {
+            foreach ($queries as $index => $query) {
+                $table = $this->tables[$query->getAttribute()] ?? null;
+                if ($table !== null && $query->getMethod()->isJoin()) {
+                    $queries[$index] = (clone $query)->setAttribute($table);
+                }
+            }
+
+            return $queries;
         }
     }
 

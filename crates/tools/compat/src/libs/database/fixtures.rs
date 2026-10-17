@@ -48,7 +48,7 @@ const FILTERS: &[(&str, &str)] = &[
 pub const CANONICAL: [&str; 4] = ["encrypt", "subQueryProbe", "operator_double_decode", "joinedSeal"];
 
 /// The format fixtures (`Formats::get`).
-const FORMATS: [&str; 10] = [
+const FORMATS: [&str; 13] = [
     "priceRange",
     "priceRangeNew",
     "email",
@@ -59,6 +59,9 @@ const FORMATS: [&str; 10] = [
     "storedEnum",
     "raceIntegerRange",
     "raceDoubleRange",
+    "counterIntegerRange",
+    "counterBigIntegerRange",
+    "counterDoubleRange",
 ];
 
 /// Where `Core::callback` declares a callback's closure: the signature of
@@ -400,8 +403,13 @@ pub fn add_format(name: &str) -> R<()> {
             }),
             ColumnType::Integer,
         ),
-        "raceIntegerRange" | "raceDoubleRange" => {
-            let format = if name == "raceIntegerRange" { Type::Integer } else { Type::Float };
+        "raceIntegerRange"
+        | "raceDoubleRange"
+        | "counterIntegerRange"
+        | "counterBigIntegerRange"
+        | "counterDoubleRange" => {
+            let double = matches!(name, "raceDoubleRange" | "counterDoubleRange");
+            let format = if double { Type::Float } else { Type::Integer };
             (
                 Arc::new(move |attribute: &Array| {
                     let options = options_of(attribute);
@@ -413,7 +421,11 @@ pub fn add_format(name: &str) -> R<()> {
                     Box::new(Range::with_format(bound("min", f64::NEG_INFINITY), bound("max", f64::INFINITY), format))
                         as Box<dyn utopia_validators::Validator>
                 }),
-                if name == "raceIntegerRange" { ColumnType::Integer } else { ColumnType::Double },
+                match name {
+                    "counterBigIntegerRange" => ColumnType::BigInteger,
+                    _ if double => ColumnType::Double,
+                    _ => ColumnType::Integer,
+                },
             )
         }
         "storedEnum" => (
@@ -466,6 +478,7 @@ pub fn hook_class(name: &str) -> String {
         "Nested" | "NestedHook" => std::any::type_name::<NestedHook>().to_owned(),
         "Decorator" | "DecoratorHook" => std::any::type_name::<DecoratorHook>().to_owned(),
         "Queries" | "QueriesHook" => std::any::type_name::<QueriesHook>().to_owned(),
+        "JoinTables" | "JoinTablesHook" => std::any::type_name::<JoinTablesHook>().to_owned(),
         "Invalidator" => std::any::type_name::<utopia_database::cache::Invalidator>().to_owned(),
         _ => name.to_owned(),
     }
@@ -545,6 +558,18 @@ pub fn make_hook(spec: &Json) -> R<HookObj> {
                     .unwrap_or(25),
             })),
             class: "QueriesHook",
+        },
+        "JoinTables" => HookObj {
+            hook: Hook::queries(Arc::new(JoinTablesHook {
+                tables: match params.get("tables") {
+                    Some(Json::Object(tables)) => tables
+                        .iter()
+                        .map(|(k, v)| (k.clone(), v.as_str().map(str::to_owned).unwrap_or_else(|| v.to_string())))
+                        .collect(),
+                    _ => Vec::new(),
+                },
+            })),
+            class: "JoinTablesHook",
         },
         _ => return fault(format!("no hook fixture `{name}`")),
     })
@@ -660,6 +685,38 @@ impl Queries for QueriesHook {
         }
         queries.push(Query::from(utopia_query::Query::limit(self.limit)));
         Ok(queries)
+    }
+}
+
+/// The suites' `Support\JoinTables`: points each join at the table its
+/// collection maps to, as Appwrite points a public table ID at its
+/// internal collection (`JoinTablesHook`).
+pub struct JoinTablesHook {
+    tables: Vec<(String, String)>,
+}
+
+#[async_trait]
+impl Queries for JoinTablesHook {
+    async fn rewrite(
+        &self,
+        _event: Event,
+        _collection: &Collection,
+        queries: Vec<Query>,
+    ) -> utopia_database::Result<Vec<Query>> {
+        Ok(queries
+            .into_iter()
+            .map(|query| {
+                let table = self.tables.iter().find(|(k, _)| k == query.attribute()).map(|(_, t)| t.clone());
+                match table {
+                    Some(table) if query.method().is_join() => {
+                        let mut inner = query.into_inner();
+                        inner.set_attribute(table);
+                        Query::from(inner)
+                    }
+                    _ => query,
+                }
+            })
+            .collect())
     }
 }
 

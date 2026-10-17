@@ -72639,6 +72639,1063 @@
       ]
     },
     {
+      "name": "AggregationTests::testBitwiseAggregatesAreSigned64BitIntegers",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true,
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "agg_bitwise_sign_297557",
+                "name": "agg_bitwise_sign_297557",
+                "attributes": [
+                  {
+                    "$id": "series",
+                    "key": "series",
+                    "type": "string",
+                    "size": 20,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "amount",
+                    "key": "amount",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "agg_bitwise_sign_297557",
+              "name": "agg_bitwise_sign_297557",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "series",
+                    "key": "series",
+                    "type": "string",
+                    "size": 20,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "amount",
+                    "key": "amount",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "agg_bitwise_sign_297557",
+            "document": {
+              "$document": {
+                "series": "positive",
+                "amount": 10,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "series": "positive",
+              "amount": 10,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "agg_bitwise_sign_297557",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "agg_bitwise_sign_297557",
+            "document": {
+              "$document": {
+                "series": "positive",
+                "amount": 3,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "series": "positive",
+              "amount": 3,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "agg_bitwise_sign_297557",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "agg_bitwise_sign_297557",
+            "document": {
+              "$document": {
+                "series": "negative",
+                "amount": -5,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "series": "negative",
+              "amount": -5,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "agg_bitwise_sign_297557",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "agg_bitwise_sign_297557",
+            "document": {
+              "$document": {
+                "series": "negative",
+                "amount": -12,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "series": "negative",
+              "amount": -12,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "agg_bitwise_sign_297557",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "4"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "agg_bitwise_sign_297557",
+            "document": {
+              "$document": {
+                "series": "mixed",
+                "amount": 10,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "series": "mixed",
+              "amount": 10,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "agg_bitwise_sign_297557",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "5"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "agg_bitwise_sign_297557",
+            "document": {
+              "$document": {
+                "series": "mixed",
+                "amount": -5,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "series": "mixed",
+              "amount": -5,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "agg_bitwise_sign_297557",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "6"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "agg_bitwise_sign_297557",
+            "document": {
+              "$document": {
+                "series": "extremes",
+                "amount": 9223372036854775807,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "series": "extremes",
+              "amount": 9223372036854775807,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "agg_bitwise_sign_297557",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "7"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "agg_bitwise_sign_297557",
+            "document": {
+              "$document": {
+                "series": "extremes",
+                "amount": -9223372036854775808,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "series": "extremes",
+              "amount": -9223372036854775808,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "agg_bitwise_sign_297557",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "8"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "agg_bitwise_sign_297557",
+            "document": {
+              "$document": {
+                "series": "nulls",
+                "amount": null,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "series": "nulls",
+              "amount": null,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "agg_bitwise_sign_297557",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "9"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "agg_bitwise_sign_297557",
+            "document": {
+              "$document": {
+                "series": "nulls",
+                "amount": null,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "series": "nulls",
+              "amount": null,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "agg_bitwise_sign_297557",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "10"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.aggregate",
+          "args": {
+            "collection": "agg_bitwise_sign_297557",
+            "queries": [
+              {
+                "$query": {
+                  "method": "bitAnd",
+                  "attribute": "amount",
+                  "values": [],
+                  "alias": "all_bits"
+                }
+              },
+              {
+                "$query": {
+                  "method": "bitOr",
+                  "attribute": "amount",
+                  "values": [],
+                  "alias": "any_bits"
+                }
+              },
+              {
+                "$query": {
+                  "method": "bitXor",
+                  "attribute": "amount",
+                  "values": [],
+                  "alias": "odd_bits"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Aggregate bitAnd is not supported by this adapter"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "agg_bitwise_sign_297557"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testIntegerAggregateSumOverflowIsRefused",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true,
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "agg_int_overflow_297557",
+                "name": "agg_int_overflow_297557",
+                "attributes": [
+                  {
+                    "$id": "series",
+                    "key": "series",
+                    "type": "string",
+                    "size": 20,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "amount",
+                    "key": "amount",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "agg_int_overflow_297557",
+              "name": "agg_int_overflow_297557",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "series",
+                    "key": "series",
+                    "type": "string",
+                    "size": 20,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "amount",
+                    "key": "amount",
+                    "type": "bigint",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "agg_int_overflow_297557",
+            "document": {
+              "$document": {
+                "series": "above",
+                "amount": 9223372036854775807,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "series": "above",
+              "amount": 9223372036854775807,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "agg_int_overflow_297557",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "agg_int_overflow_297557",
+            "document": {
+              "$document": {
+                "series": "above",
+                "amount": 9223372036854775807,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "series": "above",
+              "amount": 9223372036854775807,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "agg_int_overflow_297557",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "agg_int_overflow_297557",
+            "document": {
+              "$document": {
+                "series": "below",
+                "amount": -9223372036854775808,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "series": "below",
+              "amount": -9223372036854775808,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "agg_int_overflow_297557",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "agg_int_overflow_297557",
+            "document": {
+              "$document": {
+                "series": "below",
+                "amount": -1,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "series": "below",
+              "amount": -1,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "agg_int_overflow_297557",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "4"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "agg_int_overflow_297557",
+            "document": {
+              "$document": {
+                "series": "top",
+                "amount": 9223372036854775806,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "series": "top",
+              "amount": 9223372036854775806,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "agg_int_overflow_297557",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "5"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "agg_int_overflow_297557",
+            "document": {
+              "$document": {
+                "series": "top",
+                "amount": 1,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "series": "top",
+              "amount": 1,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "agg_int_overflow_297557",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "6"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "agg_int_overflow_297557",
+            "document": {
+              "$document": {
+                "series": "bottom",
+                "amount": -9223372036854775807,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "series": "bottom",
+              "amount": -9223372036854775807,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "agg_int_overflow_297557",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "7"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "agg_int_overflow_297557",
+            "document": {
+              "$document": {
+                "series": "bottom",
+                "amount": -1,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "series": "bottom",
+              "amount": -1,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "agg_int_overflow_297557",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "8"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.aggregate",
+          "args": {
+            "collection": "agg_int_overflow_297557",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "series",
+                  "values": [
+                    "above"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "sum",
+                  "attribute": "amount",
+                  "values": [],
+                  "alias": "total"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Value out of range"
+            }
+          }
+        },
+        {
+          "op": "database.aggregate",
+          "args": {
+            "collection": "agg_int_overflow_297557",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "series",
+                  "values": [
+                    "below"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "sum",
+                  "attribute": "amount",
+                  "values": [],
+                  "alias": "total"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Value out of range"
+            }
+          }
+        },
+        {
+          "op": "database.aggregate",
+          "args": {
+            "collection": "agg_int_overflow_297557",
+            "queries": [
+              {
+                "$query": {
+                  "method": "sum",
+                  "attribute": "amount",
+                  "values": [],
+                  "alias": "total"
+                }
+              },
+              {
+                "$query": {
+                  "method": "groupBy",
+                  "attribute": "",
+                  "values": [
+                    "series"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Value out of range"
+            }
+          }
+        },
+        {
+          "op": "database.aggregate",
+          "args": {
+            "collection": "agg_int_overflow_297557",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "series",
+                  "values": [
+                    "top"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "sum",
+                  "attribute": "amount",
+                  "values": [],
+                  "alias": "total"
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "total": 9223372036854775807
+            }
+          ]
+        },
+        {
+          "op": "database.aggregate",
+          "args": {
+            "collection": "agg_int_overflow_297557",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "series",
+                  "values": [
+                    "bottom"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "sum",
+                  "attribute": "amount",
+                  "values": [],
+                  "alias": "total"
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "total": -9223372036854775808
+            }
+          ]
+        },
+        {
+          "op": "database.aggregate",
+          "args": {
+            "collection": "agg_int_overflow_297557",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "series",
+                  "values": [
+                    "top",
+                    "bottom"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "sum",
+                  "attribute": "amount",
+                  "values": [],
+                  "alias": "total"
+                }
+              },
+              {
+                "$query": {
+                  "method": "groupBy",
+                  "attribute": "",
+                  "values": [
+                    "series"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "series",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "total": -9223372036854775808,
+              "series": "bottom"
+            },
+            {
+              "total": 9223372036854775807,
+              "series": "top"
+            }
+          ]
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "agg_int_overflow_297557"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
       "name": "AggregationTests::testJoinCountIsCappedAtEight",
       "state": [
         "sqlite"
@@ -75543,6 +76600,461 @@
           "op": "database.delete_collection",
           "args": {
             "collection": "numeric_aggregate_operands"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "AggregationTests::testPermissionsAreAggregatedAsAnArrayAttribute",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true,
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "agg_permissions_297557",
+                "name": "agg_permissions_297557",
+                "attributes": [
+                  {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 20,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "agg_permissions_297557",
+              "name": "agg_permissions_297557",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 20,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "agg_permissions_297557",
+            "document": {
+              "$document": {
+                "tags": [
+                  "a"
+                ],
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "tags": [
+                "a"
+              ],
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "agg_permissions_297557",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "agg_permissions_297557",
+            "document": {
+              "$document": {
+                "tags": [
+                  "a"
+                ],
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "tags": [
+                "a"
+              ],
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "agg_permissions_297557",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "agg_permissions_297557",
+            "document": {
+              "$document": {
+                "tags": [
+                  "a"
+                ],
+                "$permissions": [
+                  "read(\"any\")",
+                  "read(\"users\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "tags": [
+                "a"
+              ],
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"users\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "agg_permissions_297557",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.aggregate",
+          "args": {
+            "collection": "agg_permissions_297557",
+            "queries": [
+              {
+                "$query": {
+                  "method": "min",
+                  "attribute": "tags",
+                  "values": [],
+                  "alias": "result"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Aggregate min requires an attribute whose values are ordered, not an array, object, boolean, spatial or vector one: tags"
+            }
+          }
+        },
+        {
+          "op": "database.aggregate",
+          "args": {
+            "collection": "agg_permissions_297557",
+            "queries": [
+              {
+                "$query": {
+                  "method": "max",
+                  "attribute": "tags",
+                  "values": [],
+                  "alias": "result"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Aggregate max requires an attribute whose values are ordered, not an array, object, boolean, spatial or vector one: tags"
+            }
+          }
+        },
+        {
+          "op": "database.aggregate",
+          "args": {
+            "collection": "agg_permissions_297557",
+            "queries": [
+              {
+                "$query": {
+                  "method": "sum",
+                  "attribute": "tags",
+                  "values": [],
+                  "alias": "result"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Aggregate sum requires a numeric attribute that is not an array: tags"
+            }
+          }
+        },
+        {
+          "op": "database.aggregate",
+          "args": {
+            "collection": "agg_permissions_297557",
+            "queries": [
+              {
+                "$query": {
+                  "method": "avg",
+                  "attribute": "tags",
+                  "values": [],
+                  "alias": "result"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Aggregate avg requires a numeric attribute that is not an array: tags"
+            }
+          }
+        },
+        {
+          "op": "database.aggregate",
+          "args": {
+            "collection": "agg_permissions_297557",
+            "queries": [
+              {
+                "$query": {
+                  "method": "min",
+                  "attribute": "$permissions",
+                  "values": [],
+                  "alias": "result"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Aggregate min requires an attribute whose values are ordered, not an array, object, boolean, spatial or vector one: $permissions"
+            }
+          }
+        },
+        {
+          "op": "database.aggregate",
+          "args": {
+            "collection": "agg_permissions_297557",
+            "queries": [
+              {
+                "$query": {
+                  "method": "max",
+                  "attribute": "$permissions",
+                  "values": [],
+                  "alias": "result"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Aggregate max requires an attribute whose values are ordered, not an array, object, boolean, spatial or vector one: $permissions"
+            }
+          }
+        },
+        {
+          "op": "database.aggregate",
+          "args": {
+            "collection": "agg_permissions_297557",
+            "queries": [
+              {
+                "$query": {
+                  "method": "sum",
+                  "attribute": "$permissions",
+                  "values": [],
+                  "alias": "result"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Aggregate sum requires a numeric attribute that is not an array: $permissions"
+            }
+          }
+        },
+        {
+          "op": "database.aggregate",
+          "args": {
+            "collection": "agg_permissions_297557",
+            "queries": [
+              {
+                "$query": {
+                  "method": "avg",
+                  "attribute": "$permissions",
+                  "values": [],
+                  "alias": "result"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Aggregate avg requires a numeric attribute that is not an array: $permissions"
+            }
+          }
+        },
+        {
+          "op": "database.aggregate",
+          "args": {
+            "collection": "agg_permissions_297557",
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "agg_permissions_297557",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "$id"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "other"
+                }
+              },
+              {
+                "$query": {
+                  "method": "max",
+                  "attribute": "other.$permissions",
+                  "values": [],
+                  "alias": "result"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Aggregate max requires an attribute whose values are ordered, not an array, object, boolean, spatial or vector one: other.$permissions"
+            }
+          }
+        },
+        {
+          "op": "database.aggregate",
+          "args": {
+            "collection": "agg_permissions_297557",
+            "queries": [
+              {
+                "$query": {
+                  "method": "count",
+                  "attribute": "$permissions",
+                  "values": [],
+                  "alias": "rows"
+                }
+              },
+              {
+                "$query": {
+                  "method": "countDistinct",
+                  "attribute": "$permissions",
+                  "values": [],
+                  "alias": "sets"
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "rows": 3,
+              "sets": 2
+            }
+          ]
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "agg_permissions_297557"
           },
           "expect": null
         }
