@@ -1,14 +1,6 @@
 {
-  "updated": "2026-10-17T02:39:00Z",
+  "updated": "2026-10-17T03:14:00Z",
   "tasks": [
-    {
-      "id": "storage-sync",
-      "title": "Storage and client: S3 streaming from main",
-      "area": "Libraries",
-      "status": "progress",
-      "updated": "2026-10-17T02:39:00Z",
-      "note": "main's S3 backend streaming added Device::stream, S3::stream and Telemetry::stream to storage, and supportsResponseStreaming to client."
-    },
     {
       "id": "db836",
       "title": "Database: follow PHP from 8.3.0 to 8.3.6",
@@ -32,6 +24,14 @@
       "status": "todo",
       "updated": "2026-10-15T23:30:00Z",
       "note": "tests/compat/async/spec.json points at the crate but has no operations yet; write the ops and cases against utopia-php/async 0.2 to mark it complete."
+    },
+    {
+      "id": "storage-sync",
+      "title": "Storage and client: S3 streaming from main",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-10-17T03:14:00Z",
+      "note": "client hands over the response head before a streamed body (Http, Client, Retry); storage streams a file to a sink as it is read, S3 in one request with its head checked before any byte. client 471 cases and storage 190 cases, 0 differences."
     },
     {
       "id": "lib-sync-2",
