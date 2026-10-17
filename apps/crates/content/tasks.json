@@ -1,6 +1,14 @@
 {
-  "updated": "2026-10-17T17:20:00Z",
+  "updated": "2026-10-17T17:45:00Z",
   "tasks": [
+    {
+      "id": "db838",
+      "title": "database: main's 8.3.8 not yet ported",
+      "area": "Database 8",
+      "status": "todo",
+      "updated": "2026-10-17T17:45:00Z",
+      "note": "After syncing the branch with main (6edaf6d185), PHP runs utopia-php/database 8.3.8 while Rust follows 8.3.6. Uncovered: Builder\\RaisesFloatOverflow::compileAggregate. PHP tests not ported: tests/unit/IDTest.php, QueryCacheTest.php, Validator/IndexedQueriesTest.php. SQL.php line numbers in TypeError messages moved. Every other library is still at 100% with all PHP tests ported."
+    },
     {
       "id": "usage-gauge-tie",
       "title": "usage: gauge total under a millisecond tie",
