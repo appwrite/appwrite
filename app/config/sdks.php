@@ -532,7 +532,7 @@ $platforms = [
             [
                 'key' => 'rust',
                 'name' => 'Rust',
-                'version' => '0.19.0',
+                'version' => '0.20.0',
                 'url' => 'https://github.com/appwrite/sdk-for-rust',
                 'package' => 'https://crates.io/crates/appwrite',
                 'enabled' => true,
