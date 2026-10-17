@@ -883,8 +883,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Mongo\\Exception",
-              "message": "E51091 Location51091: Regular expression is invalid: missing closing parenthesis"
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid regular expression"
             }
           }
         },
