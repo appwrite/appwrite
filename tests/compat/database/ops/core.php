@@ -985,7 +985,14 @@ final class Core
             return self::pointer($arg, (string) ($value['path'] ?? ''));
         }
 
-        return array_map(fn ($v) => self::locals($v, $locals, $invocation), $value);
+        // A nested callback's steps name its own locals and arguments: they
+        // are resolved when it runs.
+        $resolved = [];
+        foreach ($value as $key => $item) {
+            $resolved[$key] = $key === 'steps' && \is_array($item) && \array_is_list($item) ? $item : self::locals($item, $locals, $invocation);
+        }
+
+        return $resolved;
     }
 
     private static function pointer(mixed $value, string $path): mixed

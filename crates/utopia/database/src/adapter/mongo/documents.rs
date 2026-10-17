@@ -133,7 +133,7 @@ impl Mongo {
             !selections.is_empty() && !selections.iter().any(|s| crate::value::from_query(s).loose_eq(&text("*")));
         let mut fields = BsonDocument::new();
         if projection {
-            fields.insert("projection", bson::document(&Self::attribute_projection(&selections))?);
+            fields.insert("projection", bson::document(&Self::attribute_projection(&selections)?)?);
         }
         let reply = self
             .driver
@@ -679,7 +679,7 @@ impl Mongo {
         let projection =
             !selections.is_empty() && !selections.iter().any(|s| crate::value::from_query(s).loose_eq(&text("*")));
         if projection {
-            fields.insert("projection", bson::document(&Self::attribute_projection(&selections))?);
+            fields.insert("projection", bson::document(&Self::attribute_projection(&selections)?)?);
         }
         let mut ors: Vec<Value> = Vec::new();
         let mut sort = BsonDocument::new();

@@ -239,8 +239,15 @@ fn locals_of(value: &Json, locals: &HashMap<String, Json>, args: &[Json]) -> Res
                     args.get(n as usize).ok_or_else(|| Fault::new(format!("the callback has no argument {n}")))?;
                 return pointer(arg, path);
             }
+            // A nested callback's steps name its own locals and arguments:
+            // they are resolved when it runs.
             Ok(Json::Object(
-                o.iter().map(|(k, v)| Ok((k.clone(), locals_of(v, locals, args)?))).collect::<Result<_, Fault>>()?,
+                o.iter()
+                    .map(|(k, v)| match v {
+                        Json::Array(_) if k == "steps" => Ok((k.clone(), v.clone())),
+                        _ => Ok((k.clone(), locals_of(v, locals, args)?)),
+                    })
+                    .collect::<Result<_, Fault>>()?,
             ))
         }
         Json::Array(items) => {

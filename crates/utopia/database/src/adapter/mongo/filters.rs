@@ -535,7 +535,10 @@ impl Mongo {
 
     /// `getAttributeProjection($selections)`: the selected attributes (but
     /// the internal ones, always selected) and every internal field.
-    pub(crate) fn attribute_projection(selections: &[QValue]) -> Array {
+    ///
+    /// Fails ([`crate::Kind::TypeError`]) for a selection PHP cannot use as
+    /// an array key (`Cannot access offset of type array on array`).
+    pub(crate) fn attribute_projection(selections: &[QValue]) -> Result<Array> {
         let internal: Vec<Value> = crate::database::internal_attributes(true).iter().map(|a| text(&a.key)).collect();
         let mut projection = Array::new();
         for selection in selections {
@@ -547,15 +550,22 @@ impl Mongo {
             let k = match &selection {
                 Value::Int(i) => ArrayKey::Int(*i),
                 Value::Bool(b) => ArrayKey::Int(i64::from(*b)),
+                Value::Float(f) => ArrayKey::Int(php_std::format::dval_to_lval(*f)),
                 Value::Null => ArrayKey::Str(Str::EMPTY),
-                other => ArrayKey::normalize(scalar_string(other)),
+                Value::Str(s) => ArrayKey::normalize(s.clone()),
+                other => {
+                    return Err(crate::error::Error::new(
+                        crate::error::Kind::TypeError,
+                        format!("Cannot access offset of type {} on array", other.type_name()),
+                    ));
+                }
             };
             projection.set(k, Value::Int(1));
         }
         for field in [storage::UID, storage::SEQUENCE, storage::CREATED_AT, storage::UPDATED_AT, storage::PERMISSIONS] {
             projection.set(key(field), Value::Int(1));
         }
-        projection
+        Ok(projection)
     }
 
     /// `ensureRelationshipDefaults($collection, $document)`: `null` for the
@@ -627,3 +637,22 @@ fn bounds(value: &Value) -> (Value, Value) {
 }
 
 use super::casting;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// PHP 8.3.6 Adapter/Mongo.php:3803 (`$projection[$selection] = 1`): a
+    /// selection that is an array is no array key, a TypeError.
+    #[test]
+    fn a_selection_that_is_an_array_is_a_type_error() {
+        let mut selection = utopia_query::Array::new();
+        selection.set(php_std::ArrayKey::from("s"), QValue::Str("".into()));
+        let error = Mongo::attribute_projection(&[QValue::Array(selection)]).unwrap_err();
+        assert_eq!(
+            (error.kind(), error.message()),
+            (crate::error::Kind::TypeError, "Cannot access offset of type array on array")
+        );
+        assert!(Mongo::attribute_projection(&[QValue::Str("name".into())]).unwrap().get_str("name").is_some());
+    }
+}

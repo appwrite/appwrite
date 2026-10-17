@@ -756,3 +756,20 @@ fn test_to_array_leaves_out_an_empty_or_zero_attribute() {
         "a logical query without children has no values"
     );
 }
+
+// PHP Query::parseQuery() (8.3.6 Query.php:89-149): a level's string children are decoded first, then the base
+// parser checks the level and recurses into its array children in order, so an invalid first child is reported
+// before a malformed string inside a later one.
+#[test]
+fn test_parse_reports_the_error_php_meets_first() {
+    for (json, message) in [
+        (
+            r#"{"method":"elemMatch","values":[{"":null},{"method":"or","attribute":"","values":["x"]}]}"#,
+            "Invalid query method: ",
+        ),
+        (r#"{"method":"and","values":[{"":null},{"method":"or","values":["x"]}]}"#, "Invalid query method: "),
+        (r#"{"method":"elemMatch","values":[{"":null},"x"]}"#, "Invalid query: Syntax error"),
+    ] {
+        assert_error(Query::parse(json, false), Kind::Query, message);
+    }
+}

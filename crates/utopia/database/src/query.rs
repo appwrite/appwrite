@@ -99,6 +99,15 @@ pub(crate) fn query_error(e: utopia_query::Error) -> Error {
     Error::new(kind, message).with_code(code)
 }
 
+/// A child query that parses, standing in for a nested query while its
+/// parent level is checked on its own.
+fn placeholder() -> QArray {
+    let mut child = QArray::with_capacity(2);
+    child.set(php_std::ArrayKey::from("method"), QValue::Str(Method::IsNull.as_str().into()));
+    child.set(php_std::ArrayKey::from("attribute"), QValue::Str("placeholder".into()));
+    child
+}
+
 /// `$sequence` for an order query without an attribute (the database's
 /// constructor).
 fn with_default_order(mut query: utopia_query::Query) -> utopia_query::Query {
@@ -537,7 +546,7 @@ impl Query {
     ///
     /// Fails as [`Query::parse`] does.
     pub fn parse_query(query: &QArray, allow_raw: bool) -> Result<Self> {
-        let prepared = Query::prepare(query, allow_raw)?;
+        let prepared = Query::prepare(query, allow_raw, false)?;
         let parsed = utopia_query::Query::parse_query(&prepared, allow_raw).map_err(query_error)?;
         Ok(Query(with_default_orders(parsed)))
     }
@@ -550,25 +559,42 @@ impl Query {
     /// The array the base parser reads, at every level as the database's
     /// `parseQuery()` hands it on: a raw query refused unless `allow_raw`,
     /// the string children of a nested query decoded.
-    fn prepare(query: &QArray, allow_raw: bool) -> Result<QArray> {
+    ///
+    /// `child`: the query is a child of a nested query, which the base parser
+    /// checks (as PHP's `parseQuery()` of that child does) before it moves
+    /// on to the next child.
+    fn prepare(query: &QArray, allow_raw: bool, child: bool) -> Result<QArray> {
         let method = query.get_str("method");
         if !allow_raw && matches!(method, Some(QValue::Str(m)) if m.as_bytes() == Method::Raw.as_str().as_bytes()) {
             return Err(Error::query(format!("Invalid query method: {}", Method::Raw.as_str())));
         }
-        let Some(QValue::Str(method)) = method else { return Ok(query.clone()) };
-        let Some(method) = method.as_str().and_then(Method::try_from_value) else { return Ok(query.clone()) };
+        let checked = |query: &QArray| -> Result<QArray> {
+            if child {
+                utopia_query::Query::parse_query(query, allow_raw).map_err(query_error)?;
+            }
+            Ok(query.clone())
+        };
+        let Some(QValue::Str(method)) = method else { return checked(query) };
+        let Some(method) = method.as_str().and_then(Method::try_from_value) else { return checked(query) };
         let nested = method.is_nested();
         if !nested && !method.is_join() {
-            return Ok(query.clone());
+            return checked(query);
         }
         let Some(QValue::Array(values)) = query.get_str("values").filter(|v| !matches!(v, QValue::Null)) else {
-            return Ok(query.clone());
+            return checked(query);
         };
+        if !nested {
+            checked(query)?;
+        }
+        // PHP decodes a level's string children first (`decodeNestedValues()`),
+        // then the base parser checks the level itself and only then recurses
+        // into its array children, in order: the first error is the one PHP
+        // meets first.
         let mut out = QArray::with_capacity(values.len());
         for (index, value) in values.iter() {
             let value = match value {
-                QValue::Array(child) => QValue::Array(Query::prepare(child, allow_raw)?),
                 QValue::Str(s) if nested => QValue::Array(Query::parse_bytes(s.as_bytes(), allow_raw)?.to_array()?),
+                QValue::Array(_) => value.clone(),
                 other if nested => {
                     return Err(Error::query(format!(
                         "Invalid nested query. Must be an array or string, got {}",
@@ -579,8 +605,29 @@ impl Query {
             };
             out.set(index.to_owned(), value);
         }
+        if nested {
+            let mut level = query.clone();
+            let mut shallow = QArray::with_capacity(out.len());
+            for (index, value) in out.iter() {
+                let value = match value {
+                    QValue::Array(_) => QValue::Array(placeholder()),
+                    other => other.clone(),
+                };
+                shallow.set(index.to_owned(), value);
+            }
+            level.set(php_std::ArrayKey::from("values"), QValue::Array(shallow));
+            utopia_query::Query::parse_query(&level, allow_raw).map_err(query_error)?;
+        }
+        let mut prepared_values = QArray::with_capacity(out.len());
+        for (index, value) in out.iter() {
+            let value = match value {
+                QValue::Array(item) => QValue::Array(Query::prepare(item, allow_raw, nested)?),
+                other => other.clone(),
+            };
+            prepared_values.set(index.to_owned(), value);
+        }
         let mut prepared = query.clone();
-        prepared.set(php_std::ArrayKey::from("values"), QValue::Array(out));
+        prepared.set(php_std::ArrayKey::from("values"), QValue::Array(prepared_values));
         Ok(prepared)
     }
 
