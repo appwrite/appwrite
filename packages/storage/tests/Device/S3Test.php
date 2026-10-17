@@ -721,6 +721,108 @@ final class S3Test extends TestCase
         $this->assertNull($list->cursor);
     }
 
+    private function objectListing(string ...$keys): Response
+    {
+        $body = '<?xml version="1.0" encoding="UTF-8"?><ListBucketResult><KeyCount>' . \count($keys) . '</KeyCount><IsTruncated>false</IsTruncated>';
+        foreach ($keys as $key) {
+            $body .= '<Contents><Key>' . htmlspecialchars($key, ENT_XML1) . '</Key><Size>1</Size></Contents>';
+        }
+        $body .= '</ListBucketResult>';
+
+        return new Response(200, body: new Stream($body))->withHeader('content-type', 'application/xml');
+    }
+
+    /**
+     * @return array<int|string, mixed>
+     */
+    private function queryOf(RequestInterface $request): array
+    {
+        parse_str($request->getUri()->getQuery(), $parameters);
+
+        return $parameters;
+    }
+
+    public function testRecursiveDeleteRemovesEveryObjectUnderThePrefix(): void
+    {
+        $client = new ScriptedClient([
+            new Response(204),
+            $this->objectListing('root/a/1.txt', 'root/a/x&y.txt'),
+            new Response(200),
+        ]);
+
+        $this->assertTrue($this->device($client)->delete('/root/a', true));
+        $this->assertCount(3, $client->requests);
+
+        [$delete, $list, $batch] = $client->requests;
+        $this->assertSame('DELETE', $delete->getMethod());
+        $this->assertSame('/root/a', $delete->getUri()->getPath());
+
+        $this->assertSame('GET', $list->getMethod());
+        $this->assertSame('root/a/', $this->queryOf($list)['prefix'] ?? null, 'a sibling such as root/a-b/ must not match');
+
+        $this->assertSame('POST', $batch->getMethod());
+        $this->assertArrayHasKey('delete', $this->queryOf($batch));
+        $xml = simplexml_load_string((string) $batch->getBody(), options: LIBXML_NOERROR | LIBXML_NOWARNING);
+        $this->assertNotFalse($xml, 'the DeleteObjects body must be well-formed XML');
+        $keys = [];
+        foreach ($xml->Object as $object) {
+            $keys[] = (string) $object->Key;
+        }
+        $this->assertSame(['root/a/1.txt', 'root/a/x&y.txt'], $keys);
+    }
+
+    public function testDeletePathListsOnlyTheDirectory(): void
+    {
+        $client = new ScriptedClient([$this->objectListing(), $this->objectListing()]);
+        $device = $this->device($client);
+
+        $this->assertTrue($device->deletePath('img'));
+        $this->assertTrue($device->deletePath('img/'));
+
+        $this->assertCount(2, $client->requests);
+        $this->assertSame('root/img/', $this->queryOf($client->requests[0])['prefix'] ?? null, 'root/img2/ must not match');
+        $this->assertSame('root/img/', $this->queryOf($client->requests[1])['prefix'] ?? null);
+    }
+
+    public function testRecursiveDeleteOfAnEmptyPrefixIsRefused(): void
+    {
+        $client = new ScriptedClient([]);
+        $device = new S3(
+            root: '',
+            accessKey: 'test-key',
+            secretKey: 'test-secret',
+            host: 'https://s3.example.com',
+            region: 'us-east-1',
+            client: $client,
+        );
+
+        $attempts = [
+            'delete(\'\', true)' => fn (): bool => $device->delete('', true),
+            'delete(\'/\', true)' => fn (): bool => $device->delete('/', true),
+            'deletePath(\'\')' => fn (): bool => $device->deletePath(''),
+        ];
+        foreach ($attempts as $call => $attempt) {
+            try {
+                $attempt();
+                self::fail("{$call} must refuse to delete the whole bucket");
+            } catch (\InvalidArgumentException) {
+            }
+        }
+
+        $this->assertCount(0, $client->requests, 'nothing may reach the bucket before the prefix is validated');
+    }
+
+    public function testDeleteWithoutRecursionSendsOneRequest(): void
+    {
+        $client = new ScriptedClient([new Response(204)]);
+
+        $this->assertTrue($this->device($client)->delete('/root/a'));
+
+        $this->assertCount(1, $client->requests);
+        $this->assertSame('DELETE', $client->requests[0]->getMethod());
+        $this->assertSame('/root/a', $client->requests[0]->getUri()->getPath());
+    }
+
     public function testFinalizeCompletesOverAnExistingObject(): void
     {
         // The upload replaces whatever is at the path; an object already there is no reason to skip completion.

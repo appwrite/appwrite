@@ -54,6 +54,11 @@ final class S3Test extends S3Base
         $this->object = new S3($this->root, $this->accessKey, $this->secretKey, $host, $this->region, Acl::Private, bucket: $this->bucket);
     }
 
+    protected function withRoot(string $root): S3
+    {
+        return new S3($root, $this->accessKey, $this->secretKey, $this->env('S3_HOST', "http://{$this->bucket}.localhost:9805"), $this->region, Acl::Private, bucket: $this->bucket);
+    }
+
     protected function getAdapterType(): DeviceType
     {
         return $this->object->getType();
