@@ -332,4 +332,8 @@ impl Validator for Range {
     fn kind(&self) -> Type {
         self.format
     }
+
+    fn as_range(&self) -> Option<&Range> {
+        Some(self)
+    }
 }

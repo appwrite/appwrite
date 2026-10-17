@@ -334,6 +334,7 @@ async fn test_get_sequences_reports_a_failing_pipeline() {
     assert_eq!(e.message(), "Failed to load sequences: connection lost");
 }
 
+// 8.3.6 (RedisAdapterPathsTest; Adapter/Redis.php:1621-1634): a bound the stored value crosses answers false.
 #[utopia_async::test]
 async fn test_increment_guards_of_the_adapter() {
     let probe = probe_or_skip!();
@@ -351,7 +352,7 @@ async fn test_increment_guards_of_the_adapter() {
     for (id, stored) in [("whole", Value::Int(10)), ("fraction", Value::Float(10.5))] {
         let at = "2026-01-01 00:00:00.000";
         assert!(
-            adapter
+            !adapter
                 .increase_document_attribute(
                     &collection(NOTES),
                     id,
@@ -365,7 +366,7 @@ async fn test_increment_guards_of_the_adapter() {
                 .unwrap()
         );
         assert!(
-            adapter
+            !adapter
                 .increase_document_attribute(
                     &collection(NOTES),
                     id,

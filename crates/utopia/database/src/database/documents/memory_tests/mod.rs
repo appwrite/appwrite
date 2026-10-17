@@ -6,6 +6,7 @@
 mod authorize;
 mod bulk;
 mod bulk_more;
+mod counter_range;
 mod delete_race;
 mod engine;
 mod ids;

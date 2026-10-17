@@ -881,8 +881,9 @@ impl Store {
         Ok(count)
     }
 
-    /// `increaseDocumentAttribute(...)`: a silent no-op when the stored
-    /// value already crosses a bound; exact for integers beyond PHP's range.
+    /// `increaseDocumentAttribute(...)`: changes nothing and returns false
+    /// when the stored value already crosses a bound (8.3.6); exact for
+    /// integers beyond PHP's range.
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn increase(
         &mut self,
@@ -917,12 +918,12 @@ impl Store {
             if let Some(min) = min
                 && BigInt::compare(&current, operand(min)?)?.is_lt()
             {
-                return Ok(true);
+                return Ok(false);
             }
             if let Some(max) = max
                 && BigInt::compare(&current, operand(max)?)?.is_gt()
             {
-                return Ok(true);
+                return Ok(false);
             }
             Value::from(BigInt::add(&current, &value)?)
         } else {
@@ -935,12 +936,12 @@ impl Store {
             if let Some(min) = min
                 && operators::lt(&current, min)
             {
-                return Ok(true);
+                return Ok(false);
             }
             if let Some(max) = max
                 && operators::gt(&current, max)
             {
-                return Ok(true);
+                return Ok(false);
             }
             operators::add(&current, &value)?
         };

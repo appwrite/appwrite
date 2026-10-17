@@ -646,8 +646,8 @@ impl Mongo {
         set.set(key(storage::UPDATED_AT), assoc([("$literal", updated_at)]));
         let pipeline = Array::from_list(vec![assoc([("$set", Value::Array(set))])]);
         let name = self.name(collection.id());
-        self.update_with_pipeline(&name, &filters, pipeline, false).await?;
-        Ok(true)
+        // False when the bounds matched no document (8.3.6).
+        Ok(self.update_with_pipeline(&name, &filters, pipeline, false).await? > 0)
     }
 
     /// `find($collection, $queries, ...)`: documents, ordered, paged after

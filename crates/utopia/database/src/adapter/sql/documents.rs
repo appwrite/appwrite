@@ -775,7 +775,8 @@ impl Sql {
         let event = if negative { Event::DocumentDecrease } else { Event::DocumentIncrease };
         let mut statement = self.execute_result(&result, Some(event), "").await?;
         self.execute(&mut statement).await.map_err(|e| self.process_exception(e))?;
-        Ok(true)
+        // False when the bounds left the row unchanged (8.3.6).
+        Ok(statement.statement.row_count() > 0)
     }
 
     /// `deleteDocument()`.

@@ -524,6 +524,7 @@ async fn test_a_cursor_without_an_order_pages_by_sequence() {
     assert_eq!(ids(&before), ["first"]);
 }
 
+// 8.3.6 (MemoryWritePathsTest; Adapter/Memory.php:1919-1932): the no-op answers false.
 #[utopia_async::test]
 async fn test_increment_is_a_no_op_when_the_stored_value_already_violates_the_bound() {
     let adapter = addresses().await;
@@ -533,13 +534,13 @@ async fn test_increment_is_a_no_op_when_the_stored_value_already_violates_the_bo
     for (id, stored) in [("whole", Value::Int(10)), ("fraction", Value::Float(10.5))] {
         let c = collection(ADDRESSES);
         assert!(
-            adapter
+            !adapter
                 .increase_document_attribute(&c, id, "visits", Value::Int(1), UPDATED_AT, None, Some(Value::Int(5)))
                 .await
                 .unwrap()
         );
         assert!(
-            adapter
+            !adapter
                 .increase_document_attribute(&c, id, "visits", Value::Int(-1), UPDATED_AT, Some(Value::Int(20)), None)
                 .await
                 .unwrap()

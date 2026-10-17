@@ -343,6 +343,14 @@ pub trait Validator: Send + Sync {
         let _ = index;
         None
     }
+
+    /// The validator as a [`Range`], when it is one; `None` for any other.
+    ///
+    /// PHP: `$validator instanceof Range`, which utopia-php/database reads a
+    /// format's bounds by.
+    fn as_range(&self) -> Option<&Range> {
+        None
+    }
 }
 
 /// `is_valid` of a validator implementing `validate`.
@@ -384,6 +392,9 @@ macro_rules! forward_validator {
             }
             fn rule_description(&self, index: usize) -> Option<String> {
                 (**self).rule_description(index)
+            }
+            fn as_range(&self) -> Option<&Range> {
+                (**self).as_range()
             }
         }
     )*};

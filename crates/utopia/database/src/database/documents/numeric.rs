@@ -2,6 +2,7 @@
 //! numeric helpers the writes share (`getNumericResult()`,
 //! `getNativeNumber()`, `declaredAttribute()`, `numericAttribute()`,
 //! `isDeclaredInteger()`, `assertIntegerChange()`, `integerBound()`,
+//! `tighterMaximum()`, `tighterMinimum()`, `formatRange()`,
 //! `assertPositiveChange()`, `roundOperators()`).
 
 use std::cmp::Ordering;
@@ -268,6 +269,8 @@ impl Database {
                 bound = Some(integer_bound(&round(rounding, b), name)?);
             }
         }
+        // The column's own range bounds the change too (8.3.6).
+        let bound = tighter_bound(bound, declared.as_ref(), increase)?;
         let integer = numeric_attribute.as_ref().is_some_and(Attribute::is_integer);
         let zero = matches!(value, Value::Int(0));
 
@@ -357,11 +360,22 @@ impl Database {
                         let native = native_number(value)?;
                         if increase { native } else { negate(&native) }
                     };
+                    let bounded = limit.is_some();
                     let (min, max) = if increase { (None, limit) } else { (limit, None) };
-                    self.inner
+                    let changed = self
+                        .inner
                         .adapter
                         .increase_document_attribute(collection, id, attribute, change, &updated_at, min, max)
                         .await?;
+                    // The write's own condition left the row unchanged: the
+                    // stored value crossed the bound meanwhile (8.3.6).
+                    if !changed
+                        && bounded
+                        && let Some(b) = bound
+                    {
+                        let which = if increase { "maximum" } else { "minimum" };
+                        return Err(Error::limit(format!("Attribute value exceeds {which} limit: {}", text(b))));
+                    }
 
                     self.purge_cached_document_internal(collection.id(), Some(id)).await?;
                     self.queue_document_purge(collection.id(), id).await?;
@@ -433,6 +447,62 @@ impl Database {
 /// The attribute of `collection` declared as `key` (`declaredAttribute()`).
 pub(crate) fn declared_attribute(collection: &Collection, key: &str) -> Result<Option<Attribute>> {
     Ok(collection.attributes()?.iter().find(|a| a.key == key).cloned())
+}
+
+/// The bound an increase (its maximum) or a decrease (its minimum) is held
+/// to: the tighter of the one given and the one the attribute's format
+/// holds it to (`tighterMaximum()`, `tighterMinimum()`, 8.3.6). On an
+/// integer attribute the format's bound is floored (maximum) or ceiled
+/// (minimum).
+///
+/// Fails as [`integer_bound`] does.
+pub(crate) fn tighter_bound(
+    bound: Option<Value>,
+    attribute: Option<&Attribute>,
+    increase: bool,
+) -> Result<Option<Value>> {
+    let Some(range) = format_range(attribute)? else { return Ok(bound) };
+    let limit = match if increase { range.max() } else { range.min() } {
+        php_std::value::Number::Int(i) => Value::Int(i),
+        php_std::value::Number::Float(f) if f.is_finite() => Value::Float(f),
+        php_std::value::Number::Float(_) => return Ok(bound),
+    };
+    if is_declared_integer(attribute) {
+        let (rounding, name) = if increase { (Rounding::Floor, "Max") } else { (Rounding::Ceil, "Min") };
+        let limit = integer_bound(&round(rounding, &limit), name)?;
+        return Ok(Some(match bound {
+            Some(b) => {
+                let ordering = compare(&limit, &b)?;
+                let tighter = if increase { ordering == Ordering::Less } else { ordering == Ordering::Greater };
+                if tighter { limit } else { b }
+            }
+            None => limit,
+        }));
+    }
+    Ok(Some(match bound {
+        Some(b) => {
+            let native = native_number(&b)?;
+            // `$limit < $max`, and `$limit > $min` as `$min < $limit`.
+            let tighter = if increase { limit.compare(&native) < 0 } else { native.compare(&limit) < 0 };
+            if tighter { limit } else { b }
+        }
+        None => limit,
+    }))
+}
+
+/// The range an attribute's format holds its values to, when its format
+/// validator is a [`utopia_validators::Range`], as the `intRange`,
+/// `bigintRange` and `floatRange` formats Appwrite registers are
+/// (`formatRange()`).
+fn format_range(attribute: Option<&Attribute>) -> Result<Option<utopia_validators::Range>> {
+    let Some(attribute) = attribute else { return Ok(None) };
+    let Some(format) = &attribute.format else { return Ok(None) };
+    if !crate::validator::structure::formats::has(&format.name, attribute.kind) {
+        return Ok(None);
+    }
+    let registered = crate::validator::structure::formats::get(&format.name, attribute.kind)?;
+    let validator = (registered.factory)(&attribute.to_document()?.array_copy());
+    Ok(utopia_validators::Validator::as_range(&*validator).copied())
 }
 
 /// Whether `attribute` is a single-valued integer (`isDeclaredInteger()`).

@@ -581,8 +581,8 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
     // ----- Increments -----
 
     /// `increaseDocumentAttribute()`: exact for integers (and integer
-    /// strings) at any size; nothing changes when the stored value is below
-    /// `min` or above `max`.
+    /// strings) at any size; nothing changes, and false is returned (8.3.6),
+    /// when the stored value is below `min` or above `max`.
     #[allow(clippy::too_many_arguments)]
     pub(super) async fn increase(
         &self,
@@ -613,12 +613,12 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
                 if let Some(min) = &min
                     && BigInt::compare(&current, operand(min)?)?.is_lt()
                 {
-                    return Ok(true);
+                    return Ok(false);
                 }
                 if let Some(max) = &max
                     && BigInt::compare(&current, operand(max)?)?.is_gt()
                 {
-                    return Ok(true);
+                    return Ok(false);
                 }
                 Value::from(BigInt::add(&current, &value)?)
             } else {
@@ -627,12 +627,12 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Redis<C> {
                 if let Some(min) = &min
                     && super::operators::lt(&current, min)
                 {
-                    return Ok(true);
+                    return Ok(false);
                 }
                 if let Some(max) = &max
                     && super::operators::lt(max, &current)
                 {
-                    return Ok(true);
+                    return Ok(false);
                 }
                 super::operators::add_values(&current, &value)
             };
