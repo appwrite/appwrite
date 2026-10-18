@@ -336,6 +336,27 @@ final class S3Test extends TestCase
         );
     }
 
+    private function objectListing(string ...$keys): Response
+    {
+        $body = '<ListBucketResult><KeyCount>' . \count($keys) . '</KeyCount><IsTruncated>false</IsTruncated>';
+        foreach ($keys as $key) {
+            $body .= '<Contents><Key>' . htmlspecialchars($key, ENT_XML1) . '</Key><Size>1</Size></Contents>';
+        }
+        $body .= '</ListBucketResult>';
+
+        return $this->xml($body);
+    }
+
+    /**
+     * @return array<int|string, mixed>
+     */
+    private function queryOf(RequestInterface $request): array
+    {
+        parse_str($request->getUri()->getQuery(), $parameters);
+
+        return $parameters;
+    }
+
     private function slowDown(): Response
     {
         $body = '<?xml version="1.0" encoding="UTF-8"?><Error><Code>SlowDown</Code><Message>Please reduce your request rate.</Message></Error>';
@@ -725,6 +746,101 @@ final class S3Test extends TestCase
         $this->assertSame('root/a.txt', $list->files[0]->path);
         $this->assertSame(11, $list->files[0]->size);
         $this->assertNull($list->cursor);
+    }
+
+    public function testRecursiveDeleteFollowsTheContinuationToken(): void
+    {
+        $page = '<ListBucketResult><KeyCount>1</KeyCount><IsTruncated>true</IsTruncated><NextContinuationToken>page-2</NextContinuationToken>'
+            . '<Contents><Key>root/a/1.txt</Key><Size>1</Size></Contents></ListBucketResult>';
+        $client = new ScriptedClient([
+            new Response(204),
+            $this->xml($page),
+            new Response(200),
+            $this->objectListing('root/a/2.txt'),
+            new Response(200),
+        ]);
+
+        $this->assertTrue($this->device($client)->delete('/root/a', true));
+
+        $this->assertCount(5, $client->requests);
+        [, $first, $firstBatch, $second, $secondBatch] = $client->requests;
+        $this->assertSame('GET', $first->getMethod());
+        $this->assertArrayNotHasKey('continuation-token', $this->queryOf($first));
+        $this->assertSame('GET', $second->getMethod());
+        $this->assertSame('page-2', $this->queryOf($second)['continuation-token'] ?? null);
+        $this->assertSame('root/a/', $this->queryOf($second)['prefix'] ?? null);
+
+        foreach ([[$firstBatch, ['root/a/1.txt']], [$secondBatch, ['root/a/2.txt']]] as [$batch, $expected]) {
+            $this->assertSame('POST', $batch->getMethod());
+            $xml = simplexml_load_string((string) $batch->getBody());
+            $this->assertNotFalse($xml);
+            $keys = [];
+            foreach ($xml->Object as $object) {
+                $keys[] = (string) $object->Key;
+            }
+            $this->assertSame($expected, $keys, 'each batch deletes the keys of its own page');
+        }
+    }
+
+    public function testAnEmptyTruncatedPageDoesNotEndTheDelete(): void
+    {
+        // S3 may answer a page with no keys and still hand back a token for the next one.
+        $empty = '<ListBucketResult><KeyCount>0</KeyCount><IsTruncated>true</IsTruncated><NextContinuationToken>page-2</NextContinuationToken></ListBucketResult>';
+        $client = new ScriptedClient([
+            $this->xml($empty),
+            $this->objectListing('root/a/1.txt'),
+            new Response(200),
+        ]);
+
+        $this->assertTrue($this->device($client)->deletePath('a'));
+
+        $this->assertCount(3, $client->requests);
+        [, $second, $batch] = $client->requests;
+        $this->assertSame('GET', $second->getMethod());
+        $this->assertSame('page-2', $this->queryOf($second)['continuation-token'] ?? null);
+        $this->assertSame('POST', $batch->getMethod());
+        $xml = simplexml_load_string((string) $batch->getBody());
+        $this->assertNotFalse($xml);
+        $this->assertSame('root/a/1.txt', (string) $xml->Object->Key);
+    }
+
+    /**
+     * @return \Iterator<string, array{list<string>, string}>
+     */
+    public static function unfollowableListings(): \Iterator
+    {
+        // A 200 that is not a ListObjectsV2 result, such as a bucket listing from a misrouted request.
+        yield 'not a ListObjectsV2 result' => [
+            ['<ListAllMyBucketsResult><Owner><ID>owner</ID></Owner><Buckets></Buckets></ListAllMyBucketsResult>'],
+            'Unexpected S3 list response for prefix root/a/',
+        ];
+        // A ListObjects V1 answer carries NextMarker, never NextContinuationToken.
+        yield 'truncated without a continuation token' => [
+            ['<ListBucketResult><IsTruncated>true</IsTruncated><NextMarker>root/a/1.txt</NextMarker></ListBucketResult>'],
+            'Truncated S3 list response without a continuation token for prefix root/a/',
+        ];
+        yield 'the same continuation token twice' => [
+            array_fill(0, 2, '<ListBucketResult><KeyCount>0</KeyCount><IsTruncated>true</IsTruncated><NextContinuationToken>page-2</NextContinuationToken></ListBucketResult>'),
+            'S3 list response repeated the continuation token for prefix root/a/',
+        ];
+    }
+
+    /**
+     * @param  list<string>  $pages
+     */
+    #[DataProvider('unfollowableListings')]
+    public function testAListingThatCannotBeFollowedIsAnError(array $pages, string $message): void
+    {
+        $client = new ScriptedClient(array_map($this->xml(...), $pages));
+
+        try {
+            $this->device($client)->deletePath('a');
+            self::fail('A listing that cannot be followed must not report the directory as deleted');
+        } catch (RemoteException $error) {
+            $this->assertSame($message, $error->getMessage());
+        }
+
+        $this->assertSame(array_fill(0, \count($pages), 'GET'), array_map(fn (RequestInterface $request): string => $request->getMethod(), $client->requests), 'nothing is deleted');
     }
 
     public function testFinalizeCompletesOverAnExistingObject(): void
