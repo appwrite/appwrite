@@ -717,7 +717,7 @@ final class UsageCustomServerTest extends Scope
         $userId = $response['body']['$id'];
 
         $this->assertEventually(function () use ($usageHeaders) {
-            $this->assertEquals(1, $this->countRequests($usageHeaders, 'POST'), 'the user creation must be counted before the outage starts');
+            $this->assertSame(1, $this->countRequests($usageHeaders, 'POST'), 'the user creation must be counted before the outage starts');
         }, 60_000, 500);
 
         $this->clickhouse('ALTER TABLE ' . self::USAGE_EVENTS_TABLE . ' ADD CONSTRAINT appwrite_e2e_outage CHECK 0 = 1');
@@ -734,7 +734,7 @@ final class UsageCustomServerTest extends Scope
         }
 
         $this->assertEventually(function () use ($usageHeaders) {
-            $this->assertEquals(1, $this->countRequests($usageHeaders, 'PATCH'), 'a request made while usage inserts fail must be counted once they succeed again');
+            $this->assertSame(1, $this->countRequests($usageHeaders, 'PATCH'), 'a request made while usage inserts fail must be counted once they succeed again');
         }, 90_000, 1_000);
     }
 
