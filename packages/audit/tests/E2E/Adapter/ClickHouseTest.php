@@ -971,6 +971,15 @@ final class ClickHouseTest extends TestCase
         );
     }
 
+    public function testCursorFromASlimProjectionPagesWithoutAnOrder(): void
+    {
+        $ids = $this->seedTiedLogs('cursor/slim');
+
+        $visited = $this->walkAfter([Query::equal('resource', 'cursor/slim'), Query::select(['event'])]);
+
+        $this->assertEqualsCanonicalizing($ids, $visited);
+    }
+
     public function testFindWithoutOrderReturnsNewestFirst(): void
     {
         $this->audit->logBatch($this->applyRequiredAttributesToBatch([

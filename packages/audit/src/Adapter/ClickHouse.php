@@ -930,9 +930,11 @@ class ClickHouse extends SQL
             throw new Exception('orderRandom cannot be combined with orderAsc/orderDesc');
         }
 
+        $orderAttributes = $parsed['randomOrder'] ? [] : $this->resolveOrder($parsed['orderAttributes']);
+
         // Build SELECT clause — respect Query::select if provided, otherwise
         // fall back to the full column list.
-        $selectColumns = $this->buildProjection($parsed['select'] ?? null);
+        $selectColumns = $this->buildProjection($parsed['select'] ?? null, array_column($orderAttributes, 'attribute'));
 
         $builder = $this->newBuilder()
             ->from($qualifiedTable)
@@ -947,8 +949,6 @@ class ClickHouse extends SQL
         if ($parsed['randomOrder']) {
             $builder->sortRandom();
         } else {
-            $orderAttributes = $this->resolveOrder($parsed['orderAttributes']);
-
             if (isset($parsed['cursor'])) {
                 $cursorWhere = $this->buildCursorWhere($orderAttributes, $parsed['cursor'], $cursorDirection ?? 'after', []);
                 $builder->whereRaw($cursorWhere['clause']);
@@ -988,12 +988,14 @@ class ClickHouse extends SQL
      * `$id` field on the `Log` model. When `sharedTables` is enabled, the
      * `tenant` column is also always projected — it's metadata callers expect
      * on every row and the full-projection path already includes it. Callers
-     * requesting a slim projection don't have to remember either.
+     * requesting a slim projection don't have to remember either. The order
+     * columns are projected too, so any returned row can be the next cursor.
      *
      * @param  list<string>|null  $select
+     * @param  list<string>  $orderColumns
      * @throws Exception
      */
-    private function buildProjection(?array $select): string
+    private function buildProjection(?array $select, array $orderColumns): string
     {
         if ($select === null) {
             return $this->getSelectColumns();
@@ -1007,6 +1009,7 @@ class ClickHouse extends SQL
         if ($this->sharedTables) {
             $forced[] = 'tenant';
         }
+        array_push($forced, ...$orderColumns);
 
         $columns = [];
         $seen = [];
