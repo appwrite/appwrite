@@ -19,6 +19,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Schedule\Clock\Test as TestClock;
 use Utopia\Schedule\Scheduler;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 require_once __DIR__ . '/../../../../app/init.php';
 
@@ -74,6 +75,7 @@ final class DeletesTest extends TestCase
                     deviceForSites: $device,
                     deviceForBuilds: $device,
                     deviceForCache: $device,
+                    deviceForVideos: $device,
                     certificates: $this->createStub(\Utopia\Cdn\Certificates\Provider::class),
                     executor: $this->createStub(\Executor\Executor::class),
                     executionRetention: '',
@@ -82,6 +84,7 @@ final class DeletesTest extends TestCase
                     publisherForUsage: $this->createStub(\Appwrite\Event\Publisher\Usage::class),
                     bus: new \Utopia\Bus\Bus(),
                     executionStore: $this->createStub(\Appwrite\Execution\Store::class),
+                    telemetry: new NoTelemetry(),
                 );
                 $this->assertFileDoesNotExist($oldPath);
                 $this->assertSame('replacement', file_get_contents($currentPath));

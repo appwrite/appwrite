@@ -548,8 +548,8 @@ final class MigrationVersionsTest extends TestCase
             \ob_end_clean();
         }
 
-        $this->assertTrue($database->getCollection('videos')->isEmpty());
-        $this->assertTrue($database->getCollection('videos_profiles')->isEmpty());
+        $this->assertNull($database->findCollection('videos'));
+        $this->assertNull($database->findCollection('videos_profiles'));
     }
 
     /**
