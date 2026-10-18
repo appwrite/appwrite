@@ -692,6 +692,27 @@ trait VideoCustom
     }
 
     /**
+     * Create an empty caption lock file so cleanup paths can be asserted.
+     */
+    public function plantCaptionLock(string $videoId, string $captionId): string
+    {
+        if (!\defined('APP_STORAGE_VIDEOS_TMP')) {
+            \define('APP_STORAGE_VIDEOS_TMP', '/storage/videos-tmp');
+        }
+
+        $path = Base::captionLockPath($videoId, $captionId);
+        $directory = \dirname($path);
+        if (!\is_dir($directory) && !\mkdir($directory, 0755, true) && !\is_dir($directory)) {
+            $this->fail('Could not create caption lock directory: ' . $directory);
+        }
+        if (\file_put_contents($path, '') === false) {
+            $this->fail('Could not plant caption lock: ' . $path);
+        }
+
+        return $path;
+    }
+
+    /**
      * Job folders for a video: `{stamp}~{projectId}~{videoId}~…` under jobs/.
      *
      * @return list<string>

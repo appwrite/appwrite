@@ -878,6 +878,89 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
+     * Maintenance parks in-flight captions whose `$updatedAt` is older than
+     * `_APP_MAINTENANCE_RETENTION_RENDITION`. Fresh in-flight and ready rows
+     * stay put even when their `$updatedAt` is old.
+     */
+    public function testMaintenanceAbortsStaleCaptions(): void
+    {
+        $videoId = $this->createVideo();
+        $projectId = $this->getProject()['$id'];
+        $bucketId = $this->getVideoBucket()['$id'];
+        $fileId = $this->getCaptionFile()['$id'];
+
+        // Park before the caption worker claims the row, then age only the stale one.
+        $stale = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
+            'bucketId' => $bucketId,
+            'fileId' => $fileId,
+            'name' => 'Stale',
+            'code' => 'eng',
+        ]);
+        $this->assertEquals(201, $stale['headers']['status-code']);
+        $staleId = $stale['body']['$id'];
+        $this->timeTravelCaption($projectId, $staleId, status: 'started', updatedAt: '2020-01-01T00:00:00Z');
+
+        $fresh = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
+            'bucketId' => $bucketId,
+            'fileId' => $fileId,
+            'name' => 'Fresh',
+            'code' => 'fra',
+        ]);
+        $this->assertEquals(201, $fresh['headers']['status-code']);
+        $freshId = $fresh['body']['$id'];
+        $this->timeTravelCaption($projectId, $freshId, status: 'started');
+
+        $ready = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
+            'bucketId' => $bucketId,
+            'fileId' => $fileId,
+            'name' => 'Ready',
+            'code' => 'heb',
+            'default' => true,
+        ]);
+        $this->assertEquals(201, $ready['headers']['status-code']);
+        $readyId = $ready['body']['$id'];
+        $readyBody = $this->waitForCaptionTerminalState($videoId, $readyId);
+        $this->assertEquals('ready', $readyBody['status']);
+        $this->timeTravelCaption($projectId, $readyId, updatedAt: '2020-01-01T00:00:00Z');
+
+        $staleLock = $this->plantCaptionLock($videoId, $staleId);
+        $freshLock = $this->plantCaptionLock($videoId, $freshId);
+        $this->assertFileExists($staleLock);
+        $this->assertFileExists($freshLock);
+
+        $stdout = '';
+        $stderr = '';
+        $code = Console::execute(
+            (new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'),
+            '',
+            $stdout,
+            $stderr
+        );
+        $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
+
+        $this->assertEventually(function () use ($videoId, $staleId, $freshId, $readyId, $staleLock, $freshLock) {
+            $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers());
+            $this->assertEquals(200, $list['headers']['status-code']);
+            $byId = \array_column($list['body']['captions'], null, '$id');
+
+            $this->assertArrayHasKey($staleId, $byId);
+            $this->assertEquals('aborted', $byId[$staleId]['status']);
+            $this->assertFileDoesNotExist($staleLock);
+
+            $this->assertArrayHasKey($freshId, $byId);
+            $this->assertEquals('started', $byId[$freshId]['status']);
+            $this->assertFileExists($freshLock);
+
+            $this->assertArrayHasKey($readyId, $byId);
+            $this->assertEquals('ready', $byId[$readyId]['status']);
+        }, 30000);
+
+        if (\is_file($freshLock)) {
+            \unlink($freshLock);
+        }
+    }
+
+    /**
      * A project accepts VIDEO_LIMIT video creates per ENCODE_PERIOD. The next
      * create is rate-limited. Uses a fresh project so exhausting the project-scoped
      * counter does not break later createVideo() calls in this suite.

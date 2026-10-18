@@ -555,6 +555,8 @@ return [
         'indexes' => [
             Index::key(key: '_key_videoId', attributes: ['videoId']),
             Index::key(key: '_key_videoInternalId', attributes: ['videoInternalId']),
+            Index::key(key: '_key_status', attributes: ['status']),
+            Index::key(key: '_key_status_updatedAt', attributes: ['status', '$updatedAt']),
         ],
     ],
 

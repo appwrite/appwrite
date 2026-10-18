@@ -571,6 +571,14 @@ class Videos extends Action
 
             $stage = 'persist';
             $phaseStart = \microtime(true);
+            // Maintenance may park the row as aborted while this job runs.
+            $current = $dbForProject->getDocument('videos_captions', $caption->getId());
+            if ($current->isEmpty() || $current->getAttribute('status') !== Base::STATUS_STARTED) {
+                $outcome = 'halted';
+                $caption = $current;
+                return;
+            }
+
             $caption = $this->persistCaptionVtt(
                 $dbForProject,
                 $deviceForVideos,
@@ -588,7 +596,14 @@ class Videos extends Action
             Span::add('error.stage', $stage);
             // Only a run that claimed the row may park it as error — a lost
             // claim must not overwrite a live job or resurrect a deleted caption.
-            if ($claimed) {
+            // Do not overwrite aborted/error parks from maintenance.
+            $current = $dbForProject->getDocument('videos_captions', $caption->getId());
+            $status = $current->isEmpty() ? '' : (string) $current->getAttribute('status', '');
+            $mayPark = $claimed
+                ? !\in_array($status, [Base::STATUS_ABORTED, Base::STATUS_ERROR], true)
+                : $status === Base::STATUS_PENDING;
+
+            if (!$current->isEmpty() && $mayPark) {
                 $caption = $dbForProject->updateDocument(
                     'videos_captions',
                     $caption->getId(),

@@ -377,6 +377,7 @@ class Deletes extends Action
                 $this->deleteOldDeployments($publisherForDeletes, $project, $getProjectDB);
                 $this->updateProcessingMigrations($project, $getProjectDB);
                 $this->abortStaleRenditions($project, $getProjectDB, $telemetry);
+                $this->abortStaleCaptions($project, $getProjectDB, $telemetry);
                 break;
             case DELETE_TYPE_REPORT:
                 $this->deleteReport($dbForPlatform, $project, $document);
@@ -661,6 +662,75 @@ class Deletes extends Action
         if ($aborted > 0) {
             try {
                 $telemetry->createCounter('worker.videos.renditions.aborted', null, 'Renditions parked by the maintenance sweep')->add($aborted);
+            } catch (Throwable) {
+                // Metrics are best-effort.
+            }
+        }
+    }
+
+    /**
+     * Park in-flight captions that have not progressed past the retention window.
+     *
+     * Caption already stops when the row leaves `started` and will not overwrite
+     * `aborted`, so a live job that outlives this pass still settles safely.
+     */
+    private function abortStaleCaptions(Document $project, callable $getProjectDB, Telemetry $telemetry): void
+    {
+        if ($project->getId() === 'console') {
+            return;
+        }
+
+        Console::info('Abort stale video captions');
+
+        /** @var Database $dbForProject */
+        $dbForProject = $getProjectDB($project);
+
+        $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '86400');
+        $date = DateTime::addSeconds(new \DateTime(), -1 * $retention);
+
+        $queries = [
+            Query::select([...$this->selects, 'status', 'videoId']),
+            Query::equal('status', [
+                VideosBase::STATUS_PENDING,
+                VideosBase::STATUS_STARTED,
+            ]),
+            Query::lessThanEqual('$updatedAt', $date),
+        ];
+
+        $aborted = 0;
+        $failed = 0;
+
+        $this->listByGroup(
+            'videos_captions',
+            $queries,
+            $dbForProject,
+            function (Document $caption) use ($dbForProject, $project, &$aborted, &$failed) {
+                try {
+                    $dbForProject->updateDocument('videos_captions', $caption->getId(), new Document([
+                        'status' => VideosBase::STATUS_ABORTED,
+                    ]));
+                    VideosBase::removeLock(VideosBase::captionLockPath($caption->getAttribute('videoId'), $caption->getId()));
+                    $aborted++;
+                    $age = \max(0, \time() - (int) \strtotime((string) $caption->getUpdatedAt()));
+                    Console::info(
+                        'Aborted stale caption ' . $caption->getId()
+                        . ' for project ' . $project->getId()
+                        . ' status=' . $caption->getAttribute('status', '')
+                        . ' age=' . $age . 's'
+                    );
+                } catch (Throwable $th) {
+                    $failed++;
+                    Console::error("Failed to abort stale caption {$caption->getId()} for project {$project->getId()}: " . $th->getMessage());
+                }
+            }
+        );
+
+        Span::add('videos.captions.aborted', $aborted);
+        Span::add('videos.captions.abort_failed', $failed);
+
+        if ($aborted > 0) {
+            try {
+                $telemetry->createCounter('worker.videos.captions.aborted', null, 'Captions parked by the maintenance sweep')->add($aborted);
             } catch (Throwable) {
                 // Metrics are best-effort.
             }

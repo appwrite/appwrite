@@ -89,7 +89,7 @@ class VideoCaption extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Packaging status: one of `pending`, `started`, `ready` or `error`.',
+                'description' => 'Packaging status: one of `pending`, `started`, `ready`, `error` or `aborted`.',
                 'default' => '',
                 'example' => 'ready',
             ])
