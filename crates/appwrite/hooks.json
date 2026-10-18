@@ -175,6 +175,18 @@
       }
     },
     {
+      "id": "usage-publish",
+      "title": "Request completed and usage publishing",
+      "description": "After every non-console `api` request: dispatches RequestCompleted (whose usage listener adds the request's metrics) unless the user is privileged, then publishes the usage context without the metrics the API key disables (suffix match).",
+      "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "Publish usage metrics if context has data" },
+      "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/shutdown/usage.rs",
+        "status": "done",
+        "note": "Main split this out of the main `api` shutdown hook (2e5a29c6509); Rust already published the same metrics there. `appwrite diff` compares every usage message.",
+        "where": [{ "file": "crates/appwrite/core/src/platform/hooks/shutdown/usage.rs", "anchor": "async fn usage" }]
+      }
+    },
+    {
       "id": "admin-console",
       "title": "No admin mode on the console",
       "description": "Refuses admin mode for the console project.",
