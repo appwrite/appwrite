@@ -445,15 +445,17 @@ final class VideosCustomServerTest extends Scope
         $xywh = \explode(',', \explode("\n", \explode('#xywh=', (string) $response['body'], 2)[1], 2)[0]);
         $this->assertSame(480, (int) $xywh[2], 'timeline thumbnails should be 480px wide');
 
-        $this->assertSame(
-            1,
-            \preg_match('~thumbnails/([a-zA-Z0-9]+)\?project=~', (string) $response['body'], $thumbnailMatch)
+        $thumbnailId = $this->playlistToken(
+            (string) $response['body'],
+            'thumbnails/',
+            '?project=',
+            'Timeline did not reference a thumbnail'
         );
         // Private video: guest + ?project= alone is not enough for document ACL.
         // Headerless location-auth is covered on public videos in the client suite.
         $thumbnail = $this->client->call(
             Client::METHOD_GET,
-            '/videos/' . $videoId . '/thumbnails/' . $thumbnailMatch[1] . '?project=' . $projectId,
+            '/videos/' . $videoId . '/thumbnails/' . $thumbnailId . '?project=' . $projectId,
             $this->headers()
         );
         $this->assertEquals(200, $thumbnail['headers']['status-code']);
@@ -1437,10 +1439,12 @@ final class VideosCustomServerTest extends Scope
         $hlsProbe = $this->assertHlsLadderPlayable((string) $master['body']);
         $this->assertGreaterThanOrEqual(2, $hlsProbe['variants'], 'Expected at least two HLS video rungs');
 
-        if (\preg_match('#renditions/' . \preg_quote($renditionId, '#') . '/streams/(\d+)/playlist\.m3u8#', $master['body'], $matches) !== 1) {
-            $this->fail('HLS master playlist did not reference a stream playlist');
-        }
-        $streamId = $matches[1];
+        $streamId = $this->playlistToken(
+            (string) $master['body'],
+            'renditions/' . $renditionId . '/streams/',
+            '/playlist.m3u8',
+            'HLS master playlist did not reference a stream playlist'
+        );
 
         $variant = $this->client->call(
             Client::METHOD_GET,
@@ -1455,10 +1459,12 @@ final class VideosCustomServerTest extends Scope
         $this->assertSame(1, \substr_count($variant['body'], '#EXT-X-MEDIA-SEQUENCE'));
         $this->assertStringNotContainsString('#EXT-X-ALLOW-CACHE', (string) $variant['body']);
 
-        if (\preg_match('#/segments/([a-zA-Z0-9]+)(?:\?|$)#', $variant['body'], $segmentMatch) !== 1) {
-            $this->fail('HLS variant playlist did not reference a segment');
-        }
-        $segmentId = $segmentMatch[1];
+        $segmentId = $this->playlistToken(
+            (string) $variant['body'],
+            '/segments/',
+            '?',
+            'HLS variant playlist did not reference a segment'
+        );
 
         $segment = $this->client->call(
             Client::METHOD_GET,
@@ -1523,7 +1529,7 @@ final class VideosCustomServerTest extends Scope
 
         $this->assertSame(
             1,
-            \preg_match_all('/contentType="video"/', (string) $mpd['body']),
+            \substr_count((string) $mpd['body'], 'contentType="video"'),
             'Expected one video AdaptationSet for ABR'
         );
         $this->assertStringContainsString('width="640"', (string) $mpd['body']);
@@ -1559,10 +1565,12 @@ final class VideosCustomServerTest extends Scope
             $cmafMaster['body']
         );
 
-        if (\preg_match('#renditions/' . \preg_quote($cmafRenditionId, '#') . '/streams/(\d+)/playlist\.m3u8#', $cmafMaster['body'], $cmafStreamMatch) !== 1) {
-            $this->fail('CMAF HLS master did not reference a stream playlist');
-        }
-        $cmafStreamId = $cmafStreamMatch[1];
+        $cmafStreamId = $this->playlistToken(
+            (string) $cmafMaster['body'],
+            'renditions/' . $cmafRenditionId . '/streams/',
+            '/playlist.m3u8',
+            'CMAF HLS master did not reference a stream playlist'
+        );
 
         $cmafVariant = $this->client->call(
             Client::METHOD_GET,
@@ -1577,10 +1585,12 @@ final class VideosCustomServerTest extends Scope
             $cmafVariant['body']
         );
 
-        if (\preg_match('#/segments/([a-zA-Z0-9]+)(?:\?|$)#', $cmafVariant['body'], $cmafSegmentMatch) !== 1) {
-            $this->fail('CMAF stream playlist did not reference a segment');
-        }
-        $cmafSegmentId = $cmafSegmentMatch[1];
+        $cmafSegmentId = $this->playlistToken(
+            (string) $cmafVariant['body'],
+            '/segments/',
+            '?',
+            'CMAF stream playlist did not reference a segment'
+        );
 
         $cmafSegment = $this->client->call(
             Client::METHOD_GET,
@@ -1662,13 +1672,15 @@ final class VideosCustomServerTest extends Scope
             '/thumbnails\/[a-zA-Z0-9]+\?project=' . \preg_quote($projectId, '/') . '#xywh=/',
             (string) $timeline['body']
         );
-        $this->assertSame(
-            1,
-            \preg_match('~thumbnails/([a-zA-Z0-9]+)\?project=~', (string) $timeline['body'], $thumbnailMatch)
+        $thumbnailId = $this->playlistToken(
+            (string) $timeline['body'],
+            'thumbnails/',
+            '?project=',
+            'Timeline did not reference a thumbnail'
         );
         $thumbnail = $this->client->call(
             Client::METHOD_GET,
-            '/videos/' . $videoId . '/thumbnails/' . $thumbnailMatch[1] . '?project=' . $projectId,
+            '/videos/' . $videoId . '/thumbnails/' . $thumbnailId . '?project=' . $projectId,
             $this->headers()
         );
         $this->assertEquals(200, $thumbnail['headers']['status-code']);
@@ -1741,10 +1753,12 @@ final class VideosCustomServerTest extends Scope
         $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoA . '/outputs/hls/master.m3u8', $this->headers());
         $this->assertEquals(200, $master['headers']['status-code']);
 
-        if (\preg_match('#renditions/' . \preg_quote($renditionId, '#') . '/streams/(\d+)/playlist\.m3u8#', $master['body'], $streamMatch) !== 1) {
-            $this->fail('HLS master playlist did not reference a stream playlist');
-        }
-        $streamId = $streamMatch[1];
+        $streamId = $this->playlistToken(
+            (string) $master['body'],
+            'renditions/' . $renditionId . '/streams/',
+            '/playlist.m3u8',
+            'HLS master playlist did not reference a stream playlist'
+        );
 
         $variant = $this->client->call(
             Client::METHOD_GET,
@@ -1753,10 +1767,12 @@ final class VideosCustomServerTest extends Scope
         );
         $this->assertEquals(200, $variant['headers']['status-code']);
 
-        if (\preg_match('#/segments/([a-zA-Z0-9]+)(?:\?|$)#', $variant['body'], $segmentMatch) !== 1) {
-            $this->fail('HLS variant playlist did not reference a segment');
-        }
-        $segmentId = $segmentMatch[1];
+        $segmentId = $this->playlistToken(
+            (string) $variant['body'],
+            '/segments/',
+            '?',
+            'HLS variant playlist did not reference a segment'
+        );
 
         $captions = $this->client->call(
             Client::METHOD_GET,
@@ -1765,18 +1781,21 @@ final class VideosCustomServerTest extends Scope
         );
         $this->assertEquals(200, $captions['headers']['status-code']);
 
-        if (\preg_match('#/segments/([a-zA-Z0-9]+)(?:\?|$)#', $captions['body'], $captionSegmentMatch) !== 1) {
-            $this->fail('Captions playlist did not reference a segment');
-        }
-        $captionSegmentId = $captionSegmentMatch[1];
+        $captionSegmentId = $this->playlistToken(
+            (string) $captions['body'],
+            '/segments/',
+            '?',
+            'Captions playlist did not reference a segment'
+        );
 
         $timeline = $this->waitForTimeline($videoA);
         $this->assertEquals(200, $timeline['headers']['status-code']);
-        $this->assertSame(
-            1,
-            \preg_match('~thumbnails/([a-zA-Z0-9]+)\?project=~', (string) $timeline['body'], $thumbnailMatch)
+        $thumbnailId = $this->playlistToken(
+            (string) $timeline['body'],
+            'thumbnails/',
+            '?project=',
+            'Timeline did not reference a thumbnail'
         );
-        $thumbnailId = $thumbnailMatch[1];
 
         $videoB = $this->createVideo();
 
@@ -1875,10 +1894,12 @@ final class VideosCustomServerTest extends Scope
         $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', $this->headers());
         $this->assertEquals(200, $master['headers']['status-code']);
 
-        if (\preg_match('#renditions/' . \preg_quote($hlsId, '#') . '/streams/(\d+)/playlist\.m3u8#', $master['body'], $streamMatch) !== 1) {
-            $this->fail('HLS master playlist did not reference a stream playlist');
-        }
-        $streamId = $streamMatch[1];
+        $streamId = $this->playlistToken(
+            (string) $master['body'],
+            'renditions/' . $hlsId . '/streams/',
+            '/playlist.m3u8',
+            'HLS master playlist did not reference a stream playlist'
+        );
 
         $variant = $this->client->call(
             Client::METHOD_GET,
@@ -1887,10 +1908,12 @@ final class VideosCustomServerTest extends Scope
         );
         $this->assertEquals(200, $variant['headers']['status-code']);
 
-        if (\preg_match('#/segments/([a-zA-Z0-9]+)(?:\?|$)#', $variant['body'], $segmentMatch) !== 1) {
-            $this->fail('HLS variant playlist did not reference a segment');
-        }
-        $segmentId = $segmentMatch[1];
+        $segmentId = $this->playlistToken(
+            (string) $variant['body'],
+            '/segments/',
+            '?',
+            'HLS variant playlist did not reference a segment'
+        );
         $segmentPath = '/videos/' . $videoId . '/outputs/hls/renditions/' . $hlsId . '/segments/' . $segmentId;
 
         $unknown = $this->client->call(
@@ -1935,10 +1958,12 @@ final class VideosCustomServerTest extends Scope
         $mpd = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/dash/master.mpd', $this->headers());
         $this->assertEquals(200, $mpd['headers']['status-code']);
 
-        if (\preg_match('#media="([a-zA-Z0-9]+)#', (string) $mpd['body'], $dashSegment) !== 1) {
-            $this->fail('DASH manifest did not reference a segment');
-        }
-        $dashSegmentId = $dashSegment[1];
+        $dashSegmentId = $this->playlistToken(
+            (string) $mpd['body'],
+            'media="',
+            '?',
+            'DASH manifest did not reference a segment'
+        );
 
         foreach ([
             '/videos/' . $videoId . '/outputs/hls/renditions/' . $dashId . '/segments/' . $dashSegmentId,
@@ -1993,13 +2018,16 @@ final class VideosCustomServerTest extends Scope
             }
         }
 
-        if (\preg_match('#renditions/' . \preg_quote($hlsId, '#') . '/streams/(\d+)/playlist\.m3u8#', $hlsMaster, $streamMatch) !== 1) {
-            $this->fail('HLS master playlist did not reference a stream playlist');
-        }
+        $streamId = $this->playlistToken(
+            $hlsMaster,
+            'renditions/' . $hlsId . '/streams/',
+            '/playlist.m3u8',
+            'HLS master playlist did not reference a stream playlist'
+        );
 
         $playlist = $this->client->call(
             Client::METHOD_GET,
-            '/videos/' . $videoId . '/outputs/hls/renditions/' . $hlsId . '/streams/' . $streamMatch[1] . '/playlist.m3u8',
+            '/videos/' . $videoId . '/outputs/hls/renditions/' . $hlsId . '/streams/' . $streamId . '/playlist.m3u8',
             $this->headers()
         );
         $this->assertEquals(200, $playlist['headers']['status-code']);
@@ -2074,11 +2102,12 @@ final class VideosCustomServerTest extends Scope
         $videoId = $this->createReadyVideo()['$id'];
         $timeline = $this->waitForTimeline($videoId);
         $this->assertEquals(200, $timeline['headers']['status-code']);
-        $this->assertSame(
-            1,
-            \preg_match('~thumbnails/([a-zA-Z0-9]+)\?project=~', (string) $timeline['body'], $thumbnailMatch)
+        $thumbnailId = $this->playlistToken(
+            (string) $timeline['body'],
+            'thumbnails/',
+            '?project=',
+            'Timeline did not reference a thumbnail'
         );
-        $thumbnailId = $thumbnailMatch[1];
         $path = '/videos/' . $videoId . '/thumbnails/' . $thumbnailId;
 
         // Distinct sizes: the response cache keys on query params, not Accept,
@@ -3323,6 +3352,24 @@ final class VideosCustomServerTest extends Scope
         }
 
         return \rtrim($base, '/') . '/' . \ltrim($relative, '/');
+    }
+
+    /**
+     * The token sitting between two fixed markers in a playlist or manifest.
+     */
+    private function playlistToken(string $body, string $before, string $after, string $failure): string
+    {
+        $at = \strpos($body, $before);
+        $this->assertNotFalse($at, $failure);
+
+        $start = $at + \strlen($before);
+        $end = \strpos($body, $after, $start);
+        $this->assertNotFalse($end, $failure);
+
+        $token = \substr($body, $start, $end - $start);
+        $this->assertNotSame('', $token, $failure);
+
+        return $token;
     }
 
     /**

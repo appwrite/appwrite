@@ -748,14 +748,16 @@ final class VideosCustomClientTest extends Scope
             '/thumbnails\/[a-zA-Z0-9]+\?project=' . \preg_quote($projectId, '/') . '#xywh=/',
             (string) $guestTimeline['body']
         );
-        $this->assertSame(
-            1,
-            \preg_match('~thumbnails/([a-zA-Z0-9]+)\?project=~', (string) $guestTimeline['body'], $thumbnailMatch)
+        $thumbnailId = $this->playlistToken(
+            (string) $guestTimeline['body'],
+            'thumbnails/',
+            '?project=',
+            'Timeline did not reference a thumbnail'
         );
         // No X-Appwrite-Project: mirrors a player resolving the VTT cue URL.
         $thumbnail = $this->client->call(
             Client::METHOD_GET,
-            '/videos/' . $videoId . '/thumbnails/' . $thumbnailMatch[1] . '?project=' . $projectId,
+            '/videos/' . $videoId . '/thumbnails/' . $thumbnailId . '?project=' . $projectId,
             [
                 'content-type' => 'application/json',
             ]
