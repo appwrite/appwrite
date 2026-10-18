@@ -1039,31 +1039,34 @@ final class S3Test extends TestCase
         parse_str($client->requests[1]->getUri()->getQuery(), $query);
         $this->assertSame('root/', $query['prefix'] ?? null);
         parse_str($client->requests[2]->getUri()->getQuery(), $query);
-        $this->assertSame('root/x', $query['prefix'] ?? null);
+        $this->assertSame('root/x/', $query['prefix'] ?? null);
         $this->assertSame('delete=', $client->requests[3]->getUri()->getQuery());
         $this->assertStringContainsString('<Key>root/x/a</Key>', (string) $client->requests[3]->getBody());
         $this->assertSame('/my-bucket/root/a', $client->requests[5]->getHeaderLine('x-amz-copy-source'));
     }
 
     /**
-     * @return iterable<string, array{string, string, bool|null, string}>
+     * @return iterable<string, array{string, string, bool|null, string, string}>
      */
     public static function endpoints(): iterable
     {
-        yield 'AWS-style bucket subdomain' => ['https://my-bucket.s3.us-east-1.amazonaws.com', 'my-bucket', null, '/'];
-        yield 'dotted bucket subdomain' => ['https://my.dotted.bucket.s3.example.com', 'my.dotted.bucket', null, '/'];
-        yield 'uppercase bucket subdomain' => ['https://MY-BUCKET.S3.EXAMPLE.COM', 'my-bucket', null, '/'];
-        yield 'host named after the bucket' => ['https://assets.example.com', 'assets.example.com', null, '/'];
-        yield 'single-label host named like the bucket' => ['http://minio:9000', 'minio', null, '/minio'];
-        yield 'service host with a port' => ['http://storage.internal:9000', 'files', null, '/files'];
-        yield 'scheme-less service host' => ['storage.example.com', 'files', null, '/files'];
-        yield 'service host behind a base path' => ['https://storage.example.com/s3/', 'files', null, '/s3/files'];
-        yield 'explicitly bucket-addressed' => ['https://storage.example.com', 'files', false, '/'];
-        yield 'explicitly path-style' => ['https://b.example.com', 'b', true, '/b'];
+        yield 'AWS-style bucket subdomain' => ['https://my-bucket.s3.us-east-1.amazonaws.com', 'my-bucket', null, '/', 'my-bucket/root/x'];
+        yield 'dotted bucket subdomain' => ['https://my.dotted.bucket.s3.example.com', 'my.dotted.bucket', null, '/', 'my.dotted.bucket/root/x'];
+        yield 'uppercase bucket subdomain' => ['https://MY-BUCKET.S3.EXAMPLE.COM', 'my-bucket', null, '/', 'my-bucket/root/x'];
+        yield 'host named after the bucket' => ['https://assets.example.com', 'assets.example.com', null, '/', 'assets.example.com/root/x'];
+        yield 'single-label host named like the bucket' => ['http://minio:9000', 'minio', null, '/minio', 'root/x'];
+        yield 'service host with a port' => ['http://storage.internal:9000', 'files', null, '/files', 'root/x'];
+        yield 'scheme-less service host' => ['storage.example.com', 'files', null, '/files', 'root/x'];
+        yield 'service host behind a base path' => ['https://storage.example.com/s3/', 'files', null, '/s3/files', 'root/x'];
+        yield 'base path ending in the bucket' => ['https://storage.example.com/s3/files/', 'files', null, '/s3/files/', 'files/root/x'];
+        yield 'endpoint path naming a mixed-case bucket' => ['http://minio:9000/MyBucket/', 'MyBucket', null, '/MyBucket/', 'MyBucket/root/x'];
+        yield 'endpoint path differing from the bucket in case' => ['http://minio:9000/mybucket/', 'MyBucket', null, '/mybucket/MyBucket', 'root/x'];
+        yield 'explicitly bucket-addressed' => ['https://storage.example.com', 'files', false, '/', 'files/root/x'];
+        yield 'explicitly path-style' => ['https://b.example.com', 'b', true, '/b', 'root/x'];
     }
 
     #[DataProvider('endpoints')]
-    public function testAddressingFollowsTheEndpoint(string $host, string $bucket, ?bool $pathStyle, string $uri): void
+    public function testAddressingFollowsTheEndpoint(string $host, string $bucket, ?bool $pathStyle, string $uri, string $prefix): void
     {
         $client = new ScriptedClient([$this->xml('<ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>')]);
         $options = ['client' => $client, 'bucket' => $bucket] + ($pathStyle === null ? [] : ['pathStyle' => $pathStyle]);
@@ -1074,7 +1077,7 @@ final class S3Test extends TestCase
         $this->assertCount(1, $client->requests);
         $this->assertSame($uri, $client->requests[0]->getUri()->getPath());
         parse_str($client->requests[0]->getUri()->getQuery(), $query);
-        $this->assertSame(str_ends_with($uri, '/') ? "{$bucket}/root/x" : 'root/x', $query['prefix'] ?? null);
+        $this->assertSame($prefix, $query['prefix'] ?? null);
     }
 
     /**
@@ -1087,18 +1090,33 @@ final class S3Test extends TestCase
         yield 'bucket holding a slash' => ['my/bucket', null];
     }
 
+    /**
+     * The refusal is the outcome: a device that cannot address its bucket is never built, so there is no state to inspect.
+     */
     #[DataProvider('unaddressable')]
     public function testAddressingRefusesWhatItCannotAddress(?string $bucket, ?bool $pathStyle): void
     {
-        $client = new ScriptedClient([]);
-        $options = ['client' => $client, 'bucket' => $bucket] + ($pathStyle === null ? [] : ['pathStyle' => $pathStyle]);
+        $options = ['bucket' => $bucket] + ($pathStyle === null ? [] : ['pathStyle' => $pathStyle]);
+
+        $this->expectException(\InvalidArgumentException::class);
+        new S3('root', 'key', 'secret', 'https://storage.example.com', 'us-east-1', ...$options);
+    }
+
+    public function testDeletePathReportsObjectsTheServiceKept(): void
+    {
+        $client = new ScriptedClient([
+            $this->xml('<ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>root/x/a</Key></Contents><Contents><Key>root/x/b</Key></Contents></ListBucketResult>'),
+            $this->xml('<DeleteResult><Error><Key>root/x/b</Key><Code>AccessDenied</Code><Message>Access Denied</Message></Error></DeleteResult>'),
+        ]);
 
         try {
-            new S3('root', 'key', 'secret', 'https://storage.example.com', 'us-east-1', ...$options);
-            self::fail('The device must be refused');
-        } catch (\InvalidArgumentException) {
+            $this->device($client)->deletePath('x');
+            self::fail('A partial delete must not report success');
+        } catch (RemoteException $e) {
+            $this->assertSame('AccessDenied', $e->errorCode);
+            $this->assertStringContainsString('root/x/b', $e->getMessage());
         }
 
-        $this->assertSame([], $client->requests);
+        $this->assertCount(2, $client->requests);
     }
 }
