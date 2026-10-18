@@ -286,10 +286,20 @@ class Databases extends Action
             return;
         }
 
+        $remaining = Permission::withoutColumn($columnPermissions, $key);
+
         $dbForProject->updateDocument(
             'database_' . $database->getSequence(),
             $collection->getId(),
-            new Document(['columnPermissions' => Permission::withoutColumn($columnPermissions, $key)]),
+            new Document([
+                // Both forms, because $permissions is derived from the verbatim list rather
+                // than stored alongside it: dropping read("any", "name") has to drop the
+                // read("any") it widened to, or the row keeps granting a read no surviving
+                // grant justifies and the role can still list and get the table. Cleared to
+                // [] when nothing names a column any more, as setPermissions() does.
+                '$permissions' => Permission::withoutColumns($remaining),
+                'columnPermissions' => Permission::hasColumns($remaining) ? $remaining : [],
+            ]),
         );
     }
 

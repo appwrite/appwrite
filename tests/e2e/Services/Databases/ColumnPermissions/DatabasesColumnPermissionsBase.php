@@ -445,6 +445,59 @@ trait DatabasesColumnPermissionsBase
     }
 
     /**
+     * Dropping a role's only grant takes its access with it.
+     *
+     * $permissions is derived from the verbatim list, not stored beside it, so removing
+     * read("any", "name") has to remove the read("any") it widened to. Left behind, the row
+     * would keep granting a read no surviving grant justifies, and the role could still list
+     * and get the table after the grant it was given had gone.
+     */
+    public function testDeletingTheOnlyGrantedColumnRemovesTheRead(): void
+    {
+        // A grant names a declared column, so a schemaless product has nothing for one to
+        // name and the library refuses it as a column the collection does not have.
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Column-scoped permissions need declared columns, which this adapter does not have');
+        }
+
+        $databaseId = $this->columnGrantsDatabase('Column Grants Sole');
+
+        $created = $this->columnGrantsContainer($databaseId, [
+            Permission::create(Role::any()),
+            Permission::read(Role::any()),
+        ]);
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $containerId = $created['body']['$id'];
+
+        // The only read "any" holds is on one column.
+        $scoped = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $containerId), $this->getServerHeaders(), [
+            'name' => 'Employees',
+            'permissions' => [Permission::create(Role::any()), Permission::read(Role::any(), 'name')],
+        ]);
+        $this->assertEquals(200, $scoped['headers']['status-code']);
+        $this->assertContains('read("any", "name")', $scoped['body']['$permissions']);
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, $this->getSchemaUrl($databaseId, $containerId, '', 'name'), $this->getServerHeaders());
+        $this->assertEquals(204, $deleted['headers']['status-code']);
+
+        // A column is deleted by a worker, so the grant goes with it once that has run.
+        $get = ['body' => ['$permissions' => ['read("any", "name")']]];
+        for ($attempt = 0; $attempt < 30; $attempt++) {
+            $get = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $containerId), $this->getServerHeaders());
+
+            if (!\in_array('read("any", "name")', $get['body']['$permissions'], true)) {
+                break;
+            }
+
+            \usleep(500000);
+        }
+
+        $this->assertNotContains('read("any", "name")', $get['body']['$permissions'], 'the grant outlived the column it named');
+        $this->assertNotContains('read("any")', $get['body']['$permissions'], 'the row still grants a read no surviving grant justifies');
+        $this->assertContains('create("any")', $get['body']['$permissions'], 'a grant naming no column was dropped with it');
+    }
+
+    /**
      * The same refusal at create, where the columns are the ones the request asks for.
      *
      * Create writes the metadata row before the collection, so a refusal from the collection
