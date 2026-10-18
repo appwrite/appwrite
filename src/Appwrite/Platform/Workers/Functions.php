@@ -100,6 +100,18 @@ class Functions extends Action
         Span::add('queue.name', $message->getQueue());
         Span::add('message.timestamp', (string) $message->getTimestamp());
 
+        // The message names a project the platform no longer has: it was
+        // deleted after the run was queued, typically a schedule that fired
+        // before the scheduler dropped it. Its database went with it, so no
+        // attempt can run the function and there is nothing to redrive.
+        if ($project->isEmpty()) {
+            $projectId = $functionMessage->project?->getId() ?? '';
+            $functionId = $functionMessage->function?->getId() ?: ($functionMessage->functionId ?? '');
+            Span::add('execution.skipped', 'project_not_found');
+            Console::warning("Project '{$projectId}' not found, skipping {$type} execution of function '{$functionId}'");
+            return;
+        }
+
         // Recorded on consume, not on publish: the schedulers hand over a due
         // second one occurrence at a time, so a write there delays the rest.
         // Best-effort billing metadata, so a failure here must not fail the

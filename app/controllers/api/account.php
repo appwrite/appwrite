@@ -329,7 +329,7 @@ Http::post('/v1/account')
     ->label('abuse-limit', 10)
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('email', '', new EmailValidator(), 'User email.')
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordFormat(new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false)], Validator::TYPE_STRING)), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordFormat(new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, denyList: $project->getAttribute('auths', [])['passwordDictionaryDenyList'] ?? [])], Validator::TYPE_STRING)), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('request')
     ->inject('response')
@@ -380,7 +380,7 @@ Http::post('/v1/account')
         }
 
         if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
-            $personalDataValidator = new PersonalData($userId, $email, $name, null);
+            $personalDataValidator = new PersonalData($userId, $email, $name, null, denyList: $project->getAttribute('auths', [])['personalDataDenyList'] ?? []);
             if (!$personalDataValidator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
@@ -3652,7 +3652,7 @@ Http::patch('/v1/account/password')
         contentType: ContentType::JSON
     ))
     ->label('abuse-limit', 10)
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordFormat(new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false)], Validator::TYPE_STRING)), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordFormat(new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, denyList: $project->getAttribute('auths', [])['passwordDictionaryDenyList'] ?? [])], Validator::TYPE_STRING)), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
     ->param('oldPassword', '', new PasswordFormat(new Text(256, 0)), 'Current user password. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('user')
@@ -3686,7 +3686,7 @@ Http::patch('/v1/account/password')
         }
 
         if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
-            $personalDataValidator = new PersonalData($user->getId(), $user->getAttribute('email'), $user->getAttribute('name'), $user->getAttribute('phone'));
+            $personalDataValidator = new PersonalData($user->getId(), $user->getAttribute('email'), $user->getAttribute('name'), $user->getAttribute('phone'), denyList: $project->getAttribute('auths', [])['personalDataDenyList'] ?? []);
             if (!$personalDataValidator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
@@ -3779,13 +3779,13 @@ Http::patch('/v1/account/email')
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `password` param: ' . $strength->getDescription());
             }
 
-            $dictionary = new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false);
+            $dictionary = new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, denyList: $project->getAttribute('auths', [])['passwordDictionaryDenyList'] ?? []);
             if (!$dictionary->isValid($password)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `password` param: ' . $dictionary->getDescription());
             }
 
             if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
-                $personalDataValidator = new PersonalData($user->getId(), $email, $user->getAttribute('name'), $user->getAttribute('phone'));
+                $personalDataValidator = new PersonalData($user->getId(), $email, $user->getAttribute('name'), $user->getAttribute('phone'), denyList: $project->getAttribute('auths', [])['personalDataDenyList'] ?? []);
                 if (!$personalDataValidator->isValid($password)) {
                     throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
                 }
@@ -3956,13 +3956,13 @@ Http::patch('/v1/account/phone')
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `password` param: ' . $strength->getDescription());
             }
 
-            $dictionary = new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false);
+            $dictionary = new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, denyList: $project->getAttribute('auths', [])['passwordDictionaryDenyList'] ?? []);
             if (!$dictionary->isValid($password)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `password` param: ' . $dictionary->getDescription());
             }
 
             if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
-                $personalDataValidator = new PersonalData($user->getId(), $user->getAttribute('email'), $user->getAttribute('name'), $phone);
+                $personalDataValidator = new PersonalData($user->getId(), $user->getAttribute('email'), $user->getAttribute('name'), $phone, denyList: $project->getAttribute('auths', [])['personalDataDenyList'] ?? []);
                 if (!$personalDataValidator->isValid($password)) {
                     throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
                 }
@@ -4386,7 +4386,7 @@ Http::put('/v1/account/recovery')
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
     ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
     ->param('secret', '', new Text(256), 'Valid reset token.')
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordFormat(new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false)], Validator::TYPE_STRING)), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordFormat(new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, denyList: $project->getAttribute('auths', [])['passwordDictionaryDenyList'] ?? [])], Validator::TYPE_STRING)), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
@@ -4409,6 +4409,13 @@ Http::put('/v1/account/recovery')
 
         if (!$verifiedToken) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
+
+        if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
+            $personalDataValidator = new PersonalData($profile->getId(), $profile->getAttribute('email'), $profile->getAttribute('name'), $profile->getAttribute('phone'), denyList: $project->getAttribute('auths', [])['personalDataDenyList'] ?? []);
+            if (!$personalDataValidator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
+            }
         }
 
         $authorization->addRole(Role::user($profile->getId())->toString());
@@ -4768,7 +4775,7 @@ Http::put('/v1/account/recovery/otp')
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
     ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
     ->param('secret', '', new Text(256), 'Valid recovery OTP code.')
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordFormat(new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false)], Validator::TYPE_STRING)), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordFormat(new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, denyList: $project->getAttribute('auths', [])['passwordDictionaryDenyList'] ?? [])], Validator::TYPE_STRING)), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
@@ -4791,6 +4798,13 @@ Http::put('/v1/account/recovery/otp')
 
         if (!$verifiedToken) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
+
+        if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
+            $personalDataValidator = new PersonalData($profile->getId(), $profile->getAttribute('email'), $profile->getAttribute('name'), $profile->getAttribute('phone'), denyList: $project->getAttribute('auths', [])['personalDataDenyList'] ?? []);
+            if (!$personalDataValidator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
+            }
         }
 
         $authorization->addRole(Role::user($profile->getId())->toString());
@@ -5429,6 +5443,8 @@ Http::post('/v1/account/targets/push')
     ->param('targetId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Target ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
     ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Provider ID. Message will be sent to this target from the specified provider ID. If no provider ID is set the first setup provider will be used.', true, ['dbForProject'])
+    ->param('bundleId', '', new Text(256), 'App bundle ID of the device registering an APNs token. Without `providerId`, routes the target to the enabled APNs provider for this bundle ID and `environment`.', true)
+    ->param('environment', '', new WhiteList(['sandbox', 'production'], true), 'APNs environment the token belongs to, `sandbox` or `production`. Used with `bundleId`.', true)
     ->inject('queueForEvents')
     ->inject('user')
     ->inject('request')
@@ -5436,10 +5452,37 @@ Http::post('/v1/account/targets/push')
     ->inject('dbForProject')
     ->inject('authorization')
     ->inject('session')
-    ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, User $user, Request $request, Response $response, Database $dbForProject, Authorization $authorization, ?Document $current) {
+    ->action(function (string $targetId, string $identifier, string $providerId, string $bundleId, string $environment, Event $queueForEvents, User $user, Request $request, Response $response, Database $dbForProject, Authorization $authorization, ?Document $current) {
         $targetId = $targetId == 'unique()' ? Id::unique() : $targetId;
 
         $provider = $authorization->skip(fn () => $dbForProject->getDocument('providers', $providerId));
+
+        // Apple's SDK registers its APNs token with the app's bundle ID and APNs environment, not a provider
+        // ID. Route it to the oldest enabled APNs provider for that app and environment; no match keeps the
+        // target on the default provider, as before.
+        $routed = false;
+        if (empty($providerId) && $bundleId !== '') {
+            $candidates = $authorization->skip(fn () => $dbForProject->find('providers', [
+                Query::equal('provider', ['apns']),
+                Query::equal('type', [MESSAGE_TYPE_PUSH]),
+                Query::equal('enabled', [true]),
+                Query::orderAsc('$sequence'),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]));
+
+            foreach ($candidates as $candidate) {
+                $sandbox = (bool) ($candidate->getAttribute('options', [])['sandbox'] ?? false);
+                // A legacy `bundle` key holds the bundle ID set by an earlier provider update and wins over `bundleId`.
+                $credentials = $candidate->getAttribute('credentials', []);
+                if (($credentials['bundle'] ?? $credentials['bundleId'] ?? '') === $bundleId
+                    && ($environment === '' || $sandbox === ($environment === 'sandbox'))) {
+                    $provider = $candidate;
+                    $providerId = $candidate->getId();
+                    $routed = true;
+                    break;
+                }
+            }
+        }
 
         $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
@@ -5463,9 +5506,12 @@ Http::post('/v1/account/targets/push')
                 Query::equal('userInternalId', [$user->getSequence()]),
                 Query::equal('sessionInternalId', [$session->getSequence()]),
                 Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
-                empty($providerId)
-                    ? Query::isNull('providerId')
-                    : Query::equal('providerId', [$providerId]),
+                match (true) {
+                    empty($providerId) => Query::isNull('providerId'),
+                    // Before routing, this install registered the same token providerless; adopt that target.
+                    $routed => Query::or([Query::isNull('providerId'), Query::equal('providerId', [$providerId])]),
+                    default => Query::equal('providerId', [$providerId]),
+                },
                 Query::orderAsc('$sequence'),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]));
@@ -5504,11 +5550,14 @@ Http::post('/v1/account/targets/push')
                     'identifier' => $identifier,
                     'name' => $name
                 ]))
-                : $dbForProject->updateDocument('targets', $current->getId(), new Document([
+                : $dbForProject->updateDocument('targets', $current->getId(), new Document(\array_merge([
                     'identifier' => $identifier,
                     'expired' => false,
                     'name' => $name,
-                ]));
+                ], $routed ? [
+                    'providerId' => $providerId,
+                    'providerInternalId' => $provider->getSequence(),
+                ] : [])));
         } catch (Duplicate) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
@@ -5556,13 +5605,15 @@ Http::put('/v1/account/targets/:targetId/push')
     ))
     ->param('targetId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Target ID.', false, ['dbForProject'])
     ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
+    ->param('bundleId', '', new Text(256), 'App bundle ID of the device registering an APNs token. Routes an APNs target to the enabled APNs provider for this bundle ID and `environment`.', true)
+    ->param('environment', '', new WhiteList(['sandbox', 'production'], true), 'APNs environment the token belongs to, `sandbox` or `production`. Used with `bundleId`.', true)
     ->inject('queueForEvents')
     ->inject('user')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('authorization')
-    ->action(function (string $targetId, string $identifier, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject, Authorization $authorization) {
+    ->action(function (string $targetId, string $identifier, string $bundleId, string $environment, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject, Authorization $authorization) {
 
         $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
@@ -5587,12 +5638,47 @@ Http::put('/v1/account/targets/:targetId/push')
 
         $target->setAttribute('name', "{$device['deviceBrand']} {$device['deviceModel']}");
 
+        $changes = new Document([
+            'identifier' => $target->getAttribute('identifier'),
+            'expired' => $target->getAttribute('expired'),
+            'name' => $target->getAttribute('name'),
+        ]);
+
+        // Re-route an APNs target when its build changes (a debug build moving to TestFlight). Only a target
+        // on no provider or an APNs one moves, so an explicitly chosen provider of another kind stays put.
+        if ($bundleId !== '') {
+            $current = empty($target->getAttribute('providerId'))
+                ? new Document()
+                : $authorization->skip(fn () => $dbForProject->getDocument('providers', $target->getAttribute('providerId')));
+
+            if ($current->isEmpty() || $current->getAttribute('provider') === 'apns') {
+                $candidates = $authorization->skip(fn () => $dbForProject->find('providers', [
+                    Query::equal('provider', ['apns']),
+                    Query::equal('type', [MESSAGE_TYPE_PUSH]),
+                    Query::equal('enabled', [true]),
+                    Query::orderAsc('$sequence'),
+                    Query::limit(APP_LIMIT_SUBQUERY),
+                ]));
+
+                foreach ($candidates as $candidate) {
+                    $sandbox = (bool) ($candidate->getAttribute('options', [])['sandbox'] ?? false);
+                    // A legacy `bundle` key holds the bundle ID set by an earlier provider update and wins over `bundleId`.
+                    $credentials = $candidate->getAttribute('credentials', []);
+                    if (($credentials['bundle'] ?? $credentials['bundleId'] ?? '') === $bundleId
+                        && ($environment === '' || $sandbox === ($environment === 'sandbox'))) {
+                        if ($candidate->getId() !== $target->getAttribute('providerId')) {
+                            $changes
+                                ->setAttribute('providerId', $candidate->getId())
+                                ->setAttribute('providerInternalId', $candidate->getSequence());
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
         try {
-            $target = $dbForProject->updateDocument('targets', $target->getId(), new Document([
-                'identifier' => $target->getAttribute('identifier'),
-                'expired' => $target->getAttribute('expired'),
-                'name' => $target->getAttribute('name'),
-            ]));
+            $target = $dbForProject->updateDocument('targets', $target->getId(), $changes);
         } catch (Duplicate) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
