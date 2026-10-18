@@ -66,9 +66,7 @@ class V18 extends Migration
                     $documentSecurity = $collection->getAttribute('documentSecurity', false);
                     $permissions = $collection->getPermissions();
 
-                    // Column security postdates this migration, so nothing it touches
-                    // can have it enabled.
-                    $this->dbForProject->updateCollection($collectionTable, $permissions, $documentSecurity, false);
+                    $this->dbForProject->updateCollection($collectionTable, $permissions, $documentSecurity);
                 } catch (\Throwable $th) {
                     Console::warning($th->getMessage());
                 }
@@ -96,7 +94,7 @@ class V18 extends Migration
             }
 
             try {
-                $this->dbForProject->updateCollection($id, [Permission::create(Role::any())], true, false);
+                $this->dbForProject->updateCollection($id, [Permission::create(Role::any())], true);
             } catch (\Throwable $th) {
                 Console::warning($th->getMessage());
             }
@@ -202,7 +200,7 @@ class V18 extends Migration
                     $internalBucketId = "bucket_{$this->project->getSequence()}";
                     $permissions = $document->getPermissions();
                     $fileSecurity = $document->getAttribute('fileSecurity', false);
-                    $this->dbForProject->updateCollection($internalBucketId, $permissions, $fileSecurity, false);
+                    $this->dbForProject->updateCollection($internalBucketId, $permissions, $fileSecurity);
                 } catch (\Throwable $th) {
                     Console::warning($th->getMessage());
                 }

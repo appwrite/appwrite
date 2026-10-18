@@ -121,9 +121,7 @@ class Update extends Action
 
         $internalId = 'bucket_' . $bucket->getSequence();
 
-        // Buckets cannot have column security: nothing exposes the flag for them, so
-        // false is the value they were created with and the only one they can hold.
-        $dbForProject->updateCollection($internalId, $permissions, $fileSecurity, columnSecurity: false);
+        $dbForProject->updateCollection($internalId, $permissions, $fileSecurity);
 
         $queueForEvents
             ->setParam('bucketId', $bucket->getId());

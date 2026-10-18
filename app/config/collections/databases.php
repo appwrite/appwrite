@@ -77,6 +77,23 @@ return [
                 'array' => false,
             ],
             [
+                // The table's permissions as the caller wrote them, kept only when one of them
+                // names a column. $permissions holds the same grants with every column dropped,
+                // because that is the form the read gate matches -- a column stored there would
+                // hide the table from the role it was granted to. So this is the list to report
+                // and to replay onto the collection; $permissions is a derived index of it.
+                '$id' => ID::custom('columnPermissions'),
+                // Declared like $permissions itself, which is the same kind of value: one JSON
+                // list of permission strings, not a column anything filters or joins on.
+                'type' => Database::VAR_STRING,
+                'size' => 1000000,
+                'signed' => true,
+                'required' => false,
+                'default' => [],
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
                 '$id' => ID::custom('attributes'),
                 'type' => Database::VAR_STRING,
                 'size' => 1000000,
