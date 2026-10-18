@@ -312,6 +312,7 @@ class Mapper
             case \Appwrite\Utopia\Database\Validator\Queries\Teams::class:
             case \Appwrite\Utopia\Database\Validator\Queries\Users::class:
             case \Appwrite\Utopia\Database\Validator\Queries\Variables::class:
+            case \Appwrite\Utopia\Database\Validator\RoutePermissions::class:
             case \Utopia\Database\Validator\Authorization::class:
             case \Utopia\Database\Validator\Permissions::class:
             case \Utopia\Database\Validator\Queries\Base::class:
