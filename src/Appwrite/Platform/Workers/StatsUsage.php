@@ -28,14 +28,15 @@ class StatsUsage extends Action
      * A stopping worker waits for the batch, so this stays under Docker's
      * 10 second stop timeout.
      */
-    protected const int FLUSH_DELAY_MS = 5_000;
+    private const int FLUSH_DELAY_MS = 5_000;
 
     /**
      * How long a batch whose insert failed waits before the next attempt.
      * Until it is written, the worker refuses messages so they stay in the
-     * queue instead of piling up in memory.
+     * queue instead of piling up in memory. Like the flush, a stopping worker
+     * waits for the retry, so this also stays under Docker's stop timeout.
      */
-    protected const int RETRY_DELAY_MS = 20_000;
+    private const int RETRY_DELAY_MS = 5_000;
 
     /**
      * The open batch, one accumulator per minute of event time. A folded event
@@ -98,7 +99,7 @@ class StatsUsage extends Action
             if ($this->accumulators === []) {
                 // One-shot rather than a tick: a pending timer keeps the worker's
                 // event loop alive only until it fires, so shutdown still writes it.
-                Timer::after(static::FLUSH_DELAY_MS, $this->flush(...));
+                Timer::after(self::FLUSH_DELAY_MS, $this->flush(...));
             }
 
             $projectId = (string) ($payload['project']['$id'] ?? '');
@@ -205,7 +206,7 @@ class StatsUsage extends Action
         }
 
         $this->retryScheduled = true;
-        Timer::after(static::RETRY_DELAY_MS, function (): void {
+        Timer::after(self::RETRY_DELAY_MS, function (): void {
             $this->retryScheduled = false;
             $this->flush();
         });
