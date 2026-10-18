@@ -33,8 +33,10 @@ class StatsUsage extends Action
     /**
      * How long a batch whose insert failed waits before the next attempt.
      * Until it is written, the worker refuses messages so they stay in the
-     * queue instead of piling up in memory. Like the flush, a stopping worker
-     * waits for the retry, so this also stays under Docker's stop timeout.
+     * queue instead of piling up in memory. Only the first retry runs on a
+     * timer; later ones run on the next message after this delay, so a
+     * stopping worker waits for at most one retry and stays under Docker's
+     * stop timeout.
      */
     private const int RETRY_DELAY_MS = 5_000;
 
@@ -55,6 +57,8 @@ class StatsUsage extends Action
     private array $retained = [];
 
     private bool $retryScheduled = false;
+
+    private float $failedAt = 0.0;
 
     public static function getName(): string
     {
@@ -86,7 +90,12 @@ class StatsUsage extends Action
         }
 
         if ($this->retained !== []) {
-            throw new \RuntimeException('Usage events are not being written; refusing the message until the retained events are written');
+            if ((\microtime(true) - $this->failedAt) * 1000 >= self::RETRY_DELAY_MS) {
+                $this->write();
+            }
+            if ($this->retained !== []) {
+                throw new \RuntimeException('Usage events are not being written; refusing the message until the retained events are written');
+            }
         }
 
         $tenant = $projectContext->sequence;
@@ -171,6 +180,21 @@ class StatsUsage extends Action
 
     private function flush(): void
     {
+        $this->write();
+
+        if ($this->retained === [] || $this->retryScheduled) {
+            return;
+        }
+
+        $this->retryScheduled = true;
+        Timer::after(self::RETRY_DELAY_MS, function (): void {
+            $this->retryScheduled = false;
+            $this->write();
+        });
+    }
+
+    private function write(): void
+    {
         // Detach first, so messages handled while the insert is in flight open the next batch.
         $accumulators = [...$this->retained, ...\array_values($this->accumulators)];
         $this->retained = [];
@@ -192,24 +216,8 @@ class StatsUsage extends Action
 
             // A failed batch stays in the accumulator, so the retry writes only what is left.
             $this->retained[] = $accumulator;
+            $this->failedAt = \microtime(true);
         }
-
-        if ($this->retained !== []) {
-            $this->scheduleRetry();
-        }
-    }
-
-    private function scheduleRetry(): void
-    {
-        if ($this->retryScheduled) {
-            return;
-        }
-
-        $this->retryScheduled = true;
-        Timer::after(self::RETRY_DELAY_MS, function (): void {
-            $this->retryScheduled = false;
-            $this->flush();
-        });
     }
 
     protected function shouldSkipMetric(string $metric): bool
