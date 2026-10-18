@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3aa57922f081a582cc472149e4a16f04",
+    "content-hash": "5db9eaeb7a2992161d6cdbf2d76e216f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4426,16 +4426,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "8.3.8",
+            "version": "dev-collection-level-column-permissions",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "6993c89987e0ed8493ca86c5c91c93701f2faa01"
+                "reference": "e2048724bbff657142337c890137602a1c72312e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/6993c89987e0ed8493ca86c5c91c93701f2faa01",
-                "reference": "6993c89987e0ed8493ca86c5c91c93701f2faa01",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/e2048724bbff657142337c890137602a1c72312e",
+                "reference": "e2048724bbff657142337c890137602a1c72312e",
                 "shasum": ""
             },
             "require": {
@@ -4493,9 +4493,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/8.3.8"
+                "source": "https://github.com/utopia-php/database/tree/collection-level-column-permissions"
             },
-            "time": "2026-10-17T03:36:41+00:00"
+            "time": "2026-10-18T08:30:14+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -7679,9 +7679,18 @@
             "time": "2026-07-03T20:44:34+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-collection-level-column-permissions",
+            "alias": "8.3.999",
+            "alias_normalized": "8.3.999.0"
+        }
+    ],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
@@ -7704,5 +7713,5 @@
     "platform-dev": {
         "ext-fileinfo": "*"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }

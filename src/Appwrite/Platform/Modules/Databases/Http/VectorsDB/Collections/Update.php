@@ -9,6 +9,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\RoutePermissions;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Collection\Update as CollectionUpdate;
 use Utopia\Database\Database;
@@ -65,7 +66,7 @@ class Update extends CollectionAction
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
             ->param('dimension', null, new Range(MIN_VECTOR_DIMENSION, MAX_VECTOR_DIMENSION), 'Embedding dimensions.', true, example: '4')
-            ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('permissions', null, new RoutePermissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Nullable(new Boolean()), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
             ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the collection.', true)
@@ -89,10 +90,20 @@ class Update extends CollectionAction
             throw new Exception($this->getNotFoundException());
         }
 
-        $permissions ??= $collection->getPermissions();
+        // The verbatim list, not $permissions: the row stores the grants with every column
+        // dropped, so inheriting from there would quietly widen them and replay that onto the
+        // collection -- an update of `enabled` alone would drop every column grant it had.
+        $permissions ??= $collection->getAttribute('columnPermissions') ?: $collection->getPermissions();
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions);
+
+        // Kept in the two forms the two stores want: the row's permissions decide who may see
+        // the collection in a listing, and the read gate matches the stored string, so a column
+        // left there would hide it from the role it was granted to -- which the library refuses
+        // outright. The verbatim list is kept beside it to report and to replay.
+        $columnPermissions = Permission::hasColumns($permissions) ? $permissions : [];
+        $rowPermissions = Permission::withoutColumns($permissions);
 
         $enabled ??= $collection->getAttribute('enabled', true);
         $description ??= $collection->getAttribute('description', '');
@@ -103,7 +114,8 @@ class Update extends CollectionAction
             $collection
                 ->setAttribute('name', $name ?? $collection->getAttribute('name'))
                 ->setAttribute('dimension', $dimensions ?? $collection->getAttribute('dimension'))
-                ->setAttribute('$permissions', $permissions)
+                ->setAttribute('$permissions', $rowPermissions)
+                ->setAttribute('columnPermissions', $columnPermissions)
                 ->setAttribute('documentSecurity', $documentSecurity)
                 ->setAttribute('enabled', $enabled)
                 ->setAttribute('description', $description)
@@ -111,7 +123,16 @@ class Update extends CollectionAction
         );
 
         $dbForDatabases = $getDatabasesDB($database, $collection);
-        $dbForDatabases->updateCollection('database_' . $database->getSequence() . '_collection_' . $updated->getSequence(), new CollectionUpdate(permissions: $permissions, documentSecurity: $documentSecurity));
+        $update = fn () => $dbForDatabases->updateCollection(
+            'database_' . $database->getSequence() . '_collection_' . $updated->getSequence(),
+            new CollectionUpdate(permissions: $permissions, documentSecurity: $documentSecurity),
+        );
+
+        // Scoped only when one of them names a column, so the library's refusal stays the
+        // backstop for a request that never asked for the feature.
+        $columnPermissions === []
+            ? $update()
+            : $dbForDatabases->withColumnPermissions($update);
 
         $queueForEvents
             ->setContext('database', $database)

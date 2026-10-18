@@ -15,6 +15,7 @@ use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Index as IndexObject;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Relationship;
 use Utopia\Database\SetType;
@@ -269,6 +270,29 @@ class Databases extends Action
      * @throws \Exception
      * @throws \Throwable
      **/
+    /**
+     * Drop the grants naming $key from a collection's metadata row.
+     *
+     * The library drops them from the collection itself when the column goes. The row keeps
+     * its own copy of the list -- the one the API reports and an update replays -- so it is
+     * dropped there too, or the two disagree about what the table grants and a later update
+     * replays a grant on a column that no longer exists.
+     */
+    private function dropColumnGrant(Database $dbForProject, Document $database, Document $collection, string $key): void
+    {
+        $columnPermissions = $collection->getAttribute('columnPermissions', []);
+
+        if (!\is_array($columnPermissions) || $columnPermissions === []) {
+            return;
+        }
+
+        $dbForProject->updateDocument(
+            'database_' . $database->getSequence(),
+            $collection->getId(),
+            new Document(['columnPermissions' => Permission::withoutColumn($columnPermissions, $key)]),
+        );
+    }
+
     private function deleteAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForPlatform, Database $dbForProject, Database $dbForDatabases, Realtime $queueForRealtime): void
     {
         if ($collection->isEmpty()) {
@@ -308,6 +332,14 @@ class Databases extends Action
                     $dbForDatabases->deleteRelationship('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key);
                 } else {
                     $dbForDatabases->deleteAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key);
+                }
+
+                $this->dropColumnGrant($dbForProject, $database, $collection, $key);
+
+                // A two-way relationship takes a key off the related collection too, so its
+                // row loses the grants on that key the same way.
+                if ($type === ColumnType::Relationship->value && $options['twoWay'] && !$relatedCollection->isEmpty()) {
+                    $this->dropColumnGrant($dbForProject, $database, $relatedCollection, $options['twoWayKey']);
                 }
 
                 $dbForProject->deleteDocument('attributes', $attribute->getId());
