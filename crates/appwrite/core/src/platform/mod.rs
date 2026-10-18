@@ -11,6 +11,7 @@
 //!
 //! None of this requires changes to CE crates.
 
+mod cache;
 mod context;
 mod error_page;
 mod guards;
@@ -93,10 +94,15 @@ pub struct Labels {
     pub error_page: bool,
     /// `origin` = `*`: any origin may call the route.
     pub any_origin: bool,
-    /// `cache`: the response is served from, and stored in, the project's
-    /// file cache (storage previews, avatars).
+    /// `cache`: a successful payload is written to the project's file cache.
     pub cache: bool,
-    /// `cache.params`: the parameters the cache key reads (all, when `None`).
+    /// `cache.resource`: the `cache` entry's resource template
+    /// (`file/{request.fileId}`), empty for none.
+    pub cache_resource: &'static str,
+    /// `cache.resourceType`: the `cache` entry's resource type template
+    /// (`bucket/{request.bucketId}`), empty for none.
+    pub cache_resource_type: &'static str,
+    /// `cache.params`: the params that key the entry, `None` for all.
     pub cache_params: Option<&'static [&'static str]>,
 }
 
@@ -113,6 +119,8 @@ impl Labels {
         error_page: false,
         any_origin: false,
         cache: false,
+        cache_resource: "",
+        cache_resource_type: "",
         cache_params: None,
     };
 }

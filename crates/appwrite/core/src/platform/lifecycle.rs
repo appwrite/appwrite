@@ -329,15 +329,16 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
     }
 
     // -- API key ---------------------------------------------------------------
+    let mut ctx_team_sequence = String::new();
     let key_header = ctx.request.header_or_empty("x-appwrite-key").to_owned();
     if !key_header.is_empty() {
         // The project's organization (`$team`) and its keys, for an
         // organization key.
         let organization = if key_header.starts_with("organization_") {
-            match load_team_id(&platform_db, &ctx.project.team_internal_id).await? {
-                Some(id) => {
-                    let keys = project::owned_keys(&platform_db, "teams", &ctx.project.team_internal_id).await?;
-                    Some((id, keys))
+            match load_team(&platform_db, ctx).await? {
+                Some((id, sequence)) => {
+                    let keys = project::owned_keys(&platform_db, "teams", &sequence).await?;
+                    Some((id, sequence, keys))
                 }
                 None => None,
             }
@@ -347,7 +348,7 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
         let account_user = ctx.user.as_ref().map(|u| u.id.clone()).unwrap_or_default();
         let owners = Owners {
             account: (!ctx.account_keys.is_empty()).then_some((account_user.as_str(), ctx.account_keys.as_slice())),
-            organization: organization.as_ref().map(|(id, keys)| (id.as_str(), keys.as_slice())),
+            organization: organization.as_ref().map(|(id, _, keys)| (id.as_str(), keys.as_slice())),
         };
         let key = ApiKey::decode(&ctx.project, &key_header, &state.config.openssl_key_v1, &owners);
         if !key.project_id.is_empty() && (header_project.is_empty() || header_project != key.project_id) {
@@ -362,6 +363,8 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
             return Err(Error::new(ErrorType::OrganizationIdMissing));
         }
         ctx.key = Some(key);
+        // The organization's own sequence locks its keys' usage updates.
+        ctx_team_sequence = organization.map(|(_, sequence, _)| sequence).unwrap_or_default();
     }
     // Request filters for an older response format: `general.php` adds them,
     // and the first read of the params runs them, before its headers.
@@ -489,7 +492,7 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
                     sequence: ctx.user.as_ref().map(|u| u.sequence.to_string()).unwrap_or_default(),
                 }
             } else {
-                KeyOwner::Team { id: key.team_id.clone(), sequence: ctx.project.team_internal_id.clone() }
+                KeyOwner::Team { id: key.team_id.clone(), sequence: ctx_team_sequence.clone() }
             };
             track_key_usage(ctx, owner, stored).await;
         }
@@ -498,8 +501,8 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
             extra_roles.push(format!("team:{}", key.team_id));
             extra_roles.push(format!("team:{}/owner", key.team_id));
         }
-    } else if ctx.user.is_some() && ctx.mode == Mode::Admin && !ctx.project.is_console() {
-        let team_id = load_team_id(&platform_db, &ctx.project.team_internal_id).await?;
+    } else if let Some(team_id) = admin_team(ctx, &platform_db).await? {
+        let team_id = Some(team_id);
         let source = ctx.roles_user().cloned().unwrap_or_default();
         let admin_roles = source
             .memberships
@@ -510,11 +513,17 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
         if admin_roles.is_empty() {
             return Err(Error::new(ErrorType::UserUnauthorized));
         }
+        // On the console, project routes act on the project in the path.
+        let project_id = if ctx.project.is_console() && ctx.route.path.starts_with("/v1/projects/:projectId") {
+            path_project.clone()
+        } else {
+            ctx.project.id.clone()
+        };
         scopes = vec!["teams.read".to_owned(), "projects.read".to_owned()];
-        let project_prefix = format!("project-{}", ctx.project.id);
+        let project_prefix = format!("project-{project_id}");
         for admin_role in admin_roles {
             let team_wide = !admin_role.starts_with("project-");
-            if team_wide || admin_role.starts_with(&project_prefix) {
+            if team_wide || (project_id != Project::CONSOLE && admin_role.starts_with(&project_prefix)) {
                 let r =
                     if team_wide { admin_role.clone() } else { admin_role.rsplit('-').next().unwrap_or("").to_owned() };
                 scopes.extend(roles::scopes(&r).into_iter().map(str::to_owned));
@@ -522,7 +531,12 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
                 role = r;
             }
         }
-        authorization = false;
+        // The console's project list and project read the platform
+        // database, where permissions limit an admin to their projects.
+        let projects = ctx.project.is_console() && matches!(ctx.route.path, "/v1/projects" | "/v1/projects/:projectId");
+        if !projects {
+            authorization = false;
+        }
     }
 
     let mut unique_scopes: Vec<String> = Vec::with_capacity(scopes.len());
@@ -647,8 +661,6 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
     Ok(())
 }
 
-/// The `$id` of the project's team (the `team` resource:
-/// `findOne('teams', [equal('$sequence', [$teamInternalId])])`).
 /// PHP's `rule` resource: the custom domain rule of the request's origin
 /// (or referer), when it serves the project or a trusted one.
 async fn rule_domain(
@@ -779,14 +791,33 @@ async fn issue(ctx: &Context, domain: &str) -> Result<()> {
     Ok(())
 }
 
-async fn load_team_id(platform_db: &Database, team_internal_id: &str) -> Result<Option<String>> {
-    if team_internal_id.is_empty() {
+/// The team whose membership roles an admin request takes: on the console,
+/// the organization the route acts on (the `team` resource, when there is
+/// one); elsewhere, in admin mode, the project's organization (`""` when it
+/// has none, which no membership matches). `None` when no admin roles
+/// apply.
+async fn admin_team(ctx: &Context, platform_db: &Database) -> Result<Option<String>> {
+    if ctx.user.is_none() {
         return Ok(None);
     }
-    let authorization = platform_db.authorization();
-    let team =
-        authorization.skip(platform_db.find_one("teams", vec![Query::equal("$sequence", [team_internal_id])])).await?;
-    Ok(if team.is_empty() { None } else { Some(team.id().to_owned()) })
+    if ctx.project.is_console() {
+        return Ok(load_team(platform_db, ctx).await?.map(|(id, _)| id));
+    }
+    if ctx.mode != Mode::Admin {
+        return Ok(None);
+    }
+    Ok(Some(load_team(platform_db, ctx).await?.map(|(id, _)| id).unwrap_or_default()))
+}
+
+/// The `$id` and `$sequence` of the `team` resource ([`super::context::team`]),
+/// `None` when it is empty.
+async fn load_team(platform_db: &Database, ctx: &Context) -> Result<Option<(String, String)>> {
+    let team = super::context::team(platform_db, &ctx.project, &ctx.route, &ctx.request, &ctx.path_params).await?;
+    if team.is_empty() {
+        return Ok(None);
+    }
+    let sequence = team.sequence().map(utopia_database::value::to_text).unwrap_or_default();
+    Ok(Some((team.id().to_owned(), sequence)))
 }
 
 /// The user an impersonator names (the `targetUser` resource): by id,
@@ -1211,7 +1242,7 @@ fn send(ctx: Context, mut response: Response, api: bool) -> Response {
     response.flush();
 
     if !is_error && api && !ctx.failed {
-        shutdown::schedule(ctx, response.status(), body, response.size());
+        shutdown::schedule(ctx, response.status(), response.content_type().to_owned(), body, response.size());
     }
     response
 }

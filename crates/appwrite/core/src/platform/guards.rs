@@ -5,9 +5,9 @@
 //! `api` group's authentication.
 
 use http::StatusCode;
-use serde_json::{Map, Value};
+use serde_json::Value;
 use utopia_abuse::TimeLimit;
-use utopia_abuse::time_limit::Redis;
+use utopia_abuse::time_limit::{Redis, Store};
 use utopia_database::validator::authorization::Input;
 use utopia_database::{Document, PermissionType};
 use utopia_http::Response;
@@ -109,14 +109,28 @@ fn abuse_params(ctx: &Context) -> Vec<(String, String)> {
 /// The `api` group's abuse reset (after the action): a response whose status
 /// the route lists in `abuse-reset` clears its limits.
 pub(super) async fn abuse_reset(state: &super::State, labels: super::Labels, status: u16, params: &[(String, String)]) {
-    if !state.config.abuse || !labels.abuse_reset.contains(&status) {
+    if !state.config.abuse {
         return;
     }
     let now = datetime::now().and_utc().timestamp();
+    reset_limits(labels, status, params, now, Redis::new(state.abuse.clone())).await;
+}
+
+/// Sets the count of each of the route's `abuse-key`s (with the request's
+/// parameters) to zero in the window `now` falls in, when `status` is one of
+/// its `abuse-reset` codes.
+async fn reset_limits<S: Store + Clone>(
+    labels: super::Labels,
+    status: u16,
+    params: &[(String, String)],
+    now: i64,
+    store: S,
+) {
+    if !labels.abuse_reset.contains(&status) {
+        return;
+    }
     for key in labels.abuse_key {
-        let Ok(time_limit) =
-            TimeLimit::new(*key, labels.abuse_limit, labels.abuse_time, Redis::new(state.abuse.clone()))
-        else {
+        let Ok(time_limit) = TimeLimit::new(*key, labels.abuse_limit, labels.abuse_time, store.clone()) else {
             continue;
         };
         if let Err(e) = time_limit.with_params(params.to_vec()).reset_at(now).await {
@@ -125,14 +139,10 @@ pub(super) async fn abuse_reset(state: &super::State, labels: super::Labels, sta
     }
 }
 
-/// `APP_STORAGE_CACHE`: the project caches live under it (`app-<projectId>`).
-const STORAGE_CACHE: &str = "/storage/cache";
 /// How long a cached response is served (180 days).
 const CACHE_TTL: i64 = 60 * 60 * 24 * 180;
 /// `APP_CACHE_UPDATE`: a hit refreshes the cache entry this often.
 const CACHE_UPDATE: i64 = 24 * 60 * 60;
-/// `APP_CACHE_BUSTER`.
-const CACHE_BUSTER: &str = "4327";
 /// `APP_PROJECT_ACCESS`: a file's `transformedAt` is refreshed this often.
 const PROJECT_ACCESS: i64 = 24 * 60 * 60;
 /// `APP_RESOURCE_TOKEN_ACCESS`.
@@ -173,7 +183,7 @@ pub(super) async fn context(ctx: &mut Context) -> Result<()> {
             && plan.get("imageTransformations").is_some_and(Value::is_i64)
     }) && !privileged;
 
-    let key = cache_key(
+    let key = super::cache::identifier(
         ctx.request.uri(),
         ctx.request.params(),
         ctx.route.labels.cache_params,
@@ -182,8 +192,8 @@ pub(super) async fn context(ctx: &mut Context) -> Result<()> {
     let db = ctx.db()?;
     let authorization = db.authorization();
     let log = authorization.skip(db.get_document("cache", &key, Vec::new(), false)).await?;
-    let cache =
-        utopia_cache::Cache::new(utopia_cache::Filesystem::new(format!("{STORAGE_CACHE}/app-{}", ctx.project.id)));
+    let root = ctx.state.config.storage_cache.join(format!("app-{}", ctx.project.id));
+    let cache = utopia_cache::Cache::new(utopia_cache::Filesystem::new(root));
     let data = cache
         .load(&key, CACHE_TTL, "")
         .await
@@ -275,42 +285,6 @@ pub(super) async fn context(ctx: &mut Context) -> Result<()> {
         ctx.response_headers.push(("x-appwrite-cache", "hit".to_owned()));
     }
     Ok(())
-}
-
-/// `Request::cacheIdentifier()`: the MD5 of the URI, the (allowed) params
-/// with the project, sorted by key and `serialize()`d, and the cache buster.
-pub(super) fn cache_key(uri: &str, params: &Map<String, Value>, allowed: Option<&[&str]>, project: &str) -> String {
-    use md5::{Digest, Md5};
-    // The params as PHP holds them (`json_decode`, so keys such as `"5"`
-    // become integers).
-    let json = serde_json::to_vec(params).unwrap_or_default();
-    let decoded = php_std::json::decode(&json, Some(true), php_std::json::DEFAULT_DEPTH, php_std::json::Flags::NONE);
-    let mut array = match decoded {
-        Ok(php_std::Value::Array(array)) => array,
-        _ => php_std::Array::new(),
-    };
-    // `array_intersect_key($params, array_flip($allowed))`.
-    if let Some(allowed) = allowed {
-        array.retain(|k, _| {
-            let name = match k {
-                php_std::types::KeyRef::Int(i) => i.to_string(),
-                php_std::types::KeyRef::Str(s) => String::from_utf8_lossy(s).into_owned(),
-            };
-            allowed.contains(&name.as_str())
-        });
-    }
-    let project_key = php_std::ArrayKey::from("project");
-    if array.get(&project_key).is_none_or(|v| matches!(v, php_std::Value::Null)) {
-        array.set(project_key, php_std::Value::Str(php_std::Str::from(project.as_bytes().to_vec())));
-    }
-    php_std::sort::ksort(&mut array, php_std::sort::SortFlags::Regular);
-    let mut input = Vec::new();
-    input.extend_from_slice(uri.as_bytes());
-    input.push(b'*');
-    input.extend_from_slice(&php_std::serialize::serialize(&php_std::Value::Array(array)));
-    input.push(b'*');
-    input.extend_from_slice(CACHE_BUSTER.as_bytes());
-    hex::encode(Md5::digest(&input))
 }
 
 /// The `resourceToken` resource: the file a `token` parameter (a resource
@@ -463,7 +437,7 @@ pub(super) async fn auth_methods(ctx: &Context) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::json;
+    use serde_json::{Map, json};
 
     fn map(value: Value) -> Map<String, Value> {
         match value {
@@ -475,16 +449,27 @@ mod tests {
     /// `Request::cacheIdentifier()`, by PHP:
     /// `md5($uri . '*' . serialize($params) . '*' . APP_CACHE_BUSTER)`.
     #[test]
-    fn cache_key_matches_php() {
+    fn cache_identifier_matches_php() {
         let flags = map(json!({"width": "100", "height": "50"}));
-        assert_eq!(cache_key("/v1/avatars/flags/us", &flags, None, "p1"), "b7170e084d342dfbca17eb415a94a5a2");
+        assert_eq!(
+            crate::platform::cache::identifier("/v1/avatars/flags/us", &flags, None, "p1"),
+            "b7170e084d342dfbca17eb415a94a5a2"
+        );
         let preview = map(json!({"width": "100", "token": "x", "project": "p2", "5": "a"}));
         assert_eq!(
-            cache_key("/v1/storage/buckets/b/files/f/preview", &preview, Some(&["width", "project"]), "p1"),
+            crate::platform::cache::identifier(
+                "/v1/storage/buckets/b/files/f/preview",
+                &preview,
+                Some(&["width", "project"]),
+                "p1"
+            ),
             "faf402ff8bd061a60af429200a4d86d7"
         );
         let numeric = map(json!({"name": "A B", "10": "x", "9": "y", "b": "z"}));
-        assert_eq!(cache_key("/v1/avatars/initials", &numeric, None, ""), "7f301db9ba4c392d96602a02b688431a");
+        assert_eq!(
+            crate::platform::cache::identifier("/v1/avatars/initials", &numeric, None, ""),
+            "7f301db9ba4c392d96602a02b688431a"
+        );
     }
 
     #[test]
@@ -493,5 +478,83 @@ mod tests {
         assert_eq!(two("a"), None);
         assert_eq!(two("a:b:c"), None);
         assert_eq!(two(":"), Some(("", "")));
+    }
+}
+
+#[cfg(test)]
+mod abuse_reset_tests {
+    use std::sync::Arc;
+
+    use utopia_abuse::TimeLimit;
+    use utopia_abuse::time_limit::{Database, Memory};
+
+    use super::reset_limits;
+    use crate::platform::Labels;
+
+    /// `POST /v1/account/sessions/email`'s labels.
+    const LABELS: Labels =
+        Labels { abuse_limit: 10, abuse_key: &["url:{url},email:{param-email}"], abuse_reset: &[201], ..Labels::NONE };
+
+    /// A minute into a window.
+    const NOW: i64 = 1_790_000_060;
+
+    fn params(email: &str) -> Vec<(String, String)> {
+        vec![
+            ("{url}".to_owned(), "localhost/v1/account/sessions/email".to_owned()),
+            ("{ip}".to_owned(), "127.0.0.1".to_owned()),
+            ("{param-email}".to_owned(), email.to_owned()),
+        ]
+    }
+
+    fn limit(store: &Arc<Memory>, email: &str) -> TimeLimit<Database<Arc<Memory>>> {
+        TimeLimit::new(LABELS.abuse_key[0], LABELS.abuse_limit, LABELS.abuse_time, Database::new(store.clone()))
+            .unwrap()
+            .with_params(params(email))
+    }
+
+    async fn store() -> Arc<Memory> {
+        let store = Arc::new(Memory::new());
+        Database::new(store.clone()).setup().await.unwrap();
+        store
+    }
+
+    async fn hit(store: &Arc<Memory>, email: &str, times: usize) {
+        for _ in 0..times {
+            limit(store, email).check_at(NOW).await.unwrap();
+        }
+    }
+
+    async fn used(store: &Arc<Memory>, email: &str) -> i64 {
+        use utopia_abuse::Adapter as _;
+        use utopia_abuse::time_limit::Store as _;
+        let limit = limit(store, email);
+        limit.store().count(limit.key(), limit.window(NOW)).await.unwrap()
+    }
+
+    /// A status the route lists resets its key (with the request's
+    /// parameters) in the current window; another status, or another
+    /// request's parameters, leave the counts alone.
+    #[utopia_async::test]
+    async fn listed_statuses_reset_the_request_keys() {
+        let store = store().await;
+        hit(&store, "a@example.com", 3).await;
+        hit(&store, "b@example.com", 2).await;
+
+        reset_limits(LABELS, 401, &params("a@example.com"), NOW, Database::new(store.clone())).await;
+        assert_eq!(used(&store, "a@example.com").await, 3);
+
+        reset_limits(LABELS, 201, &params("a@example.com"), NOW, Database::new(store.clone())).await;
+        assert_eq!(used(&store, "a@example.com").await, 0);
+        assert_eq!(used(&store, "b@example.com").await, 2);
+    }
+
+    /// A route without `abuse-reset` codes never resets.
+    #[utopia_async::test]
+    async fn routes_without_reset_codes_keep_their_counts() {
+        let store = store().await;
+        hit(&store, "a@example.com", 4).await;
+        let labels = Labels { abuse_reset: &[], ..LABELS };
+        reset_limits(labels, 201, &params("a@example.com"), NOW, Database::new(store.clone())).await;
+        assert_eq!(used(&store, "a@example.com").await, 4);
     }
 }

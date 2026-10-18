@@ -543,6 +543,9 @@ services:
       - appwrite
     ports:
       - 9530:8080
+    volumes:
+      # The response cache's files, shared with the PHP API.
+      - appwrite-cache:/storage/cache:rw
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}

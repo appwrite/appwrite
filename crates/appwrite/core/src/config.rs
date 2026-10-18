@@ -82,6 +82,8 @@ pub struct Config {
     pub geo_endpoint: Option<String>,
     pub geo_secret: Option<String>,
     pub assets: PathBuf,
+    /// `APP_STORAGE_CACHE`: the response cache's files (`app-<projectId>/<key>`).
+    pub storage_cache: PathBuf,
     pub port: u16,
     pub db_pool_size: usize,
     pub redis_connections: usize,
@@ -212,6 +214,7 @@ impl Config {
             geo_endpoint: env("_APP_GEO_ENDPOINT"),
             geo_secret: env("_APP_GEO_SECRET"),
             assets: PathBuf::from(env_or("_APP_RUST_ASSETS", "/usr/src/code").as_ref()),
+            storage_cache: PathBuf::from(env_or("_APP_RUST_STORAGE_CACHE", "/storage/cache").as_ref()),
             port: env_int("_APP_RUST_PORT", 8080) as u16,
             db_pool_size: env_int("_APP_RUST_DB_POOL", (cpus * 8).max(16) as i64) as usize,
             redis_connections: env_int("_APP_RUST_REDIS_CONNECTIONS", cpus.clamp(1, 8) as i64) as usize,

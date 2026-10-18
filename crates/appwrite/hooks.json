@@ -61,8 +61,8 @@
       "description": "After a session is created, deletes the user's oldest sessions beyond the project's `maxSessions` and purges the cached user.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "maxSessions" },
       "rust": {
-        "status": "partial",
-        "note": "Runs after every Account route in the `session` group (the session's user from the response); no scenario exceeds `maxSessions` (10), so the deletion itself is unproved.",
+        "status": "done",
+        "note": "Runs after every route in the `session` group (the session's user from the response). The diff's `account.sessions.email.limit` signs `s2` in at the project's `maxSessions` (10): both runtimes delete the same oldest session. PHP runs it after the `api` group's shutdowns, so the deleted sessions are not in the usage message; Rust leaves them out the same way (its own database, without listeners).",
         "where": [
           { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn session_limit" }
         ]
@@ -88,10 +88,10 @@
       "description": "Resets the route's abuse counters when the response status is one of its `abuse-reset` codes.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "abuse-reset" },
       "rust": {
-        "status": "partial",
-        "note": "Account's session routes carry `abuse-reset` (201) like PHP; unproved while `_APP_OPTIONS_ABUSE=disabled` on the shared stack (the hook returns early).",
+        "status": "done",
+        "note": "Account's session routes carry `abuse-reset` (201) like PHP. Unit tests (`abuse_reset_tests`) prove a listed status zeroes the request's keys in the current window and leaves other statuses, keys and routes alone. The parity diff cannot cover it: `_APP_OPTIONS_ABUSE` is read per process by both runtimes and the shared stack runs with it `disabled`.",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "async fn abuse_reset" }
+          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "async fn reset_limits" }
         ]
       }
     },
@@ -111,17 +111,14 @@
       "title": "Response cache write",
       "description": "For routes labelled `cache`, stores a successful payload in the project's file cache and records it in the `cache` collection, refreshing the access time and content on later hits.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "cache.resourceType" },
-      "rust": { "status": "missing", "note": "No Users route is cached.", "where": [] }
-    },
-    {
-      "id": "usage",
-      "title": "Usage metrics",
-      "description": "Outside the console, dispatches RequestCompleted (network requests, inbound and outbound bytes) for non-privileged callers and enqueues the request's usage metrics, without the ones the API key disables.",
-      "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "publisherForUsage->enqueue" },
       "rust": {
         "status": "done",
-        "note": "Network and resource metrics, without the metrics an API key disabled (suffix match), and still published when the key disabled them all. Proved by `appwrite diff` with an ephemeral key.",
-        "where": [{ "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn usage" }]
+        "note": "Routes set `Labels::cache` (with `cache.resource`, `cache.resourceType`, `cache.params`); no Rust route does yet (storage previews and avatars are PHP's). The key is `cacheIdentifier()`'s MD5 of the URI, the PHP-serialized sorted params and the buster; the payload goes to `/storage/cache/app-<projectId>/<key>` through utopia-cache's `Filesystem` and the entry to the `cache` collection, with PHP's create, duplicate, daily refresh and re-save rules. Unit tests check keys against PHP's (`Request::cacheIdentifier()` on the oracle, and an entry PHP's API wrote for an avatar), the rendered resources and the writes. `appwrite-rust` mounts the `appwrite-cache` volume.",
+        "where": [
+          { "file": "crates/appwrite/core/src/platform/cache.rs", "anchor": "pub(super) fn identifier" },
+          { "file": "crates/appwrite/core/src/platform/cache.rs", "anchor": "pub(super) async fn write" },
+          { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn cache_write" }
+        ]
       }
     },
     {
@@ -457,9 +454,12 @@
       "description": "The organization that owns the project, or on the console the one a route names (path project, `teamId` or `X-Appwrite-Organization`); used for admin roles.",
       "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('team'" },
       "rust": {
-        "status": "partial",
-        "note": "The project's team for admin mode; console organization routes are not needed by Users.",
-        "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "async fn load_team_id" }]
+        "status": "done",
+        "note": "Resolved as PHP does: the project's organization by `teamInternalId`; on the console the project of a `/v1/projects/:projectId` route (`projectIdFromPath`), the `teamId` param of `/v1/projects`, or `X-Appwrite-Organization` on an `organization` group route; empty otherwise. Organization keys are decoded against its keys and admin mode reads its memberships. A unit test covers each branch. The console's admin branch of the `auth` hook (bare owner/developer roles from this team, `projectIdFromPath` scopes, authorization on for `/v1/projects`) is the `auth` hook's, for when the Organization and Projects routes move.",
+        "where": [
+          { "file": "crates/appwrite/core/src/platform/context.rs", "anchor": "pub(super) async fn team(" },
+          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "async fn load_team" }
+        ]
       }
     },
     {
@@ -479,8 +479,8 @@
       "description": "Listeners on the project database: the `users.[userId].create` event for every user created, usage metrics for created and deleted documents (users, sessions, deployments ...), and purging the functions events cache.",
       "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('dbForProject'" },
       "rust": {
-        "status": "partial",
-        "note": "The project database registers PHP's listeners: `create-trigger-events` (every created user's `users.[userId].create`), `calculate-usage` (sessions and deployments, counted per event) and `purge-function-events-cache`. A deployment's usage resource (`setResource`/`setResourceInternalId`) is not applied yet: no route Rust serves writes deployments.",
+        "status": "done",
+        "note": "The project database registers PHP's listeners: `Usage` (sessions, and deployments per resource type counted against their function or site as `addResourceMetric()` does), `UserEvents` (every created user's `users.[userId].create`) and `FunctionCache` (the functions events cache purged). A unit test checks the recorded metrics against PHP's `Usage` hook on the oracle. The purge runs after the response rather than during the action; no Rust route writes functions.",
         "where": [
           { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "// Database listener" },
           { "file": "crates/appwrite/core/src/platform/context.rs", "anchor": "fn listen(" }
