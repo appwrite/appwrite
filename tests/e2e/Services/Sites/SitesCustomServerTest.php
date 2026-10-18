@@ -16,7 +16,7 @@ use Utopia\Config\Config;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\System\System;
@@ -58,7 +58,7 @@ final class SitesCustomServerTest extends Scope
 
         try {
             $siteId = $this->setupSite([
-                'siteId' => ID::unique(),
+                'siteId' => Id::unique(),
                 'name' => 'SSR site logs',
                 'framework' => 'astro',
                 'adapter' => 'ssr',
@@ -134,7 +134,7 @@ final class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'framework' => 'other',
             'name' => 'Specs site',
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'buildSpecification' => $buildSpecification,
             'runtimeSpecification' => $specifications['body']['specifications'][1]['slug'],
         ]);
@@ -153,7 +153,7 @@ final class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'framework' => 'other',
             'name' => 'Specs site',
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'buildSpecification' => 'cheap-please'
         ]);
         $this->assertEquals(400, $site['headers']['status-code']);
@@ -162,7 +162,7 @@ final class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'framework' => 'other',
             'name' => 'Specs site',
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'runtimeSpecification' => 'cheap-please'
         ]);
         $this->assertEquals(400, $site['headers']['status-code']);
@@ -182,8 +182,9 @@ final class SitesCustomServerTest extends Scope
             'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
+            'description' => 'Site created via E2E test',
             'outputDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $siteId = $site['body']['$id'] ?? '';
@@ -192,6 +193,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(201, $site['headers']['status-code']);
         $this->assertNotEmpty($site['body']['$id']);
         $this->assertEquals('Test Site', $site['body']['name']);
+        $this->assertSame('Site created via E2E test', $site['body']['description']);
         $this->assertEquals('other', $site['body']['framework']);
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$createdAt']));
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$updatedAt']));
@@ -200,18 +202,22 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(null, $site['body']['fallbackFile']);
         $this->assertEquals('./', $site['body']['outputDirectory']);
 
+        $site = $this->getSite($siteId);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertSame('Site created via E2E test', $site['body']['description']);
+
         $variable = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'siteKey1',
             'value' => 'siteValue1',
         ]);
         $variable2 = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'siteKey2',
             'value' => 'siteValue2',
         ]);
         $variable3 = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'siteKey3',
             'value' => 'siteValue3',
         ]);
@@ -228,12 +234,23 @@ final class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-24',
             'framework' => 'other',
             'name' => 'Unsupported Runtime Site',
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
         ]);
 
         $this->assertEquals(400, $site['headers']['status-code']);
         $this->assertEquals('general_argument_invalid', $site['body']['type']);
         $this->assertStringContainsString('Runtime "node-24" is not supported', (string) $site['body']['message']);
+
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'framework' => 'other',
+            'name' => 'Test Site',
+            'description' => \str_repeat('a', 1025),
+            'siteId' => ID::unique(),
+        ]);
+
+        $this->assertEquals(400, $site['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $site['body']['type']);
 
         $this->cleanupSite($siteId);
     }
@@ -241,7 +258,7 @@ final class SitesCustomServerTest extends Scope
     public function testConsoleAvailabilityEndpoint(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test Site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -316,7 +333,7 @@ final class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'name' => 'Test Site',
             'outputDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $siteId = $site['body']['$id'] ?? '';
@@ -326,7 +343,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals('Test Site', $site['body']['name']);
 
         $variable = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'siteKey1',
             'value' => 'siteValue1',
             'secret' => false,
@@ -339,7 +356,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(false, $variable['body']['secret']);
 
         $variable2 = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'siteKey2',
             'value' => 'siteValue2',
             'secret' => false,
@@ -352,7 +369,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(false, $variable2['body']['secret']);
 
         $secretVariable = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'siteKey3',
             'value' => 'siteValue3',
             'secret' => true,
@@ -367,7 +384,7 @@ final class SitesCustomServerTest extends Scope
         // A key that is not a valid env var name is refused
         foreach (['9KEY', 'MY KEY', 'MY-KEY', "TRAILING_TAB\t", "A\x00C\x00M\x00E"] as $invalidKey) {
             $invalidVariable = $this->createVariable($siteId, [
-                'variableId' => ID::unique(),
+                'variableId' => Id::unique(),
                 'key' => $invalidKey,
                 'value' => 'siteValue',
             ]);
@@ -467,20 +484,20 @@ final class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'name' => 'Test List Variables Limit',
             'outputDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
         $siteId = $site['body']['$id'] ?? '';
         $this->assertEquals(201, $site['headers']['status-code']);
 
         $variable1 = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'LIMIT_KEY_1',
             'value' => 'limit-value-1',
         ]);
         $this->assertEquals(201, $variable1['headers']['status-code']);
 
         $variable2 = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'LIMIT_KEY_2',
             'value' => 'limit-value-2',
         ]);
@@ -509,13 +526,13 @@ final class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'name' => 'Test List Variables No Total',
             'outputDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
         $siteId = $site['body']['$id'] ?? '';
         $this->assertEquals(201, $site['headers']['status-code']);
 
         $variable = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'NO_TOTAL_KEY',
             'value' => 'no-total-value',
         ]);
@@ -541,20 +558,20 @@ final class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'name' => 'Test List Variables Cursor',
             'outputDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
         $siteId = $site['body']['$id'] ?? '';
         $this->assertEquals(201, $site['headers']['status-code']);
 
         $variable1 = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'CURSOR_KEY_1',
             'value' => 'cursor-value-1',
         ]);
         $this->assertEquals(201, $variable1['headers']['status-code']);
 
         $variable2 = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'CURSOR_KEY_2',
             'value' => 'cursor-value-2',
         ]);
@@ -596,13 +613,13 @@ final class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'name' => 'Test Update Variable Key',
             'outputDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
         $siteId = $site['body']['$id'] ?? '';
         $this->assertEquals(201, $site['headers']['status-code']);
 
         $variable = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'KEY_BEFORE',
             'value' => 'unchanged-value',
             'secret' => false
@@ -630,13 +647,13 @@ final class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'name' => 'Test Update Variable Value',
             'outputDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
         $siteId = $site['body']['$id'] ?? '';
         $this->assertEquals(201, $site['headers']['status-code']);
 
         $variable = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'UNCHANGED_KEY',
             'value' => 'value-before',
             'secret' => false
@@ -664,13 +681,13 @@ final class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'name' => 'Test Update Variable NoOp',
             'outputDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
         $siteId = $site['body']['$id'] ?? '';
         $this->assertEquals(201, $site['headers']['status-code']);
 
         $variable = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'NOOP_KEY',
             'value' => 'noop-value',
             'secret' => false
@@ -686,6 +703,93 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testUpdateVariableDescription(): void
+    {
+        $settings = [
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Update Variable Description',
+            'outputDirectory' => './',
+        ];
+
+        $site = $this->createSite([...$settings, 'siteId' => ID::unique()]);
+        $siteId = $site['body']['$id'] ?? '';
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $variable = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'STRIPE_KEY',
+            'value' => 'sk_test',
+            'secret' => false,
+            'description' => 'Stripe key used at checkout',
+        ]);
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertSame('Stripe key used at checkout', $variable['body']['description']);
+        $variableId = $variable['body']['$id'];
+
+        $plain = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'PLAIN_KEY',
+            'value' => 'plain',
+        ]);
+        $this->assertEquals(201, $plain['headers']['status-code']);
+        $this->assertSame('', $plain['body']['description']);
+
+        // Re-saving unchanged settings marks the site live again
+        $site = $this->updateSite([...$settings, '$id' => $siteId]);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertTrue($site['body']['live']);
+
+        $response = $this->updateVariable($siteId, $variableId, [
+            'description' => 'Rotated quarterly',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSame('Rotated quarterly', $response['body']['description']);
+        $this->assertSame('STRIPE_KEY', $response['body']['key']);
+        $this->assertSame('sk_test', $response['body']['value']);
+        $this->assertTrue($this->getSite($siteId)['body']['live']);
+
+        $response = $this->updateVariable($siteId, $variableId, [
+            'value' => 'sk_live',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSame('Rotated quarterly', $response['body']['description']);
+        $this->assertFalse($this->getSite($siteId)['body']['live']);
+
+        $response = $this->updateVariable($siteId, $variableId, [
+            'description' => '',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSame('', $response['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $variable = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'LONG_DESCRIPTION',
+            'value' => 'value',
+            'description' => \str_repeat('a', 1025),
+        ]);
+        $this->assertEquals(400, $variable['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $variable['body']['type']);
+
+        $response = $this->updateVariable($siteId, $variableId, [
+            'description' => \str_repeat('a', 1025),
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testUpdateVariableNotFound(): void
     {
         $site = $this->createSite([
@@ -694,7 +798,7 @@ final class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'name' => 'Test Update Variable Not Found',
             'outputDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
         $siteId = $site['body']['$id'] ?? '';
         $this->assertEquals(201, $site['headers']['status-code']);
@@ -718,7 +822,7 @@ final class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'name' => 'Test Invalid Variable ID',
             'outputDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
         $siteId = $site['body']['$id'] ?? '';
         $this->assertEquals(201, $site['headers']['status-code']);
@@ -742,12 +846,12 @@ final class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'name' => 'Test Duplicate Variable ID',
             'outputDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
         $siteId = $site['body']['$id'] ?? '';
         $this->assertEquals(201, $site['headers']['status-code']);
 
-        $variableId = ID::unique();
+        $variableId = Id::unique();
 
         $variable = $this->createVariable($siteId, [
             'variableId' => $variableId,
@@ -774,7 +878,7 @@ final class SitesCustomServerTest extends Scope
     public function testVariablesE2E(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Astro site',
             'framework' => 'astro',
             'adapter' => 'ssr',
@@ -790,7 +894,7 @@ final class SitesCustomServerTest extends Scope
         $domain = $this->setupSiteDomain($siteId);
 
         $secretVariable = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'name',
             'value' => 'Appwrite',
         ]);
@@ -812,11 +916,12 @@ final class SitesCustomServerTest extends Scope
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/');
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Env variable is Appwrite", (string) $response['body']);
-        $this->assertStringNotContainsString("Variable not found", (string) $response['body']);
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/');
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertStringContainsString('Env variable is Appwrite', (string) $response['body']);
+            $this->assertStringNotContainsString('Variable not found', (string) $response['body']);
+        }, 30000, 500);
 
         $deployment = $this->getDeployment($siteId, $deploymentId);
         $this->assertEquals(200, $deployment['headers']['status-code']);
@@ -838,7 +943,7 @@ final class SitesCustomServerTest extends Scope
     public function testScopes(): void
     {
         $site = $this->createSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Astro site',
             'framework' => 'astro',
             'adapter' => 'ssr',
@@ -978,7 +1083,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $sites = $this->listSites([
@@ -1050,6 +1155,28 @@ final class SitesCustomServerTest extends Scope
         $this->assertCount(1, $sites['body']['sites']);
         $this->assertEquals($sites['body']['sites'][0]['$id'], $siteId);
 
+        // Test search description
+        $keyword = ID::unique();
+        $describedId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Described',
+            'description' => 'Renders avatars tagged ' . $keyword,
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        $sites = $this->listSites([
+            'search' => $keyword
+        ]);
+
+        $this->assertEquals(200, $sites['headers']['status-code']);
+        $this->assertCount(1, $sites['body']['sites']);
+        $this->assertSame($describedId, $sites['body']['sites'][0]['$id']);
+
+        $this->cleanupSite($describedId);
+
         /**
          * Test pagination
          */
@@ -1061,7 +1188,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $sites = $this->listSites([
@@ -1124,7 +1251,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         /**
@@ -1134,6 +1261,7 @@ final class SitesCustomServerTest extends Scope
 
         $this->assertEquals(200, $site['headers']['status-code']);
         $this->assertEquals('Test Site', $site['body']['name']);
+        $this->assertSame('', $site['body']['description']);
 
         /**
          * Test for FAILURE
@@ -1152,10 +1280,11 @@ final class SitesCustomServerTest extends Scope
             'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
+            'description' => 'Site created via E2E test',
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $siteId = $site['body']['$id'] ?? '';
@@ -1169,6 +1298,7 @@ final class SitesCustomServerTest extends Scope
             'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site Updated',
+            'description' => 'Updated site description',
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
@@ -1181,9 +1311,49 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $site['headers']['status-code']);
         $this->assertNotEmpty($site['body']['$id']);
         $this->assertEquals('Test Site Updated', $site['body']['name']);
+        $this->assertSame('Updated site description', $site['body']['description']);
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$createdAt']));
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$updatedAt']));
         $this->assertEquals('npm ci', $site['body']['installCommand']);
+
+        // Omitting description keeps the stored one
+        $site = $this->updateSite([
+            'buildRuntime' => 'node-22',
+            'framework' => 'other',
+            'name' => 'Test Site Updated',
+            'outputDirectory' => './',
+            '$id' => $siteId,
+        ]);
+
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertSame('Updated site description', $site['body']['description']);
+
+        $site = $this->updateSite([
+            'buildRuntime' => 'node-22',
+            'framework' => 'other',
+            'name' => 'Test Site Updated',
+            'description' => '',
+            'outputDirectory' => './',
+            '$id' => $siteId,
+        ]);
+
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertSame('', $site['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $site = $this->updateSite([
+            'buildRuntime' => 'node-22',
+            'framework' => 'other',
+            'name' => 'Test Site Updated',
+            'description' => \str_repeat('a', 1025),
+            'outputDirectory' => './',
+            '$id' => $siteId,
+        ]);
+
+        $this->assertEquals(400, $site['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $site['body']['type']);
 
         $this->cleanupSite($siteId);
     }
@@ -1202,7 +1372,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $code = $this->packageSite('static-single-file');
@@ -1242,7 +1412,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         // Create a temporary large site package for chunked upload
@@ -1376,10 +1546,10 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
-        $deploymentId = ID::unique();
+        $deploymentId = Id::unique();
         $tmpDirectory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'appwrite-parallel-site-deployment-' . $deploymentId;
 
         mkdir($tmpDirectory);
@@ -1521,7 +1691,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $deployment = $this->createDeployment($siteId, [
@@ -1579,7 +1749,7 @@ final class SitesCustomServerTest extends Scope
     public function testAdapterDetectionSSR(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'SSR detection site',
             'framework' => 'astro',
             'buildRuntime' => 'node-22',
@@ -1616,7 +1786,7 @@ final class SitesCustomServerTest extends Scope
     public function testAdapterMismatchFailsBuild(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Adapter mismatch site',
             'framework' => 'astro',
             'adapter' => 'ssr',
@@ -1656,7 +1826,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $deployment = $this->createDeployment($siteId, [
@@ -1706,7 +1876,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $deployment = $this->createDeployment($siteId, [
@@ -1730,7 +1900,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         /**
@@ -1757,7 +1927,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $deployment = $this->createDeployment($siteId, [
@@ -1800,7 +1970,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $deployment = $this->createDeployment($siteId, [
@@ -1824,7 +1994,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         /**
@@ -1856,7 +2026,7 @@ final class SitesCustomServerTest extends Scope
 
     public function testDeploymentEndpointsRequireMatchingResourceType(): void
     {
-        $sharedId = ID::unique();
+        $sharedId = Id::unique();
 
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
@@ -1950,7 +2120,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $deployment = $this->createDeployment($siteId, [
@@ -1974,7 +2144,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         /**
@@ -2009,7 +2179,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $deployment = $this->createDeployment($siteId, [
@@ -2033,7 +2203,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         /**
@@ -2062,6 +2232,63 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testCreateDeploymentRejectsShortChunk(): void
+    {
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Short Chunk Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => Id::unique()
+        ]);
+
+        $upload = function (string $range, string $body, ?string $resumeId = null) use ($siteId): array {
+            $headers = [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'content-range' => $range,
+            ];
+
+            if ($resumeId !== null) {
+                $headers['x-appwrite-id'] = $resumeId;
+            }
+
+            return $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments', array_merge($headers, $this->getHeaders()), [
+                'code' => new \CURLFile('data://application/x-gzip;base64,' . base64_encode($body), 'application/x-gzip', 'code.tar.gz'),
+                'activate' => 'false',
+            ]);
+        };
+
+        $chunkSize = 5 * 1024 * 1024;
+        $totalSize = $chunkSize + 1024;
+
+        $first = $upload('bytes 0-' . ($chunkSize - 1) . '/' . $totalSize, str_repeat('a', $chunkSize));
+        $this->assertEquals(202, $first['headers']['status-code']);
+        $deploymentId = $first['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         * The last chunk carries fewer bytes than its range announces.
+         */
+        $last = $upload('bytes ' . $chunkSize . '-' . ($totalSize - 1) . '/' . $totalSize, str_repeat('b', 10), $deploymentId);
+        $this->assertEquals(400, $last['headers']['status-code']);
+        $this->assertEquals('storage_invalid_content_range', $last['body']['type']);
+
+        $deployment = $this->getDeployment($siteId, $deploymentId);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertEquals('failed', $deployment['body']['status']);
+
+        // A retried chunk returns the failed deployment instead of writing to the removed source.
+        $retry = $upload('bytes ' . $chunkSize . '-' . ($totalSize - 1) . '/' . $totalSize, str_repeat('b', 1024), $deploymentId);
+        $this->assertEquals(202, $retry['headers']['status-code']);
+        $this->assertEquals('failed', $retry['body']['status']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testListDeployments(): void
     {
         $siteId = $this->setupSite([
@@ -2072,7 +2299,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $deployment = $this->createDeployment($siteId, [
@@ -2283,7 +2510,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $deployment = $this->createDeployment($siteId, [
@@ -2338,7 +2565,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         /**
@@ -2446,7 +2673,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $deployment = $this->createDeployment($siteId, [
@@ -2493,7 +2720,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $site = $this->deleteSite($siteId);
@@ -2509,7 +2736,7 @@ final class SitesCustomServerTest extends Scope
     public function testDeleteSiteRulesCleanup(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test Rules Cleanup Site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -2639,7 +2866,7 @@ final class SitesCustomServerTest extends Scope
     public function testCreateSiteHidesStartCommand(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'SSR site without a start command',
             'framework' => 'nextjs',
             'adapter' => 'ssr',
@@ -2666,7 +2893,7 @@ final class SitesCustomServerTest extends Scope
     public function testSiteStatic(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Non-SPA site',
             'framework' => 'other',
             'adapter' => 'static',
@@ -2731,7 +2958,7 @@ final class SitesCustomServerTest extends Scope
         $template = $template['body'];
 
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Template site',
             'framework' => $template['frameworks'][0]['key'],
             'adapter' => $template['frameworks'][0]['adapter'],
@@ -2800,7 +3027,7 @@ final class SitesCustomServerTest extends Scope
     public function testSiteDomainReclaiming(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Startup site',
             'framework' => 'other',
             'adapter' => 'static',
@@ -2833,7 +3060,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertStringNotContainsString("This domain is not connected to any Appwrite resource yet", (string) $response['body']);
 
         $site2 = $this->createSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Startup 2 site',
             'framework' => 'other',
             'adapter' => 'static',
@@ -2879,7 +3106,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertStringContainsString("This page is empty, but you can make it yours.", (string) $response['body']);
 
         $site = $this->createSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Startup 2 site',
             'framework' => 'other',
             'adapter' => 'static',
@@ -2905,7 +3132,7 @@ final class SitesCustomServerTest extends Scope
     public function testSitePreviewBranding(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'A site',
             'framework' => 'other',
             'adapter' => 'static',
@@ -2974,7 +3201,7 @@ final class SitesCustomServerTest extends Scope
         $subdomain = 'startup' . \uniqid();
 
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Startup site',
             'framework' => 'other',
             'adapter' => 'static',
@@ -3034,7 +3261,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $deploymentId = $this->setupDeployment($siteId, [
@@ -3101,7 +3328,7 @@ final class SitesCustomServerTest extends Scope
             'name' => 'Duplicate deployment Site',
             'adapter' => 'static',
             'fallbackFile' => '404.html',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
         $this->assertNotEmpty($siteId);
 
@@ -3116,8 +3343,10 @@ final class SitesCustomServerTest extends Scope
         ]);
         $this->assertNotEmpty($deploymentId1);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
-        $this->assertStringContainsString("Customized 404 page", (string) $response['body']);
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
+            $this->assertStringContainsString('Customized 404 page', (string) $response['body']);
+        }, 30000, 500);
 
         $site = $this->updateSite([
             '$id' => $siteId,
@@ -3176,8 +3405,10 @@ final class SitesCustomServerTest extends Scope
         $this->waitDeploymentReady($siteId, $manualDeploymentId);
         $this->waitDeploymentActivated($siteId, $manualDeploymentId);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
-        $this->assertStringContainsString("Index page", (string) $response['body']);
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
+            $this->assertStringContainsString('Index page', (string) $response['body']);
+        }, 30000, 500);
 
         $deployment = $this->getDeployment($siteId, $manualDeploymentId);
         $this->assertEquals(200, $deployment['headers']['status-code']);
@@ -3195,7 +3426,7 @@ final class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'framework' => 'other',
             'name' => 'Activate test Site',
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'adapter' => 'static',
         ]);
         $this->assertNotEmpty($siteId);
@@ -3281,7 +3512,7 @@ final class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'framework' => 'other',
             'name' => 'Authorized preview site',
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'adapter' => 'static',
         ]);
         $this->assertNotEmpty($siteId);
@@ -3447,7 +3678,7 @@ final class SitesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => 'password'
         ]);
@@ -3486,7 +3717,7 @@ final class SitesCustomServerTest extends Scope
     public function testInvalidSSRSource(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Astro SSR Site',
             'framework' => 'astro',
             'adapter' => 'ssr',
@@ -3523,7 +3754,7 @@ final class SitesCustomServerTest extends Scope
     public function testDomainForFailedDeployment(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test Site',
             'framework' => 'astro',
             'buildRuntime' => 'node-22',
@@ -3560,7 +3791,7 @@ final class SitesCustomServerTest extends Scope
     public function testPermanentRedirect(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Sub project site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -3613,7 +3844,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertStringContainsString('Start with this domain', (string) $response['body']);
 
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Static site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -3721,7 +3952,7 @@ final class SitesCustomServerTest extends Scope
     public function testEmptySiteSource(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Empty source site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -3760,7 +3991,7 @@ final class SitesCustomServerTest extends Scope
 
         // Default
         $response = $this->createSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test retention site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -3775,7 +4006,7 @@ final class SitesCustomServerTest extends Scope
 
         // Success values
         $response = $this->createSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test retention site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -3790,7 +4021,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertSame(0, $response['body']['deploymentRetention']);
 
         $response = $this->createSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test retention site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -3806,7 +4037,7 @@ final class SitesCustomServerTest extends Scope
 
         // Failure values
         $response = $this->createSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test retention site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -3815,7 +4046,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertSame(400, $response['headers']['status-code']);
 
         $response = $this->createSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test retention site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -3825,7 +4056,7 @@ final class SitesCustomServerTest extends Scope
 
         // Update flow
         $response = $this->createSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test retention site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -3887,7 +4118,7 @@ final class SitesCustomServerTest extends Scope
     public function testCreateVcsDeploymentWithoutInstallation(): void
     {
         $site = $this->createSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test VCS No Installation',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -3918,7 +4149,7 @@ final class SitesCustomServerTest extends Scope
     public function testCreateDeploymentRejectsPathTraversalId(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test Traversal Deployment Id',
             'framework' => 'other',
             'buildRuntime' => 'node-22',

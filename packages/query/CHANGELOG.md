@@ -2,6 +2,32 @@
 
 All notable changes to `utopia-php/query` are documented in this file.
 
+## 0.7.2
+
+### Changed
+
+- A join given an empty alias is read under the name of the collection it
+  joins instead of throwing `ValidationException`, from the factories and from
+  `parse()`/`parseQuery()` (the `alias` property, the legacy alias-first and
+  column forms, the nested ON form, and cross and natural joins). Only a join
+  with neither a collection nor an alias still throws.
+- `Query::isAliasDefaulted()` (new) reports a join read under its collection's
+  name. It is derived when the query is constructed (the alias equals the
+  collection), so a `toArray()`/`parse()` round trip re-derives it and a later
+  `setAttribute()` on the built query keeps it. A join serialized after its
+  collection was renamed keeps its alias, which `parse()` reads as explicit.
+
+## 0.7.1
+
+### Added
+
+- `Method::Relationship` and `Query::relationship(string $attribute, array $queries)`:
+  queries written against the collection a relationship attribute points to.
+  It is nested, so its children parse and serialize as queries and contribute
+  to `shape()` and `fingerprint()`. `Query::validate()` skips it, since its
+  children name another collection's attributes. No bundled builder compiles
+  it; consumers that populate related documents read it themselves.
+
 ## 0.7.0
 
 ### Breaking

@@ -8,9 +8,11 @@ use Appwrite\Utopia\Database\RuntimeQuery;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
+use Utopia\Query\Method;
 
 class Realtime extends MessagingAdapter
 {
@@ -160,7 +162,7 @@ class Realtime extends MessagingAdapter
             }
             $data = [
                 'strings' => $strings,
-                'compiled' => RuntimeQuery::compile($queryGroup),
+                'compiled' => RuntimeQuery::prepare($queryGroup),
             ];
         }
 
@@ -883,7 +885,7 @@ class Realtime extends MessagingAdapter
     {
         $queries = Query::parseQueries($queries);
         $stack = $queries;
-        $allowed = implode(', ', RuntimeQuery::ALLOWED_QUERIES);
+        $allowed = implode(', ', array_map(fn (Method $m) => $m->value, RuntimeQuery::ALLOWED_QUERIES));
 
         while (!empty($stack)) {
             $query = array_pop($stack);
@@ -891,15 +893,15 @@ class Realtime extends MessagingAdapter
 
             if (! in_array($method, RuntimeQuery::ALLOWED_QUERIES, true)) {
                 throw new QueryException(
-                    "Query method '{$method}' is not supported in Realtime queries. Allowed: {$allowed}"
+                    "Query method '{$method->value}' is not supported in Realtime queries. Allowed: {$allowed}"
                 );
             }
 
-            if ($method === Query::TYPE_SELECT) {
+            if ($method === Method::Select) {
                 RuntimeQuery::validateSelectQuery($query);
             }
 
-            if (in_array($method, [Query::TYPE_AND, Query::TYPE_OR], true)) {
+            if (in_array($method, [Method::And, Method::Or], true)) {
                 \array_push($stack, ...$query->getValues());
             }
         }
@@ -932,7 +934,7 @@ class Realtime extends MessagingAdapter
             case 'users':
                 $channels[] = 'account';
                 $channels[] = 'account.' . $parts[1];
-                $roles = [Role::user(ID::custom($parts[1]))->toString()];
+                $roles = [Role::user(Id::custom($parts[1]))->toString()];
                 // Roles come from the user document (verification, labels, status,
                 // sessions), so the user's open connections re-resolve when it changes,
                 // as they already do for memberships.
@@ -975,7 +977,7 @@ class Realtime extends MessagingAdapter
                     $channels[] = 'teams';
                     $channels[] = 'teams.' . $parts[1];
                 }
-                $roles = [Role::team(ID::custom($parts[1]))->toString()];
+                $roles = [Role::team(Id::custom($parts[1]))->toString()];
                 // permissionsChanged makes the worker re-subscribe the member's connections with
                 // their current roles before matching, so after a delete team:{teamId} is no
                 // longer in the subscription tree for them. Address the delete to their user
@@ -983,7 +985,7 @@ class Realtime extends MessagingAdapter
                 if ($parts[2] === 'memberships' && ($parts[4] ?? '') === 'delete') {
                     $userId = $payload->getAttribute('userId', '');
                     if (\is_string($userId) && $userId !== '') {
-                        $roles[] = Role::user(ID::custom($userId))->toString();
+                        $roles[] = Role::user(Id::custom($userId))->toString();
                     }
                 }
                 break;
@@ -1026,8 +1028,8 @@ class Realtime extends MessagingAdapter
                     }
 
                     $roles = $collection->getAttribute('documentSecurity', false)
-                        ? \array_merge($collection->getRead(), $payload->getRead())
-                        : $collection->getRead();
+                        ? \array_merge($collection->getPermissionsByType(PermissionType::Read), $payload->getPermissionsByType(PermissionType::Read))
+                        : $collection->getPermissionsByType(PermissionType::Read);
                 }
                 break;
             case 'buckets':
@@ -1040,20 +1042,20 @@ class Realtime extends MessagingAdapter
                     $channels[] = 'buckets.' . $payload->getAttribute('bucketId') . '.files.' . $payload->getId();
 
                     $roles = $bucket->getAttribute('fileSecurity', false)
-                        ? \array_merge($bucket->getRead(), $payload->getRead())
-                        : $bucket->getRead();
+                        ? \array_merge($bucket->getPermissionsByType(PermissionType::Read), $payload->getPermissionsByType(PermissionType::Read))
+                        : $bucket->getPermissionsByType(PermissionType::Read);
                 }
 
                 break;
             case 'functions':
                 if ($parts[2] === 'executions') {
-                    if (!empty($payload->getRead())) {
+                    if (!empty($payload->getPermissionsByType(PermissionType::Read))) {
                         $channels[] = 'console';
                         $channels[] = 'projects.' . $project->getId();
                         $channels[] = 'executions';
                         $channels[] = 'executions.' . $payload->getId();
                         $channels[] = 'functions.' . $payload->getAttribute('resourceId');
-                        $roles = $payload->getRead();
+                        $roles = $payload->getPermissionsByType(PermissionType::Read);
                     }
                 } elseif ($parts[2] === 'deployments') {
                     $channels[] = 'console';
@@ -1089,7 +1091,7 @@ class Realtime extends MessagingAdapter
             case 'presences':
                 $channels[] = 'presences';
                 $channels[] = 'presences.' . $parts[1];
-                $roles = $payload->getRead();
+                $roles = $payload->getPermissionsByType(PermissionType::Read);
                 break;
             case 'videos':
                 // Plain video event: `videos.{videoId}.{action}`

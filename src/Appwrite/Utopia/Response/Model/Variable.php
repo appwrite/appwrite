@@ -36,6 +36,12 @@ class Variable extends Model
                 'example' => 'API_KEY',
                 'array' => false,
             ])
+            ->addRule('description', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Optional description for the variable.',
+                'default' => '',
+                'example' => 'Stripe secret key used at checkout.',
+            ])
             ->addRule('value', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Variable value.',

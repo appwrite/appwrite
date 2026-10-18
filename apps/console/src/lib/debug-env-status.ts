@@ -45,6 +45,11 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     description: 'Appwrite API endpoint',
   },
   {
+    key: 'VITE_APPWRITE_VERSION',
+    group: 'Runtime',
+    description: 'Appwrite server version shown on the page loader',
+  },
+  {
     key: 'VITE_CONSOLE_PROFILE',
     group: 'Runtime',
     description: 'Console profile (cloud / self-hosted / native)',
@@ -100,6 +105,11 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     key: 'VITE_CONSOLE_DATABASE_PITR_RESTORE',
     group: 'Runtime',
     description: 'Override dedicated database PITR restore UI',
+  },
+  {
+    key: 'VITE_CONSOLE_PROJECT_ENVIRONMENTS',
+    group: 'Runtime',
+    description: 'Override the project environments switcher (Cloud only)',
   },
   {
     key: 'VITE_CONSOLE_EXTRA_VCS_OAUTH',
@@ -238,6 +248,7 @@ function readRuntimePresence(): Record<string, boolean> {
   const config = getRuntimeConfig()
   return {
     VITE_APPWRITE_ENDPOINT: isNonEmpty(config.appwriteEndpoint),
+    VITE_APPWRITE_VERSION: isNonEmpty(config.appwriteVersion),
     VITE_CONSOLE_PROFILE: isNonEmpty(config.consoleProfile),
     VITE_CONSOLE_FINGERPRINT_KEY: isNonEmpty(config.fingerprintKey),
     VITE_STRIPE_PUBLISHABLE_KEY: isNonEmpty(config.stripePublishableKey),
@@ -250,6 +261,7 @@ function readRuntimePresence(): Record<string, boolean> {
     VITE_CONSOLE_BLOG_DRAFTS: isNonEmpty(config.blogDrafts),
     VITE_CONSOLE_SCREENSHOT_MODE: isNonEmpty(config.screenshotMode),
     VITE_CONSOLE_DATABASE_PITR_RESTORE: isNonEmpty(config.databasePitrRestore),
+    VITE_CONSOLE_PROJECT_ENVIRONMENTS: isNonEmpty(config.projectEnvironments),
     VITE_CONSOLE_EXTRA_VCS_OAUTH: isNonEmpty(config.extraVcsOAuth),
     VITE_CONSOLE_PRE_LAUNCH: isNonEmpty(config.preLaunch),
   }

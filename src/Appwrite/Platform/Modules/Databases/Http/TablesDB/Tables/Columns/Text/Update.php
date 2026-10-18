@@ -60,6 +60,7 @@ class Update extends TextUpdate
             ->param('required', null, new Boolean(), 'Is column required?')
             ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for column when not provided. Cannot be set when column is required.', example: 'Hello World')
             ->param('newKey', null, new Nullable(new Key()), 'New Column Key.', true)
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the column.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')

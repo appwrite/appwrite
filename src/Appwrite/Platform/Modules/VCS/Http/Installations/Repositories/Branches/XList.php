@@ -16,6 +16,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\VCS\Adapter\Git\GitHub;
@@ -113,29 +114,22 @@ class XList extends Action
             : $vcs->listBranches($owner, $repositoryName);
 
         $total = $includeTotal ? \count($branches) : 0;
-        [
-            'limit' => $limit,
-            'offset' => $offset,
-        ] = Query::groupByType($queries);
+        $limit = (Query::getByType($queries, [QueryMethod::Limit])[0] ?? null)?->getValue() ?? APP_LIMIT_LIST_DEFAULT;
+        $offset = (Query::getByType($queries, [QueryMethod::Offset])[0] ?? null)?->getValue() ?? 0;
         $cursorQuery = \current(Query::getCursorQueries($queries, false));
-
-        $limit ??= APP_LIMIT_LIST_DEFAULT;
-        $offset ??= 0;
 
         if ($cursorQuery instanceof Query) {
             $cursor = $cursorQuery->getValue();
-            $cursorDirection = $cursorQuery->getMethod() === Query::TYPE_CURSOR_AFTER
-                ? Database::CURSOR_AFTER
-                : Database::CURSOR_BEFORE;
+            $cursorAfter = $cursorQuery->getMethod() === QueryMethod::CursorAfter;
 
             $cursorIndex = \array_search($cursor, $branches, true);
             if ($cursorIndex === false) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Branch '{$cursor}' for the 'cursor' value not found.");
             }
 
-            $offset += $cursorDirection === Database::CURSOR_AFTER ? $cursorIndex + 1 : 0;
+            $offset += $cursorAfter ? $cursorIndex + 1 : 0;
 
-            if ($cursorDirection === Database::CURSOR_BEFORE) {
+            if (!$cursorAfter) {
                 $start = \max(0, $cursorIndex - $limit);
                 $branches = \array_slice($branches, $start, $cursorIndex - $start);
             } else {

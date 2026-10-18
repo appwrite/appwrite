@@ -334,7 +334,6 @@ export function ConsoleSidebar({
   const { collapsed, setCollapsed } = useSidebarCollapsed(accountWithPrefs)
   const navRef = useRef<HTMLElement>(null)
   const { isDebugModeOpen } = useDebugMode()
-  const { showProjectEnvironments } = useDebugOverrides()
   const { features, isCloud } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { access, isLoading: scopesLoading } = useOrganizationScopes(
@@ -631,7 +630,7 @@ export function ConsoleSidebar({
               <OnboardingCard projectId={projectId} collapsed={collapsed} />
             )}
 
-            {showProjectEnvironments && (
+            {features.projectEnvironments && (
               <EnvironmentSwitcher projectId={projectId} collapsed={collapsed} />
             )}
 
@@ -722,7 +721,7 @@ export function ConsoleSidebar({
             <OnboardingCard projectId={projectId} collapsed={false} />
           )}
 
-          {showProjectEnvironments && (
+          {features.projectEnvironments && (
             <EnvironmentSwitcher projectId={projectId} isMobile />
           )}
 

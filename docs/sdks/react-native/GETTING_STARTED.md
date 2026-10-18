@@ -1,180 +1,145 @@
-## Getting Started
+## Getting started
 
-### Add your Platform
+### Add your platform
 
-If this is your first time using Appwrite, create an account and create your first project.
+In the Appwrite Console, open your project and under **Add a platform** add an **Android app**, an **Apple app**, or both.
 
-Then, under **Add a platform**, add a **Android app** or a **Apple app**. You can skip optional steps.
+- **Apple:** enter your app's name and bundle identifier. In Expo projects it is `expo.ios.bundleIdentifier` in `app.json`; otherwise find it in the **General** tab of your app target in Xcode.
+- **Android:** enter your app's name and package name. In Expo projects it is `expo.android.package` in `app.json`; otherwise it is the `applicationId` in your app-level `build.gradle`.
 
-#### iOS steps
+### Load the URL polyfill
 
-Add your app **name** and **Bundle ID**. You can find your **Bundle Identifier** in the **General** tab for your app's primary target in XCode. For Expo projects you can set or find it on **app.json** file at your project's root directory.
+Import `react-native-url-polyfill` once in your app's entry file (for example `index.js` or your root `_layout.tsx`), before any SDK code runs:
 
-#### Android steps
-Add your app's **name** and **package name**, Your package name is generally the **applicationId** in your app-level **build.gradle** file. For Expo projects you can set or find it on **app.json** file at your project's root directory.
-
-## Setup
-
-On `index.js` add import for `react-native-url-polyfill`
-
-```
-import 'react-native-url-polyfill/auto'
+```js
+import 'react-native-url-polyfill/auto';
 ```
 
-> If you are building for iOS, don't forget to install pods
-> `cd ios && pod install && cd ..`
+### Initialize the client
 
-### Init your SDK
-
-Initialize your SDK with your Appwrite server API endpoint and project ID which can be found in your project settings page.
+Copy your endpoint and project ID from your project's **Settings** page, and pass the bundle identifier or package name you registered to `setPlatform`.
 
 ```js
 import { Client } from 'react-native-appwrite';
-// Init your React Native SDK
-const client = new Client();
 
-client
-    .setEndpoint('http://localhost/v1') // Your Appwrite Endpoint
-    .setProject('455x34dfkj') // Your project ID
-    .setPlatform('com.example.myappwriteapp') // Your application ID or bundle ID.
-;
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setPlatform('com.example.myapp');
 ```
 
-### Make Your First Request
+For a self-hosted Appwrite, use `https://<HOSTNAME>/v1` as the endpoint.
 
-Once your SDK object is set, access any of the Appwrite services and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the [API References](https://appwrite.io/docs) section.
+### Make your first request
 
-```js
-const account = new Account(client);
-
-// Register User
-account.create({
-    userId: ID.unique(),
-    email: 'me@example.com',
-    password: 'password',
-    name: 'Jane Doe'
-})
-    .then(function (response) {
-        console.log(response);
-    }, function (error) {
-        console.log(error);
-    });
-
-```
-
-### Full Example
+Create a service from the client and call any of its methods. Every method takes a single object of named parameters and returns a promise. See the [API reference](https://appwrite.io/docs/references) for every service and method.
 
 ```js
-import { Client, Account, ID } from 'react-native-appwrite';
-// Init your React Native SDK
-const client = new Client();
-
-client
-    .setEndpoint('http://localhost/v1') // Your Appwrite Endpoint
-    .setProject('455x34dfkj')
-    .setPlatform('com.example.myappwriteapp') // YOUR application ID
-;
+import { Account, ID } from 'react-native-appwrite';
 
 const account = new Account(client);
 
-// Register User
-account.create({
+const user = await account.create({
     userId: ID.unique(),
-    email: 'me@example.com',
+    email: 'email@example.com',
     password: 'password',
-    name: 'Jane Doe'
-})
-    .then(function (response) {
-        console.log(response);
-    }, function (error) {
-        console.log(error);
-    });
+    name: "Walter O'Brien",
+});
+
+console.log(user);
 ```
 
-### Type Safety with Models
+### Sign in with OAuth
 
-The Appwrite React Native SDK provides type safety when working with table rows through generic methods. Methods like `listRows`, `getRow`, and others accept a generic type parameter that allows you to specify your custom model type for full type safety.
+Enable the provider in the Console under **Auth > Settings**. In Expo, set the app's URL scheme to `appwrite-callback-<PROJECT_ID>` in `app.json`:
 
-**TypeScript:**
-```typescript
+```json
+{
+    "expo": {
+        "scheme": "appwrite-callback-<PROJECT_ID>"
+    }
+}
+```
+
+Install the Expo packages the sign-in flow uses:
+
+```bash
+npx expo install expo-auth-session expo-web-browser
+```
+
+Then create a login URL with `createOAuth2Token`, open it with `expo-web-browser`, and exchange the returned secret for a session:
+
+```js
+import { makeRedirectUri } from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
+import { OAuthProvider } from 'react-native-appwrite';
+
+const deepLink = new URL(makeRedirectUri({ preferLocalhost: true }));
+const scheme = `${deepLink.protocol}//`;
+
+const loginUrl = account.createOAuth2Token({
+    provider: OAuthProvider.Github,
+    success: `${deepLink}`,
+    failure: `${deepLink}`,
+});
+
+const result = await WebBrowser.openAuthSessionAsync(`${loginUrl}`, scheme);
+
+if (result.type === 'success') {
+    const url = new URL(result.url);
+    const userId = url.searchParams.get('userId');
+    const secret = url.searchParams.get('secret');
+
+    if (userId && secret) {
+        await account.createSession({ userId, secret });
+    }
+}
+```
+
+### Type safety with models
+
+Methods that return rows, such as `listRows` and `getRow`, accept a type parameter for your own row shape:
+
+```ts
+import { TablesDB, type Models } from 'react-native-appwrite';
+
 interface Book extends Models.Row {
     name: string;
     author: string;
     releaseYear?: string;
-    category?: string;
     genre?: string[];
     isCheckedOut: boolean;
 }
 
 const tablesDB = new TablesDB(client);
 
-try {
-    const result = await tablesDB.listRows<Book>({
-        databaseId: 'your-database-id',
-        tableId: 'your-table-id'
-    });
-    
-    result.rows.forEach(book => {
-        console.log(`Book: ${book.name} by ${book.author}`); // Now you have full type safety
-    });
-} catch (error) {
-    console.error('Appwrite error:', error);
-}
-```
-
-**JavaScript (with JSDoc for type hints):**
-```javascript
-/**
- * @typedef {Object} Book
- * @property {string} name
- * @property {string} author
- * @property {string} [releaseYear]
- * @property {string} [category]
- * @property {string[]} [genre]
- * @property {boolean} isCheckedOut
- */
-
-const tablesDB = new TablesDB(client);
-
-try {
-    /** @type {Models.RowList<Book>} */
-    const result = await tablesDB.listRows({
-        databaseId: 'your-database-id',
-        tableId: 'your-table-id'
-    });
-    
-    result.rows.forEach(book => {
-        console.log(`Book: ${book.name} by ${book.author}`); // Type hints available in IDE
-    });
-} catch (error) {
-    console.error('Appwrite error:', error);
-}
-```
-
-**Tip**: You can use the `appwrite types` command to automatically generate TypeScript interfaces based on your Appwrite database schema. Learn more about [type generation](https://appwrite.io/docs/products/databases/type-generation).
-
-### Error Handling
-
-The Appwrite React Native SDK raises an `AppwriteException` object with `message`, `code` and `response` properties. You can handle any errors by catching the exception and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
-
-```javascript
-try {
-    const user = await account.create({
-    userId: ID.unique(),
-    email: "email@example.com",
-    password: "password",
-    name: "Walter O'Brien"
+const result = await tablesDB.listRows<Book>({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
 });
-    console.log('User created:', user);
-} catch (error) {
-    console.error('Appwrite error:', error.message);
+
+for (const book of result.rows) {
+    console.log(`${book.name} by ${book.author}`);
 }
 ```
 
-### Learn more
+The [Appwrite CLI](https://github.com/appwrite/sdk-for-cli) can generate these interfaces from your database schema with `appwrite types`. See [type generation](https://appwrite.io/docs/products/databases/tablesdb/type-generation).
 
-You can use the following resources to learn more and get help
-- 🚀 [Getting Started Tutorial](https://appwrite.io/docs/quick-starts/react-native)
-- 📜 [Appwrite Docs](https://appwrite.io/docs)
-- 💬 [Discord Community](https://appwrite.io/discord)
-- 🚂 [Appwrite React Native Playground](https://github.com/appwrite/playground-for-react-native)
+### Error handling
+
+Failed requests throw an `AppwriteException` with `message`, `code`, `type` and `response` properties.
+
+```js
+import { AppwriteException } from 'react-native-appwrite';
+
+try {
+    const user = await account.get();
+    console.log(user);
+} catch (error) {
+    if (error instanceof AppwriteException) {
+        console.error(error.code, error.type, error.message);
+    }
+}
+```
+
+The [response codes](https://appwrite.io/docs/apis/response-codes) page lists every error type.

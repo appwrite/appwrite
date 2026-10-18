@@ -5,10 +5,10 @@ import { resolveUsageDateBounds } from '@/lib/usage/usage-date-range'
 
 export type UsageChartInterval = '1m' | '15m' | '1h' | '1d'
 
-export type UsageChartIntervalPlan = Pick<
-  Models.BillingPlan,
-  'usageLogsIntervals'
-> | null | undefined
+export type UsageChartIntervalPlan =
+  | Pick<Models.BillingPlan, 'usageLogsIntervals'>
+  | null
+  | undefined
 
 export const DEFAULT_USAGE_CHART_INTERVAL: UsageChartInterval = '1h'
 
@@ -86,6 +86,22 @@ const INTERVAL_MAX_RANGE_HOURS: Partial<Record<UsageChartInterval, number>> = {
   '15m': 24,
 }
 
+/** Ranges shorter than one 15-minute bucket read at 1-minute resolution. */
+const MINUTE_INTERVAL_RANGE_MS = 15 * 60 * 1000
+
+function getUsageChartRangeDurationMs(
+  dateRange: DateRange | undefined,
+): number {
+  const { from, to } = resolveChartIntervalDateBounds(dateRange)
+  return to.getTime() - from.getTime()
+}
+
+function usageChartRangeNeedsMinuteInterval(
+  dateRange: DateRange | undefined,
+): boolean {
+  return getUsageChartRangeDurationMs(dateRange) < MINUTE_INTERVAL_RANGE_MS
+}
+
 export function getUsageChartIntervalMaxRangeDays(
   interval: UsageChartInterval,
 ): number | null {
@@ -122,12 +138,18 @@ export function isUsageChartIntervalValidForRange(
 export function getUsageChartIntervalDisabledReason(
   interval: UsageChartInterval,
   dateRange: DateRange | undefined,
+  allowedIntervals?: readonly UsageChartInterval[],
 ): string | undefined {
   const details = getUsageChartIntervalDisabledReasonDetails(
     interval,
     dateRange,
+    allowedIntervals,
   )
   if (!details) return undefined
+
+  if (details.kind === 'short') {
+    return 'Ranges shorter than 15 minutes use the 1m interval.'
+  }
 
   if (details.kind === 'hours') {
     return `Use a date range of ${details.maxHours} hours or less for this interval.`
@@ -137,13 +159,24 @@ export function getUsageChartIntervalDisabledReason(
 }
 
 export type UsageChartIntervalDisabledReasonDetails =
+  | { kind: 'short' }
   | { kind: 'hours'; maxHours: number }
   | { kind: 'days'; maxDays: number }
 
 export function getUsageChartIntervalDisabledReasonDetails(
   interval: UsageChartInterval,
   dateRange: DateRange | undefined,
+  allowedIntervals?: readonly UsageChartInterval[],
 ): UsageChartIntervalDisabledReasonDetails | undefined {
+  const allowed = allowedIntervals ?? getUsageChartIntervalsForPlan(undefined)
+  if (
+    interval !== '1m' &&
+    allowed.includes('1m') &&
+    usageChartRangeNeedsMinuteInterval(dateRange)
+  ) {
+    return { kind: 'short' }
+  }
+
   if (isUsageChartIntervalValidForRange(interval, dateRange)) {
     return undefined
   }
@@ -162,17 +195,30 @@ export function getUsageChartIntervalDisabledReasonDetails(
 }
 
 /**
- * Pick the finest plan-allowed interval still valid for the current range
- * (fallback when range widens).
+ * Keep the selected interval when it still fits. A range shorter than 15
+ * minutes drops to 1m when the plan allows it, so the series is not collapsed
+ * into a single 15-minute bucket. Wider ranges coarsen when the current
+ * interval is no longer valid.
  */
 export function resolveUsageChartIntervalForRange(
   interval: UsageChartInterval,
   dateRange: DateRange | undefined,
   plan?: UsageChartIntervalPlan,
+  options?: { refine?: boolean },
 ): UsageChartInterval {
   const allowed = getUsageChartIntervalsForPlan(plan)
   const allowedSet = new Set(allowed)
   const planInterval = resolveUsageChartIntervalForPlan(interval, plan)
+  const refine = options?.refine !== false
+
+  if (
+    refine &&
+    allowedSet.has('1m') &&
+    usageChartRangeNeedsMinuteInterval(dateRange) &&
+    isUsageChartIntervalValidForRange('1m', dateRange)
+  ) {
+    return '1m'
+  }
 
   if (
     allowedSet.has(planInterval) &&
@@ -211,8 +257,9 @@ export function resolveUsageChartInterval(
   interval: UsageChartInterval,
   dateRange: DateRange | undefined,
   plan?: UsageChartIntervalPlan,
+  options?: { refine?: boolean },
 ): UsageChartInterval {
-  return resolveUsageChartIntervalForRange(interval, dateRange, plan)
+  return resolveUsageChartIntervalForRange(interval, dateRange, plan, options)
 }
 
 /** Map saved interval prefs to a known chart interval value. */

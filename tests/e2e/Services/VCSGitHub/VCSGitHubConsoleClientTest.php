@@ -10,9 +10,9 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 
@@ -72,7 +72,7 @@ final class VCSGitHubConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'php-8.0',
@@ -622,7 +622,7 @@ final class VCSGitHubConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'php-8.0',
@@ -759,7 +759,7 @@ final class VCSGitHubConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Deleted before push',
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
@@ -790,7 +790,7 @@ final class VCSGitHubConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'php-8.0',
@@ -843,7 +843,7 @@ final class VCSGitHubConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test Site VCS',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -887,13 +887,13 @@ final class VCSGitHubConsoleClientTest extends Scope
         ];
 
         $team = $this->createTeamFixture($consoleHeaders, [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Cross Project Team',
         ]);
         $this->assertEquals(200, $team['headers']['status-code']);
 
         $project2 = $this->client->call(Client::METHOD_POST, '/projects', $consoleHeaders, [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Cross Project Test',
             'teamId' => $team['body']['$id'],
             'region' => System::getEnv('_APP_REGION', 'default'),
@@ -902,7 +902,7 @@ final class VCSGitHubConsoleClientTest extends Scope
         $project2Id = $project2['body']['$id'];
 
         $key = $this->client->call(Client::METHOD_POST, '/projects/' . $project2Id . '/keys', $consoleHeaders, [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'Test Key',
             'scopes' => ['functions.write', 'sites.write'],
         ]);
@@ -917,7 +917,7 @@ final class VCSGitHubConsoleClientTest extends Scope
         try {
             // createFunction with installation from project 1 → should fail
             $function = $this->client->call(Client::METHOD_POST, '/functions', $headers2, [
-                'functionId' => ID::unique(),
+                'functionId' => Id::unique(),
                 'name' => 'Test Cross',
                 'runtime' => 'php-8.0',
                 'entrypoint' => 'index.php',
@@ -929,7 +929,7 @@ final class VCSGitHubConsoleClientTest extends Scope
 
             // createSite with installation from project 1 → should fail
             $site = $this->client->call(Client::METHOD_POST, '/sites', $headers2, [
-                'siteId' => ID::unique(),
+                'siteId' => Id::unique(),
                 'name' => 'Test Cross Site',
                 'framework' => 'other',
                 'buildRuntime' => 'node-22',
@@ -941,7 +941,7 @@ final class VCSGitHubConsoleClientTest extends Scope
 
             // updateFunction with cross-project installation → should fail
             $fn = $this->client->call(Client::METHOD_POST, '/functions', $headers2, [
-                'functionId' => ID::unique(),
+                'functionId' => Id::unique(),
                 'name' => 'Test No VCS',
                 'runtime' => 'php-8.0',
                 'entrypoint' => 'index.php',
@@ -960,7 +960,7 @@ final class VCSGitHubConsoleClientTest extends Scope
 
             // updateSite with cross-project installation → should fail
             $siteNoVcs = $this->client->call(Client::METHOD_POST, '/sites', $headers2, [
-                'siteId' => ID::unique(),
+                'siteId' => Id::unique(),
                 'name' => 'Test No VCS Site',
                 'framework' => 'other',
                 'buildRuntime' => 'node-22',

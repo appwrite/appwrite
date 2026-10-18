@@ -97,7 +97,7 @@ class TimeTravel extends Action
         }
 
         $update = new Document($data);
-        $dbForProject->withPreserveDates(fn () => $dbForProject->updateDocument($collection, $resourceId, $update));
+        $dbForProject->withPreserveDates(true, fn () => $dbForProject->updateDocument($collection, $resourceId, $update));
 
         Console::success(
             'Time-travel successful. Updated ' . $resourceType . ' ' . $resourceId

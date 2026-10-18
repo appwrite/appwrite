@@ -18,9 +18,9 @@ use Tests\E2E\Scopes\SideServer;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 final class FunctionsCustomServerTest extends Scope
@@ -35,7 +35,7 @@ final class FunctionsCustomServerTest extends Scope
     private function setupDeployedFunction(string $name, string $fixture = 'basic', array $overrides = []): string
     {
         $functionId = $this->setupFunction(\array_merge([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => $name,
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -113,7 +113,7 @@ final class FunctionsCustomServerTest extends Scope
         }
 
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -268,7 +268,7 @@ final class FunctionsCustomServerTest extends Scope
         $buildSpecification = $this->getEnabledSpecification($buildSpecifications['body']['specifications']);
 
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Specs function',
             'runtime' => 'node-22',
             'buildSpecification' => $buildSpecification,
@@ -286,7 +286,7 @@ final class FunctionsCustomServerTest extends Scope
         $this->cleanupFunction($function['body']['$id']);
 
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Specs function',
             'runtime' => 'node-22',
             'buildSpecification' => 'cheap-please'
@@ -294,7 +294,7 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(400, $function['headers']['status-code']);
 
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Specs function',
             'runtime' => 'node-22',
             'runtimeSpecification' => 'cheap-please'
@@ -308,8 +308,9 @@ final class FunctionsCustomServerTest extends Scope
          * Test for SUCCESS
          */
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
+            'description' => 'Function created via E2E test',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
             'events' => [
@@ -325,6 +326,7 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $function['headers']['status-code']);
         $this->assertNotEmpty($function['body']['$id']);
         $this->assertEquals('Test', $function['body']['name']);
+        $this->assertSame('Function created via E2E test', $function['body']['description']);
         $this->assertEquals('node-22', $function['body']['runtime']);
         $this->assertEquals(true, $dateValidator->isValid($function['body']['$createdAt']));
         $this->assertEquals(true, $dateValidator->isValid($function['body']['$updatedAt']));
@@ -338,7 +340,7 @@ final class FunctionsCustomServerTest extends Scope
 
         // An explicit null for an optional param must fall back to its default, not 500.
         $nullSchedule = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -347,6 +349,11 @@ final class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(201, $nullSchedule['headers']['status-code']);
         $this->assertSame('', $nullSchedule['body']['schedule']);
+        $this->assertSame('', $nullSchedule['body']['description']);
+
+        $function = $this->getFunction($functionId);
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertSame('Function created via E2E test', $function['body']['description']);
 
         $variable = $this->createVariable($functionId, [
             'variableId' => 'unique()',
@@ -367,6 +374,20 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $variable['headers']['status-code']);
         $this->assertEquals(201, $variable2['headers']['status-code']);
         $this->assertEquals(201, $variable3['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test',
+            'description' => \str_repeat('a', 1025),
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+        ]);
+
+        $this->assertEquals(400, $function['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $function['body']['type']);
     }
 
     public function testListFunctions(): void
@@ -454,11 +475,31 @@ final class FunctionsCustomServerTest extends Scope
         $functionIds = array_column($functions['body']['functions'], '$id');
         $this->assertContains($data['functionId'], $functionIds);
 
+        // Test search description
+        $keyword = ID::unique();
+        $describedId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Described',
+            'description' => 'Resizes avatars tagged ' . $keyword,
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+        ]);
+
+        $functions = $this->listFunctions([
+            'search' => $keyword
+        ]);
+
+        $this->assertEquals(200, $functions['headers']['status-code']);
+        $this->assertCount(1, $functions['body']['functions']);
+        $this->assertSame($describedId, $functions['body']['functions'][0]['$id']);
+
+        $this->cleanupFunction($describedId);
+
         /**
          * Test pagination
          */
         $function2 = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test 2',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -554,8 +595,9 @@ final class FunctionsCustomServerTest extends Scope
     {
         // Create fresh function for this test since it modifies the function
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
+            'description' => 'Function created via E2E test',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
             'events' => [
@@ -576,6 +618,7 @@ final class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Test1',
+            'description' => 'Updated function description',
             'events' => [
                 'users.*.update.name',
                 'users.*.update.email',
@@ -591,6 +634,7 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertNotEmpty($function['body']['$id']);
         $this->assertEquals('Test1', $function['body']['name']);
+        $this->assertSame('Updated function description', $function['body']['description']);
         $this->assertEquals(true, $dateValidator->isValid($function['body']['$createdAt']));
         $this->assertEquals(true, $dateValidator->isValid($function['body']['$updatedAt']));
         $this->assertEquals('', $function['body']['deploymentId']);
@@ -600,6 +644,39 @@ final class FunctionsCustomServerTest extends Scope
         ], $function['body']['events']);
         $this->assertEquals('0 0 1 1 *', $function['body']['schedule']);
         $this->assertEquals(15, $function['body']['timeout']);
+
+        // Omitting description keeps the stored one
+        $function = $this->updateFunction($functionId, [
+            'name' => 'Test1',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+        ]);
+
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertSame('Updated function description', $function['body']['description']);
+
+        $function = $this->updateFunction($functionId, [
+            'name' => 'Test1',
+            'description' => '',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+        ]);
+
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertSame('', $function['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $function = $this->updateFunction($functionId, [
+            'name' => 'Test1',
+            'description' => \str_repeat('a', 1025),
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+        ]);
+
+        $this->assertEquals(400, $function['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $function['body']['type']);
 
         // Create a variable for later tests
         $variable = $this->createVariable($functionId, [
@@ -611,10 +688,101 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $variable['headers']['status-code']);
     }
 
+    public function testUpdateVariableDescription(): void
+    {
+        $settings = [
+            'name' => 'Test Update Variable Description',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+        ];
+
+        $functionId = $this->setupFunction([...$settings, 'functionId' => ID::unique()]);
+
+        /**
+         * Test for SUCCESS
+         */
+        $variable = $this->createVariable($functionId, [
+            'variableId' => ID::unique(),
+            'key' => 'STRIPE_KEY',
+            'value' => 'sk_test',
+            'secret' => false,
+            'description' => 'Stripe key used at checkout',
+        ]);
+
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertSame('Stripe key used at checkout', $variable['body']['description']);
+        $variableId = $variable['body']['$id'];
+
+        $plain = $this->createVariable($functionId, [
+            'variableId' => ID::unique(),
+            'key' => 'PLAIN_KEY',
+            'value' => 'plain',
+        ]);
+
+        $this->assertEquals(201, $plain['headers']['status-code']);
+        $this->assertSame('', $plain['body']['description']);
+
+        // Re-saving unchanged settings marks the function live again
+        $function = $this->updateFunction($functionId, $settings);
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertTrue($function['body']['live']);
+
+        $variable = $this->updateVariable($functionId, $variableId, [
+            'description' => 'Rotated quarterly',
+        ]);
+
+        $this->assertEquals(200, $variable['headers']['status-code']);
+        $this->assertSame('Rotated quarterly', $variable['body']['description']);
+        $this->assertSame('STRIPE_KEY', $variable['body']['key']);
+        $this->assertSame('sk_test', $variable['body']['value']);
+        $this->assertTrue($this->getFunction($functionId)['body']['live']);
+
+        $variable = $this->updateVariable($functionId, $variableId, [
+            'value' => 'sk_live',
+        ]);
+
+        $this->assertEquals(200, $variable['headers']['status-code']);
+        $this->assertSame('Rotated quarterly', $variable['body']['description']);
+        $this->assertFalse($this->getFunction($functionId)['body']['live']);
+
+        $variable = $this->updateVariable($functionId, $variableId, [
+            'description' => '',
+        ]);
+
+        $this->assertEquals(200, $variable['headers']['status-code']);
+        $this->assertSame('', $variable['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $variable = $this->createVariable($functionId, [
+            'variableId' => ID::unique(),
+            'key' => 'LONG_DESCRIPTION',
+            'value' => 'value',
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $variable['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $variable['body']['type']);
+
+        $variable = $this->updateVariable($functionId, $variableId, [
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $variable['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $variable['body']['type']);
+
+        $variable = $this->updateVariable($functionId, $variableId, []);
+
+        $this->assertEquals(400, $variable['headers']['status-code']);
+
+        $this->cleanupFunction($functionId);
+    }
+
     public function testCreateDeploymentFromCLI()
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'node-22',
@@ -653,7 +821,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testCreateDeploymentWithSingleContentRangeChunk(): void
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Single Chunk Range',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'node-22',
@@ -691,7 +859,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testCreateDeploymentRejectsPathTraversalId(): void
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Traversal Deployment Id',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'node-22',
@@ -746,7 +914,7 @@ final class FunctionsCustomServerTest extends Scope
 
         $function = $this->createFunction(
             [
-                'functionId' => ID::unique(),
+                'functionId' => Id::unique(),
                 'name' => $starterTemplate['body']['name'],
                 'runtime' => 'node-22',
                 'execute' => $starterTemplate['body']['permissions'],
@@ -771,7 +939,7 @@ final class FunctionsCustomServerTest extends Scope
         $deployment = $this->createTemplateDeployment(
             $functionId,
             [
-                'resourceId' => ID::unique(),
+                'resourceId' => Id::unique(),
                 'activate' => true,
                 'repository' => $starterTemplate['body']['providerRepositoryId'],
                 'owner' => $starterTemplate['body']['providerOwner'],
@@ -892,7 +1060,7 @@ final class FunctionsCustomServerTest extends Scope
 
         $function = $this->createFunction(
             [
-                'functionId' => ID::unique(),
+                'functionId' => Id::unique(),
                 'name' => $starterTemplate['body']['name'] . ' - Branch Test',
                 'runtime' => 'node-22',
                 'execute' => $starterTemplate['body']['permissions'],
@@ -914,7 +1082,7 @@ final class FunctionsCustomServerTest extends Scope
         $deployment = $this->createTemplateDeployment(
             $functionId,
             [
-                'resourceId' => ID::unique(),
+                'resourceId' => Id::unique(),
                 'activate' => true,
                 'repository' => $starterTemplate['body']['providerRepositoryId'],
                 'owner' => $starterTemplate['body']['providerOwner'],
@@ -968,7 +1136,7 @@ final class FunctionsCustomServerTest extends Scope
 
         $function = $this->createFunction(
             [
-                'functionId' => ID::unique(),
+                'functionId' => Id::unique(),
                 'name' => $starterTemplate['body']['name'] . ' - Commit Test',
                 'runtime' => 'node-22',
                 'execute' => $starterTemplate['body']['permissions'],
@@ -990,7 +1158,7 @@ final class FunctionsCustomServerTest extends Scope
         $deployment = $this->createTemplateDeployment(
             $functionId,
             [
-                'resourceId' => ID::unique(),
+                'resourceId' => Id::unique(),
                 'activate' => true,
                 'repository' => $starterTemplate['body']['providerRepositoryId'],
                 'owner' => $starterTemplate['body']['providerOwner'],
@@ -1023,7 +1191,7 @@ final class FunctionsCustomServerTest extends Scope
     {
         // Create fresh function for this test
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Deployment',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -1101,54 +1269,56 @@ final class FunctionsCustomServerTest extends Scope
     public function testDeploymentBuildOutputIsServedFromTheBuildsDevice(): void
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Build output',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
             'execute' => [Role::any()->toString()],
         ]);
 
-        $deployment = $this->createDeployment($functionId, [
-            'code' => $this->packageFunction('basic'),
-            'activate' => true,
-        ]);
-        $this->assertEquals(202, $deployment['headers']['status-code']);
-        $deploymentId = $deployment['body']['$id'];
+        try {
+            $deployment = $this->createDeployment($functionId, [
+                'code' => $this->packageFunction('basic'),
+                'activate' => true,
+            ]);
+            $this->assertSame(202, $deployment['headers']['status-code']);
+            $deploymentId = $deployment['body']['$id'];
 
-        $this->assertEventually(function () use ($functionId, $deploymentId) {
+            $this->assertEventually(function () use ($functionId, $deploymentId) {
+                $deployment = $this->getDeployment($functionId, $deploymentId);
+                $this->assertSame('ready', $deployment['body']['status'], $deployment['body']['buildLogs'] ?? '');
+
+                $function = $this->getFunction($functionId);
+                if (($function['body']['deploymentId'] ?? '') !== $deploymentId) {
+                    throw new Critical('Deployment reported ready before the function was activated. deploymentId: ' . ($function['body']['deploymentId'] ?? ''));
+                }
+            }, 100000, 500);
+
+            /**
+             * Test for SUCCESS
+             */
             $deployment = $this->getDeployment($functionId, $deploymentId);
-            $this->assertEquals('ready', $deployment['body']['status'], $deployment['body']['buildLogs'] ?? '');
+            $this->assertGreaterThan(0, $deployment['body']['buildSize']);
 
-            $function = $this->getFunction($functionId);
-            if (($function['body']['deploymentId'] ?? '') !== $deploymentId) {
-                throw new Critical('Deployment reported ready before the function was activated. deploymentId: ' . ($function['body']['deploymentId'] ?? ''));
-            }
-        }, 100000, 500);
+            // The executor fetches the artifact through its own storage connection.
+            $execution = $this->createExecution($functionId);
+            $this->assertSame(201, $execution['headers']['status-code']);
+            $this->assertSame('completed', $execution['body']['status'], $execution['body']['errors'] ?? '');
+            $this->assertSame(200, $execution['body']['responseStatusCode']);
+            $this->assertSame($deploymentId, $this->executionOutput($execution)['APPWRITE_FUNCTION_DEPLOYMENT']);
 
-        /**
-         * Test for SUCCESS
-         */
-        $deployment = $this->getDeployment($functionId, $deploymentId);
-        $this->assertGreaterThan(0, $deployment['body']['buildSize']);
+            // The download endpoint reads buildPath through the builds device. The
+            // artifact format depends on the storage strategy, so compare sizes.
+            $output = $this->getDeploymentDownload($functionId, $deploymentId, 'output');
+            $this->assertSame(200, $output['headers']['status-code']);
+            $this->assertSame($deployment['body']['buildSize'], \strlen($output['body']));
 
-        // The executor fetches the artifact through its own storage connection.
-        $execution = $this->createExecution($functionId);
-        $this->assertEquals(201, $execution['headers']['status-code']);
-        $this->assertEquals('completed', $execution['body']['status'], $execution['body']['errors'] ?? '');
-        $this->assertEquals(200, $execution['body']['responseStatusCode']);
-        $this->assertSame($deploymentId, \json_decode($execution['body']['responseBody'], true)['APPWRITE_FUNCTION_DEPLOYMENT']);
-
-        // The download endpoint reads buildPath through the builds device. The
-        // artifact format depends on the storage strategy, so compare sizes.
-        $output = $this->getDeploymentDownload($functionId, $deploymentId, 'output');
-        $this->assertEquals(200, $output['headers']['status-code']);
-        $this->assertSame($deployment['body']['buildSize'], \strlen($output['body']));
-
-        $source = $this->getDeploymentDownload($functionId, $deploymentId, 'source');
-        $this->assertEquals(200, $source['headers']['status-code']);
-        $this->assertStringStartsWith("\x1f\x8b", $source['body']);
-
-        $this->cleanupFunction($functionId);
+            $source = $this->getDeploymentDownload($functionId, $deploymentId, 'source');
+            $this->assertSame(200, $source['headers']['status-code']);
+            $this->assertStringStartsWith("\x1f\x8b", $source['body']);
+        } finally {
+            $this->cleanupFunction($functionId);
+        }
     }
 
     #[Retry(count: 3)]
@@ -1376,7 +1546,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testCreateDeploymentParallelChunksLargeFile(): void
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Parallel Chunk Deployment',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'node-22',
@@ -1384,7 +1554,7 @@ final class FunctionsCustomServerTest extends Scope
             'timeout' => 10,
         ]);
 
-        $deploymentId = ID::unique();
+        $deploymentId = Id::unique();
         $tmpDirectory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'appwrite-parallel-function-deployment-' . $deploymentId;
 
         mkdir($tmpDirectory);
@@ -1545,7 +1715,7 @@ final class FunctionsCustomServerTest extends Scope
         $deploymentId = $data['deploymentId'];
 
         $otherFunctionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Other function',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -1572,7 +1742,7 @@ final class FunctionsCustomServerTest extends Scope
 
         // A second function the deployment does not belong to.
         $otherFunctionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Other function',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -1606,7 +1776,7 @@ final class FunctionsCustomServerTest extends Scope
 
     public function testDeploymentEndpointsRequireMatchingResourceType(): void
     {
-        $sharedId = ID::unique();
+        $sharedId = Id::unique();
 
         $functionId = $this->setupFunction([
             'functionId' => $sharedId,
@@ -1697,7 +1867,7 @@ final class FunctionsCustomServerTest extends Scope
         $deploymentId = $data['deploymentId'];
 
         $otherFunctionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Other function',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -1719,7 +1889,27 @@ final class FunctionsCustomServerTest extends Scope
         $response = $this->createDuplicateDeployment($functionId, $deploymentId);
 
         $this->assertEquals(202, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
+        $duplicateId = $response['body']['$id'] ?? '';
+        $this->assertNotEmpty($duplicateId);
+
+        $this->assertEventually(function () use ($functionId, $duplicateId) {
+            $deployment = $this->getDeployment($functionId, $duplicateId);
+
+            $this->assertEquals(200, $deployment['headers']['status-code']);
+            $this->assertEquals('ready', $deployment['body']['status']);
+        }, 120000, 500);
+
+        // Duplicates activate when their build completes. Restore the shared
+        // fixture before later execution tests reuse its cached deployment ID.
+        $response = $this->updateFunctionDeployment($functionId, $deploymentId);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($deploymentId, $response['body']['deploymentId']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId . '/deployments/' . $duplicateId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+        $this->assertEquals(204, $response['headers']['status-code']);
 
         $this->cleanupFunction($otherFunctionId);
     }
@@ -1727,7 +1917,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testCreateDeploymentPartialResumeRequiresOwnership(): void
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Owner function',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -1777,7 +1967,7 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($deploymentId);
 
         $otherFunctionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Other function',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -1806,13 +1996,68 @@ final class FunctionsCustomServerTest extends Scope
         $this->cleanupFunction($functionId);
     }
 
+    public function testCreateDeploymentRejectsShortChunk(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => Id::unique(),
+            'name' => 'Short chunk function',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'execute' => [Role::any()->toString()],
+        ]);
+
+        $upload = function (string $range, string $body, ?string $resumeId = null) use ($functionId): array {
+            $headers = [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'content-range' => $range,
+            ];
+
+            if ($resumeId !== null) {
+                $headers['x-appwrite-id'] = $resumeId;
+            }
+
+            return $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge($headers, $this->getHeaders()), [
+                'entrypoint' => 'index.js',
+                'code' => new \CURLFile('data://application/x-gzip;base64,' . base64_encode($body), 'application/x-gzip', 'code.tar.gz'),
+                'activate' => 'false',
+            ]);
+        };
+
+        $chunkSize = 5 * 1024 * 1024;
+        $totalSize = $chunkSize + 1024;
+
+        $first = $upload('bytes 0-' . ($chunkSize - 1) . '/' . $totalSize, str_repeat('a', $chunkSize));
+        $this->assertEquals(202, $first['headers']['status-code']);
+        $deploymentId = $first['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         * The last chunk carries fewer bytes than its range announces.
+         */
+        $last = $upload('bytes ' . $chunkSize . '-' . ($totalSize - 1) . '/' . $totalSize, str_repeat('b', 10), $deploymentId);
+        $this->assertEquals(400, $last['headers']['status-code']);
+        $this->assertEquals('storage_invalid_content_range', $last['body']['type']);
+
+        $deployment = $this->getDeployment($functionId, $deploymentId);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertEquals('failed', $deployment['body']['status']);
+
+        // A retried chunk returns the failed deployment instead of writing to the removed source.
+        $retry = $upload('bytes ' . $chunkSize . '-' . ($totalSize - 1) . '/' . $totalSize, str_repeat('b', 1024), $deploymentId);
+        $this->assertEquals(202, $retry['headers']['status-code']);
+        $this->assertEquals('failed', $retry['body']['status']);
+
+        $this->cleanupFunction($functionId);
+    }
+
     public function testCreateDeploymentResumeRequiresOwnership(): void
     {
         $data = $this->setupTestDeployment();
         $deploymentId = $data['deploymentId'];
 
         $otherFunctionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Other function',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -2031,7 +2276,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testGetDeployment(): void
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Build duration',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -2077,7 +2322,7 @@ final class FunctionsCustomServerTest extends Scope
         // Other deployment tests can replace the cached function's active build.
         // Own the function here so the execution identity has a stable target.
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test1',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -2085,7 +2330,7 @@ final class FunctionsCustomServerTest extends Scope
         ]);
         try {
             $variable = $this->createVariable($functionId, [
-                'variableId' => ID::unique(),
+                'variableId' => Id::unique(),
                 'key' => 'GLOBAL_VARIABLE',
                 'value' => 'Global Variable Value',
             ]);
@@ -2214,7 +2459,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testListExecutionsWithinCreatedAtWindow(): void
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test executions createdAt window',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -2373,7 +2618,7 @@ final class FunctionsCustomServerTest extends Scope
         // Verify the updated specs
         $execution = $this->createExecution($functionId);
 
-        $output = json_decode($execution['body']['responseBody'], true);
+        $output = $this->executionOutput($execution);
 
         $this->assertEquals(1, $output['APPWRITE_FUNCTION_CPUS']);
         $this->assertEquals(1024, $output['APPWRITE_FUNCTION_MEMORY']);
@@ -2407,7 +2652,7 @@ final class FunctionsCustomServerTest extends Scope
         // Verify the updated specs
         $execution = $this->createExecution($functionId);
 
-        $output = json_decode($execution['body']['responseBody'], true);
+        $output = $this->executionOutput($execution);
 
         $this->assertEquals(1, $output['APPWRITE_FUNCTION_CPUS']);
         $this->assertEquals(512, $output['APPWRITE_FUNCTION_MEMORY']);
@@ -2456,7 +2701,7 @@ final class FunctionsCustomServerTest extends Scope
     {
         // Create fresh function and deployment for this test since we delete them
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Delete Deployment',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -2499,7 +2744,7 @@ final class FunctionsCustomServerTest extends Scope
     {
         // Create fresh function for this test since we delete it
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Delete Function',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -2525,7 +2770,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testDeleteFunctionRulesCleanup(): void
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Rules Cleanup Function',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -2592,7 +2837,7 @@ final class FunctionsCustomServerTest extends Scope
         // Test for SUCCESS: once the executor has been called, its failure is recorded on the
         // execution and the event is not retried: the function has run, and a retry would run
         // it, and every other subscriber of the event, a second time under new executions.
-        $userId = ID::unique();
+        $userId = Id::unique();
         $event = "users.{$userId}.create";
         $succeeding = $this->setupDeployedFunction('Event subscriber that succeeds', 'basic', ['events' => [$event]]);
         // The runtime exits in the middle of the request, so the executor answers with an error.
@@ -2655,7 +2900,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testExecutionTimeout()
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test timeout execution',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -2692,7 +2937,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testCreateCustomExecution(string $folder, string $name, string $entrypoint, string $runtimeName, string $runtimeVersion): void
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'entrypoint' => $entrypoint,
@@ -2718,7 +2963,6 @@ final class FunctionsCustomServerTest extends Scope
             'async' => 'false'
         ]);
 
-        $output = json_decode($execution['body']['responseBody'], true);
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertEquals('OK', $execution['body']['responseBody']);
@@ -2734,7 +2978,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testCreateCustomExecutionBinaryResponse()
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Binary executions',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -2782,7 +3026,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testCreateCustomExecutionBinaryRequest()
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Binary executions',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -2881,7 +3125,7 @@ final class FunctionsCustomServerTest extends Scope
 
     public function testEventTriggerWithFailingSubscribers(): void
     {
-        $userId = ID::unique();
+        $userId = Id::unique();
         $functions = [];
         $headers = array_merge([
             'content-type' => 'application/json',
@@ -2928,7 +3172,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testEventTrigger()
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Event executions',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -2980,7 +3224,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testScopes()
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Scopes executions',
             'commands' => 'bash setup.sh && npm ci',
             'runtime' => 'node-22',
@@ -3040,7 +3284,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testCookieExecution()
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Cookie executions',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -3086,7 +3330,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testFunctionsDomainServesRequestCarryingAnotherProjectsJwt(): void
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Domain with foreign JWT',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -3105,8 +3349,8 @@ final class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $otherProject['$id'],
             'x-appwrite-key' => $otherProject['apiKey'],
         ], [
-            'userId' => ID::unique(),
-            'email' => 'foreign-jwt-' . ID::unique() . '@appwrite.io',
+            'userId' => Id::unique(),
+            'email' => 'foreign-jwt-' . Id::unique() . '@appwrite.io',
             'password' => 'password',
         ]);
         $this->assertEquals(201, $user['headers']['status-code']);
@@ -3133,7 +3377,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testFunctionsDomain()
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Cookie executions',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -3185,7 +3429,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testFunctionsDomainBinaryResponse()
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Binary executions',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -3219,7 +3463,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testFunctionsDomainBinaryRequest()
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Binary executions',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -3255,7 +3499,7 @@ final class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-response-format' => '1.5.0', // add response format header
         ], $this->getHeaders()), [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -3310,7 +3554,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testRequestFilters()
     {
         $function1Id = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -3319,7 +3563,7 @@ final class FunctionsCustomServerTest extends Scope
         ]);
 
         $function2Id = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test2',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -3352,7 +3596,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testFunctionLogging()
     {
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'runtime' => 'node-22',
             'name' => 'Logging Test',
             'entrypoint' => 'index.js',
@@ -3410,7 +3654,7 @@ final class FunctionsCustomServerTest extends Scope
     {
         // Check if the function specifications are correctly set in builds
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'runtime' => 'node-22',
             'name' => 'Specification Test',
             'entrypoint' => 'index.js',
@@ -3444,7 +3688,7 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
 
-        $executionResponse = json_decode($execution['body']['responseBody'], true);
+        $executionResponse = $this->executionOutput($execution);
         $this->assertEquals('1024', $executionResponse['APPWRITE_FUNCTION_MEMORY']);
         $this->assertEquals('1', $executionResponse['APPWRITE_FUNCTION_CPUS']);
 
@@ -3454,7 +3698,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testDuplicateDeployment(): void
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'runtime' => 'node-22',
             'name' => 'Duplicate Deployment Test',
             'entrypoint' => 'index.js',
@@ -3516,7 +3760,7 @@ final class FunctionsCustomServerTest extends Scope
     {
 
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'runtime' => 'node-22',
             'name' => 'Re-activate Test',
             'entrypoint' => 'index.js',
@@ -3617,7 +3861,7 @@ final class FunctionsCustomServerTest extends Scope
 
         // failed deployment
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Error Pages',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -3673,7 +3917,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testErrorPagesPermissions(): void
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Error Pages',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -3707,7 +3951,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testErrorPagesEmptyBody(): void
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Error Pages',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -3778,7 +4022,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testLogAndErrorTruncation(): void
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Log Truncation',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -3820,7 +4064,7 @@ final class FunctionsCustomServerTest extends Scope
 
         // Default
         $response = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test retention function',
             'runtime' => 'node-22',
         ]);
@@ -3834,7 +4078,7 @@ final class FunctionsCustomServerTest extends Scope
 
         // Success values
         $response = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test retention function',
             'runtime' => 'node-22',
             'deploymentRetention' => 0
@@ -3848,7 +4092,7 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertSame(0, $response['body']['deploymentRetention']);
 
         $response = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test retention function',
             'runtime' => 'node-22',
             'deploymentRetention' => 180
@@ -3863,7 +4107,7 @@ final class FunctionsCustomServerTest extends Scope
 
         // Failure values
         $response = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test retention function',
             'runtime' => 'node-22',
             'deploymentRetention' => 999999
@@ -3871,7 +4115,7 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertSame(400, $response['headers']['status-code']);
 
         $response = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test retention function',
             'runtime' => 'node-22',
             'deploymentRetention' => -1
@@ -3880,7 +4124,7 @@ final class FunctionsCustomServerTest extends Scope
 
         // Update flow
         $response = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test retention function',
             'runtime' => 'node-22',
             'deploymentRetention' => 180
@@ -3932,7 +4176,7 @@ final class FunctionsCustomServerTest extends Scope
     public function testCreateVcsDeploymentWithoutInstallation(): void
     {
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test VCS No Installation',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -3981,7 +4225,7 @@ final class FunctionsCustomServerTest extends Scope
             }, 60000, 500);
 
             $otherFunctionId = $this->setupFunction([
-                'functionId' => ID::unique(),
+                'functionId' => Id::unique(),
                 'name' => 'Execution ownership other',
                 'runtime' => 'node-22',
                 'entrypoint' => 'index.js',
