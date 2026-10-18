@@ -559,17 +559,29 @@ class S3 extends Device
     }
 
     /**
-     * Delete file in given path, Return true on success and false on failure.
-     *
-     * @see http://php.net/manual/en/function.filesize.php
+     * Delete the object at the given path. When `$recursive` is true, also
+     * removes every object under `path/`.
      *
      * @throws StorageException
+     * @throws \InvalidArgumentException When the path names the whole bucket, or a recursive delete leaves the root
      */
     public function delete(string $path, bool $recursive = false): bool
     {
+        // Checked before any request: an empty key, or a bare bucket on a path-style device, would send DeleteBucket.
+        $key = trim($this->getAbsolutePath($path), '/');
+        if ($key === '' || ($this->pathStyle && ! str_contains($key, '/'))) {
+            throw new \InvalidArgumentException('Refusing to delete a whole bucket: ' . $path);
+        }
+
+        $directory = $recursive ? $this->directory($path, allowRoot: true) : '';
+
         $uri = ($path !== '') ? '/' . str_replace('%2F', '/', rawurlencode($path)) : '/';
 
         $this->call(Method::DELETE, $uri);
+
+        if ($recursive) {
+            $this->deletePrefix($directory);
+        }
 
         return true;
     }
@@ -705,20 +717,49 @@ class S3 extends Device
     }
 
     /**
-     * Delete every object under the given directory of the root. The path is a
-     * directory, so `images` never reaches `images-archive/`.
+     * Delete every object in the directory `path/` under the root. Objects
+     * that only share the directory name as a prefix are kept.
      *
      * @throws StorageException When the service kept any of the objects
-     * @throws \InvalidArgumentException
+     * @throws \InvalidArgumentException When the directory is the whole root, the whole bucket or outside the root
      */
     public function deletePath(string $path): bool
     {
-        [$uri, $prefix] = $this->prefix(rtrim($this->getRoot() . '/' . ltrim($path, '/'), '/') . '/');
+        $directory = $this->directory($this->getRoot() . '/' . $path, allowRoot: false);
+
+        $this->deletePrefix($directory);
+
+        return true;
+    }
+
+    /**
+     * Delete every object under the directory, a page of keys per DeleteObjects request.
+     *
+     * @throws StorageException
+     * @throws RemoteException When the listing is not a ListObjectsV2 result or cannot be followed, or the service kept any of the objects
+     * @throws \InvalidArgumentException
+     */
+    private function deletePrefix(string $directory): void
+    {
+        [$uri, $prefix] = $this->prefix($directory);
         $continuationToken = '';
         do {
             $objects = $this->listBucket($uri, $prefix, self::MAX_PAGE_SIZE, $continuationToken);
+
+            // Every ListObjectsV2 result carries IsTruncated; without it the page cannot be told apart from an empty one.
+            if (! \array_key_exists('IsTruncated', $objects)) {
+                throw new RemoteException('Unexpected S3 list response for prefix ' . $directory);
+            }
+
             $token = $objects['NextContinuationToken'] ?? '';
-            $continuationToken = \is_string($token) ? $token : '';
+            $token = \is_string($token) ? $token : '';
+            if ($objects['IsTruncated'] === 'true' && $token === '') {
+                throw new RemoteException('Truncated S3 list response without a continuation token for prefix ' . $directory);
+            }
+            if ($token !== '' && $token === $continuationToken) {
+                throw new RemoteException('S3 list response repeated the continuation token for prefix ' . $directory);
+            }
+            $continuationToken = $token;
 
             // A single object is returned as one associative entry, multiple objects as a list of them.
             $contents = $objects['Contents'] ?? [];
@@ -733,7 +774,7 @@ class S3 extends Device
             }
 
             if ($keys === []) {
-                break;
+                continue;
             }
 
             $body = '<Delete xmlns="http://s3.amazonaws.com/doc/2006-03-01/">';
@@ -744,9 +785,15 @@ class S3 extends Device
             $body .= '</Delete>';
             $response = $this->call(Method::POST, $uri, $body, ['delete' => ''], headers: ['content-type' => 'application/xml']);
 
-            // In Quiet mode the result lists only the objects that were not deleted.
-            $errors = \is_array($response->body) ? ($response->body['Error'] ?? []) : [];
-            $errors = \is_array($errors) ? (isset($errors['Key']) ? [$errors] : $errors) : [];
+            $result = \is_array($response->body) ? $response->body : [];
+
+            // A 200 whose body is a top-level Error, decoded to its Code and Message, failed every key of the batch.
+            if (isset($result['Code'])) {
+                throw new RemoteException('Failed to delete ' . \count($keys) . ' objects under ' . $directory, $response->code, \is_string($result['Code']) ? $result['Code'] : null);
+            }
+
+            $errors = $result['Error'] ?? [];
+            $errors = \is_array($errors) ? (isset($errors['Key']) || isset($errors['Code']) ? [$errors] : $errors) : [];
             $failures = [];
             $errorCode = null;
             foreach ($errors as $error) {
@@ -758,11 +805,39 @@ class S3 extends Device
                 $failures[] = (\is_string($error['Key'] ?? null) ? $error['Key'] : '?') . ' (' . $code . (\is_string($error['Message'] ?? null) ? ': ' . $error['Message'] : '') . ')';
             }
             if ($failures !== []) {
-                throw new RemoteException('Failed to delete ' . \count($failures) . ' objects: ' . implode(', ', $failures), $response->code, $errorCode);
+                throw new RemoteException('Failed to delete ' . \count($failures) . ' objects under ' . $directory . ': ' . implode(', ', $failures), $response->code, $errorCode);
+            }
+            if (\array_key_exists('Error', $result)) {
+                throw new RemoteException('Failed to delete ' . \count($keys) . ' objects under ' . $directory, $response->code);
             }
         } while ($continuationToken !== '');
+    }
 
-        return true;
+    /**
+     * The key prefix, ending in a slash, of the directory at the given path.
+     *
+     * @throws \InvalidArgumentException When the directory is the whole bucket, outside the bucket, outside the root, or the root itself unless allowed
+     */
+    private function directory(string $path, bool $allowRoot): string
+    {
+        $directory = trim($this->getAbsolutePath($path), '/');
+        if ($this->prefix($directory . '/')[1] === '') {
+            throw new \InvalidArgumentException('Refusing to delete every object in the bucket: ' . $path);
+        }
+
+        $root = trim($this->getAbsolutePath($this->getRoot()), '/');
+
+        // Resolved paths are compared, so '.', 'x/..' and '/' are refused as well.
+        if (! $allowRoot && $directory === $root) {
+            throw new \InvalidArgumentException('Refusing to delete the whole root: ' . $this->getRoot());
+        }
+
+        // getAbsolutePath() resolves '..' past the root, so root/../other would name a sibling of the root.
+        if ($root !== '' && ! str_starts_with($directory . '/', $root . '/')) {
+            throw new \InvalidArgumentException('Refusing to delete outside the root ' . $this->getRoot() . ': ' . $path);
+        }
+
+        return $directory . '/';
     }
 
     /**

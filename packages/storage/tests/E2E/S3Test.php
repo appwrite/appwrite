@@ -11,7 +11,6 @@ use Utopia\Storage\Acl;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\DeviceType;
 use Utopia\Storage\Exception\PreconditionFailedException;
-use Utopia\Storage\Exception\RemoteException;
 use Utopia\Storage\FileInfo;
 
 final class S3Test extends S3Base
@@ -121,6 +120,11 @@ final class S3Test extends S3Base
             } catch (Throwable) {
             }
         }
+    }
+
+    protected function withRoot(string $root): S3
+    {
+        return $this->virtualHosted($root);
     }
 
     protected function getAdapterType(): DeviceType
@@ -395,26 +399,21 @@ final class S3Test extends S3Base
         $root = 'contained/' . bin2hex(random_bytes(8));
         $device = $pathStyle ? $this->pathStyle("{$root}/a") : $this->virtualHosted("{$this->bucket}/{$root}/a");
         $sibling = $pathStyle ? $this->pathStyle("{$root}/sibling") : $this->virtualHosted("{$this->bucket}/{$root}/sibling");
-        $file = $device->getPath('f.txt');
+        $file = $device->getPath('d/f.txt');
         $neighbour = $sibling->getPath('f.txt');
 
         try {
             $device->write($file, new Stream('a'), 'text/plain');
             $sibling->write($neighbour, new Stream('sibling'), 'text/plain');
 
-            // A bucket-addressed request carries the prefix literally, which some services refuse.
-            $refusal = null;
             try {
                 $device->deletePath('../sibling');
-            } catch (\InvalidArgumentException|RemoteException $error) {
-                $refusal = $error;
-            }
-            if ($pathStyle) {
-                $this->assertInstanceOf(\InvalidArgumentException::class, $refusal, 'a path-style prefix climbing out of its root is refused before any request');
+                $this->fail('a directory outside the root is refused');
+            } catch (\InvalidArgumentException) {
             }
             $this->assertTrue($sibling->exists($neighbour));
 
-            $this->assertTrue($device->deletePath(''));
+            $this->assertTrue($device->deletePath('d'));
             $this->assertFalse($device->exists($file));
             $this->assertTrue($sibling->exists($neighbour));
         } finally {
@@ -439,6 +438,65 @@ final class S3Test extends S3Base
             $this->assertTrue($device->exists($neighbour));
         } finally {
             $this->remove($device, $file, $neighbour);
+        }
+    }
+
+    public function testPathStyleRefusesToDeleteABucket(): void
+    {
+        $bucket = $this->pathBucket;
+        $device = $this->pathStyle('refuse/' . bin2hex(random_bytes(8)));
+        $whole = new S3($bucket, $this->accessKey, $this->secretKey, $this->pathStyleHost(), $this->region, bucket: $bucket);
+        $sentinel = $device->getPath('sentinel.txt');
+
+        try {
+            $device->write($sentinel, new Stream('sentinel'), 'text/plain');
+
+            $attempts = [
+                'the bucket' => static fn (): bool => $device->delete($bucket),
+                'the bucket with a slash' => static fn (): bool => $device->delete($bucket . '/'),
+                'another bucket' => static fn (): bool => $device->delete('other-' . $bucket),
+                'the bucket, recursively' => static fn (): bool => $device->delete($bucket, true),
+                'nothing, recursively' => static fn (): bool => $device->delete('', true),
+                'the root of a device rooted at the bucket' => static fn (): bool => $whole->deletePath(''),
+                'a sibling bucket, recursively' => static fn (): bool => $device->delete("{$bucket}/../other", true),
+            ];
+            foreach ($attempts as $name => $attempt) {
+                try {
+                    $attempt();
+                    $this->fail("deleting {$name} is refused");
+                } catch (\InvalidArgumentException) {
+                }
+            }
+
+            $this->assertTrue($device->exists($sentinel));
+        } finally {
+            $this->remove($device, $sentinel);
+        }
+    }
+
+    public function testRecursiveDeleteAddressesTheBucket(): void
+    {
+        $root = 'rec/' . bin2hex(random_bytes(8));
+        $device = $this->pathStyle($root);
+        $sibling = $this->pathStyle("{$root}-x");
+        $files = [$device->getPath('a.txt'), $device->getPath('x/b.txt'), $device->getPath('x/y/c.txt')];
+        $neighbour = $sibling->getPath('s.txt');
+
+        try {
+            foreach ($files as $file) {
+                $device->write($file, new Stream('nested'), 'text/plain');
+            }
+            $sibling->write($neighbour, new Stream('sibling'), 'text/plain');
+
+            $this->assertTrue($device->delete($device->getRoot(), true));
+
+            foreach ($files as $file) {
+                $this->assertFalse($device->exists($file), "{$file} is under the deleted directory");
+            }
+            $this->assertTrue($sibling->exists($neighbour), 'a sibling sharing the name as a prefix survives');
+        } finally {
+            $this->remove($device, ...$files);
+            $this->remove($sibling, $neighbour);
         }
     }
 
@@ -486,8 +544,8 @@ final class S3Test extends S3Base
         $root = 'legacy/' . bin2hex(random_bytes(8));
         $legacy = new S3("{$this->pathBucket}/{$root}", $this->accessKey, $this->secretKey, $this->pathStyleHost(), $this->region);
         $device = $this->pathStyle($root);
-        $file = $legacy->getPath('f.txt');
-        $this->assertSame($file, $device->getPath('f.txt'));
+        $file = $legacy->getPath('d/f.txt');
+        $this->assertSame($file, $device->getPath('d/f.txt'));
 
         try {
             $etag = $legacy->write($file, new Stream('legacy'), 'text/plain');
@@ -496,10 +554,10 @@ final class S3Test extends S3Base
             $this->assertSame($etag, $device->getFileInfo($file)->etag);
             $this->assertSame([$file], array_map(static fn (FileInfo $info): string => $info->path, $device->listFiles($device->getPath(''))->files));
             if ($this->bucket === $this->pathBucket) {
-                $this->assertSame('legacy', (string) $this->object->read("{$root}/f.txt"));
+                $this->assertSame('legacy', (string) $this->object->read("{$root}/d/f.txt"));
             }
 
-            $this->assertTrue($device->deletePath(''));
+            $this->assertTrue($device->deletePath('d'));
             $this->assertFalse($device->exists($file));
         } finally {
             $this->remove($legacy, $file);
