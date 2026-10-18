@@ -1,0 +1,95 @@
+---
+layout: post
+title: How Creators Mind runs 1,100+ coaching apps on Appwrite
+description: Learn how Creators Mind built a white-label learning management system (LMS) on Appwrite Cloud that powers 1,100+ coaching apps for Indian educators and reaches nearly 10 million students.
+date: 2026-10-19
+cover: /images/blog/customer-story-creators-mind/cover.avif
+timeToRead: 6
+author: aditya-oberai
+category: customer-stories
+featured: false
+callToAction: true
+faqs:
+  - question: "What is Creators Mind?"
+    answer: "Creators Mind is an education technology company based in Patna, India, founded by Mohnish Vats. It gives teachers, coaching institutes, and schools a branded Android app and website for running their teaching online, along with digital boards, teaching studios, digital marketing, and support. Its software has reached almost 10 million students."
+  - question: "How does Creators Mind use Appwrite?"
+    answer: "Creators Mind runs its learning management system on Appwrite Cloud. Every educator's branded app is a clone of a base Appwrite project, with [Appwrite TablesDB](/docs/products/databases/tablesdb) for course and student data, [Appwrite Functions](/docs/products/functions) for server-side logic, [Appwrite Messaging](/docs/products/messaging) for notifications, and [Appwrite Sites](/docs/products/sites) hosting around 50 educator websites."
+  - question: "Why did Creators Mind move from Firebase to Appwrite?"
+    answer: "Creators Mind builds the same app over and over for different educators. On Firebase, cloning a project repeatedly was painful and database read costs grew with every new client. Appwrite let the team clone a complete project, including its data model and functions, and gave them predictable costs on a single paid plan."
+  - question: "Can Appwrite host many apps for many clients in one account?"
+    answer: "Yes. An Appwrite organization can hold many projects, and each project has its own databases, users, functions, and sites. Creators Mind uses this structure to give each educator an isolated backend while managing all of them from one [Appwrite Cloud](https://cloud.appwrite.io) account. Keep every project under the same organization so billing and access stay in one place."
+  - question: "What Appwrite plan is Creators Mind on?"
+    answer: "Creators Mind is on the Appwrite Pro plan and is growing into one of Appwrite's biggest Pro plan organizations from India, with a backend that serves more than 1,100 active educator apps. Media files are stored on Amazon S3, which they manage separately."
+  - question: "Does Appwrite support managed PostgreSQL?"
+    answer: "Yes. Appwrite offers [managed PostgreSQL](/docs/products/databases/postgresql) databases provisioned in your project's region, with backups, replicas, connection pooling, and extensions like pgvector. Pro plan projects include $10 of database compute credit per month, which covers the Starter specification."
+---
+
+Mohnish Vats started out building websites and apps for clients in Patna, India. Most of those clients turned out to be the same kind of person: a YouTuber or a coaching teacher who had built an audience and wanted to sell courses to it. Around 80% of his first 30 clients were educators.
+
+Every one of them wanted the same thing. A branded app where students could watch live classes, take tests, download notes, and pay fees. So rather than build it from scratch each time, Mohnish and his brothers built it once, and named the company [Creators Mind](https://www.creatorsmind.co.in/).
+
+Three years later, that one app runs as more than 1,100 separate apps, each carrying a different coaching institute's name, and the students using them add up to almost 10 million people. **Every one of those apps runs on Appwrite Cloud.**
+
+# The challenge
+
+Indian test preparation is a large, fragmented market. A single educator with a strong YouTube following can have hundreds of thousands of students, but most of them do not have an engineering team. They have a phone, a whiteboard, and a Telegram group.
+
+Creators Mind wanted to sell these educators a complete app under their own brand, with the same feature set every time and light customization where needed. That created two engineering problems.
+
+**The first was cloning.** Each new client meant a new copy of the app, the backend, the data model, and every server-side function. If that took days of manual setup per client, the business could not scale.
+
+**The second was cost.** Creators Mind charges educators a one-time setup fee plus a share of their course sales, and covers the servers and support out of that share. Backend bills that grow per client, or per database read, come straight off the margin. The team needed infrastructure they could predict.
+
+# What is Creators Mind?
+
+Creators Mind describes itself as a one-stop digital partner for teachers, coaching institutes, and schools. They offer a learning management system delivered as a branded Android app and website for each educator. Inside it, educators can:
+
+- Run **live classes** and publish recorded videos
+- Build **test series** and quizzes
+- Share **PDF notes** and study material
+- **Collect fees** and run their own store
+- **Answer student doubts** and host a community
+
+![Two Creators Mind coaching apps, each carrying the educator's own branding](/images/blog/customer-story-creators-mind/prototype.avif)
+
+The hardware side sells digital boards and flat panels for classrooms, and the company also sets up teaching studios and handles digital marketing for educators. The team is 105 people. Last financial year, Creators Mind reported revenue of about $1.1 million (₹9.5 crore), with hardware making up about 70% and software the rest.
+
+Educators running on the platform include **Law Prep**, **Aakash**, **Mentors Eduserve**, **Disha Online Classes**, **Target Board**, **Ask Class**, and **Ask Board**. Several of them have YouTube channels with over a million subscribers.
+
+# Building Creators Mind on Appwrite
+
+Before Appwrite, the learning management system (LMS) ran on Firebase. It did not survive the cloning model.
+
+> "There were so many problems when I tried to clone the same app again and again. And the database read costs. When we saw Appwrite, the best thing was that you can clone the same app. If I build the same thing, I can clone it. That is the feature that made us use Appwrite."
+
+Creators Mind started on self-hosted Appwrite, then moved to Appwrite Cloud while it was still in beta. Mohnish says he sent plenty of feedback on Discord in those early days, and talked to Appwrite's founder, Eldad, more than once about missing pieces. He stayed through thick and thin, and the platform grew up alongside his product. Today the company is growing into one of Appwrite's biggest Pro plan organizations from India.
+
+The base project is the product. Onboarding an educator means cloning it and applying their branding. Under the hood, each app uses:
+
+- **[Appwrite TablesDB](/docs/products/databases/tablesdb)** for courses, tests, students, orders, and everything else the app stores
+- **[Appwrite Functions](/docs/products/functions)** for server-side logic like payments and content processing
+- **[Appwrite Messaging](/docs/products/messaging)** for notifications to students
+- **[Appwrite Sites](/docs/products/sites)** for hosting educator websites, with around 50 sites deployed so far
+
+About 90% of Creators Mind's educators run on this shared Appwrite Cloud setup. The remaining 10% ask for their own server, and Creators Mind deploys the same app there with a maintenance fee instead of a revenue share. Because Appwrite is open source and can be [self-hosted](/docs/advanced/self-hosting), the app, data model, and functions move to the educator's infrastructure unchanged.
+
+Mohnish also runs a second company, Super Squad, which builds apps, websites, and AI automation for clients outside education. Clients there often arrive asking for Supabase because a friend recommended it.
+
+> "I convince many people to use Appwrite, because there are many things that are better than Supabase."
+
+# Creators Mind today
+
+The company that started as three brothers now has 105 people, an organic following of tens of thousands of educators and teachers, and, by Mohnish's account, the top-selling classroom hardware business in Bihar, India. Where the business stands today:
+
+- **More than 1,100 educator apps live** on the platform
+- Almost **10 million students** reached
+- **About $1.1 million (₹9.5 crore) in revenue last financial year**, about 30% of it from software
+- **Three years on Appwrite**, from the Cloud beta to today
+
+None of it is paid acquisition. Educators find Creators Mind through other educators.
+
+> "Appwrite gives us the backend power to build, ship, and scale without the backend overhead."
+
+What's next for Creators Mind is more of the same, plus a look at [Appwrite's managed PostgreSQL](/docs/products/databases/postgresql) for the parts of the Super Squad client work that currently land on Supabase. Pro plan projects already include $10 of database compute credit per month, enough to cover a Starter database, so the team can try it without a new bill.
+
+Creators Mind shows what a white-label product looks like when the backend is designed to be cloned. One project, one data model, one set of functions, and over a thousand educators each running what feels like their own app. Learn more about Creators Mind on their [website](https://www.creatorsmind.co.in/) and [LinkedIn](https://www.linkedin.com/company/creators-mind/).
