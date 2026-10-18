@@ -221,11 +221,21 @@ class Create extends CollectionAction
                 $dbForProject->createDocuments('indexes', $indexDocuments);
             }
         } catch (DuplicateException) {
+            $dbForProject->deleteDocument('database_' . $database->getSequence(), $collection->getId());
             throw new Exception($this->getDuplicateException());
         } catch (IndexException) {
+            $dbForProject->deleteDocument('database_' . $database->getSequence(), $collection->getId());
             throw new Exception($this->getInvalidIndexException());
         } catch (LimitException) {
+            $dbForProject->deleteDocument('database_' . $database->getSequence(), $collection->getId());
             throw new Exception($this->getLimitException());
+        } catch (\Throwable $e) {
+            // The metadata row is written before the collection, so anything the collection
+            // refuses has to take the row with it -- a permission naming a column that does
+            // not exist among them. Left behind, the caller is told the create failed while
+            // the row survives, and retrying the same id fails as a duplicate.
+            $dbForProject->deleteDocument('database_' . $database->getSequence(), $collection->getId());
+            throw $e;
         }
 
         $queueForEvents

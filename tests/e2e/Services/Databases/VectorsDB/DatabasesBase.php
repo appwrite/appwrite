@@ -1308,4 +1308,55 @@ trait DatabasesBase
         $this->assertEquals(400, $index['headers']['status-code']);
         $this->assertSame('general_argument_invalid', $index['body']['type']);
     }
+    /**
+     * A refused create leaves nothing behind.
+     *
+     * The metadata row is written before the collection, so a permission naming a column the
+     * collection does not have is refused after the row exists. Without a rollback the caller
+     * is told the create failed while the row survives, and retrying the same id is refused
+     * as a duplicate -- an id the caller never successfully used.
+     */
+    public function testCreateCollectionRefusedForAnUnknownColumnLeavesNoRow(): void
+    {
+        if ($this->getSide() === 'client') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/vectorsdb', $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'Column Grants',
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+        $collectionId = ID::unique();
+
+        $refused = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections", $headers, [
+            'collectionId' => $collectionId,
+            'name' => 'Products',
+            'dimension' => 3,
+            'permissions' => [Permission::create(Role::any()), Permission::read(Role::any(), 'nope')],
+        ]);
+
+        $this->assertGreaterThanOrEqual(400, $refused['headers']['status-code']);
+        $this->assertLessThan(500, $refused['headers']['status-code'], 'an unknown column is the caller\'s mistake, not a server fault');
+
+        // The same id is free again, which it would not be if the row had survived.
+        $retried = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections", $headers, [
+            'collectionId' => $collectionId,
+            'name' => 'Products',
+            'dimension' => 3,
+            'permissions' => [Permission::create(Role::any()), Permission::read(Role::any())],
+        ]);
+
+        $this->assertEquals(201, $retried['headers']['status-code'], 'the refused create left its metadata row behind');
+    }
+
 }

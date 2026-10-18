@@ -280,6 +280,16 @@ class Databases extends Action
      */
     private function dropColumnGrant(Database $dbForProject, Document $database, Document $collection, string $key): void
     {
+        // Read the row as it stands rather than trusting the message. A delete carries the
+        // collection as it was when the job was queued, and the permissions may have been
+        // rewritten since -- writing the queued list back would replace newer grants with
+        // the ones that happened to exist when the column was asked to go.
+        $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collection->getId());
+
+        if ($collection->isEmpty()) {
+            return;
+        }
+
         $columnPermissions = $collection->getAttribute('columnPermissions', []);
 
         if (!\is_array($columnPermissions) || $columnPermissions === []) {
