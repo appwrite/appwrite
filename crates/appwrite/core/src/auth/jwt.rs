@@ -73,8 +73,9 @@ pub fn decode_with_leeway(key: &str, token: &str, max_age: i64, leeway: i64) -> 
     {
         return Err("Invalid token: Expired".to_owned());
     }
+    // adhocore checks `nbf` against `nbf - leeway` (ValidatesJWT::validateTimestamps).
     if let Some(nbf) = claims.get("nbf").and_then(Value::as_i64)
-        && t <= nbf
+        && t <= nbf - leeway
     {
         return Err("Invalid token: Not now".to_owned());
     }
@@ -106,6 +107,17 @@ mod tests {
         claims.insert("exp".into(), Value::from(now() - 5));
         let token = encode("secret", claims, 0);
         assert_eq!(decode("secret", &token, 3600).unwrap_err(), "Invalid token: Expired");
+        assert!(decode_with_leeway("secret", &token, 3600, 10).is_ok());
+    }
+
+    #[test]
+    fn leeway_extends_not_before() {
+        let mut claims = Map::new();
+        claims.insert("tokenId".into(), "t1".into());
+        claims.insert("nbf".into(), Value::from(now() + 5));
+        claims.insert("exp".into(), Value::from(now() + 600));
+        let token = encode("secret", claims, 0);
+        assert_eq!(decode("secret", &token, 3600).unwrap_err(), "Invalid token: Not now");
         assert!(decode_with_leeway("secret", &token, 3600, 10).is_ok());
     }
 }
