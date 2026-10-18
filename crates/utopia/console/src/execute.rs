@@ -181,6 +181,10 @@ pub async fn execute<'a>(
 fn argv<'a>(mut words: impl Iterator<Item = &'a str>) -> Result<utopia_async::process::Command, Error> {
     let program =
         words.next().ok_or_else(|| Error::Value("proc_open(): Argument #1 ($command) must not be empty".to_owned()))?;
+    // PHP's proc_open() refuses an empty program name before it spawns anything.
+    if program.is_empty() {
+        return Err(Error::Value("First element must contain a non-empty program name".to_owned()));
+    }
     let mut command = utopia_async::process::Command::new(program);
     command.args(words);
     Ok(command)
