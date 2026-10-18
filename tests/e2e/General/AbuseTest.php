@@ -10,15 +10,19 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideNone;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\System\System;
 
 final class AbuseTest extends Scope
 {
     use ProjectCustom;
     use SideNone;
+
+    private const int MEMBERSHIP_STATUS_PERIOD = 3600;
+
+    private const int COUNTING_SECONDS = 20;
 
     protected function setUp(): void
     {
@@ -45,11 +49,11 @@ final class AbuseTest extends Scope
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Increased Limit Team',
         ]);
 
-        $this->assertEquals(200, $team['headers']['status-code']);
+        $this->assertSame(200, $team['headers']['status-code']);
 
         $project = $this->client->call(Client::METHOD_POST, '/projects', [
             'origin' => 'http://localhost',
@@ -75,12 +79,12 @@ final class AbuseTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-forwarded-for' => '198.51.100.' . random_int(1, 254),
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'increased.limit.' . bin2hex(random_bytes(8)) . '@example.com',
             'password' => 'password',
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertSame(201, $response['headers']['status-code']);
         $this->assertEquals(1000, $response['headers']['x-ratelimit-limit']);
 
         /**
@@ -92,42 +96,45 @@ final class AbuseTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-forwarded-for' => '198.51.100.' . random_int(1, 254),
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'default.limit.' . bin2hex(random_bytes(8)) . '@example.com',
             'password' => 'password',
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertSame(201, $response['headers']['status-code']);
         $this->assertEquals(10, $response['headers']['x-ratelimit-limit']);
     }
 
-    public function testAbuseCreateDocumentCollectionsAPI()
+    #[Group('abuseEnabled')]
+    public function testAbuseCreateDocumentCollectionsAPI(): void
     {
         $data = $this->createCollectionOrTable();
         $databaseId = $data['databaseId'];
         $collectionId = $data['collectionId'];
         $max = 120;
 
+        $this->startCountingInOneWindow(APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT);
         for ($i = 0; $i <= $max + 1; $i++) {
             $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
-                'documentId' => ID::unique(),
+                'documentId' => Id::unique(),
                 'data' => [
                     'title' => 'The Hulk ' . $i,
                 ],
             ]);
 
             if ($i < $max) {
-                $this->assertEquals(201, $response['headers']['status-code']);
+                $this->assertSame(201, $response['headers']['status-code']);
             } else {
-                $this->assertEquals(429, $response['headers']['status-code']);
+                $this->assertSame(429, $response['headers']['status-code']);
             }
         }
     }
 
-    public function testAbuseUpdateDocumentCollectionsAPI()
+    #[Group('abuseEnabled')]
+    public function testAbuseUpdateDocumentCollectionsAPI(): void
     {
         $data = $this->createCollectionOrTable();
         $databaseId = $data['databaseId'];
@@ -139,7 +146,7 @@ final class AbuseTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'title' => 'The Hulk',
             ],
@@ -147,6 +154,7 @@ final class AbuseTest extends Scope
 
         $documentId = $document['body']['$id'];
 
+        $this->startCountingInOneWindow(APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT);
         for ($i = 0; $i <= $max + 1; $i++) {
             $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, [
                 'content-type' => 'application/json',
@@ -158,27 +166,29 @@ final class AbuseTest extends Scope
             ]);
 
             if ($i < $max) {
-                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertSame(200, $response['headers']['status-code']);
             } else {
-                $this->assertEquals(429, $response['headers']['status-code']);
+                $this->assertSame(429, $response['headers']['status-code']);
             }
         }
     }
 
-    public function testAbuseDeleteDocumentCollectionsAPI()
+    #[Group('abuseEnabled')]
+    public function testAbuseDeleteDocumentCollectionsAPI(): void
     {
         $data = $this->createCollectionOrTable();
         $databaseId = $data['databaseId'];
         $collectionId = $data['collectionId'];
         $max = 60;
 
+        $this->startCountingInOneWindow(APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT);
         for ($i = 0; $i <= $max + 1; $i++) {
             $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ], [
-                'documentId' => ID::unique(),
+                'documentId' => Id::unique(),
                 'data' => [
                     'title' => 'The Hulk',
                 ],
@@ -192,52 +202,55 @@ final class AbuseTest extends Scope
             ]);
 
             if ($i < $max) {
-                $this->assertEquals(204, $response['headers']['status-code']);
+                $this->assertSame(204, $response['headers']['status-code']);
             } else {
-                $this->assertEquals(429, $response['headers']['status-code']);
+                $this->assertSame(429, $response['headers']['status-code']);
             }
         }
     }
 
-    public function testAbuseCreateDocumentTablesAPI()
+    #[Group('abuseEnabled')]
+    public function testAbuseCreateDocumentTablesAPI(): void
     {
         $data = $this->createCollectionOrTable(false);
         $databaseId = $data['databaseId'];
         $collectionId = $data['collectionId'];
         $max = 120;
 
+        $this->startCountingInOneWindow(APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT);
         for ($i = 0; $i <= $max + 1; $i++) {
-            $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $collectionId . '/rows', [
+            $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/rows', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
-                'rowId' => ID::unique(),
+                'rowId' => Id::unique(),
                 'data' => [
                     'title' => 'The Hulk ' . $i,
                 ],
             ]);
 
             if ($i < $max) {
-                $this->assertEquals(201, $response['headers']['status-code']);
+                $this->assertSame(201, $response['headers']['status-code']);
             } else {
-                $this->assertEquals(429, $response['headers']['status-code']);
+                $this->assertSame(429, $response['headers']['status-code']);
             }
         }
     }
 
-    public function testAbuseUpdateDocumentTablesAPI()
+    #[Group('abuseEnabled')]
+    public function testAbuseUpdateDocumentTablesAPI(): void
     {
         $data = $this->createCollectionOrTable(false);
         $databaseId = $data['databaseId'];
         $collectionId = $data['collectionId'];
         $max = 120;
 
-        $row = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $collectionId . '/rows', [
+        $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/rows', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => [
                 'title' => 'The Hulk',
             ],
@@ -245,8 +258,9 @@ final class AbuseTest extends Scope
 
         $rowId = $row['body']['$id'];
 
+        $this->startCountingInOneWindow(APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT);
         for ($i = 0; $i <= $max + 1; $i++) {
-            $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/tables/' . $collectionId . '/rows/' . $rowId, [
+            $response = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/rows/' . $rowId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
@@ -256,27 +270,29 @@ final class AbuseTest extends Scope
             ]);
 
             if ($i < $max) {
-                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertSame(200, $response['headers']['status-code']);
             } else {
-                $this->assertEquals(429, $response['headers']['status-code']);
+                $this->assertSame(429, $response['headers']['status-code']);
             }
         }
     }
 
-    public function testAbuseDeleteDocumentTablesAPI()
+    #[Group('abuseEnabled')]
+    public function testAbuseDeleteDocumentTablesAPI(): void
     {
         $data = $this->createCollectionOrTable(false);
         $databaseId = $data['databaseId'];
         $collectionId = $data['collectionId'];
         $max = 60;
 
+        $this->startCountingInOneWindow(APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT);
         for ($i = 0; $i <= $max + 1; $i++) {
-            $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/tables/' . $collectionId . '/rows', [
+            $document = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/rows', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ], [
-                'rowId' => ID::unique(),
+                'rowId' => Id::unique(),
                 'data' => [
                     'title' => 'The Hulk',
                 ],
@@ -284,38 +300,56 @@ final class AbuseTest extends Scope
 
             $documentId = $document['body']['$id'];
 
-            $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/tables/' . $collectionId . '/rows/' . $documentId, [
+            $response = $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/rows/' . $documentId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ]);
 
             if ($i < $max) {
-                $this->assertEquals(204, $response['headers']['status-code']);
+                $this->assertSame(204, $response['headers']['status-code']);
             } else {
-                $this->assertEquals(429, $response['headers']['status-code']);
+                $this->assertSame(429, $response['headers']['status-code']);
             }
         }
     }
 
-    public function testAbuseCreateFile()
+    #[Group('abuseEnabled')]
+    public function testAbuseQueryDocumentsCollectionsAPI(): void
+    {
+        $data = $this->createCollectionOrTable();
+
+        $this->assertQueryLimited('/databases/' . $data['databaseId'] . '/collections/' . $data['collectionId'] . '/documents/query');
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseQueryRowsTablesAPI(): void
+    {
+        $data = $this->createCollectionOrTable(false);
+
+        $this->assertQueryLimited('/tablesdb/' . $data['databaseId'] . '/tables/' . $data['collectionId'] . '/rows/query');
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseCreateFile(): void
     {
         $data = $this->createBucket();
         $bucketId = $data['bucketId'];
         $max = 60;
 
+        $this->startCountingInOneWindow(APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT);
         for ($i = 0; $i <= $max + 1; $i++) {
             $response = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
                 'content-type' => 'multipart/form-data',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
-                'fileId' => ID::unique(),
+                'fileId' => Id::unique(),
                 'file' => new CURLFile(realpath(__DIR__ . '/../../resources/logo.png'), 'image/png', 'permissions.png'),
             ]);
 
             if ($i < $max) {
-                $this->assertEquals(201, $response['headers']['status-code']);
+                $this->assertSame(201, $response['headers']['status-code']);
             } else {
-                $this->assertEquals(429, $response['headers']['status-code']);
+                $this->assertSame(429, $response['headers']['status-code']);
             }
         }
     }
@@ -332,12 +366,13 @@ final class AbuseTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
         $fileId = $response['body']['$id'];
 
+        $this->startCountingInOneWindow(APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT);
         for ($i = 0; $i <= $max + 1; $i++) {
             $response = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
                 'content-type' => 'application/json',
@@ -347,26 +382,28 @@ final class AbuseTest extends Scope
             ]);
 
             if ($i < $max) {
-                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertSame(200, $response['headers']['status-code']);
             } else {
-                $this->assertEquals(429, $response['headers']['status-code']);
+                $this->assertSame(429, $response['headers']['status-code']);
             }
         }
     }
 
-    public function testAbuseDeleteFile()
+    #[Group('abuseEnabled')]
+    public function testAbuseDeleteFile(): void
     {
         $data = $this->createBucket();
         $bucketId = $data['bucketId'];
         $max = 60;
 
+        $this->startCountingInOneWindow(APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT);
         for ($i = 0; $i <= $max + 1; $i++) {
             $response = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
                 'content-type' => 'multipart/form-data',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ], [
-                'fileId' => ID::unique(),
+                'fileId' => Id::unique(),
                 'file' => new CURLFile(realpath(__DIR__ . '/../../resources/logo.png'), 'image/png', 'permissions.png'),
             ]);
 
@@ -378,26 +415,47 @@ final class AbuseTest extends Scope
             ]);
 
             if ($i < $max) {
-                $this->assertEquals(204, $response['headers']['status-code']);
+                $this->assertSame(204, $response['headers']['status-code']);
             } else {
-                $this->assertEquals(429, $response['headers']['status-code']);
+                $this->assertSame(429, $response['headers']['status-code']);
             }
         }
     }
 
+    private function assertQueryLimited(string $path): void
+    {
+        $max = 120;
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-for' => '198.51.100.' . random_int(1, 254),
+        ];
+
+        $this->startCountingInOneWindow(APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT);
+        for ($i = 0; $i < $max; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, $path, $headers, ['queries' => []]);
+            $this->assertSame(200, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, $path, $headers, ['queries' => []]);
+        $this->assertSame(429, $response['headers']['status-code'], 'A guest querying past the limit is throttled');
+    }
+
     private function createCollectionOrTable(bool $isCollection = true): array
     {
-        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+        $api = $isCollection ? '/databases' : '/tablesdb';
+
+        $database = $this->client->call(Client::METHOD_POST, $api, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'AbuseDatabase',
         ]);
 
-        $this->assertEquals(201, $database['headers']['status-code']);
-        $this->assertEquals('AbuseDatabase', $database['body']['name']);
+        $this->assertSame(201, $database['headers']['status-code']);
+        $this->assertSame('AbuseDatabase', $database['body']['name']);
 
         $databaseId = $database['body']['$id'];
 
@@ -405,12 +463,12 @@ final class AbuseTest extends Scope
         $idParam = $isCollection ? 'collectionId' : 'tableId';
         $attributePath = $isCollection ? 'attributes' : 'columns';
 
-        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . "/$endpoint", [
+        $movies = $this->client->call(Client::METHOD_POST, $api . '/' . $databaseId . "/$endpoint", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            $idParam => ID::unique(),
+            $idParam => Id::unique(),
             'name' => 'Movies',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -422,7 +480,7 @@ final class AbuseTest extends Scope
 
         $collectionId = $movies['body']['$id'];
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . "/$endpoint/" . $collectionId . "/$attributePath/string", [
+        $this->client->call(Client::METHOD_POST, $api . '/' . $databaseId . "/$endpoint/" . $collectionId . "/$attributePath/string", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -442,8 +500,8 @@ final class AbuseTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
-            $this->assertEquals(200, $attr['headers']['status-code']);
-            $this->assertEquals('available', $attr['body']['status']);
+            $this->assertSame(200, $attr['headers']['status-code']);
+            $this->assertSame('available', $attr['body']['status']);
         }, 30_000, 500);
 
         return [
@@ -459,7 +517,7 @@ final class AbuseTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'permissions' => [
@@ -483,7 +541,7 @@ final class AbuseTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Abuse Team',
         ]);
         $this->assertSame(201, $team['headers']['status-code']);
@@ -506,9 +564,10 @@ final class AbuseTest extends Scope
             'x-forwarded-for' => '198.51.100.' . \random_int(1, 254),
         ];
 
+        $this->startCountingInOneWindow(self::MEMBERSHIP_STATUS_PERIOD);
         for ($i = 0; $i < 10; $i++) {
             $response = $this->client->call(Client::METHOD_PATCH, $path, $headers, [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'secret' => 'wrong-secret',
             ]);
             $this->assertNotSame(429, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
@@ -524,13 +583,13 @@ final class AbuseTest extends Scope
     #[Group('abuseEnabled')]
     public function testAbuseCreateTransactionOperationsCollectionsAPI(): void
     {
-        $this->assertGuestLimited(Client::METHOD_POST, '/databases/transactions/' . ID::unique() . '/operations', ['operations' => []], 120);
+        $this->assertGuestLimited(Client::METHOD_POST, '/databases/transactions/' . Id::unique() . '/operations', ['operations' => []], 120);
     }
 
     #[Group('abuseEnabled')]
     public function testAbuseCreateTransactionOperationsTablesAPI(): void
     {
-        $this->assertGuestLimited(Client::METHOD_POST, '/tablesdb/transactions/' . ID::unique() . '/operations', ['operations' => []], 120);
+        $this->assertGuestLimited(Client::METHOD_POST, '/tablesdb/transactions/' . Id::unique() . '/operations', ['operations' => []], 120);
     }
 
     /**
@@ -544,6 +603,7 @@ final class AbuseTest extends Scope
             'x-forwarded-for' => '198.51.100.' . \random_int(1, 254),
         ];
 
+        $this->startCountingInOneWindow(APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT);
         for ($i = 0; $i < $limit; $i++) {
             $response = $this->client->call($method, $path, $headers, $params);
             $this->assertNotSame(429, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
@@ -551,5 +611,16 @@ final class AbuseTest extends Scope
 
         $response = $this->client->call($method, $path, $headers, $params);
         $this->assertSame(429, $response['headers']['status-code'], 'A guest past the limit is throttled');
+    }
+
+    /**
+     * A limit counts hits in windows aligned to its period, so a count split across two windows never reaches it.
+     */
+    private function startCountingInOneWindow(int $period): void
+    {
+        $remaining = $period - \fmod(\microtime(true), $period);
+        if ($remaining < self::COUNTING_SECONDS) {
+            \usleep((int) \ceil(($remaining + 0.5) * 1_000_000));
+        }
     }
 }

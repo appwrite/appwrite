@@ -180,7 +180,7 @@ The bundled builders page on a `_cursor` column, so they bind the cursor row's `
 
 ### Join Queries
 
-Every join names the joined collection and an alias, which is required. Conditioned joins take an ON list of `on()` column comparisons and the filters `Method::isJoinCondition()` accepts (comparisons, `between`, null checks, `contains*`, `startsWith`/`endsWith` and their negations, and `and`/`or` of those); anything else in the list (`limit()`, `select()`, `orderAsc()`, an aggregate, another join, `search()`, …) throws `ValidationException`.
+Every join names the joined collection and the alias it is read under. An empty alias reads the join under the collection's own name, and `isAliasDefaulted()` reports it, so a consumer can tell the caller why that name cannot serve as an alias. The flag is derived when the query is built (the alias equals the collection), so a `toArray()`/`parse()` round trip re-derives it, and a later `setAttribute()` on the built query keeps it. A join serialized after `setAttribute()` renamed its collection keeps its alias, which `parse()` then reads as an explicit one. A join with neither a collection nor an alias throws `ValidationException`. Conditioned joins take an ON list of `on()` column comparisons and the filters `Method::isJoinCondition()` accepts (comparisons, `between`, null checks, `contains*`, `startsWith`/`endsWith` and their negations, and `and`/`or` of those); anything else in the list (`limit()`, `select()`, `orderAsc()`, an aggregate, another join, `search()`, …) throws `ValidationException`.
 
 ```php
 Query::join('orders', 'o', [Query::on('users.id', 'o.user_id')]);
@@ -192,8 +192,10 @@ Query::rightJoin('orders', 'o', [Query::on('users.id', 'o.user_id', '!=')]);
 Query::fullOuterJoin('orders', 'o', [Query::on('users.id', 'o.user_id')]);
 Query::crossJoin('colors', 'c');
 Query::naturalJoin('profiles', 'p');
+Query::join('orders', '', [Query::on('users.id', 'orders.user_id')]); // read as `orders`
 
 $join->getAlias();          // 'o'
+$join->isAliasDefaulted();  // false; true for a join given no alias
 $join->getJoinOnQueries();  // the ON list
 ```
 
@@ -214,6 +216,8 @@ Query::or([
 ```
 
 A `Query::elemMatch($attribute, $queries)` factory also exists, for matching a single array element against all of the given predicates. It serializes and parses like any other query, but **no bundled builder compiles it** — every dialect throws `UnsupportedException`. It is only useful to consumers that implement their own [`Compiler`](#compiler-interface).
+
+`Query::relationship($attribute, $queries)` is the same kind of query: it carries queries written against the collection a relationship attribute points to, for consumers that populate related documents themselves (such as `utopia-php/database`). It serializes and parses its child queries, contributes them to `shape()` and `fingerprint()`, and is skipped by `Query::validate()`, since its children name another collection's attributes. No bundled builder compiles it.
 
 ### Spatial Queries
 

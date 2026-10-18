@@ -13,10 +13,10 @@ use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Span\Span;
@@ -147,7 +147,7 @@ trait Deployment
                     }
                 }
 
-                $deploymentId = ID::unique();
+                $deploymentId = Id::unique();
                 $repositoryId = $repository->getId();
                 $repositoryInternalId = $repository->getSequence();
                 $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
@@ -268,13 +268,13 @@ trait Deployment
                             $teamId = $project->getAttribute('teamId', '');
 
                             $latestComment = $authorization->skip(fn () => $dbForPlatform->createDocument('vcsComments', new Document([
-                                '$id' => ID::unique(),
+                                '$id' => Id::unique(),
                                 '$permissions' => [
-                                    Permission::read(Role::team(ID::custom($teamId))),
-                                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+                                    Permission::read(Role::team(Id::custom($teamId))),
+                                    Permission::update(Role::team(Id::custom($teamId), 'owner')),
+                                    Permission::update(Role::team(Id::custom($teamId), 'developer')),
+                                    Permission::delete(Role::team(Id::custom($teamId), 'owner')),
+                                    Permission::delete(Role::team(Id::custom($teamId), 'developer')),
                                 ],
                                 'installationInternalId' => $installationInternalId,
                                 'installationId' => $installationId,
@@ -442,7 +442,7 @@ trait Deployment
 
                     // Deployment preview
                     $sitesDomain = $platform['sitesDomain'];
-                    $domain = ID::unique() . "." . $sitesDomain;
+                    $domain = Id::unique() . "." . $sitesDomain;
                     $ruleId = md5($domain);
                     $previewRuleId = $ruleId;
                     $rule = $authorization->skip(

@@ -12,11 +12,12 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
@@ -74,6 +75,7 @@ class Create extends Action
             ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Bytes::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
             ->param('antivirus', true, new Boolean(true), 'Is virus scanning enabled? For file size above ' . Bytes::human(APP_LIMIT_ANTIVIRUS, 0) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
             ->param('transformations', true, new Boolean(true), 'Are image transformations enabled?', true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the bucket.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
@@ -92,11 +94,12 @@ class Create extends Action
         ?bool $encryption,
         bool $antivirus,
         bool $transformations,
+        string $description,
         Response $response,
         Database $dbForProject,
         Event $queueForEvents
     ) {
-        $bucketId = $bucketId === 'unique()' ? ID::unique() : $bucketId;
+        $bucketId = $bucketId === 'unique()' ? Id::unique() : $bucketId;
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions) ?? [];
@@ -108,38 +111,15 @@ class Create extends Action
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Files collection is not configured.');
             }
 
-            $attributes = [];
-            $indexes = [];
-
-            foreach ($files['attributes'] as $attribute) {
-                $attributes[] = new Document([
-                    '$id' => $attribute['$id'],
-                    'type' => $attribute['type'],
-                    'size' => $attribute['size'],
-                    'required' => $attribute['required'],
-                    'signed' => $attribute['signed'],
-                    'array' => $attribute['array'],
-                    'filters' => $attribute['filters'],
-                    'default' => $attribute['default'] ?? null,
-                    'format' => $attribute['format'] ?? ''
-                ]);
-            }
-
-            foreach ($files['indexes'] as $index) {
-                $indexes[] = new Document([
-                    '$id' => $index['$id'],
-                    'type' => $index['type'],
-                    'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'] ?? [],
-                    'orders' => $index['orders'] ?? [],
-                ]);
-            }
+            $attributes = $files['attributes'];
+            $indexes = $files['indexes'];
 
             $dbForProject->createDocument('buckets', new Document([
                 '$id' => $bucketId,
                 '$collection' => 'buckets',
                 '$permissions' => $permissions,
                 'name' => $name,
+                'description' => $description,
                 'maximumFileSize' => $maximumFileSize,
                 'allowedFileExtensions' => $allowedFileExtensions,
                 'fileSecurity' => $fileSecurity,
@@ -148,7 +128,7 @@ class Create extends Action
                 'encryption' => $encryption,
                 'antivirus' => $antivirus,
                 'transformations' => $transformations,
-                'search' => implode(' ', [$bucketId, $name]),
+                'search' => implode(' ', [$bucketId, $name, $description]),
             ]));
 
             $bucket = $dbForProject->getDocument('buckets', $bucketId);
@@ -158,7 +138,13 @@ class Create extends Action
             // so the document is committed first. A bucket without its collection
             // can never hold a file: remove it rather than leave an orphan.
             try {
-                $dbForProject->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes, permissions: $permissions, documentSecurity: $fileSecurity);
+                $dbForProject->createCollection(Collection::create(
+                    id: 'bucket_' . $bucket->getSequence(),
+                    attributes: $attributes,
+                    indexes: $indexes,
+                    permissions: $permissions,
+                    documentSecurity: $fileSecurity,
+                ));
             } catch (\Throwable $th) {
                 $dbForProject->deleteDocument('buckets', $bucketId);
                 throw $th;
