@@ -559,7 +559,8 @@ class S3 extends Device
     }
 
     /**
-     * Delete file in given path, Return true on success and false on failure.
+     * Delete the object at the given path. When `$recursive` is true, also
+     * removes every object under `path/`.
      *
      * @throws StorageException
      * @throws \InvalidArgumentException When the path names the whole bucket, or a recursive delete leaves the root
@@ -572,13 +573,15 @@ class S3 extends Device
             throw new \InvalidArgumentException('Refusing to delete a whole bucket: ' . $path);
         }
 
-        if ($recursive) {
-            $this->directory($path, allowRoot: true);
-        }
+        $directory = $recursive ? $this->directory($path, allowRoot: true) : '';
 
         $uri = ($path !== '') ? '/' . str_replace('%2F', '/', rawurlencode($path)) : '/';
 
         $this->call(Method::DELETE, $uri);
+
+        if ($recursive) {
+            $this->deletePrefix($directory);
+        }
 
         return true;
     }
@@ -724,12 +727,39 @@ class S3 extends Device
     {
         $directory = $this->directory($this->getRoot() . '/' . $path, allowRoot: false);
 
+        $this->deletePrefix($directory);
+
+        return true;
+    }
+
+    /**
+     * Delete every object under the directory, a page of keys per DeleteObjects request.
+     *
+     * @throws StorageException
+     * @throws RemoteException When the listing is not a ListObjectsV2 result or cannot be followed, or the service kept any of the objects
+     * @throws \InvalidArgumentException
+     */
+    private function deletePrefix(string $directory): void
+    {
         [$uri, $prefix] = $this->prefix($directory);
         $continuationToken = '';
         do {
             $objects = $this->listBucket($uri, $prefix, self::MAX_PAGE_SIZE, $continuationToken);
+
+            // Every ListObjectsV2 result carries IsTruncated; without it the page cannot be told apart from an empty one.
+            if (! \array_key_exists('IsTruncated', $objects)) {
+                throw new RemoteException('Unexpected S3 list response for prefix ' . $directory);
+            }
+
             $token = $objects['NextContinuationToken'] ?? '';
-            $continuationToken = \is_string($token) ? $token : '';
+            $token = \is_string($token) ? $token : '';
+            if ($objects['IsTruncated'] === 'true' && $token === '') {
+                throw new RemoteException('Truncated S3 list response without a continuation token for prefix ' . $directory);
+            }
+            if ($token !== '' && $token === $continuationToken) {
+                throw new RemoteException('S3 list response repeated the continuation token for prefix ' . $directory);
+            }
+            $continuationToken = $token;
 
             // A single object is returned as one associative entry, multiple objects as a list of them.
             $contents = $objects['Contents'] ?? [];
@@ -744,7 +774,7 @@ class S3 extends Device
             }
 
             if ($keys === []) {
-                break;
+                continue;
             }
 
             $body = '<Delete xmlns="http://s3.amazonaws.com/doc/2006-03-01/">';
@@ -772,8 +802,6 @@ class S3 extends Device
                 throw new RemoteException('Failed to delete ' . \count($failures) . ' objects: ' . implode(', ', $failures), $response->code, $errorCode);
             }
         } while ($continuationToken !== '');
-
-        return true;
     }
 
     /**

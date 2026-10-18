@@ -474,6 +474,32 @@ final class S3Test extends S3Base
         }
     }
 
+    public function testRecursiveDeleteAddressesTheBucket(): void
+    {
+        $root = 'rec/' . bin2hex(random_bytes(8));
+        $device = $this->pathStyle($root);
+        $sibling = $this->pathStyle("{$root}-x");
+        $files = [$device->getPath('a.txt'), $device->getPath('x/b.txt'), $device->getPath('x/y/c.txt')];
+        $neighbour = $sibling->getPath('s.txt');
+
+        try {
+            foreach ($files as $file) {
+                $device->write($file, new Stream('nested'), 'text/plain');
+            }
+            $sibling->write($neighbour, new Stream('sibling'), 'text/plain');
+
+            $this->assertTrue($device->delete($device->getRoot(), true));
+
+            foreach ($files as $file) {
+                $this->assertFalse($device->exists($file), "{$file} is under the deleted directory");
+            }
+            $this->assertTrue($sibling->exists($neighbour), 'a sibling sharing the name as a prefix survives');
+        } finally {
+            $this->remove($device, ...$files);
+            $this->remove($sibling, $neighbour);
+        }
+    }
+
     public function testPathStyleCopyRunsServerSide(): void
     {
         $root = 'copied/' . bin2hex(random_bytes(8));
