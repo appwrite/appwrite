@@ -991,7 +991,7 @@ final class S3Test extends TestCase
         $this->device($client)->listUploads('/root/', 10, 'next-token');
     }
 
-    private static function xml(string $body): Response
+    private function xml(string $body): Response
     {
         return new Response(200, body: new Stream('<?xml version="1.0" encoding="UTF-8"?>' . $body))->withHeader('content-type', 'application/xml');
     }
@@ -1017,11 +1017,11 @@ final class S3Test extends TestCase
     {
         $client = new ScriptedClient([
             new Response(200)->withHeader('etag', '"abc"'),
-            self::xml('<ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>'),
-            self::xml('<ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>root/x/a</Key></Contents></ListBucketResult>'),
+            $this->xml('<ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>'),
+            $this->xml('<ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>root/x/a</Key></Contents></ListBucketResult>'),
             new Response(200),
             new Response(200)->withHeader('content-length', '1'),
-            self::xml('<CopyObjectResult><ETag>"abc"</ETag></CopyObjectResult>'),
+            $this->xml('<CopyObjectResult><ETag>"abc"</ETag></CopyObjectResult>'),
         ]);
         $device = $build($client);
 
@@ -1065,7 +1065,7 @@ final class S3Test extends TestCase
     #[DataProvider('endpoints')]
     public function testAddressingFollowsTheEndpoint(string $host, string $bucket, ?bool $pathStyle, string $uri): void
     {
-        $client = new ScriptedClient([self::xml('<ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>')]);
+        $client = new ScriptedClient([$this->xml('<ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>')]);
         $options = ['client' => $client, 'bucket' => $bucket] + ($pathStyle === null ? [] : ['pathStyle' => $pathStyle]);
         $device = new S3("{$bucket}/root", 'key', 'secret', $host, 'us-east-1', ...$options);
 
