@@ -47,10 +47,10 @@ use Utopia\Storage\UploadList;
  *   can be handed back to any other method.
  *
  * Unless `pathStyle` says otherwise, a device with a bucket is path-style except
- * when its host is the bucket name (a domain named after the bucket), its host
- * begins with `{bucket}.`, or the first segment of the endpoint path is the
- * bucket. A custom domain whose host is not the bucket name, or a service host
- * that happens to begin with `{bucket}.`, must pass `pathStyle` explicitly.
+ * when its host is the bucket name (a dotted domain named after the bucket),
+ * its host begins with `{bucket}.`, or the last segment of the endpoint path is
+ * the bucket. A custom domain whose host is not the bucket name, or a service
+ * host that happens to begin with `{bucket}.`, must pass `pathStyle` explicitly.
  *
  * @see \Utopia\Storage\Tests\Device\S3Test
  *
@@ -119,7 +119,7 @@ class S3 extends Device
         if ($pathStyle === true && ($bucket === null || $bucket === '')) {
             throw new \InvalidArgumentException('Path-style addressing needs a bucket');
         }
-        $this->pathStyle = $pathStyle ?? $this->addressesService(strtolower($endpoint->getHost()), $bucket);
+        $this->pathStyle = $pathStyle ?? $this->infersPathStyle(strtolower($endpoint->getHost()), $bucket);
 
         $this->client = $client ?? new Retry(
             new HttpClient(new CurlAdapter(options: [
@@ -133,23 +133,26 @@ class S3 extends Device
     }
 
     /**
-     * Whether the endpoint is the bare service rather than the bucket.
+     * Whether the endpoint is the bare service rather than the bucket. Hosts
+     * compare case-insensitively, paths case-sensitively.
      */
-    private function addressesService(string $host, ?string $bucket): bool
+    private function infersPathStyle(string $host, ?string $bucket): bool
     {
         if ($bucket === null || $bucket === '') {
             return false;
         }
 
-        $bucket = strtolower($bucket);
-        if ($host === $bucket && str_contains($host, '.')) {
+        $lowercase = strtolower($bucket);
+        if ($host === $lowercase && str_contains($host, '.')) {
             return false;
         }
-        if (str_starts_with($host, $bucket . '.')) {
+        if (str_starts_with($host, $lowercase . '.')) {
             return false;
         }
 
-        return rawurldecode(explode('/', ltrim($this->path, '/'))[0]) !== $bucket;
+        $segments = explode('/', $this->path);
+
+        return rawurldecode(end($segments)) !== $bucket;
     }
 
     /**
@@ -161,7 +164,7 @@ class S3 extends Device
      */
     private function prefix(string $path): array
     {
-        $path = ltrim($path, '/');
+        $path = ltrim(preg_replace('#/+#', '/', $path) ?? $path, '/');
         if (! $this->pathStyle) {
             return ['/', $path];
         }
@@ -175,7 +178,7 @@ class S3 extends Device
             return ['/' . $bucket, ''];
         }
         if (str_starts_with($path, $bucket . '/')) {
-            return ['/' . $bucket, ltrim(substr($path, \strlen($bucket) + 1), '/')];
+            return ['/' . $bucket, substr($path, \strlen($bucket) + 1)];
         }
 
         throw new \InvalidArgumentException('Path is outside the bucket');
@@ -584,7 +587,20 @@ class S3 extends Device
             throw new \InvalidArgumentException('Cannot list more than ' . self::MAX_PAGE_SIZE . ' objects');
         }
 
-        [$uri, $prefix] = $this->prefix($prefix);
+        [$uri, $key] = $this->prefix($prefix);
+
+        return $this->listBucket($uri, $key, $maxKeys, $continuationToken);
+    }
+
+    /**
+     * Send a ListObjectsV2 request for a key prefix to the given bucket URI.
+     *
+     * @return array<mixed>
+     *
+     * @throws StorageException
+     */
+    private function listBucket(string $uri, string $prefix, int $maxKeys, string $continuationToken): array
+    {
         $parameters = [
             'list-type' => 2,
             'prefix' => $prefix,
@@ -688,20 +704,18 @@ class S3 extends Device
     }
 
     /**
-     * Delete files in given path, path must be a directory. Return true on success and false on failure.
+     * Delete every object under the given directory of the root. The path is a
+     * directory, so `images` never reaches `images-archive/`.
      *
-     *
-     * @throws StorageException
+     * @throws StorageException When the service kept any of the objects
      * @throws \InvalidArgumentException
      */
     public function deletePath(string $path): bool
     {
-        $path = $this->getRoot() . '/' . $path;
-
-        [$uri] = $this->prefix($path);
+        [$uri, $prefix] = $this->prefix(rtrim($this->getRoot() . '/' . ltrim($path, '/'), '/') . '/');
         $continuationToken = '';
         do {
-            $objects = $this->listObjects($path, continuationToken: $continuationToken);
+            $objects = $this->listBucket($uri, $prefix, self::MAX_PAGE_SIZE, $continuationToken);
             $token = $objects['NextContinuationToken'] ?? '';
             $continuationToken = \is_string($token) ? $token : '';
 
@@ -727,7 +741,24 @@ class S3 extends Device
             }
             $body .= '<Quiet>true</Quiet>';
             $body .= '</Delete>';
-            $this->call(Method::POST, $uri, $body, ['delete' => ''], headers: ['content-type' => 'application/xml']);
+            $response = $this->call(Method::POST, $uri, $body, ['delete' => ''], headers: ['content-type' => 'application/xml']);
+
+            // In Quiet mode the result lists only the objects that were not deleted.
+            $errors = \is_array($response->body) ? ($response->body['Error'] ?? []) : [];
+            $errors = \is_array($errors) ? (isset($errors['Key']) ? [$errors] : $errors) : [];
+            $failures = [];
+            $errorCode = null;
+            foreach ($errors as $error) {
+                if (! \is_array($error)) {
+                    continue;
+                }
+                $code = \is_string($error['Code'] ?? null) ? $error['Code'] : '';
+                $errorCode ??= $code !== '' ? $code : null;
+                $failures[] = (\is_string($error['Key'] ?? null) ? $error['Key'] : '?') . ' (' . $code . (\is_string($error['Message'] ?? null) ? ': ' . $error['Message'] : '') . ')';
+            }
+            if ($failures !== []) {
+                throw new RemoteException('Failed to delete ' . \count($failures) . ' objects: ' . implode(', ', $failures), $response->code, $errorCode);
+            }
         } while ($continuationToken !== '');
 
         return true;

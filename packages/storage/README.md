@@ -79,7 +79,7 @@ When the bucket name is known, a same-device `copy()` — and therefore `move()`
 
 The bucket also decides where requests that address the bucket itself go: `listFiles()`, `listUploads()` and `deletePath()`. Like the AWS SDKs' force-path-style option, an endpoint is either:
 
-- **virtual-hosted**: the endpoint addresses the bucket (`YOUR_BUCKET_NAME.s3.us-east-1.amazonaws.com`, or `http://minio:9000/YOUR_BUCKET_NAME/`), and paths are keys in it.
+- **virtual-hosted**: the endpoint addresses the bucket (`YOUR_BUCKET_NAME.s3.us-east-1.amazonaws.com`, `http://minio:9000/YOUR_BUCKET_NAME/`, or `https://storage.example.com/s3/YOUR_BUCKET_NAME/`), and paths are keys in it.
 - **path-style**: the endpoint is the bare service (`http://minio:9000`), and every path, the root included, begins with `YOUR_BUCKET_NAME/`. Paths returned by `listFiles()` and `listUploads()` begin with it too.
 
 ```php
@@ -93,7 +93,7 @@ $device = new S3(
 );
 ```
 
-Pass `pathStyle: true` or `pathStyle: false` to choose; by default a device with a bucket is path-style unless its host is the bucket name (a domain named after the bucket), its host begins with `YOUR_BUCKET_NAME.`, or the first segment of the endpoint path is the bucket. A custom domain whose host is not the bucket name, or a service host that happens to begin with `YOUR_BUCKET_NAME.`, must say which it is. On a path-style device, a listing or `deletePath()` prefix outside the bucket, or holding a `.` or `..` segment, throws `InvalidArgumentException` before any request is made.
+Pass `pathStyle: true` or `pathStyle: false` to choose; by default a device with a bucket is path-style unless its host is the bucket name (a dotted domain named after the bucket), its host begins with `YOUR_BUCKET_NAME.`, or the last segment of the endpoint path is the bucket. Hosts compare case-insensitively, the endpoint path case-sensitively. A custom domain whose host is not the bucket name, or a service host that happens to begin with `YOUR_BUCKET_NAME.`, must say which it is. On a path-style device, a listing or `deletePath()` prefix outside the bucket, or holding a `.` or `..` segment, throws `InvalidArgumentException` before any request is made. `deletePath()` treats its path as a directory, so `deletePath('images')` leaves `images-archive/` alone, and throws `RemoteException` when the service keeps any of the objects.
 
 The provider-specific adapters below build the host for you from a bucket and region. Every S3-family adapter also accepts optional named constructor arguments:
 
