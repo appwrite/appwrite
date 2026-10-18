@@ -194,6 +194,43 @@ cargo run -p utopia-emails --bin emails-import -- stats
 
 A source that cannot be downloaded is reported and skipped; the task fails (exit code 1) only when no source gives a domain. To add a domain by hand, add a line to the manual list and run the task: an edit to the generated lists is lost on the next import. `UTOPIA_EMAILS_DATA_DIR` reads and writes the lists in another directory, and `UTOPIA_EMAILS_<TYPE>_<SOURCE>_URL` (such as `UTOPIA_EMAILS_DISPOSABLE_MARTENSON_URL`) downloads a source from another address.
 
+## Contributing
+
+Development happens in [appwrite/appwrite](https://github.com/appwrite/appwrite), where this crate lives at [`crates/utopia/emails`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/emails). Run these commands from a checkout of it. The [contributing guide](https://utopia-docs.appwrite.network/contributing) covers each step.
+
+### Test
+
+```bash
+cargo test -p utopia-emails
+cargo clippy -p utopia-emails --all-targets -- -D warnings
+cargo fmt --all --check
+```
+
+### Compare with PHP
+
+Replay the results PHP recorded for every case against Rust, without PHP:
+
+```bash
+COMPAT_LIB=emails cargo test -p compat
+```
+
+Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
+
+```bash
+tests/compat/emails/services.sh up
+bin/compat run emails
+bin/compat fuzz emails
+bin/compat check emails
+```
+
+### Benchmark
+
+```bash
+bin/compat bench emails
+```
+
+This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/emails/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/emails/bench.json). Run it on a quiet machine, one library at a time.
+
 ## License
 
 BSD-3-Clause. See [LICENSE](LICENSE).

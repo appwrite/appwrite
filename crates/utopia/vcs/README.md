@@ -97,6 +97,45 @@ done.summary = "Deployed".into();
 let id = php_std::json::encode(&created, php_std::json::Flags::NONE, 512).unwrap_or_default();
 ```
 
+## Contributing
+
+Development happens in [appwrite/appwrite](https://github.com/appwrite/appwrite), where this crate lives at [`crates/utopia/vcs`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/vcs). Run these commands from a checkout of it. The [contributing guide](https://utopia-docs.appwrite.network/contributing) covers each step.
+
+### Test
+
+```bash
+cargo test -p utopia-vcs
+cargo clippy -p utopia-vcs --all-targets -- -D warnings
+cargo fmt --all --check
+```
+
+### Compare with PHP
+
+Replay the results PHP recorded for every case against Rust, without PHP:
+
+```bash
+COMPAT_SERVICES=1 COMPAT_LIB=vcs cargo test -p compat
+```
+
+Without `COMPAT_SERVICES=1` the cases that need a service are skipped.
+
+Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
+
+```bash
+tests/compat/vcs/services.sh up
+bin/compat run vcs
+bin/compat fuzz vcs
+bin/compat check vcs
+```
+
+### Benchmark
+
+```bash
+bin/compat bench vcs
+```
+
+This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/vcs/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/vcs/bench.json). Run it on a quiet machine, one library at a time.
+
 ## License
 
 BSD-3-Clause. See [LICENSE](LICENSE).

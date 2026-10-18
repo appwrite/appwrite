@@ -122,6 +122,45 @@ let telemetry = MemoryTelemetry::default();
 let twilio = Twilio::new("AC123", "auth-token").with_telemetry(&telemetry);
 ```
 
+## Contributing
+
+Development happens in [appwrite/appwrite](https://github.com/appwrite/appwrite), where this crate lives at [`crates/utopia/messaging`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/messaging). Run these commands from a checkout of it. The [contributing guide](https://utopia-docs.appwrite.network/contributing) covers each step.
+
+### Test
+
+```bash
+cargo test -p utopia-messaging
+cargo clippy -p utopia-messaging --all-targets -- -D warnings
+cargo fmt --all --check
+```
+
+### Compare with PHP
+
+Replay the results PHP recorded for every case against Rust, without PHP:
+
+```bash
+COMPAT_SERVICES=1 COMPAT_LIB=messaging cargo test -p compat
+```
+
+Without `COMPAT_SERVICES=1` the cases that need a service are skipped.
+
+Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
+
+```bash
+tests/compat/messaging/services.sh up
+bin/compat run messaging
+bin/compat fuzz messaging
+bin/compat check messaging
+```
+
+### Benchmark
+
+```bash
+bin/compat bench messaging
+```
+
+This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/messaging/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/messaging/bench.json). Run it on a quiet machine, one library at a time.
+
 ## License
 
 BSD-3-Clause. See [LICENSE](LICENSE).

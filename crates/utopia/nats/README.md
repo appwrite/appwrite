@@ -288,6 +288,45 @@ utopia_async::Runtime::new()?.block_on(async {
 
 The workspace already depends on `async-nats`, the NATS maintainers' client, for the queue broker. This crate does not wrap it: what the PHP client does on the wire is part of its contract, and `async-nats` does it differently. The PHP client sends `lang: php` with its own `CONNECT` fields, writes a batch of requests as one write after one inbox subscription, answers a server `PING` inline, never replays a write that may have reached the server, reports a frame cut short as a desynced connection rather than a timeout, maps each `-ERR` onto its own exception and message, and drives keepalives only from calls that read. Callers, other services and the compat tests observe all of these (byte for byte, through a scripted transport). A native implementation on utopia-async matches them exactly, keeps one owner per connection without a background task, and costs a few thousand lines; it also lets tests swap the transport, which `async-nats` does not allow.
 
+## Contributing
+
+Development happens in [appwrite/appwrite](https://github.com/appwrite/appwrite), where this crate lives at [`crates/utopia/nats`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/nats). Run these commands from a checkout of it. The [contributing guide](https://utopia-docs.appwrite.network/contributing) covers each step.
+
+### Test
+
+```bash
+cargo test -p utopia-nats
+cargo clippy -p utopia-nats --all-targets -- -D warnings
+cargo fmt --all --check
+```
+
+### Compare with PHP
+
+Replay the results PHP recorded for every case against Rust, without PHP:
+
+```bash
+COMPAT_SERVICES=1 COMPAT_LIB=nats cargo test -p compat
+```
+
+Without `COMPAT_SERVICES=1` the cases that need a service are skipped.
+
+Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
+
+```bash
+tests/compat/nats/services.sh up
+bin/compat run nats
+bin/compat fuzz nats
+bin/compat check nats
+```
+
+### Benchmark
+
+```bash
+bin/compat bench nats
+```
+
+This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/nats/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/nats/bench.json). Run it on a quiet machine, one library at a time.
+
 ## License
 
 BSD-3-Clause. See [LICENSE](LICENSE).

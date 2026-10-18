@@ -326,6 +326,42 @@ for (method, target) in [("GET", "/users/ada"), ("GET", "/members/ada"), ("GET",
 assert_eq!(bodies, ["ada", "ada", "GET", "POST"]);
 ```
 
+## Contributing
+
+Development happens in [appwrite/appwrite](https://github.com/appwrite/appwrite), where this crate lives at [`crates/utopia/http`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/http). Run these commands from a checkout of it. The [contributing guide](https://utopia-docs.appwrite.network/contributing) covers each step.
+
+### Test
+
+```bash
+cargo test -p utopia-http
+cargo clippy -p utopia-http --all-targets -- -D warnings
+cargo fmt --all --check
+```
+
+### Compare with PHP
+
+Replay the results PHP recorded for every case against Rust, without PHP:
+
+```bash
+COMPAT_LIB=http cargo test -p compat
+```
+
+Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
+
+```bash
+bin/compat run http
+bin/compat fuzz http
+bin/compat check http
+```
+
+### Benchmark
+
+```bash
+bin/compat bench http
+```
+
+This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/http/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/http/bench.json). Run it on a quiet machine, one library at a time.
+
 ## License
 
 BSD-3-Clause. See [LICENSE](LICENSE).

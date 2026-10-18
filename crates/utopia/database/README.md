@@ -148,6 +148,45 @@ utopia_async::Runtime::new()?.block_on(async {
 
 The conversion is complete: every class, method and adapter of `utopia-php/database` 7.4, proven with `bin/compat check database` (the library's e2e suites and unit tests on every adapter, recorded as cases, with no differences). Appwrite's Rust services read and write through it.
 
+## Contributing
+
+Development happens in [appwrite/appwrite](https://github.com/appwrite/appwrite), where this crate lives at [`crates/utopia/database`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/database). Run these commands from a checkout of it. The [contributing guide](https://utopia-docs.appwrite.network/contributing) covers each step.
+
+### Test
+
+```bash
+cargo test -p utopia-database
+cargo clippy -p utopia-database --all-targets -- -D warnings
+cargo fmt --all --check
+```
+
+### Compare with PHP
+
+Replay the results PHP recorded for every case against Rust, without PHP:
+
+```bash
+COMPAT_SERVICES=1 COMPAT_LIB=database cargo test -p compat
+```
+
+Without `COMPAT_SERVICES=1` the cases that need a service are skipped.
+
+Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
+
+```bash
+tests/compat/database/services.sh up
+bin/compat run database
+bin/compat fuzz database
+bin/compat check database
+```
+
+### Benchmark
+
+```bash
+bin/compat bench database
+```
+
+This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/database/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/database/bench.json). Run it on a quiet machine, one library at a time.
+
 ## License
 
 BSD-3-Clause. See [LICENSE](LICENSE).

@@ -18,6 +18,7 @@ chdir(dirname(__DIR__));
 const ORG = 'utopia-php';
 const CRATES_ORG = 'utopia-rs';
 const REPOSITORY = 'appwrite/appwrite';
+const DOCS = 'https://utopia-docs.appwrite.network'; // apps/crates, SITE in src/lib/share.ts
 const SPLIT_APP_ID = 4016286; // GitHub App that pushes PHP splits to utopia-php
 const CRATES_SPLIT_APP_ID = 5319328; // GitHub App that pushes crate splits to utopia-rs
 const HOISTED = ['laravel/pint', 'phpstan/phpstan', 'rector/rector', 'phpunit/phpunit'];
@@ -698,9 +699,80 @@ function crate_readme(string $package, string $description): string
         $parts[] = $guide;
     }
     $parts[] = '';
+    $parts[] = crate_readme_contributing($package);
+    $parts[] = '';
     $parts[] = '## License';
     $parts[] = '';
     $parts[] = 'BSD-3-Clause. See [LICENSE](LICENSE).';
+
+    return implode("\n", $parts);
+}
+
+/**
+ * How to test and benchmark the crate, run from a checkout of the repository:
+ * its own tests, then, when it has compat cases, the replay and the live
+ * comparison with PHP, and its benchmarks when it records them.
+ */
+function crate_readme_contributing(string $package): string
+{
+    $home = 'https://github.com/' . REPOSITORY;
+    $repo = REPOSITORY;
+    $prefix = crate_prefix($package);
+    $crate = crate_package_name($package);
+    $compat = "tests/compat/{$package}";
+    $spec = is_file("{$compat}/spec.json") ? json_decode(file_get_contents("{$compat}/spec.json"), true) : null;
+    $services = !empty($spec['services']);
+
+    $parts = [
+        '## Contributing',
+        '',
+        "Development happens in [{$repo}]({$home}), where this crate lives at [`{$prefix}`]({$home}/tree/main/{$prefix}). Run these commands from a checkout of it. The [contributing guide](" . DOCS . '/contributing) covers each step.',
+        '',
+        '### Test',
+        '',
+        '```bash',
+        "cargo test -p {$crate}",
+        "cargo clippy -p {$crate} --all-targets -- -D warnings",
+        'cargo fmt --all --check',
+        '```',
+    ];
+
+    if (is_dir("{$compat}/cases")) {
+        $parts[] = '';
+        $parts[] = '### Compare with PHP';
+        $parts[] = '';
+        $parts[] = 'Replay the results PHP recorded for every case against Rust, without PHP:';
+        $parts[] = '';
+        $parts[] = '```bash';
+        $parts[] = ($services ? 'COMPAT_SERVICES=1 ' : '') . "COMPAT_LIB={$package} cargo test -p compat";
+        $parts[] = '```';
+        $parts[] = '';
+        if ($services) {
+            $parts[] = 'Without `COMPAT_SERVICES=1` the cases that need a service are skipped.';
+            $parts[] = '';
+        }
+        $parts[] = 'Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):';
+        $parts[] = '';
+        $parts[] = '```bash';
+        if (is_file("{$compat}/services.sh")) {
+            $parts[] = "{$compat}/services.sh up";
+        }
+        $parts[] = "bin/compat run {$package}";
+        $parts[] = "bin/compat fuzz {$package}";
+        $parts[] = "bin/compat check {$package}";
+        $parts[] = '```';
+    }
+
+    if (is_file("{$compat}/bench.json")) {
+        $parts[] = '';
+        $parts[] = '### Benchmark';
+        $parts[] = '';
+        $parts[] = '```bash';
+        $parts[] = "bin/compat bench {$package}";
+        $parts[] = '```';
+        $parts[] = '';
+        $parts[] = "This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`{$compat}/bench.json`]({$home}/blob/main/{$compat}/bench.json). Run it on a quiet machine, one library at a time.";
+    }
 
     return implode("\n", $parts);
 }

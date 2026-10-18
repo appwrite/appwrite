@@ -214,6 +214,9 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         <Link to="/changelog" className={row}>
           Changelog
         </Link>
+        <Link to="/contributing" className={row}>
+          Contributing
+        </Link>
         {index ? (
           <MigrationOnly>
             <Link to="/migration" className={item(true)} title={MIGRATION_TITLE}>

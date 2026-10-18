@@ -74,6 +74,9 @@ function Menu() {
       <Link to="/changelog" className={link} activeProps={{ className: active }}>
         Changelog
       </Link>
+      <Link to="/contributing" className={link} activeProps={{ className: active }}>
+        Contributing
+      </Link>
       <MigrationOnly>
         <Link to="/migration" className={`${link} nav-migration`} activeProps={{ className: active }} title={MIGRATION_TITLE}>
           <ArrowLeftRight className="size-3.5 flex-none text-migration-ink" />

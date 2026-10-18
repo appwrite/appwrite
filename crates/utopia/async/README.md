@@ -215,6 +215,18 @@ async fn spawns_in_parallel() {
 
 The engine is the `Adapter` of the build, `utopia_async::Engine`: `Tokio` with the default `tokio` feature. An engine is added as a module of `utopia_async::adapter` that implements `Adapter` and its resource traits (`TcpStream`, `File`, `Child`, ...), behind a feature of its name; no crate that uses `utopia_async` changes. PHP picks an adapter per facade when the program runs (`Promise::setAdapter()`); Rust picks the engine when it compiles, so every call goes straight to it.
 
+## Contributing
+
+Development happens in [appwrite/appwrite](https://github.com/appwrite/appwrite), where this crate lives at [`crates/utopia/async`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/async). Run these commands from a checkout of it. The [contributing guide](https://utopia-docs.appwrite.network/contributing) covers each step.
+
+### Test
+
+```bash
+cargo test -p utopia-async
+cargo clippy -p utopia-async --all-targets -- -D warnings
+cargo fmt --all --check
+```
+
 ## License
 
 BSD-3-Clause. See [LICENSE](LICENSE).

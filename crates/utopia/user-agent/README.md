@@ -163,6 +163,42 @@ assert_eq!(label("okhttp/4.12.0"), "OkHttp");
 assert_eq!(label(""), "Unknown client");
 ```
 
+## Contributing
+
+Development happens in [appwrite/appwrite](https://github.com/appwrite/appwrite), where this crate lives at [`crates/utopia/user-agent`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/user-agent). Run these commands from a checkout of it. The [contributing guide](https://utopia-docs.appwrite.network/contributing) covers each step.
+
+### Test
+
+```bash
+cargo test -p utopia-user-agent
+cargo clippy -p utopia-user-agent --all-targets -- -D warnings
+cargo fmt --all --check
+```
+
+### Compare with PHP
+
+Replay the results PHP recorded for every case against Rust, without PHP:
+
+```bash
+COMPAT_LIB=user-agent cargo test -p compat
+```
+
+Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
+
+```bash
+bin/compat run user-agent
+bin/compat fuzz user-agent
+bin/compat check user-agent
+```
+
+### Benchmark
+
+```bash
+bin/compat bench user-agent
+```
+
+This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/user-agent/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/user-agent/bench.json). Run it on a quiet machine, one library at a time.
+
 ## License
 
 BSD-3-Clause. See [LICENSE](LICENSE).

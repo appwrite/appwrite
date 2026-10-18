@@ -204,6 +204,45 @@ utopia_async::run(async {
 
 `Usage` holds an `Arc<dyn Adapter>`; `Adapter` is a public trait, so a backend outside this crate (a test double, another store) plugs in the same way the two built-in ones do. The ClickHouse adapter builds its statements with `utopia-query`'s ClickHouse builder and schema (the same statements, byte for byte, as PHP's, so the server sees the same SQL) and sends them through `utopia-client`; the Database adapter drives `utopia-database`. Values the library reads and writes stay PHP values (`utopia_query::Value`), so tags, rows and totals keep PHP's types: an integer stays an integer, a float a float.
 
+## Contributing
+
+Development happens in [appwrite/appwrite](https://github.com/appwrite/appwrite), where this crate lives at [`crates/utopia/usage`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/usage). Run these commands from a checkout of it. The [contributing guide](https://utopia-docs.appwrite.network/contributing) covers each step.
+
+### Test
+
+```bash
+cargo test -p utopia-usage
+cargo clippy -p utopia-usage --all-targets -- -D warnings
+cargo fmt --all --check
+```
+
+### Compare with PHP
+
+Replay the results PHP recorded for every case against Rust, without PHP:
+
+```bash
+COMPAT_SERVICES=1 COMPAT_LIB=usage cargo test -p compat
+```
+
+Without `COMPAT_SERVICES=1` the cases that need a service are skipped.
+
+Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
+
+```bash
+tests/compat/usage/services.sh up
+bin/compat run usage
+bin/compat fuzz usage
+bin/compat check usage
+```
+
+### Benchmark
+
+```bash
+bin/compat bench usage
+```
+
+This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/usage/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/usage/bench.json). Run it on a quiet machine, one library at a time.
+
 ## License
 
 BSD-3-Clause. See [LICENSE](LICENSE).

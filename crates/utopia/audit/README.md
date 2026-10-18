@@ -179,6 +179,45 @@ The ClickHouse adapter is generic over its transport, any `utopia_client::Adapte
 
 Logs are `Log`s: the attributes as the adapter returned them (PHP arrays of `php_std::Value`s, in order), with a getter for each known one.
 
+## Contributing
+
+Development happens in [appwrite/appwrite](https://github.com/appwrite/appwrite), where this crate lives at [`crates/utopia/audit`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/audit). Run these commands from a checkout of it. The [contributing guide](https://utopia-docs.appwrite.network/contributing) covers each step.
+
+### Test
+
+```bash
+cargo test -p utopia-audit
+cargo clippy -p utopia-audit --all-targets -- -D warnings
+cargo fmt --all --check
+```
+
+### Compare with PHP
+
+Replay the results PHP recorded for every case against Rust, without PHP:
+
+```bash
+COMPAT_SERVICES=1 COMPAT_LIB=audit cargo test -p compat
+```
+
+Without `COMPAT_SERVICES=1` the cases that need a service are skipped.
+
+Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
+
+```bash
+tests/compat/audit/services.sh up
+bin/compat run audit
+bin/compat fuzz audit
+bin/compat check audit
+```
+
+### Benchmark
+
+```bash
+bin/compat bench audit
+```
+
+This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/audit/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/audit/bench.json). Run it on a quiet machine, one library at a time.
+
 ## License
 
 BSD-3-Clause. See [LICENSE](LICENSE).

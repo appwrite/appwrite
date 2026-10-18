@@ -74,6 +74,42 @@ Image::new(&blob)?.save(dir.join("preview.gif"), OutputFormat::Gif, 75)?;
 assert!(dir.join("preview.gif").exists());
 ```
 
+## Contributing
+
+Development happens in [appwrite/appwrite](https://github.com/appwrite/appwrite), where this crate lives at [`crates/utopia/image`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/image). Run these commands from a checkout of it. The [contributing guide](https://utopia-docs.appwrite.network/contributing) covers each step.
+
+### Test
+
+```bash
+cargo test -p utopia-image
+cargo clippy -p utopia-image --all-targets -- -D warnings
+cargo fmt --all --check
+```
+
+### Compare with PHP
+
+Replay the results PHP recorded for every case against Rust, without PHP:
+
+```bash
+COMPAT_LIB=image cargo test -p compat
+```
+
+Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
+
+```bash
+bin/compat run image
+bin/compat fuzz image
+bin/compat check image
+```
+
+### Benchmark
+
+```bash
+bin/compat bench image
+```
+
+This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/image/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/image/bench.json). Run it on a quiet machine, one library at a time.
+
 ## License
 
 BSD-3-Clause. See [LICENSE](LICENSE).

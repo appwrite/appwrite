@@ -113,6 +113,43 @@ assert!(Caa.is_valid(&json!("0 issue \"letsencrypt.org\"")));
 assert!(!Caa.is_valid(&json!("256 issue \"letsencrypt.org\"")));
 ```
 
+## Contributing
+
+Development happens in [appwrite/appwrite](https://github.com/appwrite/appwrite), where this crate lives at [`crates/utopia/dns`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/dns). Run these commands from a checkout of it. The [contributing guide](https://utopia-docs.appwrite.network/contributing) covers each step.
+
+### Test
+
+```bash
+cargo test -p utopia-dns
+cargo clippy -p utopia-dns --all-targets -- -D warnings
+cargo fmt --all --check
+```
+
+### Compare with PHP
+
+Replay the results PHP recorded for every case against Rust, without PHP:
+
+```bash
+COMPAT_LIB=dns cargo test -p compat
+```
+
+Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
+
+```bash
+tests/compat/dns/services.sh up
+bin/compat run dns
+bin/compat fuzz dns
+bin/compat check dns
+```
+
+### Benchmark
+
+```bash
+bin/compat bench dns
+```
+
+This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/dns/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/dns/bench.json). Run it on a quiet machine, one library at a time.
+
 ## License
 
 BSD-3-Clause. See [LICENSE](LICENSE).

@@ -102,6 +102,42 @@ assert_eq!(span.get("listener.mailer.error.message"), Value::from("SMTP is down"
 assert_eq!(span.get("listener.audit.success"), Value::from(true));
 ```
 
+## Contributing
+
+Development happens in [appwrite/appwrite](https://github.com/appwrite/appwrite), where this crate lives at [`crates/utopia/bus`](https://github.com/appwrite/appwrite/tree/main/crates/utopia/bus). Run these commands from a checkout of it. The [contributing guide](https://utopia-docs.appwrite.network/contributing) covers each step.
+
+### Test
+
+```bash
+cargo test -p utopia-bus
+cargo clippy -p utopia-bus --all-targets -- -D warnings
+cargo fmt --all --check
+```
+
+### Compare with PHP
+
+Replay the results PHP recorded for every case against Rust, without PHP:
+
+```bash
+COMPAT_LIB=bus cargo test -p compat
+```
+
+Run every case on both runtimes, fuzz both with generated inputs, then run the whole conversion check. These need the dev stack (`docker compose up -d`):
+
+```bash
+bin/compat run bus
+bin/compat fuzz bus
+bin/compat check bus
+```
+
+### Benchmark
+
+```bash
+bin/compat bench bus
+```
+
+This times every benchmark on PHP and on a release build of Rust, both in containers on the dev stack. It fails if Rust is slower. Add `--write` to record the run in [`tests/compat/bus/bench.json`](https://github.com/appwrite/appwrite/blob/main/tests/compat/bus/bench.json). Run it on a quiet machine, one library at a time.
+
 ## License
 
 BSD-3-Clause. See [LICENSE](LICENSE).
