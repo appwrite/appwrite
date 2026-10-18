@@ -68,9 +68,17 @@ final class S3Test extends S3Base
             self::markTestSkipped('S3_HOST and S3_PATH_HOST must both be configured when overriding the local MinIO endpoints');
         }
 
-        $this->assertSame($this->bucket, $this->pathBucket, 'S3_PATH_BUCKET and S3_BUCKET must identify the same bucket for cross-visibility');
-
         return rtrim($pathHost ?? 'http://localhost:9805', '/');
+    }
+
+    /**
+     * Skip a test that reads through both endpoints unless they reach the same bucket.
+     */
+    private function sharedBucket(): void
+    {
+        if ($this->bucket !== $this->pathBucket) {
+            self::markTestSkipped('S3_PATH_BUCKET and S3_BUCKET must identify the same bucket for cross-visibility');
+        }
     }
 
     /**
@@ -78,7 +86,7 @@ final class S3Test extends S3Base
      */
     private function pathStyle(string $root): S3
     {
-        return new S3("{$this->bucket}/{$root}", $this->accessKey, $this->secretKey, $this->pathStyleHost(), $this->region, bucket: $this->bucket);
+        return new S3("{$this->pathBucket}/{$root}", $this->accessKey, $this->secretKey, $this->pathStyleHost(), $this->region, bucket: $this->pathBucket);
     }
 
     private function virtualHosted(string $root): S3
@@ -162,6 +170,7 @@ final class S3Test extends S3Base
 
     public function testPathStyleEndpointSharesVirtualHostedBucket(): void
     {
+        $this->sharedBucket();
         $path = new S3(
             root: '/',
             accessKey: $this->accessKey,
@@ -321,12 +330,12 @@ final class S3Test extends S3Base
 
             $this->assertSame([$a, $b], array_map(static fn (FileInfo $file): string => $file->path, $device->listFiles($device->getPath('dir/'))->files));
 
-            foreach (['', $this->bucket] as $prefix) {
+            foreach (['', $this->pathBucket] as $prefix) {
                 $paths = $this->listUntil($device, $prefix, [$a, $b]);
                 $this->assertContains($a, $paths);
                 $this->assertContains($b, $paths);
                 foreach ($paths as $path) {
-                    $this->assertStringStartsWith($this->bucket . '/', $path);
+                    $this->assertStringStartsWith($this->pathBucket . '/', $path);
                 }
             }
         } finally {
@@ -354,7 +363,7 @@ final class S3Test extends S3Base
             do {
                 $page = $device->listUploads('', cursor: $cursor);
                 foreach ($page->uploads as $upload) {
-                    $this->assertStringStartsWith($this->bucket . '/', $upload->path);
+                    $this->assertStringStartsWith($this->pathBucket . '/', $upload->path);
                     $found = $found || ($upload->path === $path && $upload->uploadId === $uploadId);
                 }
                 $cursor = $page->cursor;
@@ -413,6 +422,26 @@ final class S3Test extends S3Base
         }
     }
 
+    #[DataProvider('addressing')]
+    public function testDeletePathKeepsSiblingsSharingItsName(bool $pathStyle): void
+    {
+        $root = 'siblings/' . bin2hex(random_bytes(8));
+        $device = $pathStyle ? $this->pathStyle($root) : $this->virtualHosted("{$this->bucket}/{$root}");
+        $file = $device->getPath('images/f.txt');
+        $neighbour = $device->getPath('images-archive/f.txt');
+
+        try {
+            $device->write($file, new Stream('images'), 'text/plain');
+            $device->write($neighbour, new Stream('archive'), 'text/plain');
+
+            $this->assertTrue($device->deletePath('images'));
+            $this->assertFalse($device->exists($file));
+            $this->assertTrue($device->exists($neighbour));
+        } finally {
+            $this->remove($device, $file, $neighbour);
+        }
+    }
+
     public function testPathStyleCopyRunsServerSide(): void
     {
         $root = 'copied/' . bin2hex(random_bytes(8));
@@ -425,7 +454,9 @@ final class S3Test extends S3Base
 
             $this->assertTrue($device->copy($source, $target));
             $this->assertSame('payload', (string) $device->read($target));
-            $this->assertSame('payload', (string) $this->object->read("{$root}/target.txt"));
+            if ($this->bucket === $this->pathBucket) {
+                $this->assertSame('payload', (string) $this->object->read("{$root}/target.txt"));
+            }
         } finally {
             $this->remove($device, $source, $target);
         }
@@ -433,6 +464,7 @@ final class S3Test extends S3Base
 
     public function testVirtualHostedLegacyRootCopiesTheRealKey(): void
     {
+        $this->sharedBucket();
         $root = 'legacy-copy/' . bin2hex(random_bytes(8));
         $device = $this->virtualHosted("{$this->bucket}/{$root}");
         $source = $device->getPath('source.txt');
@@ -452,7 +484,7 @@ final class S3Test extends S3Base
     public function testLegacyBucketInRootObjectsResolveUnderPathStyle(): void
     {
         $root = 'legacy/' . bin2hex(random_bytes(8));
-        $legacy = new S3("{$this->bucket}/{$root}", $this->accessKey, $this->secretKey, $this->pathStyleHost(), $this->region);
+        $legacy = new S3("{$this->pathBucket}/{$root}", $this->accessKey, $this->secretKey, $this->pathStyleHost(), $this->region);
         $device = $this->pathStyle($root);
         $file = $legacy->getPath('f.txt');
         $this->assertSame($file, $device->getPath('f.txt'));
@@ -463,7 +495,9 @@ final class S3Test extends S3Base
             $this->assertSame('legacy', (string) $device->read($file));
             $this->assertSame($etag, $device->getFileInfo($file)->etag);
             $this->assertSame([$file], array_map(static fn (FileInfo $info): string => $info->path, $device->listFiles($device->getPath(''))->files));
-            $this->assertSame('legacy', (string) $this->object->read("{$root}/f.txt"));
+            if ($this->bucket === $this->pathBucket) {
+                $this->assertSame('legacy', (string) $this->object->read("{$root}/f.txt"));
+            }
 
             $this->assertTrue($device->deletePath(''));
             $this->assertFalse($device->exists($file));
