@@ -1268,9 +1268,12 @@ enum Variant {
     Mcp,
     /// `X-Appwrite-Timeout` (the development database timeout).
     Timeout,
+    /// `X-Appwrite-Response-Format` of a pre-release (`1.5.0-rc1`), which
+    /// PHP's `version_compare()` puts before `1.5.0`: the 1.4 filters apply.
+    PreRelease,
 }
 
-const VARIANTS: [Variant; 7] = [
+const VARIANTS: [Variant; 8] = [
     Variant::Preflight,
     Variant::OldFormat,
     Variant::NewFormat,
@@ -1278,6 +1281,7 @@ const VARIANTS: [Variant; 7] = [
     Variant::Cli,
     Variant::Mcp,
     Variant::Timeout,
+    Variant::PreRelease,
 ];
 
 struct Scenario {
@@ -1577,6 +1581,7 @@ fn request(
         Variant::Cli => headers.push(("x-sdk-name".into(), "Command Line".into())),
         Variant::Mcp => headers.push(("x-sdk-name".into(), "mcp".into())),
         Variant::Timeout => headers.push(("x-appwrite-timeout".into(), "5000".into())),
+        Variant::PreRelease => headers.push(("x-appwrite-response-format".into(), "1.5.0-rc1".into())),
     }
     (method, format!("{}{path}", twin.endpoint), headers, body)
 }
