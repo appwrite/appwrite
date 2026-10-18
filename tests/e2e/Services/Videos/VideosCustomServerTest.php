@@ -2069,6 +2069,48 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
+     * An audio-only source still encodes. The packager omits the video rung
+     * when the probe finds no picture, so the HLS master lists audio only.
+     */
+    public function testAudioOnlyRenditionReachesReady(): void
+    {
+        $video = $this->createReadyVideo($this->getAudioOnlyFile());
+        $this->assertSame(0, (int) $video['width']);
+        $this->assertSame(0, (int) $video['height']);
+        $this->assertGreaterThan(0, (int) $video['duration']);
+        $this->assertNotSame('', \trim((string) ($video['audioCodec'] ?? '')));
+
+        $profile = $this->seededProfile('360p');
+        $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $video['$id'] . '/renditions', $this->headers(), [
+            'profileId' => $profile['$id'],
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $rendition['headers']['status-code']);
+        $this->assertEquals('pending', $rendition['body']['status']);
+        $this->assertEquals('hls', $rendition['body']['output']);
+
+        $body = $this->waitForRenditionTerminalState($video['$id'], $rendition['body']['$id']);
+        $this->assertEquals('ready', $body['status'], 'Audio-only rendition did not finish');
+        $this->assertEquals('100', $body['progress']);
+        $this->assertEquals('hls', $body['output']);
+
+        $master = $this->client->call(Client::METHOD_GET, '/videos/' . $video['$id'] . '/outputs/hls/master.m3u8', $this->headers());
+        $this->assertEquals(200, $master['headers']['status-code']);
+        $masterBody = (string) $master['body'];
+        $this->assertStringContainsString('#EXTM3U', $masterBody);
+        $this->assertStringContainsString('#EXT-X-MEDIA:TYPE=AUDIO', $masterBody);
+        // The muxer still emits one variant, but it carries only AAC and no frame size.
+        $this->assertStringContainsString('CODECS="mp4a.40.2"', $masterBody);
+        $this->assertStringContainsString('RESOLUTION=,', $masterBody);
+        $this->assertStringNotContainsString('avc1', $masterBody);
+
+        $playlist = $this->client->call(Client::METHOD_GET, $this->manifestUri($masterBody), $this->headers());
+        $this->assertEquals(200, $playlist['headers']['status-code']);
+        $this->assertStringContainsString('#EXTINF', (string) $playlist['body']);
+        $this->assertStringContainsString('#EXT-X-ENDLIST', (string) $playlist['body']);
+    }
+
+    /**
      * Not-found and invalid create inputs.
      */
     public function testVideoCreateAndLookupErrors(): void
@@ -2769,6 +2811,30 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('ready', $body['status'], 'Caption did not become ready');
 
         return $captionId;
+    }
+
+    /**
+     * Path of the first quoted URI in a manifest, without the project query.
+     */
+    private function manifestUri(string $manifest): string
+    {
+        $marker = 'URI="';
+        $start = \strpos($manifest, $marker);
+        $this->assertNotFalse($start, 'Manifest did not reference a URI');
+        $start += \strlen($marker);
+        $end = \strpos($manifest, '"', $start);
+        $this->assertNotFalse($end, 'Manifest URI was not closed');
+
+        $uri = \substr($manifest, $start, $end - $start);
+        $query = \strpos($uri, '?');
+        if ($query !== false) {
+            $uri = \substr($uri, 0, $query);
+        }
+        if (\str_starts_with($uri, '/v1')) {
+            $uri = \substr($uri, 3);
+        }
+
+        return $uri;
     }
 
     /**
