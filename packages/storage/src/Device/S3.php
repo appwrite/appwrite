@@ -32,6 +32,26 @@ use Utopia\Storage\UploadInfo;
 use Utopia\Storage\UploadList;
 
 /**
+ * An S3 bucket, or an S3-compatible one.
+ *
+ * Object requests go to the device path as given. Requests that address the
+ * bucket itself (listings, upload listings, DeleteObjects) need to know where
+ * the bucket lives, which follows the AWS SDKs' force-path-style option:
+ *
+ * - virtual-hosted: the endpoint addresses the bucket, as
+ *   `{bucket}.s3.{region}.amazonaws.com` or `http://minio:9000/{bucket}/` do,
+ *   and bucket requests go to `/`.
+ * - path-style: the endpoint is the bare service (`http://minio:9000`), device
+ *   paths, root included, begin with `{bucket}/`, and bucket requests go to
+ *   `/{bucket}`. Paths returned by listings begin with `{bucket}/` too, so they
+ *   can be handed back to any other method.
+ *
+ * Unless `pathStyle` says otherwise, a device with a bucket is path-style except
+ * when its host is the bucket name (a domain named after the bucket), its host
+ * begins with `{bucket}.`, or the first segment of the endpoint path is the
+ * bucket. A custom domain whose host is not the bucket name, or a service host
+ * that happens to begin with `{bucket}.`, must pass `pathStyle` explicitly.
+ *
  * @see \Utopia\Storage\Tests\Device\S3Test
  *
  * @phpstan-import-type UploadMetadata from Device
@@ -52,6 +72,8 @@ class S3 extends Device
 
     private readonly string $path;
 
+    private readonly bool $pathStyle;
+
     private readonly ClientInterface&StreamingClientInterface $client;
 
     /**
@@ -59,7 +81,10 @@ class S3 extends Device
      *
      * @param  Acl|null  $acl  Canned ACL applied to every object written, or null to write without one, which buckets that have ACLs disabled require
      * @param  (ClientInterface&StreamingClientInterface)|null  $client  PSR-18 client used for every request; defaults to `utopia-php/client` with the cURL adapter — no overall deadline (large transfers may take arbitrarily long), a stall watchdog that aborts once no bytes move for 60s, TCP keepalive, and transient-error retries via `S3\RetryStrategy`
-     * @param  string|null  $bucket  Bucket name, required by the `x-amz-copy-source` header. When set, same-device `copy()` (and therefore `move()`) runs server side without moving bytes through PHP; when null it falls back to a streamed download and re-upload.
+     * @param  string|null  $bucket  Bucket name. It decides how bucket requests are addressed (see the class description) and is required by the `x-amz-copy-source` header: when set, same-device `copy()` (and therefore `move()`) runs server side without moving bytes through PHP; when null it falls back to a streamed download and re-upload.
+     * @param  bool|null  $pathStyle  Whether the endpoint is the bare service, so device paths begin with the bucket; null infers it from the endpoint and bucket
+     *
+     * @throws \InvalidArgumentException When the bucket holds a slash, or path-style is asked for without a bucket
      */
     public function __construct(
         protected readonly string $root,
@@ -71,6 +96,7 @@ class S3 extends Device
         protected readonly ?Acl $acl = Acl::Private,
         (ClientInterface&StreamingClientInterface)|null $client = null,
         protected readonly ?string $bucket = null,
+        ?bool $pathStyle = null,
     ) {
         $endpoint = Uri::parse(rtrim(
             str_starts_with($host, 'http://') || str_starts_with($host, 'https://')
@@ -87,6 +113,14 @@ class S3 extends Device
         $this->host = $authority;
         $this->path = rtrim($endpoint->getPath(), '/');
 
+        if ($bucket !== null && str_contains($bucket, '/')) {
+            throw new \InvalidArgumentException('Bucket name must not contain a slash');
+        }
+        if ($pathStyle === true && ($bucket === null || $bucket === '')) {
+            throw new \InvalidArgumentException('Path-style addressing needs a bucket');
+        }
+        $this->pathStyle = $pathStyle ?? $this->addressesService(strtolower($endpoint->getHost()), $bucket);
+
         $this->client = $client ?? new Retry(
             new HttpClient(new CurlAdapter(options: [
                 \CURLOPT_TIMEOUT_MS => 0,
@@ -96,6 +130,63 @@ class S3 extends Device
             ])),
             new S3\RetryStrategy(),
         );
+    }
+
+    /**
+     * Whether the endpoint is the bare service rather than the bucket.
+     */
+    private function addressesService(string $host, ?string $bucket): bool
+    {
+        if ($bucket === null || $bucket === '') {
+            return false;
+        }
+
+        $bucket = strtolower($bucket);
+        if ($host === $bucket && str_contains($host, '.')) {
+            return false;
+        }
+        if (str_starts_with($host, $bucket . '.')) {
+            return false;
+        }
+
+        return rawurldecode(explode('/', ltrim($this->path, '/'))[0]) !== $bucket;
+    }
+
+    /**
+     * The request URI and key prefix of a bucket request for the given path.
+     *
+     * @return array{string, string}
+     *
+     * @throws \InvalidArgumentException When a path-style path climbs out of, or lies outside, the bucket
+     */
+    private function prefix(string $path): array
+    {
+        $path = ltrim($path, '/');
+        if (! $this->pathStyle) {
+            return ['/', $path];
+        }
+
+        if (array_intersect(explode('/', $path), ['.', '..']) !== []) {
+            throw new \InvalidArgumentException('Path must not contain "." or ".." segments');
+        }
+
+        $bucket = (string) $this->bucket;
+        if (\in_array($path, ['', $bucket, $bucket . '/'], true)) {
+            return ['/' . $bucket, ''];
+        }
+        if (str_starts_with($path, $bucket . '/')) {
+            return ['/' . $bucket, ltrim(substr($path, \strlen($bucket) + 1), '/')];
+        }
+
+        throw new \InvalidArgumentException('Path is outside the bucket');
+    }
+
+    /**
+     * The device path of a key returned by a bucket request.
+     */
+    private function devicePath(string $key): string
+    {
+        return $this->pathStyle ? $this->bucket . '/' . $key : $key;
     }
 
     public function getType(): DeviceType
@@ -485,6 +576,7 @@ class S3 extends Device
      * @return array<mixed>
      *
      * @throws StorageException
+     * @throws \InvalidArgumentException
      */
     protected function listObjects(string $prefix = '', int $maxKeys = self::MAX_PAGE_SIZE, string $continuationToken = ''): array
     {
@@ -492,8 +584,7 @@ class S3 extends Device
             throw new \InvalidArgumentException('Cannot list more than ' . self::MAX_PAGE_SIZE . ' objects');
         }
 
-        $uri = '/';
-        $prefix = ltrim($prefix, '/'); /** S3 specific requirement that prefix should never contain a leading slash */
+        [$uri, $prefix] = $this->prefix($prefix);
         $parameters = [
             'list-type' => 2,
             'prefix' => $prefix,
@@ -542,7 +633,8 @@ class S3 extends Device
         $info = $this->getInfo($source);
         $size = (int) ($info['content-length'] ?? 0);
 
-        $copySource = '/' . $this->bucket . '/' . ltrim(str_replace('%2F', '/', rawurlencode($source)), '/');
+        $key = str_replace('%2F', '/', rawurlencode(ltrim($this->getAbsolutePath($source), '/')));
+        $copySource = $this->pathStyle ? '/' . $key : '/' . $this->bucket . '/' . $key;
         $uri = $target !== '' ? '/' . str_replace(['%2F', '%3F'], ['/', '?'], rawurlencode($target)) : '/';
 
         if ($size <= self::MAX_COPY_OBJECT_SIZE) {
@@ -600,12 +692,13 @@ class S3 extends Device
      *
      *
      * @throws StorageException
+     * @throws \InvalidArgumentException
      */
     public function deletePath(string $path): bool
     {
         $path = $this->getRoot() . '/' . $path;
 
-        $uri = '/';
+        [$uri] = $this->prefix($path);
         $continuationToken = '';
         do {
             $objects = $this->listObjects($path, continuationToken: $continuationToken);
@@ -630,7 +723,7 @@ class S3 extends Device
 
             $body = '<Delete xmlns="http://s3.amazonaws.com/doc/2006-03-01/">';
             foreach ($keys as $key) {
-                $body .= "<Object><Key>{$key}</Key></Object>";
+                $body .= '<Object><Key>' . htmlspecialchars($key, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</Key></Object>';
             }
             $body .= '<Quiet>true</Quiet>';
             $body .= '</Delete>';
@@ -710,6 +803,7 @@ class S3 extends Device
      * The cursor is the S3 continuation token.
      *
      * @throws StorageException
+     * @throws \InvalidArgumentException
      */
     public function listFiles(string $prefix = '', int $max = self::MAX_PAGE_SIZE, ?string $cursor = null): FileList
     {
@@ -731,7 +825,7 @@ class S3 extends Device
             $modified = $object['LastModified'] ?? null;
             $etag = $object['ETag'] ?? null;
             $files[] = new FileInfo(
-                path: $object['Key'],
+                path: $this->devicePath($object['Key']),
                 size: is_numeric($size) ? (int) $size : 0,
                 modifiedAt: \is_string($modified) ? new \DateTimeImmutable($modified) : null,
                 etag: \is_string($etag) ? trim($etag, '"') : null,
@@ -758,6 +852,7 @@ class S3 extends Device
      * @param  int<1, max>  $max
      *
      * @throws StorageException
+     * @throws \InvalidArgumentException
      */
     public function listUploads(string $prefix = '', int $max = self::MAX_PAGE_SIZE, ?string $cursor = null): UploadList
     {
@@ -765,9 +860,10 @@ class S3 extends Device
             throw new \InvalidArgumentException('Cannot list more than ' . self::MAX_PAGE_SIZE . ' uploads');
         }
 
+        [$uri, $prefix] = $this->prefix($prefix);
         $parameters = [
             'uploads' => '',
-            'prefix' => ltrim($prefix, '/'),
+            'prefix' => $prefix,
             'max-uploads' => $max,
         ];
 
@@ -780,7 +876,7 @@ class S3 extends Device
             $parameters['upload-id-marker'] = $markers['upload'];
         }
 
-        $response = $this->call(Method::GET, '/', '', $parameters, headers: ['content-type' => 'text/plain']);
+        $response = $this->call(Method::GET, $uri, '', $parameters, headers: ['content-type' => 'text/plain']);
 
         if (! \is_array($response->body)) {
             throw new RemoteException('Unexpected S3 upload listing response');
@@ -803,7 +899,7 @@ class S3 extends Device
             }
             $initiated = $entry['Initiated'] ?? null;
             $uploads[] = new UploadInfo(
-                path: $entry['Key'],
+                path: $this->devicePath($entry['Key']),
                 uploadId: $entry['UploadId'],
                 initiatedAt: \is_string($initiated) ? new \DateTimeImmutable($initiated) : null,
             );
