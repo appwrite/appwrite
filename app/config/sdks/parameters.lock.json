@@ -135,6 +135,10 @@
             "queries",
             "total"
         ],
+        "account.listMemberships": [
+            "queries",
+            "total"
+        ],
         "account.listMFAFactors": [],
         "account.listMfaFactors": [],
         "account.listPasskeys": [
@@ -3503,13 +3507,15 @@
             "rpId"
         ],
         "project.updatePasswordDictionaryPolicy": [
-            "enabled"
+            "enabled",
+            "denyList"
         ],
         "project.updatePasswordHistoryPolicy": [
             "total"
         ],
         "project.updatePasswordPersonalDataPolicy": [
-            "enabled"
+            "enabled",
+            "denyList"
         ],
         "project.updatePasswordPwnedPolicy": [
             "enabled",
@@ -5365,6 +5371,10 @@
             "sessionId"
         ],
         "account.listIdentities": [
+            "queries",
+            "total"
+        ],
+        "account.listMemberships": [
             "queries",
             "total"
         ],
@@ -7584,13 +7594,15 @@
             "rpId"
         ],
         "project.updatePasswordDictionaryPolicy": [
-            "enabled"
+            "enabled",
+            "denyList"
         ],
         "project.updatePasswordHistoryPolicy": [
             "total"
         ],
         "project.updatePasswordPersonalDataPolicy": [
-            "enabled"
+            "enabled",
+            "denyList"
         ],
         "project.updatePasswordPwnedPolicy": [
             "enabled",
