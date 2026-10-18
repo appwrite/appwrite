@@ -109,7 +109,11 @@ final class BaseTest extends TestCase
     public function testRenditionLockPathShape(): void
     {
         $this->assertSame(
-            \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/locks/proj1/ren1.lock',
+            \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/locks',
+            Base::tmpLocksRoot()
+        );
+        $this->assertSame(
+            Base::tmpLocksRoot() . '/proj1/ren1.lock',
             Base::renditionLockPath('proj1', 'ren1')
         );
     }
@@ -117,6 +121,7 @@ final class BaseTest extends TestCase
     public function testRemoveRenditionLockDeletesFileAndIsIdempotent(): void
     {
         $path = Base::renditionLockPath('proj-rm', 'ren-rm');
+        $sibling = Base::renditionLockPath('proj-rm', 'ren-keep');
         $directory = \dirname($path);
         if (!\is_dir($directory) && !\mkdir($directory, 0755, true) && !\is_dir($directory)) {
             $this->fail('Could not create lock directory');
@@ -124,16 +129,25 @@ final class BaseTest extends TestCase
 
         try {
             \file_put_contents($path, '');
+            \file_put_contents($sibling, '');
             $this->assertFileExists($path);
 
             Base::removeRenditionLock('proj-rm', 'ren-rm');
             $this->assertFileDoesNotExist($path);
+            $this->assertDirectoryExists($directory, 'Sibling lock must keep the project lock directory');
+
+            Base::removeRenditionLock('proj-rm', 'ren-keep');
+            $this->assertFileDoesNotExist($sibling);
+            $this->assertDirectoryDoesNotExist($directory);
 
             Base::removeRenditionLock('proj-rm', 'ren-rm');
-            $this->assertFileDoesNotExist($path);
+            $this->assertDirectoryDoesNotExist($directory);
         } finally {
             if (\is_file($path)) {
                 @\unlink($path);
+            }
+            if (\is_file($sibling)) {
+                @\unlink($sibling);
             }
             if (\is_dir($directory)) {
                 @\rmdir($directory);

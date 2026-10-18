@@ -147,7 +147,8 @@ abstract class Base extends UtopiaAction
 
     /**
      * Default age (seconds) before orphaned job folders under videos-tmp/jobs
-     * are swept. Overridden by `_APP_MAINTENANCE_RETENTION_VIDEOS_TMP`.
+     * and leftover lock files under videos-tmp/locks are swept. Overridden by
+     * `_APP_MAINTENANCE_RETENTION_VIDEOS_TMP`.
      */
     public const TMP_TTL = 86400;
 
@@ -161,17 +162,24 @@ abstract class Base extends UtopiaAction
         return \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/jobs';
     }
 
+    /** Flat root for per-rendition encode flock files on the shared volume. */
+    public static function tmpLocksRoot(): string
+    {
+        return \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/locks';
+    }
+
     /**
      * Per-rendition flock file: `{APP_STORAGE_VIDEOS_TMP}/locks/{projectId}/{renditionId}.lock`.
      *
-     * Stays outside `jobs/`, which maintenance sweeps by age. Encode holds the
-     * flock for the whole run so a duplicate message cannot download the source
-     * into the same workspace.
+     * Stays outside `jobs/` so a job-folder sweep cannot drop a lock under a
+     * live encode. Encode holds the flock for the whole run so a duplicate
+     * message cannot download the source into the same workspace. The file is
+     * unlinked on release, delete/abort, and by the age-based locks sweep.
      */
     public static function renditionLockPath(string $projectId, string $renditionId): string
     {
-        return \rtrim(APP_STORAGE_VIDEOS_TMP, '/')
-            . '/locks/'
+        return self::tmpLocksRoot()
+            . '/'
             . $projectId
             . '/'
             . $renditionId
@@ -182,14 +190,20 @@ abstract class Base extends UtopiaAction
      * Unlinks the rendition lock file when present. Missing file is a no-op.
      *
      * Does not steal a flock another process already holds — only removes the
-     * directory entry so a later encode can open a fresh path.
+     * directory entry so a later encode can open a fresh path. When the project
+     * lock directory is empty afterward, it is removed too.
      */
     public static function removeRenditionLock(string $projectId, string $renditionId): void
     {
         $path = self::renditionLockPath($projectId, $renditionId);
+        $directory = \dirname($path);
 
         if (\is_file($path)) {
             \unlink($path);
+        }
+
+        if (\is_dir($directory) && (\scandir($directory) ?: []) === ['.', '..']) {
+            @\rmdir($directory);
         }
     }
 

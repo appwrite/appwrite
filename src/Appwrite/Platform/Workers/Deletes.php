@@ -366,6 +366,7 @@ class Deletes extends Action
                 break;
             case DELETE_TYPE_VIDEOS_TMP:
                 $this->deleteOldVideoTmp($telemetry);
+                $this->deleteOldVideoLocks($telemetry);
                 break;
             case DELETE_TYPE_MAINTENANCE:
                 $this->deleteExpiredTargets($project, $getProjectDB);
@@ -1520,6 +1521,87 @@ class Deletes extends Action
         if ($removed > 0) {
             try {
                 $telemetry->createCounter('worker.videos.tmp.removed', null, 'Expired video scratch directories removed by the maintenance sweep')->add($removed);
+            } catch (Throwable) {
+                // Metrics are best-effort.
+            }
+        }
+    }
+
+    /**
+     * Remove leftover encode lock files older than the videos-tmp retention window.
+     *
+     * Encode unlinks its lock on release; this catches leftovers from crashes
+     * or older builds that only called flock release. Age is file mtime — lock
+     * paths have no stamp prefix. A live encode still holds the flock on the
+     * inode even if this pass unlinks the path.
+     */
+    private function deleteOldVideoLocks(Telemetry $telemetry): void
+    {
+        $root = VideosBase::tmpLocksRoot();
+        $tmpRoot = \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/';
+
+        if (!\is_dir($root)) {
+            return;
+        }
+
+        $retention = (int) System::getEnv(
+            '_APP_MAINTENANCE_RETENTION_VIDEOS_TMP',
+            (string) VideosBase::TMP_TTL
+        );
+        $cutoff = \time() - $retention;
+        Console::info('Deleting video rendition locks older than ' . $retention . 's');
+
+        $scanned = 0;
+        $removed = 0;
+        $failed = 0;
+
+        foreach (\scandir($root) ?: [] as $projectId) {
+            if ($projectId[0] === '.') {
+                continue;
+            }
+
+            $projectDir = $root . '/' . $projectId;
+            if (!\is_dir($projectDir) || !\str_starts_with($projectDir, $tmpRoot)) {
+                continue;
+            }
+
+            foreach (\scandir($projectDir) ?: [] as $name) {
+                if ($name[0] === '.' || !\str_ends_with($name, '.lock')) {
+                    continue;
+                }
+
+                $path = $projectDir . '/' . $name;
+                if (!\is_file($path)) {
+                    continue;
+                }
+
+                $scanned++;
+
+                $mtime = \filemtime($path);
+                if ($mtime === false || $mtime > $cutoff) {
+                    continue;
+                }
+
+                if (@\unlink($path)) {
+                    $removed++;
+                } else {
+                    $failed++;
+                }
+            }
+
+            // Drop empty project lock dirs left after unlinking.
+            if ((\scandir($projectDir) ?: []) === ['.', '..']) {
+                @\rmdir($projectDir);
+            }
+        }
+
+        Span::add('videos.locks.scanned', $scanned);
+        Span::add('videos.locks.removed', $removed);
+        Span::add('videos.locks.failed', $failed);
+
+        if ($removed > 0) {
+            try {
+                $telemetry->createCounter('worker.videos.locks.removed', null, 'Expired video rendition lock files removed by the maintenance sweep')->add($removed);
             } catch (Throwable) {
                 // Metrics are best-effort.
             }

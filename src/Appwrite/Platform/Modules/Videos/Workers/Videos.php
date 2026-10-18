@@ -1091,6 +1091,7 @@ class Videos extends Action
 
             if ($held && $lock !== null) {
                 $lock->release();
+                Base::removeRenditionLock($projectId, $rendition->getId());
             }
         }
     }
