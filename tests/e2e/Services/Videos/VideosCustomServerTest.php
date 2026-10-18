@@ -13,7 +13,9 @@ use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Scopes\VideoCustom;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\System\System;
 
 final class VideosCustomServerTest extends Scope
@@ -873,6 +875,116 @@ final class VideosCustomServerTest extends Scope
         if (\is_file($freshLock)) {
             \unlink($freshLock);
         }
+    }
+
+    /**
+     * A project accepts ENCODE_LIMIT video creates per ENCODE_PERIOD. The next
+     * create is rate-limited. Uses a fresh project so exhausting the project-scoped
+     * counter does not break later createVideo() calls in this suite.
+     */
+    #[Group('abuseEnabled')]
+    public function testCreateVideoEncodeLimit(): void
+    {
+        if (System::getEnv('_APP_OPTIONS_ABUSE') === 'disabled') {
+            $this->markTestSkipped('Abuse is not enabled.');
+        }
+
+        $project = $this->getProject(true);
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            'bucketId' => 'unique()',
+            'name' => 'Video create rate limit bucket',
+            'fileSecurity' => false,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        // Short fixture avoids re-chunking large-file.mp4 into a throwaway project.
+        $source = \realpath(__DIR__ . '/../../../resources/disk-a/short-silence.mov');
+        $this->assertNotFalse($source);
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket['body']['$id'] . '/files', [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ], [
+            'fileId' => 'unique()',
+            'file' => new \CURLFile($source, 'video/quicktime', 'short-silence.mov'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+        $fileId = $file['body']['$id'];
+
+        for ($i = 0; $i < Base::ENCODE_LIMIT; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/videos', $headers, [
+                'bucketId' => $bucketId,
+                'fileId' => $fileId,
+                'name' => 'Rate limit video ' . $i,
+            ]);
+            $this->assertEquals(201, $response['headers']['status-code'], 'Video create ' . ($i + 1) . ' should be accepted');
+            $this->assertSame(Base::ENCODE_LIMIT, (int) $response['headers']['x-ratelimit-limit']);
+        }
+
+        $limited = $this->client->call(Client::METHOD_POST, '/videos', $headers, [
+            'bucketId' => $bucketId,
+            'fileId' => $fileId,
+            'name' => 'Rate limit video over',
+        ]);
+        $this->assertEquals(429, $limited['headers']['status-code']);
+        $this->assertEquals('general_rate_limit_exceeded', $limited['body']['type']);
+    }
+
+    /**
+     * A video accepts ENCODE_LIMIT caption creates per ENCODE_PERIOD. Codes are
+     * not unique per video, so distinct names alone would work; distinct ISO
+     * 639-2 codes keep the fixtures readable.
+     */
+    #[Group('abuseEnabled')]
+    public function testCreateCaptionEncodeLimit(): void
+    {
+        if (System::getEnv('_APP_OPTIONS_ABUSE') === 'disabled') {
+            $this->markTestSkipped('Abuse is not enabled.');
+        }
+
+        $videoId = $this->createVideo();
+        $bucketId = $this->getVideoBucket()['$id'];
+        $fileId = $this->getCaptionFile()['$id'];
+
+        // Enough ISO 639-2 codes for ENCODE_LIMIT + 1 creates.
+        $codes = ['aar', 'abk', 'afr', 'aka', 'amh', 'arg', 'ara', 'asm', 'ava', 'aym', 'aze'];
+        $this->assertGreaterThan(Base::ENCODE_LIMIT, \count($codes), 'Need more language codes than ENCODE_LIMIT');
+
+        for ($i = 0; $i < Base::ENCODE_LIMIT; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
+                'bucketId' => $bucketId,
+                'fileId' => $fileId,
+                'name' => 'Caption ' . $i,
+                'code' => $codes[$i],
+            ]);
+            $this->assertEquals(201, $response['headers']['status-code'], 'Caption create ' . ($i + 1) . ' should be accepted');
+            $this->assertSame(Base::ENCODE_LIMIT, (int) $response['headers']['x-ratelimit-limit']);
+        }
+
+        $limited = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
+            'bucketId' => $bucketId,
+            'fileId' => $fileId,
+            'name' => 'Caption over',
+            'code' => $codes[Base::ENCODE_LIMIT],
+        ]);
+        $this->assertEquals(429, $limited['headers']['status-code']);
+        $this->assertEquals('general_rate_limit_exceeded', $limited['body']['type']);
     }
 
     /**
@@ -2130,6 +2242,73 @@ final class VideosCustomServerTest extends Scope
         }
     }
 
+    /**
+     * A live caption job (started) within the retention window blocks caption
+     * delete. Pending and aged started rows do not.
+     */
+    public function testDeleteCaptionBlockedWhileInProgress(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $videoId = $this->createReadyVideo()['$id'];
+
+        $pending = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getCaptionFile()['$id'],
+            'name' => 'Pending English',
+            'code' => 'eng',
+        ]);
+        $this->assertEquals(201, $pending['headers']['status-code']);
+        $pendingId = $pending['body']['$id'];
+        $this->timeTravelCaption($projectId, $pendingId, status: 'pending');
+
+        $allowedPending = $this->client->call(
+            Client::METHOD_DELETE,
+            '/videos/' . $videoId . '/captions/' . $pendingId,
+            $this->headers()
+        );
+        $this->assertEquals(204, $allowedPending['headers']['status-code']);
+
+        $live = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getCaptionFile()['$id'],
+            'name' => 'Started French',
+            'code' => 'fra',
+        ]);
+        $this->assertEquals(201, $live['headers']['status-code']);
+        $liveId = $live['body']['$id'];
+        // Park off the caption path so the worker cannot settle the row, and keep
+        // $updatedAt current so the retention window still treats it as live.
+        $this->timeTravelCaption($projectId, $liveId, status: 'started');
+
+        $blocked = $this->client->call(
+            Client::METHOD_DELETE,
+            '/videos/' . $videoId . '/captions/' . $liveId,
+            $this->headers()
+        );
+        $this->assertEquals(409, $blocked['headers']['status-code']);
+        $this->assertEquals('video_caption_in_progress', $blocked['body']['type']);
+
+        // Captions have no Get route; list is the read surface for a single row.
+        $stillThere = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers());
+        $this->assertEquals(200, $stillThere['headers']['status-code']);
+        $byId = \array_column($stillThere['body']['captions'] ?? [], null, '$id');
+        $this->assertArrayHasKey($liveId, $byId);
+        $this->assertEquals('started', $byId[$liveId]['status']);
+
+        $this->timeTravelCaption($projectId, $liveId, status: 'started', updatedAt: '2020-01-01T00:00:00Z');
+
+        $allowed = $this->client->call(
+            Client::METHOD_DELETE,
+            '/videos/' . $videoId . '/captions/' . $liveId,
+            $this->headers()
+        );
+        $this->assertEquals(204, $allowed['headers']['status-code']);
+
+        $gone = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers());
+        $this->assertEquals(200, $gone['headers']['status-code']);
+        $this->assertArrayNotHasKey($liveId, \array_column($gone['body']['captions'] ?? [], null, '$id'));
+    }
+
     public function testDeleteVideo(): void
     {
         $videoId = $this->createVideo();
@@ -2620,6 +2799,33 @@ final class VideosCustomServerTest extends Scope
             ->argument('--projectId=' . $projectId)
             ->argument('--resourceType=videos_rendition')
             ->argument('--resourceId=' . $renditionId);
+
+        if ($status !== null) {
+            $command->argument('--status=' . $status);
+        }
+        if ($updatedAt !== null) {
+            $command->argument('--updatedAt=' . $updatedAt);
+        }
+
+        $stdout = '';
+        $stderr = '';
+        $code = Console::execute($command, '', $stdout, $stderr);
+        $this->assertSame(0, $code, "Time-travel command failed with code $code: $stderr ($stdout)");
+    }
+
+    private function timeTravelCaption(
+        string $projectId,
+        string $captionId,
+        ?string $status = null,
+        ?string $updatedAt = null
+    ): void {
+        $command = (new Command('docker'))
+            ->argument('exec')
+            ->argument('appwrite')
+            ->argument('task-time-travel')
+            ->argument('--projectId=' . $projectId)
+            ->argument('--resourceType=videos_caption')
+            ->argument('--resourceId=' . $captionId);
 
         if ($status !== null) {
             $command->argument('--status=' . $status);

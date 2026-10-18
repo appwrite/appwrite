@@ -25,11 +25,11 @@ class TimeTravel extends Action
         $this
             ->desc('Create a time-travel to change document dates and video seed fields (development only)')
             ->param('projectId', '', new UID(), 'Project ID.')
-            ->param('resourceType', '', new WhiteList(['deployment', 'video', 'videos_rendition']), 'Type of resource.')
+            ->param('resourceType', '', new WhiteList(['deployment', 'video', 'videos_rendition', 'videos_caption']), 'Type of resource.')
             ->param('resourceId', '', new UID(), 'ID of resource.')
             ->param('createdAt', '', new Nullable(new DatetimeValidator()), 'New value for $createdAt.', true)
             ->param('updatedAt', '', new Nullable(new DatetimeValidator()), 'New value for $updatedAt.', true)
-            ->param('status', '', new Nullable(new Text(64)), 'Optional status override (renditions).', true)
+            ->param('status', '', new Nullable(new Text(64)), 'Optional status override (renditions, captions).', true)
             ->param('progress', '', new Nullable(new Text(8)), 'Optional progress (renditions).', true)
             ->inject('getProjectDB')
             ->inject('dbForPlatform')
@@ -65,6 +65,7 @@ class TimeTravel extends Action
             'deployment' => 'deployments',
             'video' => 'videos',
             'videos_rendition' => 'videos_renditions',
+            'videos_caption' => 'videos_captions',
             default => throw new \Exception('Resource type not implemented')
         };
 

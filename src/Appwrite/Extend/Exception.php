@@ -380,6 +380,7 @@ class Exception extends \Exception
     public const string VIDEO_RENDITION_SEGMENT_NOT_FOUND = 'video_rendition_segment_not_found';
     public const string VIDEO_CAPTION_NOT_FOUND = 'video_caption_not_found';
     public const string VIDEO_CAPTION_NOT_VALID = 'video_caption_not_valid';
+    public const string VIDEO_CAPTION_IN_PROGRESS = 'video_caption_in_progress';
     public const string VIDEO_CAPTION_SEGMENT_NOT_FOUND = 'video_caption_segment_not_found';
     public const string VIDEO_LANGUAGE_CODE_NOT_VALID = 'video_language_code_not_valid';
     public const string VIDEO_THUMBNAIL_NOT_FOUND = 'video_thumbnail_not_found';

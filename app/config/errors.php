@@ -1687,6 +1687,11 @@ return [
         'description' => 'The requested file is not a valid caption file.',
         'code' => 400,
     ],
+    Exception::VIDEO_CAPTION_IN_PROGRESS => [
+        'name' => Exception::VIDEO_CAPTION_IN_PROGRESS,
+        'description' => 'Cannot delete a caption while it is processing. Wait for the job to finish, or wait until a stuck caption is older than the retention window.',
+        'code' => 409,
+    ],
     Exception::VIDEO_CAPTION_SEGMENT_NOT_FOUND => [
         'name' => Exception::VIDEO_CAPTION_SEGMENT_NOT_FOUND,
         'description' => 'Video caption segment with the requested ID could not be found.',
