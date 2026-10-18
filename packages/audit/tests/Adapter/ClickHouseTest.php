@@ -146,6 +146,15 @@ final class ClickHouseTest extends TestCase
         $this->assertStringEndsWith('ORDER BY `time` ASC, `id` ASC LIMIT {param0:Int64} FORMAT JSON', $query);
     }
 
+    public function testFindProjectsTheOrderColumnsASlimSelectLeavesOut(): void
+    {
+        $this->client->respond(200, '{"data":[]}');
+
+        $this->adapter->find([Query::select(['event'])]);
+
+        $this->assertStringStartsWith('SELECT `id`, `time`, `event` FROM', $this->sentQuery());
+    }
+
     public function testFindRandomOrderHasNoTiebreak(): void
     {
         $this->client->respond(200, '{"data":[]}');
