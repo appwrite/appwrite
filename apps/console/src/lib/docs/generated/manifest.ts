@@ -1442,6 +1442,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 4
   },
   {
+    "slug": "products/auth/passkeys",
+    "title": "Passkeys",
+    "description": "Let users sign up and sign in with a passkey, a key pair stored on their device and unlocked with Face ID, Touch ID, a fingerprint, or a device PIN, on the web, Android, and Apple platforms.",
+    "layout": "article",
+    "readingTimeMinutes": 9
+  },
+  {
     "slug": "products/auth/phone-sms",
     "title": "Phone (SMS) login",
     "description": "Enhance security with SMS and phone authentication in Appwrite. Add multi-factor authentication via SMS, verify phone numbers, and protect user accounts.",

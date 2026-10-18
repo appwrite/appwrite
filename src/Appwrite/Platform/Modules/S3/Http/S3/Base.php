@@ -27,6 +27,7 @@ use Utopia\Database\Id;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Http\Adapter\Swoole\Request;
+use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Psr7\Stream;
@@ -91,6 +92,8 @@ abstract class Base extends Action
     ): void {
         try {
             $this->route($request, $response, $dbForProject, $project, $team, $user, $deviceForFiles, $locks, $cache, $queueForEvents, $publisherForDeletes, $publisherForAudits, $queueForRealtime, $publisherForFunctions, $queueForWebhooks, $eventProcessor);
+        } catch (Contention $error) {
+            $this->sendError($response, 'SlowDown', 'The object is busy. Please retry.', $request->getURI(), Response::STATUS_CODE_SERVICE_UNAVAILABLE);
         } catch (AppwriteException $error) {
             $this->sendError($response, $this->mapError($error), $error->getMessage(), $request->getURI(), $this->mapStatus($error));
         } catch (\Throwable $error) {
@@ -563,7 +566,7 @@ abstract class Base extends Action
         }
     }
 
-    protected function putObject(Database $dbForProject, Device $deviceForFiles, Document $bucket, string $key, string $body, string $contentType, array $metadata = []): Document
+    protected function putObject(Database $dbForProject, Document $project, DeletePublisher $publisherForDeletes, Device $deviceForFiles, Document $bucket, string $key, string $body, string $contentType, array $metadata = []): Document
     {
         $existing = $this->findObject($dbForProject, $bucket, $key);
         $object = $existing === null ? $this->objectPath($key) : [
@@ -624,7 +627,13 @@ abstract class Base extends Action
 
         if ($previousPath !== '' && $previousPath !== $path) {
             try {
-                $deviceForFiles->delete($previousPath);
+                // Backend deletes may wait for an active GET. Do not hold up
+                // publication of the replacement while reclaiming the old version.
+                $publisherForDeletes->enqueue(new DeleteMessage(
+                    project: $project,
+                    type: DELETE_TYPE_FILES,
+                    resource: $previousPath,
+                ));
             } catch (\Throwable) {
                 // The replacement is committed; stale-path cleanup is best effort.
             }
@@ -635,12 +644,12 @@ abstract class Base extends Action
     /**
      * @return array{0: Document, 1: string}
      */
-    protected function putObjectLocked(callable $locks, Database $dbForProject, Document $project, Device $deviceForFiles, Document $bucket, string $key, string $body, string $contentType, array $metadata = []): array
+    protected function putObjectLocked(callable $locks, Database $dbForProject, Document $project, DeletePublisher $publisherForDeletes, Device $deviceForFiles, Document $bucket, string $key, string $body, string $contentType, array $metadata = []): array
     {
         // Storage permits duplicate names, so lookup and write must share one key-scoped critical section.
-        return $locks($this->objectLockKey($project, $bucket, $key), 600, function () use ($dbForProject, $deviceForFiles, $bucket, $key, $body, $contentType, $metadata): array {
+        return $locks($this->objectLockKey($project, $bucket, $key), 600, function () use ($dbForProject, $project, $publisherForDeletes, $deviceForFiles, $bucket, $key, $body, $contentType, $metadata): array {
             $existing = $this->findObject($dbForProject, $bucket, $key);
-            $file = $this->putObject($dbForProject, $deviceForFiles, $bucket, $key, $body, $contentType, $metadata);
+            $file = $this->putObject($dbForProject, $project, $publisherForDeletes, $deviceForFiles, $bucket, $key, $body, $contentType, $metadata);
 
             return [$file, $existing === null ? 'create' : 'update'];
         }, timeout: 120.0);
@@ -843,27 +852,9 @@ abstract class Base extends Action
     }
 
     /**
-     * @return array<int, string>
-     */
-    protected function completedParts(string $body): array
-    {
-        if (!\preg_match_all('/<Part>\s*<PartNumber>\s*(\d+)\s*<\/PartNumber>\s*<ETag>\s*([^<]+)\s*<\/ETag>\s*<\/Part>/i', $body, $matches, PREG_SET_ORDER)) {
-            return [];
-        }
-
-        $parts = [];
-        foreach ($matches as $match) {
-            $etag = \html_entity_decode($match[2], ENT_QUOTES | ENT_XML1, 'UTF-8');
-            $parts[(int) $match[1]] = \trim($etag, " \t\n\r\0\x0B\"");
-        }
-
-        return $parts;
-    }
-
-    /**
      * @return array{0: Document, 1: string|null}
      */
-    protected function completeMultipartUpload(callable $locks, Database $dbForProject, Cache $cache, Document $project, Device $deviceForFiles, Document $bucket, array $upload, array $selected): array
+    protected function completeMultipartUpload(callable $locks, Database $dbForProject, Cache $cache, Document $project, DeletePublisher $publisherForDeletes, Device $deviceForFiles, Document $bucket, array $upload, array $selected): array
     {
         $parts = $this->getMultipartParts($upload);
         $partsByNumber = [];
@@ -896,7 +887,7 @@ abstract class Base extends Action
         $etag = \md5($etagBytes) . '-' . \count($selected);
         $key = (string) ($upload['requestedKey'] ?? $upload['key'] ?? '');
         // Finalization and document replacement are serialized with ordinary PUTs for this key.
-        $result = $locks($this->objectLockKey($project, $bucket, $key), 600, function () use ($dbForProject, $deviceForFiles, $bucket, &$upload, $selected, $size, $etag, $key): array {
+        $result = $locks($this->objectLockKey($project, $bucket, $key), 600, function () use ($dbForProject, $project, $publisherForDeletes, $deviceForFiles, $bucket, &$upload, $selected, $size, $etag, $key): array {
             $path = (string) $upload['path'];
             $committed = $this->findObject($dbForProject, $bucket, $key);
             if ($committed !== null && $committed->getAttribute('path', '') === $path) {
@@ -907,12 +898,13 @@ abstract class Base extends Action
 
             try {
                 $upload['metadata']['device'] = $upload['metadata']['device'] ?? [];
-                $chunks = \count($selected);
-                if ($chunks === 1) {
-                    $this->uploadEmptyMultipartFinalChunk($deviceForFiles, $upload);
-                    $chunks = 2;
-                }
-                if (!$deviceForFiles->finalize($path, $chunks, $upload['metadata']['device'])) {
+                // S3 may complete with fewer parts than were uploaded; the device
+                // assembles every part it holds, so keep only the selected ones.
+                $upload['metadata']['device']['parts'] = \array_intersect_key($upload['metadata']['device']['parts'] ?? [], $selected);
+                // A single part finalizes as one chunk: S3 backends reject any
+                // non-final part under 5 MiB, so padding it with an empty part
+                // would fail every small single-part upload.
+                if (!$deviceForFiles->finalize($path, \count($selected), $upload['metadata']['device'])) {
                     throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Failed to finalize multipart upload.');
                 }
 
@@ -938,7 +930,13 @@ abstract class Base extends Action
 
                 if ($previousPath !== '' && $previousPath !== $path) {
                     try {
-                        $deviceForFiles->delete($previousPath);
+                        // Backend deletes may wait for an active GET. Do not hold up
+                        // publication of the replacement while reclaiming the old version.
+                        $publisherForDeletes->enqueue(new DeleteMessage(
+                            project: $project,
+                            type: DELETE_TYPE_FILES,
+                            resource: $previousPath,
+                        ));
                     } catch (\Throwable) {
                         // The replacement is already committed; old-path cleanup is best effort.
                     }
@@ -964,18 +962,6 @@ abstract class Base extends Action
             $deviceForFiles->abort($path, (string) ($upload['metadata']['device']['uploadId'] ?? ''));
         }
         $this->purgeMultipartUpload($cache, $project, $bucket, $upload);
-    }
-
-    protected function uploadEmptyMultipartFinalChunk(Device $deviceForFiles, array &$upload): void
-    {
-        $deviceForFiles->upload(
-            new Stream(''),
-            (string) $upload['path'],
-            (string) ($upload['contentType'] ?? 'application/octet-stream'),
-            2,
-            2,
-            $upload['metadata']['device']
-        );
     }
 
     protected function purgeMultipartUpload(Cache $cache, Document $project, Document $bucket, array $upload): void

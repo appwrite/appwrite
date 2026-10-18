@@ -19,9 +19,9 @@ trait Assertions
             return null;
         }
 
-        $this->assertIsNumeric($row[$key], "Aggregate '{$key}' is not numeric");
+        $this->assertIsInt($row[$key], "Aggregate '{$key}' is not an integer");
 
-        return (int) $row[$key];
+        return $row[$key];
     }
 
     /**
@@ -34,27 +34,19 @@ trait Assertions
             return null;
         }
 
-        $this->assertIsNumeric($row[$key], "Aggregate '{$key}' is not numeric");
+        $this->assertIsFloat($row[$key], "Aggregate '{$key}' is not a float");
 
-        return (float) $row[$key];
+        return $row[$key];
     }
 
     /**
-     * The key of a grouped joined attribute in an aggregate row is the engine's column name, so the row
-     * carries either `alias.attribute` or the bare attribute.
-     *
      * @param array<string, mixed> $row
      */
     protected function groupedValue(array $row, string $attribute): mixed
     {
-        if (\array_key_exists($attribute, $row)) {
-            return $row[$attribute];
-        }
+        $this->assertArrayHasKey($attribute, $row, "Grouped attribute '{$attribute}' is missing from the row");
 
-        $column = \substr($attribute, (int) \strrpos($attribute, '.') + 1);
-        $this->assertArrayHasKey($column, $row, "Grouped attribute '{$attribute}' is missing from the row");
-
-        return $row[$column];
+        return $row[$attribute];
     }
 
     /**
