@@ -252,6 +252,17 @@ trait DatabasesColumnPermissionsBase
         ]);
 
         $this->assertEquals(201, $plain['headers']['status-code']);
+
+        // And the rule holds for a row that already exists: create is not the only way to put
+        // permissions on one, so it cannot be the only path that refuses a column.
+        $updated = $this->client->call(
+            Client::METHOD_PATCH,
+            $this->getRecordUrl($databaseId, $containerId, $plain['body']['$id']),
+            $this->getServerHeaders(),
+            ['permissions' => [Permission::read(Role::any(), 'name')]],
+        );
+
+        $this->assertEquals(400, $updated['headers']['status-code']);
     }
 
     /**
