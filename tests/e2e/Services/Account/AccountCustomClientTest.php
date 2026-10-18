@@ -7961,6 +7961,175 @@ final class AccountCustomClientTest extends Scope
         $this->assertTrue($account['body']['emailVerification']);
     }
 
+    /**
+     * ID-token sign-in must apply the same project email policies as
+     * email/password sign-up, including when the injected plan is empty
+     * (self-hosted). Covers new-user creation and the email backfill path.
+     */
+    public function testCreateIdTokenSessionDenyFreeEmail(): void
+    {
+        $this->updateMockProvider(true);
+        $this->updateProjectEmailPolicy('deny-free-email', true);
+
+        try {
+            $email = 'idtoken.free.' . \uniqid('', true) . \bin2hex(\random_bytes(4)) . '@gmail.com';
+
+            /**
+             * Test for FAILURE
+             */
+            $signup = $this->client->call(Client::METHOD_POST, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'userId' => Id::unique(),
+                'email' => $email,
+                'password' => 'password',
+            ]);
+
+            $this->assertEquals(400, $signup['headers']['status-code']);
+            $this->assertEquals('user_email_free', $signup['body']['type']);
+
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken([
+                    'sub' => 'idtoken-' . \uniqid('', true),
+                    'email' => $email,
+                    'email_verified' => true,
+                ]),
+            ]);
+
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('user_email_free', $response['body']['type']);
+
+            $sub = 'idtoken-' . \uniqid('', true);
+            $created = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken(['sub' => $sub]),
+            ]);
+
+            $this->assertEquals(201, $created['headers']['status-code']);
+
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken([
+                    'sub' => $sub,
+                    'email' => 'idtoken.free.backfill.' . \uniqid('', true) . '@gmail.com',
+                    'email_verified' => true,
+                ]),
+            ]);
+
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('user_email_free', $response['body']['type']);
+
+            /**
+             * Test for SUCCESS
+             */
+            $allowed = 'idtoken.free.allowed.' . \uniqid('', true) . '@localhost.test';
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken([
+                    'sub' => 'idtoken-' . \uniqid('', true),
+                    'email' => $allowed,
+                    'email_verified' => true,
+                ]),
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+        } finally {
+            $this->updateProjectEmailPolicy('deny-free-email', false);
+        }
+    }
+
+    public function testCreateIdTokenSessionDenyDisposableEmail(): void
+    {
+        $this->updateMockProvider(true);
+        $this->updateProjectEmailPolicy('deny-disposable-email', true);
+
+        try {
+            $email = 'idtoken.disposable.' . \uniqid('', true) . \bin2hex(\random_bytes(4)) . '@mailinator.com';
+
+            /**
+             * Test for FAILURE
+             */
+            $signup = $this->client->call(Client::METHOD_POST, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'userId' => Id::unique(),
+                'email' => $email,
+                'password' => 'password',
+            ]);
+
+            $this->assertEquals(400, $signup['headers']['status-code']);
+            $this->assertEquals('user_email_disposable', $signup['body']['type']);
+
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken([
+                    'sub' => 'idtoken-' . \uniqid('', true),
+                    'email' => $email,
+                    'email_verified' => true,
+                ]),
+            ]);
+
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('user_email_disposable', $response['body']['type']);
+
+            $sub = 'idtoken-' . \uniqid('', true);
+            $created = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken(['sub' => $sub]),
+            ]);
+
+            $this->assertEquals(201, $created['headers']['status-code']);
+
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken([
+                    'sub' => $sub,
+                    'email' => 'idtoken.disposable.backfill.' . \uniqid('', true) . '@mailinator.com',
+                    'email_verified' => true,
+                ]),
+            ]);
+
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('user_email_disposable', $response['body']['type']);
+
+            /**
+             * Test for SUCCESS
+             */
+            $allowed = 'idtoken.disposable.allowed.' . \uniqid('', true) . '@localhost.test';
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken([
+                    'sub' => 'idtoken-' . \uniqid('', true),
+                    'email' => $allowed,
+                    'email_verified' => true,
+                ]),
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+        } finally {
+            $this->updateProjectEmailPolicy('deny-disposable-email', false);
+        }
+    }
+
+    private function updateProjectEmailPolicy(string $policy, bool $enabled): void
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/' . $policy, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'enabled' => $enabled,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+    }
+
     public function testCreateEmailVerificationOTP(): void
     {
         $data = $this->createFreshAccountWithSession();
