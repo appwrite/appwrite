@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-17T19:58:00Z",
+  "updated": "2026-10-18T01:02:00Z",
   "summary": "Appwrite's API, a PHP 8.5 and Swoole monolith, is moving to Rust one service at a time. First every Utopia library it stands on is converted and proven identical to PHP, then each API service is ported and run side by side with PHP behind Traefik, on the same database, Redis, queues and caches.",
   "sections": [
     {
@@ -163,6 +163,11 @@
       "date": "2026-10-17",
       "title": "Ready for review, every CI lane on",
       "note": "The PR dropped its Users-only CI focus: every E2E lane, the Console E2E projects and all compat lanes now run on it. Users and Teams parity on both table modes is identical; the remaining red is the known database gaps and timing-dependent PHP lanes."
+    },
+    {
+      "date": "2026-10-18",
+      "title": "Every global hook in Rust",
+      "note": "The ten hooks every request passes through — authentication, request filters, certificates, abuse limits, session limits, the response cache and the request resources — now match PHP; the remaining hooks belong to services not yet ported."
     }
   ],
   "lessons": [

@@ -1,14 +1,6 @@
 {
-  "updated": "2026-10-17T23:29:00Z",
+  "updated": "2026-10-18T01:02:00Z",
   "tasks": [
-    {
-      "id": "hooks-rest",
-      "title": "The remaining global hooks",
-      "area": "Hooks",
-      "status": "progress",
-      "note": "The 10 global hooks: auth, context, request, certificates and console-forbidden (request entry), and abuse-reset, session-limit, cache-write, resource-team and resource-database-listeners (after the action, and the request resources). Two agents, three hours each. The 12 service-specific hooks (GraphQL, S3, webhooks, console, organization, project, projects, mock) come with their services.",
-      "updated": "2026-10-17T23:29:00Z"
-    },
     {
       "id": "signatures",
       "title": "One Rust method per PHP method",
@@ -40,6 +32,14 @@
       "status": "todo",
       "updated": "2026-10-17T19:50:00Z",
       "note": "36 of Account's 63 routes are implemented in Rust, but Traefik still sends all of them to PHP. The last committed parity diff (d90c55d2f0, Oct 15) had 28 of 2,006 scenarios differ, all in account.sessions (19) and account.mfa (9) and mostly purge counts; re-run it after the Users purge fix, then add the routers."
+    },
+    {
+      "id": "hooks-rest",
+      "title": "The global hooks",
+      "area": "Hooks",
+      "status": "done",
+      "note": "All 10 global hooks match PHP: auth (console admin mode and path-bound projects included), context (the cache label and resource token), request (request filters V16–V27, exact version comparison, forced HTTPS), certificates, console-forbidden, abuse-reset, session-limit, cache-write (byte-identical cache files), resource-team and resource-database-listeners. Hooks overall: 33 done, 0 partial, 12 missing; the rest belong to unported services.",
+      "updated": "2026-10-18T01:02:00Z"
     },
     {
       "id": "console-playwright",
