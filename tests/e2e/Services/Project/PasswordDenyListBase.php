@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Project;
 
 use Tests\E2E\Client;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 trait PasswordDenyListBase
 {
@@ -19,12 +19,12 @@ trait PasswordDenyListBase
 
             foreach (['/account', '/users'] as $path) {
                 $headers = $path === '/account' ? $this->passwordClientHeaders() : $this->passwordServerHeaders();
-                $params = ['userId' => ID::unique(), 'email' => ID::unique() . '@localhost.test', 'password' => $blocked];
+                $params = ['userId' => Id::unique(), 'email' => Id::unique() . '@localhost.test', 'password' => $blocked];
                 $created = $this->client->call(Client::METHOD_POST, $path, $headers, $params);
                 $this->assertSame(201, $created['headers']['status-code']);
 
                 $this->setDenyList(true);
-                $response = $this->client->call(Client::METHOD_POST, $path, $headers, array_replace($params, ['userId' => ID::unique(), 'email' => ID::unique() . '@localhost.test']));
+                $response = $this->client->call(Client::METHOD_POST, $path, $headers, array_replace($params, ['userId' => Id::unique(), 'email' => Id::unique() . '@localhost.test']));
                 $this->assertPasswordRejected($response);
 
                 $session = $this->passwordSession($params['email'], $blocked);
@@ -39,14 +39,14 @@ trait PasswordDenyListBase
                 $this->assertSame($before, $after['body']['passwordUpdate']);
                 $this->passwordSession($params['email'], $blocked);
 
-                foreach (['email' => ID::unique() . '@localhost.test', 'phone' => $this->passwordPhone()] as $field => $value) {
+                foreach (['email' => Id::unique() . '@localhost.test', 'phone' => $this->passwordPhone()] as $field => $value) {
                     $response = $this->client->call(Client::METHOD_PATCH, '/account/' . $field, $sessionHeaders, [$field => $value, 'password' => $blocked]);
                     $this->assertSame(200, $response['headers']['status-code']);
                     $this->assertSame($value, $response['body'][$field]);
                     $params[$field] = $value;
                 }
 
-                $allowed = $this->passwordPolicy() === 'password-dictionary' ? 'MyAcmeDefault123!' : 'Allowed-' . ID::unique();
+                $allowed = $this->passwordPolicy() === 'password-dictionary' ? 'MyAcmeDefault123!' : 'Allowed-' . Id::unique();
                 $response = $this->client->call(Client::METHOD_PATCH, $updatePath, $updateHeaders, ['password' => $allowed, 'oldPassword' => $blocked]);
                 $this->assertSame(200, $response['headers']['status-code']);
                 $response = $this->client->call(Client::METHOD_PATCH, $updatePath, $updateHeaders, ['password' => $blocked, 'oldPassword' => $allowed]);
@@ -54,7 +54,7 @@ trait PasswordDenyListBase
                 $this->passwordSession($params['email'], $allowed);
                 $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->passwordServerHeaders(), ['email' => $params['email'], 'password' => $blocked]);
                 $this->assertSame(401, $response['headers']['status-code']);
-                $response = $this->client->call(Client::METHOD_POST, $path, $headers, ['userId' => ID::unique(), 'email' => ID::unique() . '@localhost.test', 'password' => $allowed]);
+                $response = $this->client->call(Client::METHOD_POST, $path, $headers, ['userId' => Id::unique(), 'email' => Id::unique() . '@localhost.test', 'password' => $allowed]);
                 $this->assertSame(201, $response['headers']['status-code']);
                 $this->setDenyList(false);
             }
@@ -68,7 +68,7 @@ trait PasswordDenyListBase
                 $session = $this->client->call(Client::METHOD_POST, '/account/sessions/anonymous', $this->passwordClientHeaders());
                 $this->assertSame(201, $session['headers']['status-code']);
                 $headers = $this->passwordSessionHeaders($session);
-                $value = $field === 'email' ? ID::unique() . '@localhost.test' : $this->passwordPhone();
+                $value = $field === 'email' ? Id::unique() . '@localhost.test' : $this->passwordPhone();
                 $params = [$field => $value, 'password' => $this->blockedPassword()];
 
                 $response = $this->client->call(Client::METHOD_PATCH, '/account/' . $field, $headers, $params);
@@ -78,7 +78,7 @@ trait PasswordDenyListBase
                 $this->assertEmpty($account['body']['passwordUpdate']);
                 $this->assertEmpty($account['body'][$field]);
 
-                $params['password'] = 'Allowed-' . ID::unique();
+                $params['password'] = 'Allowed-' . Id::unique();
                 $response = $this->client->call(Client::METHOD_PATCH, '/account/' . $field, $headers, $params);
                 $this->assertSame(200, $response['headers']['status-code']);
                 $this->assertNotEmpty($response['body']['passwordUpdate']);
@@ -91,11 +91,11 @@ trait PasswordDenyListBase
     {
         $this->withPasswordDenyList(function (): void {
             foreach (['/account/recovery', '/account/recovery/otp'] as $path) {
-                $userId = ID::unique();
-                $email = ID::unique() . '@localhost.test';
-                $name = 'Profile-' . ID::unique();
+                $userId = Id::unique();
+                $email = Id::unique() . '@localhost.test';
+                $name = 'Profile-' . Id::unique();
                 $phone = $this->passwordPhone();
-                $password = 'Original-' . ID::unique();
+                $password = 'Original-' . Id::unique();
                 $created = $this->client->call(Client::METHOD_POST, '/users', $this->passwordServerHeaders(), ['userId' => $userId, 'email' => $email, 'phone' => $phone, 'name' => $name, 'password' => $password]);
                 $this->assertSame(201, $created['headers']['status-code']);
                 $before = $created['body']['passwordUpdate'];
@@ -133,13 +133,13 @@ trait PasswordDenyListBase
                     $this->passwordSession($email, $password);
                 }
 
-                $allowed = 'Recovered-' . ID::unique();
+                $allowed = 'Recovered-' . Id::unique();
                 $response = $this->client->call(Client::METHOD_PUT, $path, $this->passwordClientHeaders(), ['userId' => $userId, 'secret' => $secret, 'password' => $allowed]);
                 $this->assertSame(200, $response['headers']['status-code']);
                 $this->passwordSession($email, $allowed);
                 $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->passwordServerHeaders(), ['email' => $email, 'password' => $password]);
                 $this->assertSame(401, $response['headers']['status-code']);
-                $response = $this->client->call(Client::METHOD_PUT, $path, $this->passwordClientHeaders(), ['userId' => $userId, 'secret' => $secret, 'password' => 'Another-' . ID::unique()]);
+                $response = $this->client->call(Client::METHOD_PUT, $path, $this->passwordClientHeaders(), ['userId' => $userId, 'secret' => $secret, 'password' => 'Another-' . Id::unique()]);
                 $this->assertSame(401, $response['headers']['status-code']);
                 $this->assertSame('user_invalid_token', $response['body']['type']);
             }
@@ -149,21 +149,21 @@ trait PasswordDenyListBase
     public function testPasswordDenyListPasswordlessAndImportedHashes(): void
     {
         $this->withPasswordDenyList(function (): void {
-            $created = $this->client->call(Client::METHOD_POST, '/users', $this->passwordServerHeaders(), ['userId' => ID::unique(), 'email' => ID::unique() . '@localhost.test']);
+            $created = $this->client->call(Client::METHOD_POST, '/users', $this->passwordServerHeaders(), ['userId' => Id::unique(), 'email' => Id::unique() . '@localhost.test']);
             $this->assertSame(201, $created['headers']['status-code']);
             $this->assertEmpty($created['body']['passwordUpdate']);
 
-            $password = 'Imported-' . ID::unique();
+            $password = 'Imported-' . Id::unique();
             $hash = hash('sha256', $password);
             $term = substr($hash, 0, 8);
             $this->setDenyList(true, [$term, $hash]);
-            $email = ID::unique() . '@localhost.test';
-            $created = $this->client->call(Client::METHOD_POST, '/users/sha', $this->passwordServerHeaders(), ['userId' => ID::unique(), 'email' => $email, 'password' => $hash, 'passwordVersion' => 'sha256']);
+            $email = Id::unique() . '@localhost.test';
+            $created = $this->client->call(Client::METHOD_POST, '/users/sha', $this->passwordServerHeaders(), ['userId' => Id::unique(), 'email' => $email, 'password' => $hash, 'passwordVersion' => 'sha256']);
             $this->assertSame(201, $created['headers']['status-code']);
             $this->passwordSession($email, $password);
 
             if ($this->passwordPolicy() === 'password-personal-data') {
-                $created = $this->client->call(Client::METHOD_POST, '/users/sha', $this->passwordServerHeaders(), ['userId' => ID::unique(), 'email' => ID::unique() . '@localhost.test', 'password' => $hash, 'passwordVersion' => 'sha256', 'name' => $term]);
+                $created = $this->client->call(Client::METHOD_POST, '/users/sha', $this->passwordServerHeaders(), ['userId' => Id::unique(), 'email' => Id::unique() . '@localhost.test', 'password' => $hash, 'passwordVersion' => 'sha256', 'name' => $term]);
                 $this->assertPasswordRejected($created);
             }
         });
@@ -177,7 +177,7 @@ trait PasswordDenyListBase
             $this->setDenyList(false);
             $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/' . $other, $this->passwordServerHeaders(), ['enabled' => true, 'denyList' => ['IndependentTerm']]);
             $this->assertSame(200, $response['headers']['status-code']);
-            $response = $this->client->call(Client::METHOD_POST, '/users', $this->passwordServerHeaders(), ['userId' => ID::unique(), 'email' => ID::unique() . '@localhost.test', 'password' => $this->blockedPassword()]);
+            $response = $this->client->call(Client::METHOD_POST, '/users', $this->passwordServerHeaders(), ['userId' => Id::unique(), 'email' => Id::unique() . '@localhost.test', 'password' => $this->blockedPassword()]);
             $this->assertSame(201, $response['headers']['status-code']);
             $this->setDenyList(true);
             $response = $this->client->call(Client::METHOD_GET, '/project/policies/' . $other, $this->passwordServerHeaders());
@@ -188,9 +188,9 @@ trait PasswordDenyListBase
             $response = $this->client->call(Client::METHOD_GET, '/project/policies/' . $policy, $headers);
             $this->assertSame(200, $response['headers']['status-code']);
             $this->assertSame([], $response['body']['denyList']);
-            $response = $this->client->call(Client::METHOD_POST, '/users', $headers, ['userId' => ID::unique(), 'email' => ID::unique() . '@localhost.test', 'password' => $this->blockedPassword()]);
+            $response = $this->client->call(Client::METHOD_POST, '/users', $headers, ['userId' => Id::unique(), 'email' => Id::unique() . '@localhost.test', 'password' => $this->blockedPassword()]);
             $this->assertSame(201, $response['headers']['status-code']);
-            $response = $this->client->call(Client::METHOD_POST, '/users', $this->passwordServerHeaders(), ['userId' => ID::unique(), 'email' => ID::unique() . '@localhost.test', 'password' => $this->blockedPassword()]);
+            $response = $this->client->call(Client::METHOD_POST, '/users', $this->passwordServerHeaders(), ['userId' => Id::unique(), 'email' => Id::unique() . '@localhost.test', 'password' => $this->blockedPassword()]);
             $this->assertPasswordRejected($response);
         });
     }

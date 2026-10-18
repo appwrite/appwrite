@@ -25,6 +25,12 @@ final class RequestTest extends TestCase
         $this->request = new Request(new SwooleRequest());
     }
 
+    protected function tearDown(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+    }
+
     public function testGetIPIgnoresClientForwardedForWhenProxiesEmpty(): void
     {
         $previous = getenv('_APP_TRUSTED_PROXIES');

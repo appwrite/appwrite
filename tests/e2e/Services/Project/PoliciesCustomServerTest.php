@@ -9,7 +9,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class PoliciesCustomServerTest extends Scope
 {
@@ -54,7 +54,7 @@ final class PoliciesCustomServerTest extends Scope
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ];
         $key = $this->client->call(Client::METHOD_POST, $path, $headers, [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'Read policies',
             'scopes' => ['project.policies.read'],
         ]);
@@ -82,7 +82,7 @@ final class PoliciesCustomServerTest extends Scope
         try {
             // An explicit null password is checked against personal data rather than treated as an empty password
             $response = $this->client->call(Client::METHOD_POST, '/users', $this->buildHeaders(), [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => \uniqid() . '@example.com',
                 'password' => null,
             ]);

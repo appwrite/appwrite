@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class PoliciesPasswordDictionaryIntegrationTest extends Scope
 {
@@ -46,7 +46,7 @@ final class PoliciesPasswordDictionaryIntegrationTest extends Scope
 
             // Step 2: Create user with common password - should succeed
             $user1 = $this->client->call(Client::METHOD_POST, '/users', $serverHeaders, [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => 'dict_off_' . uniqid() . '@localhost.test',
                 'password' => $commonPassword,
                 'name' => 'Dictionary Off User',
@@ -63,7 +63,7 @@ final class PoliciesPasswordDictionaryIntegrationTest extends Scope
 
             // Step 4: Creating another user with the common password must fail
             $user2 = $this->client->call(Client::METHOD_POST, '/users', $serverHeaders, [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => 'dict_on_' . uniqid() . '@localhost.test',
                 'password' => $commonPassword,
                 'name' => 'Dictionary On User',

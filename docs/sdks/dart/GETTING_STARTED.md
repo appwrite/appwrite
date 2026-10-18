@@ -1,38 +1,56 @@
 ## Getting Started
 
-### Initialize & Make API Request
-Once you add the dependencies, its extremely easy to get started with the SDK; All you need to do is import the package in your code, set your Appwrite credentials, and start making API calls. Below is a simple example:
+### Initialize the client
+
+Import the package and point the client at your project. Server code authenticates with an API key, which you create in the Appwrite Console with the scopes your code needs. Keep the key on the server and never ship it in a client app.
 
 ```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
 Client client = Client()
-  .setProject('<YOUR_PROJECT_ID>')
-  .setKey('<YOUR_API_KEY>');
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<YOUR_PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>');
+```
+
+> If you self-host Appwrite, use your instance's endpoint instead, for example `https://appwrite.example.com/v1`. Call `setSelfSigned()` only in development, when the instance uses a self-signed certificate.
+
+To act on behalf of a user instead of with an API key, pass the user's JWT with `setJWT('<JWT>')`.
+
+### Make a request
+
+Every service takes the client in its constructor, and every method takes named parameters and returns a typed model from `package:dart_appwrite/models.dart`.
+
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/models.dart' as models;
 
 Users users = Users(client);
 
-User user = await users.create(
+models.User user = await users.create(
   userId: ID.unique(),
   email: 'email@example.com',
-  phone: '+123456789',
   password: 'password',
-  name: 'Walter O'Brien'
+  name: "Walter O'Brien",
 );
 ```
 
 ### Error handling
-The Appwrite Dart SDK raises `AppwriteException` object with `message`, `code` and `response` properties. You can handle any errors by catching `AppwriteException` and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
+
+The SDK throws an `AppwriteException` with `message`, `code`, `type` and `response` properties. Catch it to present the `message` to the user or to handle the error based on its `type`.
 
 ```dart
 try {
-  User user = await users.create(...);
-} on AppwriteException catch(e) {
-  // Handle the error
+  models.User user = await users.get(userId: '<USER_ID>');
+} on AppwriteException catch (e) {
+  print('${e.code} ${e.type}: ${e.message}');
 }
 ```
 
 ### Learn more
-You can use the following resources to learn more and get help
-- 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-server)
-- 📜 [Appwrite Docs](https://appwrite.io/docs)
-- 💬 [Discord Community](https://appwrite.io/discord)
-- 🚂 [Appwrite Dart Playground](https://github.com/appwrite/playground-for-dart)
+
+- [Dart quick start](https://appwrite.io/docs/quick-starts/dart)
+- [Server Dart API reference](https://appwrite.io/docs/references/cloud/server-dart/tablesDB)
+- [Appwrite docs](https://appwrite.io/docs)
+- [Discord community](https://appwrite.io/discord)
+- [Appwrite Dart playground](https://github.com/appwrite/playground-for-dart)

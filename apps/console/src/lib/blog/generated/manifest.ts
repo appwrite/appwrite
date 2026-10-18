@@ -3,6 +3,48 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-passkeys",
+    "href": "/blog/post/announcing-passkeys",
+    "title": "Announcing passkeys: Sign in without a password on the web, Android, and iOS",
+    "description": "Appwrite Auth now supports passkeys. Users sign up and sign in with Face ID, Touch ID, a fingerprint, or the device PIN, and one passkey works on your website and in your Android and iOS apps.",
+    "date": "2026-10-16",
+    "lastUpdated": "2026-10-16",
+    "timeToRead": 6,
+    "author": "chirag-aggarwal",
+    "category": "announcements, security",
+    "featured": false,
+    "cover": "/images/blog/announcing-passkeys/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-appwrite-helm-chart",
+    "href": "/blog/post/announcing-appwrite-helm-chart",
+    "title": "Announcing the official Appwrite Helm chart for Kubernetes",
+    "description": "Self-host Appwrite on Kubernetes with the official Helm chart, using built-in or managed PostgreSQL, Redis, and ClickHouse, S3, and Functions and Sites.",
+    "date": "2026-10-15",
+    "lastUpdated": "2026-10-15",
+    "timeToRead": 8,
+    "author": "levi-van-noort",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-appwrite-helm-chart/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "tanstack-start-stable-appwrite-sites",
+    "href": "/blog/post/tanstack-start-stable-appwrite-sites",
+    "title": "TanStack Start is stable, and it runs on Appwrite Sites",
+    "description": "TanStack Start 1.0 is stable and ready for production. Deploy it to Appwrite Sites with server-side rendering, server functions, and API routes.",
+    "date": "2026-10-14",
+    "lastUpdated": "2026-10-14",
+    "timeToRead": 4,
+    "author": "atharva",
+    "category": "products",
+    "featured": false,
+    "cover": "/images/blog/tanstack-start-stable-appwrite-sites/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-function-intervals",
     "href": "/blog/post/announcing-function-intervals",
     "title": "Announcing function intervals: run functions every N minutes",
@@ -75,8 +117,8 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   {
     "slug": "firewall-network-rules-premium-geo-db",
     "href": "/blog/post/firewall-network-rules-premium-geo-db",
-    "title": "Stop IP-rotating bots with network-based Appwrite Firewall rules",
-    "description": "Use Premium Geo DB network attributes in Appwrite Firewall to stop bots that rotate IP addresses on rented servers, with rules for your API, Functions, and Sites.",
+    "title": "Stop IP-rotating bots with Appwrite Firewall",
+    "description": "Learn how Appwrite Firewall and Premium Geo DB use network attributes to limit IP-rotating bots, protect sign-ups, and secure APIs, Functions, and Sites.",
     "date": "2026-10-05",
     "lastUpdated": "2026-10-05",
     "timeToRead": 8,
@@ -387,8 +429,8 @@ export const BLOG_POSTS: BlogPostMeta[] = [
   {
     "slug": "appwrite-firewall-use-cases",
     "href": "/blog/post/appwrite-firewall-use-cases",
-    "title": "Twelve Appwrite Firewall rules that stop real attacks",
-    "description": "Practical Appwrite Firewall rules for OTP abuse, database scraping, per-user quotas, regional access, trusted networks, webhook Functions, and Sites under attack.",
+    "title": "12 Appwrite Firewall rules to stop attacks",
+    "description": "Explore 12 practical Appwrite Firewall rules to stop OTP abuse, limit database scraping, block bots, secure webhooks, and protect your apps from attacks.",
     "date": "2026-09-23",
     "lastUpdated": "2026-09-23",
     "timeToRead": 12,

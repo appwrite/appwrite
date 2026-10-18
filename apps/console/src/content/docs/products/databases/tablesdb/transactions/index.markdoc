@@ -79,7 +79,7 @@ let client = Client()
 let tablesDB = TablesDB(client)
 
 let tx = try await tablesDB.createTransaction()
-// tx.$id is your transactionId
+// tx.id is your transactionId
 ```
 ```client-android-kotlin
 import io.appwrite.Client
@@ -92,13 +92,13 @@ val client = Client(applicationContext)
 val tablesDB = TablesDB(client)
 
 val tx = tablesDB.createTransaction()
-// tx.$id is your transactionId
+// tx.id is your transactionId
 ```
 ```client-android-java
 import io.appwrite.Client;
 import io.appwrite.services.TablesDB;
 
-Client client = new Client()
+Client client = new Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>");
 
@@ -151,7 +151,7 @@ client.set_key('<API_KEY>')
 tablesDB = TablesDB(client)
 
 tx = tablesDB.create_transaction()
-# tx.$id is your transactionId
+# tx.id is your transactionId
 ```
 ```server-php
 <?php
@@ -185,21 +185,21 @@ client = Client.new
 tablesDB = TablesDB.new(client)
 
 tx = tablesDB.create_transaction
-# tx['$id'] is your transactionId
+# tx.id is your transactionId
 ```
 ```server-dotnet
 using Appwrite;
 using Appwrite.Services;
 
 var client = new Client()
-  .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+  .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
   .SetProject("<PROJECT_ID>")
   .SetKey("<API_KEY>");
 
 var tablesDB = new TablesDB(client);
 
 var tx = await tablesDB.CreateTransaction();
-// tx.$id is your transactionId
+// tx.Id is your transactionId
 ```
 ```server-dart
 import 'package:dart_appwrite/dart_appwrite.dart';
@@ -222,7 +222,7 @@ package main
 
 import (
   "log"
-  "github.com/appwrite/sdk-for-go/appwrite"
+  "github.com/appwrite/sdk-for-go/v7/appwrite"
 )
 
 func main() {
@@ -250,7 +250,7 @@ let client = Client()
 let tablesDB = TablesDB(client)
 
 let tx = try await tablesDB.createTransaction()
-// tx.$id is your transactionId
+// tx.id is your transactionId
 ```
 ```server-kotlin
 import io.appwrite.Client
@@ -264,7 +264,7 @@ val client = Client()
 val tablesDB = TablesDB(client)
 
 val tx = tablesDB.createTransaction()
-// tx.$id is your transactionId
+// tx.id is your transactionId
 ```
 ```server-java
 import io.appwrite.Client;
@@ -365,7 +365,7 @@ try await tablesDB.createRow(
   tableId: "<TABLE_ID>",
   rowId: "<ROW_ID>",
   data: ["name": "Walter"],
-  transactionId: tx.$id
+  transactionId: tx.id
 )
 
 // Increment inside a transaction
@@ -375,7 +375,7 @@ try await tablesDB.incrementRowColumn(
   rowId: "<ROW_ID>",
   column: "credits",
   value: 1,
-  transactionId: tx.$id
+  transactionId: tx.id
 )
 ```
 ```server-kotlin
@@ -385,7 +385,7 @@ tablesDB.createRow(
   tableId = "<TABLE_ID>",
   rowId = "<ROW_ID>",
   data = mapOf("name" to "Walter"),
-  transactionId = tx.$id
+  transactionId = tx.id
 )
 
 // Increment inside a transaction
@@ -395,7 +395,7 @@ tablesDB.incrementRowColumn(
   rowId = "<ROW_ID>",
   column = "credits",
   value = 1,
-  transactionId = tx.$id
+  transactionId = tx.id
 )
 ```
 ```server-java
@@ -499,7 +499,7 @@ $tablesDB->createRow(
   tableId: '<TABLE_ID>',
   rowId: '<ROW_ID>',
   data: ['name' => 'Walter'],
-  transactionId: $tx['$id']
+  transactionId: $tx->id
 );
 
 // Increment inside a transaction
@@ -509,7 +509,7 @@ $tablesDB->incrementRowColumn(
   rowId: '<ROW_ID>',
   column: 'credits',
   value: 1,
-  transactionId: $tx['$id']
+  transactionId: $tx->id
 );
 ```
 ```server-ruby
@@ -519,7 +519,7 @@ tablesDB.create_row(
   table_id: '<TABLE_ID>',
   row_id: '<ROW_ID>',
   data: { 'name' => 'Walter' },
-  transaction_id: tx['$id']
+  transaction_id: tx.id
 )
 
 # Increment inside a transaction
@@ -529,7 +529,7 @@ tablesDB.increment_row_column(
   row_id: '<ROW_ID>',
   column: 'credits',
   value: 1,
-  transaction_id: tx['$id']
+  transaction_id: tx.id
 )
 ```
 ```server-dotnet
@@ -599,7 +599,7 @@ try await tablesDB.createRow(
   tableId: "<TABLE_ID>",
   rowId: "<ROW_ID>",
   data: ["name": "Walter"],
-  transactionId: tx.$id
+  transactionId: tx.id
 )
 
 // Increment inside a transaction
@@ -609,7 +609,7 @@ try await tablesDB.incrementRowColumn(
   rowId: "<ROW_ID>",
   column: "credits",
   value: 1,
-  transactionId: tx.$id
+  transactionId: tx.id
 )
 ```
 ```server-rust
@@ -787,7 +787,7 @@ await tablesDB.createOperations(
 ```
 ```client-apple
 try await tablesDB.createOperations(
-  transactionId: tx.$id,
+  transactionId: tx.id,
   operations: [
     [
       "action": "create",
@@ -808,7 +808,7 @@ try await tablesDB.createOperations(
 ```
 ```server-kotlin
 tablesDB.createOperations(
-  transactionId = tx.$id,
+  transactionId = tx.id,
   operations = listOf(
     mapOf(
       "action" to "create",
@@ -903,7 +903,7 @@ await tablesDB.createOperations({
 ```
 ```server-php
 $tablesDB->createOperations(
-  transactionId: $tx['$id'],
+  transactionId: $tx->id,
   operations: [
     [
       'action' => 'create',
@@ -924,7 +924,7 @@ $tablesDB->createOperations(
 ```
 ```server-ruby
 tablesDB.create_operations(
-  transaction_id: tx['$id'],
+  transaction_id: tx.id,
   operations: [
     {
       'action' => 'create',
@@ -990,7 +990,7 @@ await tablesDB.createOperations(
 ```
 ```server-swift
 try await tablesDB.createOperations(
-  transactionId: tx.$id,
+  transactionId: tx.id,
   operations: [
     [
       "action": "create",
@@ -1085,26 +1085,26 @@ await tablesDB.updateTransaction(
 ```client-apple
 // Commit
 try await tablesDB.updateTransaction(
-  transactionId: tx.$id,
+  transactionId: tx.id,
   commit: true
 )
 
 // Roll back
 try await tablesDB.updateTransaction(
-  transactionId: tx.$id,
+  transactionId: tx.id,
   rollback: true
 )
 ```
 ```server-kotlin
 // Commit
 tablesDB.updateTransaction(
-  transactionId = tx.$id,
+  transactionId = tx.id,
   commit = true
 )
 
 // Roll back
 tablesDB.updateTransaction(
-  transactionId = tx.$id,
+  transactionId = tx.id,
   rollback = true
 )
 ```
@@ -1181,26 +1181,26 @@ tablesDB.update_transaction(
 ```server-php
 // Commit
 $tablesDB->updateTransaction(
-  transactionId: $tx['$id'],
+  transactionId: $tx->id,
   commit: true
 );
 
 // Roll back
 $tablesDB->updateTransaction(
-  transactionId: $tx['$id'],
+  transactionId: $tx->id,
   rollback: true
 );
 ```
 ```server-ruby
 # Commit
 tablesDB.update_transaction(
-  transaction_id: tx['$id'],
+  transaction_id: tx.id,
   commit: true
 )
 
 # Roll back
 tablesDB.update_transaction(
-  transaction_id: tx['$id'],
+  transaction_id: tx.id,
   rollback: true
 )
 ```

@@ -1,125 +1,114 @@
-## Getting Started
+## Getting started
 
-### Init your SDK
-Initialize your SDK with your Appwrite server API endpoint and project ID which can be found on your project settings page and your new API secret Key from project's API keys section.
+### Initialize the client
+
+Create a client with your Appwrite endpoint, project ID and an [API key](https://appwrite.io/docs/partners/project/api-keys). Find the endpoint and project ID in your project's **Settings** page, and create an API key with only the scopes you need under **API keys** in the project sidebar.
 
 ```python
 from appwrite.client import Client
-from appwrite.services.users import Users
 
 client = Client()
-
-(client
-  .set_endpoint('https://[HOSTNAME_OR_IP]/v1') # Your API Endpoint
-  .set_project('5df5acd0d48c2') # Your project ID
-  .set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
-  .set_self_signed() # Use only on dev mode with a self-signed SSL cert
-)
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+client.set_project('<PROJECT_ID>')
+client.set_key('<API_KEY>')
 ```
 
-### Make Your First Request
-Once your SDK object is set, create any of the Appwrite service objects and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the [API References](https://appwrite.io/docs) section.
+API keys grant server-level access to your project. Keep them out of client-side code and version control.
 
-All service methods return typed Pydantic models, so you can access response fields as attributes:
+### Make a request
+
+Create a service object with the client and call any of its methods. Every method returns a typed Pydantic model, so response fields are available as attributes.
 
 ```python
-users = Users(client)
-
-user = users.create(ID.unique(), email = "email@example.com", phone = "+123456789", password = "password", name = "Walter O'Brien")
-
-print(user.name)   # "Walter O'Brien"
-print(user.email)  # "email@example.com"
-print(user.id)     # The generated user ID
-```
-
-### Full Example
-```python
-from appwrite.client import Client
-from appwrite.services.users import Users
 from appwrite.id import ID
-
-client = Client()
-
-(client
-  .set_endpoint('https://[HOSTNAME_OR_IP]/v1') # Your API Endpoint
-  .set_project('5df5acd0d48c2') # Your project ID
-  .set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
-  .set_self_signed() # Use only on dev mode with a self-signed SSL cert
-)
+from appwrite.services.users import Users
 
 users = Users(client)
 
-user = users.create(ID.unique(), email = "email@example.com", phone = "+123456789", password = "password", name = "Walter O'Brien")
+user = users.create(
+    user_id=ID.unique(),
+    email='email@example.com',
+    password='password',
+    name="Walter O'Brien",
+)
 
-print(user.name)       # Access fields as attributes
-print(user.to_dict())  # Convert to dictionary if needed
+print(user.id)
+print(user.name)
+print(user.to_dict())
 ```
 
-### Type Safety with Models
+See the [API reference](https://appwrite.io/docs/references/cloud/server-python/users) for every service and method.
 
-The Appwrite Python SDK provides type safety when working with database rows through generic methods. Methods like `get_row`, `list_rows`, and others accept a `model_type` parameter that allows you to specify your custom Pydantic model for full type safety.
+### Work with rows
+
+Use `TablesDB` to read and write rows. Pass a Pydantic model as `model_type` to get typed row data back; without it, `row.data` is a `dict`.
 
 ```python
-from pydantic import BaseModel
-from datetime import datetime
 from typing import Optional
-from appwrite.client import Client
+
+from pydantic import BaseModel
+
+from appwrite.id import ID
+from appwrite.query import Query
 from appwrite.services.tables_db import TablesDB
 
-# Define your custom model matching your table schema
+
 class Post(BaseModel):
-    postId: int
-    authorId: int
     title: str
-    content: str
-    createdAt: datetime
-    updatedAt: datetime
-    isPublished: bool
+    published: bool
     excerpt: Optional[str] = None
 
-client = Client()
-# ... configure your client ...
 
 tables_db = TablesDB(client)
 
-# Fetch a single row with type safety
-row = tables_db.get_row(
-    database_id="your-database-id",
-    table_id="your-table-id",
-    row_id="your-row-id",
-    model_type=Post  # Pass your custom model type
+row = tables_db.create_row(
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    row_id=ID.unique(),
+    data={'title': 'Hello, world', 'published': True},
+    model_type=Post,
 )
 
-print(row.data.title)     # Fully typed - IDE autocomplete works
-print(row.data.postId)    # int type, not Any
-print(row.data.createdAt) # datetime type
+print(row.id)
+print(row.data.title)
 
-# Fetch multiple rows with type safety
 result = tables_db.list_rows(
-    database_id="your-database-id",
-    table_id="your-table-id",
-    model_type=Post
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    queries=[Query.equal('published', True), Query.limit(25)],
+    model_type=Post,
 )
 
 for row in result.rows:
-    print(f"{row.data.title} by {row.data.authorId}")
+    print(row.data.title)
 ```
 
-### Error Handling
-The Appwrite Python SDK raises `AppwriteException` object with `message`, `code` and `response` properties. You can handle any errors by catching `AppwriteException` and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
+### Handle errors
+
+Failed requests raise `AppwriteException`, which carries `message`, `code`, `type` and `response`.
 
 ```python
-users = Users(client)
+from appwrite.exception import AppwriteException
+
 try:
-  user = users.create(ID.unique(), email = "email@example.com", phone = "+123456789", password = "password", name = "Walter O'Brien")
-  print(user.name)
-except AppwriteException as e:
-  print(e.message)
+    user = users.get(user_id='<USER_ID>')
+except AppwriteException as error:
+    print(error.code, error.type, error.message)
+```
+
+### Self-hosted Appwrite
+
+Point the client at your own instance instead of Appwrite Cloud. Call `set_self_signed()` only in development, when the server uses a self-signed TLS certificate.
+
+```python
+client.set_endpoint('https://appwrite.example.com/v1')
+client.set_self_signed()
 ```
 
 ### Learn more
-You can use the following resources to learn more and get help
-- 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-server)
-- 📜 [Appwrite Docs](https://appwrite.io/docs)
-- 💬 [Discord Community](https://appwrite.io/discord)
-- 🚂 [Appwrite Python Playground](https://github.com/appwrite/playground-for-python)
+
+- [Python quick start](https://appwrite.io/docs/quick-starts/python)
+- [Python API reference](https://appwrite.io/docs/references/cloud/server-python/users)
+- [Appwrite docs](https://appwrite.io/docs)
+- [Discord community](https://appwrite.io/discord)
+- [Appwrite Python playground](https://github.com/appwrite/playground-for-python)

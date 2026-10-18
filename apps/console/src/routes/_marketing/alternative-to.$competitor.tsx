@@ -10,10 +10,12 @@ import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
   marketingRouteLifetime,
 } from '@/lib/marketing/route-static-data'
-import { getMarketingRouteHead } from '@/lib/marketing/route-meta'
+import {
+  getMarketingFaqScript,
+  getMarketingRouteHead,
+} from '@/lib/marketing/route-meta'
 import { translate } from '@/lib/i18n/translate'
 import { respondWithPrebuiltOrRuntime } from '@/lib/seo/export-response'
-import { stringifyJsonLd } from '@/lib/seo/json-ld'
 import { trackServerPageview } from '@/lib/server-analytics'
 import { pageTitle } from '@/lib/utils/page-title'
 
@@ -96,23 +98,7 @@ export const Route = createFileRoute('/_marketing/alternative-to/$competitor')({
           href: `${canonicalPath}.md`,
         },
       ],
-      scripts: [
-        {
-          type: 'application/ld+json',
-          children: stringifyJsonLd({
-            '@context': 'https://schema.org',
-            '@type': 'FAQPage',
-            mainEntity: content.faq.map((faq) => ({
-              '@type': 'Question',
-              name: translate(faq.question),
-              acceptedAnswer: {
-                '@type': 'Answer',
-                text: translate(faq.answer),
-              },
-            })),
-          }),
-        },
-      ],
+      scripts: [getMarketingFaqScript(content.faq)],
     }
   },
   component: AlternativePage,

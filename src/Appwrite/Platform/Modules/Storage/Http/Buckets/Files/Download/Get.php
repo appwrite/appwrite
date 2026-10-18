@@ -16,6 +16,7 @@ use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\UID;
@@ -101,7 +102,7 @@ class Get extends Action
 
         $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $valid = $authorization->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
+        $valid = $authorization->isValid(new Input(PermissionType::Read, $bucket->getPermissionsByType(PermissionType::Read)));
         if (!$fileSecurity && !$valid && !$isToken) {
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
@@ -204,19 +205,35 @@ class Get extends Action
             return;
         }
 
-        if ($size > APP_STORAGE_READ_BUFFER) {
-            for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
-                $response->chunk(
-                    (string) $deviceForFiles->read(
-                        $path,
-                        ($i * MAX_OUTPUT_CHUNK_SIZE),
-                        min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
-                    ),
-                    (($i + 1) * MAX_OUTPUT_CHUNK_SIZE) >= $size
-                );
-            }
-        } else {
+        if ($size <= APP_STORAGE_READ_BUFFER) {
             $response->send((string) $deviceForFiles->read($path));
+            return;
+        }
+
+        // One backend read pins the representation, even if an S3 writer replaces
+        // and deletes its path while this response is still being delivered.
+        $remaining = $size;
+        $started = false;
+        try {
+            $deviceForFiles->stream($path, static function (string $chunk) use ($response, &$remaining, &$started): void {
+                $remaining -= \strlen($chunk);
+                if ($remaining < 0) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'File read exceeded its captured size.');
+                }
+                if ($chunk !== '') {
+                    $started = true;
+                    $response->chunk($chunk, false);
+                }
+            });
+            if ($remaining !== 0) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Incomplete file read.');
+            }
+            $response->chunk('', true);
+        } catch (\Throwable $error) {
+            if ($started) {
+                $response->abort();
+            }
+            throw $error;
         }
     }
 }

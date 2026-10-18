@@ -15,8 +15,10 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 
 class Update extends Action
@@ -62,12 +64,13 @@ class Update extends Action
                     replaceWith: 'tablesDB.updateUrlColumn',
                 ),
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
-            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Attribute Key.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getMaxUidLength()), 'Attribute Key.', false, ['dbForProject'])
             ->param('required', null, new Boolean(), 'Is attribute required?')
             ->param('default', null, new Nullable(new URL()), 'Default value for attribute when not provided. Cannot be set when attribute is required.', example: 'https://example.com')
-            ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'New Attribute Key.', true, ['dbForProject'])
+            ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getMaxUidLength())), 'New Attribute Key.', true, ['dbForProject'])
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the attribute.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -83,6 +86,7 @@ class Update extends Action
         ?bool          $required,
         ?string        $default,
         ?string        $newKey,
+        ?string        $description,
         UtopiaResponse $response,
         Database       $dbForProject,
         callable       $getDatabasesDB,
@@ -97,11 +101,12 @@ class Update extends Action
             $getDatabasesDB,
             $queueForEvents,
             $authorization,
-            type: Database::VAR_STRING,
+            type: ColumnType::String->value,
             filter: APP_DATABASE_ATTRIBUTE_URL,
             default: $default,
             required: $required,
-            newKey: $newKey
+            newKey: $newKey,
+            description: $description
         );
 
         $response

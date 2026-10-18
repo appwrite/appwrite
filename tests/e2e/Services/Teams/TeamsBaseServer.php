@@ -3,7 +3,7 @@
 namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
@@ -263,7 +263,7 @@ trait TeamsBaseServer
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'membershipId' => ID::custom($customId),
+            'membershipId' => Id::custom($customId),
             'email' => uniqid() . 'friend@localhost.test',
             'roles' => ['developer'],
         ]);
@@ -280,7 +280,7 @@ trait TeamsBaseServer
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'membershipId' => ID::custom($customId),
+            'membershipId' => Id::custom($customId),
             'email' => $email,
             'roles' => ['developer'],
         ]);

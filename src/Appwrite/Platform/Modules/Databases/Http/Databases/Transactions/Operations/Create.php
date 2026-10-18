@@ -15,13 +15,15 @@ use Appwrite\Utopia\Database\Validator\Operation;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\PermissionType;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\ArrayList;
 
 class Create extends Action
@@ -73,10 +75,11 @@ class Create extends Action
                     replaceWith: 'tablesDB.createOperations',
                 )
             ))
-            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Transaction ID.', false, ['dbForProject'])
+            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Transaction ID.', false, ['dbForProject'])
             ->param('operations', [], new ArrayList(new Operation(type: 'legacy')), 'Array of staged operations.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('transactionState')
             ->inject('plan')
             ->inject('authorization')
@@ -84,7 +87,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $transactionId, array $operations, UtopiaResponse $response, Database $dbForProject, TransactionState $transactionState, array $plan, Authorization $authorization, User $user): void
+    public function action(string $transactionId, array $operations, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, TransactionState $transactionState, array $plan, Authorization $authorization, User $user): void
     {
         if (empty($operations)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Operations array cannot be empty');
@@ -120,7 +123,7 @@ class Create extends Action
             );
         }
 
-        $databases = $collections = $staged = $dependants = [];
+        $databases = $collections = $staged = [];
         foreach ($operations as $operation) {
             if (!$isAPIKey && !$isPrivilegedUser && \in_array($operation['action'], [
                 'bulkCreate',
@@ -140,72 +143,51 @@ class Create extends Action
                 $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $operation[$this->getGroupId()]));
 
             if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-                throw new Exception(Exception::COLLECTION_NOT_FOUND, params: [$operation[$this->getGroupId()]]);
+                throw new Exception($this->getParentNotFoundException(), params: [$operation[$this->getGroupId()]]);
             }
 
             if (\in_array($operation['action'], ['bulkCreate', 'bulkUpdate', 'bulkUpsert', 'bulkDelete'])) {
                 $hasRelationships = \array_filter(
                     $collection->getAttribute('attributes', []),
-                    fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                    fn ($attribute) => $attribute->getAttribute('type') === ColumnType::Relationship->value
                 );
                 if ($hasRelationships) {
                     throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Bulk operations are not supported for ' . $this->getGroupId() . ' with relationship attributes');
                 }
             }
 
-            // For update, upsert, delete, increment, decrement, check document existence first
             $document = null;
             if (\in_array($operation['action'], ['update', 'delete', 'upsert', 'increment', 'decrement'])) {
                 $documentId = $operation[$this->getResourceId()] ?? null;
                 if (empty($documentId)) {
-                    throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Document ID is required for ' . $operation['action'] . ' operations');
+                    throw new Exception(Exception::GENERAL_BAD_REQUEST, \ucfirst($this->getResource()) . ' ID is required for ' . $operation['action'] . ' operations');
                 }
 
                 $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
-                $isDependant = isset($dependants[$collectionKey][$documentId]);
 
-                $document = $transactionState->getDocument($database, $collectionKey, $documentId, $transactionId);
-                if ($document->isEmpty() && !$isDependant && $operation['action'] !== 'upsert') {
-                    throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$documentId]);
+                $document = $transactionState->getDocument($database, $collectionKey, $documentId, $transactionId, pending: $staged);
+                if ($document->isEmpty() && $operation['action'] !== 'upsert') {
+                    throw new Exception($this->getNotFoundException(), params: [$documentId]);
                 }
             }
 
             // Bulk operations skip permission validation entirely (API key/admin only, already checked above)
             if (!\in_array($operation['action'], ['bulkCreate', 'bulkUpdate', 'bulkUpsert', 'bulkDelete'])) {
-                $permissionType = match ($operation['action']) {
-                    'create' => Database::PERMISSION_CREATE,
-                    'update', 'increment', 'decrement' => Database::PERMISSION_UPDATE,
-                    'delete' => Database::PERMISSION_DELETE,
-                    'upsert' => ($document && !$document->isEmpty()) ? Database::PERMISSION_UPDATE : Database::PERMISSION_CREATE,
-                    default => throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid action: ' . $operation['action'])
-                };
+                if (!\in_array($operation['action'], ['create', 'update', 'upsert', 'increment', 'decrement', 'delete'])) {
+                    throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid action: ' . $operation['action']);
+                }
 
                 // For individual operations, enforce permissions unless using API key/admin
                 if (!$isAPIKey && !$isPrivilegedUser) {
-                    $documentSecurity = $collection->getAttribute('documentSecurity', false);
+                    $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+                    $exists = $document !== null && !$document->isEmpty();
 
-                    $collectionValid = $authorization->isValid(
-                        new Input($permissionType, $collection->getPermissionsByType($permissionType))
-                    );
-                    $documentValid = false;
-                    if ($document !== null && !$document->isEmpty() && $documentSecurity) {
-                        if ($permissionType === Database::PERMISSION_UPDATE) {
-                            $documentValid = $authorization->isValid(
-                                new Input(Database::PERMISSION_UPDATE, $document->getUpdate())
-                            );
-                        } elseif ($permissionType === Database::PERMISSION_DELETE) {
-                            $documentValid = $authorization->isValid(
-                                new Input(Database::PERMISSION_DELETE, $document->getDelete())
-                            );
+                    if ($operation['action'] === 'delete') {
+                        $permissions = $collection->getPermissionsByType(PermissionType::Delete);
+                        if ($collection->getAttribute('documentSecurity', false) && $exists) {
+                            $permissions = [...$permissions, ...$document->getPermissionsByType(PermissionType::Delete)];
                         }
-                    }
-
-                    if ($permissionType === Database::PERMISSION_CREATE || !$documentSecurity) {
-                        if (!$collectionValid) {
-                            throw new Exception(Exception::USER_UNAUTHORIZED);
-                        }
-                    } else {
-                        if (!$collectionValid && !$documentValid) {
+                        if (!$authorization->isValid(new Input(PermissionType::Delete, $permissions))) {
                             throw new Exception(Exception::USER_UNAUTHORIZED);
                         }
                     }
@@ -214,10 +196,10 @@ class Create extends Action
                     if (isset($operation['data']['$permissions'])) {
                         $permissions = $operation['data']['$permissions'];
                         $roles = $authorization->getRoles();
-                        foreach (Database::PERMISSIONS as $type) {
+                        foreach ([PermissionType::Read, PermissionType::Create, PermissionType::Update, PermissionType::Delete] as $type) {
                             foreach ($permissions as $permission) {
                                 $permission = Permission::parse($permission);
-                                if ($permission->getPermission() != $type) {
+                                if ($permission->getPermission() != $type->value) {
                                     continue;
                                 }
                                 $role = (new Role(
@@ -232,14 +214,32 @@ class Create extends Action
                         }
                     }
 
-                    if (\in_array($operation['action'], ['create', 'update', 'upsert']) && \is_array($operation['data'] ?? null)) {
-                        $this->validateRelationships($database, $collection, $operation['data'], $dbForProject, $transactionState, $transactionId, $authorization);
+                    if ($operation['action'] !== 'delete') {
+                        $dbForDatabases = $getDatabasesDB($database);
+                        $data = \is_array($operation['data'] ?? null) ? $operation['data'] : [];
+                        $creates = $operation['action'] === 'create' || ($operation['action'] === 'upsert' && !$exists);
+
+                        if ($creates && isset($operation[$this->getResourceId()])) {
+                            $data['$id'] = $operation[$this->getResourceId()];
+                        }
+                        if (\in_array($operation['action'], ['increment', 'decrement'])) {
+                            $data = [];
+                        }
+
+                        $stagedView = $transactionState->stagedView($database, $transaction, $staged);
+                        $this->authorizeStagedWrite(
+                            fn () => $creates
+                                ? $dbForDatabases->authorizeCreate($collectionKey, new Document($data), $stagedView)
+                                : $dbForDatabases->authorizeUpdate($collectionKey, $stagedView($collectionKey, $operation[$this->getResourceId()]) ?? $document ?? new Document(), new Document($data), $stagedView),
+                            $this->getParentNotFoundException(),
+                            $operation[$this->getGroupId()],
+                        );
                     }
                 }
             }
 
             $staged[] = new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
@@ -247,15 +247,6 @@ class Create extends Action
                 'action' => $operation['action'],
                 'data' => $operation['data'] ?? [],
             ]);
-
-            // Track create operations for dependent update/increment/decrement/delete operations in same batch
-            if ($operation['action'] === 'create') {
-                $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
-                $documentId = $operation[$this->getResourceId()] ?? null;
-                if ($documentId) {
-                    $dependants[$collectionKey][$documentId] = true;
-                }
-            }
         }
 
         $transaction = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged, $operations) {
@@ -271,49 +262,5 @@ class Create extends Action
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
             ->dynamic($transaction, UtopiaResponse::MODEL_TRANSACTION);
-    }
-
-    /**
-     * Related documents nested in staged data are written on commit, so the
-     * permissions they carry are checked against the related document as already
-     * staged. Commit checks them again once earlier operations have been applied.
-     *
-     * @param array<string, mixed> $data
-     * @throws Exception
-     */
-    private function validateRelationships(Document $database, Document $collection, array $data, Database $dbForProject, TransactionState $transactionState, string $transactionId, Authorization $authorization): void
-    {
-        $relationships = \array_filter(
-            $collection->getAttribute('attributes', []),
-            fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
-        );
-
-        foreach ($relationships as $relationship) {
-            $related = $data[$relationship->getAttribute('key')] ?? null;
-
-            if (empty($related) || !\is_array($related)) {
-                continue;
-            }
-
-            $relations = \array_is_list($related) ? $related : [$related];
-
-            $relatedCollection = $authorization->skip(
-                fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $relationship->getAttribute('relatedCollection'))
-            );
-
-            foreach ($relations as $relation) {
-                if (!\is_array($relation) || \array_is_list($relation)) {
-                    continue;
-                }
-
-                $relationId = $relation['$id'] ?? null;
-                $current = \is_string($relationId)
-                    ? $authorization->skip(fn () => $transactionState->getDocument($database, 'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(), $relationId, $transactionId))
-                    : new Document();
-
-                $this->validateRelatedPermissions($relation['$permissions'] ?? null, $current, $authorization);
-                $this->validateRelationships($database, $relatedCollection, $relation, $dbForProject, $transactionState, $transactionId, $authorization);
-            }
-        }
     }
 }

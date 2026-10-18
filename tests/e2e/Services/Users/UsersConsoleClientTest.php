@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class UsersConsoleClientTest extends Scope
 {
@@ -18,7 +18,7 @@ final class UsersConsoleClientTest extends Scope
     public function testCreateUserWithoutPasswordThenSetPassword()
     {
         // Create a user with email but without password
-        $userId = ID::unique();
+        $userId = Id::unique();
         $email = $userId . '@example.com';
 
         $response = $this->client->call(Client::METHOD_POST, '/users', array_merge([
@@ -58,7 +58,7 @@ final class UsersConsoleClientTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders());
 
-        $actorId = ID::unique();
+        $actorId = Id::unique();
         $actor = $this->client->call(Client::METHOD_POST, '/users', $headers, [
             'userId' => $actorId,
             'email' => 'impersonator-queryparam-' . $actorId . '@example.com',
@@ -67,7 +67,7 @@ final class UsersConsoleClientTest extends Scope
         ]);
         $this->assertEquals(201, $actor['headers']['status-code']);
 
-        $targetId = ID::unique();
+        $targetId = Id::unique();
         $targetEmail = 'target-queryparam-' . $targetId . '@example.com';
         $targetPhone = '+1' . rand(2000000000, 2999999999);
 
@@ -142,8 +142,8 @@ final class UsersConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
-            'email' => ID::unique() . '@example.com',
+            'userId' => Id::unique(),
+            'email' => Id::unique() . '@example.com',
             'password' => 'password',
             'name' => 'Target',
         ]);
@@ -151,13 +151,13 @@ final class UsersConsoleClientTest extends Scope
         $targetId = $target['body']['$id'];
 
         // A regular account that holds a session but no server scopes
-        $email = ID::unique() . '@example.com';
+        $email = Id::unique() . '@example.com';
         $account = $this->client->call(Client::METHOD_POST, '/account', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => 'password',
             'name' => 'Member',
@@ -192,7 +192,7 @@ final class UsersConsoleClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
         $this->assertEquals('general_unauthorized_scope', $response['body']['type']);
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $targetId . '/sessions/' . ID::unique(), $memberHeaders);
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $targetId . '/sessions/' . Id::unique(), $memberHeaders);
         $this->assertEquals(401, $response['headers']['status-code']);
         $this->assertEquals('general_unauthorized_scope', $response['body']['type']);
 
@@ -210,8 +210,8 @@ final class UsersConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
-            'email' => ID::unique() . '@example.com',
+            'userId' => Id::unique(),
+            'email' => Id::unique() . '@example.com',
             'password' => 'password',
             'name' => 'Target',
         ]);

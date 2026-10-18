@@ -1,86 +1,42 @@
-import { useCallback, useEffect, useState } from 'react'
-
-export type ProjectEnvironmentType =
-  | 'production'
-  | 'staging'
-  | 'development'
-  | 'preview'
-
-export interface ProjectEnvironment {
+/**
+ * A row in the environment switcher: either the project itself (the default
+ * environment, which has no environment document of its own) or one of the
+ * environments listed under it. Every row is a project the Console can open.
+ */
+export interface ProjectEnvironmentOption {
   id: string
   name: string
-  type: ProjectEnvironmentType
-}
-
-/** Mock environments until the API ships; every project gets the same set. */
-export const MOCK_PROJECT_ENVIRONMENTS: ProjectEnvironment[] = [
-  { id: 'production', name: 'Production', type: 'production' },
-  { id: 'staging', name: 'Staging', type: 'staging' },
-  { id: 'development', name: 'Development', type: 'development' },
-  { id: 'preview', name: 'Preview', type: 'preview' },
-]
-
-export const DEFAULT_PROJECT_ENVIRONMENT_ID = 'production'
-
-export const PROJECT_ENVIRONMENT_DOT_CLASS: Record<
-  ProjectEnvironmentType,
-  string
-> = {
-  production: 'bg-emerald-500',
-  staging: 'bg-amber-500',
-  development: 'bg-sky-500',
-  preview: 'bg-violet-500',
-}
-
-const STORAGE_EVENT = 'projectEnvironmentChange'
-
-function storageKey(projectId: string) {
-  return `console.projectEnvironment.${projectId}`
-}
-
-function readEnvironmentId(projectId: string): string {
-  if (typeof window === 'undefined') return DEFAULT_PROJECT_ENVIRONMENT_ID
-  const stored = window.localStorage.getItem(storageKey(projectId))
-  return MOCK_PROJECT_ENVIRONMENTS.some((env) => env.id === stored)
-    ? (stored as string)
-    : DEFAULT_PROJECT_ENVIRONMENT_ID
+  /** The project itself. It cannot be renamed or deleted from the switcher. */
+  isDefault: boolean
 }
 
 /**
- * Selected environment for a project, persisted per device. Starts on the
- * default so SSR and first client render match; stored choice applies after mount.
+ * Dot colors for the switcher. The project itself always takes the first one;
+ * every other environment keeps the same color between renders because the
+ * color is derived from its id (an environment has no type to key on).
  */
-export function useProjectEnvironment(projectId: string) {
-  const [environmentId, setEnvironmentIdState] = useState(
-    DEFAULT_PROJECT_ENVIRONMENT_ID,
-  )
+const PROJECT_ENVIRONMENT_DOT_CLASSES = [
+  'bg-emerald-500',
+  'bg-amber-500',
+  'bg-sky-500',
+  'bg-violet-500',
+  'bg-rose-500',
+  'bg-cyan-500',
+] as const
 
-  useEffect(() => {
-    setEnvironmentIdState(readEnvironmentId(projectId))
-    const sync = () => setEnvironmentIdState(readEnvironmentId(projectId))
-    window.addEventListener(STORAGE_EVENT, sync)
-    window.addEventListener('storage', sync)
-    return () => {
-      window.removeEventListener(STORAGE_EVENT, sync)
-      window.removeEventListener('storage', sync)
-    }
-  }, [projectId])
-
-  const setEnvironmentId = useCallback(
-    (id: string) => {
-      window.localStorage.setItem(storageKey(projectId), id)
-      window.dispatchEvent(new CustomEvent(STORAGE_EVENT))
-    },
-    [projectId],
-  )
-
-  const environment =
-    MOCK_PROJECT_ENVIRONMENTS.find((env) => env.id === environmentId) ??
-    MOCK_PROJECT_ENVIRONMENTS[0]
-
-  return {
-    environment,
-    environments: MOCK_PROJECT_ENVIRONMENTS,
-    setEnvironmentId,
+function hashEnvironmentId(environmentId: string): number {
+  let hash = 0
+  for (let index = 0; index < environmentId.length; index += 1) {
+    hash = (hash << 5) - hash + environmentId.charCodeAt(index)
+    hash |= 0
   }
+  return Math.abs(hash)
+}
+
+export function projectEnvironmentDotClass(
+  environment: ProjectEnvironmentOption,
+): string {
+  if (environment.isDefault) return PROJECT_ENVIRONMENT_DOT_CLASSES[0]
+  const palette = PROJECT_ENVIRONMENT_DOT_CLASSES.slice(1)
+  return palette[hashEnvironmentId(environment.id) % palette.length]!
 }

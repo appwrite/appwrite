@@ -233,7 +233,7 @@ npx skills add appwrite/agent-skills
 
 ### 开发套件
 
-以下是当前支持的平台和语言列表。如果您想帮助我们为您选择的平台添加支持，您可以访问我们的 [SDK 生成器](https://github.com/appwrite/sdk-generator) 项目并查看我们的 [贡献指南](https://github.com/appwrite/sdk-generator/blob/master/CONTRIBUTING.md)。
+以下是当前支持的平台和语言列表。如果您想帮助我们为您选择的平台添加支持，您可以访问我们的 [SDK 生成器](https://github.com/appwrite/sdk-generator) 项目并查看我们的 [贡献指南](https://github.com/appwrite/sdk-generator/blob/main/CONTRIBUTING.md)。
 
 #### 客户端
 
@@ -242,6 +242,7 @@ npx skills add appwrite/agent-skills
 - :white_check_mark: &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple)
 - :white_check_mark: &nbsp; [Android](https://github.com/appwrite/sdk-for-android)
 - :white_check_mark: &nbsp; [React Native](https://github.com/appwrite/sdk-for-react-native)
+- :white_check_mark: &nbsp; [Unity](https://github.com/appwrite/sdk-for-unity)
 
 #### 服务器
 

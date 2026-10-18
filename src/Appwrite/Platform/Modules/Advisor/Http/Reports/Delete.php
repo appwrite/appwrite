@@ -55,7 +55,7 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('reportId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Report ID.', false, ['dbForPlatform'])
+            ->param('reportId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Report ID.', false, ['dbForPlatform'])
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')

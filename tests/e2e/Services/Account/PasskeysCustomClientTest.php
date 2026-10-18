@@ -10,7 +10,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Auth\Tests\Passkeys\Authenticator;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 
 final class PasskeysCustomClientTest extends Scope
@@ -605,7 +605,7 @@ final class PasskeysCustomClientTest extends Scope
          */
         // Apple apps sign in from the relying party ID itself
         $response = $this->client->call(Client::METHOD_POST, '/project/platforms/apple', $this->getServerHeaders($project), [
-            'platformId' => ID::unique(),
+            'platformId' => Id::unique(),
             'name' => 'iOS',
             'bundleIdentifier' => 'com.example.app',
         ]);
@@ -633,7 +633,7 @@ final class PasskeysCustomClientTest extends Scope
          */
         // An Android app without fingerprints cannot use passkeys
         $platform = $this->client->call(Client::METHOD_POST, '/project/platforms/android', $this->getServerHeaders($project), [
-            'platformId' => ID::unique(),
+            'platformId' => Id::unique(),
             'name' => 'Android',
             'applicationId' => 'com.example.app',
         ]);
@@ -1326,7 +1326,7 @@ final class PasskeysCustomClientTest extends Scope
     private function createWebPlatform(array $project, string $hostname): string
     {
         $response = $this->client->call(Client::METHOD_POST, '/project/platforms/web', $this->getServerHeaders($project), [
-            'platformId' => ID::unique(),
+            'platformId' => Id::unique(),
             'name' => $hostname,
             'hostname' => $hostname,
         ]);
@@ -1351,7 +1351,7 @@ final class PasskeysCustomClientTest extends Scope
         $email = \uniqid('passkey.', true) . \bin2hex(\random_bytes(4)) . '@localhost.test';
 
         $user = $this->client->call(Client::METHOD_POST, '/account', $this->getGuestHeaders($project), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => 'password',
             'name' => 'Passkey User',
