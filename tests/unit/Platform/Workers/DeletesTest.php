@@ -4,11 +4,19 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Platform\Workers;
 
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Execution\Store as ExecutionStore;
 use Appwrite\Platform\Workers\Deletes;
 use Appwrite\Schedule\Source\Functions as FunctionSchedules;
+use Executor\Executor;
+use PHPUnit\Framework\AssertionFailedError;
 use PHPUnit\Framework\TestCase;
+use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Memory as MemoryCache;
 use Utopia\Cache\Cache;
+use Utopia\Cdn\Certificates\Provider as Certificates;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Collection;
@@ -16,9 +24,14 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Queue\Message;
 use Utopia\Schedule\Clock\Test as TestClock;
 use Utopia\Schedule\Scheduler;
+use Utopia\Storage\Device;
+use Utopia\Storage\Device\Local;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
+use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 require_once __DIR__ . '/../../../../app/init.php';
 
@@ -57,9 +70,9 @@ final class DeletesTest extends TestCase
         $currentPath = $directory . '/replacement';
         file_put_contents($oldPath, 'original');
         file_put_contents($currentPath, 'replacement');
-        $device = new \Utopia\Storage\Device\Local($directory);
-        $payload = (new \Appwrite\Event\Message\Delete(type: DELETE_TYPE_FILES, resource: $oldPath))->toArray();
-        $message = (new \Utopia\Queue\Message())->setPayload($payload);
+        $device = new Local($directory);
+        $payload = (new DeleteMessage(type: DELETE_TYPE_FILES, resource: $oldPath))->toArray();
+        $message = (new Message())->setPayload($payload);
         try {
             // Queue delivery is at least once; reclaiming an already-removed path is safe.
             for ($attempt = 0; $attempt < 2; $attempt++) {
@@ -73,15 +86,15 @@ final class DeletesTest extends TestCase
                     deviceForFunctions: $device,
                     deviceForSites: $device,
                     deviceForBuilds: $device,
-                    deviceForCache: $device,
-                    certificates: $this->createStub(\Utopia\Cdn\Certificates\Provider::class),
-                    executor: $this->createStub(\Executor\Executor::class),
+                    telemetry: new NoTelemetry(),
+                    certificates: $this->createStub(Certificates::class),
+                    executor: $this->createStub(Executor::class),
                     executionRetention: '',
                     executionsRetentionCount: 0,
-                    publisherForDeletes: $this->createStub(\Appwrite\Event\Publisher\Delete::class),
-                    publisherForUsage: $this->createStub(\Appwrite\Event\Publisher\Usage::class),
-                    bus: new \Utopia\Bus\Bus(),
-                    executionStore: $this->createStub(\Appwrite\Execution\Store::class),
+                    publisherForDeletes: $this->createStub(DeletePublisher::class),
+                    publisherForUsage: $this->createStub(UsagePublisher::class),
+                    bus: new Bus(),
+                    executionStore: $this->createStub(ExecutionStore::class),
                 );
                 $this->assertFileDoesNotExist($oldPath);
                 $this->assertSame('replacement', file_get_contents($currentPath));
@@ -93,6 +106,69 @@ final class DeletesTest extends TestCase
             unlink($currentPath);
             rmdir($directory);
         }
+    }
+
+    /**
+     * The project row is gone by the time the worker runs, so a message whose
+     * document lost its ID must not reach getProjectDB() or the project-ID
+     * queries for an empty project, nor build a device rooted at 'app-'.
+     */
+    public function testProjectDeleteWithoutAnIdTouchesNothing(): void
+    {
+        $payload = (new DeleteMessage(
+            type: DELETE_TYPE_DOCUMENT,
+            document: new Document(['$collection' => DELETE_TYPE_PROJECTS, '$sequence' => '7', 'name' => 'nameless']),
+        ))->toArray();
+        $message = (new Message())->setPayload($payload);
+
+        $dbForPlatform = $this->createMock(Database::class);
+        $dbForPlatform->expects($this->never())->method($this->anything());
+        $device = $this->createMock(Device::class);
+        $device->expects($this->never())->method($this->anything());
+        $telemetry = $this->createMock(Telemetry::class);
+        $telemetry->expects($this->never())->method('createHistogram');
+        $certificates = $this->createMock(Certificates::class);
+        $certificates->expects($this->never())->method($this->anything());
+        $executionStore = $this->createMock(ExecutionStore::class);
+        $executionStore->expects($this->never())->method($this->anything());
+        $connections = 0;
+        $record = function () use (&$connections): Database {
+            $connections++;
+
+            return $this->database;
+        };
+
+        $refusal = null;
+        try {
+            (new Deletes())->action(
+                message: $message,
+                project: new Document(),
+                dbForPlatform: $dbForPlatform,
+                getProjectDB: $record,
+                getDatabasesDB: $record,
+                deviceForFiles: $device,
+                deviceForFunctions: $device,
+                deviceForSites: $device,
+                deviceForBuilds: $device,
+                telemetry: $telemetry,
+                certificates: $certificates,
+                executor: $this->createStub(Executor::class),
+                executionRetention: '',
+                executionsRetentionCount: 0,
+                publisherForDeletes: $this->createStub(DeletePublisher::class),
+                publisherForUsage: $this->createStub(UsagePublisher::class),
+                bus: new Bus(),
+                executionStore: $executionStore,
+            );
+        } catch (AssertionFailedError $failure) {
+            // An unexpected call on a double is the failure under test, not the refusal.
+            throw $failure;
+        } catch (\Exception $error) {
+            $refusal = $error;
+        }
+
+        $this->assertSame('Missing project ID', $refusal?->getMessage(), 'a project delete without a project ID must not run');
+        $this->assertSame(0, $connections, 'no project or databases connection is opened');
     }
 
     /**
