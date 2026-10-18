@@ -693,6 +693,74 @@ final class UsageCustomServerTest extends Scope
         }, 60_000, 500);
     }
 
+    public function testNetworkInboundCountsTheRequestBody(): void
+    {
+        self::$project = $this->getProject(true);
+        $this->waitForUsageStats();
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $response = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => Id::unique(),
+            'email' => \uniqid() . '@appwrite.io',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $userId = $response['body']['$id'];
+
+        $padding = \str_repeat('a', 50_000);
+        $response = $this->client->call(Client::METHOD_PATCH, "/users/$userId/prefs", $headers, [
+            'prefs' => ['padding' => $padding],
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            'bucketId' => Id::unique(),
+            'name' => 'Inbound',
+        ]);
+        $this->assertSame(201, $bucket['headers']['status-code']);
+
+        $source = __DIR__ . '/../../../resources/logo.png';
+        $upload = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket['body']['$id'] . '/files', \array_merge($headers, [
+            'content-type' => 'multipart/form-data',
+        ]), [
+            'fileId' => Id::unique(),
+            'file' => new \CURLFile(\realpath($source), 'image/png', 'logo.png'),
+        ]);
+        $this->assertSame(201, $upload['headers']['status-code']);
+
+        $usageHeaders = \array_merge($headers, ['x-appwrite-key' => $this->getNewKey(['usage.read'])]);
+        $this->assertEventually(function () use ($usageHeaders, $padding) {
+            $response = $this->client->call(Client::METHOD_GET, '/usage/events', $usageHeaders, [
+                'metrics' => ['network.requests', 'network.inbound'],
+                'queries' => [Query::equal('method', ['PATCH'])->toString()],
+            ]);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertEquals(1, \array_sum(\array_column($response['body']['metrics'][0]['points'], 'value')), 'the prefs update must be counted');
+            $this->assertGreaterThanOrEqual(
+                \strlen($padding),
+                \array_sum(\array_column($response['body']['metrics'][1]['points'], 'value')),
+                'network.inbound must count the request body, not only the headers',
+            );
+        }, 60_000, 500);
+
+        $size = \filesize($source);
+        $this->assertEventually(function () use ($usageHeaders, $size) {
+            $response = $this->client->call(Client::METHOD_GET, '/usage/events', $usageHeaders, [
+                'metrics' => ['network.requests', 'network.inbound'],
+                'queries' => [Query::equal('method', ['POST'])->toString()],
+            ]);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertEquals(3, \array_sum(\array_column($response['body']['metrics'][0]['points'], 'value')), 'the user, bucket and file creations must be counted');
+            $inbound = \array_sum(\array_column($response['body']['metrics'][1]['points'], 'value'));
+            $this->assertGreaterThanOrEqual($size, $inbound, 'network.inbound must count the uploaded file');
+            $this->assertLessThan(2 * $size, $inbound, 'network.inbound must count the uploaded file once');
+        }, 60_000, 500);
+    }
+
     /**
      * Breaks every usage insert for the whole stack, so it runs in a lane of its own.
      */
