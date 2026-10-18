@@ -179,9 +179,8 @@ pub async fn execute<'a>(
 }
 
 fn argv<'a>(mut words: impl Iterator<Item = &'a str>) -> Result<utopia_async::process::Command, Error> {
-    let program = words
-        .next()
-        .ok_or_else(|| Error::Value("proc_open(): Argument #1 ($command) must have at least one element".to_owned()))?;
+    let program =
+        words.next().ok_or_else(|| Error::Value("proc_open(): Argument #1 ($command) must not be empty".to_owned()))?;
     let mut command = utopia_async::process::Command::new(program);
     command.args(words);
     Ok(command)
