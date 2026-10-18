@@ -226,9 +226,9 @@ class Create extends Action
                 } catch (Duplicate) {
                     // Collection already exists
                 }
-
-                Profiles::seed($dbForProject);
             }
+
+            Profiles::seed($dbForProject);
         } else {
             $adapter = new DatabasePool($pools->get($dsn->getHost()));
             $dbForProject = new Database($adapter, $cache);

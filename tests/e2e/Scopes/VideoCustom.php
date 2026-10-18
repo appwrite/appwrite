@@ -4,8 +4,8 @@ namespace Tests\E2E\Scopes;
 
 use Appwrite\Platform\Modules\Videos\Base;
 use Tests\E2E\Client;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 /**
  * Fixtures shared by the Videos e2e suites: a bucket, a source video file and a

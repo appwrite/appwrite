@@ -15,9 +15,10 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\PermissionType;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
@@ -64,7 +65,7 @@ class Create extends Base
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID holding the source file.')
             ->param('fileId', '', new UID(), 'Source file unique ID.')
             ->param('name', '', new Text(2048), 'Video name. Defaults to the source file name. Max length: 2048 chars.', true)
-            ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -112,9 +113,9 @@ class Create extends Base
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         $allowedPermissions = [
-            Database::PERMISSION_READ,
-            Database::PERMISSION_UPDATE,
-            Database::PERMISSION_DELETE,
+            PermissionType::Read,
+            PermissionType::Update,
+            PermissionType::Delete,
         ];
 
         $permissions = Permission::aggregate($permissions, $allowedPermissions);
@@ -123,17 +124,17 @@ class Create extends Base
             $permissions = [];
             if (!empty($user->getId()) && !$isPrivilegedUser) {
                 foreach ($allowedPermissions as $permission) {
-                    $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                    $permissions[] = (new Permission($permission->value, 'user', $user->getId()))->toString();
                 }
             }
         }
 
         $roles = $authorization->getRoles();
         if (!$isAPIKey && !$isPrivilegedUser) {
-            foreach (Database::PERMISSIONS as $type) {
+            foreach ([PermissionType::Read, PermissionType::Create, PermissionType::Update, PermissionType::Delete] as $type) {
                 foreach ($permissions as $permission) {
                     $permission = Permission::parse($permission);
-                    if ($permission->getPermission() != $type) {
+                    if ($permission->getPermission() != $type->value) {
                         continue;
                     }
                     $role = (new Role(
@@ -149,7 +150,7 @@ class Create extends Base
         }
 
         $video = $authorization->skip(fn () => $dbForProject->createDocument('videos', new Document([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             '$permissions' => $permissions,
             'bucketId' => $file->getAttribute('bucketId', $bucketId),
             'bucketInternalId' => $file->getAttribute('bucketInternalId', ''),

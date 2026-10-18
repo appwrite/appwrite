@@ -16,7 +16,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
@@ -107,7 +107,7 @@ class Create extends Base
         }
 
         $caption = $authorization->skip(fn () => $dbForProject->createDocument('videos_captions', new Document([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             'videoId' => $video->getId(),
             'videoInternalId' => $video->getSequence(),
             'bucketId' => $file->getAttribute('bucketId', $bucketId),

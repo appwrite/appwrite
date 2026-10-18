@@ -12,6 +12,7 @@ use Appwrite\Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Platform\Action as UtopiaAction;
@@ -390,7 +391,7 @@ abstract class Base extends UtopiaAction
             return;
         }
 
-        if (!$authorization->isValid(new Input(Database::PERMISSION_UPDATE, $video->getUpdate()))) {
+        if (!$authorization->isValid(new Input(PermissionType::Update, $video->getPermissionsByType(PermissionType::Update)))) {
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
     }
@@ -410,7 +411,7 @@ abstract class Base extends UtopiaAction
             return;
         }
 
-        if (!$authorization->isValid(new Input(Database::PERMISSION_DELETE, $video->getDelete()))) {
+        if (!$authorization->isValid(new Input(PermissionType::Delete, $video->getPermissionsByType(PermissionType::Delete)))) {
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
     }
@@ -442,7 +443,7 @@ abstract class Base extends UtopiaAction
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $valid = $authorization->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
+        $valid = $authorization->isValid(new Input(PermissionType::Read, $bucket->getPermissionsByType(PermissionType::Read)));
 
         if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());

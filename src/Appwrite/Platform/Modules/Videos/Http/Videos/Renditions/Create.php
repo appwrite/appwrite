@@ -17,7 +17,7 @@ use Utopia\Abuse\Adapter\TimeLimit;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
@@ -145,7 +145,7 @@ class Create extends Base
 
         try {
             $rendition = $authorization->skip(fn () => $dbForProject->createDocument('videos_renditions', new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 'videoId' => $video->getId(),
                 'videoInternalId' => $video->getSequence(),
                 'profileId' => $profile->getId(),

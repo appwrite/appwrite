@@ -6,7 +6,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 /**
  * Default encode profiles for a project.
@@ -31,7 +31,7 @@ final class Profiles
             foreach (Config::getParam('videos-profiles', []) as $profile) {
                 try {
                     $database->createDocument('videos_profiles', new Document([
-                        '$id' => ID::unique(),
+                        '$id' => Id::unique(),
                         'name' => $profile['name'],
                         'codec' => $profile['codec'] ?? 'h264',
                         'videoBitRate' => $profile['videoBitRate'],

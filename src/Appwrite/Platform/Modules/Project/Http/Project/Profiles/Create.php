@@ -12,7 +12,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
@@ -87,7 +87,7 @@ class Create extends Base
 
         try {
             $profile = $authorization->skip(fn () => $dbForProject->createDocument('videos_profiles', new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 'name' => $name,
                 'codec' => $codec,
                 'videoBitRate' => $videoBitRate,

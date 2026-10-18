@@ -12,9 +12,9 @@ use Tests\E2E\Scopes\VideoCustom;
 use Tests\E2E\Services\Realtime\RealtimeBase;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
 
@@ -255,7 +255,7 @@ final class VideosCustomClientTest extends Scope
         $readable = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
-            'name' => 'session-readable-' . ID::unique(),
+            'name' => 'session-readable-' . Id::unique(),
             'permissions' => [
                 Permission::read(Role::user($userId)),
             ],
@@ -266,7 +266,7 @@ final class VideosCustomClientTest extends Scope
         $private = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
-            'name' => 'session-private-' . ID::unique(),
+            'name' => 'session-private-' . Id::unique(),
             'permissions' => [],
         ]);
         $this->assertEquals(201, $private['headers']['status-code']);
@@ -686,7 +686,7 @@ final class VideosCustomClientTest extends Scope
         $created = $this->client->call(Client::METHOD_POST, '/videos', $this->sessionHeaders(), [
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
-            'name' => 'member-public-' . ID::unique(),
+            'name' => 'member-public-' . Id::unique(),
         ]);
         $this->assertEquals(201, $created['headers']['status-code']);
         $videoId = $created['body']['$id'];
@@ -1007,7 +1007,7 @@ final class VideosCustomClientTest extends Scope
         $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
-            'name' => 'guest-then-private-' . ID::unique(),
+            'name' => 'guest-then-private-' . Id::unique(),
             'permissions' => [
                 Permission::read(Role::any()),
             ],
@@ -1098,7 +1098,7 @@ final class VideosCustomClientTest extends Scope
         $created = $this->client->call(Client::METHOD_POST, '/videos', $this->sessionHeaders(), [
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
-            'name' => 'owned-' . ID::unique(),
+            'name' => 'owned-' . Id::unique(),
         ]);
         $this->assertEquals(201, $created['headers']['status-code']);
         $videoId = $created['body']['$id'];
@@ -1184,7 +1184,7 @@ final class VideosCustomClientTest extends Scope
         $readOnly = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
-            'name' => 'read-only-' . ID::unique(),
+            'name' => 'read-only-' . Id::unique(),
             'permissions' => [
                 Permission::read(Role::user($userId)),
             ],

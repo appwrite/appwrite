@@ -19,9 +19,10 @@ use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\PermissionType;
+use Utopia\Database\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Lock\File;
@@ -1400,7 +1401,7 @@ class Videos extends Action
                     }
 
                     $caption = $dbForProject->createDocument('videos_captions', new Document([
-                        '$id' => ID::unique(),
+                        '$id' => Id::unique(),
                         'videoId' => $video->getId(),
                         'videoInternalId' => $video->getSequence(),
                         'name' => $name,
@@ -2238,7 +2239,7 @@ class Videos extends Action
     {
         return \array_map(
             static fn (string $role) => Permission::read(Role::parse($role)),
-            $video->getRead()
+            $video->getPermissionsByType(PermissionType::Read)
         );
     }
 

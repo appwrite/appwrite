@@ -1116,7 +1116,7 @@ class Realtime extends MessagingAdapter
                 }
                 // Renditions and captions inherit the video's read permissions, which the
                 // publisher stamps onto the payload before it reaches Realtime.
-                $roles = $payload->getRead();
+                $roles = $payload->getPermissionsByType(PermissionType::Read);
                 break;
         }
 
