@@ -3375,13 +3375,15 @@
             "rpId"
         ],
         "project.updatePasswordDictionaryPolicy": [
-            "enabled"
+            "enabled",
+            "denyList"
         ],
         "project.updatePasswordHistoryPolicy": [
             "total"
         ],
         "project.updatePasswordPersonalDataPolicy": [
-            "enabled"
+            "enabled",
+            "denyList"
         ],
         "project.updatePasswordPwnedPolicy": [
             "enabled",
@@ -7320,13 +7322,15 @@
             "rpId"
         ],
         "project.updatePasswordDictionaryPolicy": [
-            "enabled"
+            "enabled",
+            "denyList"
         ],
         "project.updatePasswordHistoryPolicy": [
             "total"
         ],
         "project.updatePasswordPersonalDataPolicy": [
-            "enabled"
+            "enabled",
+            "denyList"
         ],
         "project.updatePasswordPwnedPolicy": [
             "enabled",
