@@ -561,12 +561,21 @@ class S3 extends Device
     /**
      * Delete file in given path, Return true on success and false on failure.
      *
-     * @see http://php.net/manual/en/function.filesize.php
-     *
      * @throws StorageException
+     * @throws \InvalidArgumentException When the path names the whole bucket, or a recursive delete leaves the root
      */
     public function delete(string $path, bool $recursive = false): bool
     {
+        // Checked before any request: an empty key, or a bare bucket on a path-style device, would send DeleteBucket.
+        $key = trim($this->getAbsolutePath($path), '/');
+        if ($key === '' || ($this->pathStyle && ! str_contains($key, '/'))) {
+            throw new \InvalidArgumentException('Refusing to delete a whole bucket: ' . $path);
+        }
+
+        if ($recursive) {
+            $this->directory($path, allowRoot: true);
+        }
+
         $uri = ($path !== '') ? '/' . str_replace('%2F', '/', rawurlencode($path)) : '/';
 
         $this->call(Method::DELETE, $uri);
@@ -705,15 +714,17 @@ class S3 extends Device
     }
 
     /**
-     * Delete every object under the given directory of the root. The path is a
-     * directory, so `images` never reaches `images-archive/`.
+     * Delete every object in the directory `path/` under the root. Objects
+     * that only share the directory name as a prefix are kept.
      *
      * @throws StorageException When the service kept any of the objects
-     * @throws \InvalidArgumentException
+     * @throws \InvalidArgumentException When the directory is the whole root, the whole bucket or outside the root
      */
     public function deletePath(string $path): bool
     {
-        [$uri, $prefix] = $this->prefix(rtrim($this->getRoot() . '/' . ltrim($path, '/'), '/') . '/');
+        $directory = $this->directory($this->getRoot() . '/' . $path, allowRoot: false);
+
+        [$uri, $prefix] = $this->prefix($directory);
         $continuationToken = '';
         do {
             $objects = $this->listBucket($uri, $prefix, self::MAX_PAGE_SIZE, $continuationToken);
@@ -763,6 +774,33 @@ class S3 extends Device
         } while ($continuationToken !== '');
 
         return true;
+    }
+
+    /**
+     * The key prefix, ending in a slash, of the directory at the given path.
+     *
+     * @throws \InvalidArgumentException When the directory is the whole bucket, outside the bucket, outside the root, or the root itself unless allowed
+     */
+    private function directory(string $path, bool $allowRoot): string
+    {
+        $directory = trim($this->getAbsolutePath($path), '/');
+        if ($this->prefix($directory . '/')[1] === '') {
+            throw new \InvalidArgumentException('Refusing to delete every object in the bucket: ' . $path);
+        }
+
+        $root = trim($this->getAbsolutePath($this->getRoot()), '/');
+
+        // Resolved paths are compared, so '.', 'x/..' and '/' are refused as well.
+        if (! $allowRoot && $directory === $root) {
+            throw new \InvalidArgumentException('Refusing to delete the whole root: ' . $this->getRoot());
+        }
+
+        // getAbsolutePath() resolves '..' past the root, so root/../other would name a sibling of the root.
+        if ($root !== '' && ! str_starts_with($directory . '/', $root . '/')) {
+            throw new \InvalidArgumentException('Refusing to delete outside the root ' . $this->getRoot() . ': ' . $path);
+        }
+
+        return $directory . '/';
     }
 
     /**
