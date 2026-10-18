@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Storage\Tests\Device;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
@@ -20,10 +21,15 @@ use Utopia\Psr7\Request;
 use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
 use Utopia\Psr7\Uri;
+use Utopia\Storage\Device\AWS;
+use Utopia\Storage\Device\Backblaze;
+use Utopia\Storage\Device\DOSpaces;
+use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\S3\Response as S3Response;
 use Utopia\Storage\Device\S3\RetryStrategy;
+use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Exception\NotFoundException;
 use Utopia\Storage\Exception\PreconditionFailedException;
 use Utopia\Storage\Exception\RemoteException;
@@ -540,7 +546,7 @@ final class S3Test extends TestCase
             root: '/root',
             accessKey: 'test-key',
             secretKey: 'test-secret',
-            host: 'https://s3.example.com',
+            host: 'https://my-bucket.s3.example.com',
             region: 'us-east-1',
             bucket: 'my-bucket',
         );
@@ -601,7 +607,7 @@ final class S3Test extends TestCase
             root: '/root',
             accessKey: 'test-key',
             secretKey: 'test-secret',
-            host: 'https://s3.example.com',
+            host: 'https://my-bucket.s3.example.com',
             region: 'us-east-1',
             client: new Retry($client, new RetryStrategy(delay: 0.0)),
             bucket: 'my-bucket',
@@ -983,5 +989,116 @@ final class S3Test extends TestCase
 
         $this->expectException(\InvalidArgumentException::class);
         $this->device($client)->listUploads('/root/', 10, 'next-token');
+    }
+
+    private static function xml(string $body): Response
+    {
+        return new Response(200, body: new Stream('<?xml version="1.0" encoding="UTF-8"?>' . $body))->withHeader('content-type', 'application/xml');
+    }
+
+    /**
+     * @return iterable<string, array{\Closure(ScriptedClient): S3, string}>
+     */
+    public static function virtualHostedSubclasses(): iterable
+    {
+        yield 'AWS' => [static fn (ScriptedClient $client): S3 => new AWS('/root', 'key', 'secret', 'my-bucket', AWS::US_EAST_1, client: $client), 'my-bucket.s3.us-east-1.amazonaws.com'];
+        yield 'AWS China' => [static fn (ScriptedClient $client): S3 => new AWS('/root', 'key', 'secret', 'my-bucket', AWS::CN_NORTH_1, client: $client), 'my-bucket.s3.cn-north-1.amazonaws.cn'];
+        yield 'DOSpaces' => [static fn (ScriptedClient $client): S3 => new DOSpaces('/root', 'key', 'secret', 'my-bucket', DOSpaces::NYC3, client: $client), 'my-bucket.nyc3.digitaloceanspaces.com'];
+        yield 'Backblaze' => [static fn (ScriptedClient $client): S3 => new Backblaze('/root', 'key', 'secret', 'my-bucket', Backblaze::US_WEST_004, client: $client), 'my-bucket.s3.us-west-004.backblazeb2.com'];
+        yield 'Linode' => [static fn (ScriptedClient $client): S3 => new Linode('/root', 'key', 'secret', 'my-bucket', Linode::EU_CENTRAL_1, client: $client), 'my-bucket.eu-central-1.linodeobjects.com'];
+        yield 'Wasabi' => [static fn (ScriptedClient $client): S3 => new Wasabi('/root', 'key', 'secret', 'my-bucket', Wasabi::EU_CENTRAL_1, client: $client), 'my-bucket.s3.eu-central-1.wasabisys.com'];
+    }
+
+    /**
+     * @param  \Closure(ScriptedClient): S3  $build
+     */
+    #[DataProvider('virtualHostedSubclasses')]
+    public function testVirtualHostedSubclassesKeepTheirRequestUris(\Closure $build, string $host): void
+    {
+        $client = new ScriptedClient([
+            new Response(200)->withHeader('etag', '"abc"'),
+            self::xml('<ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>'),
+            self::xml('<ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>root/x/a</Key></Contents></ListBucketResult>'),
+            new Response(200),
+            new Response(200)->withHeader('content-length', '1'),
+            self::xml('<CopyObjectResult><ETag>"abc"</ETag></CopyObjectResult>'),
+        ]);
+        $device = $build($client);
+
+        $device->write('/root/a', new Stream('a'));
+        $this->assertSame([], $device->listFiles('/root/')->files);
+        $this->assertTrue($device->deletePath('x'));
+        $this->assertTrue($device->copy('/root/a', '/root/b'));
+
+        $requests = array_map(static fn (RequestInterface $request): string => $request->getMethod() . ' ' . $request->getUri()->getPath(), $client->requests);
+        $this->assertSame(['PUT /root/a', 'GET /', 'GET /', 'POST /', 'HEAD /root/a', 'PUT /root/b'], $requests);
+        foreach ($client->requests as $request) {
+            $this->assertSame($host, $request->getUri()->getHost());
+        }
+
+        parse_str($client->requests[1]->getUri()->getQuery(), $query);
+        $this->assertSame('root/', $query['prefix'] ?? null);
+        parse_str($client->requests[2]->getUri()->getQuery(), $query);
+        $this->assertSame('root/x', $query['prefix'] ?? null);
+        $this->assertSame('delete=', $client->requests[3]->getUri()->getQuery());
+        $this->assertStringContainsString('<Key>root/x/a</Key>', (string) $client->requests[3]->getBody());
+        $this->assertSame('/my-bucket/root/a', $client->requests[5]->getHeaderLine('x-amz-copy-source'));
+    }
+
+    /**
+     * @return iterable<string, array{string, string, bool|null, string}>
+     */
+    public static function endpoints(): iterable
+    {
+        yield 'AWS-style bucket subdomain' => ['https://my-bucket.s3.us-east-1.amazonaws.com', 'my-bucket', null, '/'];
+        yield 'dotted bucket subdomain' => ['https://my.dotted.bucket.s3.example.com', 'my.dotted.bucket', null, '/'];
+        yield 'uppercase bucket subdomain' => ['https://MY-BUCKET.S3.EXAMPLE.COM', 'my-bucket', null, '/'];
+        yield 'host named after the bucket' => ['https://assets.example.com', 'assets.example.com', null, '/'];
+        yield 'single-label host named like the bucket' => ['http://minio:9000', 'minio', null, '/minio'];
+        yield 'service host with a port' => ['http://storage.internal:9000', 'files', null, '/files'];
+        yield 'scheme-less service host' => ['storage.example.com', 'files', null, '/files'];
+        yield 'service host behind a base path' => ['https://storage.example.com/s3/', 'files', null, '/s3/files'];
+        yield 'explicitly bucket-addressed' => ['https://storage.example.com', 'files', false, '/'];
+        yield 'explicitly path-style' => ['https://b.example.com', 'b', true, '/b'];
+    }
+
+    #[DataProvider('endpoints')]
+    public function testAddressingFollowsTheEndpoint(string $host, string $bucket, ?bool $pathStyle, string $uri): void
+    {
+        $client = new ScriptedClient([self::xml('<ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>')]);
+        $options = ['client' => $client, 'bucket' => $bucket] + ($pathStyle === null ? [] : ['pathStyle' => $pathStyle]);
+        $device = new S3("{$bucket}/root", 'key', 'secret', $host, 'us-east-1', ...$options);
+
+        $device->listFiles("{$bucket}/root/x");
+
+        $this->assertCount(1, $client->requests);
+        $this->assertSame($uri, $client->requests[0]->getUri()->getPath());
+        parse_str($client->requests[0]->getUri()->getQuery(), $query);
+        $this->assertSame(str_ends_with($uri, '/') ? "{$bucket}/root/x" : 'root/x', $query['prefix'] ?? null);
+    }
+
+    /**
+     * @return iterable<string, array{string|null, bool|null}>
+     */
+    public static function unaddressable(): iterable
+    {
+        yield 'path-style without a bucket' => [null, true];
+        yield 'path-style with an empty bucket' => ['', true];
+        yield 'bucket holding a slash' => ['my/bucket', null];
+    }
+
+    #[DataProvider('unaddressable')]
+    public function testAddressingRefusesWhatItCannotAddress(?string $bucket, ?bool $pathStyle): void
+    {
+        $client = new ScriptedClient([]);
+        $options = ['client' => $client, 'bucket' => $bucket] + ($pathStyle === null ? [] : ['pathStyle' => $pathStyle]);
+
+        try {
+            new S3('root', 'key', 'secret', 'https://storage.example.com', 'us-east-1', ...$options);
+            self::fail('The device must be refused');
+        } catch (\InvalidArgumentException) {
+        }
+
+        $this->assertSame([], $client->requests);
     }
 }

@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Utopia\Storage\Tests\E2E;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Throwable;
 use Utopia\Psr7\Stream;
 use Utopia\Storage\Acl;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\DeviceType;
 use Utopia\Storage\Exception\PreconditionFailedException;
+use Utopia\Storage\Exception\RemoteException;
 use Utopia\Storage\FileInfo;
 
 final class S3Test extends S3Base
@@ -25,6 +27,8 @@ final class S3Test extends S3Base
     private ?string $pathHost = null;
 
     private string $pathBucket;
+
+    private string $host;
 
     private function env(string $key, string $default): string
     {
@@ -49,9 +53,66 @@ final class S3Test extends S3Base
         $this->region = $this->env('S3_REGION', 'us-east-1');
         $this->pathHost = $this->configured('S3_PATH_HOST');
         $this->pathBucket = $this->env('S3_PATH_BUCKET', $this->bucket);
-        $host = $this->env('S3_HOST', "http://{$this->bucket}.localhost:9805");
+        $this->host = $this->env('S3_HOST', "http://{$this->bucket}.localhost:9805");
 
-        $this->object = new S3($this->root, $this->accessKey, $this->secretKey, $host, $this->region, Acl::Private, bucket: $this->bucket);
+        $this->object = new S3($this->root, $this->accessKey, $this->secretKey, $this->host, $this->region, Acl::Private, bucket: $this->bucket);
+    }
+
+    /**
+     * The service endpoint without the bucket in it, shared with the virtual-hosted endpoint.
+     */
+    private function pathStyleHost(): string
+    {
+        $pathHost = $this->pathHost;
+        if (($pathHost === null) !== ($this->configured('S3_HOST') === null)) {
+            self::markTestSkipped('S3_HOST and S3_PATH_HOST must both be configured when overriding the local MinIO endpoints');
+        }
+
+        $this->assertSame($this->bucket, $this->pathBucket, 'S3_PATH_BUCKET and S3_BUCKET must identify the same bucket for cross-visibility');
+
+        return rtrim($pathHost ?? 'http://localhost:9805', '/');
+    }
+
+    /**
+     * A device built the way an application configured with a bare service endpoint builds one.
+     */
+    private function pathStyle(string $root): S3
+    {
+        return new S3("{$this->bucket}/{$root}", $this->accessKey, $this->secretKey, $this->pathStyleHost(), $this->region, bucket: $this->bucket);
+    }
+
+    private function virtualHosted(string $root): S3
+    {
+        return new S3($root, $this->accessKey, $this->secretKey, $this->host, $this->region, bucket: $this->bucket);
+    }
+
+    /**
+     * Every path listed under the prefix, paging until each wanted path has been seen.
+     *
+     * @param  array<string>  $wanted
+     * @return array<string>
+     */
+    private function listUntil(S3 $device, string $prefix, array $wanted): array
+    {
+        $paths = [];
+        $cursor = null;
+        do {
+            $page = $device->listFiles($prefix, cursor: $cursor);
+            array_push($paths, ...array_map(static fn (FileInfo $file): string => $file->path, $page->files));
+            $cursor = $page->cursor;
+        } while ($cursor !== null && array_diff($wanted, $paths) !== []);
+
+        return $paths;
+    }
+
+    private function remove(S3 $device, string ...$paths): void
+    {
+        foreach ($paths as $path) {
+            try {
+                $device->delete($path);
+            } catch (Throwable) {
+            }
+        }
     }
 
     protected function getAdapterType(): DeviceType
@@ -101,23 +162,11 @@ final class S3Test extends S3Base
 
     public function testPathStyleEndpointSharesVirtualHostedBucket(): void
     {
-        $pathHost = $this->pathHost;
-        $virtualHost = $this->configured('S3_HOST');
-        if (($pathHost === null) !== ($virtualHost === null)) {
-            self::markTestSkipped('S3_HOST and S3_PATH_HOST must both be configured when overriding the local MinIO endpoints');
-        }
-
-        if ($pathHost === null) {
-            $pathHost = 'http://localhost:9805';
-        }
-
-        $this->assertSame($this->bucket, $this->pathBucket, 'S3_PATH_BUCKET and S3_BUCKET must identify the same bucket for cross-visibility');
-
         $path = new S3(
             root: '/',
             accessKey: $this->accessKey,
             secretKey: $this->secretKey,
-            host: rtrim($pathHost, '/') . '/' . rawurlencode($this->pathBucket) . '/',
+            host: $this->pathStyleHost() . '/' . rawurlencode($this->pathBucket) . '/',
             region: $this->region,
             bucket: $this->pathBucket,
         );
@@ -257,6 +306,169 @@ final class S3Test extends S3Base
             $this->assertSame('no acl', (string) $device->read($path));
         } finally {
             $device->delete($path);
+        }
+    }
+
+    public function testPathStyleListsTheBucket(): void
+    {
+        $device = $this->pathStyle('listing/' . bin2hex(random_bytes(8)));
+        $a = $device->getPath('dir/a.txt');
+        $b = $device->getPath('dir/b.txt');
+
+        try {
+            $device->write($a, new Stream('a'), 'text/plain');
+            $device->write($b, new Stream('b'), 'text/plain');
+
+            $this->assertSame([$a, $b], array_map(static fn (FileInfo $file): string => $file->path, $device->listFiles($device->getPath('dir/'))->files));
+
+            foreach (['', $this->bucket] as $prefix) {
+                $paths = $this->listUntil($device, $prefix, [$a, $b]);
+                $this->assertContains($a, $paths);
+                $this->assertContains($b, $paths);
+                foreach ($paths as $path) {
+                    $this->assertStringStartsWith($this->bucket . '/', $path);
+                }
+            }
+        } finally {
+            $this->remove($device, $a, $b);
+        }
+    }
+
+    public function testPathStyleListsUploads(): void
+    {
+        $device = $this->pathStyle('uploads/' . bin2hex(random_bytes(8)));
+        $path = $device->getPath('a.bin');
+        $metadata = [];
+        $device->prepare($path, 'application/octet-stream', 2, $metadata);
+        $uploadId = $metadata['uploadId'] ?? '';
+        $this->assertNotSame('', $uploadId);
+
+        try {
+            $uploads = $device->listUploads($path)->uploads;
+            $this->assertCount(1, $uploads);
+            $this->assertSame($path, $uploads[0]->path);
+            $this->assertSame($uploadId, $uploads[0]->uploadId);
+
+            $found = false;
+            $cursor = null;
+            do {
+                $page = $device->listUploads('', cursor: $cursor);
+                foreach ($page->uploads as $upload) {
+                    $this->assertStringStartsWith($this->bucket . '/', $upload->path);
+                    $found = $found || ($upload->path === $path && $upload->uploadId === $uploadId);
+                }
+                $cursor = $page->cursor;
+            } while (! $found && $cursor !== null);
+            $this->assertTrue($found, 'the whole-bucket listing holds the upload');
+
+            $this->assertTrue($device->abort($path, $uploadId));
+            $this->assertSame([], $device->listUploads($path)->uploads);
+        } finally {
+            try {
+                $device->abort($path, $uploadId);
+            } catch (Throwable) {
+            }
+        }
+    }
+
+    /**
+     * @return iterable<string, array{bool}>
+     */
+    public static function addressing(): iterable
+    {
+        yield 'virtual-hosted' => [false];
+        yield 'path-style' => [true];
+    }
+
+    #[DataProvider('addressing')]
+    public function testDeletePathStaysInsideItsRoot(bool $pathStyle): void
+    {
+        $root = 'contained/' . bin2hex(random_bytes(8));
+        $device = $pathStyle ? $this->pathStyle("{$root}/a") : $this->virtualHosted("{$this->bucket}/{$root}/a");
+        $sibling = $pathStyle ? $this->pathStyle("{$root}/sibling") : $this->virtualHosted("{$this->bucket}/{$root}/sibling");
+        $file = $device->getPath('f.txt');
+        $neighbour = $sibling->getPath('f.txt');
+
+        try {
+            $device->write($file, new Stream('a'), 'text/plain');
+            $sibling->write($neighbour, new Stream('sibling'), 'text/plain');
+
+            // A bucket-addressed request carries the prefix literally, which some services refuse.
+            $refusal = null;
+            try {
+                $device->deletePath('../sibling');
+            } catch (\InvalidArgumentException|RemoteException $error) {
+                $refusal = $error;
+            }
+            if ($pathStyle) {
+                $this->assertInstanceOf(\InvalidArgumentException::class, $refusal, 'a path-style prefix climbing out of its root is refused before any request');
+            }
+            $this->assertTrue($sibling->exists($neighbour));
+
+            $this->assertTrue($device->deletePath(''));
+            $this->assertFalse($device->exists($file));
+            $this->assertTrue($sibling->exists($neighbour));
+        } finally {
+            $this->remove($device, $file, $neighbour);
+        }
+    }
+
+    public function testPathStyleCopyRunsServerSide(): void
+    {
+        $root = 'copied/' . bin2hex(random_bytes(8));
+        $device = $this->pathStyle($root);
+        $source = $device->getPath('source.txt');
+        $target = $device->getPath('target.txt');
+
+        try {
+            $device->write($source, new Stream('payload'), 'text/plain');
+
+            $this->assertTrue($device->copy($source, $target));
+            $this->assertSame('payload', (string) $device->read($target));
+            $this->assertSame('payload', (string) $this->object->read("{$root}/target.txt"));
+        } finally {
+            $this->remove($device, $source, $target);
+        }
+    }
+
+    public function testVirtualHostedLegacyRootCopiesTheRealKey(): void
+    {
+        $root = 'legacy-copy/' . bin2hex(random_bytes(8));
+        $device = $this->virtualHosted("{$this->bucket}/{$root}");
+        $source = $device->getPath('source.txt');
+        $target = $device->getPath('target.txt');
+
+        try {
+            $device->write($source, new Stream('payload'), 'text/plain');
+
+            $this->assertTrue($device->copy($source, $target));
+            $this->assertSame('payload', (string) $device->read($target));
+            $this->assertSame('payload', (string) $this->pathStyle($root)->read("{$this->bucket}/{$this->bucket}/{$root}/target.txt"));
+        } finally {
+            $this->remove($device, $source, $target);
+        }
+    }
+
+    public function testLegacyBucketInRootObjectsResolveUnderPathStyle(): void
+    {
+        $root = 'legacy/' . bin2hex(random_bytes(8));
+        $legacy = new S3("{$this->bucket}/{$root}", $this->accessKey, $this->secretKey, $this->pathStyleHost(), $this->region);
+        $device = $this->pathStyle($root);
+        $file = $legacy->getPath('f.txt');
+        $this->assertSame($file, $device->getPath('f.txt'));
+
+        try {
+            $etag = $legacy->write($file, new Stream('legacy'), 'text/plain');
+
+            $this->assertSame('legacy', (string) $device->read($file));
+            $this->assertSame($etag, $device->getFileInfo($file)->etag);
+            $this->assertSame([$file], array_map(static fn (FileInfo $info): string => $info->path, $device->listFiles($device->getPath(''))->files));
+            $this->assertSame('legacy', (string) $this->object->read("{$root}/f.txt"));
+
+            $this->assertTrue($device->deletePath(''));
+            $this->assertFalse($device->exists($file));
+        } finally {
+            $this->remove($legacy, $file);
         }
     }
 }
