@@ -8,6 +8,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Permission;
 use Appwrite\Role;
 use Appwrite\Screenshots\Client;
+use Appwrite\Screenshots\Exception as ScreenshotsException;
 use Exception;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
@@ -18,6 +19,7 @@ use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Psr7\Stream;
 use Utopia\Queue\Message;
+use Utopia\Queue\PermanentFailure;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\System\System;
@@ -75,8 +77,10 @@ class Screenshots extends Action
         Span::add('deployment.id', $deploymentId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
+        // Deleted since the build queued the capture: there is nothing left to
+        // capture or to attach the screenshots to, on this attempt or any other.
         if ($deployment->isEmpty()) {
-            throw new \Exception('Deployment not found');
+            throw new PermanentFailure('Deployment not found');
         }
 
         $siteId = $deployment->getAttribute('resourceId');
@@ -84,7 +88,7 @@ class Screenshots extends Action
         $site = $dbForProject->getDocument('sites', $siteId);
 
         if ($site->isEmpty()) {
-            throw new \Exception('Site not found');
+            throw new PermanentFailure('Site not found');
         }
 
         Span::add('site.framework', $site->getAttribute('framework', ''));
@@ -216,6 +220,12 @@ class Screenshots extends Action
             // Apply screenshot properties
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $updates);
 
+            // Deleted while the pages were captured: the update found no row,
+            // and the site must not take an empty preview from it.
+            if ($deployment->isEmpty()) {
+                throw new PermanentFailure('Deployment deleted during capture');
+            }
+
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
@@ -229,6 +239,15 @@ class Screenshots extends Action
             $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed. Deployment will continue. [0m\n");
 
             $this->recordTelemetry($counter, 'failure');
+
+            // The browser service refuses a host that resolves to a private or
+            // reserved address before it navigates. The domain points there by
+            // the customer's DNS, so the next attempt is refused the same way.
+            // Its other refusals (a page timeout, a certificate still being
+            // issued) can pass on a later attempt and stay retriable.
+            if ($th instanceof ScreenshotsException && \str_contains($th->getMessage(), 'is not publicly routable')) {
+                throw new PermanentFailure($th->getMessage(), $th->getCode(), $th);
+            }
 
             throw $th;
         }
@@ -251,6 +270,11 @@ class Screenshots extends Action
     protected function appendToLogs(Database $dbForProject, string $deploymentId, Realtime $queueForRealtime, string $logs)
     {
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+        // A deployment deleted mid-capture has no logs left to append to.
+        if ($deployment->isEmpty()) {
+            return;
+        }
 
         $buildLogs = $deployment->getAttribute('buildLogs', '');
         $buildLogs .= $logs;

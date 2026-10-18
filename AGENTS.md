@@ -166,6 +166,8 @@ HTTP actions `use Utopia\Platform\Scope\HTTP`. Constructor methods (chain on `$t
 
 Common `label()` keys: `scope` (`teams.write`), `event` (`teams.[teamId].create`), `audits.event` / `audits.resource`, `sdk` (`new Method(...)`), `resourceType`, `usage.resource` / `usage.metric` / `usage.params`, `abuse-key` / `abuse-limit` / `abuse-time`, `docs` (`false` for non-public routes). Example: [`Teams/Http/Teams/Create.php`](src/Appwrite/Platform/Modules/Teams/Http/Teams/Create.php); aliases: [`Webhooks/Http/Webhooks/XList.php`](src/Appwrite/Platform/Modules/Webhooks/Http/Webhooks/XList.php); abuse/usage: [`Tokens/Http/Tokens/Buckets/Files/Create.php`](src/Appwrite/Platform/Modules/Tokens/Http/Tokens/Buckets/Files/Create.php).
 
+On list endpoints, do not add a separate `search` parameter; callers pass search queries via `Query.search()` within the `queries` param. On `new Method(...)`, write the `description:` inline as a heredoc (`<<<EOT ... EOT`); do not reference external markdown files.
+
 Workers and tasks are also `Action` classes, without HTTP path/method. Workers: `desc` + `inject('message')` + other objects + `callback` — [`Workers/Mails.php`](src/Appwrite/Platform/Workers/Mails.php). Tasks: `desc` + CLI `param`s + `inject` + `callback` — [`Tasks/QueueRetry.php`](src/Appwrite/Platform/Tasks/QueueRetry.php).
 
 ## Lifecycle

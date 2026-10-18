@@ -14,6 +14,8 @@ Azure Virtual Machines provide full control over your infrastructure where you c
 
 For manual installations on Azure Virtual Machines or other configurations, follow the [general installation guide](/docs/advanced/self-hosting/installation) which covers Docker setup and configuration for any Linux server.
 
+To run Appwrite on Azure Kubernetes Service, use the [Helm chart](/docs/advanced/self-hosting/platforms/kubernetes). Its [`azure.yaml`](https://github.com/appwrite/helm-chart/blob/main/examples/azure.yaml) example connects Appwrite to Azure Database for PostgreSQL, Azure Cache for Redis, and Azure Files.
+
 # Production considerations {% #production %}
 
 For production deployments, optimization, and advanced configuration, see the [production deployment guide](/docs/advanced/self-hosting/production).

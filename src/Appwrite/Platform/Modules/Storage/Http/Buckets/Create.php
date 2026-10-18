@@ -75,6 +75,7 @@ class Create extends Action
             ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Bytes::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
             ->param('antivirus', true, new Boolean(true), 'Is virus scanning enabled? For file size above ' . Bytes::human(APP_LIMIT_ANTIVIRUS, 0) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
             ->param('transformations', true, new Boolean(true), 'Are image transformations enabled?', true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the bucket.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
@@ -93,6 +94,7 @@ class Create extends Action
         ?bool $encryption,
         bool $antivirus,
         bool $transformations,
+        string $description,
         Response $response,
         Database $dbForProject,
         Event $queueForEvents
@@ -117,6 +119,7 @@ class Create extends Action
                 '$collection' => 'buckets',
                 '$permissions' => $permissions,
                 'name' => $name,
+                'description' => $description,
                 'maximumFileSize' => $maximumFileSize,
                 'allowedFileExtensions' => $allowedFileExtensions,
                 'fileSecurity' => $fileSecurity,
@@ -125,7 +128,7 @@ class Create extends Action
                 'encryption' => $encryption,
                 'antivirus' => $antivirus,
                 'transformations' => $transformations,
-                'search' => implode(' ', [$bucketId, $name]),
+                'search' => implode(' ', [$bucketId, $name, $description]),
             ]));
 
             $bucket = $dbForProject->getDocument('buckets', $bucketId);
