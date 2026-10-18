@@ -12,6 +12,7 @@ use Appwrite\Platform\Modules\S3\Responses\S3Xml;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Cache\Cache;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -176,8 +177,8 @@ class Get extends Base
                     return;
                 }
 
+                $this->applyContentHeaders($response, $request, $file);
                 $response
-                    ->setContentType($file->getAttribute('mimeType', 'application/octet-stream'))
                     ->addHeader('ETag', $etag)
                     ->addHeader('Accept-Ranges', 'bytes');
 
@@ -197,7 +198,6 @@ class Get extends Base
 
                 foreach ([
                     'cacheControl' => 'Cache-Control',
-                    'contentDisposition' => 'Content-Disposition',
                     'contentEncoding' => 'Content-Encoding',
                     'contentLanguage' => 'Content-Language',
                     'expires' => 'Expires',
@@ -210,7 +210,6 @@ class Get extends Base
 
                 foreach ([
                     'response-cache-control' => 'Cache-Control',
-                    'response-content-disposition' => 'Content-Disposition',
                     'response-content-encoding' => 'Content-Encoding',
                     'response-content-language' => 'Content-Language',
                     'response-expires' => 'Expires',
@@ -219,11 +218,6 @@ class Get extends Base
                     if ($value !== '') {
                         $response->setHeader($header, $value);
                     }
-                }
-
-                $responseContentType = $this->query($request, 'response-content-type');
-                if ($responseContentType !== '') {
-                    $response->setContentType($responseContentType);
                 }
 
                 if ($range !== null) {
@@ -329,6 +323,55 @@ class Get extends Base
                 }
             }
         }
+    }
+
+    /**
+     * Same content headers as GET /storage/.../view: block script execution
+     * and never render SVG or types outside storage-mimes as a document.
+     * Stored Content-Disposition and response-* query overrides cannot
+     * change that for those types.
+     */
+    private function applyContentHeaders(Response $response, Request $request, Document $file): void
+    {
+        $storedType = (string) $file->getAttribute('mimeType', 'application/octet-stream');
+        $contentType = $storedType;
+        $overrideType = $this->query($request, 'response-content-type');
+        if ($overrideType !== '') {
+            $contentType = $overrideType;
+        }
+
+        $metadata = $file->getAttribute('metadata', []);
+        $disposition = (string) ($metadata['contentDisposition'] ?? '');
+        $overrideDisposition = $this->query($request, 'response-content-disposition');
+        if ($overrideDisposition !== '') {
+            $disposition = $overrideDisposition;
+        }
+
+        if ($this->requiresAttachment($storedType, $contentType)) {
+            $disposition = 'attachment; filename="' . $file->getAttribute('name', '') . '"';
+        }
+
+        $response
+            ->setContentType($contentType)
+            ->addHeader('Content-Security-Policy', "script-src 'none';")
+            ->setHeader('X-Content-Type-Options', 'nosniff');
+
+        if ($disposition !== '') {
+            $response->setHeader('Content-Disposition', $disposition);
+        }
+    }
+
+    private function requiresAttachment(string ...$contentTypes): bool
+    {
+        $mimes = Config::getParam('storage-mimes');
+        foreach ($contentTypes as $contentType) {
+            $contentType = \strtolower(\trim(\explode(';', $contentType, 2)[0]));
+            if ($contentType === '' || $contentType === 'image/svg+xml' || !\in_array($contentType, $mimes, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
