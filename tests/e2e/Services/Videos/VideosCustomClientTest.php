@@ -126,6 +126,30 @@ final class VideosCustomClientTest extends Scope
         return $videoId;
     }
 
+    /**
+     * Uploaded caption, polled until the worker marks it ready.
+     *
+     * Created with the API key: a video that only grants read("any") cannot
+     * be updated by the suite session.
+     */
+    private function createReadyCaption(string $videoId): string
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->serverHeaders(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getCaptionFile()['$id'],
+            'name' => 'English',
+            'code' => 'eng',
+            'default' => true,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $captionId = $response['body']['$id'];
+
+        $body = $this->waitForCaptionTerminalState($videoId, $captionId);
+        $this->assertEquals('ready', $body['status'], 'Caption did not become ready');
+
+        return $captionId;
+    }
+
     private function timeTravelRendition(string $projectId, string $renditionId, string $status): void
     {
         $command = (new Command('docker'))
@@ -159,6 +183,72 @@ final class VideosCustomClientTest extends Scope
         $this->assertNotSame('', $token, $failure);
 
         return $token;
+    }
+
+    /**
+     * DASH master, both CMAF masters, caption manifests, and the first HLS
+     * caption segment. These are the play URLs a guest can fetch without
+     * videos.read.
+     *
+     * @return list<string>
+     */
+    private function dashCmafCaptionPlayPaths(string $videoId, string $captionId): array
+    {
+        $paths = [
+            '/videos/' . $videoId . '/outputs/dash/master.mpd',
+            '/videos/' . $videoId . '/outputs/cmaf/master.m3u8',
+            '/videos/' . $videoId . '/outputs/cmaf/master.mpd',
+        ];
+
+        foreach (['hls', 'dash', 'cmaf'] as $output) {
+            $paths[] = '/videos/' . $videoId . '/outputs/' . $output . '/captions/' . $captionId . '/manifest';
+        }
+
+        $paths[] = $this->hlsCaptionSegmentPath($videoId, $captionId);
+
+        return $paths;
+    }
+
+    /**
+     * First segment path published by the HLS caption playlist.
+     */
+    private function hlsCaptionSegmentPath(string $videoId, string $captionId): string
+    {
+        $manifest = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/hls/captions/' . $captionId . '/manifest',
+            $this->serverHeaders()
+        );
+        $this->assertEquals(200, $manifest['headers']['status-code']);
+
+        $segmentId = $this->playlistToken(
+            (string) $manifest['body'],
+            '/segments/',
+            '?',
+            'HLS caption playlist did not reference a segment'
+        );
+
+        return '/videos/' . $videoId . '/outputs/hls/captions/' . $captionId . '/segments/' . $segmentId;
+    }
+
+    /**
+     * Marker that distinguishes a real playlist, MPD, or WebVTT body.
+     */
+    private function playbackNeedle(string $path): string
+    {
+        if (\str_ends_with($path, '.mpd')) {
+            return '<MPD';
+        }
+
+        if (\str_ends_with($path, '.m3u8')) {
+            return '#EXTM3U';
+        }
+
+        if (\str_contains($path, '/outputs/hls/captions/') && \str_ends_with($path, '/manifest')) {
+            return '#EXTM3U';
+        }
+
+        return 'WEBVTT';
     }
 
     /**
@@ -996,9 +1086,10 @@ final class VideosCustomClientTest extends Scope
     }
 
     /**
-     * An API key publishes a video with read("any"), encodes it, and a guest
-     * can play the result. Restricting that same video to one user then hides
-     * the encode from the guest; the API key can still read it.
+     * An API key publishes a video with read("any"), encodes HLS, DASH and
+     * CMAF plus a caption, and a guest can play the result. Restricting that
+     * same video to one user then hides every play URL from the guest; the
+     * API key can still read the HLS master.
      */
     public function testGuestLosesEncodedPlaybackWhenPermissionsRestricted(): void
     {
@@ -1070,6 +1161,17 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(200, $timeline['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', (string) $timeline['body']);
 
+        $this->createReadyRendition($videoId, 'dash');
+        $this->createReadyRendition($videoId, 'cmaf');
+        $captionId = $this->createReadyCaption($videoId);
+        $encodedPaths = $this->dashCmafCaptionPlayPaths($videoId, $captionId);
+
+        foreach ($encodedPaths as $path) {
+            $playable = $this->client->call(Client::METHOD_GET, $path, $this->anonymousHeaders());
+            $this->assertEquals(200, $playable['headers']['status-code'], $path);
+            $this->assertStringContainsString($this->playbackNeedle($path), (string) $playable['body'], $path);
+        }
+
         $restricted = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->serverHeaders(), [
             'name' => $created['body']['name'],
             'permissions' => [
@@ -1080,7 +1182,13 @@ final class VideosCustomClientTest extends Scope
         $this->assertNotContains((string) Permission::read(Role::any()), $restricted['body']['$permissions']);
         $this->assertContains((string) Permission::read(Role::user($userId)), $restricted['body']['$permissions']);
 
-        foreach ([$masterPath, $variantPath, $segmentPath, $timelinePath] as $path) {
+        foreach ([
+            $masterPath,
+            $variantPath,
+            $segmentPath,
+            $timelinePath,
+            ...$encodedPaths,
+        ] as $path) {
             $response = $this->client->call(Client::METHOD_GET, $path, $this->anonymousHeaders());
             $this->assertEquals(404, $response['headers']['status-code'], $path . ' stayed available to guests');
             $this->assertEquals('video_not_found', $response['body']['type'], $path);
@@ -1202,5 +1310,313 @@ final class VideosCustomClientTest extends Scope
 
         $deleted = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->sessionHeaders());
         $this->assertEquals(204, $deleted['headers']['status-code']);
+    }
+
+    /**
+     * A second session has no role on the suite user's video. Missing document
+     * read is video_not_found for get, update, and delete. The owner can still
+     * read it afterwards.
+     */
+    public function testOtherUserCannotManageVideo(): void
+    {
+        $ownerId = $this->getUser()['$id'];
+        $otherId = Id::unique();
+        $other = $this->createUser($otherId, $otherId . '@localhost.test');
+        $this->assertEquals($otherId, $other['$id']);
+        $this->assertNotEmpty($other['session']);
+
+        $created = $this->client->call(Client::METHOD_POST, '/videos', $this->sessionHeaders(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFile()['$id'],
+            'name' => 'owner-only-' . Id::unique(),
+        ]);
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $videoId = $created['body']['$id'];
+        $this->assertContains((string) Permission::read(Role::user($ownerId)), $created['body']['$permissions']);
+
+        $headers = $this->getUserHeaders($otherId);
+
+        $get = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $headers);
+        $this->assertEquals(404, $get['headers']['status-code']);
+        $this->assertEquals('video_not_found', $get['body']['type']);
+
+        $update = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $headers, [
+            'name' => 'taken-over',
+        ]);
+        $this->assertEquals(404, $update['headers']['status-code']);
+        $this->assertEquals('video_not_found', $update['body']['type']);
+
+        $delete = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $headers);
+        $this->assertEquals(404, $delete['headers']['status-code']);
+        $this->assertEquals('video_not_found', $delete['body']['type']);
+
+        $owner = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->sessionHeaders());
+        $this->assertEquals(200, $owner['headers']['status-code']);
+        $this->assertEquals($videoId, $owner['body']['$id']);
+    }
+
+    /**
+     * read(team:T) lets a confirmed member load the video. API-key memberships
+     * are confirmed immediately. The suite session is not on the team.
+     */
+    public function testTeamRoleGrantsRead(): void
+    {
+        $teamId = Id::unique();
+        $team = $this->createTeam($teamId, 'Readers');
+        $this->assertEquals($teamId, $team['$id']);
+
+        $memberId = Id::unique();
+        $member = $this->createUser($memberId, $memberId . '@localhost.test');
+        $this->assertEquals($memberId, $member['$id']);
+        $this->assertNotEmpty($member['session']);
+
+        $membership = $this->addToTeam($memberId, $teamId);
+        $this->assertEquals($memberId, $membership['user']);
+        $this->assertNotEmpty($membership['membership']);
+
+        $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFile()['$id'],
+            'name' => 'team-readable-' . Id::unique(),
+            'permissions' => [
+                Permission::read(Role::team($teamId)),
+            ],
+        ]);
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $videoId = $created['body']['$id'];
+        $this->assertContains((string) Permission::read(Role::team($teamId)), $created['body']['$permissions']);
+
+        $memberGet = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->getUserHeaders($memberId));
+        $this->assertEquals(200, $memberGet['headers']['status-code']);
+        $this->assertEquals($videoId, $memberGet['body']['$id']);
+
+        $outsider = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->sessionHeaders());
+        $this->assertEquals(404, $outsider['headers']['status-code']);
+        $this->assertEquals('video_not_found', $outsider['body']['type']);
+    }
+
+    /**
+     * Creating a video checks the source bucket before the file. A private
+     * bucket rejects the session even when that file id was never uploaded.
+     * With file security and an empty bucket ACL, an unreadable file is
+     * storage_file_not_found until the file itself grants the session read.
+     */
+    public function testCreateVideoFromUnreadableBucket(): void
+    {
+        $private = $this->client->call(Client::METHOD_POST, '/storage/buckets', $this->serverHeaders(), [
+            'bucketId' => 'unique()',
+            'name' => 'Private videos bucket for create',
+            'fileSecurity' => false,
+            'permissions' => [],
+        ]);
+        $this->assertEquals(201, $private['headers']['status-code']);
+
+        $denied = $this->client->call(Client::METHOD_POST, '/videos', $this->sessionHeaders(), [
+            'bucketId' => $private['body']['$id'],
+            'fileId' => Id::unique(),
+        ]);
+        $this->assertEquals(401, $denied['headers']['status-code']);
+        $this->assertEquals('user_unauthorized', $denied['body']['type']);
+
+        $secured = $this->client->call(Client::METHOD_POST, '/storage/buckets', $this->serverHeaders(), [
+            'bucketId' => 'unique()',
+            'name' => 'File-security videos bucket',
+            'fileSecurity' => true,
+            'permissions' => [],
+        ]);
+        $this->assertEquals(201, $secured['headers']['status-code']);
+        $bucketId = $secured['body']['$id'];
+
+        $file = $this->uploadVideoTo($bucketId, [], [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $missing = $this->client->call(Client::METHOD_POST, '/videos', $this->sessionHeaders(), [
+            'bucketId' => $bucketId,
+            'fileId' => $file['$id'],
+        ]);
+        $this->assertEquals(404, $missing['headers']['status-code']);
+        $this->assertEquals('storage_file_not_found', $missing['body']['type']);
+
+        $userId = $this->getUser()['$id'];
+        $granted = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $file['$id'], $this->serverHeaders(), [
+            'permissions' => [
+                Permission::read(Role::user($userId)),
+            ],
+        ]);
+        $this->assertEquals(200, $granted['headers']['status-code']);
+        $this->assertContains((string) Permission::read(Role::user($userId)), $granted['body']['$permissions']);
+
+        $created = $this->client->call(Client::METHOD_POST, '/videos', $this->sessionHeaders(), [
+            'bucketId' => $bucketId,
+            'fileId' => $file['$id'],
+            'name' => 'from-granted-file-' . Id::unique(),
+        ]);
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $this->assertNotEmpty($created['body']['$id']);
+        $this->assertEquals($file['$id'], $created['body']['fileId']);
+        $this->assertContains((string) Permission::read(Role::user($userId)), $created['body']['$permissions']);
+    }
+
+    /**
+     * A session may only grant roles it holds. Another user's role is rejected
+     * on create and on update. Role::any() is held by every request, so it is
+     * not foreign — same rule as storage file abuse permissions.
+     */
+    public function testCreateRejectsForeignRole(): void
+    {
+        $ownerId = $this->getUser()['$id'];
+        $otherId = Id::unique();
+        $other = $this->createUser($otherId, $otherId . '@localhost.test');
+        $this->assertEquals($otherId, $other['$id']);
+
+        $foreign = Permission::read(Role::user($otherId));
+
+        $created = $this->client->call(Client::METHOD_POST, '/videos', $this->sessionHeaders(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFile()['$id'],
+            'name' => 'foreign-create-' . Id::unique(),
+            'permissions' => [
+                $foreign,
+            ],
+        ]);
+        $this->assertEquals(401, $created['headers']['status-code']);
+        $this->assertEquals('user_unauthorized', $created['body']['type']);
+
+        $owned = $this->client->call(Client::METHOD_POST, '/videos', $this->sessionHeaders(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFile()['$id'],
+            'name' => 'foreign-update-' . Id::unique(),
+        ]);
+        $this->assertEquals(201, $owned['headers']['status-code']);
+        $videoId = $owned['body']['$id'];
+
+        $updated = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->sessionHeaders(), [
+            'name' => 'foreign-update-rejected',
+            'permissions' => [
+                $foreign,
+            ],
+        ]);
+        $this->assertEquals(401, $updated['headers']['status-code']);
+        $this->assertEquals('user_unauthorized', $updated['body']['type']);
+
+        $still = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->sessionHeaders());
+        $this->assertEquals(200, $still['headers']['status-code']);
+        $this->assertContains((string) Permission::read(Role::user($ownerId)), $still['body']['$permissions']);
+        $this->assertNotContains((string) Permission::read(Role::user($otherId)), $still['body']['$permissions']);
+    }
+
+    /**
+     * Omitting permissions on update keeps the current ACL. An empty array
+     * would clear read("any") and hide the guest timeline.
+     */
+    public function testUpdateKeepsPermissions(): void
+    {
+        $userId = $this->getUser()['$id'];
+        $permissions = [
+            (string) Permission::read(Role::any()),
+            (string) Permission::update(Role::user($userId)),
+        ];
+
+        $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFile()['$id'],
+            'name' => 'keeps-permissions-' . Id::unique(),
+            'permissions' => $permissions,
+        ]);
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $videoId = $created['body']['$id'];
+        $this->assertEqualsCanonicalizing($permissions, $created['body']['$permissions']);
+
+        $timeline = $this->waitForTimeline($videoId);
+        $this->assertEquals(200, $timeline['headers']['status-code']);
+
+        $guest = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', $this->anonymousHeaders());
+        $this->assertEquals(200, $guest['headers']['status-code']);
+        $this->assertStringContainsString('WEBVTT', (string) $guest['body']);
+
+        $updated = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->sessionHeaders(), [
+            'name' => 'renamed-keeps-permissions',
+        ]);
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertEquals('renamed-keeps-permissions', $updated['body']['name']);
+        $this->assertEqualsCanonicalizing($created['body']['$permissions'], $updated['body']['$permissions']);
+
+        $guestAfter = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', $this->anonymousHeaders());
+        $this->assertEquals(200, $guestAfter['headers']['status-code']);
+        $this->assertStringContainsString('WEBVTT', (string) $guestAfter['body']);
+    }
+
+    /**
+     * Thumbnail responses are cached. After read("any") is replaced with one
+     * user, the cache hook re-checks the video and the guest gets
+     * video_not_found instead of a hit.
+     */
+    public function testThumbnailCacheRespectsPermissions(): void
+    {
+        $userId = $this->getUser()['$id'];
+        $videoId = $this->createPublicVideo();
+
+        $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', $this->anonymousHeaders());
+        $this->assertEquals(200, $timeline['headers']['status-code']);
+        $previewIds = $this->timelinePreviewIds((string) $timeline['body']);
+        $this->assertNotEmpty($previewIds);
+        $path = '/videos/' . $videoId . '/thumbnails/' . $previewIds[0];
+
+        $thumbnail = $this->client->call(Client::METHOD_GET, $path, $this->anonymousHeaders());
+        $this->assertEquals(200, $thumbnail['headers']['status-code']);
+        $this->assertEquals('miss', $thumbnail['headers']['x-appwrite-cache']);
+        $this->assertNotEmpty($thumbnail['body']);
+
+        $cached = [];
+        $this->assertEventually(function () use (&$cached, $path) {
+            $cached = $this->client->call(Client::METHOD_GET, $path, $this->anonymousHeaders());
+            $cachedAgain = $this->client->call(Client::METHOD_GET, $path, $this->anonymousHeaders());
+
+            $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
+            $this->assertSame('hit', $cachedAgain['headers']['x-appwrite-cache']);
+            $this->assertSame($cached['body'], $cachedAgain['body']);
+        });
+
+        $this->assertEquals(200, $cached['headers']['status-code']);
+        $this->assertNotEmpty($cached['body']);
+
+        $video = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->serverHeaders());
+        $this->assertEquals(200, $video['headers']['status-code']);
+
+        $restricted = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->serverHeaders(), [
+            'name' => $video['body']['name'],
+            'permissions' => [
+                Permission::read(Role::user($userId)),
+            ],
+        ]);
+        $this->assertEquals(200, $restricted['headers']['status-code']);
+        $this->assertNotContains((string) Permission::read(Role::any()), $restricted['body']['$permissions']);
+        $this->assertContains((string) Permission::read(Role::user($userId)), $restricted['body']['$permissions']);
+
+        $denied = $this->client->call(Client::METHOD_GET, $path, $this->anonymousHeaders());
+        $this->assertEquals(404, $denied['headers']['status-code']);
+        $this->assertEquals('video_not_found', $denied['body']['type']);
+    }
+
+    /**
+     * A video that grants read("any") is playable by the session and by a
+     * guest, including DASH, both CMAF masters, and caption manifests.
+     */
+    public function testGuestCanPlayCaptionsAndDash(): void
+    {
+        $videoId = $this->createPublicVideo();
+        $this->createReadyRendition($videoId, 'dash');
+        $this->createReadyRendition($videoId, 'cmaf');
+        $captionId = $this->createReadyCaption($videoId);
+        $paths = $this->dashCmafCaptionPlayPaths($videoId, $captionId);
+
+        foreach ([$this->sessionHeaders(), $this->anonymousHeaders()] as $headers) {
+            foreach ($paths as $path) {
+                $response = $this->client->call(Client::METHOD_GET, $path, $headers);
+                $this->assertEquals(200, $response['headers']['status-code'], $path);
+                $this->assertStringContainsString($this->playbackNeedle($path), (string) $response['body'], $path);
+            }
+        }
     }
 }

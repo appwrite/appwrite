@@ -467,10 +467,13 @@ abstract class Base extends VideosAction
         // column and never verified the rendition belonged to this video.
         $rendition = $authorization->skip(fn () => $dbForProject->getDocument('videos_renditions', $renditionId));
 
+        // Unpublished until ready, and only on the output this rendition was
+        // packaged for. A mismatch would advertise the other container's segments.
         if (
             $rendition->isEmpty()
             || $rendition->getAttribute('videoInternalId') !== $video->getSequence()
             || $rendition->getAttribute('status') !== self::STATUS_READY
+            || $rendition->getAttribute('output') !== $output
         ) {
             throw new Exception(Exception::VIDEO_RENDITION_NOT_FOUND);
         }

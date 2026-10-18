@@ -6,6 +6,7 @@ use Appwrite\Platform\Modules\Videos\Base;
 use Tests\E2E\Client;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
+use Utopia\Lock\File;
 
 /**
  * Fixtures shared by the Videos e2e suites: a bucket, a source video file and a
@@ -710,6 +711,65 @@ trait VideoCustom
         }
 
         return $path;
+    }
+
+    /**
+     * Block until no job holds `$path`.
+     *
+     * The videos worker creates the flock file, holds it for the whole job, and
+     * leaves it behind. Cleanup acquires that flock before unlinking, so a held
+     * file stays. Returns only after the file exists and can be acquired twice,
+     * which means the worker has opened it and then dropped it.
+     */
+    public function waitForIdleLock(string $path, int $timeout = 300): void
+    {
+        $deadline = \time() + $timeout;
+
+        while (\time() < $deadline) {
+            if (!\is_file($path)) {
+                \usleep(200000);
+                continue;
+            }
+
+            try {
+                $lock = new File($path);
+                if (!$lock->tryAcquire()) {
+                    $lock->release();
+                    \usleep(200000);
+                    continue;
+                }
+
+                try {
+                    // A worker that has opened this inode but not flocked it yet
+                    // loses the race and returns. Hold across that gap.
+                    \usleep(200000);
+                } finally {
+                    $lock->release();
+                }
+            } catch (\Throwable) {
+                \usleep(200000);
+                continue;
+            }
+
+            if (!\is_file($path)) {
+                continue;
+            }
+
+            try {
+                $settled = new File($path);
+                if (!$settled->tryAcquire()) {
+                    $settled->release();
+                    continue;
+                }
+                $settled->release();
+            } catch (\Throwable) {
+                continue;
+            }
+
+            return;
+        }
+
+        $this->fail('Lock was not released: ' . $path);
     }
 
     /**

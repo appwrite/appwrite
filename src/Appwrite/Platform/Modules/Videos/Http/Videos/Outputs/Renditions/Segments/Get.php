@@ -90,10 +90,13 @@ class Get extends Base
 
         // Same gate as the media playlist: segment rows are written before the
         // rendition reaches `ready`, and those bytes must stay unpublished.
+        // The URL output has to be this rendition's output, or the response
+        // labels the other container's bytes with this route's content type.
         if (
             $rendition->isEmpty()
             || $rendition->getAttribute('videoInternalId') !== $video->getSequence()
             || $rendition->getAttribute('status') !== self::STATUS_READY
+            || $rendition->getAttribute('output') !== $output
         ) {
             throw new Exception(Exception::VIDEO_RENDITION_NOT_FOUND);
         }

@@ -6,6 +6,7 @@ namespace Tests\E2E\Services\Videos;
 
 use Appwrite\Platform\Modules\Videos\Base;
 use PHPUnit\Framework\Attributes\Group;
+use Swoole\Coroutine;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -16,7 +17,10 @@ use Utopia\Console\Console;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
+use Utopia\Database\Validator\Authorization;
 use Utopia\System\System;
+
+use function Swoole\Coroutine\run;
 
 final class VideosCustomServerTest extends Scope
 {
@@ -840,8 +844,17 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('ready', $readyBody['status']);
         $this->timeTravelRendition($projectId, $readyId, updatedAt: '2020-01-01T00:00:00Z');
 
-        $staleLock = $this->plantRenditionLock($videoId, $staleId);
-        $freshLock = $this->plantRenditionLock($videoId, $freshId);
+        // Park only after the encode worker has dropped the flock. A live encode
+        // holds it, and abort leaves a held file in place. Re-apply the stale
+        // row in case that encode finished and wrote a terminal status.
+        $staleLock = Base::encodeLockPath($videoId, $staleId);
+        $this->waitForIdleLock($staleLock);
+        $this->timeTravelRendition($projectId, $staleId, status: 'started', updatedAt: '2020-01-01T00:00:00Z');
+
+        $freshLock = Base::encodeLockPath($videoId, $freshId);
+        $this->waitForIdleLock($freshLock);
+        $this->timeTravelRendition($projectId, $freshId, status: 'started');
+
         $this->assertFileExists($staleLock);
         $this->assertFileExists($freshLock);
 
@@ -923,8 +936,15 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('ready', $readyBody['status']);
         $this->timeTravelCaption($projectId, $readyId, updatedAt: '2020-01-01T00:00:00Z');
 
-        $staleLock = $this->plantCaptionLock($videoId, $staleId);
-        $freshLock = $this->plantCaptionLock($videoId, $freshId);
+        // Same flock rule as renditions: wait out the caption job, then park.
+        $staleLock = Base::captionLockPath($videoId, $staleId);
+        $this->waitForIdleLock($staleLock);
+        $this->timeTravelCaption($projectId, $staleId, status: 'started', updatedAt: '2020-01-01T00:00:00Z');
+
+        $freshLock = Base::captionLockPath($videoId, $freshId);
+        $this->waitForIdleLock($freshLock);
+        $this->timeTravelCaption($projectId, $freshId, status: 'started');
+
         $this->assertFileExists($staleLock);
         $this->assertFileExists($freshLock);
 
@@ -1653,6 +1673,474 @@ final class VideosCustomServerTest extends Scope
         );
         $this->assertEquals(200, $thumbnail['headers']['status-code']);
         $this->assertNotEmpty($thumbnail['body']);
+    }
+
+    /**
+     * A ready caption is an HLS subtitle rung: the master lists it, and the
+     * playlist's first segment is the WebVTT cue. A private cache may hold
+     * those bytes and revalidate them. An unknown segment id is not a missing caption.
+     */
+    public function testGetCaptionSegment(): void
+    {
+        $videoId = $this->createReadyVideo()['$id'];
+        $this->createReadyRendition($videoId, 'hls');
+        $captionId = $this->createReadyCaption($videoId);
+
+        $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', $this->headers());
+        $this->assertEquals(200, $master['headers']['status-code']);
+
+        $hlsProbe = $this->assertHlsLadderPlayable((string) $master['body']);
+        $this->assertGreaterThanOrEqual(1, $hlsProbe['subtitles']);
+
+        $playlist = $this->client->call(
+            Client::METHOD_GET,
+            $this->manifestRequestPath($this->subtitleUri((string) $master['body'], $captionId)),
+            $this->headers()
+        );
+        $this->assertEquals(200, $playlist['headers']['status-code']);
+
+        $segmentUri = $this->firstPlaylistSegmentUri((string) $playlist['body']);
+        $this->assertNotSame('', $segmentUri, 'Captions playlist did not reference a segment');
+
+        $segment = $this->client->call(Client::METHOD_GET, $this->manifestRequestPath($segmentUri), $this->headers());
+        $this->assertEquals(200, $segment['headers']['status-code']);
+        $this->assertStringContainsString('text/vtt', (string) ($segment['headers']['content-type'] ?? ''));
+        $this->assertStringContainsString('WEBVTT', (string) $segment['body']);
+        $this->assertStringContainsString('Good evening, have a good week.', (string) $segment['body']);
+        $this->assertSame('private, max-age=300', $segment['headers']['cache-control'] ?? null);
+        $etag = $segment['headers']['etag'] ?? '';
+        $this->assertNotSame('', $etag);
+
+        $revalidated = $this->client->call(
+            Client::METHOD_GET,
+            $this->manifestRequestPath($segmentUri),
+            $this->headers() + ['if-none-match' => $etag]
+        );
+        $this->assertEquals(304, $revalidated['headers']['status-code']);
+
+        $unknown = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/hls/captions/' . $captionId . '/segments/nope',
+            $this->headers()
+        );
+        $this->assertEquals(404, $unknown['headers']['status-code']);
+        $this->assertEquals('video_caption_segment_not_found', $unknown['body']['type']);
+    }
+
+    /**
+     * Child ids belong to their video. The parent check runs before the
+     * segment check, so A's ids on B are the parent's not-found error.
+     * Deletes against B do not remove A's rows.
+     */
+    public function testChildIdsScopedToVideo(): void
+    {
+        $videoA = $this->createReadyVideo()['$id'];
+        $renditionId = $this->createReadyRendition($videoA, 'hls');
+        $captionId = $this->createReadyCaption($videoA);
+
+        $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoA . '/outputs/hls/master.m3u8', $this->headers());
+        $this->assertEquals(200, $master['headers']['status-code']);
+
+        if (\preg_match('#renditions/' . \preg_quote($renditionId, '#') . '/streams/(\d+)/playlist\.m3u8#', $master['body'], $streamMatch) !== 1) {
+            $this->fail('HLS master playlist did not reference a stream playlist');
+        }
+        $streamId = $streamMatch[1];
+
+        $variant = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoA . '/outputs/hls/renditions/' . $renditionId . '/streams/' . $streamId . '/playlist.m3u8',
+            $this->headers()
+        );
+        $this->assertEquals(200, $variant['headers']['status-code']);
+
+        if (\preg_match('#/segments/([a-zA-Z0-9]+)(?:\?|$)#', $variant['body'], $segmentMatch) !== 1) {
+            $this->fail('HLS variant playlist did not reference a segment');
+        }
+        $segmentId = $segmentMatch[1];
+
+        $captions = $this->client->call(
+            Client::METHOD_GET,
+            $this->manifestRequestPath($this->subtitleUri((string) $master['body'], $captionId)),
+            $this->headers()
+        );
+        $this->assertEquals(200, $captions['headers']['status-code']);
+
+        if (\preg_match('#/segments/([a-zA-Z0-9]+)(?:\?|$)#', $captions['body'], $captionSegmentMatch) !== 1) {
+            $this->fail('Captions playlist did not reference a segment');
+        }
+        $captionSegmentId = $captionSegmentMatch[1];
+
+        $timeline = $this->waitForTimeline($videoA);
+        $this->assertEquals(200, $timeline['headers']['status-code']);
+        $this->assertSame(
+            1,
+            \preg_match('~thumbnails/([a-zA-Z0-9]+)\?project=~', (string) $timeline['body'], $thumbnailMatch)
+        );
+        $thumbnailId = $thumbnailMatch[1];
+
+        $videoB = $this->createVideo();
+
+        foreach ([
+            [Client::METHOD_GET, '/videos/' . $videoB . '/renditions/' . $renditionId],
+            [Client::METHOD_DELETE, '/videos/' . $videoB . '/renditions/' . $renditionId],
+        ] as [$method, $path]) {
+            $response = $this->client->call($method, $path, $this->headers());
+            $this->assertEquals(404, $response['headers']['status-code'], $method . ' ' . $path);
+            $this->assertEquals('video_rendition_not_found', $response['body']['type'], $path);
+        }
+
+        $caption = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoB . '/captions/' . $captionId, $this->headers(), [
+            'name' => 'Other',
+            'code' => 'eng',
+        ]);
+        $this->assertEquals(404, $caption['headers']['status-code']);
+        $this->assertEquals('video_caption_not_found', $caption['body']['type']);
+
+        $caption = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoB . '/captions/' . $captionId, $this->headers());
+        $this->assertEquals(404, $caption['headers']['status-code']);
+        $this->assertEquals('video_caption_not_found', $caption['body']['type']);
+
+        $thumbnail = $this->client->call(Client::METHOD_GET, '/videos/' . $videoB . '/thumbnails/' . $thumbnailId, $this->headers());
+        $this->assertEquals(404, $thumbnail['headers']['status-code']);
+        $this->assertEquals('video_thumbnail_not_found', $thumbnail['body']['type']);
+
+        foreach ([
+            '/videos/' . $videoB . '/outputs/hls/renditions/' . $renditionId . '/streams/' . $streamId . '/playlist.m3u8',
+            '/videos/' . $videoB . '/outputs/cmaf/renditions/' . $renditionId . '/streams/' . $streamId . '/playlist.m3u8',
+        ] as $path) {
+            $response = $this->client->call(Client::METHOD_GET, $path, $this->headers());
+            $this->assertEquals(404, $response['headers']['status-code'], $path);
+            $this->assertEquals('video_rendition_not_found', $response['body']['type'], $path);
+        }
+
+        foreach (['hls', 'dash', 'cmaf'] as $output) {
+            $path = '/videos/' . $videoB . '/outputs/' . $output . '/renditions/' . $renditionId . '/segments/' . $segmentId;
+            $response = $this->client->call(Client::METHOD_GET, $path, $this->headers());
+            $this->assertEquals(404, $response['headers']['status-code'], $path);
+            $this->assertEquals('video_rendition_not_found', $response['body']['type'], $path);
+        }
+
+        foreach (['hls', 'dash', 'cmaf'] as $output) {
+            $path = '/videos/' . $videoB . '/outputs/' . $output . '/captions/' . $captionId . '/manifest';
+            $response = $this->client->call(Client::METHOD_GET, $path, $this->headers());
+            $this->assertEquals(404, $response['headers']['status-code'], $path);
+            $this->assertEquals('video_caption_not_found', $response['body']['type'], $path);
+        }
+
+        $captionSegment = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoB . '/outputs/hls/captions/' . $captionId . '/segments/' . $captionSegmentId,
+            $this->headers()
+        );
+        $this->assertEquals(404, $captionSegment['headers']['status-code']);
+        $this->assertEquals('video_caption_not_found', $captionSegment['body']['type']);
+
+        $rendition = $this->client->call(Client::METHOD_GET, '/videos/' . $videoA . '/renditions/' . $renditionId, $this->headers());
+        $this->assertEquals(200, $rendition['headers']['status-code']);
+        $this->assertEquals($renditionId, $rendition['body']['$id']);
+
+        $listed = $this->client->call(Client::METHOD_GET, '/videos/' . $videoA . '/captions', $this->headers());
+        $this->assertEquals(200, $listed['headers']['status-code']);
+        $this->assertContains($captionId, \array_column($listed['body']['captions'], '$id'));
+    }
+
+    /**
+     * An aborted rendition's stream playlist stays unpublished. Segment and
+     * stream routes reject ids and outputs outside their whitelist, serve a
+     * byte range, and refuse a rendition requested under a different output.
+     */
+    public function testStreamPlaylistAndSegmentNotFound(): void
+    {
+        $videoId = $this->createReadyVideo()['$id'];
+
+        // 480p, so this parked row does not occupy the 360p HLS slot the
+        // ready rendition below needs. Park before the worker can settle it.
+        $aborted = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $this->seededProfile('480p')['$id'],
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $aborted['headers']['status-code']);
+        $this->timeTravelRendition($this->getProject()['$id'], $aborted['body']['$id'], status: 'aborted');
+
+        $abortedPlaylist = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/hls/renditions/' . $aborted['body']['$id'] . '/streams/0/playlist.m3u8',
+            $this->headers()
+        );
+        $this->assertEquals(404, $abortedPlaylist['headers']['status-code']);
+        $this->assertEquals('video_rendition_not_found', $abortedPlaylist['body']['type']);
+
+        $hlsId = $this->createReadyRendition($videoId, 'hls');
+
+        $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', $this->headers());
+        $this->assertEquals(200, $master['headers']['status-code']);
+
+        if (\preg_match('#renditions/' . \preg_quote($hlsId, '#') . '/streams/(\d+)/playlist\.m3u8#', $master['body'], $streamMatch) !== 1) {
+            $this->fail('HLS master playlist did not reference a stream playlist');
+        }
+        $streamId = $streamMatch[1];
+
+        $variant = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/hls/renditions/' . $hlsId . '/streams/' . $streamId . '/playlist.m3u8',
+            $this->headers()
+        );
+        $this->assertEquals(200, $variant['headers']['status-code']);
+
+        if (\preg_match('#/segments/([a-zA-Z0-9]+)(?:\?|$)#', $variant['body'], $segmentMatch) !== 1) {
+            $this->fail('HLS variant playlist did not reference a segment');
+        }
+        $segmentId = $segmentMatch[1];
+        $segmentPath = '/videos/' . $videoId . '/outputs/hls/renditions/' . $hlsId . '/segments/' . $segmentId;
+
+        $unknown = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/hls/renditions/' . $hlsId . '/segments/nope',
+            $this->headers()
+        );
+        $this->assertEquals(404, $unknown['headers']['status-code']);
+        $this->assertEquals('video_rendition_segment_not_found', $unknown['body']['type']);
+
+        $invalidStream = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/hls/renditions/' . $hlsId . '/streams/11/playlist.m3u8',
+            $this->headers()
+        );
+        $this->assertEquals(400, $invalidStream['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $invalidStream['body']['type']);
+
+        $invalidOutput = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/mkv/renditions/' . $hlsId . '/segments/' . $segmentId,
+            $this->headers()
+        );
+        $this->assertEquals(400, $invalidOutput['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $invalidOutput['body']['type']);
+
+        $segment = $this->client->call(Client::METHOD_GET, $segmentPath, $this->headers());
+        $this->assertEquals(200, $segment['headers']['status-code']);
+        $tsSize = \strlen($segment['body']);
+        $this->assertGreaterThan(200, $tsSize);
+
+        $ranged = $this->client->call(Client::METHOD_GET, $segmentPath, \array_merge($this->headers(), [
+            'range' => 'bytes=100-199',
+        ]));
+        $this->assertEquals(206, $ranged['headers']['status-code']);
+        $this->assertSame('bytes', $ranged['headers']['accept-ranges'] ?? null);
+        $this->assertSame(100, \strlen($ranged['body']));
+        $this->assertEquals((string) \strlen($ranged['body']), $ranged['headers']['content-length'] ?? '');
+        $this->assertEquals('bytes 100-199/' . $tsSize, $ranged['headers']['content-range'] ?? '');
+
+        $dashId = $this->createReadyRendition($videoId, 'dash');
+        $mpd = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/dash/master.mpd', $this->headers());
+        $this->assertEquals(200, $mpd['headers']['status-code']);
+
+        if (\preg_match('#media="([a-zA-Z0-9]+)#', (string) $mpd['body'], $dashSegment) !== 1) {
+            $this->fail('DASH manifest did not reference a segment');
+        }
+        $dashSegmentId = $dashSegment[1];
+
+        foreach ([
+            '/videos/' . $videoId . '/outputs/hls/renditions/' . $dashId . '/segments/' . $dashSegmentId,
+            '/videos/' . $videoId . '/outputs/hls/renditions/' . $dashId . '/streams/0/playlist.m3u8',
+            '/videos/' . $videoId . '/outputs/dash/renditions/' . $hlsId . '/segments/' . $segmentId,
+        ] as $path) {
+            $response = $this->client->call(Client::METHOD_GET, $path, $this->headers());
+            $this->assertEquals(404, $response['headers']['status-code'], $path);
+            $this->assertEquals('video_rendition_not_found', $response['body']['type'], $path);
+        }
+
+        $hlsMatch = $this->client->call(Client::METHOD_GET, $segmentPath, $this->headers());
+        $this->assertEquals(200, $hlsMatch['headers']['status-code']);
+        $this->assertStringContainsString('video/mp2t', (string) ($hlsMatch['headers']['content-type'] ?? ''));
+
+        $dashMatch = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/dash/renditions/' . $dashId . '/segments/' . $dashSegmentId,
+            $this->headers()
+        );
+        $this->assertEquals(200, $dashMatch['headers']['status-code']);
+        $this->assertStringContainsString('video/iso.segment', (string) ($dashMatch['headers']['content-type'] ?? ''));
+    }
+
+    /**
+     * Masters and a media playlist must not be cached. The timeline may, privately.
+     */
+    public function testManifestHeaders(): void
+    {
+        $videoId = $this->createReadyVideo()['$id'];
+        $hlsId = $this->createReadyRendition($videoId, 'hls');
+        $this->createReadyRendition($videoId, 'dash');
+        $this->createReadyRendition($videoId, 'cmaf');
+
+        $masters = [
+            '/videos/' . $videoId . '/outputs/hls/master.m3u8' => 'application/x-mpegurl',
+            '/videos/' . $videoId . '/outputs/dash/master.mpd' => 'application/dash+xml',
+            '/videos/' . $videoId . '/outputs/cmaf/master.m3u8' => 'application/x-mpegurl',
+            '/videos/' . $videoId . '/outputs/cmaf/master.mpd' => 'application/dash+xml',
+        ];
+
+        $hlsMaster = '';
+
+        foreach ($masters as $path => $type) {
+            $response = $this->client->call(Client::METHOD_GET, $path, $this->headers());
+            $this->assertEquals(200, $response['headers']['status-code'], $path);
+            $this->assertStringContainsString($type, (string) ($response['headers']['content-type'] ?? ''), $path);
+            $this->assertSame('no-store, no-cache, must-revalidate', $response['headers']['cache-control'] ?? null, $path);
+
+            if ($path === '/videos/' . $videoId . '/outputs/hls/master.m3u8') {
+                $hlsMaster = (string) $response['body'];
+            }
+        }
+
+        if (\preg_match('#renditions/' . \preg_quote($hlsId, '#') . '/streams/(\d+)/playlist\.m3u8#', $hlsMaster, $streamMatch) !== 1) {
+            $this->fail('HLS master playlist did not reference a stream playlist');
+        }
+
+        $playlist = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/hls/renditions/' . $hlsId . '/streams/' . $streamMatch[1] . '/playlist.m3u8',
+            $this->headers()
+        );
+        $this->assertEquals(200, $playlist['headers']['status-code']);
+        $this->assertStringContainsString('application/x-mpegurl', (string) ($playlist['headers']['content-type'] ?? ''));
+        $this->assertSame('no-store, no-cache, must-revalidate', $playlist['headers']['cache-control'] ?? null);
+
+        $timeline = $this->waitForTimeline($videoId);
+        $this->assertEquals(200, $timeline['headers']['status-code']);
+        $this->assertStringContainsString('text/vtt', (string) ($timeline['headers']['content-type'] ?? ''));
+        $this->assertSame('private, max-age=3888000', $timeline['headers']['cache-control'] ?? null);
+    }
+
+    /**
+     * Caption manifests publish only a ready track. The segment route has no
+     * status gate, so a URL captured while ready keeps returning the WebVTT
+     * after the row is parked. A pending caption with an unknown segment id
+     * is a missing segment, not a missing caption.
+     */
+    public function testCaptionManifestRequiresReady(): void
+    {
+        $videoId = $this->createVideo();
+        $captionId = $this->createReadyCaption($videoId);
+
+        $playlist = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/hls/captions/' . $captionId . '/manifest',
+            $this->headers()
+        );
+        $this->assertEquals(200, $playlist['headers']['status-code']);
+
+        $segmentUri = $this->firstPlaylistSegmentUri((string) $playlist['body']);
+        $this->assertNotSame('', $segmentUri, 'Captions playlist did not reference a segment');
+        $segmentPath = $this->manifestRequestPath($segmentUri);
+
+        foreach (['pending', 'error'] as $status) {
+            $this->timeTravelCaption($this->getProject()['$id'], $captionId, status: $status);
+
+            foreach (['hls', 'dash', 'cmaf'] as $output) {
+                $manifest = $this->client->call(
+                    Client::METHOD_GET,
+                    '/videos/' . $videoId . '/outputs/' . $output . '/captions/' . $captionId . '/manifest',
+                    $this->headers()
+                );
+                $this->assertEquals(404, $manifest['headers']['status-code'], $output . ' ' . $status);
+                $this->assertEquals('video_caption_not_found', $manifest['body']['type'], $output . ' ' . $status);
+            }
+
+            $segment = $this->client->call(Client::METHOD_GET, $segmentPath, $this->headers());
+            $this->assertEquals(200, $segment['headers']['status-code'], $status);
+            $this->assertStringContainsString('text/vtt', (string) ($segment['headers']['content-type'] ?? ''), $status);
+
+            if ($status !== 'pending') {
+                continue;
+            }
+
+            $unknown = $this->client->call(
+                Client::METHOD_GET,
+                '/videos/' . $videoId . '/outputs/hls/captions/' . $captionId . '/segments/nope',
+                $this->headers()
+            );
+            $this->assertEquals(404, $unknown['headers']['status-code']);
+            $this->assertEquals('video_caption_segment_not_found', $unknown['body']['type']);
+        }
+    }
+
+    /**
+     * Thumbnail bytes are re-encoded only when width or height is set.
+     * The timeline cue file shares the timelines collection and is not an image.
+     */
+    public function testThumbnailTransforms(): void
+    {
+        $videoId = $this->createReadyVideo()['$id'];
+        $timeline = $this->waitForTimeline($videoId);
+        $this->assertEquals(200, $timeline['headers']['status-code']);
+        $this->assertSame(
+            1,
+            \preg_match('~thumbnails/([a-zA-Z0-9]+)\?project=~', (string) $timeline['body'], $thumbnailMatch)
+        );
+        $thumbnailId = $thumbnailMatch[1];
+        $path = '/videos/' . $videoId . '/thumbnails/' . $thumbnailId;
+
+        // Distinct sizes: the response cache keys on query params, not Accept,
+        // so a second request with the same width and height would replay the first bytes.
+        $cases = [
+            [
+                'params' => ['width' => 64, 'height' => 64],
+                'headers' => [],
+                'type' => 'image/jpeg',
+                'width' => 64,
+                'height' => 64,
+            ],
+            [
+                'params' => ['width' => 80, 'height' => 40, 'output' => 'png'],
+                'headers' => [],
+                'type' => 'image/png',
+                'width' => 80,
+                'height' => 40,
+            ],
+            [
+                'params' => ['width' => 96, 'height' => 48, 'output' => 'webp'],
+                'headers' => [],
+                'type' => 'image/webp',
+                'width' => 96,
+                'height' => 48,
+            ],
+            [
+                'params' => ['width' => 72, 'height' => 36],
+                'headers' => ['accept' => 'image/webp'],
+                'type' => 'image/webp',
+                'width' => 72,
+                'height' => 36,
+            ],
+        ];
+
+        foreach ($cases as $case) {
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                $path,
+                \array_merge($this->headers(), $case['headers']),
+                $case['params']
+            );
+            $this->assertEquals(200, $response['headers']['status-code'], $case['type']);
+            $this->assertEquals($case['type'], $response['headers']['content-type'] ?? '', $case['type']);
+
+            $image = new \Imagick();
+            $image->readImageBlob($response['body']);
+            $this->assertSame($case['width'], $image->getImageWidth(), $case['type']);
+            $this->assertSame($case['height'], $image->getImageHeight(), $case['type']);
+        }
+
+        $missing = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/thumbnails/nope', $this->headers());
+        $this->assertEquals(404, $missing['headers']['status-code']);
+        $this->assertEquals('video_thumbnail_not_found', $missing['body']['type']);
+
+        $cue = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/thumbnails/' . $this->timelineVttId($videoId),
+            $this->headers()
+        );
+        $this->assertEquals(404, $cue['headers']['status-code']);
+        $this->assertEquals('video_thumbnail_not_found', $cue['body']['type']);
     }
 
     // ---------------------------------------------------- embedded captions
@@ -2651,16 +3139,17 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
-     * Walk every STREAM-INF and AUDIO media URI on an HLS master and fetch the
-     * playlist plus first media segment — the same requests hls.js / Safari
-     * make when enumerating or locking onto a rung.
+     * Walk every STREAM-INF, AUDIO, and SUBTITLES media URI on an HLS master
+     * and fetch the playlist plus first media segment — the same requests
+     * hls.js / Safari make when enumerating or locking onto a rung.
      *
-     * @return array{variants: int, audios: int}
+     * @return array{variants: int, audios: int, subtitles: int}
      */
     private function assertHlsLadderPlayable(string $master): array
     {
         $variants = 0;
         $audios = 0;
+        $subtitles = 0;
         $pendingStream = false;
 
         foreach (\explode("\n", $master) as $raw) {
@@ -2674,6 +3163,14 @@ final class VideosCustomServerTest extends Scope
                 $this->assertNotSame('', $uri, 'AUDIO media entry is missing URI');
                 $this->assertMediaPlaylistPlayable($uri);
                 $audios++;
+                continue;
+            }
+
+            if (\str_starts_with($line, '#EXT-X-MEDIA:') && \str_contains($line, 'TYPE=SUBTITLES')) {
+                $uri = $this->attributeValue($line, 'URI');
+                $this->assertNotSame('', $uri, 'SUBTITLES media entry is missing URI');
+                $this->assertMediaPlaylistPlayable($uri);
+                $subtitles++;
                 continue;
             }
 
@@ -2693,7 +3190,7 @@ final class VideosCustomServerTest extends Scope
 
         $this->assertGreaterThan(0, $variants, 'HLS master advertised no video variants');
 
-        return ['variants' => $variants, 'audios' => $audios];
+        return ['variants' => $variants, 'audios' => $audios, 'subtitles' => $subtitles];
     }
 
     /**
@@ -2934,6 +3431,43 @@ final class VideosCustomServerTest extends Scope
         }
 
         $this->fail('Seeded ' . $name . ' profile missing');
+    }
+
+    /**
+     * Id of the `timeline.vtt` row. It sits in `videos_timelines` beside the
+     * thumbnail sheets and is not returned by any API.
+     */
+    private function timelineVttId(string $videoId): string
+    {
+        $stored = '';
+        $access = function () use ($videoId, &$stored): void {
+            global $register;
+            $authorization = new Authorization();
+            $factory = $register->get('databaseFactory')($register->get('pools'), $register->get('cache'), $authorization);
+
+            $authorization->skip(function () use ($factory, $videoId, &$stored): void {
+                $dbForProject = $factory->project($factory->platform()->getDocument('projects', $this->getProject()['$id']));
+                $rows = $dbForProject->find('videos_timelines', [
+                    Query::equal('videoId', [$videoId]),
+                    Query::equal('name', ['timeline.vtt']),
+                    Query::limit(1),
+                ]);
+
+                if (isset($rows[0])) {
+                    $stored = $rows[0]->getId();
+                }
+            });
+        };
+
+        if (Coroutine::getCid() >= 0) {
+            $access();
+        } else {
+            run($access);
+        }
+
+        $this->assertNotSame('', $stored, 'timeline.vtt row missing for ' . $videoId);
+
+        return $stored;
     }
 
     private function timeTravelRendition(
