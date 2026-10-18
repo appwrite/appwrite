@@ -58,8 +58,37 @@ final class JoinsTest extends TestCase
     public static function resolvable(): Iterator
     {
         yield 'readable at collection level' => ['shared', 'database_1_collection_2'];
-        yield 'document security without collection read' => ['owned', 'database_1_collection_3'];
-        yield 'without collection read or document security, which the database authorizes' => ['closed', 'database_1_collection_4'];
+        yield 'document security without collection read, whose rows the database filters' => ['owned', 'database_1_collection_3'];
+    }
+
+    public function testJoinOfACollectionTheCallerCannotReadIsRefusedAsIfItDidNotExist(): void
+    {
+        $unreadable = $this->refusal('closed');
+        $missing = $this->refusal('missing');
+
+        $this->assertSame(Exception::COLLECTION_NOT_FOUND, $unreadable->getType());
+        $this->assertSame($missing->getType(), $unreadable->getType());
+        $this->assertSame($missing->getCode(), $unreadable->getCode());
+        $this->assertSame(
+            \str_replace("'missing'", "'closed'", $missing->getMessage()),
+            $unreadable->getMessage(),
+            'without collection read or document security the refusal must not reveal that the collection exists',
+        );
+    }
+
+    #[DataProvider('privilegedRoles')]
+    public function testPrivilegedCallerJoinsACollectionWithoutReadOrDocumentSecurity(string $role): void
+    {
+        $this->authorization->addRole($role);
+
+        $this->assertSame('database_1_collection_4', $this->rewriteJoin('closed')->getAttribute());
+    }
+
+    public function testReadSkippingAuthorizationJoinsACollectionWithoutReadOrDocumentSecurity(): void
+    {
+        $joined = $this->authorization->skip(fn (): Query => $this->rewriteJoin('closed'));
+
+        $this->assertSame('database_1_collection_4', $joined->getAttribute(), 'a read the server makes without authorization is not refused');
     }
 
     public function testJoinOfADisabledCollectionIsNotFound(): void
@@ -105,12 +134,6 @@ final class JoinsTest extends TestCase
         yield 'owner' => [User::ROLE_OWNER];
     }
 
-    public function testJoinByPhysicalNameIsLookedUpBySequence(): void
-    {
-        $this->assertSame('database_1_collection_3', $this->rewriteJoin('database_1_collection_3')->getAttribute());
-        $this->assertSame(['getDocument', 'find'], $this->reads, 'a table name no collection is called by falls back to its sequence');
-    }
-
     #[DataProvider('publicIdsShapedLikeTables')]
     public function testJoinByAPublicIdShapedLikeATableReadsTheTableOfTheCollectionCalledThat(string $joined, string $table): void
     {
@@ -152,17 +175,31 @@ final class JoinsTest extends TestCase
         $this->assertSame($reads, $this->reads, 'a table name resolves to itself without another registry read');
     }
 
-    #[DataProvider('unknownPhysicalNames')]
-    public function testJoinByPhysicalNameGetsTheSameChecks(string $joined): void
+    #[DataProvider('tableNames')]
+    public function testJoinByTableNameIsNotFound(string $joined): void
     {
         $this->assertSame(Exception::COLLECTION_NOT_FOUND, $this->refusal($joined)->getType());
+        $this->assertSame(['getDocument'], $this->reads, 'a join is looked up by public ID only, never by the sequence in a table name');
+    }
+
+    #[DataProvider('tableNames')]
+    public function testPrivilegedJoinByTableNameIsNotFound(string $joined): void
+    {
+        foreach (self::privilegedRoles() as [$role]) {
+            $this->authorization->addRole($role);
+        }
+
+        $this->assertSame(Exception::COLLECTION_NOT_FOUND, $this->refusal($joined)->getType(), 'API keys and privileged users join by public ID too');
     }
 
     /**
      * @return Iterator<string, array{string}>
      */
-    public static function unknownPhysicalNames(): Iterator
+    public static function tableNames(): Iterator
     {
+        yield 'readable at collection level' => ['database_1_collection_1'];
+        yield 'document security without collection read' => ['database_1_collection_3'];
+        yield 'without collection read or document security' => ['database_1_collection_4'];
         yield 'disabled' => ['database_1_collection_5'];
         yield 'unknown sequence' => ['database_1_collection_9'];
         yield 'not a sequence' => ['database_1_collection_x'];

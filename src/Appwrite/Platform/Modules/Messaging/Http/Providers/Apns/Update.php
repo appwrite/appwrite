@@ -104,6 +104,12 @@ class Update extends Action
 
         $credentials = $provider->getAttribute('credentials');
 
+        // Earlier provider updates stored a changed bundle ID under `bundle`; promote it so this save repairs the row.
+        if (isset($credentials['bundle'])) {
+            $credentials['bundleId'] = $credentials['bundle'];
+            unset($credentials['bundle']);
+        }
+
         if (!empty($authKey)) {
             $credentials['authKey'] = $authKey;
         }
@@ -117,7 +123,7 @@ class Update extends Action
         }
 
         if (!empty($bundleId)) {
-            $credentials['bundle'] = $bundleId;
+            $credentials['bundleId'] = $bundleId;
         }
 
         $provider->setAttribute('credentials', $credentials);

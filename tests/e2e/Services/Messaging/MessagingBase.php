@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Messaging;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Status as MessageStatus;
 use CURLFile;
 use Tests\E2E\Client;
@@ -959,6 +960,91 @@ trait MessagingBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(0, $response['body']['qos']);
         $this->assertEquals(7200, $response['body']['expiry']);
+    }
+
+    public function testUpdateTopicDescription(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $keyword = ID::unique();
+
+        /**
+         * Test for SUCCESS
+         */
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', $headers, [
+            'topicId' => ID::unique(),
+            'name' => 'orders',
+            'description' => 'Order updates tagged ' . $keyword,
+        ]);
+
+        $this->assertEquals(201, $topic['headers']['status-code']);
+        $this->assertSame('Order updates tagged ' . $keyword, $topic['body']['description']);
+
+        $topicId = $topic['body']['$id'];
+
+        $topic = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topicId, $headers);
+
+        $this->assertEquals(200, $topic['headers']['status-code']);
+        $this->assertSame('Order updates tagged ' . $keyword, $topic['body']['description']);
+
+        $topics = $this->client->call(Client::METHOD_GET, '/messaging/topics', $headers, [
+            'search' => $keyword,
+        ]);
+
+        $this->assertEquals(200, $topics['headers']['status-code']);
+        $this->assertCount(1, $topics['body']['topics']);
+        $this->assertSame($topicId, $topics['body']['topics'][0]['$id']);
+
+        $topic = $this->client->call(Client::METHOD_PATCH, '/messaging/topics/' . $topicId, $headers, [
+            'description' => 'Shipping updates',
+        ]);
+
+        $this->assertEquals(200, $topic['headers']['status-code']);
+        $this->assertSame('Shipping updates', $topic['body']['description']);
+
+        $topic = $this->client->call(Client::METHOD_PATCH, '/messaging/topics/' . $topicId, $headers, [
+            'name' => 'shipping',
+        ]);
+
+        $this->assertEquals(200, $topic['headers']['status-code']);
+        $this->assertSame('Shipping updates', $topic['body']['description']);
+
+        $topic = $this->client->call(Client::METHOD_PATCH, '/messaging/topics/' . $topicId, $headers, [
+            'description' => '',
+        ]);
+
+        $this->assertEquals(200, $topic['headers']['status-code']);
+        $this->assertSame('', $topic['body']['description']);
+
+        $plain = $this->client->call(Client::METHOD_POST, '/messaging/topics', $headers, [
+            'topicId' => ID::unique(),
+            'name' => 'plain',
+        ]);
+
+        $this->assertEquals(201, $plain['headers']['status-code']);
+        $this->assertSame('', $plain['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', $headers, [
+            'topicId' => ID::unique(),
+            'name' => 'too-long',
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $topic['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $topic['body']['type']);
+
+        $topic = $this->client->call(Client::METHOD_PATCH, '/messaging/topics/' . $topicId, $headers, [
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $topic['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $topic['body']['type']);
     }
 
     /**
@@ -2164,6 +2250,153 @@ trait MessagingBase
         $this->assertEquals(201, $response['headers']['status-code']);
         $message = $response['body'];
         $this->assertEquals(MessageStatus::DRAFT, $message['status']);
+    }
+
+    public function testCreateEmailToRawEmails(): void
+    {
+        $emails = [uniqid() . '@example.com', uniqid() . '@example.com'];
+
+        // Raw emails alone (no topics/users/targets) must satisfy the recipient requirement.
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => Id::unique(),
+            'emails' => $emails,
+            'subject' => 'New blog post',
+            'content' => 'Check out the new blog post at http://localhost',
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $message = $response['body'];
+        $this->assertEquals(MessageStatus::DRAFT, $message['status']);
+        $this->assertEquals($emails, $message['data']['emails']);
+
+        // A non-draft message addressed only to raw emails is accepted for processing.
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => Id::unique(),
+            'emails' => $emails,
+            'subject' => 'New blog post',
+            'content' => 'Check out the new blog post at http://localhost',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($emails, $response['body']['data']['emails']);
+
+        // Malformed email addresses are rejected before the message is created.
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => Id::unique(),
+            'emails' => ['not-an-email'],
+            'subject' => 'New blog post',
+            'content' => 'Check out the new blog post at http://localhost',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testUpdateEmailToRawEmails(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $draft = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', $headers, [
+            'messageId' => Id::unique(),
+            'subject' => 'New blog post',
+            'content' => 'Check out the new blog post at http://localhost',
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(201, $draft['headers']['status-code']);
+        $messageId = $draft['body']['$id'];
+
+        $emails = [\uniqid() . '@example.com'];
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $messageId, $headers, [
+            'emails' => $emails,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSame($emails, $response['body']['data']['emails']);
+        $this->assertSame('New blog post', $response['body']['data']['subject']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $messageId, $headers, [
+            'emails' => ['not-an-email'],
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $messageId, $headers, [
+            'emails' => [],
+            'draft' => false,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertSame(Exception::MESSAGE_MISSING_TARGET, $response['body']['type']);
+    }
+
+    public function testSendEmailToRawEmails(): void
+    {
+        // A fresh project holds only the Maildev provider, so it is the default that raw emails route to.
+        $project = $this->getProject(true);
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', $headers, [
+            'providerId' => Id::unique(),
+            'name' => 'Maildev',
+            'host' => System::getEnv('_APP_SMTP_HOST', 'maildev'),
+            'port' => (int) System::getEnv('_APP_SMTP_PORT', '1025'),
+            'username' => System::getEnv('_APP_SMTP_USERNAME', 'user'),
+            'password' => System::getEnv('_APP_SMTP_PASSWORD', 'password'),
+            'fromName' => 'Appwrite',
+            'fromEmail' => 'sender@appwrite.io',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        $recipient = \uniqid() . '@appwrite.io';
+        $subject = 'Raw email ' . \uniqid();
+
+        $email = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', $headers, [
+            'messageId' => Id::unique(),
+            'emails' => [$recipient, $recipient],
+            'subject' => $subject,
+            'content' => 'Delivered without a user, target, or topic',
+        ]);
+
+        $this->assertEquals(201, $email['headers']['status-code']);
+
+        $messageId = $email['body']['$id'];
+        $this->assertEventually(function () use ($messageId, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, $headers);
+            $this->assertEquals(MessageStatus::SENT, $response['body']['status']);
+        }, 30000, 500);
+
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, $headers);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertSame(1, $message['body']['deliveredTotal'], 'A repeated raw email must be delivered once');
+        $this->assertSame([], $message['body']['deliveryErrors']);
+
+        $mail = $this->getLastEmailByAddress($recipient, fn (array $mail) => $this->assertSame($subject, $mail['subject']));
+
+        $this->assertSame($subject, $mail['subject']);
     }
 
     public function testCreateDraftPushWithImage(): void

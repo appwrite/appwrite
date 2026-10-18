@@ -1,1 +1,3 @@
 Get a list of all the user's documents in a given collection. You can use the query params to filter your results.
+
+Documents returned by aggregate, groupBy or distinct queries hold only the attributes they select, group or aggregate, typed as a document types them, with a joined attribute named by its join alias (`alias.attribute`). They have no `$id`, `$sequence`, `$createdAt`, `$updatedAt`, `$permissions`, `$databaseId` or `$collectionId` unless they select or group it, and neither does a right or full join document that no document of this collection matched.
