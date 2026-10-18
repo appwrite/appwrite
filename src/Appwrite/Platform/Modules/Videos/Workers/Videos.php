@@ -244,8 +244,12 @@ class Videos extends Action
             };
         } finally {
             if ($held && $lock !== null) {
+                // flock follows the inode. Unlinking after release lets one
+                // worker lock the old file while another creates a new inode
+                // at the same path, so both jobs run. Timeline and caption
+                // have no second claim to stop that. The maintenance sweep
+                // removes idle lock files.
                 $lock->release();
-                Base::removeLock($lockPath);
             }
             $this->record($inflight, -1, ['action' => $action->value]);
         }
@@ -466,12 +470,9 @@ class Videos extends Action
         if ($video->isEmpty()) {
             $video = $videoMessage->video;
         }
-        $workspace = $this->jobWorkspace(
-            $videoMessage->project->getId(),
-            $video->getId(),
-            Base::JOB_CAPTION,
-            \uniqid('', true)
-        );
+        // Created only after this run wins the pending→started claim, so a lost
+        // race never mkdir's a scratch directory.
+        $workspace = null;
         $permissions = $this->readPermissions($video);
         Span::add('caption.code', (string) $caption->getAttribute('code', ''));
         Span::add('caption.default', (bool) $caption->getAttribute('default', false));
@@ -481,15 +482,29 @@ class Videos extends Action
         $stage = 'claim';
         $outcome = 'error';
         $conversion = '';
+        $claimed = false;
 
         try {
-            $caption = $dbForProject->updateDocument(
+            // Compare-and-swap: only one updateDocuments may leave pending.
+            // A delete that wins while still pending removes the row, this
+            // updates nothing, and the job stops before download.
+            $updated = $dbForProject->updateDocuments(
                 'videos_captions',
-                $caption->getId(),
                 new Document([
                     'status' => Base::STATUS_STARTED,
-                ])
+                ]),
+                [
+                    Query::equal('$id', [$caption->getId()]),
+                    Query::equal('status', [Base::STATUS_PENDING]),
+                ]
             );
+            if ($updated === 0) {
+                $outcome = 'duplicate';
+                return;
+            }
+
+            $caption = $dbForProject->getDocument('videos_captions', $caption->getId());
+            $claimed = true;
             $this->notify(
                 $queueForRealtime,
                 $project,
@@ -500,6 +515,13 @@ class Videos extends Action
                     'captionId' => $caption->getId(),
                 ],
                 $permissions
+            );
+
+            $workspace = $this->jobWorkspace(
+                $videoMessage->project->getId(),
+                $video->getId(),
+                Base::JOB_CAPTION,
+                \uniqid('', true)
             );
 
             $stage = 'download';
@@ -564,24 +586,28 @@ class Videos extends Action
             $outcome = 'ready';
         } catch (\Throwable $th) {
             Span::add('error.stage', $stage);
-            $caption = $dbForProject->updateDocument(
-                'videos_captions',
-                $caption->getId(),
-                new Document([
-                    'status' => Base::STATUS_ERROR,
-                ])
-            );
-            $this->notify(
-                $queueForRealtime,
-                $project,
-                $caption,
-                'videos.[videoId].captions.[captionId].update',
-                [
-                    'videoId' => $caption->getAttribute('videoId', $video->getId()),
-                    'captionId' => $caption->getId(),
-                ],
-                $permissions
-            );
+            // Only a run that claimed the row may park it as error — a lost
+            // claim must not overwrite a live job or resurrect a deleted caption.
+            if ($claimed) {
+                $caption = $dbForProject->updateDocument(
+                    'videos_captions',
+                    $caption->getId(),
+                    new Document([
+                        'status' => Base::STATUS_ERROR,
+                    ])
+                );
+                $this->notify(
+                    $queueForRealtime,
+                    $project,
+                    $caption,
+                    'videos.[videoId].captions.[captionId].update',
+                    [
+                        'videoId' => $caption->getAttribute('videoId', $video->getId()),
+                        'captionId' => $caption->getId(),
+                    ],
+                    $permissions
+                );
+            }
 
             throw $th;
         } finally {
@@ -594,7 +620,9 @@ class Videos extends Action
                 $started,
                 $outcome === 'error' ? ['error_stage' => $stage] : []
             );
-            $this->cleanup($workspace['basePath']);
+            if ($workspace !== null) {
+                $this->cleanup($workspace['basePath']);
+            }
         }
     }
 

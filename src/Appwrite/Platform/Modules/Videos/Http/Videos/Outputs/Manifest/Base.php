@@ -248,9 +248,16 @@ abstract class Base extends VideosAction
                     $codecs = $this->withAudioCodec($codecs);
                 }
 
+                // HLS requires WIDTH x HEIGHT when RESOLUTION is present.
+                // Audio-only variants have no frame size, so the attribute is omitted.
+                $resolution = $stream['resolution'] ?? null;
+                if (!\is_string($resolution) || $resolution === '') {
+                    $resolution = null;
+                }
+
                 $streams[] = [
                     'bandwidth' => $stream['bandwidth'] ?? 0,
-                    'resolution' => $stream['resolution'] ?? '',
+                    'resolution' => $resolution,
                     'name' => $rendition->getAttribute('name', ''),
                     'codecs' => $codecs,
                     'subs' => empty($captions) ? null : 'subs',

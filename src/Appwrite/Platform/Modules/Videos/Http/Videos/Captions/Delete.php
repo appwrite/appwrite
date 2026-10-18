@@ -15,6 +15,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -89,15 +90,42 @@ class Delete extends Base
             throw new Exception(Exception::VIDEO_CAPTION_NOT_FOUND);
         }
 
-        // Caption exits if the row is gone while still pending. After claim the
-        // worker still writes through started → ready, so delete must wait.
-        // Same retention window as abortStaleRenditions / rendition delete.
-        if ($caption->getAttribute('status') === self::STATUS_STARTED) {
+        // Delete only while the row still matches the guard. A snapshot check
+        // then an unconditional deleteDocument races the worker's pending→started
+        // claim. Same retention window as abortStaleRenditions / rendition delete.
+        $scope = [
+            Query::equal('$id', [$caption->getId()]),
+            Query::equal('videoInternalId', [$video->getSequence()]),
+        ];
+
+        $deleted = $authorization->skip(fn () => $dbForProject->deleteDocuments(
+            'videos_captions',
+            [
+                ...$scope,
+                Query::notEqual('status', [self::STATUS_STARTED]),
+            ]
+        ));
+
+        if ($deleted === 0) {
             $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '86400');
             $cutoff = DateTime::addSeconds(new \DateTime(), -1 * $retention);
-            if ($caption->getUpdatedAt() > $cutoff) {
-                throw new Exception(Exception::VIDEO_CAPTION_IN_PROGRESS);
+            $deleted = $authorization->skip(fn () => $dbForProject->deleteDocuments(
+                'videos_captions',
+                [
+                    ...$scope,
+                    Query::equal('status', [self::STATUS_STARTED]),
+                    Query::lessThanEqual('$updatedAt', $cutoff),
+                ]
+            ));
+        }
+
+        if ($deleted === 0) {
+            $current = $authorization->skip(fn () => $dbForProject->getDocument('videos_captions', $captionId));
+            if ($current->isEmpty() || $current->getAttribute('videoInternalId') !== $video->getSequence()) {
+                throw new Exception(Exception::VIDEO_CAPTION_NOT_FOUND);
             }
+
+            throw new Exception(Exception::VIDEO_CAPTION_IN_PROGRESS);
         }
 
         $this->deleteCaption(

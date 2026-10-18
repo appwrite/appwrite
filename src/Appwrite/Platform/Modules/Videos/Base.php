@@ -507,7 +507,10 @@ abstract class Base extends UtopiaAction
     }
 
     /**
-     * Deletes a caption row and enqueues lazy cleanup of its segments and files.
+     * Enqueues lazy cleanup of a caption's segments and files.
+     *
+     * The caller must already have removed the caption row with a status-scoped
+     * deleteDocuments so the pending→started claim cannot race past a 409.
      */
     protected function deleteCaption(
         Database $dbForProject,
@@ -516,12 +519,6 @@ abstract class Base extends UtopiaAction
         Document $project,
         Document $caption
     ): void {
-        $deleted = $authorization->skip(fn () => $dbForProject->deleteDocument('videos_captions', $caption->getId()));
-
-        if (!$deleted) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove video caption from DB');
-        }
-
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $project,
             type: DELETE_TYPE_DOCUMENT,

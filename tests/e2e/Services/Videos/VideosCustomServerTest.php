@@ -2099,9 +2099,10 @@ final class VideosCustomServerTest extends Scope
         $masterBody = (string) $master['body'];
         $this->assertStringContainsString('#EXTM3U', $masterBody);
         $this->assertStringContainsString('#EXT-X-MEDIA:TYPE=AUDIO', $masterBody);
-        // The muxer still emits one variant, but it carries only AAC and no frame size.
+        // The muxer still emits one variant. It carries only AAC, and RESOLUTION
+        // is omitted because an audio-only source has no frame size.
         $this->assertStringContainsString('CODECS="mp4a.40.2"', $masterBody);
-        $this->assertStringContainsString('RESOLUTION=,', $masterBody);
+        $this->assertStringNotContainsString('RESOLUTION=', $masterBody);
         $this->assertStringNotContainsString('avc1', $masterBody);
 
         $playlist = $this->client->call(Client::METHOD_GET, $this->manifestUri($masterBody), $this->headers());
