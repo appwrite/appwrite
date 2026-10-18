@@ -135,6 +135,10 @@
             "queries",
             "total"
         ],
+        "account.listMemberships": [
+            "queries",
+            "total"
+        ],
         "account.listMFAFactors": [],
         "account.listMfaFactors": [],
         "account.listPasskeys": [
@@ -5111,6 +5115,10 @@
             "sessionId"
         ],
         "account.listIdentities": [
+            "queries",
+            "total"
+        ],
+        "account.listMemberships": [
             "queries",
             "total"
         ],
