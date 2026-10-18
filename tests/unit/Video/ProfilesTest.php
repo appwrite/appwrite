@@ -10,8 +10,12 @@ use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Index;
+use Utopia\Database\IntegerWidth;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
@@ -80,46 +84,21 @@ final class ProfilesTest extends TestCase
             ->setNamespace($namespace);
         $database->create();
 
-        $string = fn (string $id, int $size): Document => new Document([
-            '$id' => $id,
-            'type' => Database::VAR_STRING,
-            'format' => '',
-            'size' => $size,
-            'signed' => true,
-            'required' => false,
-            'default' => null,
-            'array' => false,
-            'filters' => [],
-        ]);
-        $integer = fn (string $id): Document => new Document([
-            '$id' => $id,
-            'type' => Database::VAR_INTEGER,
-            'format' => '',
-            'size' => 8,
-            'signed' => false,
-            'required' => false,
-            'default' => null,
-            'array' => false,
-            'filters' => [],
-        ]);
-
-        $database->createCollection('videos_profiles', [
-            $string('name', 128),
-            $integer('videoBitRate'),
-            $integer('audioBitRate'),
-            $integer('width'),
-            $integer('height'),
-            $string('codec', 36),
-            $string('search', 128),
-        ], [
-            new Document([
-                '$id' => '_key_profile',
-                'type' => Database::INDEX_UNIQUE,
-                'attributes' => ['width', 'height', 'videoBitRate', 'audioBitRate', 'codec'],
-                'lengths' => [],
-                'orders' => [],
-            ]),
-        ]);
+        $database->createCollection(Collection::create(
+            id: 'videos_profiles',
+            attributes: [
+                Attribute::string(key: 'name', size: 128),
+                Attribute::integer(key: 'videoBitRate', width: IntegerWidth::Bits64, signed: false),
+                Attribute::integer(key: 'audioBitRate', width: IntegerWidth::Bits64, signed: false),
+                Attribute::integer(key: 'width', signed: false),
+                Attribute::integer(key: 'height', signed: false),
+                Attribute::string(key: 'codec', size: 36),
+                Attribute::string(key: 'search', size: 128),
+            ],
+            indexes: [
+                Index::unique(key: '_key_profile', attributes: ['width', 'height', 'videoBitRate', 'audioBitRate', 'codec']),
+            ],
+        ));
 
         return $database;
     }
