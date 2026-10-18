@@ -5,13 +5,18 @@ namespace Appwrite\Migration;
 use Exception;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
+use Utopia\Database\Attribute;
+use Utopia\Database\Attribute\Update as AttributeUpdate;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Limit;
 use Utopia\Database\Exception\Structure;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Filter;
+use Utopia\Database\Id;
+use Utopia\Database\Index;
 use Utopia\Database\PDO;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -114,16 +119,15 @@ abstract class Migration
 
     public function __construct()
     {
-
         $this->collections = Config::getParam('collections', []);
 
         $this->collections['projects']['_metadata'] = [
-            '$id' => ID::custom('_metadata'),
+            '$id' => Id::custom('_metadata'),
             '$collection' => Database::METADATA,
         ];
 
         $this->collections['projects']['audit'] = [
-            '$id' => ID::custom('audit'),
+            '$id' => Id::custom('audit'),
             '$collection' => Database::METADATA,
         ];
     }
@@ -150,7 +154,6 @@ abstract class Migration
         $this->getProjectDB = $getProjectDB;
 
         $authorization->disable();
-        $authorization->setDefaultStatus(false);
 
         return $this;
     }
@@ -191,16 +194,16 @@ abstract class Migration
 
             Console::log('Migrating documents for collection "' . $collection['$id'] . '"');
 
-            $this->dbForProject->foreach($collection['$id'], function (Document $document) use ($collection, $callback) {
+            foreach ($this->dbForProject->cursor($collection['$id'], batchSize: 25) as $document) {
                 if (empty($document->getId()) || empty($document->getCollection())) {
-                    return;
+                    continue;
                 }
 
                 $old = $document->getArrayCopy();
                 $new = $callback($document);
 
                 if ($new === null || $new->getArrayCopy() == $old) {
-                    return;
+                    continue;
                 }
 
                 try {
@@ -211,9 +214,9 @@ abstract class Migration
                     );
                 } catch (\Throwable $th) {
                     Console::error("Failed to update document \"{$document->getId()}\" in collection \"{$collection['$id']}\":" . $th->getMessage());
-                    return;
+                    continue;
                 }
-            });
+            }
         }
     }
 
@@ -258,24 +261,21 @@ abstract class Migration
             default => 'projects',
         };
 
-        if (!$this->dbForProject->getCollection($id)->isEmpty()) {
+        if ($this->dbForProject->findCollection($id) !== null) {
             return;
         }
 
         $collection = $this->collections[$collectionType][$id];
 
-        $attributes = [];
-        foreach ($collection['attributes'] as $attribute) {
-            $attributes[] = new Document($attribute);
-        }
-
-        $indexes = [];
-        foreach ($collection['indexes'] as $index) {
-            $indexes[] = new Document($index);
-        }
+        $attributes = $collection['attributes'];
+        $indexes = $collection['indexes'];
 
         try {
-            $this->dbForProject->createCollection($name, $attributes, $indexes);
+            $this->dbForProject->createCollection(Collection::create(
+                id: $name,
+                attributes: $attributes,
+                indexes: $indexes,
+            ));
         } catch (Duplicate) {
             Console::warning('Failed to create collection "' . $name . '": Collection already exists');
         }
@@ -320,40 +320,33 @@ abstract class Migration
         $collection = $this->collections[$collectionType][$from] ?? null;
 
         if ($collection === null) {
-            throw new Exception("Collection {$from} not found");
+            throw new Exception('Collection ' . $from . ' not found');
         }
 
         $attributesToCreate = [];
         $attributes = $collection['attributes'];
-        $attributeKeys = \array_column($collection['attributes'], '$id');
+        $attributeKeys = \array_map(fn (Attribute $attribute): string => $attribute->key, $collection['attributes']);
 
         $database->purgeCachedCollection($collectionId);
 
         $existingIds = \array_map(
-            fn ($attribute) => $attribute->getId(),
-            $database->getCollection($collectionId)->getAttribute('attributes', [])
+            fn (Attribute $attribute): string => $attribute->key,
+            $database->findCollection($collectionId)?->attributes() ?? []
         );
 
         foreach ($attributeIds as $attributeId) {
             if (\in_array($attributeId, $existingIds, true)) {
-                Console::warning("Skipping attribute \"{$attributeId}\" in collection {$collectionId}: Attribute already exists");
+                Console::warning('Skipping attribute "' . $attributeId . '" in collection ' . $collectionId . ': Attribute already exists');
                 continue;
             }
 
             $attributeKey = \array_search($attributeId, $attributeKeys);
 
             if ($attributeKey === false) {
-                throw new Exception("Attribute {$attributeId} not found");
+                throw new Exception('Attribute ' . $attributeId . ' not found');
             }
 
-            $attribute = $attributes[$attributeKey];
-            $attribute['filters'] ??= [];
-            $attribute['default'] ??= null;
-            $attribute['default'] = \in_array('json', $attribute['filters'])
-                ? \json_encode($attribute['default'])
-                : $attribute['default'];
-
-            $attributesToCreate[] = $attribute;
+            $attributesToCreate[] = self::withEncodedDefault($attributes[$attributeKey]);
         }
 
         if (empty($attributesToCreate)) {
@@ -370,19 +363,10 @@ abstract class Migration
                 try {
                     $database->createAttribute(
                         collection: $collectionId,
-                        id: $attribute['$id'],
-                        type: $attribute['type'],
-                        size: $attribute['size'],
-                        required: $attribute['required'],
-                        default: $attribute['default'],
-                        signed: $attribute['signed'] ?? true,
-                        array: $attribute['array'] ?? false,
-                        format: $attribute['format'] ?? '',
-                        formatOptions: $attribute['formatOptions'] ?? [],
-                        filters: $attribute['filters'],
+                        attribute: $attribute,
                     );
                 } catch (Duplicate) {
-                    Console::warning("Skipping attribute \"{$attribute['$id']}\" in collection {$collectionId}: Attribute already exists");
+                    Console::warning('Skipping attribute "' . $attribute->key . '" in collection ' . $collectionId . ': Attribute already exists');
                 }
             }
         }
@@ -427,33 +411,20 @@ abstract class Migration
         $collection = $this->collections[$collectionType][$from] ?? null;
 
         if ($collection === null) {
-            throw new Exception("Collection {$from} not found");
+            throw new Exception('Collection ' . $from . ' not found');
         }
 
         $attributes = $collection['attributes'];
 
-        $attributeKey = \array_search($attributeId, \array_column($attributes, '$id'));
+        $attributeKey = \array_search($attributeId, \array_map(fn (Attribute $attribute): string => $attribute->key, $attributes));
 
         if ($attributeKey === false) {
-            throw new Exception("Attribute {$attributeId} not found");
+            throw new Exception('Attribute ' . $attributeId . ' not found');
         }
-
-        $attribute = $attributes[$attributeKey];
-        $filters = $attribute['filters'] ?? [];
-        $default = $attribute['default'] ?? null;
 
         $database->createAttribute(
             collection: $collectionId,
-            id: $attributeId,
-            type: $attribute['type'],
-            size: $attribute['size'],
-            required: $attribute['required'],
-            default: \in_array('json', $filters) ? \json_encode($default) : $default,
-            signed: $attribute['signed'] ?? true,
-            array: $attribute['array'] ?? false,
-            format: $attribute['format'] ?? '',
-            formatOptions: $attribute['formatOptions'] ?? [],
-            filters: $filters,
+            attribute: self::withEncodedDefault($attributes[$attributeKey]),
         );
     }
 
@@ -489,27 +460,33 @@ abstract class Migration
         $collection = $this->collections[$collectionType][$from] ?? null;
 
         if ($collection === null) {
-            throw new Exception("Collection {$collectionId} not found");
+            throw new Exception('Collection ' . $collectionId . ' not found');
         }
 
         $indexes = $collection['indexes'];
 
-        $indexKey = \array_search($indexId, \array_column($indexes, '$id'));
+        $indexKey = \array_search($indexId, \array_map(fn (Index $index): string => $index->key, $indexes));
 
         if ($indexKey === false) {
-            throw new Exception("Index {$indexId} not found");
+            throw new Exception('Index ' . $indexId . ' not found');
         }
-
-        $index = $indexes[$indexKey];
 
         $database->createIndex(
             collection: $collectionId,
-            id: $indexId,
-            type: $index['type'],
-            attributes: $index['attributes'],
-            lengths: $index['lengths'] ?? [],
-            orders: $index['orders'] ?? []
+            index: $indexes[$indexKey],
         );
+    }
+
+    /**
+     * A JSON attribute stores its default encoded, as the json filter would on write.
+     */
+    private static function withEncodedDefault(Attribute $attribute): Attribute
+    {
+        if ($attribute->default === null || !\in_array(Filter::Json->value, $attribute->filters, true)) {
+            return $attribute;
+        }
+
+        return $attribute->apply(new AttributeUpdate(default: \json_encode($attribute->default)));
     }
 
     /**

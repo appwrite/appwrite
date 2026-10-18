@@ -1,1 +1,3 @@
 Get a list of all the user's rows in a given table. You can use the query params to filter your results.
+
+Rows returned by aggregate, groupBy or distinct queries hold only the columns they select, group or aggregate, typed as a row types them, with a joined column named by its join alias (`alias.column`). They have no `$id`, `$sequence`, `$createdAt`, `$updatedAt`, `$permissions`, `$databaseId` or `$tableId` unless they select or group it, and neither does a right or full join row that no row of this table matched.

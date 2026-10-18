@@ -3,7 +3,7 @@
 namespace Appwrite\Messaging;
 
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\DSN\DSN;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\Mailgun;
@@ -199,7 +199,7 @@ class Provider
         $from = System::getEnv('_APP_SMS_FROM');
 
         $provider = new Document([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             'provider' => $host,
             'type' => MESSAGE_TYPE_SMS,
             'name' => 'Internal SMS',

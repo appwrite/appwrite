@@ -19,7 +19,7 @@ use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
@@ -72,7 +72,7 @@ class Update extends Base
                     )
                 ]
             ))
-            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Site ID.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Site name. Max length: 128 chars.')
             ->param('framework', '', new WhiteList(\array_keys(Config::getParam('frameworks')), true), 'Sites framework.', enum: new Enum(name: 'Framework'))
             ->param('enabled', true, new Boolean(), 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true)
@@ -107,6 +107,7 @@ class Update extends Base
             ), 'Runtime specification for the SSR executions.', true, ['plan'], example: 's-1vcpu-512mb')
             ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
             ->param('scopes', null, new Nullable(new ArrayList(new WhiteList(\array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE)), 'List of scopes allowed for API key auto-generated for every site build and SSR execution. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the site.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -150,6 +151,7 @@ class Update extends Base
         string $runtimeSpecification,
         int $deploymentRetention,
         ?array $scopes,
+        ?string $description,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -206,6 +208,7 @@ class Update extends Base
             $buildRuntime = $site->getAttribute('buildRuntime');
         }
 
+        $description ??= $site->getAttribute('description', '');
         $buildSpecification ??= $site->getAttribute('buildSpecification', APP_SITES_BUILD_SPECIFICATION_DEFAULT);
 
         $repositoryId = $site->getAttribute('repositoryId', '');
@@ -253,7 +256,7 @@ class Update extends Base
         if (!$isConnected && !empty($providerRepositoryId)) {
             $teamId = $project->getAttribute('teamId', '');
             $repository = new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 '$permissions' => $this->getPermissions($teamId, $project->getId()),
                 'installationId' => $installation->getId(),
                 'installationInternalId' => $installation->getSequence(),
@@ -318,6 +321,7 @@ class Update extends Base
 
         $site = $dbForProject->updateDocument('sites', $site->getId(), new Document(array_merge($site->getArrayCopy(), [
             'name' => $name,
+            'description' => $description,
             'framework' => $framework,
             'enabled' => $enabled,
             'logging' => $logging,
@@ -340,7 +344,7 @@ class Update extends Base
             'providerPaths' => $providerPaths ?? $site->getAttribute('providerPaths', []),
             'buildSpecification' => $buildSpecification,
             'runtimeSpecification' => $runtimeSpecification,
-            'search' => implode(' ', [$siteId, $name, $framework]),
+            'search' => implode(' ', [$siteId, $name, $description, $framework]),
             'buildRuntime' => $buildRuntime,
             'adapter' => $adapter,
             'fallbackFile' => $fallbackFile,

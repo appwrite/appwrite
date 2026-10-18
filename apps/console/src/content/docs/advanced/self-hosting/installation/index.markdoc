@@ -6,6 +6,10 @@ description: Step-by-step guide to install Appwrite using Docker. Learn how to s
 
 This guide will walk you through installing Appwrite on your server using Docker. Appwrite is designed to run on any operating system that supports Docker.
 
+{% info title="Running Kubernetes?" %}
+To install Appwrite on a Kubernetes cluster instead of a single Docker host, use the [official Helm chart](/docs/advanced/self-hosting/platforms/kubernetes).
+{% /info %}
+
 # System requirements {% #system-requirements %}
 
 Before installing Appwrite, ensure your system meets these minimum requirements:

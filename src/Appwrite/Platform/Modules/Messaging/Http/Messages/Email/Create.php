@@ -17,7 +17,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
@@ -74,20 +74,21 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('messageId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+            ->param('messageId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('subject', '', new Text(998), 'Email Subject.')
             ->param('content', '', new Text(64230), 'Email Content.')
-            ->param('topics', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Topic IDs.', true, ['dbForProject'])
-            ->param('users', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of User IDs.', true, ['dbForProject'])
-            ->param('targets', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Targets IDs.', true, ['dbForProject'])
-            ->param('cc', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Array of target IDs to be added as CC.', true, ['dbForProject'])
-            ->param('bcc', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Array of target IDs to be added as BCC.', true, ['dbForProject'])
+            ->param('topics', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getMaxUidLength())), 'List of Topic IDs.', true, ['dbForProject'])
+            ->param('users', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getMaxUidLength())), 'List of User IDs.', true, ['dbForProject'])
+            ->param('targets', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getMaxUidLength())), 'List of Targets IDs.', true, ['dbForProject'])
+            ->param('cc', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getMaxUidLength())), 'Array of target IDs to be added as CC.', true, ['dbForProject'])
+            ->param('bcc', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getMaxUidLength())), 'Array of target IDs to be added as BCC.', true, ['dbForProject'])
             ->param('attachments', [], new Nullable(new ArrayList(new CompoundUID())), 'Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
             ->param('draft', false, new Boolean(), 'Is message a draft', true)
             ->param('html', false, new Boolean(), 'Is content of type HTML', true)
             ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
             ->param('replyToEmail', '', new Email(allowEmpty: true), 'Email address to reply to. If not set, defaults to the sender email address.', true)
             ->param('replyToName', '', new Text(128, 0), 'Name of the reply to recipient. If not set, defaults to the sender name.', true)
+            ->param('emails', [], new ArrayList(new Email()), 'List of email addresses to send the message to. Use this to deliver to recipients that are not backed by an Appwrite user, target, or topic.', true)
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
@@ -97,10 +98,10 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $messageId, string $subject, string $content, ?array $topics, ?array $users, ?array $targets, ?array $cc, ?array $bcc, ?array $attachments, bool $draft, bool $html, ?string $scheduledAt, string $replyToEmail, string $replyToName, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response)
+    public function action(string $messageId, string $subject, string $content, ?array $topics, ?array $users, ?array $targets, ?array $cc, ?array $bcc, ?array $attachments, bool $draft, bool $html, ?string $scheduledAt, string $replyToEmail, string $replyToName, ?array $emails, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response)
     {
         $messageId = $messageId == 'unique()'
-            ? ID::unique()
+            ? Id::unique()
             : $messageId;
 
         if ($draft) {
@@ -111,7 +112,7 @@ class Create extends Action
                 : MessageStatus::SCHEDULED;
         }
 
-        if ($status !== MessageStatus::DRAFT && \count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
+        if ($status !== MessageStatus::DRAFT && \count($topics) === 0 && \count($users) === 0 && \count($targets) === 0 && \count($emails) === 0) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
         }
 
@@ -172,6 +173,7 @@ class Create extends Action
                 'cc' => $cc,
                 'bcc' => $bcc,
                 'attachments' => $attachments,
+                'emails' => $emails,
                 'replyToEmail' => $replyToEmail,
                 'replyToName' => $replyToName,
             ],

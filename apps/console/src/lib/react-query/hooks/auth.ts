@@ -884,6 +884,38 @@ export function useUpdatePasswordPwnedPolicy(
 }
 
 /**
+ * Hook to update the password rotation policy.
+ *
+ * `enabled` refuses an email/password sign-in once the password is older than
+ * `maxAge` seconds. Leaving `maxAge` out keeps the stored one.
+ *
+ * @param projectId - The project ID
+ */
+export function useUpdatePasswordRotationPolicy(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (policy: { enabled: boolean; maxAge?: number }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+
+      return await sdk
+        .forProject(projectId)
+        .project.updatePasswordRotationPolicy({
+          enabled: policy.enabled,
+          maxAge: policy.maxAge,
+        })
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
+/**
  * Hook to update project session alerts
  *
  * @param projectId - The project ID

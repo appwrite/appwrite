@@ -45,10 +45,12 @@ services:
         max-file: "5"
         max-size: 10m
     image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
+    # The marker is APP_READINESS_MARKER, written by app/http.php once the core schema exists.
     healthcheck:
       test:
         - CMD-SHELL
-        - 'curl -fsS -o /dev/null -H "Host: $${_APP_DOMAIN:-localhost}" http://localhost/v1/health/version'
+        - 'test -f /tmp/.appwrite-ready && curl -fsS -o /dev/null -H "Host: $${_APP_DOMAIN:-localhost}"
+          http://localhost/v1/health/version'
       interval: 5s
       timeout: 5s
       retries: 12
@@ -180,6 +182,7 @@ services:
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -279,6 +282,7 @@ services:
       - appwrite
     environment:
       - VITE_CONSOLE_PROFILE=self-hosted
+      - VITE_APPWRITE_VERSION=${_APP_VERSION:-}
       - APPWRITE_ENDPOINT_SAME_ORIGIN=true
     labels:
       - traefik.enable=true
@@ -528,6 +532,7 @@ services:
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -785,6 +790,7 @@ services:
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -941,6 +947,7 @@ services:
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -998,6 +1005,7 @@ services:
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -1085,6 +1093,7 @@ services:
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -1375,6 +1384,7 @@ services:
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION

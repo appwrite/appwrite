@@ -51,7 +51,10 @@ export function MarketingFaqSection({
                     {t(item.question)}
                   </span>
                 </AccordionTrigger>
-                <AccordionContent className="text-[13px] leading-6 text-muted-foreground">
+                <AccordionContent
+                  forceMount
+                  className="text-[13px] leading-6 text-muted-foreground"
+                >
                   <p>{t(item.answer)}</p>
                   {item.links?.length ? (
                     <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
