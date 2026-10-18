@@ -139,11 +139,11 @@ final class BaseTest extends TestCase
             \file_put_contents($path, '');
             $this->assertFileExists($path);
 
-            Base::removeLock($path);
+            $this->assertTrue(Base::removeLock($path));
             $this->assertFileDoesNotExist($path);
             $this->assertDirectoryExists($root, 'removeLock must never remove the locks root');
 
-            Base::removeLock($path);
+            $this->assertTrue(Base::removeLock($path));
             $this->assertDirectoryExists($root);
         } finally {
             if (\is_file($path)) {
@@ -171,6 +171,31 @@ final class BaseTest extends TestCase
             $waiter->release();
         } finally {
             Base::removeLock($path);
+        }
+    }
+
+    public function testRemoveLockLeavesHeldFileAlone(): void
+    {
+        $root = Base::tmpLocksRoot();
+        if (!\is_dir($root) && !\mkdir($root, 0755, true) && !\is_dir($root)) {
+            $this->fail('Could not create lock directory');
+        }
+
+        $path = Base::encodeLockPath('vid-held', 'ren-held');
+        $holder = new File($path);
+
+        try {
+            $this->assertTrue($holder->tryAcquire());
+            $this->assertFalse(Base::removeLock($path), 'must not unlink a held flock');
+            $this->assertFileExists($path);
+            $holder->release();
+            $this->assertTrue(Base::removeLock($path));
+            $this->assertFileDoesNotExist($path);
+        } finally {
+            $holder->release();
+            if (\is_file($path)) {
+                @\unlink($path);
+            }
         }
     }
 }

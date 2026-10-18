@@ -244,11 +244,11 @@ class Videos extends Action
             };
         } finally {
             if ($held && $lock !== null) {
-                // flock follows the inode. Unlinking after release lets one
-                // worker lock the old file while another creates a new inode
-                // at the same path, so both jobs run. Timeline and caption
-                // have no second claim to stop that. The maintenance sweep
-                // removes idle lock files.
+                // flock follows the inode. Unlinking while held frees the path
+                // so a duplicate can create and lock a new inode beside this
+                // job. Timeline and caption have no second claim to stop that,
+                // so leave the file and let the maintenance sweep remove it
+                // only after it can acquire the flock.
                 $lock->release();
             }
             $this->record($inflight, -1, ['action' => $action->value]);

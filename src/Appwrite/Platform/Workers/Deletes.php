@@ -1586,8 +1586,9 @@ class Deletes extends Action
      * Remove leftover video job lock files older than the videos-tmp retention window.
      *
      * Jobs release the flock and leave the file, so the next job locks the
-     * same inode. This removes files older than the retention window. Age is
-     * file mtime — lock paths have no stamp prefix.
+     * same inode. This removes idle files older than the retention window.
+     * Age is file mtime — lock paths have no stamp prefix, and acquiring a
+     * flock does not refresh mtime, so a held file is skipped even when old.
      *
      * Subfolders are the old `locks/{projectId}/` layout. No worker creates
      * them any more, so they are emptied of expired locks and then removed.
@@ -1630,11 +1631,13 @@ class Deletes extends Action
                     continue;
                 }
 
-                if (@\unlink($path)) {
+                // removeLock acquires first. Unlinking a held flock frees the
+                // path so a duplicate can lock a new inode beside the live job.
+                if (VideosBase::removeLock($path)) {
                     $removed++;
-                } else {
-                    $failed++;
                 }
+                // Held (or unlink failed): leave for a later pass. Do not count
+                // a live flock as a sweep failure.
             }
         };
 

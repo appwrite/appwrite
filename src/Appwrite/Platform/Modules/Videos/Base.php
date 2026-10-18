@@ -15,6 +15,7 @@ use Utopia\Database\Document;
 use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
+use Utopia\Lock\File;
 use Utopia\Platform\Action as UtopiaAction;
 
 /**
@@ -193,16 +194,33 @@ abstract class Base extends UtopiaAction
     }
 
     /**
-     * Unlinks a lock file when present. Missing file is a no-op.
+     * Unlinks a lock file when no job holds its flock. Missing file is a no-op.
      *
-     * Does not steal a flock another process already holds — only removes the
-     * directory entry so a later job can open a fresh path. Never removes
-     * `tmpLocksRoot()`.
+     * Acquires the lock first. Unlinking while another process holds the inode
+     * frees the path so a duplicate can create and lock a new inode, and both
+     * jobs run. A held lock is left alone. Never removes `tmpLocksRoot()`.
+     *
+     * @return bool True when the path is gone afterward.
      */
-    public static function removeLock(string $path): void
+    public static function removeLock(string $path): bool
     {
-        if (\is_file($path)) {
-            \unlink($path);
+        if (!\is_file($path)) {
+            return true;
+        }
+
+        try {
+            $lock = new File($path);
+            if (!$lock->tryAcquire()) {
+                return false;
+            }
+
+            try {
+                return !\is_file($path) || @\unlink($path);
+            } finally {
+                $lock->release();
+            }
+        } catch (\Throwable) {
+            return false;
         }
     }
 
