@@ -2,7 +2,7 @@
 
 namespace Appwrite\Event;
 
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\System\System;
 
@@ -29,7 +29,7 @@ class Webhook extends Event
     protected function preparePayload(): array
     {
         return \array_merge(parent::preparePayload(), [
-            'eventId' => ID::unique(),
+            'eventId' => Id::unique(),
         ]);
     }
 

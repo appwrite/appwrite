@@ -8,9 +8,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\System\System;
 
 final class FunctionsCustomClientTest extends Scope
@@ -25,7 +25,7 @@ final class FunctionsCustomClientTest extends Scope
          * Test for FAILURE
          */
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
             'events' => [
                 'users.*.create',
@@ -41,7 +41,7 @@ final class FunctionsCustomClientTest extends Scope
          * Test for DUPLICATE functionId
          */
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'node-22',
@@ -78,7 +78,7 @@ final class FunctionsCustomClientTest extends Scope
          * Test for SUCCESS
          */
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'node-22',
@@ -118,7 +118,7 @@ final class FunctionsCustomClientTest extends Scope
          * Test for SUCCESS
          */
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
             'execute' => [Role::any()->toString()],
             'runtime' => 'node-22',
@@ -134,7 +134,7 @@ final class FunctionsCustomClientTest extends Scope
             'body' => 'foobar',
             'async' => 'false'
         ]);
-        $output = json_decode($execution['body']['responseBody'], true);
+        $output = $this->executionOutput($execution);
         $this->assertEquals(201, $execution['headers']['status-code']);
 
         $this->assertNotEmpty($execution['body']['responseHeaders']);
@@ -189,7 +189,7 @@ final class FunctionsCustomClientTest extends Scope
          * Test for SUCCESS
          */
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test guest execution',
             'execute' => [Role::any()->toString()],
             'runtime' => 'node-22',
@@ -262,7 +262,7 @@ final class FunctionsCustomClientTest extends Scope
     public function testCreateExecutionNoDeployment()
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
             'execute' => [],
             'runtime' => 'node-22',
@@ -282,7 +282,7 @@ final class FunctionsCustomClientTest extends Scope
          * Test for SUCCESS
          */
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test synchronous execution',
             'execute' => [Role::any()->toString()],
             'runtime' => 'node-22',
@@ -298,7 +298,7 @@ final class FunctionsCustomClientTest extends Scope
             'body' => 'foobar',
             // Testing default value, should be 'async' => 'false'
         ]);
-        $output = json_decode($execution['body']['responseBody'], true);
+        $output = $this->executionOutput($execution);
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
@@ -328,7 +328,7 @@ final class FunctionsCustomClientTest extends Scope
          * Test for SUCCESS
          */
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test JWT execution',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'node-22',
@@ -381,7 +381,7 @@ final class FunctionsCustomClientTest extends Scope
     public function testNonOverrideOfHeaders()
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
             'execute' => [Role::any()->toString()],
             'runtime' => 'node-22',
@@ -403,7 +403,7 @@ final class FunctionsCustomClientTest extends Scope
             'x-appwrite-user-jwt' => "OVERRIDDEN",
         ]);
 
-        $output = json_decode($execution['body']['responseBody'], true);
+        $output = $this->executionOutput($execution);
         $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_JWT']);
         $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_EVENT']);
         $this->assertNotEquals('OVERRIDDEN', $output['APPWRITE_FUNCTION_TRIGGER']);
@@ -571,7 +571,7 @@ final class FunctionsCustomClientTest extends Scope
     public function testEventTriggerWithClientAuth()
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Client Event Trigger',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -591,7 +591,7 @@ final class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Test Database',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -602,7 +602,7 @@ final class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Test Collection',
             'permissions' => [
                 Permission::create(Role::users()),
@@ -637,7 +637,7 @@ final class FunctionsCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => ['name' => 'Test Document'],
         ]);
         $this->assertEquals(201, $document['headers']['status-code']);

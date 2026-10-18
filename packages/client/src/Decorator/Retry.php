@@ -12,6 +12,8 @@ use Utopia\Client\Adapter;
 use Utopia\Client\Decorator;
 use Utopia\Client\Decorator\Retry\Backoff;
 use Utopia\Client\Decorator\Retry\Strategy;
+use Utopia\Client\Exception\AdapterPreconditionException;
+use Utopia\Client\Psr18\ResponseStreamingClientInterface;
 
 /**
  * An adapter that decorates another adapter and retries it according to a
@@ -19,7 +21,7 @@ use Utopia\Client\Decorator\Retry\Strategy;
  * long to wait, when to stop); this decorator only loops and sleeps. Configuration
  * forwarding is inherited from Decorator.
  */
-final class Retry extends Decorator
+final class Retry extends Decorator implements ResponseStreamingClientInterface
 {
     private readonly Closure $sleep;
 
@@ -61,9 +63,24 @@ final class Retry extends Decorator
         }
     }
 
-    #[\Override]
-    public function stream(RequestInterface $request, callable $sink): ResponseInterface
+    public function supportsResponseStreaming(): bool
     {
+        return $this->adapter instanceof ResponseStreamingClientInterface && $this->adapter->supportsResponseStreaming();
+    }
+
+    #[\Override]
+    public function stream(RequestInterface $request, callable $sink, ?callable $onResponse = null): ResponseInterface
+    {
+        $stream = $this->adapter->stream(...);
+        if ($onResponse !== null) {
+            if (!$this->adapter instanceof ResponseStreamingClientInterface || !$this->adapter->supportsResponseStreaming()) {
+                throw new AdapterPreconditionException($request, 'This adapter cannot expose response headers before streaming.');
+            }
+
+            $adapter = $this->adapter;
+            $stream = static fn (RequestInterface $request, callable $sink): ResponseInterface => $adapter->stream($request, $sink, $onResponse);
+        }
+
         for ($attempt = 1; ; $attempt++) {
             $delivered = 0;
             $countingSink = static function (string $chunk) use ($sink, &$delivered): void {
@@ -72,7 +89,7 @@ final class Retry extends Decorator
             };
 
             try {
-                $response = $this->adapter->stream($request, $countingSink);
+                $response = $stream($request, $countingSink);
 
                 // Once bytes have reached the sink, replaying would duplicate them.
                 if ($delivered > 0) {

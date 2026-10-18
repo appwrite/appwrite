@@ -78,6 +78,7 @@ services:
     depends_on:
       - request-catcher-sms
       - request-catcher-webhook
+      - maildev
   appwrite-task-scheduler:
     build:
       context: .

@@ -1,4 +1,6 @@
 import {
+  Children,
+  isValidElement,
   useCallback,
   useContext,
   useEffect,
@@ -20,6 +22,17 @@ import {
 import { cn } from '@/lib/utils'
 import { TabsContext } from './tabs-context'
 
+type TabsItemProps = {
+  id?: string
+  title?: string
+  children?: ReactNode
+}
+
+function getTab({ id, title }: TabsItemProps) {
+  const tabId = id ?? title ?? 'tab'
+  return { id: tabId, title: title ?? tabId }
+}
+
 export function Tabs({
   children,
   proseVariant = 'docs',
@@ -28,28 +41,35 @@ export function Tabs({
   proseVariant?: MarkdocProseVariant
 }) {
   const { os } = useUserOs()
-  const [activeId, setActiveId] = useState('')
-  const [tabs, setTabs] = useState<Array<{ id: string; title: string }>>([])
+  // Read tabs from children during render so the server HTML has every panel.
+  const tabs = useMemo(() => {
+    const items: Array<{ id: string; title: string }> = []
+    Children.forEach(children, (child) => {
+      if (!isValidElement<TabsItemProps>(child)) return
+      const tab = getTab(child.props)
+      if (!items.some((item) => item.id === tab.id)) items.push(tab)
+    })
+    return items
+  }, [children])
+  const [activeId, setActiveId] = useState(() => tabs[0]?.id ?? '')
+  const [mounted, setMounted] = useState(false)
   const userSelectedRef = useRef(false)
   const previousOsRef = useRef(os)
   const tabTextClass =
     proseVariant === 'blog' ? BLOG_BODY_TEXT_SIZE_CLASS : 'text-[13px]'
 
+  useEffect(() => setMounted(true), [])
+
+  // The OS is only known in the browser; keep source order until mount so
+  // hydration matches the server HTML.
   const orderedTabs = useMemo(
-    () => orderTabsByPreferredOs(tabs, os),
-    [tabs, os],
+    () => (mounted ? orderTabsByPreferredOs(tabs, os) : tabs),
+    [mounted, tabs, os],
   )
 
   const selectTab = useCallback((id: string) => {
     userSelectedRef.current = true
     setActiveId(id)
-  }, [])
-
-  const registerTab = useCallback((id: string, title: string) => {
-    setTabs((prev) => {
-      if (prev.some((tab) => tab.id === id)) return prev
-      return [...prev, { id, title }]
-    })
   }, [])
 
   useEffect(() => {
@@ -81,10 +101,9 @@ export function Tabs({
     () => ({
       activeId,
       setActiveId: selectTab,
-      registerTab,
       tabs: orderedTabs,
     }),
-    [activeId, orderedTabs, selectTab, registerTab],
+    [activeId, orderedTabs, selectTab],
   )
 
   return (
@@ -116,25 +135,12 @@ export function Tabs({
   )
 }
 
-export function TabsItem({
-  id,
-  title,
-  children,
-}: {
-  id?: string
-  title?: string
-  children?: ReactNode
-}) {
+export function TabsItem(props: TabsItemProps) {
   const ctx = useContext(TabsContext)
-  const tabId = id ?? title ?? 'tab'
-  const tabTitle = title ?? tabId
-  const registerTab = ctx?.registerTab
+  const { id } = getTab(props)
 
-  useEffect(() => {
-    registerTab?.(tabId, tabTitle)
-  }, [registerTab, tabId, tabTitle])
-
-  if (ctx && ctx.activeId !== tabId) return null
-
-  return <div>{children}</div>
+  // Inactive panels stay in the HTML, hidden, so crawlers read every tab.
+  return (
+    <div hidden={ctx ? ctx.activeId !== id : undefined}>{props.children}</div>
+  )
 }
