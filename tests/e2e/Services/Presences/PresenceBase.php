@@ -786,6 +786,39 @@ trait PresenceBase
         $this->assertEquals(204, $delete['headers']['status-code']);
     }
 
+    public function testUpsertPresenceWithReadPermissions(): void
+    {
+        // A client sharing its presence with read roles alone must still heartbeat, update and delete it.
+        if ($this->getSide() !== 'client') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $payload = [
+            'status' => 'online',
+            'permissions' => [Permission::read(Role::users())],
+        ];
+
+        $upsert = $this->client->call(Client::METHOD_PUT, '/presences/' . ID::unique(), $headers, $payload);
+        $this->assertEquals(200, $upsert['headers']['status-code']);
+        $presenceId = $upsert['body']['$id'];
+
+        $heartbeat = $this->client->call(Client::METHOD_PUT, '/presences/' . $presenceId, $headers, $payload);
+        $this->assertEquals(200, $heartbeat['headers']['status-code']);
+
+        $update = $this->client->call(Client::METHOD_PATCH, '/presences/' . $presenceId, $headers, [
+            'status' => 'away',
+        ]);
+        $this->assertEquals(200, $update['headers']['status-code']);
+
+        $delete = $this->client->call(Client::METHOD_DELETE, '/presences/' . $presenceId, $headers);
+        $this->assertEquals(204, $delete['headers']['status-code']);
+    }
+
     public function testUpdatePresencePurgeListCache(): void
     {
         if ($this->getProject()['$id'] === 'console') {

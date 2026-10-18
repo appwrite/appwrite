@@ -1293,6 +1293,20 @@ export const jaAuthStorageDictionary: Record<string, string> = {
     'パスワードは既知のデータ漏洩と照合されていません',
   'breached password': '漏洩したパスワード',
 
+  // Periodic password change (rotation) policy
+  'Periodic password change': 'パスワードの定期変更',
+  'Require users to set a new password once the one they have reaches the maximum age. An email/password sign-in with a password past that age is refused until the user resets it through password recovery. Sign-ins with other methods are not affected.':
+    '使用中のパスワードが最大有効期間に達したユーザーに、新しいパスワードの設定を求めます。その期間を過ぎたパスワードでのメール/パスワードによるサインインは、ユーザーがパスワードリカバリーでリセットするまで拒否されます。他の方法でのサインインには影響しません。',
+  'Require a periodic password change': 'パスワードの定期変更を必須にする',
+  'Maximum password age': 'パスワードの最大有効期間',
+  'Between 1 day and 10 years': '1日から10年の間',
+  'Minimum is 1 day': '最小は1日です',
+  'Maximum is 10 years': '最大は10年です',
+  'Updated periodic password change policy':
+    'パスワード定期変更ポリシーを更新しました',
+  'Failed to update periodic password change policy':
+    'パスワード定期変更ポリシーの更新に失敗しました',
+
   // Passkey relying party policy and auth method
   Passkey: 'パスキー',
   Passkeys: 'パスキー',

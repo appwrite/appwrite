@@ -156,7 +156,7 @@
         "ext-sockets": "*",
         "appwrite/php-runtimes": "0.20.*",
         "appwrite/php-clamav": "2.0.*",
-        "utopia-php/database": "^8.1.4",
+        "utopia-php/database": "^8.3.8",
         "mustangostang/spyc": "0.6.*",
         "dragonmantank/cron-expression": "3.4.*",
         "chillerlan/php-qrcode": "4.3.*",

@@ -10,6 +10,7 @@
 
 export interface RuntimeConfig {
   appwriteEndpoint: string
+  appwriteVersion: string
   consoleProfile: string
   /** HMAC key for the console fingerprint token. Public (ships to the browser). */
   fingerprintKey: string
@@ -30,6 +31,8 @@ export interface RuntimeConfig {
   screenshotMode: string
   /** Override for dedicated database PITR restore UI ('' = profile default). */
   databasePitrRestore: string
+  /** Override for the project environments switcher ('' = profile default, off). */
+  projectEnvironments: string
   /**
    * Override for extra Git (VCS) OAuth connect providers
    * ('' = profile default, off).
@@ -114,6 +117,7 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
   const read = (key: string) => readEnvValue(env, key)
   return {
     appwriteEndpoint: readAppwriteEndpointFromEnv(env),
+    appwriteVersion: read('VITE_APPWRITE_VERSION'),
     consoleProfile: read('VITE_CONSOLE_PROFILE'),
     fingerprintKey:
       read('VITE_CONSOLE_FINGERPRINT_KEY') ||
@@ -128,6 +132,7 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
     blogDrafts: read('VITE_CONSOLE_BLOG_DRAFTS'),
     screenshotMode: read('VITE_CONSOLE_SCREENSHOT_MODE'),
     databasePitrRestore: read('VITE_CONSOLE_DATABASE_PITR_RESTORE'),
+    projectEnvironments: read('VITE_CONSOLE_PROJECT_ENVIRONMENTS'),
     extraVcsOAuth: read('VITE_CONSOLE_EXTRA_VCS_OAUTH'),
     usageStats: read('VITE_CONSOLE_USAGE_STATS'),
     preLaunch: read('VITE_CONSOLE_PRE_LAUNCH'),
