@@ -785,9 +785,15 @@ class S3 extends Device
             $body .= '</Delete>';
             $response = $this->call(Method::POST, $uri, $body, ['delete' => ''], headers: ['content-type' => 'application/xml']);
 
-            // In Quiet mode the result lists only the objects that were not deleted.
-            $errors = \is_array($response->body) ? ($response->body['Error'] ?? []) : [];
-            $errors = \is_array($errors) ? (isset($errors['Key']) ? [$errors] : $errors) : [];
+            $result = \is_array($response->body) ? $response->body : [];
+
+            // A 200 whose body is a top-level Error, decoded to its Code and Message, failed every key of the batch.
+            if (isset($result['Code'])) {
+                throw new RemoteException('Failed to delete ' . \count($keys) . ' objects under ' . $directory, $response->code, \is_string($result['Code']) ? $result['Code'] : null);
+            }
+
+            $errors = $result['Error'] ?? [];
+            $errors = \is_array($errors) ? (isset($errors['Key']) || isset($errors['Code']) ? [$errors] : $errors) : [];
             $failures = [];
             $errorCode = null;
             foreach ($errors as $error) {
@@ -799,7 +805,10 @@ class S3 extends Device
                 $failures[] = (\is_string($error['Key'] ?? null) ? $error['Key'] : '?') . ' (' . $code . (\is_string($error['Message'] ?? null) ? ': ' . $error['Message'] : '') . ')';
             }
             if ($failures !== []) {
-                throw new RemoteException('Failed to delete ' . \count($failures) . ' objects: ' . implode(', ', $failures), $response->code, $errorCode);
+                throw new RemoteException('Failed to delete ' . \count($failures) . ' objects under ' . $directory . ': ' . implode(', ', $failures), $response->code, $errorCode);
+            }
+            if (\array_key_exists('Error', $result)) {
+                throw new RemoteException('Failed to delete ' . \count($keys) . ' objects under ' . $directory, $response->code);
             }
         } while ($continuationToken !== '');
     }

@@ -843,6 +843,47 @@ final class S3Test extends TestCase
         $this->assertSame(array_fill(0, \count($pages), 'GET'), array_map(fn (RequestInterface $request): string => $request->getMethod(), $client->requests), 'nothing is deleted');
     }
 
+    /**
+     * @return \Iterator<string, array{string, string, ?string}>
+     */
+    public static function failedBatchDeletes(): \Iterator
+    {
+        yield 'two keys' => [
+            '<DeleteResult><Error><Key>root/a/1.txt</Key><Code>AccessDenied</Code><Message>Access Denied</Message></Error>'
+            . '<Error><Key>root/a/2.txt</Key><Code>InternalError</Code><Message>Internal Error</Message></Error></DeleteResult>',
+            'Failed to delete 2 objects under root/a/: root/a/1.txt (AccessDenied: Access Denied), root/a/2.txt (InternalError: Internal Error)',
+            'AccessDenied',
+        ];
+        yield 'an entry without a key' => [
+            '<DeleteResult><Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error></DeleteResult>',
+            'Failed to delete 1 objects under root/a/: ? (AccessDenied: Access Denied)',
+            'AccessDenied',
+        ];
+        yield 'an error without entries' => ['<DeleteResult><Error/></DeleteResult>', 'Failed to delete 2 objects under root/a/', null];
+        yield 'the whole batch' => ['<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>', 'Failed to delete 2 objects under root/a/', 'AccessDenied'];
+    }
+
+    #[DataProvider('failedBatchDeletes')]
+    public function testKeysTheServiceFailedToDeleteAreAnError(string $body, string $message, ?string $code): void
+    {
+        $client = new ScriptedClient([
+            $this->xml('<ListBucketResult><KeyCount>2</KeyCount><IsTruncated>true</IsTruncated><NextContinuationToken>page-2</NextContinuationToken>'
+                . '<Contents><Key>root/a/1.txt</Key><Size>1</Size></Contents><Contents><Key>root/a/2.txt</Key><Size>1</Size></Contents></ListBucketResult>'),
+            $this->xml($body),
+            $this->objectListing(),
+        ]);
+
+        try {
+            $this->device($client)->deletePath('a');
+            self::fail('Keys the service could not delete must not be reported as deleted');
+        } catch (RemoteException $error) {
+            $this->assertSame($message, $error->getMessage());
+            $this->assertSame($code, $error->errorCode);
+        }
+
+        $this->assertCount(2, $client->requests, 'no further page is listed once a batch failed');
+    }
+
     public function testFinalizeCompletesOverAnExistingObject(): void
     {
         // The upload replaces whatever is at the path; an object already there is no reason to skip completion.
