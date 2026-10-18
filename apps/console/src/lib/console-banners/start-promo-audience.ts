@@ -1,4 +1,7 @@
-import { normalizeCountryCode } from '@/lib/pricing/start-plan'
+import {
+  isStartPlanEligibleCountry,
+  normalizeCountryCode,
+} from '@/lib/pricing/start-plan'
 import {
   resolveOrganizationCanonicalPlan,
   type CanonicalPlanId,
@@ -17,10 +20,10 @@ type OrganizationBillingFields = {
   billingPlanId?: string | null
 }
 
-export function isIndiaCountryCode(
+export function isStartPromoBannerCountry(
   countryCode: string | null | undefined,
 ): boolean {
-  return normalizeCountryCode(countryCode) === 'IN'
+  return isStartPlanEligibleCountry(normalizeCountryCode(countryCode))
 }
 
 export function isNonPayingConsoleCustomer(

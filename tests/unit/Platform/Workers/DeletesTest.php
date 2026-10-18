@@ -49,6 +49,52 @@ final class DeletesTest extends TestCase
         }
     }
 
+    public function testQueuedFileCleanupOnlyDeletesTheObsoletePath(): void
+    {
+        $directory = sys_get_temp_dir() . '/s3-version-' . bin2hex(random_bytes(8));
+        mkdir($directory);
+        $oldPath = $directory . '/old';
+        $currentPath = $directory . '/replacement';
+        file_put_contents($oldPath, 'original');
+        file_put_contents($currentPath, 'replacement');
+        $device = new \Utopia\Storage\Device\Local($directory);
+        $payload = (new \Appwrite\Event\Message\Delete(type: DELETE_TYPE_FILES, resource: $oldPath))->toArray();
+        $message = (new \Utopia\Queue\Message())->setPayload($payload);
+        try {
+            // Queue delivery is at least once; reclaiming an already-removed path is safe.
+            for ($attempt = 0; $attempt < 2; $attempt++) {
+                (new Deletes())->action(
+                    message: $message,
+                    project: new Document(['$id' => 'project']),
+                    dbForPlatform: $this->database,
+                    getProjectDB: fn () => $this->database,
+                    getDatabasesDB: fn () => $this->database,
+                    deviceForFiles: $device,
+                    deviceForFunctions: $device,
+                    deviceForSites: $device,
+                    deviceForBuilds: $device,
+                    deviceForCache: $device,
+                    certificates: $this->createStub(\Utopia\Cdn\Certificates\Provider::class),
+                    executor: $this->createStub(\Executor\Executor::class),
+                    executionRetention: '',
+                    executionsRetentionCount: 0,
+                    publisherForDeletes: $this->createStub(\Appwrite\Event\Publisher\Delete::class),
+                    publisherForUsage: $this->createStub(\Appwrite\Event\Publisher\Usage::class),
+                    bus: new \Utopia\Bus\Bus(),
+                    executionStore: $this->createStub(\Appwrite\Execution\Store::class),
+                );
+                $this->assertFileDoesNotExist($oldPath);
+                $this->assertSame('replacement', file_get_contents($currentPath));
+            }
+        } finally {
+            if (file_exists($oldPath)) {
+                unlink($oldPath);
+            }
+            unlink($currentPath);
+            rmdir($directory);
+        }
+    }
+
     /**
      * The scheduler keeps every schedule in memory and syncs from the rows whose
      * resourceUpdatedAt moved since its last read. A row removed outright never

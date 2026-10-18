@@ -58,6 +58,7 @@ class Create extends Action
             ->param('key', null, new VariableKey(Database::LENGTH_KEY), 'Variable key. Letters, digits and underscores only, must not start with a digit. Max length: ' . Database::LENGTH_KEY  . ' chars.')
             ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.')
             ->param('secret', true, new Boolean(), 'Secret variables can be updated or deleted, but only projects can read them during build and runtime.', true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the variable.', true)
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForProject')
@@ -69,6 +70,7 @@ class Create extends Action
         string $key,
         string $value,
         bool $secret,
+        string $description,
         Response $response,
         QueueEvent $queueForEvents,
         Database $dbForProject,
@@ -84,6 +86,7 @@ class Create extends Action
             'key' => $key,
             'value' => $value,
             'secret' => $secret,
+            'description' => $description,
             'search' => implode(' ', [$variableId, $key, 'project']),
         ]);
 

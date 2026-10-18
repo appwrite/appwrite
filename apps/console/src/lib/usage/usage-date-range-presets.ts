@@ -200,11 +200,14 @@ export const ANALYTICS_DATE_RANGE_PRESET_GROUPS: UsageDateRangePresetGroup[] = [
  * presets so a saved analytics selection ("Last 12 months") resolves; pickers
  * decide which groups they show.
  */
-export const USAGE_DATE_RANGE_PRESETS = ANALYTICS_DATE_RANGE_PRESET_GROUPS.flatMap(
-  (group) => group.presets,
-)
+export const USAGE_DATE_RANGE_PRESETS =
+  ANALYTICS_DATE_RANGE_PRESET_GROUPS.flatMap((group) => group.presets)
 
-export const ROLLING_USAGE_DATE_RANGE_PRESET_VALUES = ['1h', '6h', '24h'] as const
+export const ROLLING_USAGE_DATE_RANGE_PRESET_VALUES = [
+  '1h',
+  '6h',
+  '24h',
+] as const
 
 export type RollingUsageDateRangePresetValue =
   (typeof ROLLING_USAGE_DATE_RANGE_PRESET_VALUES)[number]
@@ -254,7 +257,10 @@ export function getUsageDateRangePresetByValue(
   return USAGE_DATE_RANGE_PRESETS.find((preset) => preset.value === value)
 }
 
-/** Match rolling windows by duration only (ignores whether `to` is still "now"). */
+/**
+ * Match a rolling window by duration when its end is still near now.
+ * A past window of the same length is a custom range, not Last hour.
+ */
 export function inferRollingPresetByDuration(
   range: DateRange | undefined,
 ): UsageDateRangePreset | null {
@@ -271,6 +277,10 @@ export function inferRollingPresetByDuration(
   if (isCalendarDateOnlyRange(range.from, range.to)) {
     return null
   }
+
+  // A historical window of the same length (14:00 to 15:00 yesterday) is a
+  // custom range. Only treat it as rolling when the end is still near now.
+  if (!isRollingPresetToAcceptable(range.to)) return null
 
   const durationMs = range.to.getTime() - range.from.getTime()
   const hourMs = 60 * 60 * 1000
@@ -307,7 +317,11 @@ export function dateRangeMatchesUsagePreset(
     )
   }
 
-  if (preset.value === '1h' || preset.value === '6h' || preset.value === '24h') {
+  if (
+    preset.value === '1h' ||
+    preset.value === '6h' ||
+    preset.value === '24h'
+  ) {
     // Calendar day ranges (e.g. Today) can be ~24h and must not match rolling.
     if (isFullCalendarDayRange(range.from, range.to)) return false
     if (isCalendarDateOnlyRange(range.from, range.to)) return false
@@ -396,6 +410,8 @@ export function inferUsageDateRangePresetFromStoredRange(
 
     return null
   }
+
+  if (!isRollingPresetToAcceptable(to)) return null
 
   const durationMs = to.getTime() - from.getTime()
   const hourMs = 60 * 60 * 1000

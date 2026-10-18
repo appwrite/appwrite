@@ -10,7 +10,7 @@ import type {
 } from './types'
 
 /** ISO 3166-1 alpha-2 countries that can buy the Start plan. */
-export const START_PLAN_ELIGIBLE_COUNTRIES = ['IN', 'NP'] as const
+export const START_PLAN_ELIGIBLE_COUNTRIES = ['IN', 'NP', 'NG', 'PK'] as const
 
 export type StartPlanEligibleCountry =
   (typeof START_PLAN_ELIGIBLE_COUNTRIES)[number]
@@ -78,7 +78,7 @@ function planEligibleCountries(
 }
 
 /**
- * Hide country-gated catalogue entries (Start in IN/NP) until location is known.
+ * Hide country-gated catalogue entries (Start plan regions) until location is known.
  * Always keep the organization's current plan so existing subscribers can see it.
  */
 export function filterBillingPlansByLocation(

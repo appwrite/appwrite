@@ -89,6 +89,7 @@ class Create extends Action
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
             ->param('attributes', [], new ArrayList(new JSONObject(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attribute definitions to create. Each attribute should contain: key (string), type (string: string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, point, linestring, polygon, email, url, ip, enum), size (integer, required for string and varchar types), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options.', true)
             ->param('indexes', [], new ArrayList(new JSONObject(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index definitions to create. Each index should contain: key (string), type (string: key, fulltext, unique, spatial, trigram), attributes (array of attribute keys), orders (array of ASC/DESC, optional), and lengths (array of integers, optional).', true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the collection.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -97,7 +98,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, array $attributes, array $indexes, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, array $attributes, array $indexes, string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -128,7 +129,8 @@ class Create extends Action
                 'documentSecurity' => $documentSecurity,
                 'enabled' => $enabled,
                 'name' => $name,
-                'search' => \implode(' ', [$collectionId, $name]),
+                'description' => $description,
+                'search' => \implode(' ', [$collectionId, $name, $description]),
             ]));
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException(), params: [$collectionId]);
@@ -327,6 +329,7 @@ class Create extends Action
         $document = new Document([
             '$id' => Id::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $key),
             'key' => $key,
+            'description' => $attribute['description'] ?? '',
             'databaseInternalId' => $database->getSequence(),
             'databaseId' => $database->getId(),
             'collectionInternalId' => $collection->getSequence(),
@@ -396,6 +399,7 @@ class Create extends Action
         $document = new Document([
             '$id' => Id::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $key),
             'key' => $key,
+            'description' => $indexDef['description'] ?? '',
             'status' => 'available',
             'databaseInternalId' => $database->getSequence(),
             'databaseId' => $database->getId(),

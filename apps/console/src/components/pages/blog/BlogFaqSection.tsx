@@ -38,7 +38,8 @@ export function BlogFaqSection({ faqs }: BlogFaqSectionProps) {
           </h2>
           <ChevronDownIcon className="text-muted-foreground size-4 shrink-0 transition-transform duration-200" />
         </CollapsibleTrigger>
-        <CollapsibleContent>
+        {/* Force-mounted so the questions and answers ship in the server HTML. */}
+        <CollapsibleContent forceMount className="data-[state=closed]:hidden">
           <div className="mt-6 overflow-hidden rounded-xl border border-border bg-card/50">
             <Accordion type="single" collapsible className="w-full">
               {faqs.map((faq, index) => (
@@ -52,7 +53,7 @@ export function BlogFaqSection({ faqs }: BlogFaqSectionProps) {
                       {faq.question}
                     </span>
                   </AccordionTrigger>
-                  <AccordionContent className="px-4 pt-3 pb-4">
+                  <AccordionContent forceMount className="px-4 pt-3 pb-4">
                     <BlogMarkdown
                       html={faq.html}
                       className={BLOG_FAQ_ANSWER_CLASS}

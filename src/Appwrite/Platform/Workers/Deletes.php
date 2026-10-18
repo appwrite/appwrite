@@ -288,6 +288,13 @@ class Deletes extends Action
                         break;
                 }
                 break;
+            case DELETE_TYPE_FILES:
+                if ($resource === null || $resource === '') {
+                    throw new Exception('Missing file version path');
+                }
+                // The message owns an obsolete immutable path, never the current file ID.
+                $deviceForFiles->delete($resource);
+                break;
             case DELETE_TYPE_TEAM_PROJECTS:
                 $this->deleteProjectsByTeam($dbForPlatform, $getProjectDB, $getDatabasesDB, $certificates, $document, $bus, $executionStore);
                 break;

@@ -14,6 +14,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 
 class Create extends DatetimeCreate
 {
@@ -59,6 +60,7 @@ class Create extends DatetimeCreate
             ->param('required', null, new Boolean(), 'Is column required?')
             ->param('default', null, fn (Database $dbForProject) => new Nullable(new DatetimeValidator($dbForProject->getAdapter()->limits()->minDateTime, $dbForProject->getAdapter()->limits()->maxDateTime)), 'Default value for the column in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Cannot be set when column is required.', true, ['dbForProject'], example: '2020-10-15T06:38:00.000+00:00')
             ->param('array', false, new Boolean(), 'Is column an array?', true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the column.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')

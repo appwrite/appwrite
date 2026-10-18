@@ -997,6 +997,20 @@ trait UsersBase
         $this->assertSame('general_query_invalid', $response['body']['type']);
     }
 
+    public function testListUsersRejectsADottedPathOnAPlainAttribute(): void
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [Query::equal('name.x', ['a'])->toString()],
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code'], \json_encode($response['body']));
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+        $this->assertStringContainsString('nested attribute on: name', $response['body']['message']);
+    }
+
     public function testListUsersDefaultOrderIsCreationOrder(): void
     {
         $created = [];
@@ -1025,6 +1039,35 @@ trait UsersBase
         $this->assertSame(200, $listed['headers']['status-code']);
 
         $this->assertSame($created, \array_column($listed['body']['users'], '$id'), 'Main lists users in the order they were created when no order is given');
+    }
+
+    public function testListUsersTotalAcceptsBooleanStrings(): void
+    {
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => Id::unique(),
+            'email' => Id::unique() . '@localhost.test',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+
+        foreach (['false' => 0, '0' => 0, 'true' => 1, '1' => 1] as $total => $expected) {
+            $users = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::equal('$id', [$user['body']['$id']])->toString(),
+                ],
+                'total' => (string) $total,
+            ]);
+
+            $this->assertSame(200, $users['headers']['status-code']);
+            $this->assertCount(1, $users['body']['users']);
+            $this->assertSame($expected, $users['body']['total'], 'total=' . $total . ' must yield a total of ' . $expected);
+        }
     }
 
     public function testListUsers(): void
@@ -1567,7 +1610,7 @@ trait UsersBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::contains('roles', ['new-role-2'])->toString()
+                Query::containsAny('roles', ['new-role-2'])->toString()
             ]
         ]);
 
@@ -1593,6 +1636,102 @@ trait UsersBase
         $this->assertEquals($response['body']['code'], 400);
         $this->assertEquals($response['body']['message'], 'Invalid `queries` param: Invalid query: Cannot query equal on attribute "roles" because it is an array.');
         $this->assertEquals($response['body']['type'], 'general_argument_invalid');
+    }
+
+    public function testListUserMembershipsPaginatesWithACursor(): void
+    {
+        [$userId, $membershipIds] = $this->createUserWithMemberships(3);
+
+        $next = $this->listUserMemberships($userId, [
+            Query::cursorAfter(new Document(['$id' => $membershipIds[0]]))->toString(),
+            Query::limit(1)->toString(),
+        ]);
+        $this->assertSame(200, $next['headers']['status-code'], $next['body']['message'] ?? '');
+        $this->assertSame([$membershipIds[1]], \array_column($next['body']['memberships'], '$id'));
+
+        $previous = $this->listUserMemberships($userId, [
+            Query::cursorBefore(new Document(['$id' => $membershipIds[2]]))->toString(),
+        ]);
+        $this->assertSame(200, $previous['headers']['status-code'], $previous['body']['message'] ?? '');
+        $this->assertSame([$membershipIds[0], $membershipIds[1]], \array_column($previous['body']['memberships'], '$id'));
+
+        $missing = $this->listUserMemberships($userId, [
+            Query::cursorAfter(new Document(['$id' => 'missing']))->toString(),
+        ]);
+        $this->assertSame(400, $missing['headers']['status-code']);
+        $this->assertSame('general_cursor_not_found', $missing['body']['type']);
+    }
+
+    public function testListUserMembershipsTotalCountsEveryMembership(): void
+    {
+        [$userId, $membershipIds] = $this->createUserWithMemberships(3);
+
+        $page = $this->listUserMemberships($userId, [Query::limit(1)->toString()]);
+        $this->assertSame(200, $page['headers']['status-code'], $page['body']['message'] ?? '');
+        $this->assertSame([$membershipIds[0]], \array_column($page['body']['memberships'], '$id'));
+        $this->assertSame(3, $page['body']['total'], 'total counts every membership of the user, not the page');
+
+        $uncounted = $this->listUserMemberships($userId, [Query::limit(1)->toString()], false);
+        $this->assertSame(200, $uncounted['headers']['status-code']);
+        $this->assertSame(0, $uncounted['body']['total']);
+    }
+
+    /**
+     * @return array{string, list<string>}
+     */
+    private function createUserWithMemberships(int $count): array
+    {
+        $headers = $this->getUserMembershipsHeaders();
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => Id::unique(),
+            'email' => 'memberships-' . \uniqid() . '@appwrite.io',
+            'password' => 'password',
+            'name' => 'Memberships',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code'], $user['body']['message'] ?? '');
+        $userId = $user['body']['$id'];
+
+        $membershipIds = [];
+        for ($index = 0; $index < $count; $index++) {
+            $team = $this->client->call(Client::METHOD_POST, '/teams', $headers, [
+                'teamId' => Id::unique(),
+                'name' => 'Team ' . $index,
+            ]);
+            $this->assertSame(201, $team['headers']['status-code'], $team['body']['message'] ?? '');
+
+            $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['body']['$id'] . '/memberships', $headers, [
+                'userId' => $userId,
+                'roles' => ['member'],
+            ]);
+            $this->assertSame(201, $membership['headers']['status-code'], $membership['body']['message'] ?? '');
+            $membershipIds[] = $membership['body']['$id'];
+        }
+
+        return [$userId, $membershipIds];
+    }
+
+    /**
+     * @param list<string> $queries
+     * @return array<string, mixed>
+     */
+    private function listUserMemberships(string $userId, array $queries, bool $total = true): array
+    {
+        return $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/memberships', $this->getUserMembershipsHeaders(), [
+            'queries' => $queries,
+            'total' => $total,
+        ]);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function getUserMembershipsHeaders(): array
+    {
+        return \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
     }
 
     public function testUpdateUserName(): void
