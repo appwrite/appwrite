@@ -120,6 +120,7 @@ class Appwrite {
 - Add the following code to `ContentView.swift`:
 
 ```swift
+import Appwrite
 import SwiftUI
 
 class ViewModel: ObservableObject {
@@ -165,6 +166,7 @@ struct ContentView: View {
             )
         }
         .padding()
+        .registerOAuthHandler()
     }
 }
 ```
@@ -180,4 +182,4 @@ struct ContentView: View {
 ## Deliverables
 
 - A running Apple app with working Appwrite auth (register/login/logout)
-- Files created/updated: `Appwrite.swift`, `ContentView.swift`, `Info.plist` (URL scheme)
+- Files created/updated: `Appwrite.swift`, `ContentView.swift` (with `.registerOAuthHandler()`), `Info.plist` (URL scheme)

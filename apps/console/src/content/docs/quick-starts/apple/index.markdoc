@@ -151,6 +151,7 @@ class Appwrite {
 Add the following code to `ContentView.swift`.
 
 ```swift
+import Appwrite
 import SwiftUI
 
 class ViewModel: ObservableObject {
@@ -196,6 +197,7 @@ struct ContentView: View {
             )
         }
         .padding()
+        .registerOAuthHandler()
     }
 }
 ```
