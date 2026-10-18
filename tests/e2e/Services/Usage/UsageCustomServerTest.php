@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Usage;
 
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -14,12 +15,14 @@ use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\RelationshipDeleteAction;
 use Utopia\Database\RelationshipType;
+use Utopia\DSN\DSN;
 use Utopia\System\System;
 
 final class UsageCustomServerTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
+    private const string USAGE_EVENTS_TABLE = 'projects_usage_events';
 
     public function testListEventsReturnsRequestedEmptySeries(): void
     {
@@ -688,6 +691,79 @@ final class UsageCustomServerTest extends Scope
             $points = array_column($response['body']['metrics'][0]['points'], 'value', 'resourceId');
             $this->assertSame([$messages['sent'] => 2], $points);
         }, 60_000, 500);
+    }
+
+    /**
+     * Breaks every usage insert for the whole stack, so it runs in a lane of its own.
+     */
+    #[Group('usageOutage')]
+    public function testUsageEventsSurviveAFailedInsert(): void
+    {
+        self::$project = $this->getProject(true);
+        $this->waitForUsageStats();
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $usageHeaders = \array_merge($headers, ['x-appwrite-key' => $this->getNewKey(['usage.read'])]);
+
+        $response = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => Id::unique(),
+            'email' => \uniqid() . '@appwrite.io',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $userId = $response['body']['$id'];
+
+        $this->assertEventually(function () use ($usageHeaders) {
+            $this->assertEquals(1, $this->countRequests($usageHeaders, 'POST'), 'the user creation must be counted before the outage starts');
+        }, 60_000, 500);
+
+        $this->clickhouse('ALTER TABLE ' . self::USAGE_EVENTS_TABLE . ' ADD CONSTRAINT appwrite_e2e_outage CHECK 0 = 1');
+        try {
+            $response = $this->client->call(Client::METHOD_PATCH, "/users/$userId/prefs", $headers, [
+                'prefs' => ['outage' => true],
+            ]);
+            $this->assertSame(200, $response['headers']['status-code']);
+
+            // Longer than the worker's batch window, so its insert runs and fails.
+            \sleep(8);
+        } finally {
+            $this->clickhouse('ALTER TABLE ' . self::USAGE_EVENTS_TABLE . ' DROP CONSTRAINT appwrite_e2e_outage');
+        }
+
+        $this->assertEventually(function () use ($usageHeaders) {
+            $this->assertEquals(1, $this->countRequests($usageHeaders, 'PATCH'), 'a request made while usage inserts fail must be counted once they succeed again');
+        }, 90_000, 1_000);
+    }
+
+    /** @param array<string, string> $headers */
+    private function countRequests(array $headers, string $method): int
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/usage/events', $headers, [
+            'metrics' => ['network.requests'],
+            'queries' => [Query::equal('method', [$method])->toString()],
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        return (int) \array_sum(\array_column($response['body']['metrics'][0]['points'], 'value'));
+    }
+
+    private function clickhouse(string $statement): void
+    {
+        $dsn = new DSN(System::getEnv('_APP_CONNECTIONS_DB_USAGE', ''));
+        $handle = \curl_init('http://' . $dsn->getHost() . ':' . $dsn->getPort() . '/?database=' . \ltrim($dsn->getPath(), '/'));
+        \curl_setopt_array($handle, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $statement,
+            CURLOPT_USERPWD => $dsn->getUser() . ':' . $dsn->getPassword(),
+            CURLOPT_RETURNTRANSFER => true,
+        ]);
+        $body = \curl_exec($handle);
+        $status = \curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
+
+        $this->assertSame(200, $status, 'ClickHouse refused: ' . $statement . ': ' . \var_export($body, true));
     }
 
     private function waitForUsageStats(): void

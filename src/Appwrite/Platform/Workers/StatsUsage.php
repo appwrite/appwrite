@@ -28,7 +28,14 @@ class StatsUsage extends Action
      * A stopping worker waits for the batch, so this stays under Docker's
      * 10 second stop timeout.
      */
-    private const int FLUSH_DELAY_MS = 5_000;
+    protected const int FLUSH_DELAY_MS = 5_000;
+
+    /**
+     * How long a batch whose insert failed waits before the next attempt.
+     * Until it is written, the worker refuses messages so they stay in the
+     * queue instead of piling up in memory.
+     */
+    protected const int RETRY_DELAY_MS = 20_000;
 
     /**
      * The open batch, one accumulator per minute of event time. A folded event
@@ -38,6 +45,15 @@ class StatsUsage extends Action
      * @var array<int, Accumulator>
      */
     private array $accumulators = [];
+
+    /**
+     * Batches whose insert failed, kept for the next attempt.
+     *
+     * @var list<Accumulator>
+     */
+    private array $retained = [];
+
+    private bool $retryScheduled = false;
 
     public static function getName(): string
     {
@@ -68,6 +84,10 @@ class StatsUsage extends Action
             throw new \RuntimeException('Missing payload');
         }
 
+        if ($this->retained !== []) {
+            throw new \RuntimeException('Usage events are not being written; refusing the message until the retained events are written');
+        }
+
         $tenant = $projectContext->sequence;
         if ($tenant === '') {
             Console::warning('Skipping usage event write: project has no sequence');
@@ -78,7 +98,7 @@ class StatsUsage extends Action
             if ($this->accumulators === []) {
                 // One-shot rather than a tick: a pending timer keeps the worker's
                 // event loop alive only until it fires, so shutdown still writes it.
-                Timer::after(self::FLUSH_DELAY_MS, $this->flush(...));
+                Timer::after(static::FLUSH_DELAY_MS, $this->flush(...));
             }
 
             $projectId = (string) ($payload['project']['$id'] ?? '');
@@ -151,7 +171,8 @@ class StatsUsage extends Action
     private function flush(): void
     {
         // Detach first, so messages handled while the insert is in flight open the next batch.
-        $accumulators = $this->accumulators;
+        $accumulators = [...$this->retained, ...\array_values($this->accumulators)];
+        $this->retained = [];
         $this->accumulators = [];
 
         foreach ($accumulators as $accumulator) {
@@ -160,15 +181,34 @@ class StatsUsage extends Action
             }
 
             try {
-                if (!$accumulator->flush()) {
-                    Console::error('Usage event flush returned false');
+                if ($accumulator->flush()) {
+                    continue;
                 }
+                Console::error('Usage event flush left entries unwritten');
             } catch (\Throwable $th) {
-                // Usage analytics deliberately remains best-effort and inserts are
-                // not retried because the adapter has no durable deduplication key.
                 Console::error('Failed to write usage events: ' . $th->getMessage());
             }
+
+            // A failed batch stays in the accumulator, so the retry writes only what is left.
+            $this->retained[] = $accumulator;
         }
+
+        if ($this->retained !== []) {
+            $this->scheduleRetry();
+        }
+    }
+
+    private function scheduleRetry(): void
+    {
+        if ($this->retryScheduled) {
+            return;
+        }
+
+        $this->retryScheduled = true;
+        Timer::after(static::RETRY_DELAY_MS, function (): void {
+            $this->retryScheduled = false;
+            $this->flush();
+        });
     }
 
     protected function shouldSkipMetric(string $metric): bool
