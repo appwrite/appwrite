@@ -13,17 +13,17 @@ use Utopia\Queue\Message;
 use Utopia\Usage\Accumulator;
 use Utopia\Usage\Usage;
 
-class StatsResources extends Action
+class StatsCalculations extends Action
 {
     public static function getName(): string
     {
-        return 'stats-resources';
+        return 'stats-calculations';
     }
 
     public function __construct()
     {
         $this
-            ->desc('Stats resources worker')
+            ->desc('Stats calculations worker')
             ->inject('message')
             ->inject('project')
             ->inject('dbForProject')
