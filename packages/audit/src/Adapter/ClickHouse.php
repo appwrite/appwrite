@@ -942,26 +942,20 @@ class ClickHouse extends SQL
         $this->applyTenantFilter($builder);
 
         $cursorDirection = $parsed['cursorDirection'] ?? null;
-        $orderAttributes = $parsed['orderAttributes'];
         $cursorParams = [];
 
-        if (isset($parsed['cursor'])) {
-            $orderAttributes = $this->resolveCursorOrder($orderAttributes);
-            $cursorWhere = $this->buildCursorWhere($orderAttributes, $parsed['cursor'], $cursorDirection ?? 'after', []);
-            $builder->whereRaw($cursorWhere['clause']);
-            $cursorParams = $cursorWhere['params'];
-        }
-
-        // ORDER BY. orderRandom is mutually exclusive with cursor and column
-        // ordering (rejected above); when cursor is in play, rebuild from
-        // orderAttributes (always non-empty after resolveCursorOrder, which
-        // appends an id tiebreaker), flipping directions for `cursorBefore`.
         if ($parsed['randomOrder']) {
             $builder->sortRandom();
-        } elseif (isset($parsed['cursor'])) {
-            $this->applyOrderBy($builder, $orderAttributes, flip: $cursorDirection === 'before');
         } else {
-            $this->applyOrderBy($builder, $orderAttributes);
+            $orderAttributes = $this->resolveOrder($parsed['orderAttributes']);
+
+            if (isset($parsed['cursor'])) {
+                $cursorWhere = $this->buildCursorWhere($orderAttributes, $parsed['cursor'], $cursorDirection ?? 'after', []);
+                $builder->whereRaw($cursorWhere['clause']);
+                $cursorParams = $cursorWhere['params'];
+            }
+
+            $this->applyOrderBy($builder, $orderAttributes, flip: $cursorDirection === 'before');
         }
 
         if (isset($parsed['limit'])) {
@@ -1381,29 +1375,27 @@ class ClickHouse extends SQL
     }
 
     /**
-     * Resolve the effective order attributes for cursor pagination.
-     *
-     * Auto-appends `id` as a tiebreaker when not already present so keyset
-     * pagination is deterministic on non-unique columns (e.g. time).
+     * Newest first by default, always ending in `id` so the order is total.
+     * Every page, cursor or not, must sort by the columns the cursor compares
+     * on, or rows tied on `time` are skipped or repeated between pages.
      *
      * @param array<int, array{attribute: string, direction: string}> $orderAttributes
-     * @return array<int, array{attribute: string, direction: string}>
+     * @return non-empty-array<int, array{attribute: string, direction: string}>
      */
-    private function resolveCursorOrder(array $orderAttributes): array
+    private function resolveOrder(array $orderAttributes): array
     {
+        if ($orderAttributes === []) {
+            $orderAttributes[] = ['attribute' => 'time', 'direction' => 'DESC'];
+        }
+
         foreach ($orderAttributes as $entry) {
             if ($entry['attribute'] === 'id') {
                 return $orderAttributes;
             }
         }
 
-        $defaultDirection = 'DESC';
-        if ($orderAttributes !== []) {
-            $last = $orderAttributes[\count($orderAttributes) - 1];
-            $defaultDirection = $last['direction'];
-        }
-
-        $orderAttributes[] = ['attribute' => 'id', 'direction' => $defaultDirection];
+        $last = $orderAttributes[\count($orderAttributes) - 1];
+        $orderAttributes[] = ['attribute' => 'id', 'direction' => $last['direction']];
 
         return $orderAttributes;
     }
