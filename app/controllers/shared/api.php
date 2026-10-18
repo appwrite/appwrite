@@ -521,6 +521,7 @@ Http::init()
         if (empty(\array_intersect($allowed, $scopes))) {
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scopes (' . \json_encode($allowed) . ')');
         }
+        $request->setScopes($scopes);
 
         // Step 10: Check if user is blocked
         if ($rolesSource->getAttribute('status') === false) { // Account is blocked
@@ -1049,11 +1050,6 @@ Http::shutdown()
 
         $auditUser = $auditContext->user;
         if (! empty($auditContext->resource) && ! $auditUser->isEmpty()) {
-            $pattern = $route->getLabel('audits.payload', false);
-            if (! empty($pattern)) {
-                $auditContext->payload = $responsePayload;
-            }
-
             $publisherForAudits->enqueue(AuditMessage::fromContext($auditContext));
         }
     });

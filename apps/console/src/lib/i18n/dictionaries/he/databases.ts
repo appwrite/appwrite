@@ -13,6 +13,15 @@ export const heDatabasesDictionary: Record<string, string> = {
     'Appwrite Start, תוכנית שנבנתה למפתחים בהודו.',
   'Dismiss banner': 'סגירת באנר',
   'Namaste India': 'Namaste India',
+  'Namaste Nepal': 'Namaste Nepal',
+  'How far, Nigeria': 'How far, Nigeria',
+  'Salaam Pakistan': 'Salaam Pakistan',
+  'Appwrite Start, a plan built for Nepali developers.':
+    'Appwrite Start, תוכנית שנבנתה למפתחים בנפאל.',
+  'Appwrite Start, a plan built for Nigerian developers.':
+    'Appwrite Start, תוכנית שנבנתה למפתחים בניגריה.',
+  'Appwrite Start, a plan built for Pakistani developers.':
+    'Appwrite Start, תוכנית שנבנתה למפתחים בפקיסטן.',
   'New': 'חדש',
   'PostgreSQL announcement banner': 'באנר הודעה על PostgreSQL',
   'Read more': 'למידע נוסף',

@@ -22,6 +22,7 @@ use Appwrite\Services\Teams;
 use Appwrite\Services\Users;
 use Appwrite\Services\Webhooks;
 use Override;
+use Utopia\Client\Destinations;
 use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\DateTime as UtopiaDateTime;
 use Utopia\Database\Document as UtopiaDocument;
@@ -199,6 +200,14 @@ class Appwrite extends Source
         $this->client->setResolver($resolver);
 
         return parent::setResolver($resolver);
+    }
+
+    #[Override]
+    public function setDestinations(Destinations $destinations): static
+    {
+        $this->client->setDestinations($destinations);
+
+        return parent::setDestinations($destinations);
     }
 
     #[Override]

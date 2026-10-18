@@ -76,6 +76,27 @@ final class IntegerTest extends TestCase
         $this->assertSame('int64', $validator64->getFormat());
     }
 
+    public function testDescriptionStatesTheExactBounds(): void
+    {
+        $this->assertSame('Value must be a valid signed 64-bit integer between -9,223,372,036,854,775,808 and 9,223,372,036,854,775,807', new Integer(false, 64)->getDescription());
+        $this->assertSame('Value must be a valid signed 32-bit integer between -2,147,483,648 and 2,147,483,647', new Integer()->getDescription());
+        $this->assertSame('Value must be a valid unsigned 32-bit integer between 0 and 4,294,967,295', new Integer(false, 32, true)->getDescription());
+        $this->assertSame('Value must be a valid signed 8-bit integer between -128 and 127', new Integer(false, 8)->getDescription());
+    }
+
+    public function testSixtyFourBitBoundsAreInclusive(): void
+    {
+        $validator = new Integer(false, 64);
+        $this->assertTrue($validator->isValid(\PHP_INT_MAX));
+        $this->assertTrue($validator->isValid(\PHP_INT_MIN));
+
+        $loose = new Integer(true, 64);
+        $this->assertTrue($loose->isValid('9223372036854775807'));
+        $this->assertFalse($loose->isValid('9223372036854775808'));
+        $this->assertTrue($loose->isValid('-9223372036854775808'));
+        $this->assertFalse($loose->isValid('-9223372036854775809'));
+    }
+
     public function testInvalidBitSize(): void
     {
         $this->expectException(\InvalidArgumentException::class);

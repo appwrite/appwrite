@@ -35,6 +35,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Boolean;
 
 class Update extends Action
@@ -338,7 +339,7 @@ class Update extends Action
                     'status' => 'failed',
                 ])));
 
-                throw new Exception(Exception::DOCUMENT_NOT_FOUND, previous: $e, params: [$currentDocumentId ?? 'unknown']);
+                throw new Exception($this->getNotFoundException(), previous: $e, params: [$currentDocumentId ?? 'unknown']);
             } catch (DuplicateException | ConflictException $e) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
@@ -369,7 +370,7 @@ class Update extends Action
                 if ($currentChange <= 0) {
                     throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
                 }
-                throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, $this->getSDKNamespace() . ' "' . $currentAttribute . '" is not a number');
+                throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, \ucfirst($this->getAttributeKey()) . ' "' . $currentAttribute . '" is not a number');
             } catch (TransactionException $e) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
@@ -527,6 +528,17 @@ class Update extends Action
 
                 $queueForEvents->setEvent($eventString);
 
+                // The metadata findOne above skips attribute subqueries. Use the
+                // collection loaded via getCollection() during commit, which
+                // already has the schema needed to match update event payloads.
+                $schema = $collections[$collectionId] ?? $collection;
+                $relationships = [];
+                foreach ($schema->getAttribute('attributes', []) as $attribute) {
+                    if (($attribute['type'] ?? null) === ColumnType::Relationship->value) {
+                        $relationships[] = $attribute['key'];
+                    }
+                }
+
                 // Get project and function/webhook events (cached)
                 $project = $queueForEvents->getProject();
                 $functionsEvents = $eventProcessor->getFunctionsEvents($project, $dbForProject);
@@ -546,7 +558,7 @@ class Update extends Action
                     $queueForEvents
                         ->setParam('documentId', $doc->getId())
                         ->setParam('rowId', $doc->getId())
-                        ->setPayload($payload);
+                        ->setPayload($payload, sensitive: $relationships);
 
                     // Generate events for this document operation
                     $generatedEvents = Event::generateEvents(
@@ -675,7 +687,7 @@ class Update extends Action
         \DateTime $createdAt,
         array &$state
     ): void {
-        if ($documentId && !isset($data['$id'])) {
+        if ($documentId) {
             $data['$id'] = $documentId;
         }
         $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $data, &$state) {
@@ -752,6 +764,10 @@ class Update extends Action
         \DateTime $createdAt,
         array &$state
     ): void {
+        if ($documentId) {
+            $data['$id'] = $documentId;
+        }
+
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {

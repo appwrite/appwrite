@@ -235,6 +235,11 @@ class Create extends Action
                         throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
                     }
 
+                    // The chunk count and size were fixed by the first chunk.
+                    if ((int) $deployment->getAttribute('sourceSize', 0) !== $fileSize) {
+                        throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
+                    }
+
                     $chunks = $deployment->getAttribute('sourceChunksTotal', 1);
                     $uploaded = $deployment->getAttribute('sourceChunksUploaded', 0);
                     $metadata = $deployment->getAttribute('sourceMetadata', []);
@@ -281,7 +286,7 @@ class Create extends Action
         }
 
         try {
-            $locks($lockKey, 600, function () use ($buildTimeout, $activate, $chunk, &$chunks, $commands, $dbForProject, $deploymentId, $deviceForFunctions, $deviceForLocal, $entrypoint, $fileTmpName, &$function, $path, &$metadata, $mergeUploadMetadata, $deployments, $queueForEvents, $response, $type): void {
+            $locks($lockKey, 600, function () use ($buildTimeout, $activate, $chunk, &$chunks, $commands, $contentRange, $dbForProject, $deploymentId, $deviceForFunctions, $fileSize, $deviceForLocal, $entrypoint, $fileTmpName, &$function, $path, &$metadata, $mergeUploadMetadata, $deployments, $queueForEvents, $response, $type): void {
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
                 $uploaded = 0;
 
@@ -326,6 +331,20 @@ class Create extends Action
 
                 if ($chunksUploaded === $chunks && $uploaded < $chunks) {
                     $deviceForFunctions->finalize($path, $chunks, $metadata);
+
+                    // A chunk can carry more or fewer bytes than its range announces.
+                    if (!empty($contentRange) && $deviceForFunctions->getFileSize($path) !== $fileSize) {
+                        $deviceForFunctions->delete($path);
+
+                        // Marked failed and fully uploaded so a retry returns it instead of writing to the removed source.
+                        $deployments->upload($function, $deployment->setAttributes([
+                            'status' => 'failed',
+                            'buildLogs' => 'Uploaded size does not match the size announced by Content-Range.',
+                            'sourceChunksUploaded' => $chunks,
+                        ]));
+
+                        throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
+                    }
 
                     $fileSize = $deviceForFunctions->getFileSize($path);
 

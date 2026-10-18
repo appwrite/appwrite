@@ -368,7 +368,8 @@ class Builds extends Action
                 $push = Command::and(
                     (new Command('git'))->argument('config')->flag('--global')->argument('user.email')->argument(APP_VCS_GITHUB_EMAIL),
                     (new Command('git'))->argument('config')->flag('--global')->argument('user.name')->argument(APP_VCS_GITHUB_USERNAME),
-                    (new Command('git'))->option('-C', $tmpDirectory)->argument('checkout')->flag('-b')->argument($branchName),
+                    // A branch clone already has the branch; a commit clone is detached
+                    (new Command('git'))->option('-C', $tmpDirectory)->argument('checkout')->flag('-B')->argument($branchName),
                     (new Command('git'))->option('-C', $tmpDirectory)->argument('add')->argument('.'),
                     (new Command('git'))->option('-C', $tmpDirectory)->argument('commit')->option('-m', $commitMessage),
                     (new Command('git'))->option('-C', $tmpDirectory)->argument('push')->argument('origin')->argument($branchName),
