@@ -434,6 +434,85 @@ trait DatabasesColumnPermissionsBase
     }
 
     /**
+     * The same refusal at create, where the columns are the ones the request asks for.
+     *
+     * Create writes the metadata row before the collection, so a refusal from the collection
+     * has to take the row with it -- otherwise a failed create leaves a table behind that the
+     * caller was told it did not get.
+     */
+    public function testAPermissionNamingAnUnknownColumnIsRejectedAtCreate(): void
+    {
+        // A grant names a declared column, so a schemaless product has nothing for one to
+        // name and the library refuses it as a column the collection does not have.
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Column-scoped permissions need declared columns, which this adapter does not have');
+        }
+
+        $databaseId = $this->columnGrantsDatabase('Column Grants Bad At Create');
+        $containerId = \Utopia\Database\Id::unique();
+
+        $refused = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $this->getServerHeaders(), [
+            $this->getContainerIdParam() => $containerId,
+            'name' => 'Employees',
+            'permissions' => [Permission::create(Role::any()), Permission::read(Role::any(), 'nope')],
+            $this->getIndexAttributesParam() === 'columns' ? 'columns' : 'attributes' => [
+                ['key' => 'name', 'type' => 'string', 'size' => 64, 'required' => false],
+            ],
+        ]);
+
+        $this->assertEquals(400, $refused['headers']['status-code']);
+
+        // Nothing was left behind by the refusal.
+        $get = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $containerId), $this->getServerHeaders());
+        $this->assertEquals(404, $get['headers']['status-code'], 'a refused create left the table behind');
+    }
+
+    /**
+     * A grant follows a column renamed through the API.
+     *
+     * The library moves the grant on the collection itself. The metadata row keeps its own
+     * copy -- the one the API reports and the next update replays -- so if that is not moved
+     * too, the row names the old key: unreachable, and replayed back onto the collection as a
+     * grant on a column that no longer exists.
+     */
+    public function testAColumnGrantFollowsARenameThroughTheApi(): void
+    {
+        // A grant names a declared column, so a schemaless product has nothing for one to
+        // name and the library refuses it as a column the collection does not have.
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Column-scoped permissions need declared columns, which this adapter does not have');
+        }
+
+        $databaseId = $this->columnGrantsDatabase('Column Grants Renamed');
+
+        $created = $this->columnGrantsContainer($databaseId, [
+            Permission::create(Role::any()),
+            Permission::read(Role::any()),
+        ]);
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $containerId = $created['body']['$id'];
+
+        $scoped = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $containerId), $this->getServerHeaders(), [
+            'name' => 'Employees',
+            'permissions' => [Permission::create(Role::any()), Permission::read(Role::any(), 'name')],
+        ]);
+        $this->assertEquals(200, $scoped['headers']['status-code']);
+
+        $renamed = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $containerId, 'string', 'name'), $this->getServerHeaders(), [
+            'required' => false,
+            'default' => null,
+            'newKey' => 'fullName',
+        ]);
+        $this->assertEquals(200, $renamed['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $containerId, 'fullName');
+
+        $get = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $containerId), $this->getServerHeaders());
+
+        $this->assertContains('read("any", "fullName")', $get['body']['$permissions'], 'the grant did not follow the rename');
+        $this->assertNotContains('read("any", "name")', $get['body']['$permissions'], 'the grant still names the old key');
+    }
+
+    /**
      * A collection that names no column stores nothing extra and reads back exactly as before.
      */
     public function testPermissionsWithoutAColumnAreUnaffected(): void

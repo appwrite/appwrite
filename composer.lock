@@ -4430,12 +4430,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "e2048724bbff657142337c890137602a1c72312e"
+                "reference": "0b1709dd77612462f4b406b136f3a15719c95497"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/e2048724bbff657142337c890137602a1c72312e",
-                "reference": "e2048724bbff657142337c890137602a1c72312e",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/0b1709dd77612462f4b406b136f3a15719c95497",
+                "reference": "0b1709dd77612462f4b406b136f3a15719c95497",
                 "shasum": ""
             },
             "require": {
@@ -4495,7 +4495,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/collection-level-column-permissions"
             },
-            "time": "2026-10-18T08:30:14+00:00"
+            "time": "2026-10-18T12:08:57+00:00"
         },
         {
             "name": "utopia-php/mongo",
