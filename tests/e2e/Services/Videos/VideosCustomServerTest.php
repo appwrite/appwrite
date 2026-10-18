@@ -838,6 +838,11 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('ready', $readyBody['status']);
         $this->timeTravelRendition($projectId, $readyId, updatedAt: '2020-01-01T00:00:00Z');
 
+        $staleLock = $this->plantRenditionLock($staleId);
+        $freshLock = $this->plantRenditionLock($freshId);
+        $this->assertFileExists($staleLock);
+        $this->assertFileExists($freshLock);
+
         $stdout = '';
         $stderr = '';
         $code = Console::execute(
@@ -848,20 +853,26 @@ final class VideosCustomServerTest extends Scope
         );
         $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
 
-        $this->assertEventually(function () use ($videoId, $staleId, $freshId, $readyId) {
+        $this->assertEventually(function () use ($videoId, $staleId, $freshId, $readyId, $staleLock, $freshLock) {
             $stale = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $staleId, $this->headers());
             $this->assertEquals(200, $stale['headers']['status-code']);
             $this->assertEquals('aborted', $stale['body']['status']);
             $this->assertNotEmpty($stale['body']['endedAt'] ?? '');
+            $this->assertFileDoesNotExist($staleLock);
 
             $fresh = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $freshId, $this->headers());
             $this->assertEquals(200, $fresh['headers']['status-code']);
             $this->assertEquals('started', $fresh['body']['status']);
+            $this->assertFileExists($freshLock);
 
             $ready = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $readyId, $this->headers());
             $this->assertEquals(200, $ready['headers']['status-code']);
             $this->assertEquals('ready', $ready['body']['status']);
         }, 30000);
+
+        if (\is_file($freshLock)) {
+            \unlink($freshLock);
+        }
     }
 
     /**
@@ -1054,8 +1065,12 @@ final class VideosCustomServerTest extends Scope
         $this->waitUntilPathExists($secondDir);
         $this->assertDirectoryHasFiles($firstDir);
 
+        $firstLock = $this->plantRenditionLock($firstId);
+        $this->assertFileExists($firstLock);
+
         $delete = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId . '/renditions/' . $firstId, $this->headers());
         $this->assertEquals(204, $delete['headers']['status-code']);
+        $this->assertFileDoesNotExist($firstLock);
 
         $missing = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $firstId, $this->headers());
         $this->assertEquals(404, $missing['headers']['status-code']);
@@ -2119,6 +2134,12 @@ final class VideosCustomServerTest extends Scope
         // Let the create-time timeline job finish so it cannot write into the video after delete.
         $this->waitForTimeline($videoId);
 
+        $renditionId = $this->createRendition($videoId, 'hls');
+        $ready = $this->waitForRenditionTerminalState($videoId, $renditionId);
+        $this->assertEquals('ready', $ready['status']);
+        $renditionLock = $this->plantRenditionLock($renditionId);
+        $this->assertFileExists($renditionLock);
+
         $jobsRoot = $this->tmpJobsRoot();
         if (!\is_dir($jobsRoot) && !\mkdir($jobsRoot, 0755, true) && !\is_dir($jobsRoot)) {
             $this->fail('Could not create videos tmp jobs root');
@@ -2168,12 +2189,16 @@ final class VideosCustomServerTest extends Scope
             }
 
             $this->assertSame(0, $renditions, 'Deletes worker did not cascade the video renditions');
+            $this->waitUntilPathGone($renditionLock);
             $this->waitUntilPathGone($leftover);
             $this->assertDirectoryExists($sibling);
         } finally {
             $this->removePlantedTmp($sibling);
             if (\is_dir($leftover)) {
                 $this->removePlantedTmp($leftover);
+            }
+            if (\is_file($renditionLock)) {
+                \unlink($renditionLock);
             }
         }
     }

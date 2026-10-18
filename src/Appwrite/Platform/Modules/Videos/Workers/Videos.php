@@ -24,6 +24,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Lock\File;
 use Utopia\Platform\Action;
 use Utopia\Psr7\Stream;
 use Utopia\Queue\Message;
@@ -602,6 +603,8 @@ class Videos extends Action
             : (string) $rendition->getAttribute('output', Base::OUTPUT_HLS);
         $permissions = $this->readPermissions($videoMessage->video);
         $claimed = false;
+        $held = false;
+        $lock = null;
         $codec = Base::normalizeCodec(
             $rendition->getAttribute('codec')
                 ?: $profile->getAttribute('codec')
@@ -660,6 +663,25 @@ class Videos extends Action
                 ],
                 $permissions
             );
+
+            // Flock so a second identical encode message cannot download into the
+            // same rendition workspace while this run is still packing.
+            $lockPath = Base::renditionLockPath($projectId, $rendition->getId());
+            $lockDirectory = \dirname($lockPath);
+            if (!\is_dir($lockDirectory) && !\mkdir($lockDirectory, 0755, true) && !\is_dir($lockDirectory)) {
+                throw new \Exception('Failed to create video rendition lock directory');
+            }
+            $lock = new File($lockPath);
+            if (!$lock->tryAcquire()) {
+                Console::info(
+                    'Videos worker: rendition lock held for ' . $rendition->getId()
+                    . ', skipping duplicate encode download'
+                );
+                $outcome = 'duplicate';
+                $status = Base::STATUS_STARTED;
+                return;
+            }
+            $held = true;
 
             $workspace = $this->jobWorkspace(
                 $projectId,
@@ -1064,6 +1086,10 @@ class Videos extends Action
             // rendition id and may belong to the coroutine that claimed it.
             if ($workspace !== null) {
                 $this->cleanup($workspace['basePath']);
+            }
+
+            if ($held && $lock !== null) {
+                $lock->release();
             }
         }
     }

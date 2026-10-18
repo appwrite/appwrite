@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Scopes;
 
+use Appwrite\Platform\Modules\Videos\Base;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -667,6 +668,27 @@ trait VideoCustom
         $root = \defined('APP_STORAGE_VIDEOS_TMP') ? APP_STORAGE_VIDEOS_TMP : '/storage/videos-tmp';
 
         return \rtrim($root, '/') . '/jobs';
+    }
+
+    /**
+     * Create an empty encode lock file for a rendition so cleanup paths can be asserted.
+     */
+    public function plantRenditionLock(string $renditionId): string
+    {
+        if (!\defined('APP_STORAGE_VIDEOS_TMP')) {
+            \define('APP_STORAGE_VIDEOS_TMP', '/storage/videos-tmp');
+        }
+
+        $path = Base::renditionLockPath($this->getProject()['$id'], $renditionId);
+        $directory = \dirname($path);
+        if (!\is_dir($directory) && !\mkdir($directory, 0755, true) && !\is_dir($directory)) {
+            $this->fail('Could not create rendition lock directory: ' . $directory);
+        }
+        if (\file_put_contents($path, '') === false) {
+            $this->fail('Could not plant rendition lock: ' . $path);
+        }
+
+        return $path;
     }
 
     /**

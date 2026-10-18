@@ -640,6 +640,7 @@ class Deletes extends Action
                         'status' => VideosBase::STATUS_ABORTED,
                         'endedAt' => DateTime::now(),
                     ]));
+                    VideosBase::removeRenditionLock($project->getId(), $rendition->getId());
                     $aborted++;
                     $age = \max(0, \time() - (int) \strtotime((string) $rendition->getUpdatedAt()));
                     Console::info(
@@ -2128,6 +2129,10 @@ class Deletes extends Action
         $this->deleteByGroup('videos_renditions_segments', [
             Query::equal('renditionInternalId', [$document->getSequence()]),
         ], $dbForProject);
+
+        // Drop the encode flock before the empty-path return so a rendition with
+        // no packaged files still clears its lock.
+        VideosBase::removeRenditionLock($project->getId(), $document->getId());
 
         $path = $document->getAttribute('path', '');
 

@@ -8,12 +8,20 @@ use Appwrite\Platform\Modules\Videos\Base;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Config\Config;
+use Utopia\Lock\File;
 
 final class BaseTest extends TestCase
 {
+    private static string $tmpRoot = '';
+
     protected function setUp(): void
     {
         Config::setParam('videos-codecs', require \dirname(__DIR__, 5) . '/app/config/videos-codecs.php');
+
+        if (!\defined('APP_STORAGE_VIDEOS_TMP')) {
+            self::$tmpRoot = \sys_get_temp_dir() . '/appwrite-videos-tmp-' . \uniqid('', true);
+            \define('APP_STORAGE_VIDEOS_TMP', self::$tmpRoot);
+        }
     }
 
     #[DataProvider('codecOutputMatrix')]
@@ -58,10 +66,6 @@ final class BaseTest extends TestCase
 
     public function testTmpJobPathShape(): void
     {
-        if (!\defined('APP_STORAGE_VIDEOS_TMP')) {
-            \define('APP_STORAGE_VIDEOS_TMP', '/storage/videos-tmp');
-        }
-
         $path = Base::tmpJobPath('proj1', 'vid1', Base::JOB_RENDITION, 'ren1');
         $name = \basename($path);
 
@@ -100,5 +104,65 @@ final class BaseTest extends TestCase
         $this->assertFalse(Base::jobMatches('2026101212xx~proj1~vid1~rendition-ren1', 'proj1', 'vid1'));
         $this->assertFalse(Base::jobMatches('202610121200', 'proj1'));
         $this->assertFalse(Base::jobMatches($name, ''));
+    }
+
+    public function testRenditionLockPathShape(): void
+    {
+        $this->assertSame(
+            \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/locks/proj1/ren1.lock',
+            Base::renditionLockPath('proj1', 'ren1')
+        );
+    }
+
+    public function testRemoveRenditionLockDeletesFileAndIsIdempotent(): void
+    {
+        $path = Base::renditionLockPath('proj-rm', 'ren-rm');
+        $directory = \dirname($path);
+        if (!\is_dir($directory) && !\mkdir($directory, 0755, true) && !\is_dir($directory)) {
+            $this->fail('Could not create lock directory');
+        }
+
+        try {
+            \file_put_contents($path, '');
+            $this->assertFileExists($path);
+
+            Base::removeRenditionLock('proj-rm', 'ren-rm');
+            $this->assertFileDoesNotExist($path);
+
+            Base::removeRenditionLock('proj-rm', 'ren-rm');
+            $this->assertFileDoesNotExist($path);
+        } finally {
+            if (\is_file($path)) {
+                @\unlink($path);
+            }
+            if (\is_dir($directory)) {
+                @\rmdir($directory);
+            }
+        }
+    }
+
+    public function testRenditionLockContendsAcrossFileInstances(): void
+    {
+        $path = Base::renditionLockPath('proj-lock', 'ren-lock');
+        $directory = \dirname($path);
+        if (!\is_dir($directory) && !\mkdir($directory, 0755, true) && !\is_dir($directory)) {
+            $this->fail('Could not create lock directory');
+        }
+
+        $holder = new File($path);
+        $waiter = new File($path);
+
+        try {
+            $this->assertTrue($holder->tryAcquire());
+            $this->assertFalse($waiter->tryAcquire(), 'Second File instance must not acquire while first holds');
+            $holder->release();
+            $this->assertTrue($waiter->tryAcquire());
+            $waiter->release();
+        } finally {
+            Base::removeRenditionLock('proj-lock', 'ren-lock');
+            if (\is_dir($directory)) {
+                @\rmdir($directory);
+            }
+        }
     }
 }

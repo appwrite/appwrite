@@ -161,6 +161,38 @@ abstract class Base extends UtopiaAction
     }
 
     /**
+     * Per-rendition flock file: `{APP_STORAGE_VIDEOS_TMP}/locks/{projectId}/{renditionId}.lock`.
+     *
+     * Stays outside `jobs/`, which maintenance sweeps by age. Encode holds the
+     * flock for the whole run so a duplicate message cannot download the source
+     * into the same workspace.
+     */
+    public static function renditionLockPath(string $projectId, string $renditionId): string
+    {
+        return \rtrim(APP_STORAGE_VIDEOS_TMP, '/')
+            . '/locks/'
+            . $projectId
+            . '/'
+            . $renditionId
+            . '.lock';
+    }
+
+    /**
+     * Unlinks the rendition lock file when present. Missing file is a no-op.
+     *
+     * Does not steal a flock another process already holds — only removes the
+     * directory entry so a later encode can open a fresh path.
+     */
+    public static function removeRenditionLock(string $projectId, string $renditionId): void
+    {
+        $path = self::renditionLockPath($projectId, $renditionId);
+
+        if (\is_file($path)) {
+            \unlink($path);
+        }
+    }
+
+    /**
      * Per-job directory: `{tmpJobsRoot()}/{YmdHi}~{projectId}~{videoId}~{type}-{jobId}`.
      *
      * The leading 12-character UTC minute stamp sorts as text so a maintenance
@@ -444,6 +476,8 @@ abstract class Base extends UtopiaAction
         if (!$deleted) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove video rendition from DB');
         }
+
+        self::removeRenditionLock($project->getId(), $rendition->getId());
 
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $project,
