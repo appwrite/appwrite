@@ -11,12 +11,9 @@
 //!
 //! None of this requires changes to CE crates.
 
-mod cache;
 mod context;
-mod error_page;
-mod guards;
+mod hooks;
 mod lifecycle;
-mod shutdown;
 mod state;
 
 pub mod pwned;
@@ -194,7 +191,7 @@ pub struct Platform {
 
 impl Platform {
     pub fn new(state: Arc<State>) -> Self {
-        Self { state, router: Router::new(), wildcard: Arc::new(lifecycle::wildcard_route()), paths: Vec::new() }
+        Self { state, router: Router::new(), wildcard: Arc::new(hooks::wildcard::wildcard_route()), paths: Vec::new() }
     }
 
     /// Registers every route of a module.

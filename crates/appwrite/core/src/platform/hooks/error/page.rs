@@ -43,7 +43,7 @@ fn minify_text(text: &str) -> String {
 
 /// The page for an error of `kind` (`type`), status `code` and `message`,
 /// for a project named `project_name`.
-pub fn render(project_name: &str, message: &str, kind: &str, code: u16, development: bool, url: &str) -> String {
+pub(super) fn render(project_name: &str, message: &str, kind: &str, code: u16, development: bool, url: &str) -> String {
     let message = escape(message);
     let kind = escape(kind);
     let (label, label_class, message, simple) = match kind.as_str() {

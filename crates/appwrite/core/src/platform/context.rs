@@ -3,18 +3,16 @@
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Instant;
 
-use async_trait::async_trait;
 use bytes::Bytes;
 use http::StatusCode;
 use serde::Serialize;
 use serde_json::Value;
-use utopia_database::database::Hook;
-use utopia_database::event::{Domain, Event};
-use utopia_database::hook::{Lifecycle, Selective};
 use utopia_database::{Authorization, Database, Query};
 use utopia_http::{Request, Response, coerce};
 use utopia_validators::{Validator, php};
 
+use super::hooks::resources::database_listeners::{self, Listened, UsageMetric};
+use super::hooks::resources::hostnames;
 use super::{Route, State};
 use crate::auth::{ApiKey, roles};
 use crate::database::Project;
@@ -186,20 +184,10 @@ impl Context {
             return Ok(db.clone());
         }
         let db = self.state.databases.project(&self.project, self.authorization.clone())?;
-        // `x-appwrite-timeout` (the `api` group's database timeout hook):
-        // development only.
-        if self.state.config.development {
-            let timeout = php_std::format::intval(
-                php_std::format::Arg::Str(self.request.header_or_empty("x-appwrite-timeout").as_bytes()),
-                10,
-            );
-            if timeout != 0 {
-                db.set_timeout(timeout, Event::All)?;
-            }
-        }
+        super::hooks::init::database_timeout::database_timeout(&self.state, &self.request, &db)?;
         // The console's database is the platform's, without listeners.
         if !self.project.is_console() && !self.project.id.is_empty() {
-            listen(&db, &self.listened)?;
+            database_listeners::listen(&db, &self.listened)?;
         }
         self.db = Some(db.clone());
         Ok(db)
@@ -396,7 +384,7 @@ impl Context {
 
     /// The `allowedHostnames` resource (CORS, origins and redirects).
     pub fn allowed_hostnames(&self) -> Vec<String> {
-        super::lifecycle::allowed_hostnames(
+        hostnames::allowed_hostnames(
             &self.state,
             &self.project,
             self.project_found,
@@ -407,20 +395,20 @@ impl Context {
 
     /// The `allowedSchemes` resource.
     pub fn allowed_schemes(&self) -> Vec<String> {
-        super::lifecycle::allowed_schemes(&self.state, &self.project, self.project_found)
+        hostnames::allowed_schemes(&self.state, &self.project, self.project_found)
     }
 
     /// The `redirectValidator` resource: `url` must be on an allowed
     /// hostname or scheme. The error is the validator's description.
     pub fn validate_redirect(&self, url: &str) -> std::result::Result<(), String> {
-        let hosts = super::lifecycle::allowed_hostnames(
+        let hosts = hostnames::allowed_hostnames(
             &self.state,
             &self.project,
             self.project_found,
             &self.request,
             self.rule_domain.as_deref(),
         );
-        let schemes = super::lifecycle::allowed_schemes(&self.state, &self.project, self.project_found);
+        let schemes = hostnames::allowed_schemes(&self.state, &self.project, self.project_found);
         crate::network::validate_redirect(url, &hosts, &schemes)
     }
 
@@ -437,69 +425,6 @@ impl Context {
     }
 }
 
-/// The `team` resource: the organization that owns the project, or on the
-/// console the one the route acts on: the project of a
-/// `/v1/projects/:projectId` route, the `teamId` param of `/v1/projects`,
-/// or `X-Appwrite-Organization` on an `organization` group route. Empty
-/// when there is none. Authorization is skipped.
-pub(super) async fn team(
-    platform_db: &Database,
-    project: &Project,
-    route: &Route,
-    request: &Request,
-    path_params: &[(String, Value)],
-) -> Result<utopia_database::Document> {
-    let authorization = platform_db.authorization();
-    let text = |document: &utopia_database::Document, key: &str| {
-        document.get(key).map(utopia_database::value::to_text).unwrap_or_default()
-    };
-    let skipping = &authorization;
-    let get = |collection: &'static str, id: String| async move {
-        if id.is_empty() {
-            return Ok(utopia_database::Document::default());
-        }
-        skipping.skip(platform_db.get_document(collection, &id, Vec::new(), false)).await
-    };
-    let team_internal_id = if !project.is_console() {
-        project.team_internal_id.clone()
-    } else {
-        // The matched route's path; an unmatched request's URI.
-        let path = if route.name == "wildcard" { request.uri() } else { route.path };
-        let organization = request.header_or_empty("x-appwrite-organization");
-        if path.starts_with("/v1/projects/:projectId") {
-            text(&get("projects", project_id_from_path(request, path_params)).await?, "teamInternalId")
-        } else if path == "/v1/projects" {
-            let team_id = request.params().get("teamId").and_then(Value::as_str).unwrap_or_default().to_owned();
-            return Ok(get("teams", team_id).await?);
-        } else if route.has_group("organization") && !organization.is_empty() {
-            return Ok(get("teams", organization.to_owned()).await?);
-        } else {
-            String::new()
-        }
-    };
-    if team_internal_id.is_empty() {
-        return Ok(utopia_database::Document::default());
-    }
-    Ok(authorization
-        .skip(platform_db.find_one("teams", vec![Query::equal("$sequence", [team_internal_id.as_str()])]))
-        .await?)
-}
-
-/// The `projectIdFromPath` resource: the `projectId` route param of a
-/// `/v1/projects/...` URI, else empty.
-fn project_id_from_path(request: &Request, path_params: &[(String, Value)]) -> String {
-    let mut segments = request.uri().split('/').filter(|s| !s.is_empty());
-    if segments.next() != Some("v1") || segments.next() != Some("projects") {
-        return String::new();
-    }
-    path_params
-        .iter()
-        .find(|(name, _)| name == "projectId")
-        .and_then(|(_, v)| v.as_str())
-        .unwrap_or_default()
-        .to_owned()
-}
-
 /// Request hostname (`x-forwarded-host` or `host`, lower-cased, no port).
 fn request_hostname(request: &Request) -> String {
     let raw =
@@ -510,312 +435,4 @@ fn request_hostname(request: &Request) -> String {
         raw.split(':').next().unwrap_or("").to_owned()
     };
     host.to_lowercase()
-}
-
-/// What the project database's listeners saw during a request (PHP's
-/// `dbForProject` listeners).
-#[derive(Debug, Default)]
-pub struct Listened {
-    /// Users created (`create-trigger-events`): their
-    /// `users.[userId].create` events.
-    pub users: Vec<utopia_database::Document>,
-    /// Usage metrics (`calculate-usage`, and [`Context::metric`]).
-    pub metrics: Vec<UsageMetric>,
-    /// A function was created, updated or deleted
-    /// (`purge-function-events-cache`).
-    pub functions: bool,
-}
-
-/// A usage metric a request records (`Appwrite\Usage\Context`'s
-/// `addMetric()` and `addResourceMetric()`).
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct UsageMetric {
-    pub key: String,
-    pub value: i64,
-    /// `addResourceMetric()`'s resource type and internal ID, over the
-    /// request's (the project).
-    pub resource: Option<(String, String)>,
-}
-
-impl UsageMetric {
-    /// `addMetric()`: counted against the request's resource.
-    pub fn new(key: &str, value: i64) -> Self {
-        UsageMetric { key: key.to_owned(), value, resource: None }
-    }
-}
-
-/// Registers PHP's hooks on a project database (the `dbForProject`
-/// resource): `Usage`, `UserEvents` and `FunctionCache`, in that order.
-fn listen(db: &Database, listened: &Arc<Mutex<Listened>>) -> Result<()> {
-    db.add_hook(Hook::lifecycle(Arc::new(Usage(listened.clone()))))?;
-    db.add_hook(Hook::lifecycle(Arc::new(UserEvents(listened.clone()))))?;
-    db.add_hook(Hook::lifecycle(Arc::new(FunctionCache(listened.clone()))))?;
-    Ok(())
-}
-
-fn lock(listened: &Mutex<Listened>) -> std::sync::MutexGuard<'_, Listened> {
-    listened.lock().unwrap_or_else(|e| e.into_inner())
-}
-
-/// `Appwrite\Utopia\Database\Hook\Usage`: sessions and deployments counted
-/// as they are created and deleted.
-struct Usage(Arc<Mutex<Listened>>);
-
-impl Usage {
-    fn track_document(&self, collection: &str, document: &utopia_database::Document, value: i64) {
-        let mut listened = lock(&self.0);
-        match collection {
-            "sessions" => listened.metrics.push(UsageMetric::new("sessions", value)),
-            "deployments" => {
-                let kind = document.get("resourceType").map(utopia_database::value::to_text).unwrap_or_default();
-                let size = document.get("size").map(utopia_database::value::to_long).unwrap_or(0);
-                // `addResourceMetric()`: counted against the deployment's
-                // function or site (`rtrim($resourceType, 's')`).
-                let owner = kind.trim_end_matches('s').to_owned();
-                let owner_id =
-                    document.get("resourceInternalId").map(utopia_database::value::to_text).unwrap_or_default();
-                let resource = Some((owner, owner_id));
-                listened.metrics.push(UsageMetric {
-                    key: format!("{kind}.deployments"),
-                    value,
-                    resource: resource.clone(),
-                });
-                listened.metrics.push(UsageMetric {
-                    key: format!("{kind}.deployments.storage"),
-                    value: size * value,
-                    resource,
-                });
-            }
-            _ => {}
-        }
-    }
-
-    fn track_batch(&self, collection: &str, value: i64) {
-        if collection == "sessions" {
-            lock(&self.0).metrics.push(UsageMetric::new("sessions", value));
-        }
-    }
-}
-
-#[async_trait]
-impl Lifecycle for Usage {
-    async fn handle(&self, event: &Domain) -> utopia_database::Result<()> {
-        match event {
-            Domain::DocumentCreated { collection, document } => self.track_document(collection, document, 1),
-            Domain::DocumentDeleted { collection, document } => self.track_document(collection, document, -1),
-            Domain::DocumentBatchCreated { collection, count } => self.track_batch(collection, *count),
-            Domain::DocumentBatchDeleted { collection, count } => self.track_batch(collection, -count),
-            Domain::DocumentBatchUpserted { collection, created, .. } => self.track_batch(collection, *created),
-            _ => {}
-        }
-        Ok(())
-    }
-
-    fn selective(&self) -> Option<&dyn Selective> {
-        Some(self)
-    }
-}
-
-impl Selective for Usage {
-    fn handles(&self, event: Event) -> bool {
-        matches!(
-            event,
-            Event::DocumentCreate
-                | Event::DocumentDelete
-                | Event::DocumentsCreate
-                | Event::DocumentsDelete
-                | Event::DocumentsUpsert
-        )
-    }
-}
-
-/// `Appwrite\Utopia\Database\Hook\UserEvents`: each user created, for the
-/// `users.[userId].create` events the shutdown triggers.
-struct UserEvents(Arc<Mutex<Listened>>);
-
-#[async_trait]
-impl Lifecycle for UserEvents {
-    async fn handle(&self, event: &Domain) -> utopia_database::Result<()> {
-        if let Domain::DocumentCreated { collection, document } = event
-            && collection == "users"
-        {
-            lock(&self.0).users.push(document.clone());
-        }
-        Ok(())
-    }
-
-    fn selective(&self) -> Option<&dyn Selective> {
-        Some(self)
-    }
-}
-
-impl Selective for UserEvents {
-    fn handles(&self, event: Event) -> bool {
-        event == Event::DocumentCreate
-    }
-}
-
-/// `Appwrite\Utopia\Database\Hook\FunctionCache`: a function created,
-/// updated or deleted, for the shutdown to purge the function events cache.
-struct FunctionCache(Arc<Mutex<Listened>>);
-
-#[async_trait]
-impl Lifecycle for FunctionCache {
-    async fn handle(&self, event: &Domain) -> utopia_database::Result<()> {
-        if let Domain::DocumentCreated { collection, .. }
-        | Domain::DocumentUpdated { collection, .. }
-        | Domain::DocumentDeleted { collection, .. } = event
-            && collection == "functions"
-        {
-            lock(&self.0).functions = true;
-        }
-        Ok(())
-    }
-
-    fn selective(&self) -> Option<&dyn Selective> {
-        Some(self)
-    }
-}
-
-impl Selective for FunctionCache {
-    fn handles(&self, event: Event) -> bool {
-        matches!(event, Event::DocumentCreate | Event::DocumentUpdate | Event::DocumentDelete)
-    }
-}
-
-#[cfg(test)]
-mod usage_tests {
-    use utopia_database::{Document, Value};
-
-    use super::*;
-
-    fn document(fields: &[(&str, Value)]) -> Document {
-        let mut document = Document::default();
-        for (key, value) in fields {
-            document.put(*key, value.clone());
-        }
-        document
-    }
-
-    /// The metrics PHP's `Usage` hook records for the same events (printed
-    /// by `Appwrite\Usage\Context::getMetrics()` on the oracle): a
-    /// deployment counts against its function or site, a session against
-    /// the request's resource.
-    #[utopia_async::test]
-    async fn deployments_count_against_their_owner() {
-        let listened = Arc::new(Mutex::new(Listened::default()));
-        let usage = Usage(listened.clone());
-        let created = document(&[
-            ("resourceType", Value::from("functions")),
-            ("resourceInternalId", Value::Int(12)),
-            ("size", Value::from("2048")),
-        ]);
-        let deleted = document(&[
-            ("resourceType", Value::from("sites")),
-            ("resourceInternalId", Value::from("3")),
-            ("size", Value::Int(10)),
-        ]);
-        let events = [
-            Domain::DocumentCreated { collection: "deployments".into(), document: created },
-            Domain::DocumentDeleted { collection: "deployments".into(), document: deleted },
-            Domain::DocumentCreated { collection: "sessions".into(), document: Document::default() },
-        ];
-        for event in &events {
-            usage.handle(event).await.unwrap();
-        }
-        let owner = |kind: &str, id: &str| Some((kind.to_owned(), id.to_owned()));
-        let expected = vec![
-            UsageMetric { key: "functions.deployments".into(), value: 1, resource: owner("function", "12") },
-            UsageMetric { key: "functions.deployments.storage".into(), value: 2048, resource: owner("function", "12") },
-            UsageMetric { key: "sites.deployments".into(), value: -1, resource: owner("site", "3") },
-            UsageMetric { key: "sites.deployments.storage".into(), value: -10, resource: owner("site", "3") },
-            UsageMetric::new("sessions", 1),
-        ];
-        assert_eq!(lock(&listened).metrics, expected);
-    }
-}
-
-#[cfg(test)]
-mod team_tests {
-    use utopia_database::{Attribute, Collection, Document, Value};
-
-    use super::*;
-
-    /// A platform database with an organization `t1` and its project `p1`.
-    async fn platform() -> (Database, String) {
-        let cache = Arc::new(utopia_cache::Cache::from_dyn(Arc::new(utopia_cache::Memory::new())));
-        let db = Database::new(Arc::new(utopia_database::adapter::memory::Memory::new()), cache);
-        db.set_authorization(crate::database::Databases::unchecked());
-        db.set_database("appwrite").set_namespace("_console");
-        db.create(None).await.unwrap();
-        for (id, attributes) in [
-            ("teams", vec![Attribute::string("name", 128)]),
-            ("projects", vec![Attribute::string("teamInternalId", 64)]),
-        ] {
-            let collection = Collection::create(id, id, attributes, vec![], None, false, Default::default()).unwrap();
-            db.create_collection(collection).await.unwrap();
-        }
-        let mut team = Document::default();
-        team.put("$id", Value::from("t1"));
-        team.put("name", Value::from("Org"));
-        let team = db.create_document("teams", team).await.unwrap();
-        let sequence = team.sequence().map(utopia_database::value::to_text).unwrap_or_default();
-        let mut project = Document::default();
-        project.put("$id", Value::from("p1"));
-        project.put("teamInternalId", Value::from(sequence.as_str()));
-        db.create_document("projects", project).await.unwrap();
-        (db, sequence)
-    }
-
-    fn route(path: &'static str, groups: &'static [&'static str]) -> Route {
-        Route { path, name: "route", groups, ..super::super::lifecycle::wildcard_route() }
-    }
-
-    async fn team_of(
-        db: &Database,
-        project: &Project,
-        route: &Route,
-        target: &str,
-        headers: &[(&str, &str)],
-        path_params: &[(&str, &str)],
-    ) -> String {
-        let request = Request::new("GET", target, headers.iter().copied(), Bytes::new());
-        let params: Vec<(String, serde_json::Value)> =
-            path_params.iter().map(|(k, v)| (k.to_string(), serde_json::Value::String(v.to_string()))).collect();
-        team(db, project, route, &request, &params).await.unwrap().id().to_owned()
-    }
-
-    /// PHP's `team` resource: a project's own organization; on the console,
-    /// the organization a projects route or an `organization` route names.
-    #[utopia_async::test]
-    async fn teams_follow_php() {
-        let (db, sequence) = platform().await;
-        let users = route("/v1/users", &["api", "users"]);
-        let mut project = Project::empty();
-        project.id = "p1".into();
-        project.team_internal_id = sequence;
-        assert_eq!(team_of(&db, &project, &users, "/v1/users", &[], &[]).await, "t1");
-        project.team_internal_id = String::new();
-        assert_eq!(team_of(&db, &project, &users, "/v1/users", &[], &[]).await, "");
-
-        let mut console = Project::empty();
-        console.id = Project::CONSOLE.into();
-        let organization = [("x-appwrite-organization", "t1")];
-        // Console routes name no organization...
-        assert_eq!(team_of(&db, &console, &users, "/v1/users", &organization, &[]).await, "");
-        // ...unless they act on a project,
-        let project_route = route("/v1/projects/:projectId", &["api", "projects"]);
-        let path = [("projectId", "p1")];
-        assert_eq!(team_of(&db, &console, &project_route, "/v1/projects/p1", &[], &path).await, "t1");
-        let missing = [("projectId", "missing")];
-        assert_eq!(team_of(&db, &console, &project_route, "/v1/projects/missing", &[], &missing).await, "");
-        // list the projects of a `teamId`,
-        let projects = route("/v1/projects", &["api", "projects"]);
-        assert_eq!(team_of(&db, &console, &projects, "/v1/projects?teamId=t1", &[], &[]).await, "t1");
-        assert_eq!(team_of(&db, &console, &projects, "/v1/projects", &organization, &[]).await, "");
-        // or are in the `organization` group, with the header.
-        let keys = route("/v1/organization/keys", &["api", "organization"]);
-        assert_eq!(team_of(&db, &console, &keys, "/v1/organization/keys", &organization, &[]).await, "t1");
-        assert_eq!(team_of(&db, &console, &keys, "/v1/organization/keys", &[], &[]).await, "");
-    }
 }
