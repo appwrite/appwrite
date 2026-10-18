@@ -164,7 +164,8 @@ class S3 extends Device
      */
     private function prefix(string $path): array
     {
-        $path = ltrim(preg_replace('#/+#', '/', $path) ?? $path, '/');
+        $segments = array_filter(explode('/', $path), static fn (string $segment): bool => $segment !== '');
+        $path = implode('/', $segments) . ($segments !== [] && str_ends_with($path, '/') ? '/' : '');
         if (! $this->pathStyle) {
             return ['/', $path];
         }

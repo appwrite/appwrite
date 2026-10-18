@@ -1081,6 +1081,29 @@ final class S3Test extends TestCase
     }
 
     /**
+     * @return iterable<string, array{bool, string, string}>
+     */
+    public static function repeatedSlashes(): iterable
+    {
+        yield 'virtual-hosted' => [false, '/', 'files/root/x/'];
+        yield 'path-style' => [true, '/files', 'root/x/'];
+    }
+
+    #[DataProvider('repeatedSlashes')]
+    public function testBucketRequestsCollapseRepeatedSlashes(bool $pathStyle, string $uri, string $prefix): void
+    {
+        $client = new ScriptedClient([$this->xml('<ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>')]);
+        $device = new S3('files/root', 'key', 'secret', 'https://storage.example.com', 'us-east-1', client: $client, bucket: 'files', pathStyle: $pathStyle);
+
+        $device->listFiles('//files//root///x//');
+
+        $this->assertCount(1, $client->requests);
+        $this->assertSame($uri, $client->requests[0]->getUri()->getPath());
+        parse_str($client->requests[0]->getUri()->getQuery(), $query);
+        $this->assertSame($prefix, $query['prefix'] ?? null);
+    }
+
+    /**
      * @return iterable<string, array{string|null, bool|null}>
      */
     public static function unaddressable(): iterable
