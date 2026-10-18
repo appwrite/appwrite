@@ -36,21 +36,50 @@ trait KeysBase
             'keyId' => Id::unique(),
             'name' => 'Legacy Key',
             'scopes' => ['users.read'],
+            'description' => 'Used by the nightly backup job.',
         ]);
 
         $this->assertSame(201, $key['headers']['status-code']);
         $this->assertNotEmpty($key['body']['secret']);
+        $this->assertSame('Used by the nightly backup job.', $key['body']['description']);
         $keyId = $key['body']['$id'];
 
         $get = $this->client->call(Client::METHOD_GET, '/project/keys/' . $keyId, $projectHeaders);
 
         $this->assertSame(200, $get['headers']['status-code']);
         $this->assertSame('Legacy Key', $get['body']['name']);
+        $this->assertSame('Used by the nightly backup job.', $get['body']['description']);
+        $this->assertSame($key['body']['secret'], $get['body']['secret']);
 
         $list = $this->client->call(Client::METHOD_GET, '/project/keys', $projectHeaders);
 
         $this->assertSame(200, $list['headers']['status-code']);
         $this->assertContains($keyId, \array_column($list['body']['keys'], '$id'));
+        $this->assertNotContains('', \array_column($list['body']['keys'], 'secret'));
+
+        // A key that can only read keys does not see their secrets
+        $reader = $this->client->call(Client::METHOD_POST, '/project/keys/ephemeral', $projectHeaders, [
+            'scopes' => ['keys.read'],
+            'duration' => 900,
+        ]);
+
+        $this->assertSame(201, $reader['headers']['status-code']);
+
+        $readerHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $reader['body']['secret'],
+        ];
+
+        $get = $this->client->call(Client::METHOD_GET, '/project/keys/' . $keyId, $readerHeaders);
+
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('', $get['body']['secret']);
+
+        $list = $this->client->call(Client::METHOD_GET, '/project/keys', $readerHeaders);
+
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertSame([''], \array_unique(\array_column($list['body']['keys'], 'secret')));
 
         $updated = $this->client->call(Client::METHOD_PUT, '/project/keys/' . $keyId, $projectHeaders, [
             'name' => 'Legacy Key Updated',
@@ -59,6 +88,38 @@ trait KeysBase
 
         $this->assertSame(200, $updated['headers']['status-code']);
         $this->assertSame(['users.read', 'users.write'], $updated['body']['scopes']);
+        $this->assertSame('Used by the nightly backup job.', $updated['body']['description']);
+
+        $updated = $this->client->call(Client::METHOD_PUT, '/project/keys/' . $keyId, $projectHeaders, [
+            'name' => 'Legacy Key Updated',
+            'scopes' => ['users.read', 'users.write'],
+            'description' => 'Rotated every quarter.',
+        ]);
+
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame('Rotated every quarter.', $updated['body']['description']);
+
+        $updated = $this->client->call(Client::METHOD_PUT, '/project/keys/' . $keyId, $projectHeaders, [
+            'name' => 'Legacy Key Updated',
+            'scopes' => ['users.read', 'users.write'],
+            'description' => '',
+        ]);
+
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame('', $updated['body']['description']);
+
+        $undescribed = $this->client->call(Client::METHOD_POST, '/project/keys', $consoleHeaders, [
+            'keyId' => ID::unique(),
+            'name' => 'Legacy Key Without Description',
+            'scopes' => ['users.read'],
+        ]);
+
+        $this->assertSame(201, $undescribed['headers']['status-code']);
+        $this->assertSame('', $undescribed['body']['description']);
+
+        $delete = $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $undescribed['body']['$id'], $projectHeaders);
+
+        $this->assertSame(204, $delete['headers']['status-code']);
 
         $ephemeral = $this->client->call(Client::METHOD_POST, '/project/keys/ephemeral', $projectHeaders, [
             'scopes' => ['users.read'],
@@ -79,5 +140,35 @@ trait KeysBase
 
         $this->assertSame(404, $get['headers']['status-code']);
         $this->assertSame('key_not_found', $get['body']['type']);
+
+        $key = $this->client->call(Client::METHOD_POST, '/project/keys', $consoleHeaders, [
+            'keyId' => ID::unique(),
+            'name' => 'Legacy Key',
+            'scopes' => ['users.read'],
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertSame(400, $key['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $key['body']['type']);
+
+        $key = $this->client->call(Client::METHOD_POST, '/project/keys', $consoleHeaders, [
+            'keyId' => ID::unique(),
+            'name' => 'Legacy Key',
+            'scopes' => ['users.read'],
+        ]);
+
+        $this->assertSame(201, $key['headers']['status-code']);
+        $keyId = $key['body']['$id'];
+
+        $updated = $this->client->call(Client::METHOD_PUT, '/project/keys/' . $keyId, $projectHeaders, [
+            'name' => 'Legacy Key',
+            'scopes' => ['users.read'],
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertSame(400, $updated['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $updated['body']['type']);
+
+        $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $keyId, $projectHeaders);
     }
 }

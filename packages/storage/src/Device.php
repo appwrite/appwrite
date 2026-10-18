@@ -130,6 +130,29 @@ abstract class Device
     abstract public function read(string $path, int $offset = 0, ?int $length = null, ?string $etag = null): StreamInterface;
 
     /**
+     * Deliver bytes without requiring a seekable copy of the entire object.
+     *
+     * @param callable(string): void $sink
+     * @param int<0, max> $offset
+     * @param int<0, max>|null $length
+     */
+    public function stream(string $path, callable $sink, int $offset = 0, ?int $length = null, ?string $etag = null): void
+    {
+        $body = $this->read($path, $offset, $length, $etag);
+        try {
+            while (!$body->eof()) {
+                $chunk = $body->read(524288);
+                if ($chunk === '') {
+                    break;
+                }
+                $sink($chunk);
+            }
+        } finally {
+            $body->close();
+        }
+    }
+
+    /**
      * Write file by given path, replacing whatever was there.
      *
      * The stream is consumed in full: seekable streams are rewound and sent

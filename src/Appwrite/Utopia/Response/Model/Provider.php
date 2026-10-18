@@ -79,6 +79,14 @@ class Provider extends Model
      */
     public function filter(Document $document): Document
     {
+        // Earlier APNs provider updates stored a changed bundle ID under `bundle`; show the one delivery uses.
+        $credentials = $document->getAttribute('credentials');
+        if (\is_array($credentials) && isset($credentials['bundle'])) {
+            $credentials['bundleId'] = $credentials['bundle'];
+            unset($credentials['bundle']);
+            $document->setAttribute('credentials', $credentials);
+        }
+
         foreach (['credentials', 'options'] as $attribute) {
             $value = $document->getAttribute($attribute);
             if (\is_array($value) && empty($value)) {

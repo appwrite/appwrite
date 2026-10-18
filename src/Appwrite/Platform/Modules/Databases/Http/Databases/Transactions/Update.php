@@ -339,7 +339,7 @@ class Update extends Action
                     'status' => 'failed',
                 ])));
 
-                throw new Exception(Exception::DOCUMENT_NOT_FOUND, previous: $e, params: [$currentDocumentId ?? 'unknown']);
+                throw new Exception($this->getNotFoundException(), previous: $e, params: [$currentDocumentId ?? 'unknown']);
             } catch (DuplicateException | ConflictException $e) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
@@ -370,7 +370,7 @@ class Update extends Action
                 if ($currentChange <= 0) {
                     throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
                 }
-                throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, $this->getSDKNamespace() . ' "' . $currentAttribute . '" is not a number');
+                throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, \ucfirst($this->getAttributeKey()) . ' "' . $currentAttribute . '" is not a number');
             } catch (TransactionException $e) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
@@ -687,7 +687,7 @@ class Update extends Action
         \DateTime $createdAt,
         array &$state
     ): void {
-        if ($documentId && !isset($data['$id'])) {
+        if ($documentId) {
             $data['$id'] = $documentId;
         }
         $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $data, &$state) {
@@ -764,6 +764,10 @@ class Update extends Action
         \DateTime $createdAt,
         array &$state
     ): void {
+        if ($documentId) {
+            $data['$id'] = $documentId;
+        }
+
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {

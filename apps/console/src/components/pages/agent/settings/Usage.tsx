@@ -66,7 +66,9 @@ export function Usage() {
     if (!next?.from || !next?.to) return
     setDateRange(next)
     setChartInterval((current) =>
-      resolveUsageChartIntervalForRange(current, next),
+      resolveUsageChartIntervalForRange(current, next, undefined, {
+        refine: false,
+      }),
     )
   }
 

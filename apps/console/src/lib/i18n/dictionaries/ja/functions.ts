@@ -738,4 +738,33 @@ export const jaFunctionsDictionary: Record<string, string> = {
     'このアドレスでメールを受信するには、メールトリガーを有効にしてください。',
   'Mail is delivered when this function has an active deployment.':
     'この関数にアクティブなデプロイがある場合にメールが配信されます。',
+  // Inbound email (SMTP) custom domains
+  'Enable the email trigger under Settings → Executions before adding an email domain.':
+    'メールドメインを追加する前に、設定 → 実行 でメールトリガーを有効にしてください。',
+  'Email domain verified': 'メールドメインを検証しました',
+  'Failed to add email domain': 'メールドメインの追加に失敗しました',
+  'Verify email domain': 'メールドメインを検証',
+  'Add email domain': 'メールドメインを追加',
+  'Email domain': 'メールドメイン',
+  'Mail sent to any address on this domain runs this function. This is separate from HTTP domains and from outbound SMTP for the project.':
+    'このドメインの任意のアドレスに送信されたメールでこの関数が実行されます。HTTP ドメインやプロジェクトの送信 SMTP とは別の設定です。',
+  'After adding the domain, publish an MX record and a TXT ownership record, then verify.':
+    'ドメインを追加したら、MX レコードと所有権確認用の TXT レコードを公開してから検証してください。',
+  'Email domains': 'メールドメイン',
+  'Receive mail for this function on domains you own. The default address is on the Email card under Settings → Executions.':
+    '所有しているドメインでこの関数宛てのメールを受信します。デフォルトアドレスは 設定 → 実行 のメールカードに表示されます。',
+  'Enable the email trigger under Settings → Executions to add email domains.':
+    'メールドメインを追加するには、設定 → 実行 でメールトリガーを有効にしてください。',
+  'No email domains yet': 'メールドメインはまだありません',
+  'Add a domain you own, publish MX and TXT records, then verify to accept inbound mail.':
+    '所有しているドメインを追加し、MX と TXT レコードを公開して検証すると、受信メールを受け付けます。',
+  'Email domain has been deleted': 'メールドメインを削除しました',
+  'Point MX at Appwrite SMTP and prove ownership with a TXT record. No TLS certificate is issued for email domains.':
+    'MX を Appwrite SMTP に向け、TXT レコードで所有権を証明してください。メールドメインには TLS 証明書は発行されません。',
+  'MX target unavailable': 'MX ターゲットを取得できません',
+  'This region does not report its mail server target yet, so the MX record cannot be shown here.':
+    'このリージョンはまだメールサーバーのターゲットを公開していないため、ここに MX レコードを表示できません。',
+  Propagation: '反映',
+  'DNS changes can take up to 48 hours. The MX record must point straight at Appwrite on TCP port 25, not through a proxy.':
+    'DNS の変更が反映されるまで最大 48 時間かかることがあります。MX レコードはプロキシを経由せず、TCP ポート 25 の Appwrite を直接指す必要があります。',
 }

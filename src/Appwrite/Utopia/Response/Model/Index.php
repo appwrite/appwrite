@@ -34,6 +34,12 @@ class Index extends Model
                 'default' => '',
                 'example' => 'index1',
             ])
+            ->addRule('description', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Optional description for the index.',
+                'default' => '',
+                'example' => 'Speeds up lookups by email.',
+            ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Index type.',
