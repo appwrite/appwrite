@@ -834,6 +834,9 @@ class OpenAPI3 extends Format
                         }
                         break;
                     case \Utopia\Database\Validator\Permissions::class:
+                        // Judged by the route rather than the parent, but it is the same list
+                        // of permission strings on the wire -- see RoutePermissions.
+                    case \Appwrite\Utopia\Database\Validator\RoutePermissions::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['items'] = [
                             'type' => 'string',

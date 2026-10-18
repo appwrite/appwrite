@@ -312,6 +312,8 @@ class Mapper
             case \Appwrite\Utopia\Database\Validator\Queries\Teams::class:
             case \Appwrite\Utopia\Database\Validator\Queries\Users::class:
             case \Appwrite\Utopia\Database\Validator\Queries\Variables::class:
+                // Judged by the route rather than the parent, but it is the same list of
+                // permission strings on the wire -- see RoutePermissions.
             case \Appwrite\Utopia\Database\Validator\RoutePermissions::class:
             case \Utopia\Database\Validator\Authorization::class:
             case \Utopia\Database\Validator\Permissions::class:
