@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-18T14:10:00Z",
+  "updated": "2026-10-18T14:59:00Z",
   "tasks": [
     {
       "id": "signatures",
@@ -11,11 +11,11 @@
     },
     {
       "id": "storage-s3-delete",
-      "title": "storage: main's S3 delete fixes not ported",
+      "title": "storage: main's S3 delete and copy changes not ported",
       "area": "Libraries",
       "status": "todo",
-      "updated": "2026-10-18T14:10:00Z",
-      "note": "After the main sync on 2026-10-18: packages/storage refuses deletes of the whole bucket, the whole root or outside the root, deletes directories rather than name prefixes, deletes every object under a directory on a recursive delete, and fails when the service keeps keys (740f0ee6df, 886fe9aea3, 13bf781ea1, f57d3f9b22). API coverage stays 100% and every PHP test is ported, so it shows as behaviour, not missing symbols. client changed too, with coverage still complete."
+      "updated": "2026-10-18T14:59:00Z",
+      "note": "After the main sync on 2026-10-18 CI's storage lane shows 8 differences and 1 fuzz difference. Server-side copies: PHP's x-amz-copy-source is now /<key> where Rust sends /<bucket>/<key>. Deletes: PHP refuses the whole bucket, the whole root or paths outside the root, deletes directories rather than name prefixes, deletes every object under a directory on a recursive delete, and fails when the service keeps keys (740f0ee6df, 886fe9aea3, 13bf781ea1, f57d3f9b22). API coverage stays 100% and every PHP test is ported, so these are behaviour changes, not missing symbols."
     },
     {
       "id": "cdn-fuzz",
