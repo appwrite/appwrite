@@ -12,11 +12,17 @@
 //! PHP: `Utopia\Http\Router`; combinations are tried in the order PHP's
 //! generator yields them.
 
+mod entry;
+mod r#match;
+
 use std::collections::HashMap;
 
 use indexmap::IndexMap;
 
 use crate::error::{Error, Result};
+
+use entry::Entry;
+pub use r#match::Match;
 
 /// The segment that stands for a param in a stored template.
 ///
@@ -33,25 +39,6 @@ pub const METHODS: [&str; 5] = ["GET", "POST", "PUT", "PATCH", "DELETE"];
 
 /// Path params parsed from a request path, by name.
 pub type PathParams = Vec<(String, String)>;
-
-/// A matched route and its path params.
-///
-/// PHP: `RouteMatch`.
-#[derive(Debug)]
-pub struct Match<'a, T> {
-    /// The matched route's value.
-    pub route: &'a T,
-    /// The route's id in the router.
-    pub id: usize,
-    /// The path params, by name.
-    pub params: PathParams,
-}
-
-struct Entry<T> {
-    value: T,
-    /// Param name -> segment index, per registered template (`Route::$pathParams`).
-    params: IndexMap<String, IndexMap<String, usize>>,
-}
 
 /// The routing table: values of type `T` (an application stores [`Route`](crate::Route)s)
 /// by method and path template, each with a stable id.

@@ -6,7 +6,21 @@
 //! PHP: `Utopia\Http\Response`; the [`Wire`] stands for the server
 //! adapter's output.
 
-use std::fmt::Write;
+mod aborted;
+/// Common content types.
+///
+/// PHP: `Response::CONTENT_TYPE_*`.
+pub mod content_type;
+mod cookie;
+mod head;
+mod reason;
+/// The `SameSite` values of a cookie.
+///
+/// PHP: `Response::COOKIE_SAMESITE_*`.
+pub mod same_site;
+mod stream;
+mod wire;
+
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use bytes::Bytes;
@@ -18,346 +32,22 @@ use crate::encode;
 use crate::error::{Error, Result};
 use crate::headers::Headers;
 
+pub use aborted::Aborted;
+pub use cookie::Cookie;
+pub(crate) use head::Head;
+pub use reason::reason;
+pub(crate) use stream::Stream;
+pub use wire::Wire;
+
 /// Bodies larger than this many bytes are written in chunks.
 ///
 /// PHP: `Response::CHUNK_SIZE`.
 pub const CHUNK_SIZE: usize = 2_000_000;
 
-/// Common content types.
-///
-/// PHP: `Response::CONTENT_TYPE_*`.
-pub mod content_type {
-    /// `text/plain`.
-    pub const TEXT: &str = "text/plain";
-    /// `text/html`.
-    pub const HTML: &str = "text/html";
-    /// `application/json`.
-    pub const JSON: &str = "application/json";
-    /// `text/xml`.
-    pub const XML: &str = "text/xml";
-    /// `text/javascript`.
-    pub const JAVASCRIPT: &str = "text/javascript";
-    /// `image/*`: any image.
-    pub const IMAGE: &str = "image/*";
-    /// `image/jpeg`.
-    pub const IMAGE_JPEG: &str = "image/jpeg";
-    /// `image/png`.
-    pub const IMAGE_PNG: &str = "image/png";
-    /// `image/gif`.
-    pub const IMAGE_GIF: &str = "image/gif";
-    /// `image/svg+xml`.
-    pub const IMAGE_SVG: &str = "image/svg+xml";
-    /// `image/webp`.
-    pub const IMAGE_WEBP: &str = "image/webp";
-    /// `image/x-icon`.
-    pub const IMAGE_ICON: &str = "image/x-icon";
-    /// `image/bmp`.
-    pub const IMAGE_BMP: &str = "image/bmp";
-}
-
 /// The UTF-8 charset name, for [`Response::set_content_type`].
 ///
 /// PHP: `Response::CHARSET_UTF8`.
 pub const CHARSET_UTF8: &str = "UTF-8";
-
-/// The `SameSite` values of a cookie.
-///
-/// PHP: `Response::COOKIE_SAMESITE_*`.
-pub mod same_site {
-    /// `None`: sent with cross-site requests.
-    pub const NONE: &str = "None";
-    /// `Strict`: sent with same-site requests only.
-    pub const STRICT: &str = "Strict";
-    /// `Lax`: sent with same-site requests and top-level navigations.
-    pub const LAX: &str = "Lax";
-}
-
-/// The reason phrase of a status code, or `None` for a code the response
-/// does not accept.
-///
-/// PHP: every status code `setStatusCode()` accepts.
-pub fn reason(code: u16) -> Option<&'static str> {
-    Some(match code {
-        100 => "Continue",
-        101 => "Switching Protocols",
-        102 => "Processing",
-        103 => "Early Hints",
-        200 => "OK",
-        201 => "Created",
-        202 => "Accepted",
-        203 => "Non-Authoritative Information",
-        204 => "No Content",
-        205 => "Reset Content",
-        206 => "Partial Content",
-        207 => "Multi-Status",
-        208 => "Already Reported",
-        226 => "IM Used",
-        300 => "Multiple Choices",
-        301 => "Moved Permanently",
-        302 => "Found",
-        303 => "See Other",
-        304 => "Not Modified",
-        305 => "Use Proxy",
-        306 => "(Unused)",
-        307 => "Temporary Redirect",
-        308 => "Permanent Redirect",
-        400 => "Bad Request",
-        401 => "Unauthorized",
-        402 => "Payment Required",
-        403 => "Forbidden",
-        404 => "Not Found",
-        405 => "Method Not Allowed",
-        406 => "Not Acceptable",
-        407 => "Proxy Authentication Required",
-        408 => "Request Timeout",
-        409 => "Conflict",
-        410 => "Gone",
-        411 => "Length Required",
-        412 => "Precondition Failed",
-        413 => "Request Entity Too Large",
-        414 => "Request-URI Too Long",
-        415 => "Unsupported Media Type",
-        416 => "Requested Range Not Satisfiable",
-        417 => "Expectation Failed",
-        418 => "I'm a teapot",
-        421 => "Misdirected Request",
-        422 => "Unprocessable Entity",
-        423 => "Locked",
-        424 => "Failed Dependency",
-        425 => "Too Early",
-        426 => "Upgrade Required",
-        428 => "Precondition Required",
-        429 => "Too Many Requests",
-        431 => "Request Header Fields Too Large",
-        451 => "Unavailable For Legal Reasons",
-        500 => "Internal Server Error",
-        501 => "Not Implemented",
-        502 => "Bad Gateway",
-        503 => "Service Unavailable",
-        504 => "Gateway Timeout",
-        505 => "HTTP Version Not Supported",
-        506 => "Variant Also Negotiates",
-        507 => "Insufficient Storage",
-        508 => "Loop Detected",
-        510 => "Not Extended",
-        511 => "Network Authentication Required",
-        _ => return None,
-    })
-}
-
-/// A cookie added with [`Response::add_cookie`]. `None` means not given.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct Cookie {
-    /// The cookie name.
-    pub name: String,
-    /// The value; empty or `None` deletes the cookie.
-    pub value: Option<String>,
-    /// The expiry, in Unix seconds.
-    pub expire: Option<i64>,
-    /// The `path` attribute.
-    pub path: Option<String>,
-    /// The `domain` attribute.
-    pub domain: Option<String>,
-    /// Whether the cookie is sent over HTTPS only.
-    pub secure: Option<bool>,
-    /// Whether scripts are denied access to the cookie.
-    pub http_only: Option<bool>,
-    /// The `SameSite` attribute (see [`same_site`]).
-    pub same_site: Option<String>,
-}
-
-impl Cookie {
-    /// The `Set-Cookie` header value for this cookie at `now` (Unix
-    /// seconds), or `None` when the cookie is refused: an empty name, a name
-    /// with `=`, a name, path or domain with separators or whitespace, or an
-    /// expiry past the year 9999.
-    ///
-    /// The value is URL-encoded; an empty value deletes the cookie.
-    ///
-    /// PHP: the header Swoole sends for the cookie.
-    pub fn header(&self, now: i64) -> Option<String> {
-        let name = &self.name;
-        let forbidden =
-            |s: &str| s.bytes().any(|b| matches!(b, b',' | b';' | b' ' | b'\t' | b'\r' | b'\n' | 0x0B | 0x0C));
-        if name.is_empty() || name.contains('=') || forbidden(name) {
-            return None;
-        }
-        if self.path.as_deref().is_some_and(forbidden) || self.domain.as_deref().is_some_and(forbidden) {
-            return None;
-        }
-        // Expiry years past 9999 are refused.
-        if self.expire.is_some_and(|e| e >= 253_402_300_800) {
-            return None;
-        }
-        let value = self.value.as_deref().unwrap_or("");
-        let mut out = String::with_capacity(name.len() + value.len() * 3 + 128);
-        out.push_str(name);
-        out.push('=');
-        if value.is_empty() {
-            out.push_str("deleted; expires=Thu, 01-Jan-1970 00:00:01 GMT; Max-Age=0");
-        } else {
-            urlencode_into(&mut out, value.as_bytes());
-            let expires = self.expire.unwrap_or(0);
-            if expires > 0 {
-                out.push_str("; expires=");
-                cookie_date(&mut out, expires);
-                let _ = write!(out, "; Max-Age={}", (expires - now).max(0));
-            }
-        }
-        if let Some(path) = self.path.as_deref().filter(|p| !p.is_empty()) {
-            out.push_str("; path=");
-            out.push_str(path);
-        }
-        if let Some(domain) = self.domain.as_deref().filter(|d| !d.is_empty()) {
-            out.push_str("; domain=");
-            out.push_str(domain);
-        }
-        if self.secure == Some(true) {
-            out.push_str("; secure");
-        }
-        if self.http_only == Some(true) {
-            out.push_str("; HttpOnly");
-        }
-        if let Some(same_site) = self.same_site.as_deref().filter(|s| !s.is_empty()) {
-            out.push_str("; SameSite=");
-            out.push_str(same_site);
-        }
-        Some(out)
-    }
-}
-
-/// PHP `urlencode()`, appended: alphanumerics and `-_.` are kept, a space
-/// is `+`, every other byte is `%XX`.
-fn urlencode_into(out: &mut String, s: &[u8]) {
-    const HEX: &[u8; 16] = b"0123456789ABCDEF";
-    for &c in s {
-        if c == b' ' {
-            out.push('+');
-        } else if c.is_ascii_alphanumeric() || matches!(c, b'-' | b'.' | b'_') {
-            out.push(char::from(c));
-        } else {
-            out.push('%');
-            out.push(char::from(HEX[usize::from(c >> 4)]));
-            out.push(char::from(HEX[usize::from(c & 15)]));
-        }
-    }
-}
-
-/// `D, d-M-Y H:i:s GMT` in UTC, appended.
-fn cookie_date(out: &mut String, timestamp: i64) {
-    const DAYS: [&str; 7] = ["Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed"];
-    const MONTHS: [&str; 12] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    let days = timestamp.div_euclid(86_400);
-    let secs = timestamp.rem_euclid(86_400);
-    let (y, m, d) = civil(days);
-    let _ = write!(
-        out,
-        "{}, {:02}-{}-{:04} {:02}:{:02}:{:02} GMT",
-        DAYS[days.rem_euclid(7) as usize],
-        d,
-        MONTHS[(m - 1) as usize],
-        y,
-        secs / 3600,
-        secs % 3600 / 60,
-        secs % 60
-    );
-}
-
-/// Days since the Unix epoch to (year, month, day).
-pub(crate) fn civil(days: i64) -> (i64, i64, i64) {
-    let z = days + 719_468;
-    let era = z.div_euclid(146_097);
-    let doe = z - era * 146_097;
-    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
-    let y = yoe + era * 400;
-    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-    let mp = (5 * doy + 2) / 153;
-    let d = doy - (153 * mp + 2) / 5 + 1;
-    let m = if mp < 10 { mp + 3 } else { mp - 9 };
-    (if m <= 2 { y + 1 } else { y }, m, d)
-}
-
-/// The response on the wire: the status, headers, cookies and body bytes
-/// the response has sent so far.
-///
-/// PHP: what the server adapter was asked to send (`sendStatus`,
-/// `sendHeader`, `sendCookie`, `write`, `end`).
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct Wire {
-    /// The status sent, if any.
-    pub status: Option<u16>,
-    /// Header lines by lowercased name, in the order they were first sent.
-    pub headers: Vec<(String, Vec<String>)>,
-    /// Cookies sent.
-    pub cookies: Vec<Cookie>,
-    /// Body bytes written.
-    pub body: Vec<u8>,
-    /// Number of `write()` calls (a chunked response has at least one).
-    pub writes: usize,
-    /// Whether `end()` was called.
-    pub ended: bool,
-    /// Whether the response was aborted: the connection closed without the
-    /// terminal chunk, so the client sees the body as incomplete.
-    pub aborted: bool,
-}
-
-impl Wire {
-    fn header(&mut self, name: &str, values: &[String]) {
-        match self.headers.iter_mut().find(|(n, _)| n == name) {
-            Some((_, v)) => *v = values.to_vec(),
-            None => self.headers.push((name.to_owned(), values.to_vec())),
-        }
-    }
-
-    fn write(&mut self, content: &[u8]) -> bool {
-        if self.ended {
-            return false;
-        }
-        self.writes += 1;
-        self.body.extend_from_slice(content);
-        true
-    }
-
-    fn end(&mut self, content: Option<&[u8]>) {
-        if self.ended {
-            return;
-        }
-        if let Some(c) = content {
-            self.body.extend_from_slice(c);
-        }
-        self.ended = true;
-    }
-}
-
-/// The head of a streamed response: what is sent before the first body byte.
-#[derive(Debug)]
-pub(crate) struct Head {
-    pub status: u16,
-    pub headers: Vec<(String, Vec<String>)>,
-    pub cookies: Vec<Cookie>,
-    /// The whole body, when the response ended before anything was written.
-    pub body: Option<Bytes>,
-}
-
-/// Where a streamed response goes as it is sent (the server's connection).
-#[derive(Debug)]
-pub(crate) struct Stream {
-    pub head: Option<utopia_async::sync::oneshot::Sender<Head>>,
-    pub body: Option<utopia_async::sync::mpsc::UnboundedSender<Result<Bytes, Aborted>>>,
-}
-
-/// The error a streamed body ends with when the response is aborted: the
-/// server closes the connection instead of sending the terminal chunk.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Aborted;
-
-impl std::fmt::Display for Aborted {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str("response aborted")
-    }
-}
-
-impl std::error::Error for Aborted {}
 
 /// A hyper response body: a buffer, or the frames a streamed response
 /// sends (which end in [`Aborted`] when the response is aborted).
@@ -1094,26 +784,6 @@ pub(crate) fn head_response(
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn cookie_lines_like_swoole() {
-        let c = Cookie {
-            name: "n".into(),
-            value: Some("v a;l=ü".into()),
-            expire: Some(1000),
-            path: Some("/p".into()),
-            domain: Some("d.com".into()),
-            secure: Some(true),
-            http_only: Some(true),
-            same_site: Some("Strict".into()),
-        };
-        assert_eq!(
-            c.header(2000).unwrap(),
-            "n=v+a%3Bl%3D%C3%BC; expires=Thu, 01-Jan-1970 00:16:40 GMT; Max-Age=0; path=/p; domain=d.com; secure; HttpOnly; SameSite=Strict"
-        );
-        let empty = Cookie { name: "n".into(), ..Default::default() };
-        assert_eq!(empty.header(0).unwrap(), "n=deleted; expires=Thu, 01-Jan-1970 00:00:01 GMT; Max-Age=0");
-    }
 
     #[test]
     fn send_once() {

@@ -3,6 +3,8 @@
 //!
 //! PHP: `Utopia\Http\Files`.
 
+mod file;
+
 use std::path::Path;
 
 use bytes::Bytes;
@@ -10,20 +12,13 @@ use indexmap::IndexMap;
 
 use crate::error::{Error, Result};
 
+pub use file::File;
+
 /// MIME types by extension that override content sniffing: CSS, JavaScript
 /// and SVG.
 ///
 /// PHP: `Files::EXTENSIONS`.
 pub const EXTENSIONS: [(&str, &str); 3] = [("css", "text/css"), ("js", "text/javascript"), ("svg", "image/svg+xml")];
-
-/// A loaded file: its contents and MIME type.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct File {
-    /// The file's bytes.
-    pub contents: Bytes,
-    /// The MIME type, from [`EXTENSIONS`] or sniffed from the contents.
-    pub mime: String,
-}
 
 /// Files loaded from directories, by URI (the path relative to the load root,
 /// starting with `/`).

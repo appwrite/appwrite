@@ -5,6 +5,9 @@
 //! one Appwrite serves with: headers, cookies, query and form fields are
 //! parsed the way Swoole parses them, the JSON body the way Utopia does.
 
+mod form;
+mod range;
+
 use std::borrow::Cow;
 use std::net::IpAddr;
 use std::sync::{Arc, OnceLock};
@@ -17,7 +20,10 @@ use serde_json::{Map, Value};
 use crate::headers::{self, Headers};
 use crate::multipart;
 use crate::params::{self, Params};
-use crate::trusted::TrustedHeaders;
+use crate::trusted_headers::TrustedHeaders;
+
+use form::Form;
+pub use range::Range;
 
 /// Headers Swoole keeps a single value of (a repeated one replaces it).
 const SINGLE: [&str; 8] = [
@@ -35,28 +41,6 @@ const SINGLE: [&str; 8] = [
 ///
 /// PHP: `Request::SCHEMES`.
 pub const SCHEMES: [&str; 4] = ["http", "https", "ws", "wss"];
-
-/// How the body was encoded, decided by the original `Content-Type` (Swoole
-/// parses form bodies while reading the request).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Form {
-    None,
-    Urlencoded,
-    Multipart,
-}
-
-/// A `Range` or `Content-Range` header, parsed.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Range {
-    /// The range unit, such as `bytes`.
-    pub unit: String,
-    /// The first position, inclusive.
-    pub start: i64,
-    /// The last position, inclusive; `None` for an open range (`bytes=0-`).
-    pub end: Option<i64>,
-    /// The total size (`Content-Range` only).
-    pub size: Option<i64>,
-}
 
 /// An incoming HTTP request.
 ///
@@ -144,7 +128,7 @@ impl Request {
             // Lowercased once; common names are static and cost nothing.
             let name = headers::name(name);
             if name == "content-type" && form == Form::None {
-                form = form_kind(value);
+                form = Form::from_content_type(value);
             }
             // Swoole drops the whitespace before a value (hyper drops it around).
             let value = value.trim_start_matches([' ', '\t']).to_owned();
@@ -837,19 +821,6 @@ fn method_name(method: &str) -> Cow<'static, str> {
 
 fn now() -> f64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs_f64()).unwrap_or(0.0)
-}
-
-/// Swoole's `Content-Type` sniffing: case-insensitive prefixes.
-fn form_kind(content_type: &str) -> Form {
-    let lower = content_type.as_bytes();
-    let starts = |p: &str| lower.len() >= p.len() && lower[..p.len()].eq_ignore_ascii_case(p.as_bytes());
-    if starts("application/x-www-form-urlencoded") {
-        Form::Urlencoded
-    } else if starts("multipart/form-data") {
-        Form::Multipart
-    } else {
-        Form::None
-    }
 }
 
 /// `filter_var($ip, FILTER_VALIDATE_IP)` is truthy.

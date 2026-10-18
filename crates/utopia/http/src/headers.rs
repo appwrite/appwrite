@@ -4,9 +4,13 @@
 //! PHP: PSR-7 style headers, as `Request::$headers` and `Response::$headers`
 //! hold them.
 
+mod values;
+
 use std::borrow::Cow;
 
 use indexmap::IndexMap;
+
+use values::Values;
 
 /// Header names common enough to share one static, lowercased copy: a
 /// request or response naming them allocates nothing for the name.
@@ -67,29 +71,6 @@ pub(crate) fn name(name: &str) -> Cow<'static, str> {
     match KNOWN.iter().find(|known| known.len() == name.len() && known.eq_ignore_ascii_case(name)) {
         Some(known) => Cow::Borrowed(known),
         None => Cow::Owned(name.to_ascii_lowercase()),
-    }
-}
-
-/// The values of one header: most headers have one, kept without a list.
-#[derive(Debug, Clone)]
-enum Values {
-    One(String),
-    Many(Vec<String>),
-}
-
-impl Values {
-    fn as_slice(&self) -> &[String] {
-        match self {
-            Values::One(value) => std::slice::from_ref(value),
-            Values::Many(values) => values,
-        }
-    }
-
-    fn push(&mut self, value: String) {
-        match self {
-            Values::One(first) => *self = Values::Many(vec![std::mem::take(first), value]),
-            Values::Many(values) => values.push(value),
-        }
     }
 }
 

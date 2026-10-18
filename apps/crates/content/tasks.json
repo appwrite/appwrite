@@ -1,6 +1,14 @@
 {
-  "updated": "2026-10-18T01:02:00Z",
+  "updated": "2026-10-18T12:00:00Z",
   "tasks": [
+    {
+      "id": "crate-layout",
+      "title": "One type per file, modules after PHP namespaces",
+      "area": "Libraries",
+      "status": "review",
+      "updated": "2026-10-18T12:00:00Z",
+      "note": "utopia-http is split on branch refactor/rust-http-modules: every struct, enum and trait in its own file, satellite types under their class's module directory (request/range.rs, response/cookie.rs, server/mode.rs), public API unchanged. CONVERSION.md §4 gets the Layout rule. The other crates follow once the shape is approved."
+    },
     {
       "id": "signatures",
       "title": "One Rust method per PHP method",

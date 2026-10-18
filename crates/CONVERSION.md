@@ -55,6 +55,7 @@ From the migration brief. These are review criteria, not suggestions.
 - **Backends behind features.** Each optional backend is a cargo feature (`postgres`, `mysql`, `sqlite`, `mongodb`, `memcached`, ...) so binaries only link what they use. CI builds with `--all-features`.
 - **Dependencies.** Add third-party crates to `[workspace.dependencies]` with a reason in the PR. Prefer maintained, pure-Rust crates; avoid C dependencies unless there is no adequate alternative.
 - **Naming.** Rust naming (`get_description()` becomes `description()`, `isValid` becomes `is_valid`). The crate docs carry a table mapping each PHP class to its Rust item, so a reader of one runtime can find the other.
+- **Layout.** Modules follow the PHP library's namespaces, and every struct, enum and trait has a file of its own, named after it in snake_case. A PHP class is a module file holding its type (`Utopia\Http\Request` is `request.rs`); types that only serve it live in that module's directory (`request/range.rs`, `request/form.rs`), as do the constants modules of its class constants (`response/content_type.rs`). Free functions and type aliases stay in the module they belong to. The crate root declares the modules and re-exports the public API flat, so `utopia_http::Request` reads like `Utopia\Http\Request`. `utopia-http` is the reference layout.
 - **No `unsafe`** unless a benchmark proves it necessary, with a `// SAFETY:` comment.
 - **Configuration.** Environment variables keep their PHP names (`_APP_*`), read through `utopia-system`.
 
