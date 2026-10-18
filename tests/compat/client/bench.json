@@ -1,8 +1,8 @@
 {
   "lib": "client",
   "environment": {
-    "date": "2026-10-11T19:33:03Z",
-    "commit": "e2c3406452",
+    "date": "2026-10-18T14:19:08Z",
+    "commit": "398712d31e",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -18,10 +18,10 @@
       "kernel": "6.10.14-linuxkit"
     },
     "rust": {
-      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
       "profile": "release",
       "runs": "in a container on the same Docker network (bin/compat-rust)",
-      "image": "compat-rust:1.88",
+      "image": "compat-rust:1.97",
       "os": "Debian GNU/Linux 12 (bookworm)",
       "kernel": "6.10.14-linuxkit"
     }
@@ -31,111 +31,156 @@
       "name": "resolve",
       "description": "Resolve a relative redirect location against a request URI",
       "php": {
-        "ns": 2328.874261083744,
-        "min": 2300.307881773399,
-        "max": 2511.786699507389,
+        "ns": 2589.301957361925,
+        "min": 2450.7906744794914,
+        "max": 4052.009225782321,
         "samples": 15,
-        "calls": 8120
+        "calls": 8021,
+        "cpu": 2752.8321489423597,
+        "peak": 45152.0,
+        "retained": 0.003125129867431326,
+        "rss": 107802624.0
       },
       "rust": {
-        "ns": 317.63341247303816,
-        "min": 309.4032711078007,
-        "max": 327.7166177862607,
+        "ns": 420.87229247527233,
+        "min": 414.15998914903383,
+        "max": 425.8212929343517,
         "samples": 15,
-        "calls": 64443,
-        "allocations": 18.000001034505946,
-        "bytes": 239.0001241407135
+        "calls": 47922,
+        "cpu": 420.647613483021,
+        "rss": 22437888.0,
+        "allocations": 18.000015302644574,
+        "bytes": 239.0039077389647,
+        "peak": 1650.0,
+        "retained": 0.002300961284309225
       },
-      "speedup": 7.331956178512633,
-      "bound": null
+      "speedup": 6.1522271806810735,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "public_internet",
       "description": "Check a connected address against PublicInternet",
       "php": {
-        "ns": 1667.6229863156072,
-        "min": 1624.826779837173,
-        "max": 2029.5015589814655,
+        "ns": 1763.5387888707037,
+        "min": 1702.6186579378068,
+        "max": 1943.5443535188217,
         "samples": 15,
-        "calls": 11546
+        "calls": 9165,
+        "cpu": 1778.9998181487542,
+        "peak": 3008.0,
+        "retained": 0.002735042735042735,
+        "rss": 107802624.0
       },
       "rust": {
-        "ns": 434.923812686815,
-        "min": 425.53599025794307,
-        "max": 601.0886084357356,
+        "ns": 492.2618668199274,
+        "min": 476.98693800778494,
+        "max": 513.3831082316675,
         "samples": 15,
-        "calls": 45165,
-        "allocations": 20.000001476069226,
-        "bytes": 98.00017712830731
+        "calls": 38279,
+        "cpu": 493.97943519945665,
+        "rss": 22437888.0,
+        "allocations": 20.000019157588582,
+        "bytes": 98.00489215148428,
+        "peak": 1650.0,
+        "retained": 0.002880604683159609
       },
-      "speedup": 3.8342876100841337,
-      "bound": null
+      "speedup": 3.5825216368340342,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "backoff",
       "description": "Decide the delay after a 503 response",
       "php": {
-        "ns": 215.0208264300529,
-        "min": 211.2030484886418,
-        "max": 241.0635838150289,
+        "ns": 208.3409415989531,
+        "min": 202.75943678545704,
+        "max": 222.35451474481877,
         "samples": 15,
-        "calls": 81483
+        "calls": 98577,
+        "cpu": 210.36752995120565,
+        "peak": 3008.0,
+        "retained": 0.0002542851442696234,
+        "rss": 107802624.0
       },
       "rust": {
-        "ns": 6.556229790017525,
-        "min": 6.285685709543286,
-        "max": 6.689776339313922,
+        "ns": 6.586329790215763,
+        "min": 6.52782664171714,
+        "max": 6.74440537553754,
         "samples": 15,
-        "calls": 3054493,
-        "allocations": 2.1825771631058464e-8,
-        "bytes": 2.619092595727016e-6
+        "calls": 2996984,
+        "cpu": 6.6067706734503755,
+        "rss": 22437888.0,
+        "allocations": 2.446904399000239e-7,
+        "bytes": 0.00006248504051628792,
+        "peak": 1650.0,
+        "retained": 0.00003679254432678542
       },
-      "speedup": 32.796413993518385,
-      "bound": null
+      "speedup": 31.632327598968896,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "round_trip",
       "description": "Send a GET to the fixture server on a reused connection and read its JSON response",
       "php": {
-        "ns": 73134.47653429603,
-        "min": 70078.6714801444,
-        "max": 109740.37545126354,
+        "ns": 74182.5938566553,
+        "min": 69298.3481228669,
+        "max": 79887.08873720137,
         "samples": 15,
-        "calls": 277
+        "calls": 293,
+        "cpu": 39688.73720136519,
+        "peak": 123288.0,
+        "retained": 0.08555176336746302,
+        "rss": 107884544.0
       },
       "rust": {
-        "ns": 55200.88547486033,
-        "min": 32391.061452513968,
-        "max": 81348.93016759776,
+        "ns": 53085.71662125341,
+        "min": 52739.78201634877,
+        "max": 54224.68392370572,
         "samples": 15,
-        "calls": 358,
-        "allocations": 48.00018621973929,
-        "bytes": 7212.022346368715
+        "calls": 367,
+        "cpu": 19344.274659400544,
+        "rss": 22437888.0,
+        "allocations": 48.001998183469574,
+        "bytes": 7284.510263396912,
+        "peak": 6464.0,
+        "retained": 0.30045413260672116
       },
-      "speedup": 1.3248786845566642,
-      "bound": "A loopback round trip to the fixture server (request out, a Swoole coroutine answers, response back), the same on both runtimes, dominates the call"
+      "speedup": 1.3974115558412852,
+      "bound": "A loopback round trip to the fixture server (request out, a Swoole coroutine answers, response back), the same on both runtimes, dominates the call",
+      "compat": null
     },
     {
       "name": "raw_response",
       "description": "Send a GET answered with a fixed response on a fresh connection",
       "php": {
-        "ns": 264380.28571428574,
-        "min": 253376.31746031746,
-        "max": 300739.4126984127,
+        "ns": 267041.15,
+        "min": 235120.8375,
+        "max": 311631.25,
         "samples": 15,
-        "calls": 63
+        "calls": 80,
+        "cpu": 174987.5,
+        "peak": 115664.0,
+        "retained": 0.31333333333333335,
+        "rss": 107884544.0
       },
       "rust": {
-        "ns": 236554.01234567902,
-        "min": 230649.6913580247,
-        "max": 255051.95061728396,
+        "ns": 220168.86315789472,
+        "min": 210715.7894736842,
+        "max": 226139.47368421053,
         "samples": 15,
-        "calls": 81,
-        "allocations": 57.00082304526749,
-        "bytes": 24404.0987654321
+        "calls": 95,
+        "cpu": 102301.66456140351,
+        "rss": 22437888.0,
+        "allocations": 59.00771929824561,
+        "bytes": 24527.971228070175,
+        "peak": 22971.0,
+        "retained": 1.160701754385965
       },
-      "speedup": 1.1176317961918307,
-      "bound": "A new TCP connection and a round trip to the fixture server, the same on both runtimes, dominate the call"
+      "speedup": 1.2128924416005669,
+      "bound": "A new TCP connection and a round trip to the fixture server, the same on both runtimes, dominate the call",
+      "compat": null
     }
   ]
 }

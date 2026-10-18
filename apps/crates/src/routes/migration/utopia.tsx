@@ -1,7 +1,7 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { Search } from 'lucide-react'
 import { Fragment, useEffect, useState } from 'react'
-import { Measured, SpeedupBadge } from '@/components/Bench'
+import { Measured, SpeedupBadge, Summary } from '@/components/Bench'
 import { Performance } from '@/components/BenchLibrary'
 import { Expand, TabProgress, TestState, chip } from '@/components/Dashboard'
 import { StatusBadge } from '@/components/Status'
@@ -50,6 +50,7 @@ function Utopia() {
       <TabProgress title="Utopia libraries converted" progress={progress.utopia(libraries)}>
         {proven.length} libraries proven against PHP by bin/compat over {cases.toLocaleString('en-US')} cases; {benched.length} benchmarked against PHP
         {retired ? `; ${retired} not converted by design` : ''}. <BuildSummary run={build} /><Generated at={generated.at} commit={generated.commit} commitDate={generated.commitDate} label="Generated" />.
+        <BenchSummary libraries={benched} />
       </TabProgress>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -111,6 +112,38 @@ function Tests({ lib }: { lib: LibrarySummary }) {
         {c.cases.toLocaleString('en-US')} cases{c.complete ? ' identical' : ', gaps left'}
       </TestState>
       <span className="text-[11.5px] text-muted-foreground tabular-nums">{c.operations} operations</span>
+    </div>
+  )
+}
+
+/**
+ * Rust against PHP over every library's benchmarks: the geometric mean of each library's time and CPU means,
+ * weighted by its benchmark count (the mean of every benchmark), and of each library's driver memory ratio.
+ */
+function BenchSummary({ libraries }: { libraries: LibrarySummary[] }) {
+  const mean = (pick: (b: NonNullable<LibrarySummary['bench']>) => number | null | undefined, weighted: boolean) => {
+    const xs = libraries.flatMap((l) => (l.bench && pick(l.bench) ? [{ x: pick(l.bench)!, n: weighted ? l.bench.benchmarks : 1 }] : []))
+    const n = xs.reduce((a, x) => a + x.n, 0)
+    return n ? { x: Math.exp(xs.reduce((a, x) => a + x.n * Math.log(x.x), 0) / n), n, libraries: xs.length } : null
+  }
+  const time = mean((b) => b.speedup, true)
+  const cpu = mean((b) => b.cpu, true)
+  const memory = mean((b) => b.memory, false)
+  if (!time) return null
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-2">
+      <span>Across every benchmark:</span>
+      <Summary
+        items={[
+          { metric: 'time', x: time.x, title: `Time per call: geometric mean of ${time.n} benchmarks in ${time.libraries} libraries` },
+          { metric: 'cpu', x: cpu?.x, title: cpu ? `CPU time per call: geometric mean of ${cpu.n} benchmarks in ${cpu.libraries} libraries` : undefined },
+          {
+            metric: 'memory',
+            x: memory?.x,
+            title: memory ? `Driver peak resident memory, runtime baseline included: geometric mean over ${memory.libraries} libraries` : undefined,
+          },
+        ]}
+      />
     </div>
   )
 }

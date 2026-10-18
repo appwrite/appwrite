@@ -1,8 +1,8 @@
 {
   "lib": "compression",
   "environment": {
-    "date": "2026-10-11T19:33:03Z",
-    "commit": "e2c3406452",
+    "date": "2026-10-18T14:19:17Z",
+    "commit": "398712d31e",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -18,10 +18,10 @@
       "kernel": "6.10.14-linuxkit"
     },
     "rust": {
-      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
       "profile": "release",
       "runs": "in a container on the same Docker network (bin/compat-rust)",
-      "image": "compat-rust:1.88",
+      "image": "compat-rust:1.97",
       "os": "Debian GNU/Linux 12 (bookworm)",
       "kernel": "6.10.14-linuxkit"
     }
@@ -31,111 +31,156 @@
       "name": "gzip",
       "description": "GZIP: compress a 64 KiB text payload (gzencode, zlib level 6)",
       "php": {
-        "ns": 552500.0,
-        "min": 502324.55263157893,
-        "max": 616576.7631578947,
+        "ns": 694090.5172413794,
+        "min": 620168.1034482758,
+        "max": 1109114.9310344828,
         "samples": 15,
-        "calls": 38
+        "calls": 29,
+        "cpu": 712503.448275862,
+        "peak": 471416.0,
+        "retained": 0.864367816091954,
+        "rss": 108847104.0
       },
       "rust": {
-        "ns": 538394.6666666666,
-        "min": 499498.8611111111,
-        "max": 968473.3611111111,
+        "ns": 574447.2333333333,
+        "min": 524381.9333333333,
+        "max": 664409.7333333333,
         "samples": 15,
-        "calls": 36,
-        "allocations": 1.0018518518518518,
-        "bytes": 66542.22222222222
+        "calls": 30,
+        "cpu": 581462.1288888889,
+        "rss": 22704128.0,
+        "allocations": 1.0244444444444445,
+        "bytes": 66548.24222222222,
+        "peak": 66542.0,
+        "retained": 3.6755555555555555
       },
-      "speedup": 1.026198872698095,
-      "bound": "zlib 1.3.2's deflate, the same C library both runtimes call, dominates the call"
+      "speedup": 1.2082754985410835,
+      "bound": "zlib 1.3.2's deflate, the same C library both runtimes call, dominates the call",
+      "compat": null
     },
     {
       "name": "deflate_decompress",
       "description": "Deflate: decompress a 64 KiB text payload (gzinflate)",
       "php": {
-        "ns": 37349.67472118959,
-        "min": 36799.02416356877,
-        "max": 39424.10223048327,
+        "ns": 37169.77437858508,
+        "min": 36331.02294455067,
+        "max": 39702.038240917784,
         "samples": 15,
-        "calls": 538
+        "calls": 523,
+        "cpu": 37404.07903123008,
+        "peak": 139640.0,
+        "retained": 0.04792861695347355,
+        "rss": 108847104.0
       },
       "rust": {
-        "ns": 31180.244408945688,
-        "min": 30609.82428115016,
-        "max": 31953.140575079873,
+        "ns": 32641.948553054663,
+        "min": 31721.46302250804,
+        "max": 35782.958199356915,
         "samples": 15,
-        "calls": 626,
-        "allocations": 2.0001064962726303,
-        "bytes": 113868.01277955272
+        "calls": 622,
+        "cpu": 32976.17899249732,
+        "rss": 22835200.0,
+        "allocations": 2.0011789924973207,
+        "bytes": 113868.30107181137,
+        "peak": 75912.0,
+        "retained": 0.17727759914255092
       },
-      "speedup": 1.1978634365827447,
-      "bound": "zlib 1.3.2's inflate, the same C library both runtimes call, dominates the call"
+      "speedup": 1.1387118731031363,
+      "bound": "zlib 1.3.2's inflate, the same C library both runtimes call, dominates the call",
+      "compat": null
     },
     {
       "name": "zstd",
       "description": "Zstd: compress a 64 KiB text payload at level 3",
       "php": {
-        "ns": 120945.85628742515,
-        "min": 119638.22754491017,
-        "max": 124810.62874251496,
+        "ns": 122586.1801242236,
+        "min": 119042.18633540372,
+        "max": 133016.04347826086,
         "samples": 15,
-        "calls": 167
+        "calls": 161,
+        "cpu": 123265.42443064183,
+        "peak": 147832.0,
+        "retained": 0.1556935817805383,
+        "rss": 108847104.0
       },
       "rust": {
-        "ns": 76576.65267175573,
-        "min": 75645.35496183205,
-        "max": 79418.893129771,
+        "ns": 76657.61423220974,
+        "min": 74366.25842696629,
+        "max": 85127.02996254682,
         "samples": 15,
-        "calls": 262,
-        "allocations": 2.0002544529262085,
-        "bytes": 164423.03053435116
+        "calls": 267,
+        "cpu": 77793.8099875156,
+        "rss": 23638016.0,
+        "allocations": 2.0027465667915108,
+        "bytes": 164423.7013732834,
+        "peak": 164423.0,
+        "retained": 0.41298377028714106
       },
-      "speedup": 1.5794090243909866,
-      "bound": "libzstd 1.5.7, the same C library both runtimes call, dominates the call"
+      "speedup": 1.5991389942411713,
+      "bound": "libzstd 1.5.7, the same C library both runtimes call, dominates the call",
+      "compat": null
     },
     {
       "name": "zstd_decompress",
       "description": "Zstd: decompress a 64 KiB text payload",
       "php": {
-        "ns": 37525.48863636364,
-        "min": 36293.08712121212,
-        "max": 38595.48484848485,
+        "ns": 36911.38919925512,
+        "min": 36359.01675977654,
+        "max": 37612.35195530726,
         "samples": 15,
-        "calls": 528
+        "calls": 537,
+        "cpu": 36854.37616387337,
+        "peak": 135544.0,
+        "retained": 0.046679081315952824,
+        "rss": 109326336.0
       },
       "rust": {
-        "ns": 32997.04290429043,
-        "min": 28319.582508250824,
-        "max": 36715.41584158416,
+        "ns": 28654.266141732285,
+        "min": 28450.3937007874,
+        "max": 31278.28188976378,
         "samples": 15,
-        "calls": 606,
-        "allocations": 2.0001100110011003,
-        "bytes": 131072.01320132014
+        "calls": 635,
+        "cpu": 28985.411128608925,
+        "rss": 23638016.0,
+        "allocations": 2.0011548556430445,
+        "bytes": 131072.29490813648,
+        "peak": 131072.0,
+        "retained": 0.1736482939632546
       },
-      "speedup": 1.1372379259925864,
-      "bound": "libzstd 1.5.7, the same C library both runtimes call, dominates the call"
+      "speedup": 1.288163829311863,
+      "bound": "libzstd 1.5.7, the same C library both runtimes call, dominates the call",
+      "compat": null
     },
     {
       "name": "negotiate",
       "description": "Choose the algorithm for a browser Accept-Encoding header",
       "php": {
-        "ns": 1583.8239574816025,
-        "min": 1565.814963205233,
-        "max": 1660.326410466067,
+        "ns": 1574.0968600736041,
+        "min": 1565.170464333255,
+        "max": 1589.754130451805,
         "samples": 15,
-        "calls": 12230
+        "calls": 12771,
+        "cpu": 1575.272100853496,
+        "peak": 50128.0,
+        "retained": 0.0019627802573539007,
+        "rss": 109326336.0
       },
       "rust": {
-        "ns": 99.48447888220933,
-        "min": 96.0758156185771,
-        "max": 106.6345131377071,
+        "ns": 99.82934926605553,
+        "min": 92.9208542379374,
+        "max": 102.15124203940263,
         "samples": 15,
-        "calls": 207266,
-        "allocations": 2.0000003216478666,
-        "bytes": 9.000038597743961
+        "calls": 187957,
+        "cpu": 99.09534556662783,
+        "rss": 23638016.0,
+        "allocations": 2.0000039016016076,
+        "bytes": 9.000996327174123,
+        "peak": 1650.0,
+        "retained": 0.0005866590053398738
       },
-      "speedup": 15.920312145946573,
-      "bound": null
+      "speedup": 15.767876597877779,
+      "bound": null,
+      "compat": null
     }
   ]
 }

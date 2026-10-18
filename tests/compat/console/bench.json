@@ -1,8 +1,8 @@
 {
   "lib": "console",
   "environment": {
-    "date": "2026-10-12T02:48:11Z",
-    "commit": "b5c0f44a39",
+    "date": "2026-10-18T14:19:32Z",
+    "commit": "398712d31e",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -13,15 +13,15 @@
       "opcache": true,
       "jit": "tracing",
       "runs": "in a container of the dev image (bin/compat-php)",
-      "image": "appwrite-dev",
+      "image": "compat-cache-php",
       "os": "Alpine Linux v3.24",
       "kernel": "6.10.14-linuxkit"
     },
     "rust": {
-      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
       "profile": "release",
       "runs": "in a container on the same Docker network (bin/compat-rust)",
-      "image": "compat-rust:1.88",
+      "image": "compat-rust:1.97",
       "os": "Debian GNU/Linux 12 (bookworm)",
       "kernel": "6.10.14-linuxkit"
     }
@@ -31,22 +31,30 @@
       "name": "build",
       "description": "Build a plain command with a flag, two options and an argument",
       "php": {
-        "ns": 651.6206384814495,
-        "min": 591.3186540120794,
-        "max": 813.4225021570319,
+        "ns": 770.6936011008859,
+        "min": 744.9076717984003,
+        "max": 874.2456781628968,
         "samples": 15,
-        "calls": 28975
+        "calls": 23254,
+        "cpu": 779.005762449471,
+        "peak": 3008.0,
+        "retained": 0.001077950746824919,
+        "rss": 107655168.0
       },
       "rust": {
-        "ns": 140.26354060845853,
-        "min": 135.1922151526493,
-        "max": 147.53120488691653,
+        "ns": 213.57833350845854,
+        "min": 210.45891562467165,
+        "max": 239.77093621939687,
         "samples": 15,
-        "calls": 149624,
-        "allocations": 13.000000445561318,
-        "bytes": 376.00005346735816
+        "calls": 95170,
+        "cpu": 216.30465342720044,
+        "rss": 22315008.0,
+        "allocations": 13.00000770550944,
+        "bytes": 376.0019677069104,
+        "peak": 1650.0,
+        "retained": 0.0011586284193198138
       },
-      "speedup": 4.645687936114696,
+      "speedup": 3.608482135995145,
       "bound": null,
       "compat": null
     },
@@ -54,22 +62,30 @@
       "name": "render",
       "description": "Render a redirected pipeline of two commands as a quoted shell string",
       "php": {
-        "ns": 550.1593276879651,
-        "min": 501.47975365665894,
-        "max": 667.711290736464,
+        "ns": 721.6093945068665,
+        "min": 705.894975031211,
+        "max": 787.6807506242197,
         "samples": 15,
-        "calls": 38970
+        "calls": 25632,
+        "cpu": 728.8649604660841,
+        "peak": 3008.0,
+        "retained": 0.0009779442363712027,
+        "rss": 107655168.0
       },
       "rust": {
-        "ns": 179.14008553771572,
-        "min": 168.57723935536214,
-        "max": 198.03508648924767,
+        "ns": 176.55759213801244,
+        "min": 170.3833403183455,
+        "max": 183.05008681372254,
         "samples": 15,
-        "calls": 99839,
-        "allocations": 10.00000066774173,
-        "bytes": 197.0000801290077
+        "calls": 116917,
+        "cpu": 175.7838888556269,
+        "rss": 22315008.0,
+        "allocations": 10.000006272255817,
+        "bytes": 197.00160170605358,
+        "peak": 1650.0,
+        "retained": 0.0009431191928176969
       },
-      "speedup": 3.071112342257623,
+      "speedup": 4.087104869117128,
       "bound": null,
       "compat": null
     }

@@ -1,8 +1,8 @@
 {
   "lib": "nats",
   "environment": {
-    "date": "2026-10-12T10:32:43Z",
-    "commit": "bb98dba84e",
+    "date": "2026-10-18T14:21:35Z",
+    "commit": "398712d31e",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -13,15 +13,15 @@
       "opcache": true,
       "jit": "tracing",
       "runs": "in a container of the dev image (bin/compat-php)",
-      "image": "appwrite-dev",
+      "image": "compat-cache-php",
       "os": "Alpine Linux v3.24",
       "kernel": "6.10.14-linuxkit"
     },
     "rust": {
-      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
-      "profile": "release (thin LTO: the Docker VM had no memory for the workspace's fat-LTO link)",
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
       "runs": "in a container on the same Docker network (bin/compat-rust)",
-      "image": "compat-rust:1.88",
+      "image": "compat-rust:1.97",
       "os": "Debian GNU/Linux 12 (bookworm)",
       "kernel": "6.10.14-linuxkit"
     }
@@ -31,22 +31,30 @@
       "name": "parse_msg",
       "description": "Parse a MSG frame with a reply subject (in-memory transport)",
       "php": {
-        "ns": 1032.6481257557436,
-        "min": 958.0813180169287,
-        "max": 6882.179564691656,
+        "ns": 602.44578841815,
+        "min": 583.822950614189,
+        "max": 682.1284469791927,
         "samples": 15,
-        "calls": 3308
+        "calls": 31912,
+        "cpu": 612.5887858276928,
+        "peak": 3008.0,
+        "retained": 0.0007854934402941422,
+        "rss": 107765760.0
       },
       "rust": {
-        "ns": 537.8640846764494,
-        "min": 420.0006314649988,
-        "max": 1256.6166105364446,
+        "ns": 271.24421377472294,
+        "min": 265.4398653387572,
+        "max": 279.8043203815402,
         "samples": 15,
-        "calls": 33256,
-        "allocations": 11.00000200465079,
-        "bytes": 915.0002405580948
+        "calls": 71290,
+        "cpu": 273.0945181652406,
+        "rss": 22679552.0,
+        "allocations": 11.000010286622715,
+        "bytes": 915.0026268293823,
+        "peak": 1650.0,
+        "retained": 0.0015467339972880722
       },
-      "speedup": 1.9199053351497344,
+      "speedup": 2.221045677009356,
       "bound": null,
       "compat": null
     },
@@ -54,22 +62,30 @@
       "name": "parse_hmsg",
       "description": "Parse an HMSG frame with two headers (in-memory transport)",
       "php": {
-        "ns": 1531.395685158843,
-        "min": 1255.351588430536,
-        "max": 3873.814604077762,
+        "ns": 636.4539765652438,
+        "min": 621.6981897129722,
+        "max": 677.5938507710482,
         "samples": 15,
-        "calls": 16872
+        "calls": 31321,
+        "cpu": 638.8323063333439,
+        "peak": 3008.0,
+        "retained": 0.0008003150176133159,
+        "rss": 107765760.0
       },
       "rust": {
-        "ns": 864.4075829383886,
-        "min": 418.1121642969984,
-        "max": 1818.2412006319116,
+        "ns": 256.69914738124237,
+        "min": 253.49177831912303,
+        "max": 265.12489849776694,
         "samples": 15,
-        "calls": 15825,
-        "allocations": 11.00000421274355,
-        "bytes": 851.000505529226
+        "calls": 78816,
+        "cpu": 257.87773548518066,
+        "rss": 22679552.0,
+        "allocations": 11.000009304371362,
+        "bytes": 851.0023759981053,
+        "peak": 1650.0,
+        "retained": 0.0013990391121938017
       },
-      "speedup": 1.771612969836701,
+      "speedup": 2.4793770569872606,
       "bound": null,
       "compat": null
     },
@@ -77,22 +93,30 @@
       "name": "headers",
       "description": "Encode three headers and parse them back",
       "php": {
-        "ns": 2610.5370247463734,
-        "min": 1499.3916753579217,
-        "max": 6055.501564425903,
+        "ns": 731.5495299284911,
+        "min": 725.171512577589,
+        "max": 778.0908562924244,
         "samples": 15,
-        "calls": 10547
+        "calls": 27549,
+        "cpu": 738.2070734569918,
+        "peak": 3376.0,
+        "retained": 0.0009098938860454704,
+        "rss": 107765760.0
       },
       "rust": {
-        "ns": 1010.2464091134225,
-        "min": 923.547152055473,
-        "max": 1259.4519068845964,
+        "ns": 487.1301991798477,
+        "min": 480.14303846904903,
+        "max": 507.78961628588166,
         "samples": 15,
-        "calls": 20190,
-        "allocations": 23.000003301964668,
-        "bytes": 1040.0003962357603
+        "calls": 40968,
+        "cpu": 487.7680921694981,
+        "rss": 22679552.0,
+        "allocations": 23.00001790014971,
+        "bytes": 1040.0045710473214,
+        "peak": 1650.0,
+        "retained": 0.0026915316019006704
       },
-      "speedup": 2.584059691968955,
+      "speedup": 1.5017535992639295,
       "bound": null,
       "compat": null
     },
@@ -100,22 +124,30 @@
       "name": "publish",
       "description": "Publish a 128-byte message with a reply subject (in-memory transport)",
       "php": {
-        "ns": 447.2441941732063,
-        "min": 391.7734978733601,
-        "max": 994.5028455041036,
+        "ns": 219.41487082954694,
+        "min": 216.69542169717425,
+        "max": 235.44263057683153,
         "samples": 15,
-        "calls": 50079
+        "calls": 92436,
+        "cpu": 222.04912948778974,
+        "peak": 3008.0,
+        "retained": 0.00027117861727753975,
+        "rss": 107765760.0
       },
       "rust": {
-        "ns": 359.0268144440472,
-        "min": 305.2228727207723,
-        "max": 1376.2699320700751,
+        "ns": 172.72854246451902,
+        "min": 171.07037274507425,
+        "max": 174.87371549378759,
         "samples": 15,
-        "calls": 22376,
-        "allocations": 4.000002979382672,
-        "bytes": 1119.0003575259207
+        "calls": 115414,
+        "cpu": 172.88943340207138,
+        "rss": 22679552.0,
+        "allocations": 4.00000635393742,
+        "bytes": 1119.0016225645647,
+        "peak": 1650.0,
+        "retained": 0.0009554011356219061
       },
-      "speedup": 1.2457125099855388,
+      "speedup": 1.270287282570094,
       "bound": null,
       "compat": null
     },
@@ -123,22 +155,30 @@
       "name": "request",
       "description": "A request and its reply (in-memory transport)",
       "php": {
-        "ns": 5553.070533769063,
-        "min": 4609.931100217865,
-        "max": 8943.27559912854,
+        "ns": 2591.6199376947043,
+        "min": 2489.9895327102804,
+        "max": 2872.803738317757,
         "samples": 15,
-        "calls": 3672
+        "calls": 8025,
+        "cpu": 2601.7196261682243,
+        "peak": 123288.0,
+        "retained": 0.0031235721703011424,
+        "rss": 107765760.0
       },
       "rust": {
-        "ns": 3033.1420454545455,
-        "min": 1634.9431818181818,
-        "max": 63021.78409090909,
+        "ns": 952.6433452025791,
+        "min": 943.7493985179482,
+        "max": 977.1898277355403,
         "samples": 15,
-        "calls": 176,
-        "allocations": 29.000378787878788,
-        "bytes": 4623.045454545455
+        "calls": 20782,
+        "cpu": 952.4294453533506,
+        "rss": 22679552.0,
+        "allocations": 29.00003528694704,
+        "bytes": 4623.0090110031115,
+        "peak": 3883.0,
+        "retained": 0.0053058736727296055
       },
-      "speedup": 1.8307980472232985,
+      "speedup": 2.720451416310054,
       "bound": null,
       "compat": null
     },
@@ -146,22 +186,30 @@
       "name": "metadata",
       "description": "Parse a JetStream reply subject into message metadata",
       "php": {
-        "ns": 514.0,
-        "min": 500.0,
-        "max": 1694.3333333333333,
+        "ns": 360.0644323015859,
+        "min": 352.5473185839133,
+        "max": 383.2824519872559,
         "samples": 15,
-        "calls": 3
+        "calls": 56183,
+        "cpu": 363.04220137764094,
+        "peak": 115664.0,
+        "retained": 0.0004461610570219936,
+        "rss": 107765760.0
       },
       "rust": {
-        "ns": 120.41464165210415,
-        "min": 89.45646081308318,
-        "max": 433.7707584599998,
+        "ns": 57.49062932408526,
+        "min": 56.944248857127846,
+        "max": 58.16423788088441,
         "samples": 15,
-        "calls": 90987,
-        "allocations": 3.000000732705405,
-        "bytes": 31.000087924648575
+        "calls": 342558,
+        "cpu": 57.420227620821386,
+        "rss": 22679552.0,
+        "allocations": 3.000002140756699,
+        "bytes": 31.000546671415254,
+        "peak": 1650.0,
+        "retained": 0.0003218919618478233
       },
-      "speedup": 4.268583894349183,
+      "speedup": 6.263010799061468,
       "bound": null,
       "compat": null
     },
@@ -169,22 +217,30 @@
       "name": "server_request",
       "description": "A request answered by a subscriber of the same connection, on the NATS server",
       "php": {
-        "ns": 553125.0,
-        "min": 100562.5,
-        "max": 4537750.0,
+        "ns": 120372.71917808219,
+        "min": 112973.45890410959,
+        "max": 130643.83561643836,
         "samples": 15,
-        "calls": 2
+        "calls": 146,
+        "cpu": 45716.438356164384,
+        "peak": 71952.0,
+        "retained": 0.17168949771689498,
+        "rss": 107765760.0
       },
       "rust": {
-        "ns": 324690.46428571426,
-        "min": 129828.89285714286,
-        "max": 1103659.2142857143,
+        "ns": 107728.10204081633,
+        "min": 103615.64795918367,
+        "max": 114786.98979591837,
         "samples": 15,
-        "calls": 28,
-        "allocations": 36.00238095238095,
-        "bytes": 6389.285714285715
+        "calls": 196,
+        "cpu": 38486.87040816327,
+        "rss": 22687744.0,
+        "allocations": 36.00374149659864,
+        "bytes": 6389.955442176871,
+        "peak": 4558.0,
+        "retained": 0.5625850340136055
       },
-      "speedup": 1.7035455636703662,
+      "speedup": 1.1173752892488074,
       "bound": "A round trip to the NATS server (out to the subscriber and back), the same on both runtimes, dominates the call",
       "compat": null
     }

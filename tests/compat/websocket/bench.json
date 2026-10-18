@@ -1,8 +1,8 @@
 {
   "lib": "websocket",
   "environment": {
-    "date": "2026-10-11T19:33:03Z",
-    "commit": "e2c3406452",
+    "date": "2026-10-18T14:24:26Z",
+    "commit": "398712d31e",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -18,10 +18,10 @@
       "kernel": "6.10.14-linuxkit"
     },
     "rust": {
-      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
       "profile": "release",
       "runs": "in a container on the same Docker network (bin/compat-rust)",
-      "image": "compat-rust:1.88",
+      "image": "compat-rust:1.97",
       "os": "Debian GNU/Linux 12 (bookworm)",
       "kernel": "6.10.14-linuxkit"
     }
@@ -31,67 +31,94 @@
       "name": "dispatch",
       "description": "Deliver a message to the server's message hook, which replies to its connection",
       "php": {
-        "ns": 164.51226342058015,
-        "min": 163.67219028480127,
-        "max": 165.84923981617223,
+        "ns": 177.6538930553015,
+        "min": 172.28793975977075,
+        "max": 223.06609353088226,
         "samples": 15,
-        "calls": 121418
+        "calls": 98406,
+        "cpu": 180.7836920512977,
+        "peak": 3008.0,
+        "retained": 0.0002547270152903956,
+        "rss": 107929600.0
       },
       "rust": {
-        "ns": 25.787119672582943,
-        "min": 25.543505361222508,
-        "max": 26.468325902573337,
+        "ns": 31.2098600643925,
+        "min": 29.182959603720057,
+        "max": 77.1904735569234,
         "samples": 15,
-        "calls": 776502,
-        "allocations": 1.0000000858551126,
-        "bytes": 160.0000103026135
+        "calls": 669022,
+        "cpu": 37.95766237881564,
+        "rss": 22044672.0,
+        "allocations": 1.000001096127382,
+        "bytes": 160.0002799110742,
+        "peak": 1650.0,
+        "retained": 0.00016481769906918857
       },
-      "speedup": 6.379629268773698,
-      "bound": null
+      "speedup": 5.692236129504079,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "fanout",
       "description": "Send one message to 1,000 open connections",
       "php": {
-        "ns": 30260.432473444613,
-        "min": 30096.358118361153,
-        "max": 32105.842185128982,
+        "ns": 32956.653846153844,
+        "min": 31631.639194139196,
+        "max": 41737.78937728938,
         "samples": 15,
-        "calls": 659
+        "calls": 546,
+        "cpu": 33652.13675213675,
+        "peak": 236912.0,
+        "retained": 0.04590964590964591,
+        "rss": 107929600.0
       },
       "rust": {
-        "ns": 9204.131970260223,
-        "min": 9083.681691449814,
-        "max": 9895.562267657993,
+        "ns": 9457.578445398189,
+        "min": 9052.595135908441,
+        "max": 10862.700524558893,
         "samples": 15,
-        "calls": 2152,
-        "allocations": 1.0000309789343247,
-        "bytes": 40000.00371747212
+        "calls": 2097,
+        "cpu": 9496.60886981402,
+        "rss": 22044672.0,
+        "allocations": 1.000349705929105,
+        "bytes": 40000.089302177716,
+        "peak": 40000.0,
+        "retained": 0.05258305515816245
       },
-      "speedup": 3.287700846882694,
-      "bound": null
+      "speedup": 3.4846820501065676,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "client",
       "description": "Create a client: parse a wss URL with a path and a query",
       "php": {
-        "ns": 336.37316176470586,
-        "min": 327.28528062601185,
-        "max": 360.94411090124123,
+        "ns": 339.39254558545286,
+        "min": 331.40917234566245,
+        "max": 358.1032433065988,
         "samples": 15,
-        "calls": 59296
+        "calls": 59723,
+        "cpu": 340.7955617322193,
+        "peak": 3008.0,
+        "retained": 0.0004197154641706992,
+        "rss": 107929600.0
       },
       "rust": {
-        "ns": 140.9179170404197,
-        "min": 137.25371714371144,
-        "max": 145.60511294136833,
+        "ns": 143.68419764824318,
+        "min": 140.12026537660267,
+        "max": 153.3054976859943,
         "samples": 15,
-        "calls": 147156,
-        "allocations": 5.000000453033969,
-        "bytes": 144.00005436407622
+        "calls": 143042,
+        "cpu": 144.45159090803168,
+        "rss": 22044672.0,
+        "allocations": 5.000005126699384,
+        "bytes": 144.00130917259733,
+        "peak": 1650.0,
+        "retained": 0.0007708691619710761
       },
-      "speedup": 2.3870148582186568,
-      "bound": null
+      "speedup": 2.3620728732906877,
+      "bound": null,
+      "compat": null
     }
   ]
 }

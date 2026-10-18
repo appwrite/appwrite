@@ -1,8 +1,8 @@
 {
   "lib": "orchestration",
   "environment": {
-    "date": "2026-10-12T11:41:02Z",
-    "commit": "e4e095988a",
+    "date": "2026-10-18T14:21:55Z",
+    "commit": "398712d31e",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -13,15 +13,15 @@
       "opcache": true,
       "jit": "tracing",
       "runs": "in a container of the dev image (bin/compat-php)",
-      "image": "appwrite-dev",
+      "image": "compat-cache-php",
       "os": "Alpine Linux v3.24",
       "kernel": "6.10.14-linuxkit"
     },
     "rust": {
-      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
       "profile": "release",
       "runs": "in a container on the same Docker network (bin/compat-rust)",
-      "image": "compat-rust:1.88",
+      "image": "compat-rust:1.97",
       "os": "Debian GNU/Linux 12 (bookworm)",
       "kernel": "6.10.14-linuxkit"
     }
@@ -31,22 +31,30 @@
       "name": "parse_command",
       "description": "Split a runtime start command with a quoted script",
       "php": {
-        "ns": 933.2153088810878,
-        "min": 495.40091998547393,
-        "max": 4529.18750756567,
+        "ns": 220.70161363739814,
+        "min": 210.79608766898812,
+        "max": 258.8557626655742,
         "samples": 15,
-        "calls": 49566
+        "calls": 87876,
+        "cpu": 223.58626549531917,
+        "peak": 3008.0,
+        "retained": 0.0002852504286342877,
+        "rss": 107810816.0
       },
       "rust": {
-        "ns": 211.51634905543384,
-        "min": 136.97585879045926,
-        "max": 2143.097308916539,
+        "ns": 63.86821198064217,
+        "min": 63.31483702065249,
+        "max": 82.05519274224756,
         "samples": 15,
-        "calls": 24191,
-        "allocations": 1.000002755845838,
-        "bytes": 64.00033070150056
+        "calls": 209321,
+        "cpu": 65.36109579704537,
+        "rss": 21909504.0,
+        "allocations": 1.0000035033911234,
+        "bytes": 64.00089463869686,
+        "peak": 1650.0,
+        "retained": 0.0005267826289128499
       },
-      "speedup": 4.412024474933199,
+      "speedup": 3.455578397971915,
       "bound": null,
       "compat": null
     },
@@ -54,22 +62,30 @@
       "name": "filter_env_key",
       "description": "Filter ten environment variable names",
       "php": {
-        "ns": 2139.190625,
-        "min": 888.93125,
-        "max": 106235.2875,
+        "ns": 459.29754383341435,
+        "min": 456.8800328984261,
+        "max": 760.7231672212046,
         "samples": 15,
-        "calls": 320
+        "calls": 26749,
+        "cpu": 487.04375241442045,
+        "peak": 3008.0,
+        "retained": 0.0009371066831158797,
+        "rss": 107810816.0
       },
       "rust": {
-        "ns": 365.70535714285717,
-        "min": 356.4017857142857,
-        "max": 1168.1607142857142,
+        "ns": 257.0903745008279,
+        "min": 241.70887308853608,
+        "max": 275.47147414044997,
         "samples": 15,
-        "calls": 112,
-        "allocations": 11.000595238095238,
-        "bytes": 143.07142857142858
+        "calls": 82136,
+        "cpu": 255.58974546280965,
+        "rss": 21909504.0,
+        "allocations": 11.000008928281549,
+        "bytes": 143.0022799584429,
+        "peak": 1650.0,
+        "retained": 0.0013424888802311614
       },
-      "speedup": 5.849492175101931,
+      "speedup": 1.7865217425008468,
       "bound": null,
       "compat": null
     }

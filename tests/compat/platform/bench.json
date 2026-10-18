@@ -1,8 +1,8 @@
 {
   "lib": "platform",
   "environment": {
-    "date": "2026-10-12T02:48:25Z",
-    "commit": "b5c0f44a39",
+    "date": "2026-10-18T14:22:14Z",
+    "commit": "398712d31e",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -13,15 +13,15 @@
       "opcache": true,
       "jit": "tracing",
       "runs": "in a container of the dev image (bin/compat-php)",
-      "image": "appwrite-dev",
+      "image": "compat-cache-php",
       "os": "Alpine Linux v3.24",
       "kernel": "6.10.14-linuxkit"
     },
     "rust": {
-      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
       "profile": "release",
       "runs": "in a container on the same Docker network (bin/compat-rust)",
-      "image": "compat-rust:1.88",
+      "image": "compat-rust:1.97",
       "os": "Debian GNU/Linux 12 (bookworm)",
       "kernel": "6.10.14-linuxkit"
     }
@@ -31,22 +31,30 @@
       "name": "declare",
       "description": "Declare an action: method, path, description, groups, a label, three params and two injections",
       "php": {
-        "ns": 793.42787797319,
-        "min": 717.1502184384452,
-        "max": 908.3103319517569,
+        "ns": 978.464390101325,
+        "min": 964.5809138737335,
+        "max": 1096.6363016367889,
         "samples": 15,
-        "calls": 26781
+        "calls": 20528,
+        "cpu": 994.5440374123149,
+        "peak": 7720.0,
+        "retained": 0.0012210963886723823,
+        "rss": 107986944.0
       },
       "rust": {
-        "ns": 619.7931556729933,
-        "min": 595.7247124029259,
-        "max": 670.8987207166565,
+        "ns": 1630.0053028757902,
+        "min": 748.1815215174383,
+        "max": 3558.493167448501,
         "samples": 15,
-        "calls": 31033,
-        "allocations": 40.000002148250786,
-        "bytes": 2457.0002577900946
+        "calls": 4903,
+        "cpu": 1671.712352981168,
+        "rss": 22183936.0,
+        "allocations": 40.00014956829152,
+        "bytes": 2457.038194302808,
+        "peak": 2177.0,
+        "retained": 0.02248963219797403
       },
-      "speedup": 1.2801494671422404,
+      "speedup": 0.6002829490033175,
       "bound": null,
       "compat": null
     },
@@ -54,22 +62,30 @@
       "name": "init",
       "description": "Register a service of ten HTTP actions with two params and an injection each",
       "php": {
-        "ns": 14998.06449375867,
-        "min": 13819.14563106796,
-        "max": 18566.400832177533,
+        "ns": 14936.946085672083,
+        "min": 14632.293205317577,
+        "max": 15429.652880354504,
         "samples": 15,
-        "calls": 1442
+        "calls": 1354,
+        "cpu": 14921.614967996062,
+        "peak": 3008.0,
+        "retained": 0.018513047759724274,
+        "rss": 107986944.0
       },
       "rust": {
-        "ns": 5491.508287292818,
-        "min": 5269.886740331492,
-        "max": 6494.436771025169,
+        "ns": 7335.66339869281,
+        "min": 7138.8133623819895,
+        "max": 7695.685185185185,
         "samples": 15,
-        "calls": 3258,
-        "allocations": 288.0000204624514,
-        "bytes": 30273.002455494166
+        "calls": 2754,
+        "cpu": 7328.623965141613,
+        "rss": 22183936.0,
+        "allocations": 288.00026627935125,
+        "bytes": 30273.067998063423,
+        "peak": 1650.0,
+        "retained": 0.040038731541999516
       },
-      "speedup": 2.731137550764283,
+      "speedup": 2.0362093070319713,
       "bound": null,
       "compat": null
     }

@@ -145,9 +145,10 @@ export interface LibrarySummary {
   }
   /**
    * Geometric means over the benchmarks, compat ones left out: `speedup` (PHP time / Rust time) and `cpu` (PHP CPU
-   * time / Rust CPU time per call; null or absent when the results predate CPU measurement).
+   * time / Rust CPU time per call; null or absent when the results predate CPU measurement). `memory`: PHP's driver
+   * peak resident memory over Rust's, each the largest of the run (null or absent before memory was measured).
    */
-  bench: { speedup: number; benchmarks: number; cpu?: number | null } | null
+  bench: { speedup: number; benchmarks: number; cpu?: number | null; memory?: number | null } | null
   /** The crate's compile time (`compat build`), null without a run that timed it; older data leaves it out. */
   build?: BuildTime | null
   updated?: Updated

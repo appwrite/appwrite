@@ -1,8 +1,8 @@
 {
   "lib": "storage",
   "environment": {
-    "date": "2026-10-12T02:47:50Z",
-    "commit": "b5c0f44a39",
+    "date": "2026-10-18T14:24:56Z",
+    "commit": "398712d31e",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -13,15 +13,15 @@
       "opcache": true,
       "jit": "tracing",
       "runs": "in a container of the dev image (bin/compat-php)",
-      "image": "appwrite-dev",
+      "image": "compat-cache-php",
       "os": "Alpine Linux v3.24",
       "kernel": "6.10.14-linuxkit"
     },
     "rust": {
-      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
       "profile": "release",
       "runs": "in a container on the same Docker network (bin/compat-rust)",
-      "image": "compat-rust:1.88",
+      "image": "compat-rust:1.97",
       "os": "Debian GNU/Linux 12 (bookworm)",
       "kernel": "6.10.14-linuxkit"
     }
@@ -31,22 +31,30 @@
       "name": "local_write",
       "description": "Write a 64 KB file on the local disk (atomic rename, MD5 ETag)",
       "php": {
-        "ns": 1972018.0,
-        "min": 1118976.142857143,
-        "max": 6811178.571428572,
+        "ns": 2541222.3333333335,
+        "min": 1282597.3333333333,
+        "max": 19676680.666666668,
         "samples": 15,
-        "calls": 7
+        "calls": 3,
+        "cpu": 477533.3333333333,
+        "peak": 599944.0,
+        "retained": 8.355555555555556,
+        "rss": 108765184.0
       },
       "rust": {
-        "ns": 986633.3333333334,
-        "min": 739747.2,
-        "max": 1424294.4666666666,
+        "ns": 724705.2222222222,
+        "min": 607757.7037037037,
+        "max": 1154387.3333333333,
         "samples": 15,
-        "calls": 15,
-        "allocations": 14.004444444444445,
-        "bytes": 1102.5333333333333
+        "calls": 27,
+        "cpu": 195245.3111111111,
+        "rss": 22958080.0,
+        "allocations": 14.02716049382716,
+        "bytes": 1098.9358024691358,
+        "peak": 1650.0,
+        "retained": 4.083950617283951
       },
-      "speedup": 1.998734416703267,
+      "speedup": 3.5065599852323097,
       "bound": "File system calls (create, write, rename) on the mounted /tmp/compat-fs, the same on both runtimes, dominate the call",
       "compat": null
     },
@@ -54,22 +62,30 @@
       "name": "local_read",
       "description": "Read a 64 KB local file to the end",
       "php": {
-        "ns": 215479.16176470587,
-        "min": 162449.75,
-        "max": 435200.98529411765,
+        "ns": 148702.34806629835,
+        "min": 130572.28729281768,
+        "max": 207212.70718232045,
         "samples": 15,
-        "calls": 68
+        "calls": 181,
+        "cpu": 42200.36832412523,
+        "peak": 86944.0,
+        "retained": 0.13848987108655617,
+        "rss": 108765184.0
       },
       "rust": {
-        "ns": 182429.6222222222,
-        "min": 145673.14444444445,
-        "max": 264555.55555555556,
+        "ns": 116241.35975609756,
+        "min": 107529.21951219512,
+        "max": 124250.0,
         "samples": 15,
-        "calls": 90,
-        "allocations": 9.00074074074074,
-        "bytes": 66054.08888888889
+        "calls": 164,
+        "cpu": 26405.33780487805,
+        "rss": 23220224.0,
+        "allocations": 9.004471544715447,
+        "bytes": 66057.1418699187,
+        "peak": 65984.0,
+        "retained": 0.6723577235772358
       },
-      "speedup": 1.1811632296328782,
+      "speedup": 1.279255063587623,
       "bound": "File system calls (open, read, close) on the mounted /tmp/compat-fs, the same on both runtimes, dominate the call",
       "compat": null
     },
@@ -77,22 +93,30 @@
       "name": "local_read_range",
       "description": "Read a 4 KB range from the middle of a 64 KB local file",
       "php": {
-        "ns": 128266.66666666667,
-        "min": 90452.77575757576,
-        "max": 153996.21212121213,
+        "ns": 89240.34334763949,
+        "min": 76616.41630901287,
+        "max": 97304.18884120171,
         "samples": 15,
-        "calls": 165
+        "calls": 233,
+        "cpu": 20959.37052932761,
+        "peak": 25608.0,
+        "retained": 0.10758226037195995,
+        "rss": 108765184.0
       },
       "rust": {
-        "ns": 118172.40816326531,
-        "min": 105544.64285714286,
-        "max": 247089.92346938775,
+        "ns": 88389.32142857143,
+        "min": 57416.482142857145,
+        "max": 108848.58482142857,
         "samples": 15,
-        "calls": 196,
-        "allocations": 9.000340136054422,
-        "bytes": 4616.040816326531
+        "calls": 224,
+        "cpu": 16076.511607142857,
+        "rss": 23220224.0,
+        "allocations": 9.00327380952381,
+        "bytes": 4618.836011904762,
+        "peak": 4546.0,
+        "retained": 0.4922619047619048
       },
-      "speedup": 1.0854197579646112,
+      "speedup": 1.0096281078450837,
       "bound": "File system calls (open, seek, read, close) on the mounted /tmp/compat-fs, the same on both runtimes, dominate the call",
       "compat": null
     },
@@ -100,22 +124,30 @@
       "name": "s3_write",
       "description": "Write a 64 KB object to MinIO (SigV4-signed PUT)",
       "php": {
-        "ns": 3019048.5,
-        "min": 2642673.5,
-        "max": 3749826.5,
+        "ns": 2103972.1666666665,
+        "min": 1955680.5,
+        "max": 4679027.833333333,
         "samples": 15,
-        "calls": 6
+        "calls": 6,
+        "cpu": 869100.0,
+        "peak": 600536.0,
+        "retained": 4.177777777777778,
+        "rss": 110239744.0
       },
       "rust": {
-        "ns": 2101820.8,
-        "min": 1453245.8,
-        "max": 5739558.3,
+        "ns": 1495256.3846153845,
+        "min": 1371214.7692307692,
+        "max": 1824131.3846153845,
         "samples": 15,
-        "calls": 10,
-        "allocations": 249.00666666666666,
-        "bytes": 30120.8
+        "calls": 13,
+        "cpu": 248056.38974358974,
+        "rss": 23220224.0,
+        "allocations": 246.05641025641026,
+        "bytes": 31075.40512820513,
+        "peak": 18330.0,
+        "retained": 8.482051282051282
       },
-      "speedup": 1.4363967185023576,
+      "speedup": 1.407097932043178,
       "bound": "A MinIO round trip (PUT of 64 KB, hashing included), the same on both runtimes, dominates the call",
       "compat": null
     },
@@ -123,22 +155,30 @@
       "name": "validate_file_name",
       "description": "Validate an upload file name",
       "php": {
-        "ns": 124.45713139904684,
-        "min": 121.24225212874103,
-        "max": 130.84995756507465,
+        "ns": 128.14052438814772,
+        "min": 125.1490261929632,
+        "max": 133.19301609128533,
         "samples": 15,
-        "calls": 107223
+        "calls": 151262,
+        "cpu": 128.6337612883606,
+        "peak": 43080.0,
+        "retained": 0.00016571687976270753,
+        "rss": 110239744.0
       },
       "rust": {
-        "ns": 46.38921911806794,
-        "min": 43.056748783655856,
-        "max": 48.8831825286749,
+        "ns": 91.50863285311154,
+        "min": 90.17231824595277,
+        "max": 96.80302242685282,
         "samples": 15,
-        "calls": 454230,
-        "allocations": 3.000000146768524,
-        "bytes": 56.000017612222884
+        "calls": 215456,
+        "cpu": 91.8681255879004,
+        "rss": 23490560.0,
+        "allocations": 3.000003403633843,
+        "bytes": 56.00086916431506,
+        "peak": 1650.0,
+        "retained": 0.0005117827615228476
       },
-      "speedup": 2.6828891230586067,
+      "speedup": 1.4003107727971111,
       "bound": null,
       "compat": null
     }

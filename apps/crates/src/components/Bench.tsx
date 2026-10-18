@@ -294,13 +294,16 @@ export function Footnote({ children, metrics }: { children: ReactNode; metrics: 
  * A library's average advantage over PHP, for cards and headers: `2.1× faster · 1.9× less CPU` (geometric
  * means of its gated benchmarks). The averages get no parity tolerance: that applies to single bound benchmarks.
  */
-export function SpeedupBadge({ bench }: { bench: { speedup: number; benchmarks: number; cpu?: number | null } | null }) {
+export function SpeedupBadge({ bench }: { bench: { speedup: number; benchmarks: number; cpu?: number | null; memory?: number | null } | null }) {
   if (!bench) return null
   const of = `geometric mean of ${bench.benchmarks} benchmark${bench.benchmarks === 1 ? '' : 's'} against PHP`
   return (
     <span className="inline-flex flex-wrap items-center justify-end gap-1">
       <Verdict x={bench.speedup} title={`Time per call, ${of}: ${bench.speedup.toFixed(2)}× PHP's speed`} />
       {bench.cpu ? <Verdict x={bench.cpu} metric="cpu" long title={`CPU time per call, ${of}: PHP uses ${bench.cpu.toFixed(2)}× Rust's`} /> : null}
+      {bench.memory ? (
+        <Verdict x={bench.memory} metric="memory" long title={`Driver peak resident memory over the run, runtime baseline included: PHP uses ${bench.memory.toFixed(2)}× Rust's`} />
+      ) : null}
     </span>
   )
 }

@@ -1,8 +1,8 @@
 {
   "lib": "detector",
   "environment": {
-    "date": "2026-10-11T19:58:45Z",
-    "commit": "6b2000ecfb",
+    "date": "2026-10-18T14:19:41Z",
+    "commit": "398712d31e",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -13,15 +13,15 @@
       "opcache": true,
       "jit": "tracing",
       "runs": "in a container of the dev image (bin/compat-php)",
-      "image": "appwrite-dev",
+      "image": "compat-cache-php",
       "os": "Alpine Linux v3.24",
       "kernel": "6.10.14-linuxkit"
     },
     "rust": {
-      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
       "profile": "release",
       "runs": "in a container on the same Docker network (bin/compat-rust)",
-      "image": "compat-rust:1.88",
+      "image": "compat-rust:1.97",
       "os": "Debian GNU/Linux 12 (bookworm)",
       "kernel": "6.10.14-linuxkit"
     }
@@ -31,89 +31,125 @@
       "name": "framework",
       "description": "Score 15 frameworks on 10 file names and a package.json",
       "php": {
-        "ns": 16205.47462406015,
-        "min": 13939.536654135338,
-        "max": 19278.312969924813,
+        "ns": 14824.532356532356,
+        "min": 14233.617826617827,
+        "max": 23387.108669108668,
         "samples": 15,
-        "calls": 1064
+        "calls": 819,
+        "cpu": 16324.379324379324,
+        "peak": 45368.0,
+        "retained": 0.030606430606430608,
+        "rss": 107462656.0
       },
       "rust": {
-        "ns": 1871.9976935141617,
-        "min": 1847.8180643970845,
-        "max": 2100.163022419042,
+        "ns": 1661.5921713581652,
+        "min": 1636.3535209932709,
+        "max": 1783.8514832717278,
         "samples": 15,
-        "calls": 10839,
-        "allocations": 39.0000061506289,
-        "bytes": 5034.000738075468
+        "calls": 10551,
+        "cpu": 1673.6175528385936,
+        "rss": 22822912.0,
+        "allocations": 40.000069503680535,
+        "bytes": 5242.017748712602,
+        "peak": 3057.0,
+        "retained": 0.010450826146020914
       },
-      "speedup": 8.656781298506207,
-      "bound": null
+      "speedup": 8.921883848558918,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "runtime",
       "description": "Find the runtime of 10 file names by extension among 11 runtimes",
       "php": {
-        "ns": 3022.873661337886,
-        "min": 2987.053080862952,
-        "max": 3405.717988514667,
+        "ns": 3074.520498026116,
+        "min": 3007.7563012450655,
+        "max": 3298.315821439417,
         "samples": 15,
-        "calls": 6443
+        "calls": 6586,
+        "cpu": 3084.4923575260655,
+        "peak": 7536.0,
+        "retained": 0.0038060532442554915,
+        "rss": 107462656.0
       },
       "rust": {
-        "ns": 261.22480640065754,
-        "min": 257.97407117264055,
-        "max": 267.46192867325055,
+        "ns": 321.0667387880427,
+        "min": 316.18992315891626,
+        "max": 329.4647692381119,
         "samples": 15,
-        "calls": 77867,
-        "allocations": 18.000000856160717,
-        "bytes": 1401.0001027392861
+        "calls": 62857,
+        "cpu": 321.655194064835,
+        "rss": 22822912.0,
+        "allocations": 18.000011666693183,
+        "bytes": 1401.0029792491953,
+        "peak": 1650.0,
+        "retained": 0.001754246411166086
       },
-      "speedup": 11.571924209607824,
-      "bound": null
+      "speedup": 9.575954549610975,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "rendering",
       "description": "Tell the rendering of a 6-file Next.js build",
       "php": {
-        "ns": 1554.3033569448721,
-        "min": 1535.2248229134586,
-        "max": 1643.6967970434248,
+        "ns": 1608.3884457336235,
+        "min": 1569.0516477318508,
+        "max": 1759.7292724196277,
         "samples": 15,
-        "calls": 12988
+        "calls": 12411,
+        "cpu": 1624.4514274971127,
+        "peak": 4264.0,
+        "retained": 0.0020197136948405985,
+        "rss": 107462656.0
       },
       "rust": {
-        "ns": 181.97649397623627,
-        "min": 179.7388567273798,
-        "max": 187.73910522489024,
+        "ns": 225.02047064199223,
+        "min": 221.1726981951108,
+        "max": 240.649508795979,
         "samples": 15,
-        "calls": 108653,
-        "allocations": 13.0000006135741,
-        "bytes": 560.000073628892
+        "calls": 87540,
+        "cpu": 227.11912573299824,
+        "rss": 22822912.0,
+        "allocations": 13.000008377122839,
+        "bytes": 560.0021392125504,
+        "peak": 1650.0,
+        "retained": 0.0012596146523494022
       },
-      "speedup": 8.541231468872258,
-      "bound": null
+      "speedup": 7.147742785999994,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "adapter",
       "description": "Read the rendering adapter of a TanStack Start vite.config.ts",
       "php": {
-        "ns": 201.9637514553228,
-        "min": 192.61747757090725,
-        "max": 211.11149484889103,
+        "ns": 203.34279608048712,
+        "min": 199.7354530424614,
+        "max": 210.53394290092342,
         "samples": 15,
-        "calls": 102211
+        "calls": 99196,
+        "cpu": 204.65408551420083,
+        "peak": 57752.0,
+        "retained": 0.000252698361493071,
+        "rss": 107462656.0
       },
       "rust": {
-        "ns": 122.92606124076212,
-        "min": 119.21181972890312,
-        "max": 128.65573194968403,
+        "ns": 121.52946307303154,
+        "min": 119.78368409903679,
+        "max": 132.75567891542994,
         "samples": 15,
-        "calls": 168058,
-        "allocations": 1.0000003966884448,
-        "bytes": 166.0000476026134
+        "calls": 160506,
+        "cpu": 123.35587537745214,
+        "rss": 22822912.0,
+        "allocations": 1.000004568884237,
+        "bytes": 166.00116672689288,
+        "peak": 1650.0,
+        "retained": 0.0006869940479898986
       },
-      "speedup": 1.6429693542344777,
-      "bound": null
+      "speedup": 1.6731975188460344,
+      "bound": null,
+      "compat": null
     }
   ]
 }

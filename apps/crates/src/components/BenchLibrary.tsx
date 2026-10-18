@@ -51,6 +51,7 @@ export function Performance({ bench, stale }: { bench: Bench | null; stale?: boo
           items={[
             { metric: 'time', x: speed, title: `Time per call: geometric mean of ${gated} benchmarks` },
             { metric: 'cpu', x: cpu, title: `CPU time per call: geometric mean of ${gated} benchmarks` },
+            { metric: 'memory', php: phpRss, rust: rustRss, title: 'Driver peak resident memory over the run, runtime baseline included' },
           ]}
         />
       </div>

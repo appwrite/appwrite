@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-18T01:02:00Z",
+  "updated": "2026-10-18T14:27:00Z",
   "summary": "Appwrite's API, a PHP 8.5 and Swoole monolith, is moving to Rust one service at a time. First every Utopia library it stands on is converted and proven identical to PHP, then each API service is ported and run side by side with PHP behind Traefik, on the same database, Redis, queues and caches.",
   "sections": [
     {
@@ -168,6 +168,11 @@
       "date": "2026-10-18",
       "title": "Every global hook in Rust",
       "note": "The ten hooks every request passes through — authentication, request filters, certificates, abuse limits, session limits, the response cache and the request resources — now match PHP; the remaining hooks belong to services not yet ported."
+    },
+    {
+      "date": "2026-10-18",
+      "title": "Every library benchmark re-run with CPU and memory",
+      "note": "All 230 benchmarks of 49 libraries re-timed on one commit, both runtimes in containers on a quiet Docker VM: Rust is 3.5x faster, uses 3.5x less CPU per call and 3.8x less driver memory (geometric means). Three gated benchmarks miss: platform's action declaration, mongo's count and telemetry's in-memory counter."
     }
   ],
   "lessons": [

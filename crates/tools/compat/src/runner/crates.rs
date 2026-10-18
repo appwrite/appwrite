@@ -414,6 +414,18 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
             (Some(p), Some(r)) if r > 0.0 => Some(p / r),
             _ => None,
         });
+        // PHP's driver peak resident memory over Rust's: `rss` is a running maximum per
+        // process, so each runtime's largest over the run (null for files without it).
+        let rss = |side: &str| {
+            bench
+                .as_ref()
+                .and_then(|b| b["results"].as_array())
+                .and_then(|r| r.iter().filter_map(|x| x[side]["rss"].as_f64()).reduce(f64::max))
+        };
+        let memory = match (rss("php"), rss("rust")) {
+            (Some(p), Some(r)) if r > 0.0 => Some(p / r),
+            _ => None,
+        };
         let updated = updated(&history, lib, bench.as_ref());
         let size = library_size(root, lib, &vendored);
         // php-std: the PHP functions it reimplements, each with its Rust path and proof.
@@ -464,7 +476,7 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
                 "releases": sync["releases"].as_array().map(Vec::len).unwrap_or(0),
                 "upstream": sync["upstream"]["commits"],
             },
-            "bench": speedup.map(|x| json!({ "speedup": x, "benchmarks": benchmarks, "cpu": cpu })),
+            "bench": speedup.map(|x| json!({ "speedup": x, "benchmarks": benchmarks, "cpu": cpu, "memory": memory })),
             // `compat build --write` runs: the crate's latest compile time and its average.
             "build": lib.rust.as_ref().and_then(|_| super::build::summary(root, &lib.slug)),
             "updated": updated,

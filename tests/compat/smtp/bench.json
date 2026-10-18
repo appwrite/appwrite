@@ -1,8 +1,8 @@
 {
   "lib": "smtp",
   "environment": {
-    "date": "2026-10-11T19:33:03Z",
-    "commit": "e2c3406452",
+    "date": "2026-10-18T14:23:07Z",
+    "commit": "398712d31e",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -18,10 +18,10 @@
       "kernel": "6.10.14-linuxkit"
     },
     "rust": {
-      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
       "profile": "release",
       "runs": "in a container on the same Docker network (bin/compat-rust)",
-      "image": "compat-rust:1.88",
+      "image": "compat-rust:1.97",
       "os": "Debian GNU/Linux 12 (bookworm)",
       "kernel": "6.10.14-linuxkit"
     }
@@ -31,89 +31,125 @@
       "name": "message",
       "description": "Build and render a message with text, HTML and a 4 KiB attachment",
       "php": {
-        "ns": 13416.114569536423,
-        "min": 13049.641059602649,
-        "max": 14483.74701986755,
+        "ns": 21384.833150384195,
+        "min": 20324.780461031834,
+        "max": 26173.61909989023,
         "samples": 15,
-        "calls": 1510
+        "calls": 911,
+        "cpu": 22037.760702524698,
+        "peak": 45368.0,
+        "retained": 0.027515550676911818,
+        "rss": 107679744.0
       },
       "rust": {
-        "ns": 6025.291731186126,
-        "min": 5988.954475069681,
-        "max": 7688.835552802725,
+        "ns": 17498.046063651593,
+        "min": 16354.620603015075,
+        "max": 25419.31825795645,
         "samples": 15,
-        "calls": 3229,
-        "allocations": 117.0000206462269,
-        "bytes": 46096.00247754723
+        "calls": 1194,
+        "cpu": 17928.65940815187,
+        "rss": 22716416.0,
+        "allocations": 117.00061418202122,
+        "bytes": 46096.15683975433,
+        "peak": 24095.0,
+        "retained": 0.09235064209938582
       },
-      "speedup": 2.226633193559137,
-      "bound": null
+      "speedup": 1.222126920491229,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "header",
       "description": "Encode and fold a long non-ASCII subject",
       "php": {
-        "ns": 3631.178762696214,
-        "min": 3602.300646352724,
-        "max": 3879.701385041551,
+        "ns": 5501.059513830679,
+        "min": 5044.984632578933,
+        "max": 5661.0785135512715,
         "samples": 15,
-        "calls": 5415
+        "calls": 3579,
+        "cpu": 5373.605290118283,
+        "peak": 3560.0,
+        "retained": 0.00700381857129552,
+        "rss": 107679744.0
       },
       "rust": {
-        "ns": 176.91381096050796,
-        "min": 174.15454586391678,
-        "max": 187.58612149322286,
+        "ns": 314.1731944005193,
+        "min": 295.9486658787889,
+        "max": 337.98916390632024,
         "samples": 15,
-        "calls": 111035,
-        "allocations": 6.000000600411282,
-        "bytes": 690.0000720493538
+        "calls": 60077,
+        "cpu": 317.85587939921544,
+        "rss": 22978560.0,
+        "allocations": 6.00001220655714,
+        "bytes": 690.003117110819,
+        "peak": 1650.0,
+        "retained": 0.001835422319134888
       },
-      "speedup": 20.525128835231488,
-      "bound": null
+      "speedup": 17.509639943431107,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "ehlo",
       "description": "Read a ten-line EHLO reply into capabilities",
       "php": {
-        "ns": 1623.5952801412748,
-        "min": 1599.363862578263,
-        "max": 1690.8679563332798,
+        "ns": 1713.7909770421784,
+        "min": 1623.6059797116925,
+        "max": 1820.8459690336358,
         "samples": 15,
-        "calls": 12458
+        "calls": 11238,
+        "cpu": 1720.4781396452513,
+        "peak": 3072.0,
+        "retained": 0.0022305273773506554,
+        "rss": 107679744.0
       },
       "rust": {
-        "ns": 859.4640181802879,
-        "min": 838.4079622927363,
-        "max": 921.1486406868108,
+        "ns": 906.3090025415794,
+        "min": 881.6270566727605,
+        "max": 968.0147144067419,
         "samples": 15,
-        "calls": 23762,
-        "allocations": 46.000002805599976,
-        "bytes": 2356.0003366719975
+        "calls": 22427,
+        "cpu": 912.3675242639081,
+        "rss": 22978560.0,
+        "allocations": 46.00003269868165,
+        "bytes": 2356.00835005425,
+        "peak": 1650.0,
+        "retained": 0.004916692676981614
       },
-      "speedup": 1.889078827964031,
-      "bound": null
+      "speedup": 1.8909565857077024,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "send",
       "description": "Send a message to Mailpit over an open session",
       "php": {
-        "ns": 43726792.0,
-        "min": 41830250.0,
-        "max": 46134709.0,
+        "ns": 43155125.0,
+        "min": 41532667.0,
+        "max": 45059500.0,
         "samples": 15,
-        "calls": 1
+        "calls": 1,
+        "cpu": 854533.3333333334,
+        "peak": 118848.0,
+        "retained": 25.066666666666666,
+        "rss": 107679744.0
       },
       "rust": {
-        "ns": 282845.15,
-        "min": 194480.55,
-        "max": 330292.36666666664,
+        "ns": 251062.91836734695,
+        "min": 185999.16326530612,
+        "max": 336924.32653061225,
         "samples": 15,
-        "calls": 60,
-        "allocations": 58.00111111111111,
-        "bytes": 4353.133333333333
+        "calls": 49,
+        "cpu": 51472.80952380953,
+        "rss": 22978560.0,
+        "allocations": 58.01496598639456,
+        "bytes": 4356.821768707483,
+        "peak": 2899.0,
+        "retained": 2.250340136054422
       },
-      "speedup": 154.5962234105835,
-      "bound": "A Mailpit round trip (MAIL, RCPT, DATA and the stored message), the same on both runtimes, dominates the call"
+      "speedup": 171.88968120276866,
+      "bound": "A Mailpit round trip (MAIL, RCPT, DATA and the stored message), the same on both runtimes, dominates the call",
+      "compat": null
     }
   ]
 }

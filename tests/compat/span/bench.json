@@ -1,8 +1,8 @@
 {
   "lib": "span",
   "environment": {
-    "date": "2026-10-11T16:04:42Z",
-    "commit": "c74b41c1e9",
+    "date": "2026-10-18T14:23:14Z",
+    "commit": "398712d31e",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -18,10 +18,10 @@
       "kernel": "6.10.14-linuxkit"
     },
     "rust": {
-      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
       "profile": "release",
       "runs": "in a container on the same Docker network (bin/compat-rust)",
-      "image": "compat-rust:1.88",
+      "image": "compat-rust:1.97",
       "os": "Debian GNU/Linux 12 (bookworm)",
       "kernel": "6.10.14-linuxkit"
     }
@@ -31,67 +31,94 @@
       "name": "add",
       "description": "Set an attribute on the current span",
       "php": {
-        "ns": 63.23439396524802,
-        "min": 62.74180379329107,
-        "max": 64.46467332687274,
+        "ns": 79.17920468685193,
+        "min": 72.84212982165077,
+        "max": 97.79502799668188,
         "samples": 15,
-        "calls": 310601
+        "calls": 38576,
+        "cpu": 79.59180146550533,
+        "peak": 3008.0,
+        "retained": 0.0006497995299322549,
+        "rss": 107552768.0
       },
       "rust": {
-        "ns": 18.122339275288148,
-        "min": 18.057540311826486,
-        "max": 18.22141410355292,
+        "ns": 23.954888053894212,
+        "min": 23.87557838203724,
+        "max": 25.802744859718423,
         "samples": 15,
-        "calls": 1109848,
-        "allocations": 6.006828562710089e-8,
-        "bytes": 7.208194275252106e-6
+        "calls": 809586,
+        "cpu": 24.15759066979913,
+        "rss": 22446080.0,
+        "allocations": 9.05812765207567e-7,
+        "bytes": 0.00023131164158800505,
+        "peak": 1650.0,
+        "retained": 0.00013620130124121052
       },
-      "speedup": 3.4893063751143454,
-      "bound": null
+      "speedup": 3.3053464707792783,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "set",
       "description": "Set an attribute on a span held by the caller",
       "php": {
-        "ns": 36.99356375871949,
-        "min": 36.65615407615998,
-        "max": 39.06154454651088,
+        "ns": 47.64980032288215,
+        "min": 47.25534360513968,
+        "max": 57.77851889615846,
         "samples": 15,
-        "calls": 528414
+        "calls": 423684,
+        "cpu": 49.01137010916941,
+        "peak": 3008.0,
+        "retained": 0.00005916359047466193,
+        "rss": 107552768.0
       },
       "rust": {
-        "ns": 4.595527335718887,
-        "min": 4.528175558998031,
-        "max": 4.9410688387810735,
+        "ns": 6.905876054777548,
+        "min": 6.840165349520587,
+        "max": 7.075685969746861,
         "samples": 15,
-        "calls": 4411554,
-        "allocations": 1.5111832852248135e-8,
-        "bytes": 1.8134199422697762e-6
+        "calls": 2899071,
+        "cpu": 6.913963887052094,
+        "rss": 22708224.0,
+        "allocations": 2.5295459591480627e-7,
+        "bytes": 0.00006459540544769916,
+        "peak": 1650.0,
+        "retained": 0.00003803517287664451
       },
-      "speedup": 8.049906149221615,
-      "bound": null
+      "speedup": 6.89989219976191,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "lifecycle",
       "description": "Start a span, add three attributes and finish it without exporters",
       "php": {
-        "ns": 954.9921190030539,
-        "min": 943.3430203920796,
-        "max": 968.6093980888583,
+        "ns": 1109.4817766384306,
+        "min": 1090.027808738297,
+        "max": 1258.0342732946947,
         "samples": 15,
-        "calls": 20302
+        "calls": 17944,
+        "cpu": 1127.8793282805766,
+        "peak": 3008.0,
+        "retained": 0.001396938623866845,
+        "rss": 107552768.0
       },
       "rust": {
-        "ns": 512.0690536430781,
-        "min": 506.3944389072044,
-        "max": 529.451736563674,
+        "ns": 683.1092935990382,
+        "min": 669.5174323290466,
+        "max": 723.8530365404932,
         "samples": 15,
-        "calls": 39129,
-        "allocations": 16.000001703766173,
-        "bytes": 1422.000204451941
+        "calls": 27449,
+        "cpu": 689.3685623034233,
+        "rss": 23101440.0,
+        "allocations": 16.0000267162131,
+        "bytes": 1422.0068223493267,
+        "peak": 1650.0,
+        "retained": 0.004017146951315774
       },
-      "speedup": 1.8649674535276675,
-      "bound": null
+      "speedup": 1.6241643716966592,
+      "bound": null,
+      "compat": null
     }
   ]
 }
