@@ -60,6 +60,16 @@ pub(super) async fn run(platform: &Platform, request: Request) -> Response {
         if ctx.route.has_group("api") {
             authenticate(&mut ctx).await?;
             state.hooks.init(&mut ctx).await?;
+        } else if ctx.route.groups.iter().any(|g| CONSOLE_FORBIDDEN.contains(g)) {
+            resolve_project(&mut ctx).await;
+        }
+        // Hooks run group by group, in the route's order: these groups'
+        // come after every `api` hook.
+        console_forbidden(&ctx)?;
+        // A hook sent the response (`$response->isSent()`): no action
+        // (`finalize` sends it).
+        if ctx.sent.is_some() {
+            return Ok(Response::new());
         }
         let action = ctx.route.action;
         action(&mut ctx).await
@@ -91,6 +101,67 @@ async fn resolve_project(ctx: &mut Context) {
             ctx.project_found = false;
         }
     }
+}
+
+/// The `projectIdFromPath` resource: the route's `projectId` when the
+/// request path is under `/v1/projects`.
+fn project_id_from_path(ctx: &Context) -> String {
+    let path = ctx.request.route_path();
+    path_project(&path, &ctx.path_params)
+}
+
+fn path_project(path: &str, params: &[(String, Value)]) -> String {
+    let mut segments = path.split('/').filter(|s| !s.is_empty());
+    if segments.next() != Some("v1") || segments.next() != Some("projects") {
+        return String::new();
+    }
+    match params.iter().find(|(k, _)| k == "projectId") {
+        Some((_, Value::String(id))) => id.clone(),
+        _ => String::new(),
+    }
+}
+
+/// Whether the product behind an SDK namespace is on (any namespace but
+/// the operator's products is).
+fn product_enabled(products: &[(&str, bool)], namespace: &str) -> bool {
+    let namespace = namespace.to_lowercase();
+    products.iter().find(|(name, _)| *name == namespace).is_none_or(|(_, on)| *on)
+}
+
+/// Whether the `Host` header names a host forced HTTPS leaves alone:
+/// `localhost` and the migration host, with or without the port (internal
+/// traffic before a public domain is set up).
+fn local_host(host: &str, port: &str, migration_host: Option<&str>) -> bool {
+    let mut local = vec!["localhost".to_owned(), format!("localhost:{port}")];
+    if let Some(migration) = migration_host.filter(|h| !h.is_empty() && *h != "0") {
+        local.push(migration.to_owned());
+        local.push(format!("{migration}:{port}"));
+    }
+    local.iter().any(|h| h == host)
+}
+
+/// The groups of the project services the console has none of.
+const CONSOLE_FORBIDDEN: [&str; 4] = ["database", "functions", "sites", "messaging"];
+
+/// `general.php`'s init hook for the `database`, `functions`, `sites` and
+/// `messaging` groups: the console project has no databases, functions,
+/// sites or messaging, and a request that names no project is told so.
+fn console_forbidden(ctx: &Context) -> Result<()> {
+    refuse_console(ctx.route.groups, &ctx.project.id, ctx.request.header_or_empty("x-appwrite-project"))
+}
+
+/// [`console_forbidden`] for a route's groups, the project and the
+/// `X-Appwrite-Project` header.
+fn refuse_console(groups: &[&str], project_id: &str, header: &str) -> Result<()> {
+    if !groups.iter().any(|g| CONSOLE_FORBIDDEN.contains(g)) || project_id != Project::CONSOLE {
+        return Ok(());
+    }
+    let message = if header.is_empty() {
+        "No Appwrite project was specified. Please specify your project ID when initializing your Appwrite SDK."
+    } else {
+        "This endpoint is not available for the console project. The Appwrite Console is a reserved project ID and cannot be used with the Appwrite SDKs and APIs. Please check if your project ID is correct."
+    };
+    Err(Error::with_message(ErrorType::GeneralAccessForbidden, message))
 }
 
 /// The `allowedHostnames` resource.
@@ -221,23 +292,24 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
     }
 
     // -- response format, locale -----------------------------------------
+    // `version_compare()` against each filter's version (see
+    // `Version::from_format`).
     let format = ctx
         .request
         .header("x-appwrite-response-format")
         .map(str::to_owned)
-        .or_else(|| state.config.response_format.clone());
-    if let Some(f) = format.as_deref().and_then(Version::parse) {
-        let current = Version::parse(VERSION).expect("valid version");
-        if f > current {
+        .or_else(|| state.config.response_format.clone())
+        .unwrap_or_default();
+    if let Some(f) = Version::from_format(&format) {
+        if crate::response::version_compare(&format, VERSION) == std::cmp::Ordering::Greater {
             ctx.response_headers.push((
                 "x-appwrite-warning",
                 format!(
-                    "The current SDK is built for Appwrite {}. However, the current Appwrite server version is {VERSION}. Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks",
-                    format.as_deref().unwrap_or("")
+                    "The current SDK is built for Appwrite {format}. However, the current Appwrite server version is {VERSION}. Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks"
                 ),
             ));
         }
-        if f < current {
+        if f < Version::parse(VERSION).expect("valid version") {
             ctx.format = Some(f);
         }
     }
@@ -257,15 +329,16 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
     }
 
     // -- API key ---------------------------------------------------------------
+    let mut ctx_team_sequence = String::new();
     let key_header = ctx.request.header_or_empty("x-appwrite-key").to_owned();
     if !key_header.is_empty() {
         // The project's organization (`$team`) and its keys, for an
         // organization key.
         let organization = if key_header.starts_with("organization_") {
-            match load_team_id(&platform_db, &ctx.project.team_internal_id).await? {
-                Some(id) => {
-                    let keys = project::owned_keys(&platform_db, "teams", &ctx.project.team_internal_id).await?;
-                    Some((id, keys))
+            match load_team(&platform_db, ctx).await? {
+                Some((id, sequence)) => {
+                    let keys = project::owned_keys(&platform_db, "teams", &sequence).await?;
+                    Some((id, sequence, keys))
                 }
                 None => None,
             }
@@ -275,7 +348,7 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
         let account_user = ctx.user.as_ref().map(|u| u.id.clone()).unwrap_or_default();
         let owners = Owners {
             account: (!ctx.account_keys.is_empty()).then_some((account_user.as_str(), ctx.account_keys.as_slice())),
-            organization: organization.as_ref().map(|(id, keys)| (id.as_str(), keys.as_slice())),
+            organization: organization.as_ref().map(|(id, _, keys)| (id.as_str(), keys.as_slice())),
         };
         let key = ApiKey::decode(&ctx.project, &key_header, &state.config.openssl_key_v1, &owners);
         if !key.project_id.is_empty() && (header_project.is_empty() || header_project != key.project_id) {
@@ -290,6 +363,8 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
             return Err(Error::new(ErrorType::OrganizationIdMissing));
         }
         ctx.key = Some(key);
+        // The organization's own sequence locks its keys' usage updates.
+        ctx_team_sequence = organization.map(|(_, sequence, _)| sequence).unwrap_or_default();
     }
     // Request filters for an older response format: `general.php` adds them,
     // and the first read of the params runs them, before its headers.
@@ -298,11 +373,54 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
     {
         let model = format!("{}.{}", ctx.route.namespace, ctx.route.sdk_method);
         let mut params = ctx.request.params().clone();
-        crate::request::apply(format, &model, &mut params)?;
+        // `V20` (before 1.8.0) reads the project database and the route's
+        // collection.
+        let db = if format < Version(1, 8, 0)
+            && matches!(model.as_str(), "databases.getDocument" | "databases.listDocuments")
+        {
+            Some(ctx.db()?)
+        } else {
+            None
+        };
+        let path = |key: &str| match ctx.param(key) {
+            Some(Value::String(s)) => s.clone(),
+            _ => String::new(),
+        };
+        let related = db.as_ref().map(|db| crate::request::Related {
+            db,
+            database_id: path("databaseId"),
+            collection_id: path("collectionId"),
+        });
+        crate::request::apply(format, &model, &mut params, related).await?;
         if matches!(ctx.request.method(), "POST" | "PUT" | "PATCH" | "DELETE") {
             ctx.request.set_payload(params);
         } else {
             ctx.request.set_query(params);
+        }
+    }
+
+    // -- forced HTTPS ---------------------------------------------------------
+    // `_APP_OPTIONS_FORCE_HTTPS`: plain HTTP is redirected (GET) or refused,
+    // except on localhost and the migration host (proxies). The redirect is
+    // sent here, before the security headers; the hooks after it still run,
+    // and the action does not.
+    if state.config.force_https && ctx.request.protocol() != "https" {
+        let local = local_host(
+            ctx.request.header_or_empty("host"),
+            &ctx.request.port(),
+            state.config.migration_host.as_deref(),
+        );
+        if !local {
+            if ctx.request.method() != Method::GET {
+                return Err(Error::with_message(
+                    ErrorType::GeneralProtocolUnsupported,
+                    "Method unsupported over HTTP. Please use HTTPS instead.",
+                ));
+            }
+            let url = format!("https://{}{}", ctx.request.hostname(), ctx.request.uri());
+            let mut response = Response::with_body(StatusCode::MOVED_PERMANENTLY, "text/html", Bytes::new());
+            response.add("location", &url);
+            ctx.send(response);
         }
     }
 
@@ -320,7 +438,20 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
         }
     }
 
+    // -- certificate for the main domain -------------------------------------
+    certify(ctx).await?;
+
     // -- auth (shared/api.php) -----------------------------------------------
+    // Project management under `/v1/projects/:projectId` acts on the project
+    // in the path: no other project may be named.
+    let path_project = project_id_from_path(ctx);
+    if !path_project.is_empty() {
+        for named in [header_project.as_str(), ctx.project.id.as_str()] {
+            if !named.is_empty() && named != Project::CONSOLE && named != path_project {
+                return Err(Error::new(ErrorType::UserUnauthorized));
+            }
+        }
+    }
     if !ctx.project_found {
         return Err(Error::new(ErrorType::ProjectNotFound));
     }
@@ -361,7 +492,7 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
                     sequence: ctx.user.as_ref().map(|u| u.sequence.to_string()).unwrap_or_default(),
                 }
             } else {
-                KeyOwner::Team { id: key.team_id.clone(), sequence: ctx.project.team_internal_id.clone() }
+                KeyOwner::Team { id: key.team_id.clone(), sequence: ctx_team_sequence.clone() }
             };
             track_key_usage(ctx, owner, stored).await;
         }
@@ -370,8 +501,8 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
             extra_roles.push(format!("team:{}", key.team_id));
             extra_roles.push(format!("team:{}/owner", key.team_id));
         }
-    } else if ctx.user.is_some() && ctx.mode == Mode::Admin && !ctx.project.is_console() {
-        let team_id = load_team_id(&platform_db, &ctx.project.team_internal_id).await?;
+    } else if let Some(team_id) = admin_team(ctx, &platform_db).await? {
+        let team_id = Some(team_id);
         let source = ctx.roles_user().cloned().unwrap_or_default();
         let admin_roles = source
             .memberships
@@ -382,11 +513,17 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
         if admin_roles.is_empty() {
             return Err(Error::new(ErrorType::UserUnauthorized));
         }
+        // On the console, project routes act on the project in the path.
+        let project_id = if ctx.project.is_console() && ctx.route.path.starts_with("/v1/projects/:projectId") {
+            path_project.clone()
+        } else {
+            ctx.project.id.clone()
+        };
         scopes = vec!["teams.read".to_owned(), "projects.read".to_owned()];
-        let project_prefix = format!("project-{}", ctx.project.id);
+        let project_prefix = format!("project-{project_id}");
         for admin_role in admin_roles {
             let team_wide = !admin_role.starts_with("project-");
-            if team_wide || admin_role.starts_with(&project_prefix) {
+            if team_wide || (project_id != Project::CONSOLE && admin_role.starts_with(&project_prefix)) {
                 let r =
                     if team_wide { admin_role.clone() } else { admin_role.rsplit('-').next().unwrap_or("").to_owned() };
                 scopes.extend(roles::scopes(&r).into_iter().map(str::to_owned));
@@ -394,7 +531,12 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
                 role = r;
             }
         }
-        authorization = false;
+        // The console's project list and project read the platform
+        // database, where permissions limit an admin to their projects.
+        let projects = ctx.project.is_console() && matches!(ctx.route.path, "/v1/projects" | "/v1/projects/:projectId");
+        if !projects {
+            authorization = false;
+        }
     }
 
     let mut unique_scopes: Vec<String> = Vec::with_capacity(scopes.len());
@@ -460,6 +602,12 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
         }
     }
 
+    // Products an operator provisions (DocumentsDB, VectorsDB, embeddings)
+    // are closed to everyone, keys included, until turned on.
+    if !ctx.route.namespace.is_empty() && !product_enabled(&state.config.products, ctx.route.namespace) {
+        return Err(Error::new(ErrorType::GeneralServiceDisabled));
+    }
+
     // Service and API toggles.
     let privileged_or_key = roles::is_privileged(&ctx.roles) || roles::is_key(&ctx.roles);
     if !ctx.route.namespace.is_empty() && ctx.project.service_disabled(ctx.route.namespace) && !privileged_or_key {
@@ -505,6 +653,7 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
 
     // The hooks routes opt into, in PHP's order.
     guards::abuse(ctx).await?;
+    guards::context(ctx).await?;
     guards::session_active(ctx)?;
     guards::mfa_fresh(ctx)?;
     guards::recent_session(ctx)?;
@@ -512,8 +661,6 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
     Ok(())
 }
 
-/// The `$id` of the project's team (the `team` resource:
-/// `findOne('teams', [equal('$sequence', [$teamInternalId])])`).
 /// PHP's `rule` resource: the custom domain rule of the request's origin
 /// (or referer), when it serves the project or a trusted one.
 async fn rule_domain(
@@ -549,14 +696,128 @@ async fn rule_domain(
     Ok(Some(rule.string_or_empty("domain")))
 }
 
-async fn load_team_id(platform_db: &Database, team_internal_id: &str) -> Result<Option<String>> {
-    if team_internal_id.is_empty() {
+/// `general.php`'s certificate hook: the first request to one of the
+/// platform's own hostnames (a known, non-test domain) creates its `rules`
+/// document and queues a certificate for it. Each hostname is looked at
+/// once per process.
+async fn certify(ctx: &Context) -> Result<()> {
+    let state = &ctx.state;
+    let hostname = ctx.request.hostname();
+    let seen = |name: &str| state.certified.lock().unwrap_or_else(|e| e.into_inner()).contains(name);
+    let remember = |name: &str| {
+        state.certified.lock().unwrap_or_else(|e| e.into_inner()).insert(name.to_owned());
+    };
+    if seen(&hostname) {
+        return Ok(());
+    }
+    let domain = utopia_domains::Domain::new(&hostname)
+        .map_err(|e| Error::with_message(ErrorType::GeneralUnknown, e.to_string()))?;
+    let name = domain.get().to_owned();
+    if name.is_empty() || !domain.is_known() || domain.is_test() {
+        remember(&name);
+        return Ok(());
+    }
+    if ctx.request.uri().starts_with("/.well-known/acme-challenge") {
+        return Ok(());
+    }
+    if !state.config.platform_hostnames().contains(&name) {
+        return Ok(());
+    }
+    // Whatever happens next, the hostname is not looked at again.
+    let issued = issue(ctx, &name).await;
+    remember(&name);
+    issued
+}
+
+/// Creates the `rules` document of a platform hostname and queues its
+/// certificate, unless the rule exists.
+async fn issue(ctx: &Context, domain: &str) -> Result<()> {
+    let state = &ctx.state;
+    let platform_db = ctx.platform_db()?;
+    let authorization = platform_db.authorization();
+    let existing = if state.config.rules_md5 {
+        use md5::{Digest, Md5};
+        let id = hex::encode(Md5::digest(domain.as_bytes()));
+        authorization.skip(platform_db.get_document("rules", &id, Vec::new(), false)).await?
+    } else {
+        authorization.skip(platform_db.find_one("rules", vec![Query::equal("domain", [domain])])).await?
+    };
+    if !existing.is_empty() {
+        return Ok(());
+    }
+    // A domain under one of Appwrite's own is Appwrite's.
+    let owner =
+        if state.config.appwrite_domains.iter().any(|d| domain.ends_with(d.as_str())) { "Appwrite" } else { "" };
+    let id = if state.config.rules_md5 {
+        use md5::{Digest, Md5};
+        hex::encode(Md5::digest(domain.as_bytes()))
+    } else {
+        crate::database::unique_id()
+    };
+    let console = state.projects.console();
+    let mut rule = Document::default();
+    rule.put("$id", id.as_str().into());
+    rule.put("domain", domain.into());
+    rule.put("type", "api".into());
+    rule.put("status", "verifying".into());
+    rule.put("projectId", console.id.as_str().into());
+    rule.put("projectInternalId", console.sequence.as_str().into());
+    rule.put("search", format!("{id} {domain}").as_str().into());
+    rule.put("owner", owner.into());
+    rule.put("region", console.region.as_str().into());
+    let rule = match authorization.skip(platform_db.create_document("rules", rule)).await {
+        Ok(rule) => rule,
+        Err(e) if e.is_a(utopia_database::Kind::Duplicate) => {
+            tracing::info!("Certificate already exists");
+            return Ok(());
+        }
+        Err(e) => return Err(e.into()),
+    };
+    // `RuleCreated` has no listener in CE.
+    tracing::info!("Issuing a TLS certificate for the main domain ({domain}) in a few seconds...");
+    let message = serde_json::json!({
+        "project": {
+            "$id": console.id,
+            "$sequence": console.sequence,
+            "database": console.database,
+        },
+        "domain": utopia_database::Value::Array(rule.array_copy()).to_json(),
+        "skipRenewCheck": true,
+        "validationDomain": null,
+        "action": "generation",
+        "skipDomainValidation": false,
+    });
+    ctx.enqueue(&state.config.queue_certificates, &message).await;
+    Ok(())
+}
+
+/// The team whose membership roles an admin request takes: on the console,
+/// the organization the route acts on (the `team` resource, when there is
+/// one); elsewhere, in admin mode, the project's organization (`""` when it
+/// has none, which no membership matches). `None` when no admin roles
+/// apply.
+async fn admin_team(ctx: &Context, platform_db: &Database) -> Result<Option<String>> {
+    if ctx.user.is_none() {
         return Ok(None);
     }
-    let authorization = platform_db.authorization();
-    let team =
-        authorization.skip(platform_db.find_one("teams", vec![Query::equal("$sequence", [team_internal_id])])).await?;
-    Ok(if team.is_empty() { None } else { Some(team.id().to_owned()) })
+    if ctx.project.is_console() {
+        return Ok(load_team(platform_db, ctx).await?.map(|(id, _)| id));
+    }
+    if ctx.mode != Mode::Admin {
+        return Ok(None);
+    }
+    Ok(Some(load_team(platform_db, ctx).await?.map(|(id, _)| id).unwrap_or_default()))
+}
+
+/// The `$id` and `$sequence` of the `team` resource ([`super::context::team`]),
+/// `None` when it is empty.
+async fn load_team(platform_db: &Database, ctx: &Context) -> Result<Option<(String, String)>> {
+    let team = super::context::team(platform_db, &ctx.project, &ctx.route, &ctx.request, &ctx.path_params).await?;
+    if team.is_empty() {
+        return Ok(None);
+    }
+    let sequence = team.sequence().map(utopia_database::value::to_text).unwrap_or_default();
+    Ok(Some((team.id().to_owned(), sequence)))
 }
 
 /// The user an impersonator names (the `targetUser` resource): by id,
@@ -873,7 +1134,7 @@ async fn track_access(ctx: &mut Context) {
 }
 
 /// Builds the final response (success or error) and schedules shutdown work.
-pub(super) fn finalize(ctx: Context, result: Result<Response>) -> Response {
+pub(super) fn finalize(mut ctx: Context, result: Result<Response>) -> Response {
     let state = ctx.state.clone();
     let allowed = allowed_hostnames(&state, &ctx.project, ctx.project_found, &ctx.request, ctx.rule_domain.as_deref());
     let cors = network::cors_headers(ctx.request.header_or_empty("origin"), &allowed);
@@ -882,6 +1143,26 @@ pub(super) fn finalize(ctx: Context, result: Result<Response>) -> Response {
         .header("x-forwarded-proto")
         .map(|p| p.split(',').next().unwrap_or("").trim().eq_ignore_ascii_case("https"))
         .unwrap_or(false);
+
+    // A response a hook sent stays as it was sent (with the CORS and
+    // security headers when they came before it); an error after it only
+    // skips the shutdown hooks.
+    if let Some(mut sent) = ctx.sent.take() {
+        ctx.failed |= result.is_err();
+        if ctx.sent_secured {
+            for (k, v) in &cors {
+                sent.add(k, v);
+            }
+            sent.set("server", "Appwrite");
+            sent.set("x-content-type-options", "nosniff");
+            if https {
+                sent.set("strict-transport-security", "max-age=10886400");
+            }
+        } else {
+            sent.set("server", "swoole-http-server");
+        }
+        return send(ctx, sent, true);
+    }
 
     let mut response = match result {
         Ok(response) => response,
@@ -939,7 +1220,14 @@ pub(super) fn finalize(ctx: Context, result: Result<Response>) -> Response {
         response.set("expires", "0");
         response.set("pragma", "no-cache");
     }
-    // `Response::send()`: compression, `X-Debug-Speed` (from the request start), then the body.
+    send(ctx, response, api)
+}
+
+/// `Response::send()`: compression, `X-Debug-Speed` (from the request
+/// start), then the body; and the shutdown hooks of a success.
+fn send(ctx: Context, mut response: Response, api: bool) -> Response {
+    let state = ctx.state.clone();
+    let is_error = response.status().as_u16() >= 400;
     let body: Bytes = response.staged().cloned().unwrap_or_default();
     response.set_started(ctx.started);
     let accept = ctx.request.header_line_or("accept-encoding", "");
@@ -954,7 +1242,7 @@ pub(super) fn finalize(ctx: Context, result: Result<Response>) -> Response {
     response.flush();
 
     if !is_error && api && !ctx.failed {
-        shutdown::schedule(ctx, response.status(), body, response.size());
+        shutdown::schedule(ctx, response.status(), response.content_type().to_owned(), body, response.size());
     }
     response
 }
@@ -976,4 +1264,52 @@ pub(crate) fn error_response(state: &super::State, error: &Error) -> Response {
         StatusCode::from_u16(status).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR),
         crate::json::to_vec(&model),
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn console_is_refused_by_project_services() {
+        assert!(refuse_console(&["api", "users"], Project::CONSOLE, "").is_ok());
+        assert!(refuse_console(&["api", "database"], "project1", "project1").is_ok());
+        let missing = refuse_console(&["api", "database"], Project::CONSOLE, "").unwrap_err();
+        assert_eq!(missing.kind, ErrorType::GeneralAccessForbidden);
+        assert!(missing.public_message().starts_with("No Appwrite project was specified."));
+        let console = refuse_console(&["api", "messaging"], Project::CONSOLE, "console").unwrap_err();
+        assert!(console.public_message().starts_with("This endpoint is not available for the console project."));
+        for group in CONSOLE_FORBIDDEN {
+            assert!(refuse_console(&[group], Project::CONSOLE, "").is_err());
+        }
+    }
+
+    #[test]
+    fn forced_https_spares_local_hosts() {
+        assert!(local_host("localhost", "", None));
+        assert!(local_host("localhost:8080", "8080", None));
+        assert!(!local_host("localhost:8080", "80", None));
+        assert!(!local_host("appwrite.io", "443", None));
+        assert!(local_host("migration", "80", Some("migration")));
+        assert!(local_host("migration:80", "80", Some("migration")));
+        assert!(!local_host("0", "80", Some("0")));
+    }
+
+    #[test]
+    fn project_from_path_only_under_projects() {
+        let params = vec![("projectId".to_owned(), Value::String("p1".to_owned()))];
+        assert_eq!(path_project("/v1/projects/p1/keys", &params), "p1");
+        assert_eq!(path_project("//v1//projects/p1", &params), "p1");
+        assert_eq!(path_project("/v1/users", &params), "");
+        assert_eq!(path_project("/v1/projects", &[]), "");
+    }
+
+    #[test]
+    fn products_are_closed_until_enabled() {
+        let products = [("documentsdb", false), ("vectorsdb", true), ("embeddings", true)];
+        assert!(!product_enabled(&products, "documentsdb"));
+        assert!(!product_enabled(&products, "DocumentsDB"));
+        assert!(product_enabled(&products, "vectorsdb"));
+        assert!(product_enabled(&products, "users"));
+    }
 }

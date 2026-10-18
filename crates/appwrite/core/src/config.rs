@@ -82,6 +82,8 @@ pub struct Config {
     pub geo_endpoint: Option<String>,
     pub geo_secret: Option<String>,
     pub assets: PathBuf,
+    /// `APP_STORAGE_CACHE`: the response cache's files (`app-<projectId>/<key>`).
+    pub storage_cache: PathBuf,
     pub port: u16,
     pub db_pool_size: usize,
     pub redis_connections: usize,
@@ -120,6 +122,15 @@ pub struct Config {
     /// domain (before the 1.7 migration).
     pub rules_md5: bool,
     pub locking: bool,
+    /// The products an operator turns on (`_APP_DOCUMENTSDB`,
+    /// `_APP_VECTORSDB`, `_APP_EMBEDDING`): an SDK namespace and whether it
+    /// is on.
+    pub products: Vec<(&'static str, bool)>,
+    /// `_APP_CERTIFICATES_QUEUE_NAME`.
+    pub queue_certificates: String,
+    /// The domains Appwrite owns (`_APP_DOMAIN_FUNCTIONS_FALLBACK`,
+    /// `_APP_DOMAIN_FUNCTIONS`, `_APP_DOMAIN_SITES`, each a list).
+    pub appwrite_domains: Vec<String>,
 }
 
 fn list(value: Option<String>) -> Vec<String> {
@@ -203,6 +214,7 @@ impl Config {
             geo_endpoint: env("_APP_GEO_ENDPOINT"),
             geo_secret: env("_APP_GEO_SECRET"),
             assets: PathBuf::from(env_or("_APP_RUST_ASSETS", "/usr/src/code").as_ref()),
+            storage_cache: PathBuf::from(env_or("_APP_RUST_STORAGE_CACHE", "/storage/cache").as_ref()),
             port: env_int("_APP_RUST_PORT", 8080) as u16,
             db_pool_size: env_int("_APP_RUST_DB_POOL", (cpus * 8).max(16) as i64) as usize,
             redis_connections: env_int("_APP_RUST_REDIS_CONNECTIONS", cpus.clamp(1, 8) as i64) as usize,
@@ -229,6 +241,19 @@ impl Config {
                 .map(|c| c.to_uppercase())
                 .collect(),
             locking: env_or("_APP_LOCKING_ENABLED", "enabled") == "enabled",
+            products: vec![
+                ("documentsdb", env_or("_APP_DOCUMENTSDB", "disabled") == "enabled"),
+                ("vectorsdb", env_or("_APP_VECTORSDB", "disabled") == "enabled"),
+                ("embeddings", env_or("_APP_EMBEDDING", "enabled") == "enabled"),
+            ],
+            queue_certificates: env_or("_APP_CERTIFICATES_QUEUE_NAME", "v1-certificates").into_owned(),
+            // `explode(',')` without trimming, empty entries skipped.
+            appwrite_domains: ["_APP_DOMAIN_FUNCTIONS_FALLBACK", "_APP_DOMAIN_FUNCTIONS", "_APP_DOMAIN_SITES"]
+                .iter()
+                .flat_map(|name| {
+                    env_or(name, "").split(',').filter(|d| !d.is_empty()).map(str::to_owned).collect::<Vec<_>>()
+                })
+                .collect(),
             domain,
             console_domain,
         }

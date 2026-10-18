@@ -438,6 +438,9 @@ async fn twin(
     // scenarios delete, `u4` the tokens they exchange.
     post("/users", json!({"userId": "s1", "email": "s1@example.com", "password": "password-1234", "name": "Signer"}))
         .await?;
+    // `s2` signs in at its session limit (see [`Setup::SessionLimit`]).
+    post("/users", json!({"userId": "s2", "email": "s2@example.com", "password": "password-1234", "name": "Limit"}))
+        .await?;
     // The mock OAuth2 provider (the browser flow and the native ID tokens).
     let console_patch = |path: String, body: Value| {
         let headers = console.headers.clone();
@@ -765,7 +768,13 @@ enum Setup {
     Token,
     /// An ID token the mock provider signed for a new subject (`{id-token}`).
     IdToken,
+    /// `s2` holds the project's `maxSessions` (10) sessions: the session the
+    /// request creates makes the `session` group's limit delete the oldest.
+    SessionLimit,
 }
+
+/// The project's `maxSessions` (`APP_LIMIT_USER_SESSIONS_DEFAULT`).
+const MAX_SESSIONS: u64 = 10;
 
 /// Which identities, origins and variants a route runs under.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -879,6 +888,14 @@ const ROUTES: &[Route] = &[
         "/account/sessions/email",
         Some(r#"{"email":"s1@example.com","password":"wrong-password"}"#),
         Setup::None,
+        Reduced,
+    ),
+    account(
+        "account.sessions.email.limit",
+        "POST",
+        "/account/sessions/email",
+        Some(r#"{"email":"s2@example.com","password":"password-1234"}"#),
+        Setup::SessionLimit,
         Reduced,
     ),
     account("account.sessions.anonymous", "POST", "/account/sessions/anonymous", None, Setup::None, Reduced),
@@ -1251,9 +1268,12 @@ enum Variant {
     Mcp,
     /// `X-Appwrite-Timeout` (the development database timeout).
     Timeout,
+    /// `X-Appwrite-Response-Format` of a pre-release (`1.5.0-rc1`), which
+    /// PHP's `version_compare()` puts before `1.5.0`: the 1.4 filters apply.
+    PreRelease,
 }
 
-const VARIANTS: [Variant; 7] = [
+const VARIANTS: [Variant; 8] = [
     Variant::Preflight,
     Variant::OldFormat,
     Variant::NewFormat,
@@ -1261,6 +1281,7 @@ const VARIANTS: [Variant; 7] = [
     Variant::Cli,
     Variant::Mcp,
     Variant::Timeout,
+    Variant::PreRelease,
 ];
 
 struct Scenario {
@@ -1411,10 +1432,18 @@ async fn prepare(api: &Api, stack: &Stack, scenario: &Scenario, twin: &Twin) -> 
             let r = api.send("GET", &url, &[], None).await?;
             prepared.id_token = r.body["token"].as_str().unwrap_or_default().to_owned();
         }
+        Setup::SessionLimit => {
+            let url = format!("{}/users/s2/sessions", stack.php);
+            let held = api.send("GET", &url, &headers, None).await?.body["total"].as_u64().unwrap_or(0);
+            for _ in held..MAX_SESSIONS {
+                post("/users/s2/sessions".into(), json!({})).await?;
+            }
+        }
     }
     match scenario.route.setup {
         Setup::FreshSession => purge_host_cache("u3").await?,
         Setup::Token => purge_host_cache("u4").await?,
+        Setup::SessionLimit => purge_host_cache("s2").await?,
         _ => {}
     }
     Ok(prepared)
@@ -1552,6 +1581,7 @@ fn request(
         Variant::Cli => headers.push(("x-sdk-name".into(), "Command Line".into())),
         Variant::Mcp => headers.push(("x-sdk-name".into(), "mcp".into())),
         Variant::Timeout => headers.push(("x-appwrite-timeout".into(), "5000".into())),
+        Variant::PreRelease => headers.push(("x-appwrite-response-format".into(), "1.5.0-rc1".into())),
     }
     (method, format!("{}{path}", twin.endpoint), headers, body)
 }
