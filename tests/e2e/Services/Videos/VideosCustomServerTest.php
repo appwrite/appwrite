@@ -878,7 +878,7 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
-     * A project accepts ENCODE_LIMIT video creates per ENCODE_PERIOD. The next
+     * A project accepts VIDEO_LIMIT video creates per ENCODE_PERIOD. The next
      * create is rate-limited. Uses a fresh project so exhausting the project-scoped
      * counter does not break later createVideo() calls in this suite.
      */
@@ -927,14 +927,14 @@ final class VideosCustomServerTest extends Scope
         $bucketId = $bucket['body']['$id'];
         $fileId = $file['body']['$id'];
 
-        for ($i = 0; $i < Base::ENCODE_LIMIT; $i++) {
+        for ($i = 0; $i < Base::VIDEO_LIMIT; $i++) {
             $response = $this->client->call(Client::METHOD_POST, '/videos', $headers, [
                 'bucketId' => $bucketId,
                 'fileId' => $fileId,
                 'name' => 'Rate limit video ' . $i,
             ]);
             $this->assertEquals(201, $response['headers']['status-code'], 'Video create ' . ($i + 1) . ' should be accepted');
-            $this->assertSame(Base::ENCODE_LIMIT, (int) $response['headers']['x-ratelimit-limit']);
+            $this->assertSame(Base::VIDEO_LIMIT, (int) $response['headers']['x-ratelimit-limit']);
         }
 
         $limited = $this->client->call(Client::METHOD_POST, '/videos', $headers, [
@@ -947,7 +947,7 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
-     * A video accepts ENCODE_LIMIT caption creates per ENCODE_PERIOD. Codes are
+     * A video accepts CAPTION_LIMIT caption creates per ENCODE_PERIOD. Codes are
      * not unique per video, so distinct names alone would work; distinct ISO
      * 639-2 codes keep the fixtures readable.
      */
@@ -962,11 +962,11 @@ final class VideosCustomServerTest extends Scope
         $bucketId = $this->getVideoBucket()['$id'];
         $fileId = $this->getCaptionFile()['$id'];
 
-        // Enough ISO 639-2 codes for ENCODE_LIMIT + 1 creates.
-        $codes = ['aar', 'abk', 'afr', 'aka', 'amh', 'arg', 'ara', 'asm', 'ava', 'aym', 'aze'];
-        $this->assertGreaterThan(Base::ENCODE_LIMIT, \count($codes), 'Need more language codes than ENCODE_LIMIT');
+        // Enough ISO 639-2 codes for CAPTION_LIMIT + 1 creates.
+        $codes = ['aar', 'abk', 'afr', 'aka', 'amh', 'arg', 'ara', 'asm', 'ava', 'aym', 'aze', 'bak', 'bel', 'bul', 'bih', 'bis', 'bam', 'ben', 'bod', 'bre', 'bos'];
+        $this->assertGreaterThan(Base::CAPTION_LIMIT, \count($codes), 'Need more language codes than CAPTION_LIMIT');
 
-        for ($i = 0; $i < Base::ENCODE_LIMIT; $i++) {
+        for ($i = 0; $i < Base::CAPTION_LIMIT; $i++) {
             $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
                 'bucketId' => $bucketId,
                 'fileId' => $fileId,
@@ -974,21 +974,21 @@ final class VideosCustomServerTest extends Scope
                 'code' => $codes[$i],
             ]);
             $this->assertEquals(201, $response['headers']['status-code'], 'Caption create ' . ($i + 1) . ' should be accepted');
-            $this->assertSame(Base::ENCODE_LIMIT, (int) $response['headers']['x-ratelimit-limit']);
+            $this->assertSame(Base::CAPTION_LIMIT, (int) $response['headers']['x-ratelimit-limit']);
         }
 
         $limited = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
             'bucketId' => $bucketId,
             'fileId' => $fileId,
             'name' => 'Caption over',
-            'code' => $codes[Base::ENCODE_LIMIT],
+            'code' => $codes[Base::CAPTION_LIMIT],
         ]);
         $this->assertEquals(429, $limited['headers']['status-code']);
         $this->assertEquals('general_rate_limit_exceeded', $limited['body']['type']);
     }
 
     /**
-     * A video accepts ENCODE_LIMIT encode creates per ENCODE_PERIOD. The next
+     * A video accepts RENDITION_LIMIT rendition creates per ENCODE_PERIOD. The next
      * distinct profile+output pair is rate-limited; a duplicate of an earlier
      * pair is still reported as already existing.
      */
@@ -1016,16 +1016,16 @@ final class VideosCustomServerTest extends Scope
                 $pairs[] = ['profileId' => $profile['$id'], 'output' => $output];
             }
         }
-        $this->assertGreaterThan(Base::ENCODE_LIMIT, \count($pairs), 'Need more profile/output pairs than ENCODE_LIMIT');
+        $this->assertGreaterThan(Base::RENDITION_LIMIT, \count($pairs), 'Need more profile/output pairs than RENDITION_LIMIT');
 
         $firstPair = $pairs[0];
-        for ($i = 0; $i < Base::ENCODE_LIMIT; $i++) {
+        for ($i = 0; $i < Base::RENDITION_LIMIT; $i++) {
             $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), $pairs[$i]);
             $this->assertEquals(202, $response['headers']['status-code'], 'Encode create ' . ($i + 1) . ' should be accepted');
-            $this->assertSame(Base::ENCODE_LIMIT, (int) $response['headers']['x-ratelimit-limit']);
+            $this->assertSame(Base::RENDITION_LIMIT, (int) $response['headers']['x-ratelimit-limit']);
         }
 
-        $limited = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), $pairs[Base::ENCODE_LIMIT]);
+        $limited = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), $pairs[Base::RENDITION_LIMIT]);
         $this->assertEquals(429, $limited['headers']['status-code']);
         $this->assertEquals('general_rate_limit_exceeded', $limited['body']['type']);
 

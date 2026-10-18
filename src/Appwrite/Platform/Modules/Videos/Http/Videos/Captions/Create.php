@@ -108,7 +108,7 @@ class Create extends Base
 
         $isRateLimited = $timelimit(
             'url:/v1/videos/captions,projectId:{projectId},videoId:{videoId}',
-            self::ENCODE_LIMIT,
+            self::CAPTION_LIMIT,
             self::ENCODE_PERIOD,
             function (TimeLimit $timeLimit) use ($project, $video, $response): bool {
                 $timeLimit = $timeLimit->withParams([
