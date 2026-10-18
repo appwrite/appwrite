@@ -106,63 +106,60 @@ final class BaseTest extends TestCase
         $this->assertFalse(Base::jobMatches($name, ''));
     }
 
-    public function testRenditionLockPathShape(): void
+    public function testLockPathShape(): void
     {
         $this->assertSame(
             \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/locks',
             Base::tmpLocksRoot()
         );
         $this->assertSame(
-            Base::tmpLocksRoot() . '/proj1/ren1.lock',
-            Base::renditionLockPath('proj1', 'ren1')
+            Base::tmpLocksRoot() . '/timeline~vid1.lock',
+            Base::timelineLockPath('vid1')
+        );
+        $this->assertSame(
+            Base::tmpLocksRoot() . '/encode~vid1~ren1.lock',
+            Base::encodeLockPath('vid1', 'ren1')
+        );
+        $this->assertSame(
+            Base::tmpLocksRoot() . '/caption~vid1~cap1.lock',
+            Base::captionLockPath('vid1', 'cap1')
         );
     }
 
-    public function testRemoveRenditionLockDeletesFileAndIsIdempotent(): void
+    public function testRemoveLockDeletesFileAndKeepsRoot(): void
     {
-        $path = Base::renditionLockPath('proj-rm', 'ren-rm');
-        $sibling = Base::renditionLockPath('proj-rm', 'ren-keep');
-        $directory = \dirname($path);
-        if (!\is_dir($directory) && !\mkdir($directory, 0755, true) && !\is_dir($directory)) {
+        $root = Base::tmpLocksRoot();
+        if (!\is_dir($root) && !\mkdir($root, 0755, true) && !\is_dir($root)) {
             $this->fail('Could not create lock directory');
         }
 
+        $path = Base::encodeLockPath('vid-rm', 'ren-rm');
+
         try {
             \file_put_contents($path, '');
-            \file_put_contents($sibling, '');
             $this->assertFileExists($path);
 
-            Base::removeRenditionLock('proj-rm', 'ren-rm');
+            Base::removeLock($path);
             $this->assertFileDoesNotExist($path);
-            $this->assertDirectoryExists($directory, 'Sibling lock must keep the project lock directory');
+            $this->assertDirectoryExists($root, 'removeLock must never remove the locks root');
 
-            Base::removeRenditionLock('proj-rm', 'ren-keep');
-            $this->assertFileDoesNotExist($sibling);
-            $this->assertDirectoryDoesNotExist($directory);
-
-            Base::removeRenditionLock('proj-rm', 'ren-rm');
-            $this->assertDirectoryDoesNotExist($directory);
+            Base::removeLock($path);
+            $this->assertDirectoryExists($root);
         } finally {
             if (\is_file($path)) {
                 @\unlink($path);
             }
-            if (\is_file($sibling)) {
-                @\unlink($sibling);
-            }
-            if (\is_dir($directory)) {
-                @\rmdir($directory);
-            }
         }
     }
 
-    public function testRenditionLockContendsAcrossFileInstances(): void
+    public function testLockContendsAcrossFileInstances(): void
     {
-        $path = Base::renditionLockPath('proj-lock', 'ren-lock');
-        $directory = \dirname($path);
-        if (!\is_dir($directory) && !\mkdir($directory, 0755, true) && !\is_dir($directory)) {
+        $root = Base::tmpLocksRoot();
+        if (!\is_dir($root) && !\mkdir($root, 0755, true) && !\is_dir($root)) {
             $this->fail('Could not create lock directory');
         }
 
+        $path = Base::encodeLockPath('vid-lock', 'ren-lock');
         $holder = new File($path);
         $waiter = new File($path);
 
@@ -173,10 +170,7 @@ final class BaseTest extends TestCase
             $this->assertTrue($waiter->tryAcquire());
             $waiter->release();
         } finally {
-            Base::removeRenditionLock('proj-lock', 'ren-lock');
-            if (\is_dir($directory)) {
-                @\rmdir($directory);
-            }
+            Base::removeLock($path);
         }
     }
 }

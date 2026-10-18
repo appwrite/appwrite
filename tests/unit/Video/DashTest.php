@@ -113,6 +113,48 @@ final class DashTest extends TestCase
         $this->assertSame('/a1/', $sets[1]['representations'][0]['baseUrl']);
     }
 
+    public function testTimelineKeepsEachSegmentDuration(): void
+    {
+        $timeline = Dash::timeline([3.9, 3.9, 4.2, 2.1], 10);
+
+        $this->assertSame([
+            ['t' => 0, 'd' => 39, 'r' => 1],
+            ['d' => 42],
+            ['d' => 21],
+        ], $timeline);
+    }
+
+    public function testTimelineRepeatsEqualDurations(): void
+    {
+        // 29.97 fps lands on 120120 ticks at 30 kHz, not on a flat 4.000s.
+        $this->assertSame([
+            ['t' => 0, 'd' => 120120, 'r' => 4],
+        ], Dash::timeline([4.004, 4.004, 4.004, 4.004, 4.004], 30000));
+    }
+
+    public function testTimelineRoundTripsStoredDurations(): void
+    {
+        $seconds = [];
+
+        foreach ([191488, 192512, 192512, 192512, 190976] as $ticks) {
+            $seconds[] = Dash::duration($ticks / 48000);
+        }
+
+        $this->assertSame([
+            ['t' => 0, 'd' => 191488],
+            ['d' => 192512, 'r' => 2],
+            ['d' => 190976],
+        ], Dash::timeline($seconds, 48000));
+    }
+
+    public function testTimelineSkippedWhenADurationIsMissing(): void
+    {
+        $this->assertSame([], Dash::timeline([4.0, 0, 4.0], 1000000));
+        $this->assertSame([], Dash::timeline([4.0, '', 4.0], 1000000));
+        $this->assertSame([], Dash::timeline([], 1000000));
+        $this->assertSame([], Dash::timeline([4.0], 0));
+    }
+
     public function testDropsBitstreamSwitchingFromAttributes(): void
     {
         $entry = $this->entry('video', bandwidth: 400000, width: 640, baseUrl: '/r/');

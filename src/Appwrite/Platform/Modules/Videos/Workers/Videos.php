@@ -10,6 +10,7 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Platform\Modules\Videos\Base;
 use Appwrite\Usage\Context;
 use Appwrite\Usage\Video as VideoUsage;
+use Appwrite\Video\Dash as DashManifest;
 use Captioning\Format\SubripFile;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
@@ -177,10 +178,39 @@ class Videos extends Action
             ['action' => $action->value]
         );
 
+        // Taken before any job code runs so a duplicate message never claims,
+        // downloads or bills. Encode re-reads the status under this lock.
+        $lockPath = match ($action) {
+            VideoAction::Timeline => Base::timelineLockPath($videoMessage->video->getId()),
+            VideoAction::Encode => Base::encodeLockPath(
+                $videoMessage->video->getId(),
+                $videoMessage->rendition?->getId() ?? throw new \Exception('Missing rendition in payload')
+            ),
+            VideoAction::Caption => Base::captionLockPath(
+                $videoMessage->video->getId(),
+                $videoMessage->caption?->getId() ?? throw new \Exception('Missing caption in payload')
+            ),
+        };
+        $lock = null;
+        $held = false;
+
         $inflight = $telemetry->createUpDownCounter('worker.videos.inflight', null, 'Videos jobs currently running');
         $this->record($inflight, 1, ['action' => $action->value]);
 
         try {
+            $root = Base::tmpLocksRoot();
+            if (!\is_dir($root) && !\mkdir($root, 0755, true) && !\is_dir($root)) {
+                throw new \Exception('Failed to create video lock directory');
+            }
+            $lock = new File($lockPath);
+            if (!$lock->tryAcquire()) {
+                Console::info('Videos worker: ' . $action->value . ' lock held at ' . $lockPath . ', skipping duplicate');
+                Span::add('video.outcome', 'duplicate');
+                $this->outcome($telemetry, $action->value, 'duplicate', \microtime(true));
+                return;
+            }
+            $held = true;
+
             match ($action) {
                 VideoAction::Timeline => $this->timeline(
                     $dbForProject,
@@ -213,6 +243,10 @@ class Videos extends Action
                 ),
             };
         } finally {
+            if ($held && $lock !== null) {
+                $lock->release();
+                Base::removeLock($lockPath);
+            }
             $this->record($inflight, -1, ['action' => $action->value]);
         }
     }
@@ -604,8 +638,6 @@ class Videos extends Action
             : (string) $rendition->getAttribute('output', Base::OUTPUT_HLS);
         $permissions = $this->readPermissions($videoMessage->video);
         $claimed = false;
-        $held = false;
-        $lock = null;
         $codec = Base::normalizeCodec(
             $rendition->getAttribute('codec')
                 ?: $profile->getAttribute('codec')
@@ -664,25 +696,6 @@ class Videos extends Action
                 ],
                 $permissions
             );
-
-            // Flock so a second identical encode message cannot download into the
-            // same rendition workspace while this run is still packing.
-            $lockPath = Base::renditionLockPath($projectId, $rendition->getId());
-            $lockDirectory = \dirname($lockPath);
-            if (!\is_dir($lockDirectory) && !\mkdir($lockDirectory, 0755, true) && !\is_dir($lockDirectory)) {
-                throw new \Exception('Failed to create video rendition lock directory');
-            }
-            $lock = new File($lockPath);
-            if (!$lock->tryAcquire()) {
-                Console::info(
-                    'Videos worker: rendition lock held for ' . $rendition->getId()
-                    . ', skipping duplicate encode download'
-                );
-                $outcome = 'duplicate';
-                $status = Base::STATUS_STARTED;
-                return;
-            }
-            $held = true;
 
             $workspace = $this->jobWorkspace(
                 $projectId,
@@ -762,9 +775,14 @@ class Videos extends Action
                     ->params($params),
             };
 
+            // FFmpeg writes each segment's duration only into a SegmentTimeline,
+            // and only when templates are on. Playback rebuilds the MPD from
+            // those durations. One SegmentList duration repeats the longest
+            // segment, so a long video seeks into the wrong segment and never
+            // requests the tail.
             $target = match ($output) {
-                Base::OUTPUT_DASH => (new Dash())->template(false)->timeline(false)->segment(self::SEGMENT_DURATION)->manifests(false),
-                Base::OUTPUT_CMAF => (new Cmaf())->segment(self::SEGMENT_DURATION)->manifests(false),
+                Base::OUTPUT_DASH => (new Dash())->template(true)->timeline(true)->segment(self::SEGMENT_DURATION)->manifests(false),
+                Base::OUTPUT_CMAF => (new Cmaf())->template(true)->timeline(true)->segment(self::SEGMENT_DURATION)->manifests(false),
                 default => (new Hls())->segment(self::SEGMENT_DURATION)->manifests(false),
             };
 
@@ -1087,11 +1105,6 @@ class Videos extends Action
             // rendition id and may belong to the coroutine that claimed it.
             if ($workspace !== null) {
                 $this->cleanup($workspace['basePath']);
-            }
-
-            if ($held && $lock !== null) {
-                $lock->release();
-                Base::removeRenditionLock($projectId, $rendition->getId());
             }
         }
     }
@@ -1909,16 +1922,22 @@ class Videos extends Action
         string $path,
         string $output
     ): array {
-        $targetDuration = null;
+        $longest = 0.0;
+        $declared = 0.0;
         $streams = [];
 
         foreach ($package->variants() as $index => $variant) {
             $streamId = $index;
             $streams[] = $this->streamMeta($variant, $streamId);
 
+            if ($declared <= 0.0 && $variant->target > 0) {
+                $declared = $variant->target;
+            }
+
             foreach ($variant->segments as $segment) {
-                $needsDuration = !$segment->init
-                    && ($output === Base::OUTPUT_HLS || $output === Base::OUTPUT_CMAF);
+                if (!$segment->init && $segment->duration > $longest) {
+                    $longest = $segment->duration;
+                }
 
                 $dbForProject->createDocument('videos_renditions_segments', new Document(\array_filter([
                     'renditionId' => $rendition->getId(),
@@ -1926,15 +1945,19 @@ class Videos extends Action
                     'streamId' => $streamId,
                     'fileName' => $segment->file,
                     'path' => $path,
-                    'duration' => $needsDuration ? (string) $segment->duration : null,
+                    // DASH seeks from these lengths. A missing one falls the
+                    // manifest back to a single duration for every segment.
+                    'duration' => (!$segment->init && $segment->duration > 0)
+                        ? DashManifest::duration($segment->duration)
+                        : null,
                     'isInit' => $segment->init ? 1 : 0,
                 ], fn ($value) => $value !== null)));
             }
-
-            if ($targetDuration === null && $variant->target > 0) {
-                $targetDuration = (string) (int) \ceil($variant->target);
-            }
         }
+
+        $targetDuration = $longest > 0
+            ? (string) (int) \ceil($longest)
+            : ($declared > 0 ? (string) (int) \ceil($declared) : null);
 
         if ($output === Base::OUTPUT_HLS || $output === Base::OUTPUT_CMAF) {
             $metaTarget = $package->metadata()['targetDuration'] ?? null;
@@ -2068,8 +2091,9 @@ class Videos extends Action
 
             $segmentListAttrs = \array_filter([
                 'timescale' => $variant->timescale > 0 ? (string) $variant->timescale : null,
-                // SegmentList@duration is in timescale ticks — required for dash.js to
-                // schedule SegmentURL entries when addressing is list-based.
+                // Fallback for encodes that did not store a duration per segment.
+                // It is one value — the packager target — and the manifest drops
+                // it once a SegmentTimeline can name each segment.
                 'duration' => ($variant->timescale > 0 && $variant->target > 0)
                     ? (string) (int) \round($variant->target * $variant->timescale)
                     : null,

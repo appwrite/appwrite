@@ -162,48 +162,47 @@ abstract class Base extends UtopiaAction
         return \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/jobs';
     }
 
-    /** Flat root for per-rendition encode flock files on the shared volume. */
+    /**
+     * Flat root for video job flock files on the shared volume.
+     *
+     * Stays outside `jobs/` so a job-folder sweep cannot drop a lock under a
+     * live job. Lock files sit directly in this folder, which is never removed,
+     * so a job never races another over a parent directory.
+     */
     public static function tmpLocksRoot(): string
     {
         return \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/locks';
     }
 
-    /**
-     * Per-rendition flock file: `{APP_STORAGE_VIDEOS_TMP}/locks/{projectId}/{renditionId}.lock`.
-     *
-     * Stays outside `jobs/` so a job-folder sweep cannot drop a lock under a
-     * live encode. Encode holds the flock for the whole run so a duplicate
-     * message cannot download the source into the same workspace. The file is
-     * unlinked on release, delete/abort, and by the age-based locks sweep.
-     */
-    public static function renditionLockPath(string $projectId, string $renditionId): string
+    /** Timeline job flock file: `{tmpLocksRoot()}/timeline~{videoId}.lock`. */
+    public static function timelineLockPath(string $videoId): string
     {
-        return self::tmpLocksRoot()
-            . '/'
-            . $projectId
-            . '/'
-            . $renditionId
-            . '.lock';
+        return self::tmpLocksRoot() . '/timeline~' . $videoId . '.lock';
+    }
+
+    /** Encode job flock file: `{tmpLocksRoot()}/encode~{videoId}~{renditionId}.lock`. */
+    public static function encodeLockPath(string $videoId, string $renditionId): string
+    {
+        return self::tmpLocksRoot() . '/encode~' . $videoId . '~' . $renditionId . '.lock';
+    }
+
+    /** Caption job flock file: `{tmpLocksRoot()}/caption~{videoId}~{captionId}.lock`. */
+    public static function captionLockPath(string $videoId, string $captionId): string
+    {
+        return self::tmpLocksRoot() . '/caption~' . $videoId . '~' . $captionId . '.lock';
     }
 
     /**
-     * Unlinks the rendition lock file when present. Missing file is a no-op.
+     * Unlinks a lock file when present. Missing file is a no-op.
      *
      * Does not steal a flock another process already holds — only removes the
-     * directory entry so a later encode can open a fresh path. When the project
-     * lock directory is empty afterward, it is removed too.
+     * directory entry so a later job can open a fresh path. Never removes
+     * `tmpLocksRoot()`.
      */
-    public static function removeRenditionLock(string $projectId, string $renditionId): void
+    public static function removeLock(string $path): void
     {
-        $path = self::renditionLockPath($projectId, $renditionId);
-        $directory = \dirname($path);
-
         if (\is_file($path)) {
             \unlink($path);
-        }
-
-        if (\is_dir($directory) && (\scandir($directory) ?: []) === ['.', '..']) {
-            @\rmdir($directory);
         }
     }
 
@@ -492,7 +491,7 @@ abstract class Base extends UtopiaAction
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove video rendition from DB');
         }
 
-        self::removeRenditionLock($project->getId(), $rendition->getId());
+        self::removeLock(self::encodeLockPath($rendition->getAttribute('videoId'), $rendition->getId()));
 
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $project,

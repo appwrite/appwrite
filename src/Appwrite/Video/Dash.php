@@ -89,4 +89,95 @@ final class Dash
 
         return $sets;
     }
+
+    /**
+     * Decimal seconds for a segment row.
+     *
+     * Nine places round-trip through a media timescale — 48 kHz, 90 kHz, or
+     * microseconds — back to the tick the packager wrote.
+     */
+    public static function duration(float $seconds): string
+    {
+        $formatted = \rtrim(\sprintf('%.9F', $seconds), '0');
+
+        return \rtrim($formatted, '.');
+    }
+
+    /**
+     * SegmentTimeline runs for one representation.
+     *
+     * `SegmentList@duration` is a single length applied to every segment, and
+     * the value we have is the longest. A player then seeks to
+     * `floor(time / longest)`, so on a long video the index lands on the wrong
+     * segment and the tail, whose start falls past the presentation, is never
+     * requested. Each `S` carries one segment's own duration in timescale
+     * ticks. `r` is how many extra segments repeat `d`. The first run is
+     * anchored at `t=0`.
+     *
+     * Returns nothing when a length is missing or the timescale is unusable,
+     * so the caller can keep the single duration for an older encode.
+     *
+     * @param list<float|int|string|null> $seconds One entry per media segment, in order.
+     * @return list<array{t?: int, d: int, r?: int}>
+     */
+    public static function timeline(array $seconds, int $timescale): array
+    {
+        if ($timescale <= 0 || $seconds === []) {
+            return [];
+        }
+
+        $ticks = [];
+
+        foreach ($seconds as $secondsEach) {
+            if ($secondsEach === null || $secondsEach === '') {
+                return [];
+            }
+
+            $tick = (int) \round((float) $secondsEach * $timescale);
+
+            if ($tick <= 0) {
+                return [];
+            }
+
+            $ticks[] = $tick;
+        }
+
+        $runs = [];
+        $current = 0;
+        $count = 0;
+
+        foreach ($ticks as $tick) {
+            if ($count > 0 && $tick === $current) {
+                $count++;
+                continue;
+            }
+
+            if ($count > 0) {
+                $runs[] = [$current, $count];
+            }
+
+            $current = $tick;
+            $count = 1;
+        }
+
+        $runs[] = [$current, $count];
+
+        $timeline = [];
+
+        foreach ($runs as $index => [$tick, $repeated]) {
+            $entry = ['d' => $tick];
+
+            if ($index === 0) {
+                $entry = ['t' => 0, 'd' => $tick];
+            }
+
+            if ($repeated > 1) {
+                $entry['r'] = $repeated - 1;
+            }
+
+            $timeline[] = $entry;
+        }
+
+        return $timeline;
+    }
 }

@@ -334,6 +334,7 @@ abstract class Base extends VideosAction
 
                 $init = '';
                 $media = [];
+                $seconds = [];
 
                 foreach ($segments as $segment) {
                     // Relative to <BaseURL>, which is what the MPD resolves against.
@@ -345,6 +346,7 @@ abstract class Base extends VideosAction
                     }
 
                     $media[] = $uri;
+                    $seconds[] = $segment->getAttribute('duration', 0);
                 }
 
                 $representation = $adaptation['representation'] ?? [];
@@ -352,28 +354,44 @@ abstract class Base extends VideosAction
                 $representation['segmentList']['init'] = $init;
                 $representation['segmentList']['media'] = $media;
 
-                // Older encodes may lack SegmentList@duration in metadata; derive it so
-                // dash.js can schedule list-addressed segments.
                 $segAttrs = $representation['segmentList']['attributes'] ?? [];
-                if (empty($segAttrs['duration'])) {
-                    $timescale = (int) ($segAttrs['timescale'] ?? 0);
-                    $target = (float) $rendition->getAttribute('targetDuration', 0);
-                    if ($timescale <= 0) {
-                        $timescale = 1000000;
+                $timescale = (int) ($segAttrs['timescale'] ?? 0);
+                $assumedTimescale = false;
+
+                if ($timescale <= 0) {
+                    $timescale = 1000000;
+                    $assumedTimescale = true;
+                }
+
+                // Each segment's own length. A single @duration is the longest
+                // segment repeated, and dash.js seeks with it.
+                $timeline = Dash::timeline($seconds, $timescale);
+
+                if ($timeline !== []) {
+                    $segAttrs['timescale'] = (string) $timescale;
+                    unset($segAttrs['duration']);
+                    $representation['segmentList']['timeline'] = $timeline;
+                } elseif (empty($segAttrs['duration'])) {
+                    // Older encodes stored no per-segment duration.
+                    if ($assumedTimescale) {
                         $segAttrs['timescale'] = (string) $timescale;
                     }
+
+                    $target = (float) $rendition->getAttribute('targetDuration', 0);
+
                     if ($target > 0) {
                         $segAttrs['duration'] = (string) (int) \round($target * $timescale);
                     } elseif (\count($media) > 0) {
                         $presentation = (string) ($mpd['mediaPresentationDuration'] ?? '');
                         // PT32.8S → seconds; split evenly across media segments.
-                        $seconds = $this->presentationDurationSeconds($presentation);
-                        if ($seconds > 0) {
-                            $segAttrs['duration'] = (string) (int) \round(($seconds / \count($media)) * $timescale);
+                        $presentationSeconds = $this->presentationDurationSeconds($presentation);
+                        if ($presentationSeconds > 0) {
+                            $segAttrs['duration'] = (string) (int) \round(($presentationSeconds / \count($media)) * $timescale);
                         }
                     }
-                    $representation['segmentList']['attributes'] = $segAttrs;
                 }
+
+                $representation['segmentList']['attributes'] = $segAttrs;
 
                 // Each Appwrite rendition is packed alone, so stream indexes restart at 0.
                 // Representation/@id must still be unique across the merged master.

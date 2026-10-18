@@ -17,6 +17,13 @@ echo '<?xml version="1.0" encoding="utf-8"?>'; ?>
              <?php endif;?>
             <SegmentList<?php if (isset($representation['segmentList']['attributes']['timescale'])): ?> timescale="<?php echo $representation['segmentList']['attributes']['timescale']; ?>"<?php endif;?><?php if (isset($representation['segmentList']['attributes']['duration'])): ?> duration="<?php echo $representation['segmentList']['attributes']['duration']; ?>"<?php endif;?><?php if (isset($representation['segmentList']['attributes']['startNumber'])): ?> startNumber="<?php echo $representation['segmentList']['attributes']['startNumber']; ?>"<?php endif;?>>
             <Initialization sourceURL="<?php if (isset($representation['segmentList']['init'])):?><?php echo $representation['segmentList']['init']; ?><?php endif;?>"/>
+            <?php if (!empty($representation['segmentList']['timeline'])): ?>
+            <SegmentTimeline>
+                <?php foreach ($representation['segmentList']['timeline'] as $entry): ?>
+                <S<?php if (isset($entry['t'])): ?> t="<?php echo (int) $entry['t']; ?>"<?php endif; ?> d="<?php echo (int) $entry['d']; ?>"<?php if (isset($entry['r'])): ?> r="<?php echo (int) $entry['r']; ?>"<?php endif; ?>/>
+                <?php endforeach; ?>
+            </SegmentTimeline>
+            <?php endif; ?>
             <?php if (isset($representation['segmentList']['media'])):?>
                 <?php foreach ($representation['segmentList']['media'] as $segment): ?>
                     <SegmentURL media="<?php if (isset($segment)):?><?php echo $segment; ?><?php endif;?>"/>

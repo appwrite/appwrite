@@ -208,7 +208,7 @@ class Create extends Base
             $authorization->skip(fn () => $dbForProject->updateDocument(
                 'videos_captions',
                 $caption->getId(),
-                $caption->setAttribute('default', false)
+                new Document(['default' => false])
             ));
         }
     }

@@ -838,8 +838,8 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('ready', $readyBody['status']);
         $this->timeTravelRendition($projectId, $readyId, updatedAt: '2020-01-01T00:00:00Z');
 
-        $staleLock = $this->plantRenditionLock($staleId);
-        $freshLock = $this->plantRenditionLock($freshId);
+        $staleLock = $this->plantRenditionLock($videoId, $staleId);
+        $freshLock = $this->plantRenditionLock($videoId, $freshId);
         $this->assertFileExists($staleLock);
         $this->assertFileExists($freshLock);
 
@@ -1065,7 +1065,7 @@ final class VideosCustomServerTest extends Scope
         $this->waitUntilPathExists($secondDir);
         $this->assertDirectoryHasFiles($firstDir);
 
-        $firstLock = $this->plantRenditionLock($firstId);
+        $firstLock = $this->plantRenditionLock($videoId, $firstId);
         $this->assertFileExists($firstLock);
 
         $delete = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId . '/renditions/' . $firstId, $this->headers());
@@ -1299,6 +1299,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertStringContainsString('<MPD', (string) $mpd['body']);
         $this->assertStringContainsString('<AdaptationSet', (string) $mpd['body']);
         $this->assertStringContainsString('<SegmentList', (string) $mpd['body']);
+        $this->assertStringContainsString('<SegmentTimeline', (string) $mpd['body']);
         $this->assertStringContainsString('<Initialization', (string) $mpd['body']);
         $this->assertStringContainsString('<SegmentURL', (string) $mpd['body']);
         $this->assertStringContainsString('segmentAlignment="true"', (string) $mpd['body']);
@@ -1430,6 +1431,7 @@ final class VideosCustomServerTest extends Scope
         $cmafMpd = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/cmaf/master.mpd', $this->headers());
         $this->assertEquals(200, $cmafMpd['headers']['status-code']);
         $this->assertStringContainsString('<SegmentList', (string) $cmafMpd['body']);
+        $this->assertStringContainsString('<SegmentTimeline', (string) $cmafMpd['body']);
         $this->assertStringContainsString('<SegmentURL', (string) $cmafMpd['body']);
         $this->assertStringContainsString('<Initialization', (string) $cmafMpd['body']);
         $this->assertDashLadderPlayable((string) $cmafMpd['body']);
@@ -2137,7 +2139,7 @@ final class VideosCustomServerTest extends Scope
         $renditionId = $this->createRendition($videoId, 'hls');
         $ready = $this->waitForRenditionTerminalState($videoId, $renditionId);
         $this->assertEquals('ready', $ready['status']);
-        $renditionLock = $this->plantRenditionLock($renditionId);
+        $renditionLock = $this->plantRenditionLock($videoId, $renditionId);
         $this->assertFileExists($renditionLock);
 
         $jobsRoot = $this->tmpJobsRoot();

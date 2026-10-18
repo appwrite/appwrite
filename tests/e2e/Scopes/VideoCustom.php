@@ -673,13 +673,13 @@ trait VideoCustom
     /**
      * Create an empty encode lock file for a rendition so cleanup paths can be asserted.
      */
-    public function plantRenditionLock(string $renditionId): string
+    public function plantRenditionLock(string $videoId, string $renditionId): string
     {
         if (!\defined('APP_STORAGE_VIDEOS_TMP')) {
             \define('APP_STORAGE_VIDEOS_TMP', '/storage/videos-tmp');
         }
 
-        $path = Base::renditionLockPath($this->getProject()['$id'], $renditionId);
+        $path = Base::encodeLockPath($videoId, $renditionId);
         $directory = \dirname($path);
         if (!\is_dir($directory) && !\mkdir($directory, 0755, true) && !\is_dir($directory)) {
             $this->fail('Could not create rendition lock directory: ' . $directory);

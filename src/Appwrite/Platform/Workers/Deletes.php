@@ -618,7 +618,7 @@ class Deletes extends Action
         $date = DateTime::addSeconds(new \DateTime(), -1 * $retention);
 
         $queries = [
-            Query::select([...$this->selects, 'status', 'progress']),
+            Query::select([...$this->selects, 'status', 'progress', 'videoId']),
             Query::equal('status', [
                 VideosBase::STATUS_PENDING,
                 VideosBase::STATUS_STARTED,
@@ -641,7 +641,7 @@ class Deletes extends Action
                         'status' => VideosBase::STATUS_ABORTED,
                         'endedAt' => DateTime::now(),
                     ]));
-                    VideosBase::removeRenditionLock($project->getId(), $rendition->getId());
+                    VideosBase::removeLock(VideosBase::encodeLockPath($rendition->getAttribute('videoId'), $rendition->getId()));
                     $aborted++;
                     $age = \max(0, \time() - (int) \strtotime((string) $rendition->getUpdatedAt()));
                     Console::info(
@@ -1528,12 +1528,15 @@ class Deletes extends Action
     }
 
     /**
-     * Remove leftover encode lock files older than the videos-tmp retention window.
+     * Remove leftover video job lock files older than the videos-tmp retention window.
      *
-     * Encode unlinks its lock on release; this catches leftovers from crashes
+     * Jobs unlink their lock on release; this catches leftovers from crashes
      * or older builds that only called flock release. Age is file mtime — lock
-     * paths have no stamp prefix. A live encode still holds the flock on the
+     * paths have no stamp prefix. A live job still holds the flock on the
      * inode even if this pass unlinks the path.
+     *
+     * Subfolders are the old `locks/{projectId}/` layout. No worker creates
+     * them any more, so they are emptied of expired locks and then removed.
      */
     private function deleteOldVideoLocks(Telemetry $telemetry): void
     {
@@ -1549,28 +1552,19 @@ class Deletes extends Action
             (string) VideosBase::TMP_TTL
         );
         $cutoff = \time() - $retention;
-        Console::info('Deleting video rendition locks older than ' . $retention . 's');
+        Console::info('Deleting video job locks older than ' . $retention . 's');
 
         $scanned = 0;
         $removed = 0;
         $failed = 0;
 
-        foreach (\scandir($root) ?: [] as $projectId) {
-            if ($projectId[0] === '.') {
-                continue;
-            }
-
-            $projectDir = $root . '/' . $projectId;
-            if (!\is_dir($projectDir) || !\str_starts_with($projectDir, $tmpRoot)) {
-                continue;
-            }
-
-            foreach (\scandir($projectDir) ?: [] as $name) {
+        $sweep = function (string $directory) use ($cutoff, &$scanned, &$removed, &$failed): void {
+            foreach (\scandir($directory) ?: [] as $name) {
                 if ($name[0] === '.' || !\str_ends_with($name, '.lock')) {
                     continue;
                 }
 
-                $path = $projectDir . '/' . $name;
+                $path = $directory . '/' . $name;
                 if (!\is_file($path)) {
                     continue;
                 }
@@ -1588,10 +1582,24 @@ class Deletes extends Action
                     $failed++;
                 }
             }
+        };
 
-            // Drop empty project lock dirs left after unlinking.
-            if ((\scandir($projectDir) ?: []) === ['.', '..']) {
-                @\rmdir($projectDir);
+        $sweep($root);
+
+        foreach (\scandir($root) ?: [] as $name) {
+            if ($name[0] === '.') {
+                continue;
+            }
+
+            $legacyDir = $root . '/' . $name;
+            if (!\is_dir($legacyDir) || !\str_starts_with($legacyDir, $tmpRoot)) {
+                continue;
+            }
+
+            $sweep($legacyDir);
+
+            if ((\scandir($legacyDir) ?: []) === ['.', '..']) {
+                @\rmdir($legacyDir);
             }
         }
 
@@ -1601,7 +1609,7 @@ class Deletes extends Action
 
         if ($removed > 0) {
             try {
-                $telemetry->createCounter('worker.videos.locks.removed', null, 'Expired video rendition lock files removed by the maintenance sweep')->add($removed);
+                $telemetry->createCounter('worker.videos.locks.removed', null, 'Expired video job lock files removed by the maintenance sweep')->add($removed);
             } catch (Throwable) {
                 // Metrics are best-effort.
             }
@@ -2214,7 +2222,7 @@ class Deletes extends Action
 
         // Drop the encode flock before the empty-path return so a rendition with
         // no packaged files still clears its lock.
-        VideosBase::removeRenditionLock($project->getId(), $document->getId());
+        VideosBase::removeLock(VideosBase::encodeLockPath($document->getAttribute('videoId'), $document->getId()));
 
         $path = $document->getAttribute('path', '');
 
