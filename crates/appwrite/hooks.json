@@ -7,10 +7,13 @@
       "description": "Binds project routes to the project in the path, rejects an unknown project, derives the role and scopes from the session, an API key (expiry, key actor, last access and SDK tracking) or console admin membership, adds the impersonator's user discovery scope, refuses account writes while impersonating, checks disabled products, services and the REST API, then the route's scope, a blocked user, a required password reset and missing MFA factors.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "init", "anchor": "Step 9: Validate scope permissions" },
       "rust": {
-        "status": "partial",
-        "note": "Same checks in the same order for project, standard, ephemeral, account and organization keys, sessions, JWTs, admin mode and impersonation, including the account key's user roles, the organization key's team roles and each key's last-access tracking (proved by `bin/compat appwrite diff`). The path project binding and the DocumentsDB/VectorsDB product switches are not needed by Users yet. The user's `accessedAt` is written before the action, as in PHP, so an action that writes the user returns it (proved on `PATCH /v1/account/status`).",
+        "status": "done",
+        "note": "Same checks in the same order for project, standard, ephemeral, account and organization keys, sessions, JWTs, admin mode and impersonation, including the account key's user roles, the organization key's team roles and each key's last-access tracking (proved by `bin/compat appwrite diff`; an organization key's usage is locked on its team's own sequence). A route under `/v1/projects/:projectId` is bound to that project (`user_unauthorized` when the header or the project names another), and the DocumentsDB, VectorsDB and embeddings switches (`_APP_DOCUMENTSDB`, `_APP_VECTORSDB`, `_APP_EMBEDDING`) close their namespaces to everyone. On the console, a user with a membership in the team the route acts on (the `team` resource) gets its bare roles, with scopes from the project in the path, and authorization stays on for `/v1/projects` and `/v1/projects/:projectId`. The user's `accessedAt` is written before the action, as in PHP, so an action that writes the user returns it (proved on `PATCH /v1/account/status`). The `project` resource's deprecated-alias and S3 credential paths come with the first ported route that has an alias or the `s3` group.",
         "where": [
           { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// -- auth (shared/api.php)" },
+          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn project_id_from_path" },
+          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn product_enabled" },
+          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "async fn admin_team" },
           { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn track_key_usage" },
           { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn track_access" }
         ]
@@ -35,9 +38,11 @@
       "description": "Names the route's event on the events queue with the project and acting user, fills the audit context (mode, IP, user agent, hostname, SDK, audit event, actor or impersonated target), and for routes labelled `cache` serves a stored response (with bucket, file and token checks) or marks a cache miss.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "init", "anchor": "Background Jobs" },
       "rust": {
-        "status": "partial",
-        "note": "Events and the audit context come from the route's labels and the request; the `cache` label (storage previews) is not implemented.",
+        "status": "done",
+        "note": "Events and the audit context come from the route's labels and the request. The `resourceToken` resource is resolved for every request, as PHP injects it (a `token` JWT's file, refreshing the token's `accessedAt`; `token_resource_type_invalid` for another type). Routes labelled `cache` (with `cache.params`) look their `Request::cacheIdentifier()` up in the `cache` collection and `<storage cache>/app-<projectId>`: a hit runs PHP's bucket, file, token and plan (`imageTransformations`) checks, refreshes the file's `transformedAt` and the entry, and sends the stored body with `X-Appwrite-Cache: hit`, skipping the action (`Context::send`); a miss adds the no-cache headers and `X-Appwrite-Cache: miss` (the write is `cache-write`). No route Rust serves is labelled `cache` yet. `cacheControlForStorage` is CE's (`private, max-age`); the storage cache telemetry counter and spans are not reported.",
         "where": [
+          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "pub(super) async fn context" },
+          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "async fn resource_token" },
           { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "pub(super) fn schedule" }
         ]
       }
@@ -173,7 +178,14 @@
       "title": "Project services refuse the console",
       "description": "Refuses database, functions, sites and messaging routes on the console project, explaining a missing project ID.",
       "php": { "file": "app/controllers/general.php", "kind": "init", "anchor": "No Appwrite project was specified" },
-      "rust": { "status": "missing", "note": null, "where": [] }
+      "rust": {
+        "status": "done",
+        "note": "Routes in the `database`, `functions`, `sites` or `messaging` group refuse the console project with `general_access_forbidden`, explaining a missing `X-Appwrite-Project`. It runs after every `api` hook (and the edition's `Hooks::init`), as PHP runs a route's hooks group by group. No route Rust serves is in these groups yet.",
+        "where": [
+          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn console_forbidden" },
+          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn refuse_console" }
+        ]
+      }
     },
     {
       "id": "request",
@@ -181,9 +193,13 @@
       "description": "Sends requests for custom domains to the function and site router, answers 404 without a route, adds request filters for older `X-Appwrite-Response-Format` versions and response filters with a version warning header, sets the locale from the parameter or header, and with `_APP_OPTIONS_FORCE_HTTPS` redirects GET requests to HTTPS and refuses other methods.",
       "php": { "file": "app/controllers/general.php", "kind": "init", "anchor": "x-appwrite-response-format" },
       "rust": {
-        "status": "partial",
-        "note": "Response formats, the warning, the locale and the request filters of the routes Rust serves (V17's 1.4 queries, V27's keywords; `appwrite_core::request`, proven on PHP's own V17 output) are handled; Traefik never routes custom domains to Rust. Forced HTTPS is not implemented.",
-        "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// -- response format, locale" }]
+        "status": "done",
+        "note": "Response formats are compared with PHP's `version_compare()` (`response::version_compare`, `Version::from_format`), with the warning for a newer SDK. Every request filter (V16 to V27) is in `appwrite_core::request`, keyed by SDK model as PHP's are, so a ported service gets its filters unchanged; V17 is proven on PHP's own output, and V20 reads the project's relationships as PHP does. Response filters are applied by each response model (`Render::before`), so a ported model brings its own. The locale comes from the parameter or header. `_APP_OPTIONS_FORCE_HTTPS` redirects GET requests to HTTPS (sent before the security headers, the action skipped) and refuses other methods, sparing localhost and the migration host. Traefik never routes custom domains to Rust, so the function and site router is not needed; a request without a route reaches the wildcard.",
+        "where": [
+          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// -- response format, locale" },
+          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// -- forced HTTPS" },
+          { "file": "crates/appwrite/core/src/request.rs", "anchor": "pub async fn apply" }
+        ]
       }
     },
     {
@@ -207,9 +223,12 @@
       "description": "On the first request to a known platform hostname, creates its `rules` document and enqueues a certificate job, remembering certified domains in memory.",
       "php": { "file": "app/controllers/general.php", "kind": "init", "anchor": "Issuing a TLS certificate" },
       "rust": {
-        "status": "missing",
-        "note": "Requests reaching Rust also reach PHP on other routes, which issues the certificate.",
-        "where": []
+        "status": "done",
+        "note": "The first request to a platform hostname that is a known, non-test domain (not an ACME challenge) creates its `api` rule (md5 id under `_APP_RULES_FORMAT=md5`, Appwrite-owned under the function and site domains) and queues a certificate job on `_APP_CERTIFICATES_QUEUE_NAME` with PHP's message (`skipRenewCheck`), unless the rule exists; each hostname is looked at once per process (PHP's `certifiedDomains`). PHP's `RuleCreated` bus event has no CE listener.",
+        "where": [
+          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "async fn certify" },
+          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "async fn issue" }
+        ]
       }
     },
     {
