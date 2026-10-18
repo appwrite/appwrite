@@ -243,22 +243,23 @@ class Client implements Adapter, ResponseStreamingClientInterface
         $refused = null;
         $handle = $this->handle($request);
         $notified = false;
-        $notify = function () use (&$notified, &$headers, $onResponse, $decompress, $request): void {
+        $builder = $this->responseBuilder;
+        $notify = static function () use (&$notified, &$headers, $onResponse, $decompress, $request, $builder): void {
             if ($notified || $onResponse === null) {
                 return;
             }
 
-            $parsed = $this->parseHeaderBlock($headers);
+            $parsed = self::parseHeaderBlock($headers);
             if ($parsed['status'] < 200 || $parsed['status'] > 599) {
                 throw new InvalidResponseException($request, 'Received an invalid final HTTP response.');
             }
 
             if ($decompress) {
-                $parsed['headers'] = $this->decoded($parsed['headers']);
+                $parsed['headers'] = self::decoded($parsed['headers']);
             }
 
             $notified = true;
-            $onResponse($this->responseBuilder->build($parsed['status'], $parsed['reason'], $parsed['headers'], '', $parsed['protocol']));
+            $onResponse($builder->build($parsed['status'], $parsed['reason'], $parsed['headers'], '', $parsed['protocol']));
         };
         $options = $this->options($request, $headers, $refused, static function (string $chunk) use ($sink, $notify): void {
             $notify();
@@ -290,14 +291,14 @@ class Client implements Adapter, ResponseStreamingClientInterface
             throw new ConnectionException($request, 'Connection closed before a complete HTTP response was received.');
         }
 
-        $parsed = $this->parseHeaderBlock($headers);
+        $parsed = self::parseHeaderBlock($headers);
 
         if ($parsed['status'] < 100 || $parsed['status'] > 599) {
             throw new InvalidResponseException($request, 'Received an invalid HTTP response.');
         }
 
         if ($decompress) {
-            $parsed['headers'] = $this->decoded($parsed['headers']);
+            $parsed['headers'] = self::decoded($parsed['headers']);
         }
 
         $notify();
@@ -586,7 +587,7 @@ class Client implements Adapter, ResponseStreamingClientInterface
      *
      * @return array<string, array<int, string>>
      */
-    private function decoded(array $headers): array
+    private static function decoded(array $headers): array
     {
         $encoded = false;
 
@@ -612,7 +613,7 @@ class Client implements Adapter, ResponseStreamingClientInterface
     /**
      * @return array{protocol: string, status: int, reason: string, headers: array<string, array<int, string>>}
      */
-    private function parseHeaderBlock(string $headerBlock): array
+    private static function parseHeaderBlock(string $headerBlock): array
     {
         $blocks = preg_split("/\r\n\r\n|\n\n|\r\r/", trim($headerBlock));
         $headers = $blocks === false ? [] : array_values(array_filter($blocks));
