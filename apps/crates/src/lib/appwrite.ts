@@ -167,7 +167,8 @@ export interface Hook {
   needed: boolean
   /** Described in crates/appwrite/hooks.json. */
   matched: boolean
-  rust: { status: HookStatus; note: string | null; where: { file: string; anchor: string; line: number | null; found: boolean }[] }
+  /** `file`: the module that holds the hook in appwrite-core (`rust.file` in hooks.json). */
+  rust: { file?: string | null; status: HookStatus; note: string | null; where: { file: string; anchor: string; line: number | null; found: boolean }[] }
 }
 
 export interface Router {

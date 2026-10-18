@@ -1,5 +1,5 @@
 {
-  "$comment": "The cross-cutting PHP behaviour a migrated service must reproduce, and where appwrite-core does. `bin/compat appwrite` finds every Http::init/shutdown/error/options/wildcard hook in app/controllers and every hook action class (setType) in the modules, reads its groups, injections, labels, errors and headers from the code, and joins it to the entry here by `php.file`, `php.kind` and `php.anchor` (text inside the hook, needed when a file has several hooks of a kind). A hook without an entry is listed as undescribed; an entry whose hook or Rust anchor is gone is reported. `rust.status`: done, partial or missing; `rust.where`: files and text anchors in crates/appwrite. Resources (`kind: resource`) are request resources in app/init/resources/request.php that carry behaviour.",
+  "$comment": "The cross-cutting PHP behaviour a migrated service must reproduce, and where appwrite-core does. `bin/compat appwrite` finds every Http::init/shutdown/error/options/wildcard hook in app/controllers and every hook action class (setType) in the modules, reads its groups, injections, labels, errors and headers from the code, and joins it to the entry here by `php.file`, `php.kind` and `php.anchor` (text inside the hook, needed when a file has several hooks of a kind). A hook without an entry is listed as undescribed; an entry whose hook or Rust anchor is gone is reported. `rust.file`: the module that holds the hook in appwrite-core (`platform/hooks/<kind>/<id>`); `rust.status`: done, partial or missing; `rust.where`: files and text anchors in crates/appwrite. Resources (`kind: resource`) are request resources in app/init/resources/request.php that carry behaviour.",
   "hooks": [
     {
       "id": "auth",
@@ -7,15 +7,16 @@
       "description": "Binds project routes to the project in the path, rejects an unknown project, derives the role and scopes from the session, an API key (expiry, key actor, last access and SDK tracking) or console admin membership, adds the impersonator's user discovery scope, refuses account writes while impersonating, checks disabled products, services and the REST API, then the route's scope, a blocked user, a required password reset and missing MFA factors.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "init", "anchor": "Step 9: Validate scope permissions" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/init/auth/mod.rs",
         "status": "done",
         "note": "Same checks in the same order for project, standard, ephemeral, account and organization keys, sessions, JWTs, admin mode and impersonation, including the account key's user roles, the organization key's team roles and each key's last-access tracking (proved by `bin/compat appwrite diff`; an organization key's usage is locked on its team's own sequence). A route under `/v1/projects/:projectId` is bound to that project (`user_unauthorized` when the header or the project names another), and the DocumentsDB, VectorsDB and embeddings switches (`_APP_DOCUMENTSDB`, `_APP_VECTORSDB`, `_APP_EMBEDDING`) close their namespaces to everyone. On the console, a user with a membership in the team the route acts on (the `team` resource) gets its bare roles, with scopes from the project in the path, and authorization stays on for `/v1/projects` and `/v1/projects/:projectId`. The user's `accessedAt` is written before the action, as in PHP, so an action that writes the user returns it (proved on `PATCH /v1/account/status`). The `project` resource's deprecated-alias and S3 credential paths come with the first ported route that has an alias or the `s3` group.",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// -- auth (shared/api.php)" },
-          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn project_id_from_path" },
-          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn product_enabled" },
-          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "async fn admin_team" },
-          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn track_key_usage" },
-          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn track_access" }
+          { "file": "crates/appwrite/core/src/platform/hooks/init/auth/mod.rs", "anchor": "// -- auth (shared/api.php)" },
+          { "file": "crates/appwrite/core/src/platform/hooks/init/auth/mod.rs", "anchor": "fn project_id_from_path" },
+          { "file": "crates/appwrite/core/src/platform/hooks/init/auth/mod.rs", "anchor": "fn product_enabled" },
+          { "file": "crates/appwrite/core/src/platform/hooks/init/auth/admin.rs", "anchor": "async fn admin_team" },
+          { "file": "crates/appwrite/core/src/platform/hooks/init/auth/keys.rs", "anchor": "fn track_key_usage" },
+          { "file": "crates/appwrite/core/src/platform/hooks/init/auth/access.rs", "anchor": "fn track_access" }
         ]
       }
     },
@@ -25,10 +26,11 @@
       "description": "Rate limits a route by its `abuse-key`, `abuse-limit` and `abuse-time` labels (raised 100 times for listed projects), skipping keys and privileged users and when `_APP_OPTIONS_ABUSE` is disabled; sets the X-RateLimit headers and throws a rate limit error past the limit. Also hands the user to the request and response.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "init", "anchor": "GENERAL_RATE_LIMIT_EXCEEDED" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/init/abuse.rs",
         "status": "done",
         "note": "Teams' `createMembership` (`abuse-limit` 10 on the default key) and `updateMembershipStatus` (`ip:{ip},url:{url}`) and the Account recovery, verification and password routes (keys with `{param-email}`, `{userId}` and `{param-userId}`, several keys per route) prove the counters and the `X-RateLimit-*` headers in `bin/compat appwrite diff` (the dev stack runs with `_APP_OPTIONS_ABUSE=disabled`, so requests are counted, not refused).",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "async fn abuse" }
+          { "file": "crates/appwrite/core/src/platform/hooks/init/abuse.rs", "anchor": "async fn abuse" }
         ]
       }
     },
@@ -38,12 +40,13 @@
       "description": "Names the route's event on the events queue with the project and acting user, fills the audit context (mode, IP, user agent, hostname, SDK, audit event, actor or impersonated target), and for routes labelled `cache` serves a stored response (with bucket, file and token checks) or marks a cache miss.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "init", "anchor": "Background Jobs" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/init/context.rs",
         "status": "done",
         "note": "Events and the audit context come from the route's labels and the request. The `resourceToken` resource is resolved for every request, as PHP injects it (a `token` JWT's file, refreshing the token's `accessedAt`; `token_resource_type_invalid` for another type). Routes labelled `cache` (with `cache.params`) look their `Request::cacheIdentifier()` up in the `cache` collection and `<storage cache>/app-<projectId>`: a hit runs PHP's bucket, file, token and plan (`imageTransformations`) checks, refreshes the file's `transformedAt` and the entry, and sends the stored body with `X-Appwrite-Cache: hit`, skipping the action (`Context::send`); a miss adds the no-cache headers and `X-Appwrite-Cache: miss` (the write is `cache-write`). No route Rust serves is labelled `cache` yet. `cacheControlForStorage` is CE's (`private, max-age`); the storage cache telemetry counter and spans are not reported.",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "pub(super) async fn context" },
-          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "async fn resource_token" },
-          { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "pub(super) fn schedule" }
+          { "file": "crates/appwrite/core/src/platform/hooks/init/context.rs", "anchor": "async fn context" },
+          { "file": "crates/appwrite/core/src/platform/hooks/resources/resource_token.rs", "anchor": "async fn resource_token" },
+          { "file": "crates/appwrite/core/src/platform/hooks/shutdown/mod.rs", "anchor": "fn schedule" }
         ]
       }
     },
@@ -53,10 +56,11 @@
       "description": "Refuses to create a session for a caller who already has one, unless the route is labelled `session.allowActive`.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "init", "anchor": "session.allowActive" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/init/session_active.rs",
         "status": "done",
         "note": "Proved by Account: the session routes (email, anonymous, token, magic URL, phone, ID token) refuse a session or JWT caller with `user_session_already_exists`; the OAuth2 redirect (`session.allowActive`) replaces the session instead. `appwrite diff` account.sessions.* scenarios.",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "fn session_active" }
+          { "file": "crates/appwrite/core/src/platform/hooks/init/session_active.rs", "anchor": "fn session_active" }
         ]
       }
     },
@@ -66,10 +70,11 @@
       "description": "After a session is created, deletes the user's oldest sessions beyond the project's `maxSessions` and purges the cached user.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "maxSessions" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/shutdown/session_limit.rs",
         "status": "done",
         "note": "Runs after every route in the `session` group (the session's user from the response). The diff's `account.sessions.email.limit` signs `s2` in at the project's `maxSessions` (10): both runtimes delete the same oldest session. PHP runs it after the `api` group's shutdowns, so the deleted sessions are not in the usage message; Rust leaves them out the same way (its own database, without listeners).",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn session_limit" }
+          { "file": "crates/appwrite/core/src/platform/hooks/shutdown/session_limit.rs", "anchor": "async fn session_limit" }
         ]
       }
     },
@@ -79,11 +84,12 @@
       "description": "When the route set an event, generates its event names and publishes them to realtime (console only for allowed groups), to the functions queue when a function listens to one of them, and to the webhooks queue when a webhook does.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "getWebhooksEvents" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/shutdown/events.rs",
         "status": "done",
         "note": "Function events are cached in the same Redis hash as PHP's. Realtime adds the action-suffixed account channels; function messages carry the whole project document. `appwrite diff` compares every message and publication.",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn trigger" },
-          { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn function_events" }
+          { "file": "crates/appwrite/core/src/platform/hooks/shutdown/events.rs", "anchor": "async fn trigger" },
+          { "file": "crates/appwrite/core/src/platform/hooks/shutdown/events.rs", "anchor": "async fn function_events" }
         ]
       }
     },
@@ -93,10 +99,11 @@
       "description": "Resets the route's abuse counters when the response status is one of its `abuse-reset` codes.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "abuse-reset" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/shutdown/abuse_reset.rs",
         "status": "done",
         "note": "Account's session routes carry `abuse-reset` (201) like PHP. Unit tests (`abuse_reset_tests`) prove a listed status zeroes the request's keys in the current window and leaves other statuses, keys and routes alone. The parity diff cannot cover it: `_APP_OPTIONS_ABUSE` is read per process by both runtimes and the shared stack runs with it `disabled`.",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "async fn reset_limits" }
+          { "file": "crates/appwrite/core/src/platform/hooks/shutdown/abuse_reset.rs", "anchor": "async fn reset_limits" }
         ]
       }
     },
@@ -106,9 +113,10 @@
       "description": "Renders the route's `audits.resource` template from the request and response, picks the actor (target user, key or guest) and enqueues an audit message with the response payload.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "publisherForAudits->enqueue" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/shutdown/audits.rs",
         "status": "done",
         "note": "Skipped on the self-hosted edition, like the PHP audit publisher.",
-        "where": [{ "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn audit" }]
+        "where": [{ "file": "crates/appwrite/core/src/platform/hooks/shutdown/audits.rs", "anchor": "async fn audit" }]
       }
     },
     {
@@ -117,12 +125,13 @@
       "description": "For routes labelled `cache`, stores a successful payload in the project's file cache and records it in the `cache` collection, refreshing the access time and content on later hits.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "cache.resourceType" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/shutdown/cache_write.rs",
         "status": "done",
         "note": "Routes set `Labels::cache` (with `cache.resource`, `cache.resourceType`, `cache.params`); no Rust route does yet (storage previews and avatars are PHP's). The key is `cacheIdentifier()`'s MD5 of the URI, the PHP-serialized sorted params and the buster; the payload goes to `/storage/cache/app-<projectId>/<key>` through utopia-cache's `Filesystem` and the entry to the `cache` collection, with PHP's create, duplicate, daily refresh and re-save rules. Unit tests check keys against PHP's (`Request::cacheIdentifier()` on the oracle, and an entry PHP's API wrote for an avatar), the rendered resources and the writes. `appwrite-rust` mounts the `appwrite-cache` volume.",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/cache.rs", "anchor": "pub(super) fn identifier" },
-          { "file": "crates/appwrite/core/src/platform/cache.rs", "anchor": "pub(super) async fn write" },
-          { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn cache_write" }
+          { "file": "crates/appwrite/core/src/platform/hooks/shutdown/cache_write.rs", "anchor": "fn identifier" },
+          { "file": "crates/appwrite/core/src/platform/hooks/shutdown/cache_write.rs", "anchor": "pub(super) async fn write" },
+          { "file": "crates/appwrite/core/src/platform/hooks/shutdown/cache_write.rs", "anchor": "async fn cache_write" }
         ]
       }
     },
@@ -132,9 +141,10 @@
       "description": "After a successful SDK, CLI or MCP request, marks the matching onboarding stage of the project (or the project in the path on the console) as completed, with the actor type, under a lock.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "ONBOARDING_STATUS_COMPLETED" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/shutdown/onboarding.rs",
         "status": "done",
         "note": "Every stage of `app/config/onboarding.php` (a unit test pins the list) and the CLI and MCP install stages from `X-SDK-Name` / `X-SDK-Language`. Proved by `appwrite diff` (CLI and MCP variants).",
-        "where": [{ "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn onboarding" }]
+        "where": [{ "file": "crates/appwrite/core/src/platform/hooks/shutdown/onboarding.rs", "anchor": "async fn onboarding" }]
       }
     },
     {
@@ -143,11 +153,12 @@
       "description": "Records the request's metadata for usage: path, method, user agent, hostname, country from the IP, SDK and version, protocol, accept headers, query keys, region and service.",
       "php": { "file": "app/controllers/general.php", "kind": "init", "anchor": "->setQueryKeys($queryKeys)" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/init/usage_context.rs",
         "status": "done",
         "note": "Country from the IP's geo lookup, after the response. Query keys stay empty, as in PHP: Swoole's `request_uri` has no query string. `appwrite diff` compares every usage message.",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "pub(super) fn schedule" },
-          { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn usage" }
+          { "file": "crates/appwrite/core/src/platform/hooks/init/usage_context.rs", "anchor": "fn of" },
+          { "file": "crates/appwrite/core/src/platform/hooks/shutdown/usage.rs", "anchor": "async fn usage" }
         ]
       }
     },
@@ -157,9 +168,10 @@
       "description": "Adds the response status to the usage context and the project as the resource when the action named none.",
       "php": { "file": "app/controllers/general.php", "kind": "shutdown", "anchor": "fillMissingResource" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/shutdown/usage.rs",
         "status": "done",
         "note": null,
-        "where": [{ "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn usage" }]
+        "where": [{ "file": "crates/appwrite/core/src/platform/hooks/shutdown/usage.rs", "anchor": "async fn usage" }]
       }
     },
     {
@@ -168,9 +180,10 @@
       "description": "Refuses admin mode for the console project.",
       "php": { "file": "app/controllers/general.php", "kind": "init", "anchor": "Admin mode is not allowed for console project" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/init/admin_console.rs",
         "status": "done",
         "note": null,
-        "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "Admin mode is not allowed for console project" }]
+        "where": [{ "file": "crates/appwrite/core/src/platform/hooks/init/admin_console.rs", "anchor": "Admin mode is not allowed for console project" }]
       }
     },
     {
@@ -179,11 +192,12 @@
       "description": "Refuses database, functions, sites and messaging routes on the console project, explaining a missing project ID.",
       "php": { "file": "app/controllers/general.php", "kind": "init", "anchor": "No Appwrite project was specified" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/init/console_forbidden.rs",
         "status": "done",
         "note": "Routes in the `database`, `functions`, `sites` or `messaging` group refuse the console project with `general_access_forbidden`, explaining a missing `X-Appwrite-Project`. It runs after every `api` hook (and the edition's `Hooks::init`), as PHP runs a route's hooks group by group. No route Rust serves is in these groups yet.",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn console_forbidden" },
-          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn refuse_console" }
+          { "file": "crates/appwrite/core/src/platform/hooks/init/console_forbidden.rs", "anchor": "fn console_forbidden" },
+          { "file": "crates/appwrite/core/src/platform/hooks/init/console_forbidden.rs", "anchor": "fn refuse_console" }
         ]
       }
     },
@@ -193,11 +207,12 @@
       "description": "Sends requests for custom domains to the function and site router, answers 404 without a route, adds request filters for older `X-Appwrite-Response-Format` versions and response filters with a version warning header, sets the locale from the parameter or header, and with `_APP_OPTIONS_FORCE_HTTPS` redirects GET requests to HTTPS and refuses other methods.",
       "php": { "file": "app/controllers/general.php", "kind": "init", "anchor": "x-appwrite-response-format" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/init/request.rs",
         "status": "done",
         "note": "Response formats are compared with PHP's `version_compare()` (`response::version_compare`, `Version::from_format`), with the warning for a newer SDK. Every request filter (V16 to V27) is in `appwrite_core::request`, keyed by SDK model as PHP's are, so a ported service gets its filters unchanged; V17 is proven on PHP's own output, and V20 reads the project's relationships as PHP does. Response filters are applied by each response model (`Render::before`), so a ported model brings its own. The locale comes from the parameter or header. `_APP_OPTIONS_FORCE_HTTPS` redirects GET requests to HTTPS (sent before the security headers, the action skipped) and refuses other methods, sparing localhost and the migration host. Traefik never routes custom domains to Rust, so the function and site router is not needed; a request without a route reaches the wildcard.",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// -- response format, locale" },
-          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// -- forced HTTPS" },
+          { "file": "crates/appwrite/core/src/platform/hooks/init/request.rs", "anchor": "// -- response format, locale" },
+          { "file": "crates/appwrite/core/src/platform/hooks/init/request.rs", "anchor": "// -- forced HTTPS" },
           { "file": "crates/appwrite/core/src/request.rs", "anchor": "pub async fn apply" }
         ]
       }
@@ -208,10 +223,11 @@
       "description": "Adds the CORS headers, `Server`, `X-Content-Type-Options` and HSTS over HTTPS, then rejects a browser origin that is not an allowed platform (CSRF), unless an API key is sent or the route allows any origin.",
       "php": { "file": "app/controllers/general.php", "kind": "init", "anchor": "Application level CSRF protection" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/init/security.rs",
         "status": "done",
         "note": "The security headers apply once the project, mode, user and API key resolved, as in `general.php`: an error before that is sent with Swoole's `Server` header and no `X-Content-Type-Options`. `appwrite diff` covers no origin, a platform and a foreign origin.",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// -- CORS / origin (I4)" },
+          { "file": "crates/appwrite/core/src/platform/hooks/init/security.rs", "anchor": "// -- CORS / origin (I4)" },
           { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "pub(super) fn finalize" },
           { "file": "crates/appwrite/core/src/network.rs", "anchor": "pub fn validate_origin" }
         ]
@@ -223,11 +239,12 @@
       "description": "On the first request to a known platform hostname, creates its `rules` document and enqueues a certificate job, remembering certified domains in memory.",
       "php": { "file": "app/controllers/general.php", "kind": "init", "anchor": "Issuing a TLS certificate" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/init/certificates.rs",
         "status": "done",
         "note": "The first request to a platform hostname that is a known, non-test domain (not an ACME challenge) creates its `api` rule (md5 id under `_APP_RULES_FORMAT=md5`, Appwrite-owned under the function and site domains) and queues a certificate job on `_APP_CERTIFICATES_QUEUE_NAME` with PHP's message (`skipRenewCheck`), unless the rule exists; each hostname is looked at once per process (PHP's `certifiedDomains`). PHP's `RuleCreated` bus event has no CE listener.",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "async fn certify" },
-          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "async fn issue" }
+          { "file": "crates/appwrite/core/src/platform/hooks/init/certificates.rs", "anchor": "async fn certify" },
+          { "file": "crates/appwrite/core/src/platform/hooks/init/certificates.rs", "anchor": "async fn issue" }
         ]
       }
     },
@@ -237,9 +254,10 @@
       "description": "Answers OPTIONS with the CORS headers and 204 (custom domains go to the router first) and dispatches RequestCompleted for usage, since OPTIONS runs no shutdown hooks.",
       "php": { "file": "app/controllers/general.php", "kind": "options" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/preflight.rs",
         "status": "done",
         "note": "Headers (with the user resource's fallback headers) and status match, proven by `appwrite diff`. PHP dispatches RequestCompleted, which only adds metrics to the request's usage context; only the `api` shutdown hook publishes that context, and it does not run for a preflight, so no usage is recorded, as in Rust.",
-        "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn preflight" }]
+        "where": [{ "file": "crates/appwrite/core/src/platform/hooks/preflight.rs", "anchor": "fn preflight" }]
       }
     },
     {
@@ -248,10 +266,11 @@
       "description": "Maps framework and database exceptions to Appwrite errors, dispatches usage for non-publishable errors, adds span attributes, hides messages of unexpected codes behind a 500, adds the development trace, CORS and no-cache headers, and renders the error model (or an HTML page outside /v1).",
       "php": { "file": "app/controllers/general.php", "kind": "error" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/error/mod.rs",
         "status": "done",
         "note": "Error model, status codes, development fields, CORS and no-cache headers match, proven by `appwrite diff` (401, 403, 404 and 400 answers). PHP dispatches RequestCompleted for non-publishable errors, but only the `api` shutdown hook, which does not run after an error, publishes usage: no usage is recorded, as in Rust.",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "pub(crate) fn error_response" },
+          { "file": "crates/appwrite/core/src/platform/hooks/error/mod.rs", "anchor": "fn error_response" },
           { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "pub(super) fn finalize" }
         ]
       }
@@ -262,9 +281,10 @@
       "description": "Answers routes that match nothing with a route not found error.",
       "php": { "file": "app/controllers/general.php", "kind": "wildcard" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/wildcard.rs",
         "status": "done",
         "note": null,
-        "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "pub(super) fn wildcard_route" }]
+        "where": [{ "file": "crates/appwrite/core/src/platform/hooks/wildcard.rs", "anchor": "fn wildcard_route" }]
       }
     },
     {
@@ -273,10 +293,11 @@
       "description": "For `mfaProtected` routes, requires an MFA challenge completed within the recent window.",
       "php": { "file": "app/controllers/shared/api/auth.php", "kind": "init", "anchor": "USER_CHALLENGE_REQUIRED" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/init/mfa_fresh.rs",
         "status": "done",
         "note": "Proved by Account's `mfaProtected` routes (recovery codes get/update, authenticator delete): sessions without a recent challenge get `user_challenge_required`. No scenario completes a challenge, so the fresh pass is not reached.",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "fn mfa_fresh" }
+          { "file": "crates/appwrite/core/src/platform/hooks/init/mfa_fresh.rs", "anchor": "fn mfa_fresh" }
         ]
       }
     },
@@ -286,10 +307,11 @@
       "description": "For `recentSession` routes, requires a session created or MFA-verified within the recent window.",
       "php": { "file": "app/controllers/shared/api/auth.php", "kind": "init", "anchor": "USER_REAUTHENTICATION_REQUIRED" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/init/recent_session.rs",
         "status": "done",
         "note": "Proved by Account's `recentSession` routes (passkeys create, verify, delete): a fresh session passes, guests fall through to the scope check. `appwrite diff` account.passkeys.* scenarios.",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "fn recent_session" }
+          { "file": "crates/appwrite/core/src/platform/hooks/init/recent_session.rs", "anchor": "fn recent_session" }
         ]
       }
     },
@@ -299,10 +321,11 @@
       "description": "For `auth` routes, refuses console access from denied countries and, except for keys and privileged users, an authentication method the project disabled (`auth.type` label).",
       "php": { "file": "app/controllers/shared/api/auth.php", "kind": "init", "anchor": "auth.type" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/init/auth_methods.rs",
         "status": "done",
         "note": "`createMembership` (`auth.type` `invites`, groups `api`, `teams`, `auth`) and `createPhoneVerification` (`auth.type` `phone`) run it in `bin/compat appwrite diff` under every identity (both methods enabled, as on the twins); the refusal of a disabled method is the shared code path the other `auth.type` values take.",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "async fn auth_methods" }
+          { "file": "crates/appwrite/core/src/platform/hooks/init/auth_methods.rs", "anchor": "async fn auth_methods" }
         ]
       }
     },
@@ -354,6 +377,7 @@
       "description": "In development, applies the `X-Appwrite-Timeout` header as the project database's query timeout.",
       "php": { "file": "src/Appwrite/Platform/Modules/Databases/Http/Init/Timeout.php", "kind": "init" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/init/database_timeout.rs",
         "status": "done",
         "note": "`X-Appwrite-Timeout` sets the project database timeout in development. Proved by `appwrite diff` (timeout variant).",
         "where": []
@@ -407,9 +431,10 @@
       "description": "The project from the `project` parameter, `X-Appwrite-Project` header, query, S3 credential or legacy `/v1/projects/:projectId` path; the console project when none.",
       "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('project'" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/resources/project.rs",
         "status": "done",
         "note": "S3 credentials and the legacy project paths are not needed by Users.",
-        "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// -- project" }]
+        "where": [{ "file": "crates/appwrite/core/src/platform/hooks/resources/project.rs", "anchor": "// -- project" }]
       }
     },
     {
@@ -418,9 +443,10 @@
       "description": "`default` or `admin` from the `mode` parameter or `X-Appwrite-Mode`; admin when the project asked for is not the one resolved.",
       "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('mode'" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/resources/mode.rs",
         "status": "done",
         "note": null,
-        "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// -- mode" }]
+        "where": [{ "file": "crates/appwrite/core/src/platform/hooks/resources/mode.rs", "anchor": "// -- mode" }]
       }
     },
     {
@@ -429,9 +455,10 @@
       "description": "The user from the session cookie (console cookie in admin mode), the `X-Appwrite-Session` header or `X-Fallback-Cookies`, then a JWT; an account API key's user when its header matches.",
       "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('user'" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/resources/user.rs",
         "status": "done",
         "note": "Sessions, JWTs and the account API key's user (with `X-Appwrite-User`, refused alongside a session or when expired).",
-        "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "async fn resolve_user" }]
+        "where": [{ "file": "crates/appwrite/core/src/platform/hooks/resources/user.rs", "anchor": "async fn load" }]
       }
     },
     {
@@ -440,6 +467,7 @@
       "description": "The user's current session, verified from the session secret or the JWT's session ID.",
       "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('session'" },
       "rust": {
+        "file": "crates/appwrite/core/src/auth/mod.rs",
         "status": "done",
         "note": null,
         "where": [{ "file": "crates/appwrite/core/src/auth/mod.rs", "anchor": "pub fn session_verify" }]
@@ -451,9 +479,10 @@
       "description": "Decodes `X-Appwrite-Key` and requires the project, user or organization header its type names.",
       "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('apiKey'" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/resources/key.rs",
         "status": "done",
         "note": "Project (standard and ephemeral), account and organization keys, with the header each requires.",
-        "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// -- API key" }]
+        "where": [{ "file": "crates/appwrite/core/src/platform/hooks/resources/key.rs", "anchor": "// -- API key" }]
       }
     },
     {
@@ -462,9 +491,10 @@
       "description": "For a user with the impersonator flag, the target user by ID, email or phone header (or parameter).",
       "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('impersonatorUser'" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/resources/impersonation.rs",
         "status": "done",
         "note": null,
-        "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// Impersonation." }]
+        "where": [{ "file": "crates/appwrite/core/src/platform/hooks/resources/impersonation.rs", "anchor": "// Impersonation." }]
       }
     },
     {
@@ -473,11 +503,12 @@
       "description": "The organization that owns the project, or on the console the one a route names (path project, `teamId` or `X-Appwrite-Organization`); used for admin roles.",
       "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('team'" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/resources/team.rs",
         "status": "done",
         "note": "Resolved as PHP does: the project's organization by `teamInternalId`; on the console the project of a `/v1/projects/:projectId` route (`projectIdFromPath`), the `teamId` param of `/v1/projects`, or `X-Appwrite-Organization` on an `organization` group route; empty otherwise. Organization keys are decoded against its keys and admin mode reads its memberships. A unit test covers each branch. The console's admin branch of the `auth` hook (bare owner/developer roles from this team, `projectIdFromPath` scopes, authorization on for `/v1/projects`) is the `auth` hook's, for when the Organization and Projects routes move.",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/context.rs", "anchor": "pub(super) async fn team(" },
-          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "async fn load_team" }
+          { "file": "crates/appwrite/core/src/platform/hooks/resources/team.rs", "anchor": "async fn team(" },
+          { "file": "crates/appwrite/core/src/platform/hooks/resources/team.rs", "anchor": "async fn load_team" }
         ]
       }
     },
@@ -487,9 +518,10 @@
       "description": "Hostnames CORS and the origin check accept: platform and console hosts, the project's platforms, the origin on preflight, and a custom domain rule's domain.",
       "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('allowedHostnames'" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/resources/hostnames.rs",
         "status": "done",
         "note": "Platform and console hosts, the project's platforms, the preflight origin and the custom domain rule the origin (or referer) names, when it serves the project or a trusted one (`_APP_CONSOLE_TRUSTED_PROJECTS`, `_APP_RULES_FORMAT=md5`). Proved by `appwrite diff` from the twin's own rule domain and the other twin's.",
-        "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn allowed_hostnames" }]
+        "where": [{ "file": "crates/appwrite/core/src/platform/hooks/resources/hostnames.rs", "anchor": "fn allowed_hostnames" }]
       }
     },
     {
@@ -498,11 +530,12 @@
       "description": "Listeners on the project database: the `users.[userId].create` event for every user created, usage metrics for created and deleted documents (users, sessions, deployments ...), and purging the functions events cache.",
       "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('dbForProject'" },
       "rust": {
+        "file": "crates/appwrite/core/src/platform/hooks/resources/database_listeners.rs",
         "status": "done",
         "note": "The project database registers PHP's listeners: `Usage` (sessions, and deployments per resource type counted against their function or site as `addResourceMetric()` does), `UserEvents` (every created user's `users.[userId].create`) and `FunctionCache` (the functions events cache purged). A unit test checks the recorded metrics against PHP's `Usage` hook on the oracle. The purge runs after the response rather than during the action; no Rust route writes functions.",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "// Database listener" },
-          { "file": "crates/appwrite/core/src/platform/context.rs", "anchor": "fn listen(" }
+          { "file": "crates/appwrite/core/src/platform/hooks/shutdown/mod.rs", "anchor": "// Database listener" },
+          { "file": "crates/appwrite/core/src/platform/hooks/resources/database_listeners.rs", "anchor": "fn listen(" }
         ]
       }
     }

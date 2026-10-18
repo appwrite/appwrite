@@ -154,7 +154,7 @@ fn hooks(
                 json!({ "file": file, "anchor": anchor, "line": line, "found": line.is_some() })
             })
             .collect();
-        json!({ "status": r["status"].as_str().unwrap_or("missing"), "note": r["note"], "where": places })
+        json!({ "file": r["file"], "status": r["status"].as_str().unwrap_or("missing"), "note": r["note"], "where": places })
     };
     for entry in &entries {
         let id = entry["id"].as_str().unwrap_or_default();
