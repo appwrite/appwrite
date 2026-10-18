@@ -71,11 +71,29 @@ $device = new S3(
     'YOUR_BUCKET_NAME.s3.us-east-1.amazonaws.com', // Host
     'us-east-1', // Region
     Acl::Private, // Access control (default: private)
-    bucket: 'YOUR_BUCKET_NAME', // Optional: enables server-side copy
+    bucket: 'YOUR_BUCKET_NAME', // Optional: addresses bucket requests and enables server-side copy
 );
 ```
 
 When the bucket name is known, a same-device `copy()` — and therefore `move()` — runs entirely server side (`CopyObject`, or `UploadPartCopy` above 5 GB), so no bytes move through PHP. The provider-specific adapters below pass their bucket automatically. Without it, `copy()` falls back to a streamed download and re-upload.
+
+The bucket also decides where requests that address the bucket itself go: `listFiles()`, `listUploads()` and `deletePath()`. Like the AWS SDKs' force-path-style option, an endpoint is either:
+
+- **virtual-hosted**: the endpoint addresses the bucket (`YOUR_BUCKET_NAME.s3.us-east-1.amazonaws.com`, or `http://minio:9000/YOUR_BUCKET_NAME/`), and paths are keys in it.
+- **path-style**: the endpoint is the bare service (`http://minio:9000`), and every path, the root included, begins with `YOUR_BUCKET_NAME/`. Paths returned by `listFiles()` and `listUploads()` begin with it too.
+
+```php
+$device = new S3(
+    'YOUR_BUCKET_NAME/root', // Root path, starting with the bucket
+    'YOUR_ACCESS_KEY',
+    'YOUR_SECRET_KEY',
+    'http://minio:9000', // Host
+    'us-east-1', // Region
+    bucket: 'YOUR_BUCKET_NAME',
+);
+```
+
+Pass `pathStyle: true` or `pathStyle: false` to choose; by default a device with a bucket is path-style unless its host is the bucket name (a domain named after the bucket), its host begins with `YOUR_BUCKET_NAME.`, or the first segment of the endpoint path is the bucket. A custom domain whose host is not the bucket name, or a service host that happens to begin with `YOUR_BUCKET_NAME.`, must say which it is. On a path-style device, a listing or `deletePath()` prefix outside the bucket, or holding a `.` or `..` segment, throws `InvalidArgumentException` before any request is made.
 
 The provider-specific adapters below build the host for you from a bucket and region. Every S3-family adapter also accepts optional named constructor arguments:
 
