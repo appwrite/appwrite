@@ -14,6 +14,7 @@ use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;

@@ -2444,7 +2444,7 @@ final class VideosCustomServerTest extends Scope
     {
         $document = new \DOMDocument();
         $loaded = @$document->loadXML($mpd);
-        $this->assertTrue($loaded !== false, 'MPD is not valid XML');
+        $this->assertNotFalse($loaded, 'MPD is not valid XML');
 
         $counts = ['video' => 0, 'audio' => 0, 'other' => 0];
 

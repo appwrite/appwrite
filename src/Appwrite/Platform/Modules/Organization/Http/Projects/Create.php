@@ -16,6 +16,7 @@ use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -226,9 +227,9 @@ class Create extends Action
                 } catch (Duplicate) {
                     // Collection already exists
                 }
-
-                Profiles::seed($dbForProject);
             }
+
+            Profiles::seed($dbForProject);
         } else {
             $adapter = new DatabasePool($pools->get($dsn->getHost()));
             $dbForProject = new Database($adapter, $cache);

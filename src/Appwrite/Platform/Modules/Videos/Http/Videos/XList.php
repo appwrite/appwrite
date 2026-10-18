@@ -106,7 +106,7 @@ class XList extends Base
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+        $filterQueries = Query::groupByType($queries)->filters;
 
         try {
             if ($isAPIKey || $isPrivilegedUser) {
