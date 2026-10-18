@@ -1069,6 +1069,14 @@ return [
                 'question' => '',
             ],
             [
+                'name' => '_APP_STORAGE_S3_PATH_STYLE',
+                'description' => 'Whether requests to _APP_STORAGE_S3_ENDPOINT name the bucket in the path. Set to \'enabled\' when the endpoint is the bare service, or \'disabled\' when it already addresses the bucket. Leave empty to infer it: the endpoint addresses the bucket when its host is the bucket name (a dotted domain), its host begins with the bucket name followed by a dot, or its path ends with the bucket name.',
+                'introduction' => '2.6.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
                 'name' => '_APP_STORAGE_DO_SPACES_ACCESS_KEY',
                 'description' => 'Deprecated. DigitalOcean Spaces access key retained for backward compatibility. Use _APP_STORAGE_S3_ACCESS_KEY instead; Open Runtimes Orchestrator does not support this provider-specific variable.',
                 'introduction' => '0.13.0',
