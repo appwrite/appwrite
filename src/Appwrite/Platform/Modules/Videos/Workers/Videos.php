@@ -92,6 +92,22 @@ class Videos extends Action
     /** Seconds one embedded caption track may take to extract before it counts as failed. */
     private const SUBTITLE_TIMEOUT = 60;
 
+    /**
+     * ffmpeg run limit: ENCODE_BASE + duration x factor, at least ENCODE_FLOOR and
+     * at most _APP_VIDEOS_ENCODE_TIMEOUT. A factor of 4 lets an encode run as slowly
+     * as 0.25x realtime; frames above 1080p double it.
+     */
+    private const ENCODE_BASE = 120;
+    private const ENCODE_FLOOR = 300;
+    private const ENCODE_FACTORS = [
+        Base::CODEC_H264 => 4,
+        Base::CODEC_HEVC => 8,
+        Base::CODEC_VP9 => 10,
+    ];
+
+    /** Seconds an encode may report progress without its media time advancing. */
+    private const STALL_TIMEOUT = 300;
+
     /** Histogram bucket boundaries in seconds. */
     private const JOB_BUCKETS = [1, 5, 10, 30, 60, 120, 300, 600, 1200, 1800, 3600];
     private const PHASE_BUCKETS = [0.1, 0.5, 1, 5, 10, 30, 60, 120, 300, 600, 1800];
@@ -305,7 +321,7 @@ class Videos extends Action
                 $permissions
             );
 
-            $encoder = $this->encoder();
+            $encoder = $this->encoder($this->timeout($video, 1));
 
             // Prefer dimensions over bitrate: many containers (VBR MKV, some DivX)
             // report width/height but leave bitrate as 0, and empty(0) is true in PHP.
@@ -351,13 +367,18 @@ class Videos extends Action
             // library-written VTT and render our own from cues().
             $stage = 'tile';
             $phaseStart = \microtime(true);
-            $sheet = $encoder->tile(
-                $inPath,
-                \rtrim($workspace['outDir'], '/'),
-                // 480px stays sharp on HiDPI screens and enlarged scrub frames; a 4x4
-                // grid keeps each sheet at ~1920x1080, small enough for hover scrubbing.
-                (new Tile())->width(480)->grid(4, 4)->quality(2)->vtt(false)
-            );
+            try {
+                $sheet = $encoder->tile(
+                    $inPath,
+                    \rtrim($workspace['outDir'], '/'),
+                    // 480px stays sharp on HiDPI screens and enlarged scrub frames; a 4x4
+                    // grid keeps each sheet at ~1920x1080, small enough for hover scrubbing.
+                    (new Tile())->width(480)->grid(4, 4)->quality(2)->vtt(false)
+                );
+            } catch (\Throwable $th) {
+                Span::add('timings.tile', \round(\microtime(true) - $phaseStart, 3));
+                throw $th;
+            }
 
             $this->phase($telemetry, VideoAction::Timeline->value, 'tile', $phaseStart);
             Span::add('timeline.sheets', \count($sheet->images()));
@@ -689,6 +710,10 @@ class Videos extends Action
         $outcome = 'error';
         $status = '';
         $last = null;
+        // Set by the progress listener when the row leaves `started` (sweeper
+        // abort, error park, e2e seed); it then stops ffmpeg and this pack never
+        // resumes DB writes, even if status is set back to `started`.
+        $halted = false;
 
         try {
             // Every rendition owns exactly one Encode message, so a message whose
@@ -764,7 +789,13 @@ class Videos extends Action
             // so the library must not print its own copy to stdout.
             $probe = new FFprobe();
             $probe->setReporter(new Silent());
-            $packager = new Packager(new FFmpeg(threads: self::THREADS), probe: $probe, reporter: new Silent());
+            $timeout = $this->timeout(
+                $video,
+                (self::ENCODE_FACTORS[$codec] ?? self::ENCODE_FACTORS[Base::CODEC_H264])
+                * ((int) $profile->getAttribute('height') > 1080 ? 2 : 1)
+            );
+            Span::add('encode.timeout', $timeout);
+            $packager = new Packager(new FFmpeg(timeout: $timeout, threads: self::THREADS), probe: $probe, reporter: new Silent());
 
             $stage = 'probe';
             if (!$packager->valid($inPath)) {
@@ -830,67 +861,82 @@ class Videos extends Action
             };
 
             $lastProgress = -1;
-            // Once the row leaves `started` (sweeper abort, error park, e2e seed),
-            // never resume DB writes for this pack — even if status is set back to
-            // `started` before ffmpeg exits.
-            $halted = false;
             $lastStatusCheck = 0.0;
             $phaseStart = \microtime(true);
-            $package = $packager
-                ->open($inPath)
-                ->format($format)
-                ->add($representation)
-                ->output($target)
-                ->on(Packager::PROGRESS, function (mixed $progress) use ($dbForProject, $queueForRealtime, $project, $permissions, &$rendition, &$lastProgress, &$halted, &$lastStatusCheck, &$last) {
-                    if (!$progress instanceof Progress) {
-                        return;
-                    }
-                    $last = $progress;
-                    if ($halted) {
-                        return;
-                    }
+            $advancedAt = $phaseStart;
+            $advancedTime = -1.0;
+            try {
+                $package = $packager
+                    ->open($inPath)
+                    ->format($format)
+                    ->add($representation)
+                    ->output($target)
+                    ->on(Packager::PROGRESS, function (mixed $progress) use ($dbForProject, $queueForRealtime, $project, $permissions, &$rendition, &$lastProgress, &$halted, &$lastStatusCheck, &$last, &$advancedAt, &$advancedTime) {
+                        if (!$progress instanceof Progress) {
+                            return;
+                        }
+                        $last = $progress;
+                        if ($halted) {
+                            return;
+                        }
 
-                    $now = \microtime(true);
-                    $percentage = (int) \round($progress->percent);
-                    $onWriteBoundary = $percentage % 3 === 0 && $percentage !== $lastProgress;
-                    // Poll status ~every 500ms (and on write boundaries) so abort/
-                    // error parks are noticed without a DB read on every ffmpeg tick.
-                    if (!$onWriteBoundary && ($now - $lastStatusCheck) < 0.5) {
-                        return;
-                    }
-                    $lastStatusCheck = $now;
+                        // Throwing from a listener makes the library kill ffmpeg.
+                        $now = \microtime(true);
+                        if ($progress->time > $advancedTime) {
+                            $advancedTime = $progress->time;
+                            $advancedAt = $now;
+                        } elseif (($now - $advancedAt) > self::STALL_TIMEOUT) {
+                            Span::add('ffmpeg.stalled', true);
+                            throw new Runtime('Command "ffmpeg" timed out after ' . self::STALL_TIMEOUT . 's without progress');
+                        }
 
-                    $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
-                    if ($current->isEmpty() || $current->getAttribute('status') !== Base::STATUS_STARTED) {
-                        $halted = true;
-                        return;
-                    }
+                        $percentage = (int) \round($progress->percent);
+                        $onWriteBoundary = $percentage % 3 === 0 && $percentage !== $lastProgress;
+                        // Poll status ~every 500ms (and on write boundaries) so abort/
+                        // error parks are noticed without a DB read on every ffmpeg tick.
+                        if (!$onWriteBoundary && ($now - $lastStatusCheck) < 0.5) {
+                            return;
+                        }
+                        $lastStatusCheck = $now;
 
-                    if (!$onWriteBoundary) {
-                        return;
-                    }
-                    $lastProgress = $percentage;
+                        $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
+                        if ($current->isEmpty() || $current->getAttribute('status') !== Base::STATUS_STARTED) {
+                            // Stop ffmpeg now instead of letting it finish unused work.
+                            $halted = true;
+                            throw new \Exception('Encode halted: rendition left started');
+                        }
 
-                    $rendition = $dbForProject->updateDocument(
-                        'videos_renditions',
-                        $rendition->getId(),
-                        new Document([
-                            'progress' => (string) $percentage,
-                        ])
-                    );
-                    $this->notify(
-                        $queueForRealtime,
-                        $project,
-                        $rendition,
-                        'videos.[videoId].renditions.[renditionId].update',
-                        [
-                            'videoId' => $rendition->getAttribute('videoId', ''),
-                            'renditionId' => $rendition->getId(),
-                        ],
-                        $permissions
-                    );
-                })
-                ->pack(\rtrim($workspace['outDir'], '/'));
+                        if (!$onWriteBoundary) {
+                            return;
+                        }
+                        $lastProgress = $percentage;
+
+                        $rendition = $dbForProject->updateDocument(
+                            'videos_renditions',
+                            $rendition->getId(),
+                            new Document([
+                                'progress' => (string) $percentage,
+                            ])
+                        );
+                        $this->notify(
+                            $queueForRealtime,
+                            $project,
+                            $rendition,
+                            'videos.[videoId].renditions.[renditionId].update',
+                            [
+                                'videoId' => $rendition->getAttribute('videoId', ''),
+                                'renditionId' => $rendition->getId(),
+                            ],
+                            $permissions
+                        );
+                    })
+                    ->pack(\rtrim($workspace['outDir'], '/'));
+            } catch (\Throwable $th) {
+                // phase() only closes a completed phase, but how long ffmpeg ran
+                // is the first question on a timeout, a stall or an abort.
+                Span::add('timings.encode', \round(\microtime(true) - $phaseStart, 3));
+                throw $th;
+            }
             $this->phase($telemetry, VideoAction::Encode->value, 'encode', $phaseStart);
             if ($last !== null && $last->speed > 0) {
                 $this->record(
@@ -909,8 +955,7 @@ class Videos extends Action
             // `started` while ffmpeg was still running — stop before ending.
             $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
             if (
-                $halted
-                || $current->isEmpty()
+                $current->isEmpty()
                 || $current->getAttribute('status') !== Base::STATUS_STARTED
             ) {
                 $outcome = 'halted';
@@ -1060,6 +1105,13 @@ class Videos extends Action
             $status = Base::STATUS_READY;
         } catch (\Throwable $th) {
             $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
+            // The progress listener stopped ffmpeg because the row left `started`.
+            if ($halted) {
+                $outcome = 'halted';
+                $status = $current->isEmpty() ? '' : (string) $current->getAttribute('status', '');
+                return;
+            }
+
             // Do not overwrite aborted/error parks from maintenance or e2e seeding.
             // Pre-claim failures may only park while the row is still `pending` —
             // never clobber a sibling coroutine that already won the claim.
@@ -2204,14 +2256,31 @@ class Videos extends Action
         return $bytes;
     }
 
-    private function encoder(): Encoder
+    /**
+     * @param int $timeout Seconds an ffmpeg run may take; 0 disables the limit.
+     */
+    private function encoder(int $timeout = 0): Encoder
     {
         // Silent reporters: failures reach the span through the exception, so
         // the library must not print its own copy to stdout.
         $probe = new FFprobe();
         $probe->setReporter(new Silent());
 
-        return new Encoder(new FFmpeg(threads: self::THREADS), $probe, new Silent());
+        return new Encoder(new FFmpeg(timeout: $timeout, threads: self::THREADS), $probe, new Silent());
+    }
+
+    /**
+     * Seconds an ffmpeg run over this source may take. An unknown duration gets the cap.
+     */
+    private function timeout(Document $video, int $factor): int
+    {
+        $cap = (int) System::getEnv('_APP_VIDEOS_ENCODE_TIMEOUT', '21600');
+        $seconds = (int) \ceil(((int) $video->getAttribute('duration', 0)) / 1000);
+        if ($seconds <= 0) {
+            return $cap;
+        }
+
+        return \min($cap, \max(self::ENCODE_FLOOR, self::ENCODE_BASE + $seconds * $factor));
     }
 
     /**

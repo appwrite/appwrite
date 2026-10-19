@@ -1874,6 +1874,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_VIDEOS_ENCODE_TIMEOUT',
+                'description' => 'The maximum number of seconds one ffmpeg run in the videos worker may take. Each encode gets a limit scaled to the source duration, codec and resolution, capped at this value; a source with unknown duration gets this value. The default value is 21600 seconds (6 hours).',
+                'introduction' => '2.6.0',
+                'default' => '21600',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_MAINTENANCE_RETENTION_VIDEOS_TMP',
                 'description' => 'Maximum age (in seconds) of orphaned video worker scratch folders under videos-tmp before maintenance deletes them. The default value is 86400 seconds (1 day).',
                 'introduction' => '2.4.0',

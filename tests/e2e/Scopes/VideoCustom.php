@@ -12,9 +12,11 @@ use Utopia\Lock\File;
  * Fixtures shared by the Videos e2e suites: a bucket, a source video file and a
  * caption file.
  *
- * Each is uploaded once per test class and cached statically — the video is the
- * 23 MB `large-file.mp4` fixture and has to be chunk-uploaded, so re-uploading
- * per test would dominate the suite runtime.
+ * Each is uploaded once per test class and cached statically. The default video
+ * is the 327 KB `small-video.mp4` (640x360, 5 s), which keeps every timeline and
+ * encode job under a second. The 23 MB 4K `large-file.mp4` costs seconds per job,
+ * so only getLargeVideoFile() chunk-uploads it, for the one test that checks
+ * production-sized output.
  */
 trait VideoCustom
 {
@@ -22,6 +24,7 @@ trait VideoCustom
 
     protected static array $videoBucket = [];
     protected static array $videoFile = [];
+    protected static array $largeVideoFile = [];
     protected static array $captionFile = [];
     protected static array $videoFileWithCaptions = [];
     protected static array $videoFileWithUndeterminedCaptions = [];
@@ -67,8 +70,7 @@ trait VideoCustom
     }
 
     /**
-     * Chunk-uploads the source video. Mirrors the pattern in
-     * `tests/e2e/Services/Storage/StorageBase.php`.
+     * Uploads the default (small) source video.
      */
     public function getVideoFile(): array
     {
@@ -87,18 +89,40 @@ trait VideoCustom
     }
 
     /**
-     * Chunk-uploads the source video into an arbitrary bucket, so tests can put
-     * one in a bucket with different permissions.
+     * Chunk-uploads the 23 MB 4K `large-file.mp4`. Every timeline and encode on
+     * it costs seconds, so only tests that need production-sized output use it.
+     */
+    public function getLargeVideoFile(): array
+    {
+        if (!empty(self::$largeVideoFile)) {
+            return self::$largeVideoFile;
+        }
+
+        $file = $this->uploadVideoTo($this->getVideoBucket()['$id'], name: 'large-file.mp4');
+
+        self::$largeVideoFile = [
+            '$id' => $file['$id'],
+            'sizeOriginal' => $file['sizeOriginal'],
+        ];
+
+        return self::$largeVideoFile;
+    }
+
+    /**
+     * Uploads a source video into an arbitrary bucket, so tests can put one in
+     * a bucket with different permissions. Files over one chunk are sent in 5 MB
+     * pieces, mirroring `tests/e2e/Services/Storage/StorageBase.php`.
      *
      * @param array<string> $permissions file-level permissions, when the bucket
      *                                   has fileSecurity enabled
      * @param array<string, string>|null $auth overrides the suite's auth headers,
      *                                         needed to upload into a bucket the
      *                                         current side cannot write to
+     * @param string $name fixture under `tests/resources/disk-a`
      */
-    public function uploadVideoTo(string $bucketId, array $permissions = [], ?array $auth = null): array
+    public function uploadVideoTo(string $bucketId, array $permissions = [], ?array $auth = null, string $name = 'small-video.mp4'): array
     {
-        $source = __DIR__ . '/../../resources/disk-a/large-file.mp4';
+        $source = __DIR__ . '/../../resources/disk-a/' . $name;
         $chunkSize = 5 * 1024 * 1024;
         $size = \filesize($source);
         $mimeType = \mime_content_type($source);
@@ -113,8 +137,10 @@ trait VideoCustom
         ];
 
         while (!\feof($handle)) {
-            $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . \base64_encode(@\fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
-            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . \min((($counter * $chunkSize) + $chunkSize) - 1, $size - 1) . '/' . $size;
+            $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . \base64_encode(@\fread($handle, $chunkSize)), $mimeType, $name);
+            if ($size > $chunkSize) {
+                $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . \min((($counter * $chunkSize) + $chunkSize) - 1, $size - 1) . '/' . $size;
+            }
 
             if (!empty($id)) {
                 $headers['x-appwrite-id'] = $id;

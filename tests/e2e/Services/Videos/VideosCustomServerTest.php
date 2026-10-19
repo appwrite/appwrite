@@ -1170,6 +1170,10 @@ final class VideosCustomServerTest extends Scope
         ]);
         $this->assertEquals(202, $otherOutput['headers']['status-code']);
 
+        // A live encode refuses delete with 409, so let the first one settle.
+        $firstReady = $this->waitForRenditionTerminalState($videoId, $firstId);
+        $this->assertEquals('ready', $firstReady['status']);
+
         $delete = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId . '/renditions/' . $firstId, $this->headers());
         $this->assertEquals(204, $delete['headers']['status-code']);
 
@@ -1399,7 +1403,9 @@ final class VideosCustomServerTest extends Scope
      */
     public function testEncodedPlaybackOutput(): void
     {
-        $videoId = $this->createReadyVideo()['$id'];
+        // The one encode on the 4K fixture: several segments per variant and a real
+        // audio track, so the manifests below are checked against production-like output.
+        $videoId = $this->createReadyVideo($this->getLargeVideoFile())['$id'];
         $renditionId = $this->createReadyRendition($videoId, 'hls');
 
         $profile360 = $this->seededProfile('360p');
