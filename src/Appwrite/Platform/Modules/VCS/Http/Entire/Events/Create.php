@@ -12,6 +12,7 @@ use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
@@ -268,6 +269,36 @@ class Create extends Action
         } while ($installationCursor !== null);
     }
 
+    /**
+     * Whether the repository's resource got a deployment of this commit since
+     * the attempt began - a push can fail after its deployment is accepted,
+     * and retrying it then would build the commit twice. A lookup that fails
+     * counts as no deployment, so the push is retried rather than dropped.
+     */
+    private function hasDeployed(Document $repository, string $commitHash, string $branch, string $since, Database $dbForPlatform, Authorization $authorization, callable $getProjectDB): bool
+    {
+        try {
+            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $repository->getAttribute('projectId', '')));
+            if ($project->isEmpty() || !$this->isProjectInCurrentRegion($project)) {
+                return false;
+            }
+
+            $dbForProject = $getProjectDB($project);
+
+            return !$authorization->skip(fn () => $dbForProject->findOne('deployments', [
+                Query::equal('resourceId', [$repository->getAttribute('resourceId', '')]),
+                Query::equal('resourceType', [$repository->getAttribute('resourceType') === 'function' ? 'functions' : 'sites']),
+                Query::equal('providerCommitHash', [$commitHash]),
+                Query::equal('providerBranch', [$branch]),
+                Query::greaterThanEqual('$createdAt', $since),
+            ]))->isEmpty();
+        } catch (\Throwable $error) {
+            Console::warning("Failed to look up deployments of repository '{$repository->getId()}': " . $error->getMessage());
+
+            return false;
+        }
+    }
+
     private function isProjectInCurrentRegion(Document $project): bool
     {
         try {
@@ -385,9 +416,9 @@ class Create extends Action
         }
 
         // Entire retries a delivery it got an error for. Each repository claims
-        // the delivery once and gives the claim back only when it failed, so a
-        // retry deploys just the repositories that did not deploy, and one that
-        // keeps failing never redeploys the others.
+        // the delivery once and gives the claim back only when it failed without
+        // deploying, so a retry deploys just the repositories that did not, and
+        // one that keeps failing never redeploys the others.
         $deliveryId = \strval($parsedPayload['deliveryId'] ?? '');
         $errors = [];
         foreach ($repositories as $repository) {
@@ -401,10 +432,11 @@ class Create extends Action
                 }
             }
 
+            $attemptedAt = DateTime::now();
             try {
                 $this->createGitDeployments($vcs, $providerInstallationId, [$repository], $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, '', $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory);
             } catch (\Throwable $error) {
-                if ($deliveryId !== '') {
+                if ($deliveryId !== '' && !$this->hasDeployed($repository, $providerCommitHash, $providerBranch, $attemptedAt, $dbForPlatform, $authorization, $getProjectDB)) {
                     $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $claim));
                 }
                 $errors[] = $error->getMessage();
