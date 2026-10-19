@@ -1,0 +1,3850 @@
+{
+  "source": "packages/vcs/tests/EntireTest.php",
+  "cases": [
+    {
+      "name": "testValidateWebhookEvent",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "payload": "{\"delivery_id\":\"dlv_0123456789\"}",
+            "signature": "Bearer eyJhbGciOiJFZERTQSIsImtpZCI6ImsxIiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwczpcL1wvYXdzLXVzLWVhc3QtMi5hcGkuZW50aXJlLmlvIiwiYXVkIjoiYXBwd3JpdGUiLCJpYXQiOjE3NjcyMjU2MDAsImV4cCI6NDEwMjQ0NDgwMCwianRpIjoianRpXzAxMjM0NTY3ODkiLCJib2R5X3NoYTI1NiI6ImFYUHpnb0VJZE0zNVZkLVQ1RUwxbnlSaUk1c3JrNnZJVUtoMUZvZS1JOVEifQ.bP4r-guocrBn_XQiTaJUnMgZkHVZ2WoLAnfKe5ZGx70nOB5PBdQi5y68dkqS7ZVNMX-8Li5wKG8w6QwrwDb3AQ",
+            "signatureKey": "6kpsY+KcUgq+9VB7Ey7F+ZVHdq6+vnuSQh7qaRRG0iw="
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "payload": "{\"delivery_id\":\"dlv_0123456789\"}",
+            "signature": "eyJhbGciOiJFZERTQSIsImtpZCI6ImsxIiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwczpcL1wvYXdzLXVzLWVhc3QtMi5hcGkuZW50aXJlLmlvIiwiYXVkIjoiYXBwd3JpdGUiLCJpYXQiOjE3NjcyMjU2MDAsImV4cCI6NDEwMjQ0NDgwMCwianRpIjoianRpXzAxMjM0NTY3ODkiLCJib2R5X3NoYTI1NiI6ImFYUHpnb0VJZE0zNVZkLVQ1RUwxbnlSaUk1c3JrNnZJVUtoMUZvZS1JOVEifQ.bP4r-guocrBn_XQiTaJUnMgZkHVZ2WoLAnfKe5ZGx70nOB5PBdQi5y68dkqS7ZVNMX-8Li5wKG8w6QwrwDb3AQ",
+            "signatureKey": "6kpsY+KcUgq+9VB7Ey7F+ZVHdq6+vnuSQh7qaRRG0iw="
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "payload": "{\"delivery_id\":\"dlv_0123456789\"}",
+            "signature": "not-a-token",
+            "signatureKey": "6kpsY+KcUgq+9VB7Ey7F+ZVHdq6+vnuSQh7qaRRG0iw="
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "payload": "{\"delivery_id\":\"dlv_0123456789\"}",
+            "signature": "eyJhbGciOiJFZERTQSIsImtpZCI6ImsxIiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwczpcL1wvYXdzLXVzLWVhc3QtMi5hcGkuZW50aXJlLmlvIiwiYXVkIjoiYXBwd3JpdGUiLCJpYXQiOjE3NjcyMjU2MDAsImV4cCI6NDEwMjQ0NDgwMCwianRpIjoianRpXzAxMjM0NTY3ODkiLCJib2R5X3NoYTI1NiI6ImFYUHpnb0VJZE0zNVZkLVQ1RUwxbnlSaUk1c3JrNnZJVUtoMUZvZS1JOVEifQ.C3f7JleB1tijl6m4QEc0BIx4oFDPgVN5p7KMKmYMN8jC3py3P_7rK4wIZG30MrgvtbZRX5iF2ppCskAy5x8gBA",
+            "signatureKey": "6kpsY+KcUgq+9VB7Ey7F+ZVHdq6+vnuSQh7qaRRG0iw="
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "payload": "{\"delivery_id\":\"dlv_0123456789\"} ",
+            "signature": "Bearer eyJhbGciOiJFZERTQSIsImtpZCI6ImsxIiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwczpcL1wvYXdzLXVzLWVhc3QtMi5hcGkuZW50aXJlLmlvIiwiYXVkIjoiYXBwd3JpdGUiLCJpYXQiOjE3NjcyMjU2MDAsImV4cCI6NDEwMjQ0NDgwMCwianRpIjoianRpXzAxMjM0NTY3ODkiLCJib2R5X3NoYTI1NiI6ImFYUHpnb0VJZE0zNVZkLVQ1RUwxbnlSaUk1c3JrNnZJVUtoMUZvZS1JOVEifQ.bP4r-guocrBn_XQiTaJUnMgZkHVZ2WoLAnfKe5ZGx70nOB5PBdQi5y68dkqS7ZVNMX-8Li5wKG8w6QwrwDb3AQ",
+            "signatureKey": "6kpsY+KcUgq+9VB7Ey7F+ZVHdq6+vnuSQh7qaRRG0iw="
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "payload": "{\"delivery_id\":\"dlv_0123456789\"}",
+            "signature": "eyJhbGciOiJFZERTQSIsImtpZCI6ImsxIiwidHlwIjoiSldUIn0.eyJleHAiOjE3NjcyMjUzMDAsImlzcyI6Imh0dHBzOlwvXC9hd3MtdXMtZWFzdC0yLmFwaS5lbnRpcmUuaW8iLCJhdWQiOiJhcHB3cml0ZSIsImlhdCI6MTc2NzIyNTYwMCwianRpIjoianRpXzAxMjM0NTY3ODkiLCJib2R5X3NoYTI1NiI6ImFYUHpnb0VJZE0zNVZkLVQ1RUwxbnlSaUk1c3JrNnZJVUtoMUZvZS1JOVEifQ.OP8l3Kk1-KxrP3nElSz0BZupP_ztO1C_tly65TNnjY76RmvWILm0jMxrvzbYYpVXri1dU_Y6WyXjHEPlinWxDg",
+            "signatureKey": "6kpsY+KcUgq+9VB7Ey7F+ZVHdq6+vnuSQh7qaRRG0iw="
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "payload": "{\"delivery_id\":\"dlv_0123456789\"}",
+            "signature": "eyJhbGciOiJFZERTQSIsImtpZCI6ImsxIiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwczpcL1wvYXdzLXVzLWVhc3QtMi5hcGkuZW50aXJlLmlvIiwiYXVkIjoiYXBwd3JpdGUiLCJpYXQiOjE3NjcyMjU2MDAsImp0aSI6Imp0aV8wMTIzNDU2Nzg5IiwiYm9keV9zaGEyNTYiOiJhWFB6Z29FSWRNMzVWZC1UNUVMMW55UmlJNXNyazZ2SVVLaDFGb2UtSTlRIn0.AmePaDuEyqDDqmbsUU13McUATpMEL1GQofhnxn2l293ONBRALr-VsQ8lD2NqLe4hMOL2rF2sKmZ42L4RouTXDA",
+            "signatureKey": "6kpsY+KcUgq+9VB7Ey7F+ZVHdq6+vnuSQh7qaRRG0iw="
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "payload": "{\"delivery_id\":\"dlv_0123456789\"}",
+            "signature": "eyJhbGciOiJFZERTQSIsImtpZCI6ImsxIiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwczpcL1wvYXdzLXVzLWVhc3QtMi5hcGkuZW50aXJlLmlvIiwiYXVkIjoiYXBwd3JpdGUiLCJpYXQiOjE3NjcyMjU2MDAsImV4cCI6NDEwMjQ0NDgwMCwianRpIjoianRpXzAxMjM0NTY3ODkifQ.kLU28tbpYNAXpMMr-VK3Gh3xZiftdgjF72-gEr6xQTMG9GRDPM8biX3ekcEvsz7U7qpTdjnOTd61irw2YGQxCg",
+            "signatureKey": "6kpsY+KcUgq+9VB7Ey7F+ZVHdq6+vnuSQh7qaRRG0iw="
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "payload": "{\"delivery_id\":\"dlv_0123456789\"}",
+            "signature": "eyJhbGciOiJIUzI1NiIsImtpZCI6ImsxIiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwczpcL1wvYXdzLXVzLWVhc3QtMi5hcGkuZW50aXJlLmlvIiwiYXVkIjoiYXBwd3JpdGUiLCJpYXQiOjE3NjcyMjU2MDAsImV4cCI6NDEwMjQ0NDgwMCwianRpIjoianRpXzAxMjM0NTY3ODkiLCJib2R5X3NoYTI1NiI6ImFYUHpnb0VJZE0zNVZkLVQ1RUwxbnlSaUk1c3JrNnZJVUtoMUZvZS1JOVEifQ.nVx9drj7sThe2y8d5pdw-_qz3Mv2HbbjBnRh1vYynF7Tfze4YhuIm9O2FzPNMReEVCPExyjQerKmO0n4UonfCg",
+            "signatureKey": "6kpsY+KcUgq+9VB7Ey7F+ZVHdq6+vnuSQh7qaRRG0iw="
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "payload": "{\"delivery_id\":\"dlv_0123456789\"}",
+            "signature": "eyJhbGciOiJFZERTQSIsImtpZCI6ImsxIiwidHlwIjoiSldUIn0.eyJpYXQiOjQxMDI0NDQ4MDAsImlzcyI6Imh0dHBzOlwvXC9hd3MtdXMtZWFzdC0yLmFwaS5lbnRpcmUuaW8iLCJhdWQiOiJhcHB3cml0ZSIsImV4cCI6NDEwMjQ0NDgwMCwianRpIjoianRpXzAxMjM0NTY3ODkiLCJib2R5X3NoYTI1NiI6ImFYUHpnb0VJZE0zNVZkLVQ1RUwxbnlSaUk1c3JrNnZJVUtoMUZvZS1JOVEifQ.i_okaelBQ5H_MTw-JgmJW8CQ7PYih3o9y4SqyQiEdXg3tGfMyV5sUGVp0zQqM52VniHDLDjUD1NAXnNOpYd8BA",
+            "signatureKey": "6kpsY+KcUgq+9VB7Ey7F+ZVHdq6+vnuSQh7qaRRG0iw="
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "payload": "{\"delivery_id\":\"dlv_0123456789\"}",
+            "signature": "Bearer eyJhbGciOiJFZERTQSIsImtpZCI6ImsxIiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwczpcL1wvYXdzLXVzLWVhc3QtMi5hcGkuZW50aXJlLmlvIiwiYXVkIjoiYXBwd3JpdGUiLCJpYXQiOjE3NjcyMjU2MDAsImV4cCI6NDEwMjQ0NDgwMCwianRpIjoianRpXzAxMjM0NTY3ODkiLCJib2R5X3NoYTI1NiI6ImFYUHpnb0VJZE0zNVZkLVQ1RUwxbnlSaUk1c3JrNnZJVUtoMUZvZS1JOVEifQ.bP4r-guocrBn_XQiTaJUnMgZkHVZ2WoLAnfKe5ZGx70nOB5PBdQi5y68dkqS7ZVNMX-8Li5wKG8w6QwrwDb3AQ",
+            "signatureKey": "not a key"
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "payload": "{\"delivery_id\":\"dlv_0123456789\"}",
+            "signature": "Bearer eyJhbGciOiJFZERTQSIsImtpZCI6ImsxIiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwczpcL1wvYXdzLXVzLWVhc3QtMi5hcGkuZW50aXJlLmlvIiwiYXVkIjoiYXBwd3JpdGUiLCJpYXQiOjE3NjcyMjU2MDAsImV4cCI6NDEwMjQ0NDgwMCwianRpIjoianRpXzAxMjM0NTY3ODkiLCJib2R5X3NoYTI1NiI6ImFYUHpnb0VJZE0zNVZkLVQ1RUwxbnlSaUk1c3JrNnZJVUtoMUZvZS1JOVEifQ.bP4r-guocrBn_XQiTaJUnMgZkHVZ2WoLAnfKe5ZGx70nOB5PBdQi5y68dkqS7ZVNMX-8Li5wKG8w6QwrwDb3AQ",
+            "signatureKey": "6kpsY-KcUgq-9VB7Ey7F-ZVHdq6-vnuSQh7qaRRG0iw"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testValidateWebhookEventAcceptsPemPublicKey",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "payload": "{\"delivery_id\":\"dlv_0123456789\"}",
+            "signature": "Bearer eyJhbGciOiJFZERTQSIsImtpZCI6ImsxIn0.eyJpc3MiOiJodHRwczpcL1wvYXdzLXVzLWVhc3QtMi5hcGkuZW50aXJlLmlvIiwiYXVkIjoiYXBwd3JpdGUiLCJpYXQiOjE3NjcyMjU2MDAsImV4cCI6NDEwMjQ0NDgwMCwianRpIjoianRpXzAxMjM0NTY3ODkiLCJib2R5X3NoYTI1NiI6ImFYUHpnb0VJZE0zNVZkLVQ1RUwxbnlSaUk1c3JrNnZJVUtoMUZvZS1JOVEifQ.zzS3O1FIxP7saZCr38e4-TMNUh1tarkHDLuu9eoVTxH8Q59kKrOv93QArPLYM4EGrzIt_NkMd0nwPQ0kjSrODQ",
+            "signatureKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA6kpsY+KcUgq+9VB7Ey7F+ZVHdq6+vnuSQh7qaRRG0iw=\n-----END PUBLIC KEY-----"
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.validate_webhook_event",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "payload": "{\"delivery_id\":\"dlv_0123456789\"}",
+            "signature": "Bearer eyJhbGciOiJFZERTQSIsImtpZCI6ImsxIiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwczpcL1wvYXdzLXVzLWVhc3QtMi5hcGkuZW50aXJlLmlvIiwiYXVkIjoiYXBwd3JpdGUiLCJpYXQiOjE3NjcyMjU2MDAsImV4cCI6NDEwMjQ0NDgwMCwianRpIjoianRpXzAxMjM0NTY3ODkiLCJib2R5X3NoYTI1NiI6ImFYUHpnb0VJZE0zNVZkLVQ1RUwxbnlSaUk1c3JrNnZJVUtoMUZvZS1JOVEifQ.bP4r-guocrBn_XQiTaJUnMgZkHVZ2WoLAnfKe5ZGx70nOB5PBdQi5y68dkqS7ZVNMX-8Li5wKG8w6QwrwDb3AQ",
+            "signatureKey": "-----BEGIN PUBLIC KEY-----\nAAAA\n-----END PUBLIC KEY-----"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testGetWebhookClaims",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_webhook_claims",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "authorization": "Bearer eyJhbGciOiJFZERTQSIsImtpZCI6ImsxIn0.eyJpc3MiOiJodHRwczpcL1wvYXdzLXVzLWVhc3QtMi5hcGkuZW50aXJlLmlvIiwiYXVkIjoiYXBwd3JpdGUiLCJpYXQiOjE3NjcyMjU2MDAsImV4cCI6NDEwMjQ0NDgwMCwianRpIjoianRpXzAxMjM0NTY3ODkiLCJib2R5X3NoYTI1NiI6IlJCTnZvMVd6WjRvUlJxMFc5LWhrbnBUN1Q4SWY1MzZERU1CZzloeXFfNG8ifQ.6A6hjrKpj9b2LorMqfQX9nRiYP6P9JrdpqeAKT_QN2xSkz7EwvAiUTrgt0GwLpUhPRDKmF_Gez6ZQo2GYc53Bw"
+          },
+          "expect": {
+            "iss": "https://aws-us-east-2.api.entire.io",
+            "aud": "appwrite",
+            "iat": 1767225600,
+            "exp": 4102444800,
+            "jti": "jti_0123456789",
+            "body_sha256": "RBNvo1WzZ4oRRq0W9-hknpT7T8If536DEMBg9hyq_4o",
+            "kid": "k1"
+          }
+        },
+        {
+          "op": "vcs.get_webhook_claims",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "authorization": "eyJhbGciOiJFZERTQSJ9.eyJpc3MiOiJodHRwczpcL1wvYXdzLXVzLWVhc3QtMi5hcGkuZW50aXJlLmlvIiwiYXVkIjoiYXBwd3JpdGUiLCJpYXQiOjE3NjcyMjU2MDAsImV4cCI6NDEwMjQ0NDgwMCwianRpIjoianRpXzAxMjM0NTY3ODkiLCJib2R5X3NoYTI1NiI6IlJCTnZvMVd6WjRvUlJxMFc5LWhrbnBUN1Q4SWY1MzZERU1CZzloeXFfNG8ifQ.2vAA8mud3w5Daeg78yshpcbhUx2JJcS-e1CJru_9UCFtvLa73QbOJiXRyvGxHR6KwmoxBpitPZ636mjLhNjMCw"
+          },
+          "expect": {
+            "iss": "https://aws-us-east-2.api.entire.io",
+            "aud": "appwrite",
+            "iat": 1767225600,
+            "exp": 4102444800,
+            "jti": "jti_0123456789",
+            "body_sha256": "RBNvo1WzZ4oRRq0W9-hknpT7T8If536DEMBg9hyq_4o",
+            "kid": ""
+          }
+        },
+        {
+          "op": "vcs.get_webhook_claims",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "authorization": "Bearer not-a-token"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Token is not a JWT",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.get_webhook_claims",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "authorization": "Bearer bm90.anNvbg.x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Token is malformed",
+              "code": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testIsTrustedIssuer",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.is_trusted_issuer",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "issuer": "https://aws-us-east-2.api.entire.io"
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.is_trusted_issuer",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "issuer": "https://aws-eu-central-1.api.entire.io/"
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.is_trusted_issuer",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "issuer": "https://entire.io"
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.is_trusted_issuer",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "issuer": "https://evil.example"
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.is_trusted_issuer",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "issuer": "https://entire.io.evil.example"
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.is_trusted_issuer",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "issuer": "https://evilentire.io"
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.is_trusted_issuer",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "issuer": "http://aws-us-east-2.api.entire.io"
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.is_trusted_issuer",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "issuer": "https://aws-us-east-2.api.entire.io/cells"
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.is_trusted_issuer",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "issuer": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.set_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "endpoint": "http://localhost:8787"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.is_trusted_issuer",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "issuer": "http://localhost:8788"
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.is_trusted_issuer",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "issuer": "http://entire.io"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testGetInstallUrl",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_install_url",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "plugin": "appwrite",
+            "redirectUri": "https://appwrite.test/v1/vcs/entire/callback",
+            "state": "{\"projectId\":\"p1\"}"
+          },
+          "expect": "https://entire.io/plugins/appwrite/install?redirect_uri=https%3A%2F%2Fappwrite.test%2Fv1%2Fvcs%2Fentire%2Fcallback&state=%7B%22projectId%22%3A%22p1%22%7D"
+        },
+        {
+          "op": "vcs.get_install_url",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "plugin": "appwrite"
+          },
+          "expect": "https://entire.io/plugins/appwrite/install"
+        }
+      ]
+    },
+    {
+      "name": "testVerifyReceipt",
+      "steps": [
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/entire-core/.well-known/jwks.json",
+                "body": {
+                  "keys": [
+                    {
+                      "kty": "OKP",
+                      "crv": "Ed25519",
+                      "kid": "k1",
+                      "x": "6kpsY-KcUgq-9VB7Ey7F-ZVHdq6-vnuSQh7qaRRG0iw"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test",
+            "endpoint": "${vcs}/~${ns}/origin/entire-core"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "jwt.sign",
+          "args": {
+            "header": {
+              "alg": "EdDSA",
+              "kid": "k1",
+              "typ": "entire-install-receipt+jwt"
+            },
+            "claims": {
+              "iss": "${vcs}/~${ns}/origin/entire-core",
+              "aud": [
+                "https://appwrite.test"
+              ],
+              "plugin_id": "appwrite",
+              "installation_id": "ins_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+              "iat": 1767225600,
+              "exp": 4102444800,
+              "project": "test-project",
+              "project_id": "01M4ZC35447W79310H702K9276",
+              "state": "{\"projectId\":\"p1\"}",
+              "jti": "rcp_0123456789"
+            },
+            "seed": "0707070707070707070707070707070707070707070707070707070707070707"
+          },
+          "bind": "rc",
+          "expect": {
+            "token": "<masked>"
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": {
+              "$ref": "rc",
+              "path": "/token"
+            },
+            "plugin": "appwrite"
+          },
+          "expect": {
+            "iss": "${vcs}/~${ns}/origin/entire-core",
+            "aud": [
+              "https://appwrite.test"
+            ],
+            "plugin_id": "appwrite",
+            "installation_id": "ins_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+            "iat": 1767225600,
+            "exp": 4102444800,
+            "project": "test-project",
+            "project_id": "01M4ZC35447W79310H702K9276",
+            "state": "{\"projectId\":\"p1\"}",
+            "jti": "rcp_0123456789"
+          }
+        },
+        {
+          "op": "jwt.sign",
+          "args": {
+            "header": {
+              "alg": "EdDSA",
+              "kid": "k1",
+              "typ": "entire-install-receipt+jwt"
+            },
+            "claims": {
+              "aud": "https://appwrite.test",
+              "iss": "${vcs}/~${ns}/origin/entire-core",
+              "plugin_id": "appwrite",
+              "installation_id": "ins_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+              "iat": 1767225600,
+              "exp": 4102444800
+            },
+            "seed": "0707070707070707070707070707070707070707070707070707070707070707"
+          },
+          "bind": "rs",
+          "expect": {
+            "token": "<masked>"
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": {
+              "$ref": "rs",
+              "path": "/token"
+            },
+            "plugin": "appwrite"
+          },
+          "expect": {
+            "aud": "https://appwrite.test",
+            "iss": "${vcs}/~${ns}/origin/entire-core",
+            "plugin_id": "appwrite",
+            "installation_id": "ins_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+            "iat": 1767225600,
+            "exp": 4102444800
+          }
+        },
+        {
+          "op": "vcs.set_issuer",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "issuer": "https://other.test"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": {
+              "$ref": "rs",
+              "path": "/token"
+            },
+            "plugin": "appwrite"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt audience does not include the registered audience",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.set_issuer",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "issuer": ""
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": {
+              "$ref": "rs",
+              "path": "/token"
+            },
+            "plugin": "appwrite"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt audience does not include the registered audience",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-core/.well-known/jwks.json",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testVerifyReceiptRejections",
+      "steps": [
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/entire-core/.well-known/jwks.json",
+                "body": {
+                  "keys": [
+                    {
+                      "kty": "OKP",
+                      "crv": "Ed25519",
+                      "kid": "k1",
+                      "x": "6kpsY-KcUgq-9VB7Ey7F-ZVHdq6-vnuSQh7qaRRG0iw"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test",
+            "endpoint": "${vcs}/~${ns}/origin/entire-core"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": "not-a-jwt",
+            "plugin": "appwrite"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt token is not a JWT",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": "bm90.anNvbg.x",
+            "plugin": "appwrite"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt token is malformed",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "jwt.sign",
+          "args": {
+            "header": {
+              "alg": "HS256",
+              "kid": "k1",
+              "typ": "entire-install-receipt+jwt"
+            },
+            "claims": {
+              "iss": "${vcs}/~${ns}/origin/entire-core",
+              "aud": [
+                "https://appwrite.test"
+              ],
+              "plugin_id": "appwrite",
+              "installation_id": "ins_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+              "iat": 1767225600,
+              "exp": 4102444800
+            },
+            "seed": "0707070707070707070707070707070707070707070707070707070707070707"
+          },
+          "bind": "r0",
+          "expect": {
+            "token": "<masked>"
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": {
+              "$ref": "r0",
+              "path": "/token"
+            },
+            "plugin": "appwrite"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt has an unexpected algorithm",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "jwt.sign",
+          "args": {
+            "header": {
+              "typ": "JWT",
+              "alg": "EdDSA",
+              "kid": "k1"
+            },
+            "claims": {
+              "iss": "${vcs}/~${ns}/origin/entire-core",
+              "aud": [
+                "https://appwrite.test"
+              ],
+              "plugin_id": "appwrite",
+              "installation_id": "ins_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+              "iat": 1767225600,
+              "exp": 4102444800
+            },
+            "seed": "0707070707070707070707070707070707070707070707070707070707070707"
+          },
+          "bind": "r2",
+          "expect": {
+            "token": "<masked>"
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": {
+              "$ref": "r2",
+              "path": "/token"
+            },
+            "plugin": "appwrite"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt has an unexpected type",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "jwt.sign",
+          "args": {
+            "header": {
+              "kid": "k2",
+              "alg": "EdDSA",
+              "typ": "entire-install-receipt+jwt"
+            },
+            "claims": {
+              "iss": "${vcs}/~${ns}/origin/entire-core",
+              "aud": [
+                "https://appwrite.test"
+              ],
+              "plugin_id": "appwrite",
+              "installation_id": "ins_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+              "iat": 1767225600,
+              "exp": 4102444800
+            },
+            "seed": "0707070707070707070707070707070707070707070707070707070707070707"
+          },
+          "bind": "r4",
+          "expect": {
+            "token": "<masked>"
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": {
+              "$ref": "r4",
+              "path": "/token"
+            },
+            "plugin": "appwrite"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Token is signed with an unknown key",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "jwt.sign",
+          "args": {
+            "header": {
+              "alg": "EdDSA",
+              "kid": "k1",
+              "typ": "entire-install-receipt+jwt"
+            },
+            "claims": {
+              "iss": "${vcs}/~${ns}/origin/entire-core",
+              "aud": [
+                "https://appwrite.test"
+              ],
+              "plugin_id": "appwrite",
+              "installation_id": "ins_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+              "iat": 1767225600,
+              "exp": 4102444800
+            },
+            "seed": "0707070707070707070707070707070707070707070707070707070707070707"
+          },
+          "bind": "r6",
+          "expect": {
+            "token": "<masked>"
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": {
+              "$ref": "r6",
+              "path": "/token"
+            },
+            "plugin": "other-plugin"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt does not name this plugin",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "jwt.sign",
+          "args": {
+            "header": {
+              "alg": "EdDSA",
+              "kid": "k1",
+              "typ": "entire-install-receipt+jwt"
+            },
+            "claims": {
+              "aud": [
+                "https://other.test"
+              ],
+              "iss": "${vcs}/~${ns}/origin/entire-core",
+              "plugin_id": "appwrite",
+              "installation_id": "ins_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+              "iat": 1767225600,
+              "exp": 4102444800
+            },
+            "seed": "0707070707070707070707070707070707070707070707070707070707070707"
+          },
+          "bind": "r8",
+          "expect": {
+            "token": "<masked>"
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": {
+              "$ref": "r8",
+              "path": "/token"
+            },
+            "plugin": "appwrite"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt audience does not include the registered audience",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "jwt.sign",
+          "args": {
+            "header": {
+              "alg": "EdDSA",
+              "kid": "k1",
+              "typ": "entire-install-receipt+jwt"
+            },
+            "claims": {
+              "iss": "https://evil.test",
+              "aud": [
+                "https://appwrite.test"
+              ],
+              "plugin_id": "appwrite",
+              "installation_id": "ins_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+              "iat": 1767225600,
+              "exp": 4102444800
+            },
+            "seed": "0707070707070707070707070707070707070707070707070707070707070707"
+          },
+          "bind": "r10",
+          "expect": {
+            "token": "<masked>"
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": {
+              "$ref": "r10",
+              "path": "/token"
+            },
+            "plugin": "appwrite"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt issuer is not an Entire core",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "jwt.sign",
+          "args": {
+            "header": {
+              "alg": "EdDSA",
+              "kid": "k1",
+              "typ": "entire-install-receipt+jwt"
+            },
+            "claims": {
+              "iss": "https://eu.auth.entire.io.evil.test",
+              "aud": [
+                "https://appwrite.test"
+              ],
+              "plugin_id": "appwrite",
+              "installation_id": "ins_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+              "iat": 1767225600,
+              "exp": 4102444800
+            },
+            "seed": "0707070707070707070707070707070707070707070707070707070707070707"
+          },
+          "bind": "r12",
+          "expect": {
+            "token": "<masked>"
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": {
+              "$ref": "r12",
+              "path": "/token"
+            },
+            "plugin": "appwrite"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt issuer is not an Entire core",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "jwt.sign",
+          "args": {
+            "header": {
+              "alg": "EdDSA",
+              "kid": "k1",
+              "typ": "entire-install-receipt+jwt"
+            },
+            "claims": {
+              "exp": 1767225300,
+              "iss": "${vcs}/~${ns}/origin/entire-core",
+              "aud": [
+                "https://appwrite.test"
+              ],
+              "plugin_id": "appwrite",
+              "installation_id": "ins_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+              "iat": 1767225600
+            },
+            "seed": "0707070707070707070707070707070707070707070707070707070707070707"
+          },
+          "bind": "r14",
+          "expect": {
+            "token": "<masked>"
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": {
+              "$ref": "r14",
+              "path": "/token"
+            },
+            "plugin": "appwrite"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt has expired",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "jwt.sign",
+          "args": {
+            "header": {
+              "alg": "EdDSA",
+              "kid": "k1",
+              "typ": "entire-install-receipt+jwt"
+            },
+            "claims": {
+              "installation_id": "",
+              "iss": "${vcs}/~${ns}/origin/entire-core",
+              "aud": [
+                "https://appwrite.test"
+              ],
+              "plugin_id": "appwrite",
+              "iat": 1767225600,
+              "exp": 4102444800
+            },
+            "seed": "0707070707070707070707070707070707070707070707070707070707070707"
+          },
+          "bind": "r16",
+          "expect": {
+            "token": "<masked>"
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": {
+              "$ref": "r16",
+              "path": "/token"
+            },
+            "plugin": "appwrite"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt is missing the installation ID",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "jwt.sign",
+          "args": {
+            "header": {
+              "alg": "EdDSA",
+              "kid": "k1",
+              "typ": "entire-install-receipt+jwt"
+            },
+            "claims": {
+              "iss": "${vcs}/~${ns}/origin/entire-core",
+              "aud": [
+                "https://appwrite.test"
+              ],
+              "plugin_id": "appwrite",
+              "installation_id": "ins_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+              "iat": 1767225600,
+              "exp": 4102444800
+            },
+            "seed": "0808080808080808080808080808080808080808080808080808080808080808"
+          },
+          "bind": "r18",
+          "expect": {
+            "token": "<masked>"
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": {
+              "$ref": "r18",
+              "path": "/token"
+            },
+            "plugin": "appwrite"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt signature is invalid",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "jwt.sign",
+          "args": {
+            "header": {
+              "alg": "EdDSA",
+              "kid": "k1",
+              "typ": "entire-install-receipt+jwt"
+            },
+            "claims": {
+              "nbf": 4102444800,
+              "iss": "${vcs}/~${ns}/origin/entire-core",
+              "aud": [
+                "https://appwrite.test"
+              ],
+              "plugin_id": "appwrite",
+              "installation_id": "ins_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+              "iat": 1767225600,
+              "exp": 4102444800
+            },
+            "seed": "0707070707070707070707070707070707070707070707070707070707070707"
+          },
+          "bind": "r20",
+          "expect": {
+            "token": "<masked>"
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": {
+              "$ref": "r20",
+              "path": "/token"
+            },
+            "plugin": "appwrite"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt is not yet valid",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "jwt.sign",
+          "args": {
+            "header": {
+              "alg": "EdDSA",
+              "kid": "k1",
+              "typ": "entire-install-receipt+jwt"
+            },
+            "claims": {
+              "iat": 4102444800,
+              "iss": "${vcs}/~${ns}/origin/entire-core",
+              "aud": [
+                "https://appwrite.test"
+              ],
+              "plugin_id": "appwrite",
+              "installation_id": "ins_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+              "exp": 4102444800
+            },
+            "seed": "0707070707070707070707070707070707070707070707070707070707070707"
+          },
+          "bind": "r22",
+          "expect": {
+            "token": "<masked>"
+          }
+        },
+        {
+          "op": "vcs.verify_receipt",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "receipt": {
+              "$ref": "r22",
+              "path": "/token"
+            },
+            "plugin": "appwrite"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Installation receipt is issued in the future",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-core/.well-known/jwks.json",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testIsTrustedCore",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.is_trusted_core",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "origin": "https://us.auth.entire.io"
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.is_trusted_core",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "origin": "https://eu.auth.entire.io"
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.is_trusted_core",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "origin": "https://au.auth.entire.io"
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.is_trusted_core",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "origin": "https://in.auth.entire.io"
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.is_trusted_core",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "origin": "https://uk.auth.entire.io"
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.is_trusted_core",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "origin": "https://sg.auth.entire.io"
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.is_trusted_core",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "origin": "https://us.auth.entire.io/"
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.is_trusted_core",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "origin": "https://us.console.entire.io"
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.is_trusted_core",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "origin": "https://aws-us-east-2.api.entire.io"
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.is_trusted_core",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "origin": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.set_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "endpoint": "http://localhost:8787"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.is_trusted_core",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "origin": "http://localhost:8787"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testGetSigningKeys",
+      "steps": [
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/entire-core/.well-known/jwks.json",
+                "body": {
+                  "keys": [
+                    {
+                      "kty": "OKP",
+                      "crv": "Ed25519",
+                      "kid": "k1",
+                      "x": "first-key"
+                    },
+                    {
+                      "kty": "OKP",
+                      "crv": "Ed25519",
+                      "kid": "k2",
+                      "x": "second-key"
+                    },
+                    {
+                      "kty": "RSA",
+                      "kid": "k3",
+                      "n": "not-ed25519"
+                    },
+                    {
+                      "kty": "OKP",
+                      "crv": "X25519",
+                      "kid": "k4",
+                      "x": "not-signing"
+                    },
+                    "not a key"
+                  ]
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/.well-known/jwks.json",
+                "body": {
+                  "keys": [
+                    {
+                      "kty": "OKP",
+                      "crv": "Ed25519",
+                      "kid": "c1",
+                      "x": "cell-key"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test",
+            "endpoint": "${vcs}/~${ns}/origin/entire-core"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_signing_keys",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            "first-key",
+            "second-key"
+          ]
+        },
+        {
+          "op": "vcs.get_signing_keys",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            "first-key",
+            "second-key"
+          ]
+        },
+        {
+          "op": "vcs.get_signing_keys",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "refresh": true
+          },
+          "expect": [
+            "first-key",
+            "second-key"
+          ]
+        },
+        {
+          "op": "vcs.get_signing_keys",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "issuer": "${vcs}/~${ns}/origin/entire-cell/"
+          },
+          "expect": [
+            "cell-key"
+          ]
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-core/.well-known/jwks.json",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-core/.well-known/jwks.json",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/.well-known/jwks.json",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testGetEventType",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_event_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "payload": "{\"delivery_id\":\"dlv_0123456789\",\"installation_id\":\"ins_01ARZ3NDEKTSV4RRFFQ69G5FAV\",\"plugin_id\":\"appwrite\",\"api_url\":\"https:\\/\\/aws-us-east-2.api.entire.io\\/\",\"core_url\":\"https:\\/\\/us.console.entire.io\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"ref.updated\",\"time\":\"2026-10-15T10:00:00Z\",\"payload\":{\"ref\":\"refs\\/heads\\/main\",\"before\":\"abc1234567abc1234567abc1234567abc1234567\",\"after\":\"def4567890def4567890def4567890def4567890\",\"forced\":false,\"pusher\":{\"account\":{\"id\":\"acc_0123456789\",\"handle\":\"github:alice\"}},\"repository\":{\"id\":\"repo_01ARZ3NDEKTSV4RRFFQ69G5FAV\",\"path\":\"et\\/test-project\\/test-repo\",\"default_branch\":\"main\",\"clone_url\":\"https:\\/\\/aws-us-east-2.entire.io\\/et\\/test-project\\/test-repo\",\"entire_clone_url\":\"entire:\\/\\/aws-us-east-2.entire.io\\/et\\/test-project\\/test-repo\"}}}}"
+          },
+          "expect": "ref.updated"
+        },
+        {
+          "op": "vcs.get_event_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "payload": "{}"
+          },
+          "expect": ""
+        },
+        {
+          "op": "vcs.get_event_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "payload": "not json"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid payload.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.get_event_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "payload": "{\"event\":{\"type\":7}}"
+          },
+          "expect": "7"
+        }
+      ]
+    },
+    {
+      "name": "testGetEventRefUpdated",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "ref.updated",
+            "payload": "{\"delivery_id\":\"dlv_0123456789\",\"installation_id\":\"ins_01ARZ3NDEKTSV4RRFFQ69G5FAV\",\"plugin_id\":\"appwrite\",\"api_url\":\"https:\\/\\/aws-us-east-2.api.entire.io\\/\",\"core_url\":\"https:\\/\\/us.console.entire.io\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"ref.updated\",\"time\":\"2026-10-15T10:00:00Z\",\"payload\":{\"ref\":\"refs\\/heads\\/main\",\"before\":\"abc1234567abc1234567abc1234567abc1234567\",\"after\":\"def4567890def4567890def4567890def4567890\",\"forced\":false,\"pusher\":{\"account\":{\"id\":\"acc_0123456789\",\"handle\":\"github:alice\"}},\"repository\":{\"id\":\"repo_01ARZ3NDEKTSV4RRFFQ69G5FAV\",\"path\":\"et\\/test-project\\/test-repo\",\"default_branch\":\"main\",\"clone_url\":\"https:\\/\\/aws-us-east-2.entire.io\\/et\\/test-project\\/test-repo\",\"entire_clone_url\":\"entire:\\/\\/aws-us-east-2.entire.io\\/et\\/test-project\\/test-repo\"}}}}"
+          },
+          "expect": [
+            {
+              "branchCreated": false,
+              "branchDeleted": false,
+              "branch": "main",
+              "branchUrl": "https://entire.io/et/test-project/test-repo/tree/main",
+              "repositoryId": "repo_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "https://entire.io/et/test-project/test-repo",
+              "installationId": "ins_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+              "deliveryId": "dlv_0123456789",
+              "apiUrl": "https://aws-us-east-2.api.entire.io",
+              "defaultBranch": "main",
+              "commitHash": "def4567890def4567890def4567890def4567890",
+              "previousCommitHash": "abc1234567abc1234567abc1234567abc1234567",
+              "forced": false,
+              "owner": "test-project",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitAuthorName": "github:alice",
+              "headCommitAuthorEmail": "",
+              "headCommitMessage": "",
+              "headCommitUrl": "https://entire.io/et/test-project/test-repo/commit/def4567890def4567890def4567890def4567890",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testGetEventRefLifecycle",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "ref.created",
+            "payload": "{\"delivery_id\":\"dlv_0123456789\",\"installation_id\":\"ins_01ARZ3NDEKTSV4RRFFQ69G5FAV\",\"plugin_id\":\"appwrite\",\"api_url\":\"https:\\/\\/aws-us-east-2.api.entire.io\\/\",\"core_url\":\"https:\\/\\/us.console.entire.io\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"ref.created\",\"time\":\"2026-10-15T10:00:00Z\",\"payload\":{\"ref\":\"refs\\/heads\\/new-branch\",\"before\":\"0000000000000000000000000000000000000000\",\"after\":\"def4567890def4567890def4567890def4567890\",\"forced\":false,\"pusher\":{\"account\":{\"id\":\"acc_0123456789\",\"handle\":\"github:alice\"}},\"repository\":{\"id\":\"repo_01ARZ3NDEKTSV4RRFFQ69G5FAV\",\"path\":\"et\\/test-project\\/test-repo\",\"default_branch\":\"main\",\"clone_url\":\"https:\\/\\/aws-us-east-2.entire.io\\/et\\/test-project\\/test-repo\",\"entire_clone_url\":\"entire:\\/\\/aws-us-east-2.entire.io\\/et\\/test-project\\/test-repo\"}}}}"
+          },
+          "expect": [
+            {
+              "branchCreated": true,
+              "branchDeleted": false,
+              "branch": "new-branch",
+              "branchUrl": "https://entire.io/et/test-project/test-repo/tree/new-branch",
+              "repositoryId": "repo_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "https://entire.io/et/test-project/test-repo",
+              "installationId": "ins_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+              "deliveryId": "dlv_0123456789",
+              "apiUrl": "https://aws-us-east-2.api.entire.io",
+              "defaultBranch": "main",
+              "commitHash": "def4567890def4567890def4567890def4567890",
+              "previousCommitHash": "0000000000000000000000000000000000000000",
+              "forced": false,
+              "owner": "test-project",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitAuthorName": "github:alice",
+              "headCommitAuthorEmail": "",
+              "headCommitMessage": "",
+              "headCommitUrl": "https://entire.io/et/test-project/test-repo/commit/def4567890def4567890def4567890def4567890",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "ref.deleted",
+            "payload": "{\"delivery_id\":\"dlv_0123456789\",\"installation_id\":\"ins_01ARZ3NDEKTSV4RRFFQ69G5FAV\",\"plugin_id\":\"appwrite\",\"api_url\":\"https:\\/\\/aws-us-east-2.api.entire.io\\/\",\"core_url\":\"https:\\/\\/us.console.entire.io\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"ref.deleted\",\"time\":\"2026-10-15T10:00:00Z\",\"payload\":{\"ref\":\"refs\\/heads\\/old-branch\",\"before\":\"abc1234567abc1234567abc1234567abc1234567\",\"after\":\"0000000000000000000000000000000000000000\",\"forced\":false,\"pusher\":{\"account\":{\"id\":\"acc_0123456789\",\"handle\":\"github:alice\"}},\"repository\":{\"id\":\"repo_01ARZ3NDEKTSV4RRFFQ69G5FAV\",\"path\":\"et\\/test-project\\/test-repo\",\"default_branch\":\"main\",\"clone_url\":\"https:\\/\\/aws-us-east-2.entire.io\\/et\\/test-project\\/test-repo\",\"entire_clone_url\":\"entire:\\/\\/aws-us-east-2.entire.io\\/et\\/test-project\\/test-repo\"}}}}"
+          },
+          "expect": [
+            {
+              "branchCreated": false,
+              "branchDeleted": true,
+              "branch": "old-branch",
+              "branchUrl": "https://entire.io/et/test-project/test-repo/tree/old-branch",
+              "repositoryId": "repo_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "https://entire.io/et/test-project/test-repo",
+              "installationId": "ins_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+              "deliveryId": "dlv_0123456789",
+              "apiUrl": "https://aws-us-east-2.api.entire.io",
+              "defaultBranch": "main",
+              "commitHash": "",
+              "previousCommitHash": "abc1234567abc1234567abc1234567abc1234567",
+              "forced": false,
+              "owner": "test-project",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitAuthorName": "github:alice",
+              "headCommitAuthorEmail": "",
+              "headCommitMessage": "",
+              "headCommitUrl": "",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testGetEventIgnoresTags",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "ref.created",
+            "payload": "{\"delivery_id\":\"dlv_0123456789\",\"installation_id\":\"ins_01ARZ3NDEKTSV4RRFFQ69G5FAV\",\"plugin_id\":\"appwrite\",\"api_url\":\"https:\\/\\/aws-us-east-2.api.entire.io\\/\",\"core_url\":\"https:\\/\\/us.console.entire.io\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"ref.created\",\"time\":\"2026-10-15T10:00:00Z\",\"payload\":{\"ref\":\"refs\\/tags\\/v1.0.0\",\"before\":\"0000000000000000000000000000000000000000\",\"after\":\"def4567890def4567890def4567890def4567890\",\"forced\":false,\"pusher\":{\"account\":{\"id\":\"acc_0123456789\",\"handle\":\"github:alice\"}},\"repository\":{\"id\":\"repo_01ARZ3NDEKTSV4RRFFQ69G5FAV\",\"path\":\"et\\/test-project\\/test-repo\",\"default_branch\":\"main\",\"clone_url\":\"https:\\/\\/aws-us-east-2.entire.io\\/et\\/test-project\\/test-repo\",\"entire_clone_url\":\"entire:\\/\\/aws-us-east-2.entire.io\\/et\\/test-project\\/test-repo\"}}}}"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventReadsTypeFromBody",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "",
+            "payload": "{\"delivery_id\":\"dlv_0123456789\",\"installation_id\":\"ins_01ARZ3NDEKTSV4RRFFQ69G5FAV\",\"plugin_id\":\"appwrite\",\"api_url\":\"https:\\/\\/aws-us-east-2.api.entire.io\\/\",\"core_url\":\"https:\\/\\/us.console.entire.io\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"ref.deleted\",\"time\":\"2026-10-15T10:00:00Z\",\"payload\":{\"ref\":\"refs\\/heads\\/main\",\"before\":\"abc1234567abc1234567abc1234567abc1234567\",\"after\":\"0000000000000000000000000000000000000000\",\"forced\":false,\"pusher\":{\"account\":{\"id\":\"acc_0123456789\",\"handle\":\"github:alice\"}},\"repository\":{\"id\":\"repo_01ARZ3NDEKTSV4RRFFQ69G5FAV\",\"path\":\"et\\/test-project\\/test-repo\",\"default_branch\":\"main\",\"clone_url\":\"https:\\/\\/aws-us-east-2.entire.io\\/et\\/test-project\\/test-repo\",\"entire_clone_url\":\"entire:\\/\\/aws-us-east-2.entire.io\\/et\\/test-project\\/test-repo\"}}}}"
+          },
+          "expect": [
+            {
+              "branchCreated": false,
+              "branchDeleted": true,
+              "branch": "main",
+              "branchUrl": "https://entire.io/et/test-project/test-repo/tree/main",
+              "repositoryId": "repo_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+              "repositoryName": "test-repo",
+              "repositoryUrl": "https://entire.io/et/test-project/test-repo",
+              "installationId": "ins_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+              "deliveryId": "dlv_0123456789",
+              "apiUrl": "https://aws-us-east-2.api.entire.io",
+              "defaultBranch": "main",
+              "commitHash": "",
+              "previousCommitHash": "abc1234567abc1234567abc1234567abc1234567",
+              "forced": false,
+              "owner": "test-project",
+              "authorUrl": "",
+              "authorAvatarUrl": "",
+              "headCommitAuthorName": "github:alice",
+              "headCommitAuthorEmail": "",
+              "headCommitMessage": "",
+              "headCommitUrl": "",
+              "external": false,
+              "pullRequestNumber": "",
+              "action": "",
+              "affectedFiles": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testGetEventInstallation",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "installation.deleted",
+            "payload": "{\"delivery_id\":\"dlv_0123456789\",\"installation_id\":\"ins_01ARZ3NDEKTSV4RRFFQ69G5FAV\",\"plugin_id\":\"appwrite\",\"api_url\":\"https:\\/\\/aws-us-east-2.api.entire.io\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"installation.deleted\",\"payload\":{\"installation\":{\"project_id\":\"prj_0123456789\",\"repository_selection\":\"all\",\"repository_count\":0,\"revision\":3,\"added_repository_ids\":[\"repo_1\",2,null,[\"x\"]],\"removed_repository_ids\":\"none\"}}}}"
+          },
+          "expect": [
+            {
+              "action": "deleted",
+              "installationId": "ins_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+              "deliveryId": "dlv_0123456789",
+              "projectId": "prj_0123456789",
+              "repositorySelection": "all",
+              "addedRepositoryIds": [
+                "repo_1",
+                "2"
+              ],
+              "removedRepositoryIds": [],
+              "userName": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testGetEventsIgnoresUnknownTypes",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "trail.opened",
+            "payload": "{\"delivery_id\":\"dlv_0123456789\",\"installation_id\":\"ins_01ARZ3NDEKTSV4RRFFQ69G5FAV\",\"plugin_id\":\"appwrite\",\"api_url\":\"https:\\/\\/aws-us-east-2.api.entire.io\\/\",\"core_url\":\"https:\\/\\/us.console.entire.io\",\"event\":{\"id\":\"evt_0123456789\",\"type\":\"trail.opened\",\"time\":\"2026-10-15T10:00:00Z\",\"payload\":{\"ref\":\"refs\\/heads\\/main\",\"before\":\"abc1234567abc1234567abc1234567abc1234567\",\"after\":\"def4567890def4567890def4567890def4567890\",\"forced\":false,\"pusher\":{\"account\":{\"id\":\"acc_0123456789\",\"handle\":\"github:alice\"}},\"repository\":{\"id\":\"repo_01ARZ3NDEKTSV4RRFFQ69G5FAV\",\"path\":\"et\\/test-project\\/test-repo\",\"default_branch\":\"main\",\"clone_url\":\"https:\\/\\/aws-us-east-2.entire.io\\/et\\/test-project\\/test-repo\",\"entire_clone_url\":\"entire:\\/\\/aws-us-east-2.entire.io\\/et\\/test-project\\/test-repo\"}}}}"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testGetEventsRejectsInvalidPayload",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "ref.updated",
+            "payload": "not json"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid payload.",
+              "code": 0
+            }
+          }
+        },
+        {
+          "op": "vcs.get_events",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "ref.updated",
+            "payload": "\"text\""
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid payload.",
+              "code": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testUrls",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_organization_url",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "acme"
+          },
+          "expect": "https://entire.io/et/acme"
+        },
+        {
+          "op": "vcs.get_repository_url",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "acme",
+            "repositoryName": "api"
+          },
+          "expect": "https://entire.io/et/acme/api"
+        },
+        {
+          "op": "vcs.get_branch_url",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "acme",
+            "repositoryName": "api",
+            "branch": "main"
+          },
+          "expect": "https://entire.io/et/acme/api/tree/main"
+        },
+        {
+          "op": "vcs.get_commit_url",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "acme",
+            "repositoryName": "api",
+            "commitHash": "abc"
+          },
+          "expect": "https://entire.io/et/acme/api/commit/abc"
+        },
+        {
+          "op": "vcs.get_file_url",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "acme",
+            "repositoryName": "api",
+            "reference": "main"
+          },
+          "expect": "https://entire.io/et/acme/api/blob/main"
+        },
+        {
+          "op": "vcs.get_pull_request_url",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "acme",
+            "repositoryName": "api",
+            "pullRequestNumber": 7
+          },
+          "expect": "https://entire.io/et/acme/api/trails/7"
+        }
+      ]
+    },
+    {
+      "name": "testCapabilities",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.get_name",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": "entire"
+        },
+        {
+          "op": "vcs.get_type",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": "git"
+        },
+        {
+          "op": "vcs.get_supported_webhook_scopes",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            "installation"
+          ]
+        },
+        {
+          "op": "vcs.get_signature_header_name",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": "authorization"
+        },
+        {
+          "op": "vcs.get_event_header_name",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": "x-entire-event"
+        },
+        {
+          "op": "vcs.supports_repository_creation",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.supports_repository_deletion",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.supports_repository_archives",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.supports_comment_images",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.supports_public_repositories",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.has_access_to_all_repositories",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.list_repository_languages",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "acme",
+            "repositoryName": "api"
+          },
+          "expect": []
+        },
+        {
+          "op": "vcs.supports_repository_clone_url",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "vcs.get_repository_clone_headers",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "vcs.generate_push_command",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "acme",
+            "repositoryName": "api",
+            "directory": "/tmp/clone",
+            "branch": "main"
+          },
+          "expect": "'git' '-C' '/tmp/clone' 'push' 'origin' 'main'"
+        }
+      ]
+    },
+    {
+      "name": "testCheckRunsStates",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "origin": {
+                "ed25519": "7UkoxijRwsbq6QM4kFmVYSlZJzpcY_k2NsFGFKyHN9E"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/repositories",
+                "body": {
+                  "repositories": [
+                    {
+                      "id": "repo_1",
+                      "full_name": "et/test-project/app",
+                      "clone_url": "https://cell.entire.test/et/test-project/app.git",
+                      "placements": [
+                        {
+                          "api_base_url": "${base}/entire-cell",
+                          "role": "processing_primary"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/access-tokens",
+                "body": {
+                  "token": "tok_fixture",
+                  "expires_at": "2100-01-01T00:00:00Z"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1",
+                "body": {
+                  "id": "grepo_1",
+                  "default_branch": "main"
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/branches-containing",
+                "body": {
+                  "abc123": [
+                    "refs/heads/main"
+                  ]
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-cell/api/v1/repos/repo_1/commits/abc123/check-runs",
+                "status": 201,
+                "body": {
+                  "ok": true
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test",
+            "endpoint": "${vcs}/~${ns}/origin/entire-core"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "ins_fixture",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD\n-----END PRIVATE KEY-----\n",
+            "appId": "appwrite"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "SHA": "abc123",
+            "state": "queued",
+            "name": "Site (Project)",
+            "title": "Starting...",
+            "summary": "",
+            "detailsUrl": ""
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "SHA": "abc123",
+            "state": "pending",
+            "name": "check",
+            "title": "Building...",
+            "summary": "",
+            "detailsUrl": ""
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "SHA": "abc123",
+            "state": "in_progress",
+            "name": "check",
+            "title": "Building...",
+            "summary": "",
+            "detailsUrl": ""
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "SHA": "abc123",
+            "state": "success",
+            "name": "check",
+            "title": "Done.",
+            "summary": "",
+            "detailsUrl": ""
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "SHA": "abc123",
+            "state": "failure",
+            "name": "check",
+            "title": "Done.",
+            "summary": "",
+            "detailsUrl": ""
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "SHA": "abc123",
+            "state": "error",
+            "name": "check",
+            "title": "Done.",
+            "summary": "",
+            "detailsUrl": ""
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "SHA": "abc123",
+            "state": "cancelled",
+            "name": "check",
+            "title": "Done.",
+            "summary": "",
+            "detailsUrl": ""
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "SHA": "abc123",
+            "state": "unknown",
+            "name": "check",
+            "title": "Done.",
+            "summary": "",
+            "detailsUrl": ""
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/access-tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"https://appwrite.test\",\"aud\":\"${vcs}/~${ns}/origin/entire-core/api/authz/sts\",\"plugin_id\":\"appwrite\",\"installation_id\":\"ins_fixture\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"permissions\":{\"contents\":\"read\",\"checks\":\"write\"}}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/repositories",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"https://appwrite.test\",\"aud\":\"${vcs}/~${ns}/origin/entire-core/api/authz/sts\",\"plugin_id\":\"appwrite\",\"installation_id\":\"ins_fixture\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/branches-containing",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"targets\":[\"abc123\"]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/repos/repo_1/commits/abc123/check-runs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"branch\":\"main\",\"check_suite\":{\"key\":\"Site (Project)\",\"name\":\"Site (Project)\",\"status\":\"queued\",\"external_id\":\"Site (Project)\",\"external_updated_at\":\"<now>\"},\"check_runs\":[{\"key\":\"Site (Project)\",\"name\":\"Site (Project)\",\"status\":\"queued\",\"external_id\":\"Site (Project)\",\"external_updated_at\":\"<now>\",\"output\":{\"title\":\"Starting...\",\"summary\":\"Starting...\"}}]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/branches-containing",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"targets\":[\"abc123\"]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/repos/repo_1/commits/abc123/check-runs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"branch\":\"main\",\"check_suite\":{\"key\":\"check\",\"name\":\"check\",\"status\":\"in_progress\",\"external_id\":\"check\",\"external_updated_at\":\"<now>\"},\"check_runs\":[{\"key\":\"check\",\"name\":\"check\",\"status\":\"in_progress\",\"external_id\":\"check\",\"external_updated_at\":\"<now>\",\"output\":{\"title\":\"Building...\",\"summary\":\"Building...\"}}]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/branches-containing",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"targets\":[\"abc123\"]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/repos/repo_1/commits/abc123/check-runs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"branch\":\"main\",\"check_suite\":{\"key\":\"check\",\"name\":\"check\",\"status\":\"in_progress\",\"external_id\":\"check\",\"external_updated_at\":\"<now>\"},\"check_runs\":[{\"key\":\"check\",\"name\":\"check\",\"status\":\"in_progress\",\"external_id\":\"check\",\"external_updated_at\":\"<now>\",\"output\":{\"title\":\"Building...\",\"summary\":\"Building...\"}}]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/branches-containing",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"targets\":[\"abc123\"]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/repos/repo_1/commits/abc123/check-runs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"branch\":\"main\",\"check_suite\":{\"key\":\"check\",\"name\":\"check\",\"status\":\"completed\",\"external_id\":\"check\",\"external_updated_at\":\"<now>\",\"conclusion\":\"success\",\"completed_at\":\"<now>\"},\"check_runs\":[{\"key\":\"check\",\"name\":\"check\",\"status\":\"completed\",\"external_id\":\"check\",\"external_updated_at\":\"<now>\",\"conclusion\":\"success\",\"completed_at\":\"<now>\",\"output\":{\"title\":\"Done.\",\"summary\":\"Done.\"}}]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/branches-containing",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"targets\":[\"abc123\"]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/repos/repo_1/commits/abc123/check-runs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"branch\":\"main\",\"check_suite\":{\"key\":\"check\",\"name\":\"check\",\"status\":\"completed\",\"external_id\":\"check\",\"external_updated_at\":\"<now>\",\"conclusion\":\"failure\",\"completed_at\":\"<now>\"},\"check_runs\":[{\"key\":\"check\",\"name\":\"check\",\"status\":\"completed\",\"external_id\":\"check\",\"external_updated_at\":\"<now>\",\"conclusion\":\"failure\",\"completed_at\":\"<now>\",\"output\":{\"title\":\"Done.\",\"summary\":\"Done.\"}}]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/branches-containing",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"targets\":[\"abc123\"]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/repos/repo_1/commits/abc123/check-runs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"branch\":\"main\",\"check_suite\":{\"key\":\"check\",\"name\":\"check\",\"status\":\"completed\",\"external_id\":\"check\",\"external_updated_at\":\"<now>\",\"conclusion\":\"failure\",\"completed_at\":\"<now>\"},\"check_runs\":[{\"key\":\"check\",\"name\":\"check\",\"status\":\"completed\",\"external_id\":\"check\",\"external_updated_at\":\"<now>\",\"conclusion\":\"failure\",\"completed_at\":\"<now>\",\"output\":{\"title\":\"Done.\",\"summary\":\"Done.\"}}]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/branches-containing",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"targets\":[\"abc123\"]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/repos/repo_1/commits/abc123/check-runs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"branch\":\"main\",\"check_suite\":{\"key\":\"check\",\"name\":\"check\",\"status\":\"completed\",\"external_id\":\"check\",\"external_updated_at\":\"<now>\",\"conclusion\":\"cancelled\",\"completed_at\":\"<now>\"},\"check_runs\":[{\"key\":\"check\",\"name\":\"check\",\"status\":\"completed\",\"external_id\":\"check\",\"external_updated_at\":\"<now>\",\"conclusion\":\"cancelled\",\"completed_at\":\"<now>\",\"output\":{\"title\":\"Done.\",\"summary\":\"Done.\"}}]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/branches-containing",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"targets\":[\"abc123\"]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/repos/repo_1/commits/abc123/check-runs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"branch\":\"main\",\"check_suite\":{\"key\":\"check\",\"name\":\"check\",\"status\":\"completed\",\"external_id\":\"check\",\"external_updated_at\":\"<now>\",\"conclusion\":\"failure\",\"completed_at\":\"<now>\"},\"check_runs\":[{\"key\":\"check\",\"name\":\"check\",\"status\":\"completed\",\"external_id\":\"check\",\"external_updated_at\":\"<now>\",\"conclusion\":\"failure\",\"completed_at\":\"<now>\",\"output\":{\"title\":\"Done.\",\"summary\":\"Done.\"}}]}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testCheckRunsOutputAndDetails",
+      "steps": [
+        {
+          "op": "fixture.config",
+          "args": {
+            "config": {
+              "origin": {
+                "ed25519": "7UkoxijRwsbq6QM4kFmVYSlZJzpcY_k2NsFGFKyHN9E"
+              }
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "fixture.script",
+          "args": {
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/repositories",
+                "body": {
+                  "repositories": [
+                    {
+                      "id": "repo_1",
+                      "full_name": "et/test-project/app",
+                      "clone_url": "https://cell.entire.test/et/test-project/app.git",
+                      "placements": [
+                        {
+                          "api_base_url": "${base}/entire-cell",
+                          "role": "processing_primary"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/access-tokens",
+                "body": {
+                  "token": "tok_fixture",
+                  "expires_at": "2100-01-01T00:00:00Z"
+                }
+              },
+              {
+                "method": "GET",
+                "path": "/entire-cell/api/v1/repos/repo_1",
+                "body": {
+                  "id": "grepo_1",
+                  "default_branch": "main"
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-cell/api/v1/git/repos/grepo_1/branches-containing",
+                "body": {
+                  "abc123": [
+                    "refs/heads/main"
+                  ]
+                }
+              },
+              {
+                "method": "POST",
+                "path": "/entire-cell/api/v1/repos/repo_1/commits/abc123/check-runs",
+                "status": 201,
+                "body": {
+                  "ok": true
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test",
+            "endpoint": "${vcs}/~${ns}/origin/entire-core"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "ins_fixture",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIAMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD\n-----END PRIVATE KEY-----\n",
+            "appId": "appwrite"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "SHA": "abc123",
+            "state": "success",
+            "name": "check",
+            "title": "Build succeeded.",
+            "summary": "- Site best in project QA\n- Preview: https://x.example.com",
+            "detailsUrl": "https://x.example.com"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "SHA": "abc123",
+            "state": "success",
+            "name": "check",
+            "title": "Done.",
+            "summary": "",
+            "detailsUrl": "http://localhost/console"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "SHA": "abc123",
+            "state": "success",
+            "name": "check",
+            "title": "Done.",
+            "summary": "",
+            "detailsUrl": "https://user:secret@example.com"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "SHA": "abc123",
+            "state": "pending",
+            "name": "",
+            "title": "",
+            "summary": "",
+            "detailsUrl": ""
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "test-project",
+            "repositoryName": "app",
+            "SHA": "abc123",
+            "state": "pending",
+            "name": "0",
+            "title": "Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title ",
+            "summary": "",
+            "detailsUrl": ""
+          },
+          "expect": null
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/access-tokens",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"https://appwrite.test\",\"aud\":\"${vcs}/~${ns}/origin/entire-core/api/authz/sts\",\"plugin_id\":\"appwrite\",\"installation_id\":\"ins_fixture\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"permissions\":{\"contents\":\"read\",\"checks\":\"write\"}}"
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-core/api/v1/plugins/appwrite/installations/ins_fixture/repositories",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer <jwt {\"header\":{\"alg\":\"EdDSA\",\"typ\":\"JWT\"},\"claims\":{\"iss\":\"https://appwrite.test\",\"aud\":\"${vcs}/~${ns}/origin/entire-core/api/authz/sts\",\"plugin_id\":\"appwrite\",\"installation_id\":\"ins_fixture\",\"iat\":\"<now>\",\"exp\":\"<iat+300>\"},\"signature\":\"valid\"}>"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "GET",
+              "target": "/entire-cell/api/v1/repos/repo_1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/branches-containing",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"targets\":[\"abc123\"]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/repos/repo_1/commits/abc123/check-runs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"branch\":\"main\",\"check_suite\":{\"key\":\"check\",\"name\":\"check\",\"status\":\"completed\",\"external_id\":\"check\",\"external_updated_at\":\"<now>\",\"conclusion\":\"success\",\"completed_at\":\"<now>\",\"details_url\":\"https:\\/\\/x.example.com\"},\"check_runs\":[{\"key\":\"check\",\"name\":\"check\",\"status\":\"completed\",\"external_id\":\"check\",\"external_updated_at\":\"<now>\",\"conclusion\":\"success\",\"completed_at\":\"<now>\",\"output\":{\"title\":\"Build succeeded.\",\"summary\":\"- Site best in project QA\\n- Preview: https:\\/\\/x.example.com\"},\"details_url\":\"https:\\/\\/x.example.com\"}]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/branches-containing",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"targets\":[\"abc123\"]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/repos/repo_1/commits/abc123/check-runs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"branch\":\"main\",\"check_suite\":{\"key\":\"check\",\"name\":\"check\",\"status\":\"completed\",\"external_id\":\"check\",\"external_updated_at\":\"<now>\",\"conclusion\":\"success\",\"completed_at\":\"<now>\"},\"check_runs\":[{\"key\":\"check\",\"name\":\"check\",\"status\":\"completed\",\"external_id\":\"check\",\"external_updated_at\":\"<now>\",\"conclusion\":\"success\",\"completed_at\":\"<now>\",\"output\":{\"title\":\"Done.\",\"summary\":\"Done.\"}}]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/branches-containing",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"targets\":[\"abc123\"]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/repos/repo_1/commits/abc123/check-runs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"branch\":\"main\",\"check_suite\":{\"key\":\"check\",\"name\":\"check\",\"status\":\"completed\",\"external_id\":\"check\",\"external_updated_at\":\"<now>\",\"conclusion\":\"success\",\"completed_at\":\"<now>\"},\"check_runs\":[{\"key\":\"check\",\"name\":\"check\",\"status\":\"completed\",\"external_id\":\"check\",\"external_updated_at\":\"<now>\",\"conclusion\":\"success\",\"completed_at\":\"<now>\",\"output\":{\"title\":\"Done.\",\"summary\":\"Done.\"}}]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/branches-containing",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"targets\":[\"abc123\"]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/repos/repo_1/commits/abc123/check-runs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"branch\":\"main\",\"check_suite\":{\"key\":\"default\",\"name\":\"default\",\"status\":\"in_progress\",\"external_id\":\"default\",\"external_updated_at\":\"<now>\"},\"check_runs\":[{\"key\":\"default\",\"name\":\"default\",\"status\":\"in_progress\",\"external_id\":\"default\",\"external_updated_at\":\"<now>\"}]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/git/repos/grepo_1/branches-containing",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"targets\":[\"abc123\"]}"
+            },
+            {
+              "provider": "origin",
+              "method": "POST",
+              "target": "/entire-cell/api/v1/repos/repo_1/commits/abc123/check-runs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "Bearer tok_fixture"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"branch\":\"main\",\"check_suite\":{\"key\":\"default\",\"name\":\"default\",\"status\":\"in_progress\",\"external_id\":\"default\",\"external_updated_at\":\"<now>\"},\"check_runs\":[{\"key\":\"default\",\"name\":\"default\",\"status\":\"in_progress\",\"external_id\":\"default\",\"external_updated_at\":\"<now>\",\"output\":{\"title\":\"Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Lo\",\"summary\":\"Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title Long title \"}}]}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testCreateFileRejectsEscapingPath",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.create_file",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "filepath": "../escape.txt",
+            "content": "content"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "File path escapes the repository: ../escape.txt",
+              "code": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCreateFileRejectsEmptyPath",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "entire",
+            "issuer": "https://appwrite.test"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.create_file",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "owner",
+            "repositoryName": "repo",
+            "filepath": "./.",
+            "content": "content"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "File path names no file: ./.",
+              "code": 0
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

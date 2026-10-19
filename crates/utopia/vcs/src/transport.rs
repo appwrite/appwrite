@@ -172,8 +172,13 @@ impl Transport {
     /// undecodable one fails). A transport failure is an `\Exception` with
     /// the client's message and ` with status code 0`.
     pub async fn call(&self, call: Call) -> Result<Response> {
+        self.call_at(&self.endpoint, call).await
+    }
+
+    /// [`Transport::call`] against another base than the endpoint.
+    pub async fn call_at(&self, endpoint: &str, call: Call) -> Result<Response> {
         let form = matches!(call.params, Params::Form(_));
-        let mut url = format!("{}{}", self.endpoint, call.path);
+        let mut url = format!("{}{}", endpoint, call.path);
         let mut body: Option<Vec<u8>> = None;
         match &call.params {
             Params::Array(Value::Array(params)) if call.method == Method::Get && !params.is_empty() => {

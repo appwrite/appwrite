@@ -7,7 +7,7 @@ use php_std::{Array, Value};
 use utopia_cache::Cache;
 use utopia_console::Command;
 
-use crate::adapter::{Adapter, CheckRun, Git, VcsType, WebhookId, WebhookScope, unsupported};
+use crate::adapter::{Adapter, CheckRun, Git, VcsType, WebhookId, WebhookScope, commit_status_state, unsupported};
 use crate::error::{Error, Result};
 use crate::git::{self, clone_command, normalize_repository_path};
 use crate::php::{self, at, each, empty, object, or, path, s};
@@ -565,7 +565,7 @@ impl Adapter for GitHub {
         php::return_string(or(at(&body, "id"), ""), &format!("{CLASS}::updateComment"))
     }
 
-    fn clone_command(
+    async fn clone_command(
         &self,
         owner: &str,
         repository_name: &str,
@@ -770,7 +770,7 @@ impl Adapter for GitHub {
             .transport
             .call(Call::post(format!("/repos/{owner}/{repository_name}/statuses/{sha}")).auth(self.bearer()).params(
                 object([
-                    ("state", s(state)),
+                    ("state", s(commit_status_state(state))),
                     ("target_url", s(target_url)),
                     ("description", s(description)),
                     ("context", s(context)),

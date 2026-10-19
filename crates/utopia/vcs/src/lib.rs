@@ -1,5 +1,5 @@
 //! Version control system adapters: GitHub, GitLab, Gitea, Forgejo, Gogs,
-//! Bitbucket and Origin behind one contract.
+//! Bitbucket, Origin and Entire behind one contract.
 //!
 //! An adapter ([`Adapter`], [`Git`]) reads and writes a provider's
 //! repositories, branches, tags, files, commits, pull requests, comments,
@@ -54,6 +54,8 @@
 //! | `Utopia\VCS\Adapter\Git\Gitea`, `Forgejo`, `Gogs` | [`Gitea`] with its [`Flavor`] ([`Gitea::new`], [`Gitea::forgejo`], [`Gitea::gogs`]) |
 //! | `Utopia\VCS\Adapter\Git\Bitbucket` | [`Bitbucket`] |
 //! | `Utopia\VCS\Adapter\Git\Origin` | [`Origin`] (`batchUpsertCheckRuns` takes [`BatchCheckRun`]s) |
+//! | `Utopia\VCS\Adapter\Git\Entire` | [`Entire`] (`getWebhookClaims` is [`Entire::webhook_claims`], `getSigningKeys` [`Entire::signing_keys`]) |
+//! | `Git::generatePushCommand`, `supportsRepositoryCloneUrl` | [`Git::push_command`], [`Git::supports_repository_clone_url`] |
 //! | `Utopia\VCS\Exception\FileNotFound`, `OwnerNotFound`, `RepositoryNotFound` | [`Error::FileNotFound`], [`Error::OwnerNotFound`], [`Error::RepositoryNotFound`] |
 //! | the protected `$endpoint`, `$webEndpoint`, `$gitEndpoint`, `$bitbucketUrl` a subclass sets | [`GitHub::with_endpoint`], [`Origin::with_endpoint`], [`Origin::with_web_endpoint`], [`Origin::with_git_endpoint`], [`Bitbucket::with_web_url`] |
 
@@ -66,6 +68,7 @@ pub struct GettingStarted;
 
 mod adapter;
 mod bitbucket;
+mod entire;
 mod error;
 mod git;
 mod gitea;
@@ -80,6 +83,7 @@ mod webhook;
 
 pub use adapter::{Adapter, CheckRun, Git, VcsType, WebhookId, WebhookScope, clone_type};
 pub use bitbucket::Bitbucket;
+pub use entire::Entire;
 pub use error::{Error, Message, Result};
 pub use git::clone_command;
 pub use gitea::{Flavor, Gitea};
@@ -94,3 +98,11 @@ pub use github::APP_JWT_EXPIRY as GITHUB_APP_JWT_EXPIRY;
 pub use origin::APP_JWT_EXPIRY as ORIGIN_APP_JWT_EXPIRY;
 /// Origin's push event type.
 pub use origin::EVENT_PUSH as ORIGIN_EVENT_PUSH;
+
+/// Entire's constants: event types, cores, JWT and token lifetimes.
+pub mod entire_constants {
+    pub use crate::entire::{
+        CORES, EVENT_INSTALLATION, EVENT_REF_CREATED, EVENT_REF_DELETED, EVENT_REF_UPDATED, PLUGIN_JWT_EXPIRY,
+        PLUGIN_JWT_SKEW, TOKEN_CACHE_TTL,
+    };
+}

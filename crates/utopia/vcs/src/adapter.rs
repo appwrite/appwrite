@@ -235,7 +235,7 @@ pub trait Adapter: Send + Sync {
     /// `directory`, checking out only `root_directory`.
     ///
     /// PHP: `generateCloneCommand()`.
-    fn clone_command(
+    async fn clone_command(
         &self,
         owner: &str,
         repository_name: &str,
@@ -331,6 +331,30 @@ pub trait Adapter: Send + Sync {
         target_url: &str,
         context: &str,
     ) -> Result<()>;
+
+    /// Reports a build check on a commit; `state` is `queued`, `pending`,
+    /// `success`, `failure`, `error` or `cancelled`. A provider with plain
+    /// commit statuses carries the title as the status description and drops
+    /// the summary (`queued` is `pending` there); one with check runs
+    /// overrides this.
+    ///
+    /// PHP: `updateCheck()`.
+    #[allow(clippy::too_many_arguments)]
+    async fn update_check(
+        &self,
+        owner: &str,
+        repository_name: &str,
+        sha: &str,
+        state: &str,
+        name: &str,
+        title: &str,
+        summary: &str,
+        details_url: &str,
+    ) -> Result<()> {
+        let _ = summary;
+        let state = if state == "queued" { "pending" } else { state };
+        self.update_commit_status(repository_name, sha, owner, state, title, details_url, name).await
+    }
 
     /// Creates a check run on a commit.
     ///
@@ -525,9 +549,28 @@ pub trait Git: Adapter {
     /// [`Git::repository_clone_headers`]).
     ///
     /// PHP: `getRepositoryCloneUrl()`.
-    fn repository_clone_url(&self, owner: &str, repository_name: &str) -> Result<String> {
+    async fn repository_clone_url(&self, owner: &str, repository_name: &str) -> Result<String> {
         let _ = (owner, repository_name);
         Err(Error::exception(format!("getRepositoryCloneUrl() is not supported by {}", self.name()), 0))
+    }
+
+    /// Whether any git client can fetch [`Git::repository_clone_url`] with
+    /// [`Git::repository_clone_headers`]: false when fetching takes the
+    /// provider's own tooling (Entire's `git-remote-entire`), so a consumer
+    /// clones with [`Adapter::clone_command`] instead.
+    ///
+    /// PHP: `supportsRepositoryCloneUrl()`.
+    fn supports_repository_clone_url(&self) -> bool {
+        true
+    }
+
+    /// Pushes `branch` of a clone [`Adapter::clone_command`] made back to
+    /// its origin, with whatever credential the provider's remote needs.
+    ///
+    /// PHP: `generatePushCommand()`.
+    fn push_command(&self, owner: &str, repository_name: &str, directory: &str, branch: &str) -> Result<Command> {
+        let _ = (owner, repository_name);
+        Ok(crate::git::git(directory)?.argument("push")?.argument("origin")?.argument(branch)?)
     }
 
     /// Headers authenticating a fetch of the clone URL.
@@ -577,4 +620,14 @@ pub trait Git: Adapter {
 /// support: `<method>() is not supported by <name>`.
 pub(crate) fn unsupported(method: &str, name: &str) -> Error {
     Error::exception(format!("{method}() is not supported by {name}"), 0)
+}
+
+/// A commit status's state for a check state: a commit status knows no
+/// queue or cancellation.
+pub(crate) fn commit_status_state(state: &str) -> &str {
+    match state {
+        "queued" | "in_progress" => "pending",
+        "cancelled" => "error",
+        other => other,
+    }
 }
