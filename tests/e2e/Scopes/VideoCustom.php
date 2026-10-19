@@ -751,10 +751,6 @@ trait VideoCustom
                 continue;
             }
 
-            if (!\is_file($path)) {
-                continue;
-            }
-
             try {
                 $settled = new File($path);
                 if (!$settled->tryAcquire()) {

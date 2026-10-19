@@ -215,7 +215,7 @@ abstract class Base extends UtopiaAction
             }
 
             try {
-                return !\is_file($path) || @\unlink($path);
+                return @\unlink($path);
             } finally {
                 $lock->release();
             }

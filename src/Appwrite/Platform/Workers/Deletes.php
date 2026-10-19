@@ -1611,9 +1611,8 @@ class Deletes extends Action
 
         $scanned = 0;
         $removed = 0;
-        $failed = 0;
 
-        $sweep = function (string $directory) use ($cutoff, &$scanned, &$removed, &$failed): void {
+        $sweep = function (string $directory) use ($cutoff, &$scanned, &$removed): void {
             foreach (\scandir($directory) ?: [] as $name) {
                 if ($name[0] === '.' || !\str_ends_with($name, '.lock')) {
                     continue;
@@ -1662,7 +1661,6 @@ class Deletes extends Action
 
         Span::add('videos.locks.scanned', $scanned);
         Span::add('videos.locks.removed', $removed);
-        Span::add('videos.locks.failed', $failed);
 
         if ($removed > 0) {
             try {
