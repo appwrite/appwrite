@@ -109,13 +109,20 @@ export interface VcsProviderMeta {
 }
 
 // Key order is display order: every provider list in the UI renders GitHub
-// first, Origin second, then the rest, Entire last.
+// first, Entire second, then the rest.
 export const VCS_PROVIDERS: Record<VcsProviderId, VcsProviderMeta> = {
   github: {
     id: 'github',
     label: 'GitHub',
     Icon: GitHubIcon,
     baseUrl: (organization) => `https://github.com/${organization}`,
+  },
+  entire: {
+    id: 'entire',
+    label: 'Entire',
+    Icon: EntireIcon,
+    // Entire repositories belong to a project, browsed under /et/<project>
+    baseUrl: (organization) => `https://entire.io/et/${organization}`,
   },
   origin: {
     id: 'origin',
@@ -135,13 +142,6 @@ export const VCS_PROVIDERS: Record<VcsProviderId, VcsProviderMeta> = {
     label: 'Bitbucket',
     Icon: BitbucketIcon,
     baseUrl: (organization) => `https://bitbucket.org/${organization}`,
-  },
-  entire: {
-    id: 'entire',
-    label: 'Entire',
-    Icon: EntireIcon,
-    // Entire repositories belong to a project, browsed under /et/<project>
-    baseUrl: (organization) => `https://entire.io/et/${organization}`,
   },
 }
 
