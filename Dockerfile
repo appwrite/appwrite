@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:2.2.1 AS base
+FROM appwrite/base:2.2.3 AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -28,24 +28,6 @@ RUN if [ "$DEBUG" == "true" ]; then \
     fi
 
 WORKDIR /usr/src/code
-
-# Entire serves git only through its own remote helper, which git runs from
-# the PATH for entire:// remotes; the Builds worker clones Entire repositories with it.
-# Bump the checksums with the version, from the release's checksums.txt.
-ARG TARGETARCH
-ARG ENTIRE_CLI_VERSION=0.11.5
-ARG ENTIRE_CLI_SHA256_AMD64=c20476c4ba9689b1800fe8d590601792e2b6f3c89d03a95280d88484029d7eba
-ARG ENTIRE_CLI_SHA256_ARM64=bcd3b4997ef1ed191d38c6d98586cf4b1eafcce11d9adba9e06ec670bb1dbdf2
-RUN case "${TARGETARCH}" in \
-        amd64) checksum="${ENTIRE_CLI_SHA256_AMD64}" ;; \
-        arm64) checksum="${ENTIRE_CLI_SHA256_ARM64}" ;; \
-        *) echo "Unsupported architecture for the Entire CLI: ${TARGETARCH}" >&2; exit 1 ;; \
-    esac && \
-    curl -fsSL -o /tmp/entire.tar.gz "https://github.com/entireio/cli/releases/download/v${ENTIRE_CLI_VERSION}/entire_linux_${TARGETARCH}.tar.gz" && \
-    echo "${checksum}  /tmp/entire.tar.gz" | sha256sum -c - && \
-    tar -xzf /tmp/entire.tar.gz -C /usr/local/bin git-remote-entire && \
-    chmod +x /usr/local/bin/git-remote-entire && \
-    rm /tmp/entire.tar.gz
 
 COPY --from=composer /usr/local/src/vendor /usr/src/code/vendor
 
@@ -142,7 +124,7 @@ EXPOSE 80
 
 CMD [ "php", "app/http.php" ]
 
-FROM appwrite/base:2.2.1-xdebug AS xdebug
+FROM appwrite/base:2.2.3-xdebug AS xdebug
 
 FROM base AS development
 
@@ -152,7 +134,7 @@ RUN printf 'opcache.validate_timestamps=1\nopcache.revalidate_freq=0\n' > /usr/l
 COPY ./docs /usr/src/code/docs
 COPY ./dev /usr/src/code/dev
 
-# appwrite/base:2.2.1 ships without XDebug, so it cannot reach production or
+# appwrite/base:2.2.3 ships without XDebug, so it cannot reach production or
 # Cloud. The -xdebug tag is the same build with the extension; mounting it
 # rather than copying keeps xdebug.so out of every layer unless DEBUG asked
 # for it, and guarantees an ABI match because both tags are one base build.
