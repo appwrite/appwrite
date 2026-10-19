@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-19T12:29:00Z",
+  "updated": "2026-10-19T13:21:00Z",
   "tasks": [
     {
       "id": "signatures",
@@ -8,6 +8,14 @@
       "status": "progress",
       "updated": "2026-10-17T19:50:00Z",
       "note": "An optional PHP parameter becomes an explicit Rust argument, never a second method or a with_* builder. registry is converted in the working tree (set and get take fresh; set_fresh and get_fresh are gone), and CONVERSION.md gets the rule in §4 and on the checklist. Not committed yet; the other crates follow."
+    },
+    {
+      "id": "cache-purge",
+      "title": "cache: main's purges fail when they can't be confirmed",
+      "area": "Libraries",
+      "status": "todo",
+      "updated": "2026-10-19T13:21:00Z",
+      "note": "main's 7a3dfbb99d, d4b607d8da and 06a1ae1626: a purge the circuit breaker can't confirm throws Unavailable, a filesystem purge of a directory throws, a missing cache directory is nothing to purge. Rust still returns false: 2 differences in CI. API coverage stays 100%."
     },
     {
       "id": "php-8511",
@@ -35,11 +43,11 @@
     },
     {
       "id": "nats-tests",
-      "title": "nats: two PHP tests from main not ported",
+      "title": "nats: main's TLS and connect-retry changes not ported",
       "area": "Libraries",
       "status": "todo",
-      "updated": "2026-10-19T11:13:00Z",
-      "note": "After the main sync on 2026-10-19 nats has 100% API coverage but 38 of 40 PHP tests ported: packages/nats/tests/ConnectRetryTest.php, packages/nats/tests/Transport/TlsFailureTest.php. audit, cache, messaging, migration and usage also changed on main and stay at 100% with every PHP test ported."
+      "updated": "2026-10-19T13:21:00Z",
+      "note": "After the main sync on 2026-10-19 nats has 100% API coverage but 38 of 40 PHP tests ported: packages/nats/tests/ConnectRetryTest.php, packages/nats/tests/Transport/TlsFailureTest.php. audit, cache, messaging, migration and usage also changed on main and stay at 100% with every PHP test ported. Also: a failed TLS upgrade now raises TlsException (with the OpenSSL reason) where Rust raises ConnectionException."
     },
     {
       "id": "sites-flake",
