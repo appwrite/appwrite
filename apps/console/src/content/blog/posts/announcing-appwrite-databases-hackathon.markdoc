@@ -24,7 +24,7 @@ There's always that one project you've been meaning to build. Maybe it's a devel
 
 We think it's time to bring those ideas to life.
 
-Today, we're announcing the **Appwrite Databases Hackathon**, running from October 19 to October 31, 2026. We're inviting developers of all experience levels to build something new using one of Appwrite's five database types, share their projects with the community, and compete for prizes.
+Today, we're announcing the [Appwrite Databases Hackathon](https://hackathon.appwrite.io), running from October 19 to October 31, 2026. We're inviting developers of all experience levels to build something new using one of Appwrite's five database types, share their projects with the community, and compete for prizes.
 
 There's no fixed theme or specific type of application you need to build. We're leaving that entirely up to you.
 
@@ -122,16 +122,16 @@ Whether you're building an AI application, a developer tool, or something entire
 
 You have 13 days, five database types to choose from, and plenty of room to get creative.
 
-We can't wait to see what you build!
+We can't wait to see what you build! [Join the Appwrite Databases Hackathon.](https://hackathon.appwrite.io)
 
 # Resources to help you get started
 
 Not sure where to start? We've put together a few resources to help you explore Appwrite Databases and get your project up and running.
 
-- [TablesDB documentation](/docs/products/databases) – Learn how to store, query, and manage structured data.
-- [DocumentsDB documentation](/docs) – Explore Appwrite's documentation to get started with document-based applications.
-- [VectorsDB documentation](/docs) – Explore the tools available for building vector-powered applications.
-- [PostgreSQL documentation](/docs/products/databases/postgresql) – Get started with managed PostgreSQL.
-- [MySQL documentation](/docs) – Explore Appwrite's documentation for working with MySQL.
+- [TablesDB documentation](/docs/products/databases)
+- [DocumentsDB documentation](/docs) 
+- [VectorsDB documentation](/docs) 
+- [PostgreSQL documentation](/docs/products/databases/postgresql)
+- [MySQL documentation](/docs) 
 
 You can also join our [Discord community](https://appwrite.io/discord) to connect with other developers, ask questions, and get help along the way.
