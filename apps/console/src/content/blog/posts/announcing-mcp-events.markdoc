@@ -27,14 +27,14 @@ Until now, an AI agent connected to the Appwrite MCP server could only act when 
 
 Today, we are announcing **MCP Events** for the [Appwrite MCP server](/docs/tooling/ai/mcp-servers). Your agent can now subscribe to events in your Appwrite project, such as a new user signing up, a function execution failing, or a deployment finishing, and react the moment they happen.
 
+In this demo, [Pi](https://pi.dev) subscribes to new users in an Appwrite project and goes idle. In a second terminal, Codex creates a user through the Appwrite MCP server. The event reaches Pi in about a second and wakes it up without a new prompt. Pi looks up the new user, reports back, and then unsubscribes.
+
 {% only_dark %}
 ![Pi subscribes to new users in an Appwrite project and waits. Codex creates a user, the event wakes Pi, and Pi reports the new user and unsubscribes](/images/blog/announcing-mcp-events/dark/demo.gif)
 {% /only_dark %}
 {% only_light %}
 ![Pi subscribes to new users in an Appwrite project and waits. Codex creates a user, the event wakes Pi, and Pi reports the new user and unsubscribes](/images/blog/announcing-mcp-events/demo.gif)
 {% /only_light %}
-
-In this demo, [Pi](https://pi.dev) subscribes to new users in an Appwrite project and goes idle. In a second terminal, Codex creates a user through the Appwrite MCP server. The event reaches Pi in about a second and wakes it up without a new prompt. Pi looks up the new user, reports back, and then unsubscribes.
 
 # What are MCP Events {% #what-are-mcp-events %}
 
@@ -48,7 +48,7 @@ An MCP server that supports events adds three things to the protocol:
 
 The change sounds small, but it turns the agent from something you have to prompt into something that can keep watching your project for you. You can ask it to "tell me when the deployment finishes", "investigate any failed execution of the `checkout` function", or "welcome every new user in our Slack", and walk away.
 
-On the Appwrite MCP server, each subscription is an Appwrite [webhook](/docs/apis/webhooks) in the project you subscribe to, created with your OAuth token, so the server keeps no database of subscriptions. The server checks that you can read the resource you watch, and events carry IDs and metadata only. The agent fetches any details it needs with a normal tool call, which goes through Appwrite's permission checks. The [Events documentation](/docs/tooling/ai/mcp-servers#events) covers how subscriptions work, their permissions, and their limits.
+On the Appwrite MCP server, each subscription is an Appwrite [webhook](/docs/apis/webhooks) in the project you subscribe to, created with your OAuth token, so the server keeps no database of subscriptions. The [Events documentation](/docs/tooling/ai/mcp-servers#events) covers how subscriptions work, their permissions, and their limits.
 
 ## Two ways to receive events {% #delivery %}
 
@@ -70,9 +70,7 @@ The Appwrite MCP server launches with six events. Every event takes a required `
 | `tablesdb.row.created` | `project_id`, `database_id`, `table_id` | A row is created in the table | `database_id`, `table_id`, `row_id`, `created_at` |
 | `storage.file.created` | `project_id`, `bucket_id` | A file is uploaded to the bucket | `bucket_id`, `file_id`, `mime_type`, `size`, `created_at` |
 
-Each subscription is scoped to the exact resource you name. An ID can contain only letters, digits, `_`, and `-`, so a subscription can never be widened with a wildcard to cover resources beyond the one you asked for.
-
-These six are a starting point. We plan to add more events based on what you want your agents to watch.
+Each subscription is scoped to the exact resource you name. These six events are a starting point, and we plan to add more based on what you want your agents to watch.
 
 # Try it with Pi {% #try-it %}
 
@@ -107,8 +105,6 @@ These six are a starting point. We plan to add more events based on what you wan
 Create a user in the Appwrite Console, or have another agent do it. Pi wakes up without a new prompt, looks up the user with the Appwrite tools, and reports their name and email.
 
 When you are done, ask Pi to unsubscribe. The server closes the stream and deletes the webhook it created for the subscription, so nothing is left behind in your project.
-
-To see the full event catalog, ask Pi to run `mcp_events` with the `catalog` action on the `appwrite` server.
 
 # What's next {% #whats-next %}
 
