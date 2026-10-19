@@ -669,6 +669,11 @@ impl Engine {
                     self.configure("php", &ns_p)?;
                     self.configure("rust", &ns_r)?;
                 }
+                let scrub = if profile.scrub.is_empty() {
+                    scrub.clone()
+                } else {
+                    Scrubber::new(&[spec.scrub.as_slice(), profile.scrub.as_slice()].concat())
+                };
                 let iterations = opts.iterations.unwrap_or(profile.iterations);
                 let mut rng = Rng::new(opts.seed ^ fnv(&title));
                 let masks: Vec<&Mask> = op.mask.iter().collect();

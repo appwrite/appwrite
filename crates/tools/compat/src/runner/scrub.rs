@@ -12,7 +12,7 @@
 //!
 //! | Kind | Replaces | With |
 //! |---|---|---|
-//! | `now` | a datetime string within `seconds` (default 3600) of the runner's clock: `Y-m-d\TH:i:s.vP`, `Y-m-d H:i:s.v`, `Y-m-d H:i:s` (with or without a zone; none is UTC), as a whole string or delimited by non-alphanumerics inside one (a JSON body a library sends) | `"<now>"` |
+//! | `now` | a datetime string within `seconds` (default 3600) of the runner's clock: `Y-m-d\TH:i:s.vP`, `Y-m-d H:i:s.v`, `Y-m-d H:i:s` (with or without a zone; none is UTC), as a whole string or delimited by non-alphanumerics inside one (a JSON body a library sends); with `any_year`, its month, day and time against the clock's whatever its year | `"<now>"` |
 //! | `uniqid` | a token of 13 to 36 lowercase hex digits whose first 8 are a unix time within a day of the runner's clock (PHP's `uniqid()`, plus any random padding, and the `.dddddddd` decimals of `uniqid('', true)`), as a whole string or delimited by non-alphanumerics inside one | `"<uniqid>"` |
 //! | `long` | a string over 64 KiB (not nondeterministic: kept out of recorded expectations, compared by length and digest) | `"<long:<bytes>:<sha256 hex>>"` |
 //! | `uuid7` | a UUID version 7 (`xxxxxxxx-xxxx-7xxx-[89ab]xxx-xxxxxxxxxxxx`, lowercase hex) whose millisecond time is within a day of the runner's clock, as a whole string or inside one | `"<uuid7>"` |
@@ -20,7 +20,7 @@
 //! Only comparison and recording see scrubbed values: bound step results
 //! (`bind`) keep the raw ones, so later steps use the real ids.
 
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::{DateTime, Datelike, NaiveDateTime, Utc};
 use serde::Deserialize;
 use serde_json::Value;
 
@@ -41,6 +41,10 @@ pub struct Scrub {
     /// `now`: how far from the clock a datetime may be, in seconds.
     #[serde(default)]
     pub seconds: Option<i64>,
+    /// `now`: compare the datetime's month, day and time with the clock's,
+    /// whatever its year (a clock reading under a year the input chose).
+    #[serde(default)]
+    pub any_year: bool,
 }
 
 /// Strings longer than this are compared by length and digest (`long`).
@@ -51,6 +55,8 @@ pub const LONG: usize = 65536;
 pub struct Scrubber {
     /// The `now` window in seconds, when scrubbed.
     now: Option<i64>,
+    /// `now` ignores the year.
+    any_year: bool,
     uniqid: bool,
     uuid7: bool,
     long: bool,
@@ -63,6 +69,7 @@ impl Scrubber {
     pub fn new(scrubs: &[Scrub]) -> Self {
         Self {
             now: scrubs.iter().filter(|s| s.kind == Kind::Now).map(|s| s.seconds.unwrap_or(3600)).max(),
+            any_year: scrubs.iter().any(|s| s.kind == Kind::Now && s.any_year),
             uniqid: scrubs.iter().any(|s| s.kind == Kind::Uniqid),
             uuid7: scrubs.iter().any(|s| s.kind == Kind::Uuid7),
             long: scrubs.iter().any(|s| s.kind == Kind::Long),
@@ -189,7 +196,12 @@ impl Scrubber {
 
     fn is_now(&self, s: &str) -> bool {
         let window = self.now.unwrap_or(3600);
-        parse_datetime(s).is_some_and(|t| (t - self.clock()).num_seconds().abs() <= window)
+        let clock = self.clock();
+        let Some(t) = parse_datetime(s) else { return false };
+        // Under the clock's year, and the years either side for a window across New Year.
+        let years: &[i32] = if self.any_year { &[-1, 0, 1] } else { &[] };
+        let near = |t: DateTime<Utc>| (t - clock).num_seconds().abs() <= window;
+        near(t) || years.iter().any(|d| t.with_year(clock.year() + d).is_some_and(near))
     }
 
     fn is_uniqid(&self, token: &str) -> bool {
@@ -313,9 +325,9 @@ mod tests {
         let clock = Utc.with_ymd_and_hms(2026, 10, 12, 10, 0, 0).unwrap();
         Scrubber::at(
             &[
-                Scrub { kind: Kind::Now, reason: "t".into(), seconds: None },
-                Scrub { kind: Kind::Uniqid, reason: "t".into(), seconds: None },
-                Scrub { kind: Kind::Long, reason: "t".into(), seconds: None },
+                Scrub { kind: Kind::Now, reason: "t".into(), seconds: None, any_year: false },
+                Scrub { kind: Kind::Uniqid, reason: "t".into(), seconds: None, any_year: false },
+                Scrub { kind: Kind::Long, reason: "t".into(), seconds: None, any_year: false },
             ],
             clock,
         )
@@ -348,7 +360,7 @@ mod tests {
     #[test]
     fn uuid7s_near_the_clock() {
         let clock = Utc.with_ymd_and_hms(2026, 10, 12, 10, 0, 0).unwrap();
-        let s = Scrubber::at(&[Scrub { kind: Kind::Uuid7, reason: "t".into(), seconds: None }], clock);
+        let s = Scrubber::at(&[Scrub { kind: Kind::Uuid7, reason: "t".into(), seconds: None, any_year: false }], clock);
         assert_eq!(s.string("01a12f8e-0900-7abc-8def-0123456789ab").as_deref(), Some("<uuid7>"));
         assert_eq!(
             s.string("dup key: { _id: \"01a12f8e-0900-7abc-bdef-0123456789ab\" }").as_deref(),
@@ -388,6 +400,31 @@ mod tests {
     }
 
     #[test]
+    fn any_year_reads_the_clock_under_another_year() {
+        let clock = Utc.with_ymd_and_hms(2026, 10, 19, 22, 36, 0).unwrap();
+        let s = Scrubber::at(
+            &[Scrub { kind: Kind::Now, reason: "t".into(), seconds: Some(604_800), any_year: true }],
+            clock,
+        );
+        let mut v = json!([
+            "6672-10-19T22:36:29.000+00:00",
+            "2026-10-23 08:00:36.146",
+            "2024-01-01 10:00:00",
+            "2005-08-15T15:52:01+00:00"
+        ]);
+        s.apply(&mut v);
+        assert_eq!(v, json!(["<now>", "<now>", "2024-01-01 10:00:00", "2005-08-15T15:52:01+00:00"]));
+        // New Year: a date late in the clock's previous year is near too.
+        let s = Scrubber::at(
+            &[Scrub { kind: Kind::Now, reason: "t".into(), seconds: Some(604_800), any_year: true }],
+            Utc.with_ymd_and_hms(2027, 1, 2, 0, 0, 0).unwrap(),
+        );
+        let mut v = json!("1999-12-30 00:00:00");
+        s.apply(&mut v);
+        assert_eq!(v, json!("<now>"));
+    }
+
+    #[test]
     fn datetimes_inside_a_string() {
         let s = scrubber();
         assert_eq!(
@@ -421,10 +458,14 @@ mod more_tests {
     #[test]
     fn windows_and_long_strings() {
         let clock = Utc.with_ymd_and_hms(2026, 10, 12, 10, 0, 0).unwrap();
-        let wide = Scrubber::at(&[Scrub { kind: Kind::Now, reason: "t".into(), seconds: Some(180_000) }], clock);
+        let wide = Scrubber::at(
+            &[Scrub { kind: Kind::Now, reason: "t".into(), seconds: Some(180_000), any_year: false }],
+            clock,
+        );
         assert_eq!(wide.string("2026-10-11 10:00:00.000").as_deref(), Some("<now>"));
         assert_eq!(wide.string("2026-10-08 10:00:00.000"), None);
-        let long = Scrubber::at(&[Scrub { kind: Kind::Long, reason: "t".into(), seconds: None }], clock);
+        let long =
+            Scrubber::at(&[Scrub { kind: Kind::Long, reason: "t".into(), seconds: None, any_year: false }], clock);
         let text = "ab".repeat(LONG);
         let out = long.string(&text).unwrap();
         assert!(out.starts_with("<long:131072:") && out.len() == "<long:131072:>".len() + 64, "{out}");

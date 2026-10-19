@@ -184,6 +184,11 @@ pub struct FuzzSpec {
     /// engine's own functions such as `filter_var` fill too).
     #[serde(default)]
     pub isolate: bool,
+    /// Scrubs for this profile only, on top of the spec's: for inputs a
+    /// library resolves against the clock (a garbage date PHP reads as
+    /// relative to now) where the spec's other results must keep theirs.
+    #[serde(default)]
+    pub scrub: Vec<Scrub>,
 }
 
 fn default_iterations() -> u64 {
