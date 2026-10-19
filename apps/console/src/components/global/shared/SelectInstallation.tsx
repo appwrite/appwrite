@@ -9,7 +9,7 @@
 
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -26,15 +26,11 @@ import {
   closeInstallationPicker,
   useInstallationPickerRequest,
 } from '@/lib/vcs/installation-picker'
-import {
-  VcsIcon,
-  vcsInlineProviderIconBoxClassName,
-  vcsInlineProviderIconClassName,
-} from '@/lib/vcs/providers'
+import { getVcsProvider, VcsIcon } from '@/lib/vcs/providers'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
-const VISIBLE_PROJECT_NAMES = 3
+const NEW_ACCOUNT = 'new'
 
 export function SelectInstallation() {
   const t = useT()
@@ -44,12 +40,14 @@ export function SelectInstallation() {
     ...reusableInstallationsQueryOptions(request?.projectId, request?.provider),
     enabled: !!request,
   })
+  const provider = getVcsProvider(request?.provider)
 
   useEffect(() => {
-    setSelected('')
-  }, [request])
+    setSelected(installations?.[0]?.providerInstallationId ?? '')
+  }, [request, installations])
 
   // Nothing to reuse (or no way to tell): behave exactly like the plain link.
+  // Runs after a fetch, so a new tab would be blocked; stay in this one.
   useEffect(() => {
     if (!request) return
     if (isError || installations?.length === 0) {
@@ -57,7 +55,17 @@ export function SelectInstallation() {
     }
   }, [request, installations, isError])
 
-  const handleUse = () => {
+  const handleContinue = () => {
+    if (!request) return
+    if (selected === NEW_ACCOUNT) {
+      if (request.target === '_blank') {
+        window.open(request.href, '_blank', 'noreferrer')
+        closeInstallationPicker()
+      } else {
+        window.location.assign(request.href)
+      }
+      return
+    }
     closeInstallationPicker()
     toast.info(t('Using an existing installation is not available yet.'))
   }
@@ -71,10 +79,10 @@ export function SelectInstallation() {
     >
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-left">
-          <DialogTitle>{t('Choose an installation')}</DialogTitle>
+          <DialogTitle>{t(`Connect ${provider.label}`)}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {t(
-              'These accounts are already connected to your other projects. Use one of them, or add a new installation.',
+              'Use an account you already connected in another project, or add a new one.',
             )}
           </DialogDescription>
         </DialogHeader>
@@ -84,18 +92,16 @@ export function SelectInstallation() {
             <RadioGroup
               value={selected}
               onValueChange={setSelected}
-              className="max-h-72 overflow-y-auto gap-2"
+              className="max-h-80 overflow-y-auto gap-2"
             >
               {installations.map((installation) => {
                 const id = installation.providerInstallationId
-                const names = installation.projects.map((p) => p.name)
-                const hidden = names.length - VISIBLE_PROJECT_NAMES
                 return (
                   <Label
                     key={id}
                     htmlFor={`installation-${id}`}
                     className={cn(
-                      'flex items-center gap-3 rounded-xl border p-3 cursor-pointer transition-all',
+                      'flex items-center gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-all',
                       selected === id
                         ? 'border-foreground bg-card/80'
                         : 'border-border bg-card/50 hover:border-border/80',
@@ -106,24 +112,40 @@ export function SelectInstallation() {
                       id={`installation-${id}`}
                       className="shrink-0"
                     />
-                    <div className={vcsInlineProviderIconBoxClassName}>
-                      <VcsIcon
-                        type={installation.provider}
-                        className={vcsInlineProviderIconClassName}
-                      />
-                    </div>
+                    <VcsIcon
+                      type={installation.provider}
+                      className="h-4 w-4 shrink-0 text-muted-foreground"
+                    />
                     <div className="min-w-0">
                       <p className="text-[13px] font-medium text-foreground truncate">
                         {installation.organization}
                       </p>
                       <p className="text-[12px] font-normal text-muted-foreground truncate">
-                        {names.slice(0, VISIBLE_PROJECT_NAMES).join(', ')}
-                        {hidden > 0 ? ` +${hidden}` : ''}
+                        {installation.projects.map((p) => p.name).join(', ')}
                       </p>
                     </div>
                   </Label>
                 )
               })}
+              <Label
+                htmlFor="installation-new"
+                className={cn(
+                  'flex items-center gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-all',
+                  selected === NEW_ACCOUNT
+                    ? 'border-foreground bg-card/80'
+                    : 'border-border bg-card/50 hover:border-border/80',
+                )}
+              >
+                <RadioGroupItem
+                  value={NEW_ACCOUNT}
+                  id="installation-new"
+                  className="shrink-0"
+                />
+                <Plus className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <span className="text-[13px] font-medium text-foreground">
+                  {t('Add a new account')}
+                </span>
+              </Label>
             </RadioGroup>
           ) : (
             <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
@@ -133,18 +155,11 @@ export function SelectInstallation() {
           )}
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button variant="outline" asChild>
-            <a
-              href={request?.href}
-              target={request?.target}
-              rel="noreferrer"
-              onClick={closeInstallationPicker}
-            >
-              {t('Add new installation')}
-            </a>
+          <Button variant="outline" onClick={closeInstallationPicker}>
+            {t('Cancel')}
           </Button>
-          <Button disabled={!selected} onClick={handleUse}>
-            {t('Use installation')}
+          <Button disabled={!installations?.length} onClick={handleContinue}>
+            {t('Continue')}
           </Button>
         </div>
       </DialogContent>
