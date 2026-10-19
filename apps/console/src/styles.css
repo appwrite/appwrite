@@ -3153,3 +3153,26 @@ pre.prism-code .token-line > span {
   }
 }
 
+/* Init 5 hero: the init_ underscore blinks like a terminal caret, then settles. */
+@keyframes init5-caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.init5-caret {
+  animation: init5-caret-blink 0.7s steps(1, end) var(--init5-caret-delay, 1.3s) 3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .init5-caret {
+    animation: none;
+  }
+}
+

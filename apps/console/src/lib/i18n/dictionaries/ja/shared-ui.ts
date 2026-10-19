@@ -1353,4 +1353,24 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Load more': 'さらに読み込む',
   'Loading more failed. Try again.':
     'さらに読み込めませんでした。もう一度お試しください。',
+  'Browse Init events': 'Init イベントを見る',
+  'Switch between past and upcoming Init launch weeks.':
+    '過去と今後の Init ローンチ週を切り替えます。',
+  Past: '過去',
+  Upcoming: '近日公開',
+  'AUGUST 31 - SEPTEMBER 4': '8月31日 - 9月4日',
+  'NOVEMBER 2 - 6': '11月2日 - 6日',
+  'Starts in': '開始まで',
+  'Hero concept': 'ヒーローのコンセプト',
+  Concept: 'コンセプト',
+  Particles: 'パーティクル',
+  'Light trails': '光の軌跡',
+  Glass: 'ガラス',
+  'Replay intro': 'イントロを再生',
+  'Luminous particle 5 that assembles, breathes and reacts to the cursor.':
+    '光る粒子が集まって 5 の形になり、呼吸するように動き、カーソルに反応します。',
+  'Streaks of light racing along the 5, drawn in Init line-art style.':
+    'Init の線画スタイルで、光の筋が 5 に沿って走ります。',
+  'A refractive glass and chrome 5 on a lit stage.':
+    '照らされたステージ上の、屈折するガラスとクロームの 5。',
 }

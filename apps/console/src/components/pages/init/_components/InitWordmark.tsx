@@ -31,6 +31,8 @@ type InitWordmarkProps = {
   className?: string
   /** Ticket accent for the underscore; defaults to brand CTA. */
   accentColor?: string
+  /** Extra classes on the underscore group (e.g. the Init 5 caret blink). */
+  underscoreClassName?: string
   'aria-label'?: string
 }
 
@@ -41,6 +43,7 @@ type InitWordmarkProps = {
 export function InitWordmark({
   className,
   accentColor = 'var(--brand-cta)',
+  underscoreClassName,
   'aria-label': ariaLabel = 'init',
 }: InitWordmarkProps) {
   return (
@@ -48,7 +51,10 @@ export function InitWordmark({
       viewBox={INIT_WORDMARK_VIEWBOX}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={cn('inline-block h-[1em] w-auto shrink-0 align-[-0.05em] leading-none', className)}
+      className={cn(
+        'inline-block h-[1em] w-auto shrink-0 align-[-0.05em] leading-none',
+        className,
+      )}
       role="img"
       aria-label={ariaLabel}
     >
@@ -57,7 +63,10 @@ export function InitWordmark({
           <path fill="currentColor" d={letter.d} />
         </g>
       ))}
-      <g transform={`translate(${INIT_WORDMARK_UNDERSCORE.x} 0)`}>
+      <g
+        transform={`translate(${INIT_WORDMARK_UNDERSCORE.x} 0)`}
+        className={underscoreClassName}
+      >
         <path fill={accentColor} d={INIT_WORDMARK_UNDERSCORE.d} />
       </g>
     </svg>

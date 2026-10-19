@@ -1,4 +1,10 @@
 import { useState, useEffect } from 'react'
+import { isKnownLaunchEventId } from '@/lib/init/init-event-catalog'
+import {
+  DEFAULT_INIT5_HERO_VARIANT,
+  INIT5_HERO_VARIANT_IDS,
+  type Init5HeroVariantId,
+} from '@/lib/init/init5-hero/hero-variant'
 import {
   getInitMockCurrentDayDefault,
   isValidInitMockCurrentDay,
@@ -7,10 +13,7 @@ import {
   type InitTicketTypeId,
   isInitTicketTypeId,
 } from '@/lib/init/ticket-types'
-import {
-  USER_OS_VALUES,
-  type UserOsOverride,
-} from '@/lib/user-os'
+import { USER_OS_VALUES, type UserOsOverride } from '@/lib/user-os'
 import { clearLegacyPreLaunchDebugOverride } from '@/lib/pre-launch'
 import { syncMockLocaleCountryCookie } from '@/lib/locale/visitor-country'
 
@@ -26,9 +29,13 @@ export const DEBUG_OVERRIDE_KEYS = {
   showProjectAgents: 'debug:showProjectAgents',
   showConstruction: 'debug:showConstruction',
   mockInitCurrentDay: 'debug:mockInitCurrentDay',
+  /** When set, `/init` uses this launch event instead of the featured one. */
+  mockInitActiveEventId: 'debug:mockInitActiveEventId',
   mockInitTicketType: 'debug:mockInitTicketType',
   previewInitReactionConfetti: 'debug:previewInitReactionConfetti',
   initLowPowerAnimations: 'debug:initLowPowerAnimations',
+  /** Init 5 hero concept (particles, light trails, glass) while the cover is being picked. */
+  init5HeroVariant: 'debug:init5HeroVariant',
   /** Overrides detected client OS for UI toggles and keyboard shortcuts. */
   userOs: 'debug:userOs',
   /** @deprecated Migrated to `userOs`; kept for one-time localStorage migration. */
@@ -100,12 +107,19 @@ export type DebugOverrides = {
    * never follows the calendar. Defaults to before-event.
    */
   mockInitCurrentDay: number
+  /**
+   * Force a specific Init launch event in this browser. Null uses production
+   * resolution (featured event, Init 4 by default).
+   */
+  mockInitActiveEventId: string | null
   /** Mock Init ticket tier on /init. Null uses account rules (gold, silver, standard). */
   mockInitTicketType: InitTicketTypeId | null
   /** When true, Init reaction confetti triggers with a single online user. */
   previewInitReactionConfetti: boolean
   /** Controls Init animation optimizations for constrained devices. */
   initLowPowerAnimations: InitLowPowerAnimationsOverride
+  /** Which Init 5 hero concept renders on `/init` for the November event. */
+  init5HeroVariant: Init5HeroVariantId
   /**
    * Overrides detected client OS for OS toggles, docs tabs, and keyboard
    * shortcut labels / visualizer. `'auto'` uses device detection.
@@ -181,7 +195,17 @@ function readInitDayFromStorage(key: string): number {
   return parsed
 }
 
-function readNullableInitTicketTypeFromStorage(key: string): InitTicketTypeId | null {
+function readNullableInitActiveEventIdFromStorage(key: string): string | null {
+  const storage = getStorage()
+  if (!storage) return null
+  const raw = storage.getItem(key)
+  if (raw === null || raw === 'auto') return null
+  return isKnownLaunchEventId(raw) ? raw : null
+}
+
+function readNullableInitTicketTypeFromStorage(
+  key: string,
+): InitTicketTypeId | null {
   const storage = getStorage()
   if (!storage) return null
   const raw = storage.getItem(key)
@@ -266,6 +290,9 @@ export function loadDebugOverrides(): DebugOverrides {
     mockInitCurrentDay: readInitDayFromStorage(
       DEBUG_OVERRIDE_KEYS.mockInitCurrentDay,
     ),
+    mockInitActiveEventId: readNullableInitActiveEventIdFromStorage(
+      DEBUG_OVERRIDE_KEYS.mockInitActiveEventId,
+    ),
     mockInitTicketType: readNullableInitTicketTypeFromStorage(
       DEBUG_OVERRIDE_KEYS.mockInitTicketType,
     ),
@@ -277,6 +304,11 @@ export function loadDebugOverrides(): DebugOverrides {
       DEBUG_OVERRIDE_KEYS.initLowPowerAnimations,
       ['auto', 'on', 'off'] as const,
       'auto',
+    ),
+    init5HeroVariant: readStringFromStorage(
+      DEBUG_OVERRIDE_KEYS.init5HeroVariant,
+      INIT5_HERO_VARIANT_IDS,
+      DEFAULT_INIT5_HERO_VARIANT,
     ),
     userOs: readUserOsOverrideFromStorage(),
     unlockOnboardingLocks: readBooleanFromStorage(
@@ -402,10 +434,12 @@ export function resetFeatureFlagsMenuDebugOverrides() {
 
 /** Keys toggled from Debug → Settings → Init (not other debug sections). */
 export const INIT_MENU_DEBUG_KEYS = [
+  'mockInitActiveEventId',
   'mockInitCurrentDay',
   'mockInitTicketType',
   'previewInitReactionConfetti',
   'initLowPowerAnimations',
+  'init5HeroVariant',
 ] as const satisfies readonly (keyof DebugOverrides)[]
 
 export type InitMenuDebugKey = (typeof INIT_MENU_DEBUG_KEYS)[number]
@@ -421,7 +455,9 @@ export function resetInitMenuDebugOverrides() {
 }
 
 /** Reset a single debug override from the Feature flags submenu to its default. */
-export function resetFeatureFlagsMenuDebugOverride(key: FeatureFlagsMenuDebugKey) {
+export function resetFeatureFlagsMenuDebugOverride(
+  key: FeatureFlagsMenuDebugKey,
+) {
   const storage = getStorage()
   if (!storage) return
   storage.removeItem(DEBUG_OVERRIDE_KEYS[key])
@@ -459,9 +495,11 @@ export function getDefaultDebugOverrides(): DebugOverrides {
     showProjectAgents: false,
     showConstruction: getShowConstructionDefault(),
     mockInitCurrentDay: getInitMockCurrentDayDefault(),
+    mockInitActiveEventId: null,
     mockInitTicketType: null,
     previewInitReactionConfetti: false,
     initLowPowerAnimations: 'auto',
+    init5HeroVariant: DEFAULT_INIT5_HERO_VARIANT,
     userOs: 'auto',
     unlockOnboardingLocks: false,
     previewOnboardingComplete: false,

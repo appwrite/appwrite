@@ -1391,4 +1391,24 @@ export const heSharedUiDictionary: Record<string, string> = {
   'App key copied': 'מפתח האפליקציה הועתק',
   'Load more': 'טעינת עוד',
   'Loading more failed. Try again.': 'טעינת פריטים נוספים נכשלה. נסו שוב.',
+  'Browse Init events': 'עיון באירועי Init',
+  'Switch between past and upcoming Init launch weeks.':
+    'מעבר בין שבועות השקה קודמים ועתידיים של Init.',
+  Past: 'עבר',
+  Upcoming: 'בקרוב',
+  'AUGUST 31 - SEPTEMBER 4': '31 באוגוסט - 4 בספטמבר',
+  'NOVEMBER 2 - 6': '2-6 בנובמבר',
+  'Starts in': 'מתחיל בעוד',
+  'Hero concept': 'קונספט לכותרת',
+  Concept: 'קונספט',
+  Particles: 'חלקיקים',
+  'Light trails': 'שובלי אור',
+  Glass: 'זכוכית',
+  'Replay intro': 'הפעלת הפתיח מחדש',
+  'Luminous particle 5 that assembles, breathes and reacts to the cursor.':
+    'חלקיקים זוהרים שמתכנסים לצורת 5, נושמים ומגיבים לסמן.',
+  'Streaks of light racing along the 5, drawn in Init line-art style.':
+    'שובלי אור שרצים לאורך הספרה 5, בסגנון הקו של Init.',
+  'A refractive glass and chrome 5 on a lit stage.':
+    'ספרה 5 מזכוכית ומכרום על במה מוארת.',
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useDebugOverrides } from '@/lib/debug-overrides'
 import { getActiveLaunchEvent } from './events'
 import {
   INIT_SCHEDULE_LIVE_DURATION_MS,
@@ -11,10 +12,13 @@ import {
  * next starting-soon window opens, a session starts, or its live window ends.
  */
 export function useInitLiveClock(currentDay: number): number {
+  const { mockInitActiveEventId } = useDebugOverrides()
   const [nowMs, setNowMs] = useState(() => Date.now())
 
   useEffect(() => {
-    const event = getActiveLaunchEvent()
+    const event = getActiveLaunchEvent(new Date(), {
+      activeEventId: mockInitActiveEventId,
+    })
     if (!event || currentDay < 1) return
 
     const boundaries = event.schedule
@@ -22,10 +26,7 @@ export function useInitLiveClock(currentDay: number): number {
       .flatMap((item) => {
         const startMs = parseInitScheduleTime(item.startsAt)?.getTime()
         if (typeof startMs !== 'number') return []
-        const edges = [
-          startMs - INIT_SCHEDULE_STARTING_SOON_WINDOW_MS,
-          startMs,
-        ]
+        const edges = [startMs - INIT_SCHEDULE_STARTING_SOON_WINDOW_MS, startMs]
         if (item.isLive) {
           edges.push(startMs + INIT_SCHEDULE_LIVE_DURATION_MS)
         }
@@ -43,7 +44,7 @@ export function useInitLiveClock(currentDay: number): number {
     }, delay)
 
     return () => window.clearTimeout(timeoutId)
-  }, [currentDay, nowMs])
+  }, [currentDay, mockInitActiveEventId, nowMs])
 
   return nowMs
 }
