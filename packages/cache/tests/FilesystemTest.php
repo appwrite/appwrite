@@ -69,6 +69,15 @@ final class FilesystemTest extends Base
         $this->assertTrue($cache->purge('hidden'));
     }
 
+    public function testPurgingFromADirectoryNotYetCreatedReportsNothingToPurge(): void
+    {
+        $path = self::scratch('uncreated-data');
+        $cache = new Cache(new Filesystem($path));
+        self::deletePath($path);
+
+        $this->assertFalse($cache->purge('missing'));
+    }
+
     public function testGetSize(): void
     {
         self::$cache->save('test', 'test');

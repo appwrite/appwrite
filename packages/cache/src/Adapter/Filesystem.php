@@ -97,7 +97,7 @@ class Filesystem implements Adapter
 
         if (! file_exists($file)) {
             $directory = \dirname($file);
-            if (! is_dir($directory) || ! is_executable($directory)) {
+            if (is_dir($directory) && ! is_executable($directory)) {
                 throw new Exception("Can't purge {$file}: {$directory} is not accessible");
             }
 
