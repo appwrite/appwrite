@@ -131,6 +131,8 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Invalid webhook delivery token. The delivery could not be verified against Entire\'s published signing keys.');
         }
 
+        $this->preprocessEvent($request);
+
         $event = $vcs->getEventType($payload);
         Span::add('vcs.entire.event.name', $event);
 
@@ -151,6 +153,16 @@ class Create extends Action
         }
 
         $response->json(['events' => $parsedPayloads]);
+    }
+
+    /**
+     * Runs once a delivery has verified, before it is handled. Cloud overrides
+     * it to forward the delivery to its other regions, as it does for GitHub;
+     * each region verifies the forwarded delivery again.
+     */
+    protected function preprocessEvent(Request $request)
+    {
+        return;
     }
 
     /**
