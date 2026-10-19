@@ -726,11 +726,11 @@ impl Request {
 
     // -- size and ranges ---------------------------------------------------
 
-    /// The size of the request in bytes, counted as its header lines
-    /// (`name: v1, v2`, joined by `\n`). The body is not counted.
+    /// The size of the request in bytes: its header lines (`name: v1, v2`,
+    /// joined by `\n`) and its raw body.
     ///
-    /// PHP: `getSize()`; the body is not counted because under Swoole
-    /// `php://input` is always empty.
+    /// PHP: `getSize()`, which reads the body through `getRawPayload()`
+    /// (Swoole's `rawContent()`).
     pub fn size(&self) -> usize {
         let mut total = 0usize;
         for (i, (name, values)) in self.headers.iter().enumerate() {
@@ -745,7 +745,7 @@ impl Request {
                 total += v.len();
             }
         }
-        total
+        total + self.raw_payload().len()
     }
 
     /// The `Content-Range` header (`bytes 0-99/200`), or `None` when it is
