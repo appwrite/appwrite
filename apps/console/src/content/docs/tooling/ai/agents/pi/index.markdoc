@@ -50,7 +50,7 @@ Add the Appwrite MCP server to `~/.pi/agent/mcp-adapter.json`. Create the file i
 }
 ```
 
-The server uses OAuth for authentication. Start Pi by running `pi` in your terminal, then run `/mcp-auth appwrite`. Your browser opens so you can sign in to your Appwrite account and authorize access. You don't need an API key. pi-mcp-adapter keeps the sign-in in your operating system's credential store.
+The server uses OAuth for authentication. Start Pi by running `pi` in your terminal, then run `/mcp-auth appwrite`. Your browser opens so you can sign in to your Appwrite account and authorize access. You don't need an API key. The adapter keeps the sign-in in your operating system's credential store.
 
 {% info title="Pi's built-in MCP support" %}
 
@@ -72,6 +72,8 @@ Run `/mcp` in Pi to check that **appwrite** is listed with its tools. Then try o
 - `How do I set up real-time subscriptions in Appwrite?`
 - `Show me how to authenticate users with OAuth`
 - `How do I implement file uploads with Appwrite Storage?`
+
+The following screenshot shows Pi answering `List the users in my Appwrite project pi-guide` for a test project.
 
 {% only_dark %}
 ![Pi lists the users in an Appwrite project](/images/docs/mcp/pi/list-users-dark.avif)
@@ -102,18 +104,20 @@ Subscribe with mcp_events to users.user.created on the appwrite server for proje
 
 Pi opens the subscription and goes idle. When a user signs up or you create one in the Appwrite Console, Pi wakes up without a new prompt, looks up the user, and replies with their name and email.
 
+Each subscription is a webhook in your project, so it counts toward your plan's webhook limit. The Free plan allows 2 webhooks per project. When you no longer need the events, ask Pi to unsubscribe:
+
+```
+Unsubscribe from users.user.created
+```
+
+The following recording shows the whole flow in a test project. Pi subscribes, wakes up when a user is created, reports the user, and then unsubscribes.
+
 {% only_dark %}
 ![Pi subscribes to users.user.created, wakes up when a user is created, and unsubscribes](/images/docs/mcp/pi/events-dark.gif)
 {% /only_dark %}
 {% only_light %}
 ![Pi subscribes to users.user.created, wakes up when a user is created, and unsubscribes](/images/docs/mcp/pi/events-light.gif)
 {% /only_light %}
-
-Each subscription is a webhook in your project, so it counts toward your plan's webhook limit. The Free plan allows 2 webhooks per project. When you no longer need the events, ask Pi to unsubscribe:
-
-```
-Unsubscribe from users.user.created
-```
 
 Subscriptions last as long as the Pi session. After you restart Pi or run `/reload`, ask it to subscribe again. To see every event you can subscribe to and how delivery works, read [Events](/docs/tooling/ai/mcp-servers#events).
 
