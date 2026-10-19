@@ -94,18 +94,6 @@ class Realtime extends MessagingAdapter
     public array $connections = [];
 
     /**
-     * This worker's presence holders, for the worker-level `connections` counter.
-     *
-     * [PROJECT_ID] -> [USER_ID] -> [CONNECTION_ID -> true]
-     *
-     * The worker holds a user's presence while this set is non-empty; it bumps the row's
-     * `connections` on its 0->1 transition and decrements it on 1->0.
-     *
-     * @var array<string, array<string, array<int, true>>>
-     */
-    public array $presenceHolders = [];
-
-    /**
      * Subscription Tree
      *
      * [PROJECT_ID] ->
@@ -274,27 +262,6 @@ class Realtime extends MessagingAdapter
      * @param string $presenceId
      * @return int Number of connections whose presences map was updated.
      */
-    /**
-     * Forget this worker's holds on a deleted presence row, so a later close does not decrement a
-     * worker count the row no longer carries. Only holds tagged with the deleted row id are
-     * cleared, so a hold on a row recreated after the delete is left intact. Live connections
-     * re-register on their next presence message.
-     */
-    public function clearPresenceHolders(string $projectId, string $userId, string $presenceId): void
-    {
-        foreach (($this->presenceHolders[$projectId][$userId] ?? []) as $connectionId => $heldPresenceId) {
-            if ($heldPresenceId !== $presenceId) {
-                continue;
-            }
-
-            unset($this->connections[$connectionId]['presence'], $this->presenceHolders[$projectId][$userId][$connectionId]);
-        }
-
-        if (empty($this->presenceHolders[$projectId][$userId] ?? [])) {
-            unset($this->presenceHolders[$projectId][$userId]);
-        }
-    }
-
     public function removePresenceFromConnections(string $projectId, string $presenceId): int
     {
         if ($projectId === '' || $presenceId === '') {
@@ -314,44 +281,6 @@ class Realtime extends MessagingAdapter
         }
 
         return $removed;
-    }
-
-    /**
-     * Returns the presence ID carried by a `presences.{id}.delete` event payload,
-     * or null when the event is not a presence delete.
-     *
-     * @param array $event Decoded pubsub payload produced by self::send().
-     * @return string|null
-     */
-    public static function extractDeletedPresenceId(array $event): ?string
-    {
-        $events = $event['data']['events'] ?? [];
-        if (!\is_array($events)) {
-            return null;
-        }
-
-        $isPresenceDelete = false;
-        foreach ($events as $eventName) {
-            if (
-                \is_string($eventName)
-                && \str_starts_with($eventName, 'presences.')
-                && \str_ends_with($eventName, '.delete')
-            ) {
-                $isPresenceDelete = true;
-                break;
-            }
-        }
-
-        if (!$isPresenceDelete) {
-            return null;
-        }
-
-        $presenceId = $event['data']['payload']['$id'] ?? null;
-        if (!\is_string($presenceId) || $presenceId === '') {
-            return null;
-        }
-
-        return $presenceId;
     }
 
     /**

@@ -1313,49 +1313,6 @@ final class MessagingTest extends TestCase
         $this->assertContains(Role::any()->toString(), $result['roles']);
     }
 
-    public function testExtractDeletedPresenceIdReturnsIdForDeleteEvent(): void
-    {
-        $event = [
-            'project' => 'proj',
-            'data' => [
-                'events' => [
-                    'presences.abc.delete',
-                    'presences.*.delete',
-                    'presences.abc',
-                ],
-                'payload' => ['$id' => 'abc'],
-            ],
-        ];
-
-        $this->assertSame('abc', Realtime::extractDeletedPresenceId($event));
-    }
-
-    public function testExtractDeletedPresenceIdRejectsNonDeleteEvents(): void
-    {
-        $this->assertNull(Realtime::extractDeletedPresenceId([
-            'data' => [
-                'events' => ['presences.abc.upsert'],
-                'payload' => ['$id' => 'abc'],
-            ],
-        ]));
-
-        // Unrelated resource that happens to end with `.delete` must not trigger.
-        $this->assertNull(Realtime::extractDeletedPresenceId([
-            'data' => [
-                'events' => ['documents.abc.delete'],
-                'payload' => ['$id' => 'abc'],
-            ],
-        ]));
-
-        // Missing payload ID — the event names look right but we have nothing to remove.
-        $this->assertNull(Realtime::extractDeletedPresenceId([
-            'data' => [
-                'events' => ['presences.abc.delete'],
-                'payload' => [],
-            ],
-        ]));
-    }
-
     public function testRemovePresenceFromConnectionsScopedToProject(): void
     {
         $realtime = new Realtime();
