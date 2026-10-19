@@ -556,7 +556,7 @@ impl Sql {
             let Some(mut row) = row.filter(|r| !r.is_empty()) else {
                 return Ok(Document::empty());
             };
-            super::row::remap_row(&mut row);
+            self.remap_row(&mut row);
             return Document::from_row(row);
         }
 
@@ -581,7 +581,7 @@ impl Sql {
         let Some(mut row) = rows.into_iter().next() else {
             return Ok(Document::empty());
         };
-        super::row::remap_row(&mut row);
+        self.remap_row(&mut row);
         Document::from_row(row)
     }
 

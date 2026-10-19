@@ -361,6 +361,9 @@ impl Database {
             match self.silent(self.delete_document(METADATA, collection)).await {
                 Ok(d) => deleted = d,
                 Err(error) => {
+                    if self.may_have_committed(&error) {
+                        return Err(error);
+                    }
                     if schema_deleted {
                         // Best-effort restore; the metadata error is what the caller needs.
                         let _ = self
@@ -377,7 +380,7 @@ impl Database {
                 }
             }
 
-            self.purge_cached_collection(collection).await?;
+            self.purge_committed_collection(collection).await?;
         }
 
         if deleted {

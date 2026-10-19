@@ -884,7 +884,26 @@ mod permission_filter {
         let error = Filter::with_options(
             vec!["x".to_owned()],
             |_: &str| "p".to_owned(),
-            Options { document_column: "1x".to_owned(), ..Options::default() },
+            Options { document_column: ".x".to_owned(), ..Options::default() },
+        )
+        .unwrap_err();
+        assert_eq!((error.kind(), error.message()), (Kind::InvalidArgument, "Invalid column name: .x"));
+
+        // 8.3.10: the document column is quoted, so it may start with a digit
+        // or a hyphen (an Appwrite table ID as a join alias); the permission
+        // table's columns may not.
+        for column in ["1x", "-x", "a-1.b"] {
+            Filter::with_options(
+                vec!["x".to_owned()],
+                |_: &str| "p".to_owned(),
+                Options { document_column: column.to_owned(), ..Options::default() },
+            )
+            .unwrap();
+        }
+        let error = Filter::with_options(
+            vec!["x".to_owned()],
+            |_: &str| "p".to_owned(),
+            Options { permission_role_column: "1x".to_owned(), ..Options::default() },
         )
         .unwrap_err();
         assert_eq!((error.kind(), error.message()), (Kind::InvalidArgument, "Invalid column name: 1x"));

@@ -22,7 +22,6 @@ use utopia_query::{CursorDirection, Method, OrderDirection};
 
 use super::hook::column::AllowNull;
 use super::hook::{join as join_hook, permission, tenant};
-use super::row::remap_row;
 use super::{Engine, Sql};
 use crate::adapter::{Adapter, Find};
 use crate::builder::SqlBuilder;
@@ -548,7 +547,7 @@ impl Sql {
 
         let mut documents = Vec::with_capacity(results.len());
         for mut row in results {
-            remap_row(&mut row);
+            self.remap_row(&mut row);
             documents.push(Document::from_row(row)?);
         }
         if cursor_direction == CursorDirection::Before {
@@ -593,7 +592,7 @@ impl Sql {
 
         let mut documents = Vec::with_capacity(rows.len());
         for mut row in rows {
-            remap_row(&mut row);
+            self.remap_row(&mut row);
             documents.push(Document::from_row(row)?);
         }
         Ok(documents)

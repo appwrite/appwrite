@@ -252,7 +252,7 @@ impl Sql {
                     .map_or(column, |(_, name)| name));
             }
             return Ok(match prefix {
-                Some(prefix) => format!("{prefix}.{column}"),
+                Some(prefix) => self.join_label(prefix, &column),
                 None => column,
             });
         }

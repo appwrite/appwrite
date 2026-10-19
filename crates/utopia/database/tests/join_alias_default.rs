@@ -39,7 +39,7 @@ fn a_join_built_without_an_alias_is_read_under_its_collection() {
 fn a_table_id_that_cannot_be_the_alias_is_refused() {
     let pattern = |table: &str| {
         format!(
-            "Table ID \"{table}\" cannot be used as the join alias: an alias must start with a letter or an underscore and contain only letters, digits and underscores. Pass an alias for the join"
+            "Table ID \"{table}\" cannot be used as the join alias: an alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens. Pass an alias for the join"
         )
     };
     let reserved = |table: &str| {
@@ -47,11 +47,18 @@ fn a_table_id_that_cannot_be_the_alias_is_refused() {
             "Table ID \"{table}\" cannot be used as the join alias: it is reserved for the main collection. Pass an alias for the join"
         )
     };
+    let too_long = |table: &str| {
+        format!(
+            "Table ID \"{table}\" cannot be used as the join alias: an alias must be at most 63 characters. Pass an alias for the join"
+        )
+    };
+    const LONG: &str = "oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo";
     let upper = DEFAULT_ALIAS.to_uppercase();
     for (join, message) in [
-        (Query::join("my-orders", "", on("$id", "customerId")).unwrap(), pattern("my-orders")),
+        (Query::join("my orders", "", on("$id", "customerId")).unwrap(), pattern("my orders")),
         (Query::left_join("orders.v2", "", on("$id", "customerId")).unwrap(), pattern("orders.v2")),
-        (Query::cross_join("2024orders", "").unwrap(), pattern("2024orders")),
+        (Query::cross_join("-orders", "").unwrap(), pattern("-orders")),
+        (Query::cross_join(LONG, "").unwrap(), too_long(LONG)),
         (Query::join(DEFAULT_ALIAS, "", on("$id", "customerId")).unwrap(), reserved(DEFAULT_ALIAS)),
         (Query::cross_join(upper.as_str(), "").unwrap(), reserved(&upper)),
     ] {

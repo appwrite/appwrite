@@ -294,7 +294,7 @@ impl Database {
         .await?;
 
         if altering {
-            self.with_retries(|| self.purge_cached_collection(&id), 3, 100).await?;
+            self.purge_committed_collection(&id).await?;
         }
         self.with_retries(
             || async { self.purge_cached_document_internal(METADATA, Some(&id)).await.map(|_| ()) },
@@ -475,7 +475,7 @@ impl Database {
         )
         .await?;
 
-        self.with_retries(|| self.purge_cached_collection(&id), 3, 100).await?;
+        self.purge_committed_collection(&id).await?;
 
         self.trigger(Event::AttributeRename, || Domain::AttributeRenamed {
             collection: id.clone(),
@@ -846,7 +846,7 @@ impl Database {
     /// dispatches [`Event::DocumentPurge`] of the definition, isolated
     /// (`purgeCollectionCaches()`).
     pub(crate) async fn purge_collection_caches(&self, collection: &str) -> Result<()> {
-        self.with_retries(|| self.purge_cached_collection(collection), 3, 100).await?;
+        self.purge_committed_collection(collection).await?;
         self.with_retries(
             || async { self.purge_cached_document_internal(METADATA, Some(collection)).await.map(|_| ()) },
             3,
