@@ -172,6 +172,64 @@ final class DeletesTest extends TestCase
     }
 
     /**
+     * Maintenance jobs can outlive their project: the worker reloads the project by
+     * the payload's ID as an empty Document, and getProjectDB() maps an empty
+     * project to the platform database, so the project cleanups would run there.
+     */
+    public function testMaintenanceForDeletedProjectLeavesPlatformDatabaseUntouched(): void
+    {
+        $collections = Config::getParam('collections', []);
+        foreach (['targets', 'sessions', 'tokens', 'challenges', 'transactions', 'transactionLogs', 'presenceLogs', 'sites', 'deployments', 'migrations', 'rules'] as $id) {
+            $collection = $collections['console'][$id] ?? $collections['projects'][$id];
+            $this->database->createCollection(Collection::create(
+                id: $id,
+                attributes: $collection['attributes'],
+                indexes: $collection['indexes'],
+            ));
+        }
+
+        $this->database->withPreserveDates(true, fn () => $this->database->skipFilters(fn () => $this->database->createDocument('sessions', new Document([
+            '$id' => 'platform-session',
+            '$createdAt' => DateTime::format(new \DateTime('-2 years')),
+            'userInternalId' => '1',
+            'expire' => DateTime::format(new \DateTime('-1 year')),
+        ]))));
+
+        $payload = [
+            'type' => DELETE_TYPE_MAINTENANCE,
+            'project' => ['$id' => 'deleted', '$sequence' => '42'],
+        ];
+        $message = (new Message())->setPayload($payload);
+        $getProjectDB = fn (Document $project): Database => $project->isEmpty()
+            ? $this->database
+            : throw new \LogicException('No project database for ' . $project->getId());
+
+        (new Deletes())->action(
+            message: $message,
+            project: new Document(),
+            dbForPlatform: $this->database,
+            getProjectDB: $getProjectDB,
+            getDatabasesDB: $getProjectDB,
+            deviceForFiles: $this->createStub(Device::class),
+            deviceForFunctions: $this->createStub(Device::class),
+            deviceForSites: $this->createStub(Device::class),
+            deviceForBuilds: $this->createStub(Device::class),
+            telemetry: new NoTelemetry(),
+            certificates: $this->createStub(Certificates::class),
+            executor: $this->createStub(Executor::class),
+            executionRetention: DateTime::format(new \DateTime('-14 days')),
+            executionsRetentionCount: 0,
+            publisherForDeletes: $this->createStub(DeletePublisher::class),
+            publisherForUsage: $this->createStub(UsagePublisher::class),
+            bus: new Bus(),
+            executionStore: $this->createStub(ExecutionStore::class),
+        );
+
+        $session = $this->database->skipFilters(fn () => $this->database->getDocument('sessions', 'platform-session'));
+        $this->assertSame('platform-session', $session->getId(), 'the platform database keeps its expired session');
+    }
+
+    /**
      * The scheduler keeps every schedule in memory and syncs from the rows whose
      * resourceUpdatedAt moved since its last read. A row removed outright never
      * moves, so a deleted project's functions kept firing every minute until
