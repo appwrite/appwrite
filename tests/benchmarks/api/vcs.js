@@ -2,7 +2,7 @@
 // Git provider, in a mix modelled on console traffic. See README.md.
 //
 // An installation only exists once a provider (GitHub, GitLab, Bitbucket,
-// Gitea, Origin) completes its install flow, so the dev stack has none: the
+// Gitea, Origin, Entire) completes its install flow, so the dev stack has none: the
 // installation endpoints that only read Appwrite's database are measured on
 // their not-found path, and those that call the provider are skipped. Webhooks
 // are measured on their rejected-signature path (the provider holds the
@@ -47,12 +47,15 @@ const bench = define({
         { ...authorize('bitbucket'), route: 'GET /v1/vcs/bitbucket/authorize' },
         { ...authorize('gitea'), route: 'GET /v1/vcs/gitea/authorize' },
         { ...authorize('origin'), route: 'GET /v1/vcs/origin/authorize' },
+        { ...authorize('entire'), route: 'GET /v1/vcs/entire/authorize' },
         { ...events('github'), route: 'POST /v1/vcs/github/events', weight: 4 },
         { ...events('gitlab'), route: 'POST /v1/vcs/gitlab/events' },
         { ...events('bitbucket'), route: 'POST /v1/vcs/bitbucket/events' },
         { ...events('gitea'), route: 'POST /v1/vcs/gitea/events' },
         // Without a webhook-id header, Origin's delivery is rejected before its signing keys are fetched.
         { ...events('origin'), route: 'POST /v1/vcs/origin/events' },
+        // Without a bearer JWT, Entire's delivery is refused before its issuer's keys are fetched.
+        { ...events('entire'), route: 'POST /v1/vcs/entire/events' },
     ],
     skipped: [
         { skipped: 'GET /v1/vcs/github/callback', reason: 'completes the install flow with the provider (exchanges its code or verifies its receipt)' },
@@ -60,6 +63,7 @@ const bench = define({
         { skipped: 'GET /v1/vcs/bitbucket/callback', reason: 'completes the install flow with the provider (exchanges its code or verifies its receipt)' },
         { skipped: 'GET /v1/vcs/gitea/callback', reason: 'completes the install flow with the provider (exchanges its code or verifies its receipt)' },
         { skipped: 'GET /v1/vcs/origin/callback', reason: 'completes the install flow with the provider (exchanges its code or verifies its receipt)' },
+        { skipped: 'GET /v1/vcs/entire/callback', reason: 'completes the install flow with the provider (exchanges its code or verifies its receipt)' },
         { skipped: 'GET /v1/vcs/installations/:installationId/namespaces', reason: 'lists the installation\'s namespaces from its provider' },
         { skipped: 'POST /v1/vcs/github/installations/:installationId/detections', reason: 'reads the repository\'s files from GitHub to detect its runtime or framework' },
         { skipped: 'GET /v1/vcs/github/installations/:installationId/providerRepositories', reason: 'reads the installation\'s repositories from GitHub' },
