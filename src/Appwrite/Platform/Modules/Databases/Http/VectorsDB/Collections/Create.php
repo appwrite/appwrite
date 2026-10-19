@@ -106,8 +106,10 @@ class Create extends CollectionAction
         /** @var Database $dbForDatabases */
         $dbForDatabases = $getDatabasesDB($database);
 
+        $databaseKey = 'database_' . $database->getSequence();
+
         try {
-            $collection = $dbForProject->createDocument('database_' . $database->getSequence(), new Document([
+            $collection = $dbForProject->createDocument($databaseKey, new Document([
                 '$id' => $collectionId,
                 'databaseInternalId' => $database->getSequence(),
                 'databaseId' => $databaseId,
@@ -127,6 +129,8 @@ class Create extends CollectionAction
         } catch (NotFoundException) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
+
+        $collectionKey = $databaseKey . '_collection_' . $collection->getSequence();
 
         $collections = (Config::getParam('collections', [])['vectorsdb'] ?? [])['collections'] ?? [];
         $attributes = [
@@ -155,12 +159,32 @@ class Create extends CollectionAction
                 }
             }
             $dbForDatabases->createCollection(Collection::create(
-                id: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                id: $collectionKey,
                 attributes: $attributes,
                 indexes: $indexes,
                 permissions: $permissions,
                 documentSecurity: $documentSecurity,
             ));
+        } catch (DuplicateException) {
+            $dbForProject->deleteDocument($databaseKey, $collection->getId());
+            throw new Exception($this->getDuplicateException());
+        } catch (IndexException) {
+            $dbForProject->deleteDocument($databaseKey, $collection->getId());
+            throw new Exception($this->getInvalidIndexException());
+        } catch (LimitException) {
+            $dbForProject->deleteDocument($databaseKey, $collection->getId());
+            throw new Exception($this->getLimitException());
+        } catch (\Throwable $e) {
+            // The row is written before the collection so its sequence can name it, so a
+            // refusal here leaves the row and nothing else. Left behind, the caller is told
+            // the create failed while the row survives, and retrying the same id fails as a
+            // duplicate.
+            $dbForProject->deleteDocument($databaseKey, $collection->getId());
+            throw $e;
+        }
+
+        // Past here the backing collection exists too, so a failure has to take both.
+        try {
             $attributeDocuments = \array_map(function (Attribute $attribute) use ($database, $collection, $databaseId, $collectionId) {
                 return new Document([
                     '$id' => Id::custom($database->getSequence() . '_' . $collection->getSequence() . '_' . $attribute->key),
@@ -206,11 +230,17 @@ class Create extends CollectionAction
                 $dbForProject->createDocuments('indexes', $indexDocuments);
             }
         } catch (DuplicateException) {
+            $this->cleanup($dbForProject, $dbForDatabases, $databaseKey, $collectionKey, $collection->getId());
             throw new Exception($this->getDuplicateException());
         } catch (IndexException) {
+            $this->cleanup($dbForProject, $dbForDatabases, $databaseKey, $collectionKey, $collection->getId());
             throw new Exception($this->getInvalidIndexException());
         } catch (LimitException) {
+            $this->cleanup($dbForProject, $dbForDatabases, $databaseKey, $collectionKey, $collection->getId());
             throw new Exception($this->getLimitException());
+        } catch (\Throwable $e) {
+            $this->cleanup($dbForProject, $dbForDatabases, $databaseKey, $collectionKey, $collection->getId());
+            throw $e;
         }
 
         $queueForEvents

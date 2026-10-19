@@ -417,23 +417,4 @@ class Create extends Action
         ];
     }
 
-    protected function cleanup(
-        Database $dbForProject,
-        Database $dbForDatabases,
-        string $databaseId,
-        string $collectionId,
-        string $collectionDocumentId
-    ): void {
-        try {
-            $dbForDatabases->deleteCollection($collectionId);
-        } catch (\Throwable) {
-            // Ignore cleanup errors for collection deletion
-        }
-
-        try {
-            $dbForProject->deleteDocument($databaseId, $collectionDocumentId);
-        } catch (\Throwable) {
-            // Ignore cleanup errors for document deletion
-        }
-    }
 }

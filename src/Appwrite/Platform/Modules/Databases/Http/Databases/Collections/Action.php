@@ -118,4 +118,31 @@ abstract class Action extends DatabasesAction
         $document->setAttribute('bytesUsed', $adapter->getAttributeWidth($document));
         return $document;
     }
+
+    /**
+     * Undo a create that failed after the backing collection was made.
+     *
+     * The metadata row is written first so its sequence can name the collection, which leaves
+     * a window where both exist but the schema documents behind them do not. The caller is
+     * told the create failed, so nothing it can still see should survive it.
+     */
+    protected function cleanup(
+        Database $dbForProject,
+        Database $dbForDatabases,
+        string $databaseId,
+        string $collectionId,
+        string $collectionDocumentId
+    ): void {
+        try {
+            $dbForDatabases->deleteCollection($collectionId);
+        } catch (\Throwable) {
+            // Ignore cleanup errors for collection deletion
+        }
+
+        try {
+            $dbForProject->deleteDocument($databaseId, $collectionDocumentId);
+        } catch (\Throwable) {
+            // Ignore cleanup errors for document deletion
+        }
+    }
 }
