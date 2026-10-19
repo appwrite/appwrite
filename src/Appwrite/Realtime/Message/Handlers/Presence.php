@@ -81,7 +81,9 @@ class Presence extends Action
             'userId' => $user->getId(),
             'source' => 'realtime',
             'status' => $status,
-            'expiresAt' => DateTime::format((new \DateTime())->modify('+30 days')),
+            // Backstop for a hard crash that fires no onClose (the heartbeat handles network loss).
+            // Short so an orphaned row reads offline within a day instead of 30 (appwrite/appwrite#14343).
+            'expiresAt' => DateTime::format((new \DateTime())->modify('+1 day')),
             'hostname' => \gethostname() ?: null,
         ];
         if ($metadata !== null) {

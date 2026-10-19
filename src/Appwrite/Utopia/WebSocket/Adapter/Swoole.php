@@ -23,6 +23,13 @@ class Swoole extends SwooleAdapter
         // since a worker holding thousands of connections needs every second.
         $this->config['reload_async'] = true;
         $this->config['max_wait_time'] = 15;
+
+        // Close a socket that sends nothing for longer than the idle time, so a silently dead
+        // client (network loss, or a peer that vanished without a FIN) runs onClose and releases
+        // its presence instead of lingering until expiry. Clients ping every ~20s, well within
+        // the idle window, so a live connection is never cut (appwrite/appwrite#14343).
+        $this->config['heartbeat_check_interval'] = 30;
+        $this->config['heartbeat_idle_time'] = 60;
     }
 
     public function onWorkerExit(callable $callback): self
