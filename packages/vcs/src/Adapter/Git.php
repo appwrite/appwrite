@@ -12,7 +12,6 @@ use Utopia\VCS\Adapter;
 
 abstract class Git extends Adapter
 {
-    #[\Override]
     protected string $endpoint;
 
     protected string $accessToken;
@@ -22,7 +21,6 @@ abstract class Git extends Adapter
      *
      * @var array<string, string>
      */
-    #[\Override]
     protected $headers = ['content-type' => 'application/json'];
 
     public function __construct(protected Cache $cache)
