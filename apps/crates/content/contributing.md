@@ -129,3 +129,47 @@ RESULTS=tests/benchmarks/results/users.json bash tests/benchmarks/users-compare.
 - Raise PostgreSQL's `max_connections`. PHP's workers hold one connection each, which alone uses up the default of 100 under load.
 
 Run it on dedicated hardware before and after every performance change, and attach the report to the pull request.
+
+## Work on this site
+
+This site lives in `apps/crates`, a TanStack Start app. Nothing on it is written by hand except this guide and the changelog: every page is generated from the crates themselves into `apps/crates/data`, which is not committed. Generate the data, then start the app:
+
+```bash
+bin/compat crates
+cd apps/crates
+bun install
+bun run dev
+```
+
+The app serves on <http://localhost:3200>. Generation reads PHP signatures in the `appwrite-dev` image; without Docker the pages are generated without them. Run `bin/compat crates` again after you change a crate, and after every merge, so the site shows what the branch holds.
+
+To change what a page says, change its source, not the app:
+
+| On the site | Where it comes from |
+|---|---|
+| A library's overview | the crate's `//!` docs in `src/lib.rs` |
+| Getting started | `guide.md` next to the crate's `Cargo.toml`: one `## ` section per task, each with a Rust example |
+| Modules and items | the module and item doc comments |
+| Examples | Rust code blocks in doc comments, run as doctests |
+| Category | `[package.metadata.utopia]` in the crate's `Cargo.toml`, titles in `crates/categories.json` |
+| Changelog | one Markdown file per entry in `apps/crates/content/changelog/`, with `title`, `date`, an optional `tag` and comma-separated `packages` in its frontmatter |
+| This page | `apps/crates/content/contributing.md`, one section per `## ` heading |
+
+The [site's README](https://github.com/appwrite/appwrite/blob/main/apps/crates/README.md) maps every page to its source. Before you open a pull request that touches the app, type-check and build it:
+
+```bash
+cd apps/crates
+bun run check
+bun run build
+```
+
+`bun run build` also renders each library's share card into `public/og/` (not committed); `bun run og` renders them alone.
+
+## Track the move from PHP
+
+The Migration dashboard is generated like the rest of the site, from the results committed in the repository: compat cases, `bench.json`, `build.json`, E2E runs and Appwrite benchmarks, each written by its `--write` command above. Two of its tabs are written by hand, in `apps/crates/content`:
+
+- `tasks.json` is the task board. Each task has an `id`, a `title`, an `area`, a `status` (`todo`, `progress`, `blocked` or `done`), an `updated` time and a `note` saying where it stands. Update it whenever a task changes status, along with the file's own `updated` time.
+- `facts.json` is the project in numbers, with its summary, sections of facts, timeline and lessons. Update it with each milestone, with figures you have measured or counted, never estimates.
+
+A finished milestone also gets a changelog entry tagged `Migration`, which can link to the [task board](/migration/tasks) and the [facts](/migration/facts). Run `bin/compat appwrite` to regenerate only the Appwrite migration (`data/appwrite.json`); it needs neither Docker nor a dev stack.
