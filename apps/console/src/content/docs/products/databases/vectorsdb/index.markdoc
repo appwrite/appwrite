@@ -1,0 +1,73 @@
+---
+layout: article
+title: VectorsDB
+description: Store vector embeddings and run similarity search with Appwrite VectorsDB to power semantic search, recommendations, and other AI features.
+---
+
+Appwrite VectorsDB lets you store vector embeddings and run similarity search over them.
+A collection is created with a fixed `dimension`, every document holds an `embeddings` vector of that length plus optional `metadata`, and an HNSW index keeps similarity search fast as your data grows.
+
+{% info title="Looking for file storage?" %}
+Databases store data, if you need to store files like images, PDFs or videos, use [Appwrite Storage](/docs/products/storage).
+{% /info %}
+
+You organize data into databases, collections, and documents, the same way you do across Appwrite Databases. What sets VectorsDB apart is the fixed schema built for vectors and the ability to generate text embeddings and search by similarity.
+
+{% arrow_link href="/docs/products/databases/vectorsdb/quick-start" %}
+Quick start
+{% /arrow_link %}
+
+# Key concepts {% #key-concepts %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/vectorsdb/databases" title="Databases" %}
+Create and manage vector databases, the largest organizational unit.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/vectorsdb/collections" title="Collections" %}
+Created with a required `dimension`, the length of the vectors they hold, plus an optional `metadata` object per document.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/vectorsdb/documents" title="Documents" %}
+Store one embedding under `embeddings` and any associated JSON under `metadata`.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/vectorsdb/embeddings" title="Embeddings" %}
+Generate embeddings from text with built-in models, without a separate embedding service.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/vectorsdb/permissions" title="Permissions" %}
+Control access at the collection and document level.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/vectorsdb/queries" title="Queries" %}
+Filter documents by their `metadata` with comparison, string, and logical operators.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/vectorsdb/order" title="Order" %}
+Sort results by metadata fields.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/vectorsdb/backups" title="Backups" %}
+Schedule backup policies and restore from any backup.
+{% /cards_item %}
+{% /cards %}
+
+# Guides {% #guides %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/vectorsdb/vector-search" title="Vector search" %}
+Create an HNSW index on `embeddings`, then rank documents by cosine, dot product, or Euclidean distance.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/vectorsdb/pagination" title="Pagination" %}
+Page through results with offset or cursor pagination.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/vectorsdb/transactions" title="Transactions" %}
+Stage operations and commit or roll them back atomically.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/vectorsdb/bulk-operations" title="Bulk operations" %}
+Create, update, upsert, or delete many documents in one request.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/vectorsdb/timestamp-overrides" title="Timestamp overrides" %}
+Set custom creation and update timestamps during imports.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/vectorsdb/csv-imports" title="CSV imports" %}
+Import documents from CSV files.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/vectorsdb/csv-exports" title="CSV exports" %}
+Export collections to CSV files.
+{% /cards_item %}
+{% /cards %}

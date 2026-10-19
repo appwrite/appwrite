@@ -9,6 +9,6 @@ parameters:
 
 services:
     -
-        class: Utopia\PHPStan\DisallowAssertEqualsExtension
+        class: Utopia\Validator\PHPStan\DisallowAssertEqualsExtension
         tags:
             - phpstan.restrictedMethodUsageExtension

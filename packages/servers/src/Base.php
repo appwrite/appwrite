@@ -3,7 +3,7 @@
 namespace Utopia\Servers;
 
 use Utopia\DI\Container;
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 abstract class Base
 {

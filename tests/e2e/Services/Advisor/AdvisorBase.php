@@ -3,7 +3,7 @@
 namespace Tests\E2E\Services\Advisor;
 
 use Tests\E2E\Client;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 trait AdvisorBase
 {
@@ -48,7 +48,7 @@ trait AdvisorBase
 
     public function testGetReportMissing(): void
     {
-        $missing = $this->getReport(ID::unique());
+        $missing = $this->getReport(Id::unique());
 
         $this->assertSame(404, $missing['headers']['status-code']);
         $this->assertSame('report_not_found', $missing['body']['type']);
@@ -56,7 +56,7 @@ trait AdvisorBase
 
     public function testListInsightsMissingReport(): void
     {
-        $missing = $this->listInsights(ID::unique());
+        $missing = $this->listInsights(Id::unique());
 
         $this->assertSame(404, $missing['headers']['status-code']);
         $this->assertSame('report_not_found', $missing['body']['type']);
@@ -64,7 +64,7 @@ trait AdvisorBase
 
     public function testGetInsightMissingReport(): void
     {
-        $missing = $this->getInsight(ID::unique(), ID::unique());
+        $missing = $this->getInsight(Id::unique(), Id::unique());
 
         $this->assertSame(404, $missing['headers']['status-code']);
         $this->assertSame('report_not_found', $missing['body']['type']);
@@ -73,7 +73,7 @@ trait AdvisorBase
     public function testReportsCreateAndUpdateNotExposed(): void
     {
         $create = $this->client->call(Client::METHOD_POST, '/reports', $this->serverHeaders(), [
-            'reportId' => ID::unique(),
+            'reportId' => Id::unique(),
             'type' => 'audit',
             'title' => 'Read-only check',
             'targetType' => 'sites',
@@ -81,7 +81,7 @@ trait AdvisorBase
         ]);
         $this->assertSame(404, $create['headers']['status-code']);
 
-        $update = $this->client->call(Client::METHOD_PATCH, '/reports/' . ID::unique(), $this->serverHeaders(), [
+        $update = $this->client->call(Client::METHOD_PATCH, '/reports/' . Id::unique(), $this->serverHeaders(), [
             'title' => 'Read-only check',
         ]);
         $this->assertSame(404, $update['headers']['status-code']);
@@ -89,7 +89,7 @@ trait AdvisorBase
 
     public function testDeleteReportMissing(): void
     {
-        $delete = $this->client->call(Client::METHOD_DELETE, '/reports/' . ID::unique(), $this->serverHeaders());
+        $delete = $this->client->call(Client::METHOD_DELETE, '/reports/' . Id::unique(), $this->serverHeaders());
         $this->assertSame(404, $delete['headers']['status-code']);
         $this->assertSame('report_not_found', $delete['body']['type']);
     }
@@ -98,7 +98,7 @@ trait AdvisorBase
     {
         $create = $this->client->call(
             Client::METHOD_POST,
-            '/reports/' . ID::unique() . '/insights',
+            '/reports/' . Id::unique() . '/insights',
             $this->serverHeaders(),
             []
         );
@@ -106,7 +106,7 @@ trait AdvisorBase
 
         $update = $this->client->call(
             Client::METHOD_PATCH,
-            '/reports/' . ID::unique() . '/insights/' . ID::unique(),
+            '/reports/' . Id::unique() . '/insights/' . Id::unique(),
             $this->serverHeaders(),
             ['status' => 'dismissed']
         );
@@ -114,7 +114,7 @@ trait AdvisorBase
 
         $delete = $this->client->call(
             Client::METHOD_DELETE,
-            '/reports/' . ID::unique() . '/insights/' . ID::unique(),
+            '/reports/' . Id::unique() . '/insights/' . Id::unique(),
             $this->serverHeaders()
         );
         $this->assertSame(404, $delete['headers']['status-code']);

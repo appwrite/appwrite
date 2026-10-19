@@ -1,0 +1,188 @@
+---
+layout: post
+title: GPT-6 Sol and Luna launch at 50% lower API prices
+description: OpenAI launches GPT-6 Sol and Luna with stronger coding,
+  factuality, and agent performance, plus 50% lower API prices than GPT-5.6.
+date: 2026-09-24
+timeToRead: 5
+author: aishwari
+category: news
+featured: false
+unlisted: true
+cover: /images/blog/gpt-6-sol-and-luna-launch-at-50-lower-api-prices/cover.avif
+faqs:
+  - question: What are GPT-6 Sol and GPT-6 Luna?
+    answer: GPT-6 Sol and GPT-6 Luna are lower-cost models in OpenAI’s GPT-6 family.
+      Sol is designed for complex coding, agentic workflows, and professional
+      tasks, while Luna is optimized for focused, high-volume workloads. GPT-6
+      Astra remains the most capable model in the family.
+  - question: How much do GPT-6 Sol and GPT-6 Luna cost?
+    answer: GPT-6 Sol costs $2 per million input tokens and $10 per million output
+      tokens. GPT-6 Luna costs $0.10 per million input tokens and $0.50 per
+      million output tokens. Both are priced 50% lower than their GPT-5.6
+      predecessors based on OpenAI’s comparison pricing.
+  - question: What is the difference between GPT-6 Sol and GPT-6 Luna?
+    answer: GPT-6 Sol is built for more demanding workloads such as coding agents,
+      business automation, and complex professional tasks. GPT-6 Luna
+      prioritizes cost efficiency and works well for high-volume tasks such as
+      classification, extraction, routine agent steps, and well-specified
+      implementation work.
+  - question: Should I use GPT-6 Astra, Sol, or Luna?
+    answer: Use GPT-6 Astra for the hardest tasks where maximum capability matters
+      most, GPT-6 Sol for demanding coding and agent workflows, and GPT-6 Luna
+      for high-volume, well-defined tasks where cost efficiency is the priority.
+---
+GPT-6 Sol and GPT-6 Luna are OpenAI's new mid-tier and low-cost GPT-6 models, and the headline is the price: both cost 50% less in the API than their GPT-5.6 predecessors. OpenAI [introduced GPT-6 Sol and Luna](https://openai.com/index/introducing-gpt-6-sol-and-luna/) a few weeks after GPT-6 Astra, its flagship. You call them through the OpenAI API with the model ids `gpt-6-sol` and `gpt-6-luna`.
+
+Most teams do not run every request on the flagship. Agents, coding loops, and background jobs run on whatever tier the budget allows, and that is exactly where Sol and Luna land. This post covers GPT-6 Sol and Luna pricing, benchmarks, caching changes, availability, and how to pick the right tier if you build agents on Appwrite.
+
+# What are GPT-6 Sol and GPT-6 Luna?
+
+**GPT-6 Sol and GPT-6 Luna are faster, cheaper models in the GPT-6 family, trained with similar methods to GPT-6 Astra.** They bring Astra's gains in professional work, factuality, coding, computer use, and alignment to lower price points. Astra remains OpenAI's best model across the board.
+
+The GPT-6 lineup has three tiers, with Astra at the top. GPT-6 Astra is OpenAI's flagship model, while Sol and Luna bring many of its advances in professional work, factuality, coding, computer use, and alignment to faster, more affordable models.
+
+OpenAI says improvements in caching and inference let it serve these models at lower cost, and it is passing those savings on through the API price cut. If you want context on the previous generation, see our [GPT-5.6 launch breakdown](/blog/post/gpt-56-is-here-openais-efficient-frontier-model).
+
+# GPT-6 Sol and Luna API pricing: 50% lower than GPT-5.6
+
+**GPT-6 Sol costs $2 per million input tokens and $10 per million output tokens. GPT-6 Luna costs $0.10 per million input tokens and $0.50 per million output tokens.** OpenAI compares these against GPT-5.6 promotional pricing, which already included the [July 2026 price cuts](/blog/post/openai-cuts-gpt-56-pricing-and-adds-fast-mode-to-the-api).
+
+| Model | Input | Output | Price reduction |
+| --- | --- | --- | --- |
+| GPT-5.6 Sol → GPT-6 Sol | $4 → $2 | $20 → $10 | 50% cheaper |
+| GPT-5.6 Luna → GPT-6 Luna | $0.20 → $0.10 | $1.20 → $0.50 | 50% cheaper |
+
+Prices are per 1 million tokens.
+
+*Source: OpenAI's* [GPT-6 Sol and Luna announcement](https://openai.com/index/introducing-gpt-6-sol-and-luna/). *Full rates are on the* [OpenAI API pricing page](https://platform.openai.com/docs/pricing).
+
+Luna's output price drops slightly more than half, from $1.20 to $0.50. For output-heavy workloads like code generation and long-form summaries, that gap is worth factoring into your cost estimates.
+
+# GPT-6 Sol and Luna benchmarks for agents and professional work
+
+OpenAI's pitch is cost per task, not raw score. Most comparisons pair a GPT-6 Sol or Luna result with a competitor's result and a cost ratio.
+
+## AutomationBench results
+
+[AutomationBench](https://zapier.com/) tests agents on end-to-end business workflows using 47 tools across sales, marketing, operations, support, finance, and HR.
+
+| Model (and effort) | Score | Cost per task |
+| --- | --- | --- |
+| GPT-6 Sol (xhigh) | 33.2% | $0.27 |
+| GPT-6 Astra (low) | 30.3% | 3.9x GPT-6 Sol |
+| Claude Opus 5 (max) | 26.9% | 11.1x GPT-6 Sol |
+| Claude Fable 5.1 w/ Opus 5 Fallback (max) | 31.4% | >8.9x GPT-6 Sol (fallback cost not reported) |
+
+*The Claude Fable 5.1 cost omits Opus 5 fallbacks, which OpenAI says occurred on about 40% of tasks, so its real cost is higher.*
+
+Three results stand out:
+
+* **GPT-6 Sol at xhigh effort beats Claude Opus 5 at max effort** at 9% of Opus 5's cost per task.
+* **GPT-6 Sol beats low-effort GPT-6 Astra**, the flagship, at about a quarter of the cost.
+* **GPT-6 Luna at high effort improves on GPT-5.6 Luna** by 5.4 percentage points at 58% lower cost per task.
+
+## Agents' Last Exam results
+
+Agents' Last Exam evaluates agents on long-horizon, economically valuable tasks across 55 sub-industries. **GPT-6 Sol at max effort scores 56.4%**, above Claude Opus 5's highest score in the evaluation, at 60% lower cost per task.
+
+# GPT-6 Sol and Luna for coding agents
+
+Coding is where lower prices matter most, because coding agents burn tokens for hours. OpenAI shared that valued at API prices, daily token usage at the company has passed $600 for the median researcher and $7,000 for researchers at the 90th percentile. At that scale, per-token price decides how ambitious a team can be with [Codex](/docs/tooling/ai/agents/codex) or any other agent.
+
+| Benchmark             | Model (effort)   | Result                                           | Cost per task                                 |
+| --------------------- | ---------------- | ------------------------------------------------ | --------------------------------------------- |
+| FrontierCode 1.1 Main | GPT-6 Sol        | Matches Claude Fable 5.1 (xhigh)                 | Much lower than Fable 5.1                     |
+| DeepSWE 1.1           | GPT-6 Sol (max)  | 68.8%, vs 69.9% for Claude Fable 5 (xhigh)       | About 80% lower than Fable 5                  |
+| DeepSWE 1.1 | GPT-6 Luna (max) | 66.6%, comparable to Opus 5 and Fable 5 (medium) on this benchmark | 93% lower than Opus 5, 96% lower than Fable 5 |
+
+**Note:** OpenAI's benchmark comparisons use Claude Opus 5, Claude Fable 5, and Claude Fable 5.1. They do not include Claude Opus 5.5, which Anthropic released on September 22, 2026.
+
+**Benchmark caveat:** These results reflect specific evaluation settings and should not be read as evidence that GPT-6 Luna will match Claude Fable 5 across real-world coding workloads. Performance can vary significantly by task, context, tools, and prompting.
+
+What these numbers mean in practice:
+
+* **FrontierCode grades mergeability, not just correctness.** It scores test quality, scope discipline, code style, and adherence to codebase standards. GPT-6 Sol improves substantially over GPT-5.6 Sol here.
+* **GPT-6 Sol lands within 1.1 points of Claude Fable 5 on DeepSWE.** DeepSWE tests original, long-horizon software engineering tasks in real codebases.
+* **GPT-6 Luna scores competitively on DeepSWE.** At max effort, its benchmark score is comparable to Claude Opus 5 and Fable 5 at medium effort, at a small fraction of the reported cost. Real-world performance will vary by task, workflow, and prompting.
+
+# GPT-6 Sol and Luna for computer use
+
+GPT-6 Astra remains OpenAI's best model for computer use, but Sol and Luna are more cost-efficient than their predecessors. On OSWorld 2.0, which tests long-horizon computer-use workflows across everyday and professional tasks:
+
+* **GPT-6 Sol at xhigh effort scores 60.5%**, similar to Claude Opus 5 at medium effort (60.3%), at about 80% lower cost per task.
+* **GPT-6 Luna at max effort beats GPT-5.6 Sol at medium effort** at one tenth of its cost.
+
+# GPT-6 Sol factuality and collaboration style
+
+**GPT-6 Sol makes about half as many factual mistakes as GPT-5.6 Sol** on OpenAI's internal factuality evaluation, approaching Astra-level reliability at much lower cost. The evaluation uses de-identified ChatGPT conversations where users flagged factual errors from a prior model, so it is deliberately harder than typical use. GPT-6 Luna also improves, and at higher effort levels it matches GPT-5.6 Sol at about a hundredth of the cost.
+
+Sol and Luna also inherit Astra's communication style, which OpenAI expects to be most noticeable in technical and coding conversations:
+
+* More clarity and less jargon.
+* Fewer odd turns of phrase and fewer low-value details.
+* Slightly shorter answers without losing substance.
+* More upfront reporting on what the model did and did not check.
+
+In OpenAI's example, a user asks for a bento layout and a page slider. GPT-6 Sol states its plan, checks whether React is needed before changing the setup, and reports that it tested desktop, narrow mobile screens, and browser back navigation. That last part is the useful change for developers reviewing agent output.
+
+# GPT-6 prompt caching improvements for agents
+
+**GPT-6 prompt caching delivers higher cache hit rates by default, with a 90% discount on cached input-token reads.** For agents that resend the same system prompt, tool definitions, and conversation history on every turn, this matters as much as the headline price cut.
+
+OpenAI also added more control over caching:
+
+* **Monitor and diagnose.** The Prompt Caching Dashboard shows how much input is cached and how that changes over time, while the diagnostics tool explains missed caching opportunities.
+* **Adjust reasoning effort and tool availability without breaking cache.** Developers can raise or lower reasoning effort and enable or disable tools while preserving earlier context for cache reuse.
+* **Optimize which prefixes get cached.** Explicit breakpoints let developers choose where cached prompt prefixes end for more control over cache reuse.
+
+The effort and tool changes are the practical win. Agents often switch effort levels or tool sets mid-conversation, and previously that could invalidate the cached prefix. GitHub reports these improvements cut the share of prompt tokens needing fresh processing by more than 50% across billions of requests, helping Copilot respond faster. See OpenAI's [prompt caching guide](https://platform.openai.com/docs/guides/prompt-caching) for implementation details.
+
+# GPT-6 Sol and Luna safety and alignment
+
+GPT-6 Sol and Luna build on the alignment work introduced with Astra. Both show improvements over their GPT-5.6 counterparts in OpenAI's alignment evaluations, including **lower rates of misleading claims about their coding work**.
+
+On OpenAI's internal coding deception evaluation, which uses tasks deliberately selected to elicit dishonesty, GPT-6 Sol's deception rate is 1.3%, down from 10.4% for GPT-5.6 Sol, while GPT-6 Luna's rate is 2.8%, down from 9.5% for GPT-5.6 Luna. These evaluations deliberately test situations designed to elicit problematic behavior and should not be interpreted as failure rates in typical use. The full results are in the GPT-6 Sol and Luna system card.
+
+# Where GPT-6 Sol and Luna are available
+
+GPT-6 Sol and Luna are rolling out gradually, so they may not appear in every surface right away.
+
+GPT-6 Sol and GPT-6 Luna are available in ChatGPT Work and Codex for Plus, Pro, Business, Enterprise, and Edu users. Free and Go users can access GPT-6 Luna in the desktop app. The models are not yet available in Chat.
+
+In the OpenAI API, they are available as `gpt-6-sol` and `gpt-6-luna`.
+
+OpenAI notes that its evaluations ran in a research environment or through the API, which may differ slightly from production ChatGPT. Competitor scores come from publicly available reports.
+
+# Should you use GPT-6 Astra, Sol, or Luna?
+
+**Use GPT-6 Sol as the default for demanding agent and coding work, GPT-6 Luna for high-volume well-specified tasks, and GPT-6 Astra only when the task needs the best possible result.** The benchmarks above show Sol matching or beating models that cost several times more, so defaulting everything to Astra is now hard to justify on cost.
+
+* **Choose GPT-6 Astra** for the hardest, highest-stakes work where an uncompromising result matters more than cost.
+* **Choose GPT-6 Sol** for coding agents, business workflow automation, and professional tasks where you need strong results with room to iterate.
+* **Choose GPT-6 Luna** for high-volume and cost-sensitive workloads where you do not need Astra-level capability.
+* **Mix tiers in one workflow.** A coding agent can plan with Sol and hand scoped changes to Luna to implement and test.
+* **Tune effort and caching before switching models.** Effort changes no longer break the cache, so run routine steps at low effort and raise it only for hard turns.
+
+Vendor benchmarks are a starting point. Run your own evaluation set on a representative slice of traffic before moving production workloads.
+
+# Build GPT-6 Sol and Luna agents on Appwrite
+
+Cheaper Sol and Luna tokens make it realistic to run agentic features at scale. Those agents still need a backend to authenticate users, store state, persist files between steps, and run server-side logic.
+
+[Appwrite](/) is an open source backend that covers all of it in one project: [Auth](/docs/products/auth), [Databases](/docs/products/databases), [Storage](/docs/products/storage), [Functions](/docs/products/functions), [Messaging](/docs/products/messaging), and [Sites](/docs/products/sites) for deploying the frontend next to them. Run it on managed Cloud or self-host it. To call GPT-6 Luna or Sol from server-side code, see [AI in Appwrite Functions](/docs/tooling/ai/ai-in-functions).
+
+If you build with Codex, the [Appwrite plugin for Codex](/blog/post/appwrite-codex-plugin-hosted-mcp) bundles the hosted [Appwrite MCP server](/docs/tooling/ai/mcp-servers) and [Appwrite Skills](/docs/tooling/ai/skills). Install it from the ChatGPT desktop app or the Codex CLI, sign in with OAuth, and your GPT-6 Sol agent writes real SDK calls against a backend that already exists instead of guessing at one.
+
+[Create a free Appwrite project](https://cloud.appwrite.io/), install the plugin, and ask Codex running GPT-6 Sol to build an authentication flow and database schema against it. The long, repeated MCP tool definitions in that loop are exactly where GPT-6's 90% cached-input discount pays off.
+
+# Resources
+
+* [Appwrite plugin for Codex](/blog/post/appwrite-codex-plugin-hosted-mcp)
+* [Codex integration docs](/docs/tooling/ai/agents/codex)
+* [Appwrite MCP server docs](/docs/tooling/ai/mcp-servers)
+* [AI in Appwrite Functions](/docs/tooling/ai/ai-in-functions)
+* [GPT-5.6 launch breakdown](/blog/post/gpt-56-is-here-openais-efficient-frontier-model)
+* [Create a free Appwrite project](https://appwrite.io/sign-up)
+* [Appwrite docs](/docs)
+* [Join the Appwrite Discord](/discord)

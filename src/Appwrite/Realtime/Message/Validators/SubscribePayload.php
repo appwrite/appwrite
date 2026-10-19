@@ -3,7 +3,7 @@
 namespace Appwrite\Realtime\Message\Validators;
 
 use Appwrite\Utopia\Database\Validator\CustomId;
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 class SubscribePayload extends Validator
 {

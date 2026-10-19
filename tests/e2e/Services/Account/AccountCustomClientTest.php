@@ -5,16 +5,20 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Account;
 
 use Appwrite\Tests\Retry;
+use Swoole\Coroutine;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\DateTime;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Document;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 use function sleep;
+use function Swoole\Coroutine\run;
 
 final class AccountCustomClientTest extends Scope
 {
@@ -98,7 +102,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -168,7 +172,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -435,7 +439,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'phone' => $number,
         ]);
 
@@ -678,7 +682,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
         ]);
 
@@ -1483,7 +1487,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $data['email'],
             'password' => $data['password'],
             'name' => $data['name'],
@@ -1701,7 +1705,7 @@ final class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
-            'userId' => ID::custom('ewewe'),
+            'userId' => Id::custom('ewewe'),
             'secret' => $verification,
         ]);
 
@@ -2109,6 +2113,28 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
+            'email' => $email,
+            'url' => 'http://remotehost\@localhost/recovery',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'url' => 'http://user@localhost/recovery',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
             'email' => 'not-found@localhost.test',
             'url' => 'http://localhost/recovery',
         ]);
@@ -2127,7 +2153,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $blockedEmail,
             'password' => 'password',
             'name' => 'Blocked User',
@@ -2206,7 +2232,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::custom('ewewe'),
+            'userId' => Id::custom('ewewe'),
             'secret' => $recovery,
             'password' => $newPassword,
         ]);
@@ -2237,7 +2263,7 @@ final class AccountCustomClientTest extends Scope
         $email = uniqid() . 'concurrent-recovery@localhost.test';
 
         $response = $this->client->call(Client::METHOD_POST, '/account', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => 'password',
         ]);
@@ -2300,7 +2326,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -2349,7 +2375,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'otpuser3@appwrite.io'
         ]);
 
@@ -2358,6 +2384,7 @@ final class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['$createdAt']);
         $this->assertNotEmpty($response['body']['userId']);
         $this->assertNotEmpty($response['body']['expire']);
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
         $this->assertEmpty($response['body']['secret']);
         $this->assertEmpty($response['body']['phrase']);
         $this->assertStringContainsStringIgnoringCase('New login detected on '. $this->getProject()['name'], $lastEmail['text']);
@@ -2388,6 +2415,7 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals($userId, $response['body']['userId']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['expire']);
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
         $this->assertEmpty($response['body']['secret']);
 
         $lastEmailId = $lastEmail['id'];
@@ -2979,7 +3007,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
         ]);
@@ -3198,6 +3226,194 @@ final class AccountCustomClientTest extends Scope
         $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?secret=', $response['headers']['location']);
     }
 
+    public function testCreateOAuth2TokenStartedByServer(): void
+    {
+        $provider = 'mock';
+        $projectId = $this->getProject()['$id'];
+        $sessionCookieKey = 'a_session_' . $projectId;
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => $provider,
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // The browser is signed in to another account, which has no identities.
+        $email = \uniqid() . 'user@localhost.test';
+        $password = 'password';
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $signedInUserId = $response['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $signedInSessionId = $response['body']['$id'];
+        $signedInCookieHeader = ['cookie' => $sessionCookieKey . '=' . $response['cookies'][$sessionCookieKey]];
+
+        // The app's server starts the flow, as a server SDK does, and keeps only the Location;
+        // the nonce cookie set on that response never reaches the browser.
+        $response = $this->client->call(Client::METHOD_GET, '/account/tokens/oauth2/' . $provider, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+            'state' => 'app-state-123',
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $oauthClient = new Client();
+        $oauthClient->setEndpoint('');
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $callbackUrl = $response['headers']['location'];
+
+        // The browser completes the flow with its session cookie but no nonce cookie.
+        $response = $oauthClient->call(Client::METHOD_GET, $callbackUrl, $signedInCookieHeader, followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $signedInCookieHeader, followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?', $response['headers']['location']);
+
+        // The token belongs to the provider identity's own account, not the signed-in one.
+        \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $successParams);
+        $this->assertNotEmpty($successParams['userId']);
+        $this->assertNotEmpty($successParams['secret']);
+        $this->assertNotEquals($signedInUserId, $successParams['userId']);
+        $this->assertSame('app-state-123', $successParams['state']);
+
+        // The app exchanges the token for a session.
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => $successParams['userId'],
+            'secret' => $successParams['secret'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($successParams['userId'], $response['body']['userId']);
+
+        // The signed-in account keeps its session and gained no identity.
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $signedInCookieHeader));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($signedInSessionId, $response['body']['$id']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/identities', array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $signedInCookieHeader));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+    }
+
+    public function testCreateOAuth2TokenReturnsStateOnFailure(): void
+    {
+        $provider = 'mock';
+        $projectId = $this->getProject()['$id'];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => $provider,
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Outside printable ASCII is refused up front, so the callback's state limit always fits.
+        $response = $this->client->call(Client::METHOD_GET, '/account/tokens/oauth2/' . $provider, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+            'state' => \str_repeat('😀', 256),
+        ], followRedirects: false);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // The longest allowed state, made of characters JSON escaping doubles, still round-trips.
+        $state = \str_repeat('"/\\', 85) . 'x';
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/tokens/oauth2/' . $provider, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+            'state' => $state,
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        // The provider sends the user back with an error instead of a code.
+        \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $providerParams);
+
+        $oauthClient = new Client();
+        $oauthClient->setEndpoint('');
+
+        $response = $oauthClient->call(Client::METHOD_GET, 'http://localhost/v1/account/sessions/oauth2/callback/' . $provider . '/' . $projectId . '?' . \http_build_query([
+            'error' => 'access_denied',
+            'state' => $providerParams['state'],
+        ]), followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/failure?', $response['headers']['location']);
+
+        \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $failureParams);
+        $this->assertSame($state, $failureParams['state']);
+        $this->assertSame('user_oauth2_provider_error', \json_decode($failureParams['error'], true)['type']);
+    }
+
     public function testCreateOidcOAuth2Token(): void
     {
         $provider = 'oidc';
@@ -3292,7 +3508,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -3371,7 +3587,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -3450,7 +3666,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -3712,7 +3928,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password
         ]);
@@ -3892,6 +4108,8 @@ final class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['providerAccessToken']);
         $this->assertEquals('tuvwxyz', $response['body']['providerRefreshToken']);
         $this->assertNotEquals($initialExpiry, $response['body']['providerAccessTokenExpiry']);
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['providerAccessTokenExpiry']));
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
 
         // Verify that updateSession refetched the photo and the served avatar content changed
         $refreshedPhotoResponse = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
@@ -3936,7 +4154,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
         ]);
@@ -3981,6 +4199,48 @@ final class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
+    public function testCreateAccountAfterOAuth2AccountDelete(): void
+    {
+        // A fresh project keeps the fixed mock OAuth email away from parallel tests.
+        $projectId = $this->getProject(true)['$id'];
+        $sessionCookieKey = 'a_session_' . $projectId;
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => 'mock',
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->followMockOAuth2Flow('/account/sessions/oauth2/mock', ['x-appwrite-project' => $projectId]);
+        $this->assertArrayHasKey($sessionCookieKey, $response['cookies']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $sessionCookieKey . '=' . $response['cookies'][$sessionCookieKey],
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => Id::unique(),
+            'email' => 'useroauth@localhost.test',
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
     }
 
     /**
@@ -4193,7 +4453,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => 'password',
         ]);
@@ -4243,6 +4503,8 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($existingUserId, $response['body']['$id']);
         $this->assertEquals($email, $response['body']['email']);
+        // The provider vouched for the address, so the adopted account needs no verification email
+        $this->assertTrue($response['body']['emailVerification']);
 
         // Clean up - delete the user
         $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $existingUserId, array_merge([
@@ -4387,7 +4649,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
         ]);
@@ -4570,7 +4832,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'phone' => $number,
         ]);
 
@@ -4578,6 +4840,7 @@ final class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEmpty($response['body']['secret']);
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
 
         $userId = $response['body']['userId'];
 
@@ -4607,7 +4870,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique()
+            'userId' => Id::unique()
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -4635,7 +4898,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . 'token-conflict@localhost.test',
         ]);
 
@@ -4682,7 +4945,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::custom('ewewe'),
+            'userId' => Id::custom('ewewe'),
             'secret' => $token,
         ]);
 
@@ -4927,7 +5190,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'userId' => ID::custom('ewewe'),
+            'userId' => Id::custom('ewewe'),
             'secret' => $secret,
         ]);
 
@@ -4965,6 +5228,7 @@ final class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['$createdAt']);
         $this->assertEmpty($response['body']['secret']);
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
 
         $tokenCreatedAt = $response['body']['$createdAt'];
 
@@ -5056,7 +5320,7 @@ final class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
-            'userId' => ID::custom('ewewe'),
+            'userId' => Id::custom('ewewe'),
             'secret' => $secret,
         ]);
 
@@ -5088,7 +5352,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             // 'url' => 'http://localhost/magiclogin',
         ]);
@@ -5129,7 +5393,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'url' => 'localhost/magiclogin',
         ]);
@@ -5141,7 +5405,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'url' => 'http://remotehost/magiclogin',
         ]);
@@ -5163,7 +5427,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'phrase' => true
         ]);
@@ -5204,7 +5468,7 @@ final class AccountCustomClientTest extends Scope
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ]), [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => $email,
                 'url' => 'http://' . $host . '/magiclogin',
             ]);
@@ -5222,7 +5486,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'url' => 'http://127.0.0.1:5173/magiclogin',
         ]);
@@ -5254,7 +5518,7 @@ final class AccountCustomClientTest extends Scope
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ]), [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => 'magic-loopback-' . uniqid() . '-' . \time() . '@appwrite.io',
                 'url' => 'http://' . $host . '/magiclogin',
             ]);
@@ -5275,7 +5539,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
         ]);
 
@@ -5330,7 +5594,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::custom('ewewe'),
+            'userId' => Id::custom('ewewe'),
             'secret' => $token,
         ]);
 
@@ -5439,7 +5703,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'identifier' => 'test-identifier',
         ]);
 
@@ -5454,7 +5718,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'identifier' => 'test-identifier-2',
         ]);
 
@@ -5480,7 +5744,7 @@ final class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'providerType' => 'push',
             'identifier' => 'test-identifier-taken',
         ]);
@@ -5515,7 +5779,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'identifier' => 'test-identifier-before-rotation',
         ]);
 
@@ -5527,7 +5791,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'identifier' => 'test-identifier-after-rotation',
         ]);
 
@@ -5552,12 +5816,390 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'identifier' => 'test-identifier-after-rotation',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertEquals($targetId, $response['body']['$id']);
+    }
+
+    /**
+     * Apple's SDK registers its APNs token with the app's bundle ID and APNs environment instead of a
+     * provider ID. The target lands on the oldest enabled APNs provider for that app and environment,
+     * next to an Appwrite push provider that would otherwise compete as the default.
+     */
+    public function testCreatePushTargetRoutesApnsByBundleAndEnvironment(): void
+    {
+        $session = $this->createDeviceSession();
+        $bundleId = 'io.appwrite.e2e.' . Id::unique();
+        $this->createAppwritePushProvider();
+        $this->createApnsProvider($bundleId, sandbox: true, enabled: false);
+        $sandbox = $this->createApnsProvider($bundleId, sandbox: true);
+        $this->createApnsProvider($bundleId, sandbox: true);
+        $production = $this->createApnsProvider($bundleId, sandbox: false);
+
+        /**
+         * Test for SUCCESS
+         */
+        $target = $this->createPushTarget($session, ['bundleId' => $bundleId, 'environment' => 'sandbox']);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $this->assertSame($sandbox, $target['body']['providerId'], 'expected the oldest enabled sandbox provider');
+
+        $target = $this->createPushTarget($session, ['bundleId' => $bundleId, 'environment' => 'production']);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $this->assertSame($production, $target['body']['providerId']);
+
+        // An explicit provider ID wins over the bundle and environment.
+        $target = $this->createPushTarget($session, ['providerId' => $production, 'bundleId' => $bundleId, 'environment' => 'sandbox']);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $this->assertSame($production, $target['body']['providerId']);
+
+        // No APNs provider for the bundle keeps the target on the default provider, as before.
+        $target = $this->createPushTarget($session, ['bundleId' => 'io.appwrite.e2e.unknown.' . Id::unique(), 'environment' => 'production']);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $this->assertEmpty($target['body']['providerId']);
+
+        /**
+         * Test for FAILURE
+         */
+        $target = $this->createPushTarget($session, ['bundleId' => $bundleId, 'environment' => 'development']);
+        $this->assertEquals(400, $target['headers']['status-code']);
+    }
+
+    /**
+     * The SDK re-registers through PUT on a 409, so PUT moves an APNs target when the same install
+     * switches build (a debug build moving to TestFlight), and leaves a non-APNs provider alone.
+     */
+    public function testUpdatePushTargetReroutesApnsEnvironment(): void
+    {
+        $session = $this->createDeviceSession();
+        $bundleId = 'io.appwrite.e2e.' . Id::unique();
+        $sandbox = $this->createApnsProvider($bundleId, sandbox: true);
+        $production = $this->createApnsProvider($bundleId, sandbox: false);
+
+        $target = $this->createPushTarget($session, ['bundleId' => $bundleId, 'environment' => 'sandbox']);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $this->assertSame($sandbox, $target['body']['providerId']);
+        $targetId = $target['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $target = $this->updatePushTarget($session, $targetId, ['bundleId' => $bundleId, 'environment' => 'production']);
+        $this->assertEquals(200, $target['headers']['status-code']);
+        $this->assertSame($production, $target['body']['providerId']);
+
+        // No match leaves the current provider in place rather than clearing it.
+        $target = $this->updatePushTarget($session, $targetId, ['bundleId' => 'io.appwrite.e2e.unknown.' . Id::unique(), 'environment' => 'sandbox']);
+        $this->assertEquals(200, $target['headers']['status-code']);
+        $this->assertSame($production, $target['body']['providerId']);
+
+        // A target on a provider other than APNs is never moved.
+        $appwrite = $this->createAppwritePushProvider();
+        $target = $this->createPushTarget($session, ['providerId' => $appwrite]);
+        $this->assertEquals(201, $target['headers']['status-code']);
+
+        $target = $this->updatePushTarget($session, $target['body']['$id'], ['bundleId' => $bundleId, 'environment' => 'sandbox']);
+        $this->assertEquals(200, $target['headers']['status-code']);
+        $this->assertSame($appwrite, $target['body']['providerId']);
+
+        /**
+         * Test for FAILURE
+         */
+        $target = $this->updatePushTarget($session, $targetId, ['bundleId' => $bundleId, 'environment' => 'development']);
+        $this->assertEquals(400, $target['headers']['status-code']);
+    }
+
+    /**
+     * Routing follows a bundle ID changed through the APNs provider update endpoint, which used to store
+     * it under the wrong credentials key, leaving delivery and routing on the old one.
+     */
+    public function testCreatePushTargetRoutesApnsByUpdatedBundleId(): void
+    {
+        $session = $this->createDeviceSession();
+        $before = 'io.appwrite.e2e.' . Id::unique();
+        $after = 'io.appwrite.e2e.' . Id::unique();
+        $providerId = $this->createApnsProvider($before, sandbox: false);
+
+        $update = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/apns/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bundleId' => $after,
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $update['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $target = $this->createPushTarget($session, ['bundleId' => $after, 'environment' => 'production']);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $this->assertSame($providerId, $target['body']['providerId']);
+
+        /**
+         * Test for FAILURE
+         */
+        $target = $this->createPushTarget($session, ['bundleId' => $before, 'environment' => 'production']);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $this->assertEmpty($target['body']['providerId'], 'the replaced bundle ID still routes to the provider');
+    }
+
+    /**
+     * APNs provider updates before #14589 stored a changed bundle ID under `credentials.bundle`, leaving
+     * `bundleId` on the one from creation. The API can no longer write that, so the row is seeded directly.
+     * Routing, the API and the next provider save all treat the legacy value as the current bundle ID.
+     */
+    public function testPushTargetRoutesApnsByLegacyBundleKey(): void
+    {
+        $session = $this->createDeviceSession();
+        $before = 'io.appwrite.e2e.' . Id::unique();
+        $after = 'io.appwrite.e2e.' . Id::unique();
+        $providerId = $this->createApnsProvider($before, sandbox: false);
+
+        $credentials = $this->providerCredentials($providerId);
+        $credentials['bundle'] = $after;
+        $this->providerCredentials($providerId, $credentials);
+
+        /**
+         * Test for SUCCESS
+         */
+        // Create routes by the legacy value.
+        $target = $this->createPushTarget($session, ['bundleId' => $after, 'environment' => 'production']);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $this->assertSame($providerId, $target['body']['providerId']);
+
+        // Update re-routes a providerless target by it too.
+        $other = $this->createDeviceSession();
+        $legacy = $this->createPushTarget($other, []);
+        $this->assertEquals(201, $legacy['headers']['status-code']);
+        $this->assertEmpty($legacy['body']['providerId']);
+
+        $updated = $this->updatePushTarget($other, $legacy['body']['$id'], ['bundleId' => $after, 'environment' => 'production']);
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertSame($providerId, $updated['body']['providerId']);
+
+        // The API shows the legacy value as bundleId and hides the stray key.
+        $provider = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(200, $provider['headers']['status-code']);
+        $this->assertSame($after, $provider['body']['credentials']['bundleId']);
+        $this->assertArrayNotHasKey('bundle', $provider['body']['credentials']);
+
+        // Any provider save repairs the row: the legacy value moves into bundleId and the stray key goes.
+        $save = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/apns/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => 'apns-renamed',
+        ]);
+        $this->assertEquals(200, $save['headers']['status-code']);
+
+        $credentials = $this->providerCredentials($providerId);
+        $this->assertSame($after, $credentials['bundleId']);
+        $this->assertArrayNotHasKey('bundle', $credentials);
+
+        /**
+         * Test for FAILURE
+         */
+        // The bundle ID from creation no longer routes to the provider.
+        $target = $this->createPushTarget($this->createDeviceSession(), ['bundleId' => $before, 'environment' => 'production']);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $this->assertEmpty($target['body']['providerId']);
+    }
+
+    /**
+     * An install that registered before routing holds a providerless target. Its next registration,
+     * now routed, adopts that target instead of leaving it live on the default provider beside a new one.
+     */
+    public function testCreatePushTargetAdoptsLegacyProviderlessTarget(): void
+    {
+        $bundleId = 'io.appwrite.e2e.' . Id::unique();
+        $production = $this->createApnsProvider($bundleId, sandbox: false);
+
+        /**
+         * Test for SUCCESS
+         */
+        // A rotated token with a fresh target ID moves the legacy target onto the APNs provider.
+        $session = $this->createDeviceSession();
+        $legacy = $this->createPushTarget($session, []);
+        $this->assertEquals(201, $legacy['headers']['status-code']);
+        $this->assertEmpty($legacy['body']['providerId']);
+
+        $target = $this->createPushTarget($session, ['bundleId' => $bundleId, 'environment' => 'production']);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $this->assertSame($legacy['body']['$id'], $target['body']['$id']);
+        $this->assertSame($production, $target['body']['providerId']);
+
+        $live = \array_filter($this->getSessionTargets($session), fn (array $target) => !$target['expired']);
+        $this->assertCount(1, $live, 'the legacy target stayed live beside the routed one');
+
+        // An unchanged token with a fresh target ID resolves to the legacy target instead of a 409.
+        $session = $this->createDeviceSession();
+        $legacy = $this->createPushTarget($session, []);
+        $this->assertEquals(201, $legacy['headers']['status-code']);
+
+        $target = $this->createPushTarget($session, [
+            'identifier' => $legacy['body']['identifier'],
+            'bundleId' => $bundleId,
+            'environment' => 'production',
+        ]);
+        $this->assertEquals(201, $target['headers']['status-code']);
+        $this->assertSame($legacy['body']['$id'], $target['body']['$id']);
+        $this->assertSame($production, $target['body']['providerId']);
+    }
+
+    /**
+     * An APNs provider with placeholder credentials. Creating and routing targets never contacts Apple.
+     *
+     * @return string the provider id
+     */
+    private function createApnsProvider(string $bundleId, bool $sandbox, bool $enabled = true): string
+    {
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/apns', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => Id::unique(),
+            'name' => 'apns-' . ($sandbox ? 'sandbox' : 'production'),
+            'authKey' => 'placeholder-auth-key',
+            'authKeyId' => 'placeholder-auth-key-id',
+            'teamId' => 'placeholder-team-id',
+            'bundleId' => $bundleId,
+            'sandbox' => $sandbox,
+            'enabled' => $enabled,
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
+        $this->assertSame($enabled, $provider['body']['enabled']);
+
+        return $provider['body']['$id'];
+    }
+
+    /** @return string the provider id */
+    private function createAppwritePushProvider(): string
+    {
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/appwrite', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => Id::unique(),
+            'name' => 'appwrite-push',
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        return $provider['body']['$id'];
+    }
+
+    /**
+     * Read a provider's stored credentials, or replace them when $credentials is given, straight from
+     * the project database (decrypted on read, encrypted on write).
+     *
+     * @param  array<string, mixed>|null  $credentials
+     * @return array<string, mixed>
+     */
+    private function providerCredentials(string $providerId, ?array $credentials = null): array
+    {
+        $stored = [];
+        $access = function () use ($providerId, $credentials, &$stored): void {
+            global $register;
+            $authorization = new Authorization();
+            $factory = $register->get('databaseFactory')($register->get('pools'), $register->get('cache'), $authorization);
+
+            $authorization->skip(function () use ($factory, $providerId, $credentials, &$stored): void {
+                $dbForProject = $factory->project($factory->platform()->getDocument('projects', $this->getProject()['$id']));
+                $provider = $credentials === null
+                    ? $dbForProject->getDocument('providers', $providerId)
+                    : $dbForProject->updateDocument('providers', $providerId, new Document(['credentials' => $credentials]));
+                $stored = $provider->getAttribute('credentials', []);
+            });
+        };
+
+        if (Coroutine::getCid() >= 0) {
+            $access();
+        } else {
+            run($access);
+        }
+
+        return $stored;
+    }
+
+    /**
+     * A new user with one session, standing in for one device install, so routing tests don't adopt the
+     * shared session's targets.
+     *
+     * @return array<string, string> client headers for that session
+     */
+    private function createDeviceSession(): array
+    {
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $userId = Id::unique();
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => $userId,
+            'email' => 'apns-' . $userId . '@appwrite.io',
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', $server);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        return [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-session' => $session['body']['secret'],
+        ];
+    }
+
+    /**
+     * @param  array<string, string>  $session headers from createDeviceSession()
+     * @return array<int, array<string, mixed>>
+     */
+    private function getSessionTargets(array $session): array
+    {
+        $account = $this->client->call(Client::METHOD_GET, '/account', $session);
+        $this->assertEquals(200, $account['headers']['status-code']);
+
+        return \array_values(\array_filter($account['body']['targets'], fn (array $target) => $target['providerType'] === 'push'));
+    }
+
+    /**
+     * Register a push target for the session user with a fresh token, as the Apple SDK does.
+     *
+     * @param  array<string, string>  $session headers from createDeviceSession()
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
+    private function createPushTarget(array $session, array $params): array
+    {
+        return $this->client->call(Client::METHOD_POST, '/account/targets/push', $session, \array_merge([
+            'targetId' => Id::unique(),
+            'identifier' => 'apns-token-' . Id::unique(),
+        ], $params));
+    }
+
+    /**
+     * @param  array<string, string>  $session headers from createDeviceSession()
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
+    private function updatePushTarget(array $session, string $targetId, array $params): array
+    {
+        return $this->client->call(Client::METHOD_PUT, '/account/targets/' . $targetId . '/push', $session, \array_merge([
+            'identifier' => 'apns-token-' . Id::unique(),
+        ], $params));
     }
 
     public function testMFARecoveryCodeChallenge(): void
@@ -5796,6 +6438,7 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(201, $challenge['headers']['status-code']);
         $this->assertNotEmpty($challenge['body']['$id']);
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $challenge['body']['expire']));
 
         $challengeVerification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $headers, [
             'challengeId' => $challenge['body']['$id'],
@@ -6431,13 +7074,13 @@ final class AccountCustomClientTest extends Scope
         $jwtHeaders = $this->createJWTHeaders($data['session']);
 
         $first = $this->client->call(Client::METHOD_POST, '/account/targets/push', $jwtHeaders, [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'identifier' => 'jwt-identifier-before-rotation-' . $data['id'],
         ]);
         $this->assertEquals(201, $first['headers']['status-code']);
 
         $second = $this->client->call(Client::METHOD_POST, '/account/targets/push', $jwtHeaders, [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'identifier' => 'jwt-identifier-after-rotation-' . $data['id'],
         ]);
         $this->assertEquals(201, $second['headers']['status-code']);
@@ -6460,7 +7103,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => 'password',
         ]);
@@ -6859,6 +7502,18 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertEquals($existing['id'], $response['body']['userId']);
+
+        // The provider vouched for the address, so the adopted account needs no verification email
+        $projectId = $this->getProject()['$id'];
+        $account = $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $response['cookies']['a_session_' . $projectId],
+        ]);
+
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertTrue($account['body']['emailVerification']);
 
         /**
          * Test for FAILURE - unverified provider email cannot link to an existing account
@@ -7328,6 +7983,7 @@ final class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['secret']);
         $this->assertEmpty($response['body']['phrase']);
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
 
         $lastEmail = $this->getLastEmailByAddress($email);
         $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
@@ -7399,7 +8055,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -7494,7 +8150,7 @@ final class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'cookie' => 'a_session_' . $projectId . '=' . $session,
         ]), [
-            'userId' => ID::custom('doesnotexist'),
+            'userId' => Id::custom('doesnotexist'),
             'secret' => $otp,
         ]);
 
@@ -7542,7 +8198,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -7567,6 +8223,7 @@ final class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['secret']);
         $this->assertEmpty($response['body']['phrase']);
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
 
         $lastEmail = $this->getLastEmailByAddress($email);
         $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
@@ -7642,7 +8299,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -7752,7 +8409,7 @@ final class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ]), [
-            'userId' => ID::custom('doesnotexist'),
+            'userId' => Id::custom('doesnotexist'),
             'secret' => $otp,
             'password' => 'new-password-otp',
         ]);
@@ -8037,5 +8694,136 @@ final class AccountCustomClientTest extends Scope
         $this->assertIsArray($claims, 'Stored ID token payload is not JSON.');
 
         return $claims;
+    }
+
+    public function testListAccountMemberships(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $data['session'],
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        $team1 = $this->client->call(Client::METHOD_POST, '/teams', $headers, [
+            'teamId' => Id::unique(),
+            'name' => 'Account Memberships Team A',
+        ]);
+        $this->assertEquals(201, $team1['headers']['status-code']);
+
+        $team2 = $this->client->call(Client::METHOD_POST, '/teams', $headers, [
+            'teamId' => Id::unique(),
+            'name' => 'Account Memberships Team B',
+        ]);
+        $this->assertEquals(201, $team2['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, [
+            'queries' => [Query::orderAsc('$createdAt')->toString()],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(2, $response['body']['total']);
+        $this->assertCount(2, $response['body']['memberships']);
+        $this->assertEquals($team1['body']['$id'], $response['body']['memberships'][0]['teamId']);
+        $this->assertEquals('Account Memberships Team A', $response['body']['memberships'][0]['teamName']);
+        $this->assertEquals($data['id'], $response['body']['memberships'][0]['userId']);
+        $this->assertContains('owner', $response['body']['memberships'][0]['roles']);
+
+        $firstMembershipId = $response['body']['memberships'][0]['$id'];
+        $secondMembershipId = $response['body']['memberships'][1]['$id'];
+
+        $filtered = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, [
+            'queries' => [Query::equal('teamId', [$team1['body']['$id']])->toString()],
+        ]);
+        $this->assertEquals(200, $filtered['headers']['status-code']);
+        $this->assertEquals(1, $filtered['body']['total']);
+        $this->assertCount(1, $filtered['body']['memberships']);
+        $this->assertEquals($team1['body']['$id'], $filtered['body']['memberships'][0]['teamId']);
+
+        $sorted = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, [
+            'queries' => [Query::orderDesc('$createdAt')->toString()],
+        ]);
+        $this->assertEquals(200, $sorted['headers']['status-code']);
+        $this->assertEquals(2, $sorted['body']['total']);
+        $this->assertEquals($secondMembershipId, $sorted['body']['memberships'][0]['$id']);
+        $this->assertEquals($firstMembershipId, $sorted['body']['memberships'][1]['$id']);
+
+        $limited = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, [
+            'queries' => [Query::orderAsc('$createdAt')->toString(), Query::limit(1)->toString()],
+        ]);
+        $this->assertEquals(200, $limited['headers']['status-code']);
+        $this->assertEquals(2, $limited['body']['total']);
+        $this->assertCount(1, $limited['body']['memberships']);
+        $this->assertEquals($firstMembershipId, $limited['body']['memberships'][0]['$id']);
+
+        $offset = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, [
+            'queries' => [Query::orderAsc('$createdAt')->toString(), Query::offset(1)->toString()],
+        ]);
+        $this->assertEquals(200, $offset['headers']['status-code']);
+        $this->assertEquals(2, $offset['body']['total']);
+        $this->assertCount(1, $offset['body']['memberships']);
+        $this->assertEquals($secondMembershipId, $offset['body']['memberships'][0]['$id']);
+
+        $cursored = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, [
+            'queries' => [
+                Query::orderAsc('$createdAt')->toString(),
+                Query::cursorAfter(new Document(['$id' => $firstMembershipId]))->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $cursored['headers']['status-code']);
+        $this->assertEquals(2, $cursored['body']['total']);
+        $this->assertCount(1, $cursored['body']['memberships']);
+        $this->assertEquals($secondMembershipId, $cursored['body']['memberships'][0]['$id']);
+
+        $noTotal = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, ['total' => false]);
+        $this->assertEquals(200, $noTotal['headers']['status-code']);
+        $this->assertEquals(0, $noTotal['body']['total']);
+        $this->assertCount(2, $noTotal['body']['memberships']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/account/memberships', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, [
+            'queries' => [Query::equal('roles', ['owner'])->toString()],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, [
+            'queries' => [Query::cursorAfter(new Document(['$id' => 'nonexistent-membership']))->toString()],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_cursor_not_found', $response['body']['type']);
+
+        $otherData = $this->createFreshAccountWithSession();
+        $otherHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $otherData['session'],
+        ];
+        $otherTeam = $this->client->call(Client::METHOD_POST, '/teams', $otherHeaders, [
+            'teamId' => Id::unique(),
+            'name' => 'Other Team',
+        ]);
+        $this->assertEquals(201, $otherTeam['headers']['status-code']);
+        $otherMemberships = $this->client->call(Client::METHOD_GET, '/account/memberships', $otherHeaders);
+        $otherMembershipId = $otherMemberships['body']['memberships'][0]['$id'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, [
+            'queries' => [Query::cursorAfter(new Document(['$id' => $otherMembershipId]))->toString()],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_cursor_not_found', $response['body']['type']);
     }
 }

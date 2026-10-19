@@ -2,9 +2,10 @@
 
 namespace Appwrite\Utopia\Database\Validator;
 
-use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
-use Utopia\Validator;
+use Utopia\Query\Schema\IndexType;
+use Utopia\Validator\Text;
+use Utopia\Validator\Validator;
 
 class Indexes extends Validator
 {
@@ -14,18 +15,19 @@ class Indexes extends Validator
      * @var array<string> Supported index types
      */
     protected array $supportedTypes = [
-        Database::INDEX_KEY,
-        Database::INDEX_FULLTEXT,
-        Database::INDEX_UNIQUE,
-        Database::INDEX_SPATIAL,
+        IndexType::Key->value,
+        IndexType::Fulltext->value,
+        IndexType::Unique->value,
+        IndexType::Spatial->value,
+        IndexType::Trigram->value,
     ];
 
     /**
      * @var array<string> Supported orders
      */
     protected array $supportedOrders = [
-        Database::ORDER_ASC,
-        Database::ORDER_DESC,
+        'ASC',
+        'DESC',
     ];
 
     /**
@@ -65,6 +67,7 @@ class Indexes extends Validator
         }
 
         $keyValidator = new Key();
+        $descriptionValidator = new Text(1024, 0);
         $keys = [];
 
         foreach ($value as $i => $index) {
@@ -105,6 +108,12 @@ class Indexes extends Validator
             // Validate type
             if (!in_array($index['type'], $this->supportedTypes)) {
                 $this->message = "Invalid type for index '" . $index['key'] . "': " . $index['type'];
+                return false;
+            }
+
+            // Validate description if provided
+            if (isset($index['description']) && !$descriptionValidator->isValid($index['description'])) {
+                $this->message = "Invalid 'description' value for index '" . $index['key'] . "': " . $descriptionValidator->getDescription();
                 return false;
             }
 

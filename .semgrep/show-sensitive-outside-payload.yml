@@ -1,0 +1,22 @@
+rules:
+  - id: php.appwrite.show-sensitive-outside-payload
+    message: >
+      Response::showSensitive() is only for building queue / event payloads
+      (->setPayload(..., sensitive: [...])), where the sensitive keys are
+      stripped before fan-out. Using it for a client response returns
+      fields that models normally hide from non-privileged callers.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/**"
+        - "**/app/controllers/**"
+        - "**/app/init/**"
+      exclude:
+        - "**/src/Appwrite/Utopia/Response.php"
+    patterns:
+      - pattern: $RESPONSE->showSensitive(...)
+      - pattern-not-inside: $QUEUE->setPayload(...)

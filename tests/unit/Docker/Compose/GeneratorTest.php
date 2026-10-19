@@ -24,7 +24,6 @@ final class GeneratorTest extends TestCase
     {
         $compose = $this->render([
             'database' => 'mariadb',
-            'enableAssistant' => false,
         ]);
 
         $this->assertArrayHasKey('mariadb', $compose['services']);
@@ -45,19 +44,6 @@ final class GeneratorTest extends TestCase
         $this->assertArrayHasKey('appwrite-postgresql', $compose['volumes']);
         $this->assertArrayNotHasKey('appwrite-mongodb', $compose['volumes']);
         $this->assertArrayNotHasKey('appwrite-mariadb', $compose['volumes']);
-    }
-
-    public function testTogglesAssistantService(): void
-    {
-        $disabled = $this->render([
-            'enableAssistant' => false,
-        ]);
-        $enabled = $this->render([
-            'enableAssistant' => true,
-        ]);
-
-        $this->assertArrayNotHasKey('appwrite-assistant', $disabled['services']);
-        $this->assertArrayHasKey('appwrite-assistant', $enabled['services']);
     }
 
     public function testKeepsProductionWorkers(): void

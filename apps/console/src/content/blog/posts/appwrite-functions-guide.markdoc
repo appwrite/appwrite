@@ -1,0 +1,218 @@
+---
+layout: post
+title: "Appwrite Functions: everything you need to know"
+description: A complete guide to Appwrite Functions covering triggers, execution modes, deployment options, permissions, and practical use cases for server-side logic.
+date: 2026-03-24
+lastUpdated: 2026-06-29
+cover: /images/blog/appwrite-functions-guide/cover.avif
+timeToRead: 5
+author: aditya-oberai
+category: products, tutorials
+featured: false
+unlisted: true
+faqs:
+  - question: "What are Appwrite Functions?"
+    answer: "Appwrite Functions are self-contained units of code that run inside isolated containers, triggered by HTTP requests, events, schedules, or SDK calls. They support runtimes like Node.js, Python, Go, Dart, PHP, and Ruby, and integrate directly with the rest of your Appwrite project for server-side logic without managing servers."
+  - question: "What trigger types do Appwrite Functions support?"
+    answer: "Appwrite Functions support five trigger types: HTTP requests to a unique URL, SDK execution from client or server SDKs, server events (like row creation or user signup), scheduled cron executions as frequent as once per minute, and delayed executions that run at a future time via the SDK delay parameter."
+  - question: "What is the difference between synchronous and asynchronous executions?"
+    answer: "Synchronous executions make the caller wait for the function and have a hard 30-second timeout, which suits API endpoints and short tasks. Asynchronous executions return an execution ID immediately and run in the background, which suits long-running tasks like batch processing, email sending, or upload post-processing."
+  - question: "How can I deploy Appwrite Functions?"
+    answer: "You can upload a compressed archive directly via the Appwrite Console or CLI, or you can connect a GitHub, GitLab, or Bitbucket repository for continuous deployment. Git deployment is recommended for production because it gives you version history, automatic redeployment on push, rollback to any previous deployment, and code review via pull requests."
+  - question: "How are environment variables and secrets handled?"
+    answer: "Each function has its own environment variables that are encrypted at rest and injected into the function at runtime. You should always use environment variables for secrets such as third-party API keys instead of hard-coding them, since this keeps credentials out of source control and out of client-visible code."
+  - question: "How do permissions work for executing a function?"
+    answer: "By default, no client can execute a function; you must explicitly grant the execute permission to a role, such as Role.users() or Role.team(TEAM_ID). Server SDK calls with an API key bypass function-level permissions but require the functions.executions.write scope. HTTP calls also go through the permission check."
+---
+
+Every app eventually needs server-side logic that does not fit neatly into a database write or a storage upload. Sending an email after a user signs up, resizing an image after it is uploaded, charging a customer after an order is placed. This is the gap that Appwrite Functions fills.
+
+[Appwrite Functions](/docs/products/functions) run your custom code inside isolated containers, triggered by HTTP requests, events, schedules, or SDK calls. They give you full control over server-side logic without managing servers, and they integrate directly with the rest of your Appwrite project.
+
+# What Appwrite Functions are
+
+Each function is a self-contained unit of code. You define the runtime (Node.js, Python, Go, Dart, PHP, Ruby, and more), write your handler, and deploy. Appwrite wraps it in an isolated container with its own environment variables, its own URL, and its own execution history.
+
+Functions are not long-running services. They start, execute, and stop. For persistent workloads, you would use a separate server. For discrete tasks triggered by an event or a schedule, functions are the right tool.
+
+# Triggers
+
+Appwrite Functions support five trigger types. Choosing the right trigger is the first design decision for any function.
+
+## HTTP requests
+
+Every function gets a unique URL. Any HTTP request to that URL triggers the function. The function receives the full request (method, headers, body, query parameters) and returns a response.
+
+This is the most flexible trigger. Use it to build webhooks, REST endpoints, API proxies, or any server-side endpoint your client needs to call directly.
+
+## SDK execution
+
+Client and server SDKs can trigger a function programmatically:
+
+```js
+import { Functions } from "appwrite";
+
+const functions = new Functions(client);
+
+const execution = await functions.createExecution({
+    functionId: "[FUNCTION_ID]",
+    body: JSON.stringify({ userId: "abc123" }),
+    async: false,
+    path: "/",
+    method: "POST"
+});
+
+console.log(execution.responseBody);
+```
+
+SDK-triggered functions behave identically to HTTP-triggered functions. The difference is that SDK calls go through Appwrite's auth layer, so the function context includes the calling user's session.
+
+## Server events
+
+Appwrite emits events when things happen inside your project: a row is created, a file is uploaded, a user signs up. You can configure a function to fire on any of these events.
+
+Event-triggered functions receive the event name and the full resource payload in the request body. The `x-appwrite-event` header tells the function which event fired.
+
+Examples of events you can react to:
+
+- `databases.[DATABASE_ID].tables.[TABLE_ID].rows.*.create` fires when any row is created in a table
+- `storage.[BUCKET_ID].files.*.create` fires when a file is uploaded
+- `users.*.create` fires when a new user registers
+- `users.*.sessions.*.create` fires on every new login
+
+This is the right trigger for side effects: post-processing uploads, sending notifications, syncing data to external systems.
+
+## Scheduled executions (cron)
+
+Functions can run on a cron schedule, as frequently as once every minute. The cron syntax is standard:
+
+```
+* * * * *   every minute
+0 * * * *   every hour
+0 9 * * 1   every Monday at 9am UTC
+```
+
+Use scheduled functions for recurring jobs: daily reports, cleanup tasks, cache refreshes, subscription renewals, and anything else that needs to run on a timer rather than in response to an event.
+
+## Delayed executions
+
+SDK execution supports a delay parameter that schedules the function to run at a future time. This is useful for deferred processing, follow-up emails a set number of hours after a user action, or any task that should happen later rather than immediately.
+
+# Execution modes: synchronous vs asynchronous
+
+Every function execution is either synchronous or asynchronous. This matters for how your calling code behaves.
+
+## Synchronous execution
+
+The caller waits for the function to complete and receives the response body directly. Synchronous executions have a hard 30-second timeout. If the function does not complete within 30 seconds, the execution is terminated.
+
+Synchronous mode is the right choice when:
+
+- The caller needs the function's output to proceed
+- The function is fast enough to complete within 30 seconds
+- You are building an API endpoint that must return data
+
+```js
+const execution = await functions.createExecution({
+    functionId: "[FUNCTION_ID]",
+    body,
+    async: false
+});
+// execution.responseBody contains the function's output
+```
+
+## Asynchronous execution
+
+The caller receives an execution ID immediately and does not wait for the function to finish. The function runs in the background. You can check its status later by fetching the execution by ID.
+
+Asynchronous mode is the right choice when:
+
+- The task takes longer than 30 seconds
+- The caller does not need the result immediately
+- You are processing uploads, sending emails, or running batch jobs
+
+```js
+const execution = await functions.createExecution({
+    functionId: "[FUNCTION_ID]",
+    body,
+    async: true
+});
+// execution.status will be "waiting" or "processing"
+// poll later with functions.getExecution({
+//     functionId,
+//     executionId: execution.$id
+// })
+```
+
+HTTP-triggered functions always behave synchronously from the HTTP client's perspective: the connection stays open until the function returns a response or times out.
+
+# Deployment
+
+## Manual deployment
+
+You can upload a compressed archive of your function code directly in the Appwrite Console or via the CLI. This is the fastest way to test a function, but it does not version your code or integrate with your development workflow.
+
+## Deploy from Git
+
+Appwrite Functions support continuous deployment from GitHub, GitLab, and Bitbucket. Connect a repository, specify the branch and build command, and Appwrite automatically deploys a new version every time you push.
+
+Git deployment is the recommended approach for production functions. It gives you:
+
+- Version history tied to your commits
+- Automatic redeployment on push
+- Rollback to any previous deployment
+- Code review via pull requests before deployment
+
+[Deploy from Git docs](/docs/products/functions/deploy-from-git)
+
+## Build commands and environment variables
+
+Each function has its own build command (for installing dependencies and compiling code) and its own set of environment variables. Environment variables are encrypted at rest and injected into the function at runtime. Never hard-code secrets; always use environment variables.
+
+# Permissions
+
+## Client SDK execution
+
+When a client calls a function via the SDK, Appwrite checks whether the function has the `execute` permission for the calling user's role. By default, no client can execute a function. You must explicitly grant execute permission.
+
+To allow all authenticated users to execute a function:
+
+```js
+[Permission.execute(Role.users())]
+```
+
+To restrict execution to a specific team:
+
+```js
+[Permission.execute(Role.team("teamABC"))]
+```
+
+## Server SDK execution
+
+Server SDK calls with an API key bypass function-level permissions, subject to the API key's scope. The API key must have the `functions.executions.write` scope to trigger a function.
+
+## HTTP endpoint execution
+
+Direct HTTP calls to the function URL also go through the permission check. If the function is not publicly executable (`Role.any()`), unauthenticated HTTP calls will be rejected.
+
+# Use cases
+
+**Webhooks.** Functions are natural webhook receivers. Point a Stripe, Twilio, or GitHub webhook at your function URL. The function receives the payload, validates the signature, and updates your Appwrite database.
+
+**Post-processing uploads.** Trigger a function on `storage.*.files.*.create` to resize images, extract metadata, run virus scans, or generate thumbnails immediately after upload.
+
+**Email and notification delivery.** Trigger a function on user creation or order completion to send transactional email via SendGrid, Resend, or any email API. Keep your email credentials in function environment variables.
+
+**Scheduled reports.** Run a function every morning to aggregate the previous day's data, write a summary row, and send a report email to stakeholders.
+
+**Third-party API proxies.** Expose a function as an HTTP endpoint that calls a third-party API with a secret key. Clients call your function; the function calls the external API. API keys never leave the server.
+
+**Data validation and enrichment.** Trigger a function on row creation to validate fields, enrich data from external sources, or enforce business rules that cannot be expressed as database constraints.
+
+# Get started with Appwrite Functions
+
+Appwrite Functions give you server-side execution that integrates directly with your Appwrite project, scales automatically, and requires no server management. Every trigger type, execution mode, and runtime is available on Appwrite Cloud.
+
+- [Appwrite Functions overview](/docs/products/functions)
+- [Function execution docs](/docs/products/functions/execute)
+- [Sign up for Appwrite Cloud](https://cloud.appwrite.io)

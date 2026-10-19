@@ -180,4 +180,21 @@ final class SitesCustomClientTest extends Scope
         $template = $this->getTemplate('invalid-template-id');
         $this->assertEquals(404, $template['headers']['status-code']);
     }
+
+    public function testTemplateDeploymentCannotBeChangedByAProjectUser(): void
+    {
+        ['siteId' => $siteId, 'deploymentId' => $deploymentId] = $this->setupTemplateDeployment();
+
+        $this->assertSame(401, $this->cancelDeployment($siteId, $deploymentId)['headers']['status-code']);
+        $this->assertSame(401, $this->deleteDeployment($siteId, $deploymentId)['headers']['status-code']);
+
+        $deployment = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertSame(200, $deployment['headers']['status-code'], 'A refused user request leaves the deployment in place');
+
+        $this->cleanupSite($siteId);
+    }
 }

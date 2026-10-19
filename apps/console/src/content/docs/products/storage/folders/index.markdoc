@@ -1,0 +1,579 @@
+---
+layout: article
+title: Folders
+description: Organize files in Appwrite Storage buckets with virtual folders. Learn how to upload files into folders, list files by folder, and browse folders.
+---
+
+Appwrite Storage lets you organize the files inside a bucket using virtual folders.
+Folders work like key prefixes in S3-compatible storage services: they are derived from the paths of your files, so you never create or delete folders explicitly.
+
+# How folders work {% #how-folders-work %}
+
+A bucket doesn't store folders as records. Instead, every file has a `folder` attribute, a path like `photos/2026/`, and folders are derived from these paths: a folder exists whenever at least one file's `folder` path places the file inside it.
+For example, uploading a single file with the folder `photos/2026` is what brings both the `photos/` and `photos/2026/` folders into existence.
+
+A file's folder is set once, when the file is uploaded, and defaults to the bucket root (an empty string).
+Folder paths are stored in a canonical form that always ends with a trailing slash, like `photos/2026/`.
+Each file also exposes a computed `key` attribute, which is the file's full virtual path: the folder followed by the file name, like `photos/2026/Pink.png`.
+
+Because folders are derived from files, they exist implicitly. A folder appears as soon as the first file is uploaded into it and disappears when the last file inside it is deleted.
+There are no empty folders, no folder permissions, and no folder metadata to manage.
+
+Unlike in S3, uploading a file with the same name to the same folder does not overwrite the existing file.
+Files are identified by their file ID, so multiple files can share the same `key`.
+
+# Upload files to a folder {% #upload-files-to-a-folder %}
+
+To place a file inside a folder, pass the optional `folder` parameter when [uploading the file](/docs/products/storage/upload-download#create-file).
+Nest folders using `/`, for example `photos/2026`. The trailing slash is optional on input and is added automatically when stored.
+
+{% multicode %}
+  ```client-web
+  import { Client, Storage, ID } from "appwrite";
+
+  const client = new Client()
+      .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+      .setProject('<PROJECT_ID>');
+
+  const storage = new Storage(client);
+
+  const file = await storage.createFile({
+      bucketId: '<BUCKET_ID>',
+      fileId: ID.unique(),
+      file: document.getElementById('uploader').files[0],
+      folder: 'photos/2026'
+  });
+
+  console.log(file.folder); // 'photos/2026/'
+  console.log(file.key);    // 'photos/2026/Pink.png'
+  ```
+
+  ```server-nodejs
+  const sdk = require('node-appwrite');
+  const { InputFile } = require('node-appwrite/file');
+
+  const client = new sdk.Client()
+      .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+      .setProject('<PROJECT_ID>')
+      .setKey('<API_KEY>');
+
+  const storage = new sdk.Storage(client);
+
+  const file = await storage.createFile({
+      bucketId: '<BUCKET_ID>',
+      fileId: sdk.ID.unique(),
+      file: InputFile.fromPath('/path/to/Pink.png', 'Pink.png'),
+      folder: 'photos/2026'
+  });
+
+  console.log(file.folder); // 'photos/2026/'
+  console.log(file.key);    // 'photos/2026/Pink.png'
+  ```
+
+  ```client-flutter
+  import 'package:appwrite/appwrite.dart';
+
+  void main() async {
+    final client = Client()
+        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+        .setProject('<PROJECT_ID>');
+
+    final storage = Storage(client);
+
+    final file = await storage.createFile(
+      bucketId: '<BUCKET_ID>',
+      fileId: ID.unique(),
+      file: InputFile.fromPath(path: './path-to-files/Pink.png', filename: 'Pink.png'),
+      folder: 'photos/2026',
+    );
+  }
+  ```
+
+  ```client-android-kotlin
+  import io.appwrite.Client
+  import io.appwrite.ID
+  import io.appwrite.models.InputFile
+  import io.appwrite.services.Storage
+
+  suspend fun main() {
+      val client = Client(applicationContext)
+          .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+          .setProject("<PROJECT_ID>") // Your project ID
+
+      val storage = Storage(client)
+
+      val file = storage.createFile(
+          bucketId = "<BUCKET_ID>",
+          fileId = ID.unique(),
+          file = InputFile.fromPath("./path-to-files/Pink.png"),
+          folder = "photos/2026",
+      )
+  }
+  ```
+
+  ```client-apple
+  import Appwrite
+
+  func main() async throws {
+      let client = Client()
+          .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+          .setProject("<PROJECT_ID>")
+
+      let storage = Storage(client)
+
+      let file = try await storage.createFile(
+          bucketId: "<BUCKET_ID>",
+          fileId: ID.unique(),
+          file: InputFile.fromBuffer(yourByteBuffer,
+              filename: "Pink.png",
+              mimeType: "image/png"
+          ),
+          folder: "photos/2026"
+      )
+  }
+  ```
+
+  ```client-react-native
+  import { Client, Storage, ID } from 'react-native-appwrite';
+
+  const client = new Client()
+      .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+      .setProject('<PROJECT_ID>');
+
+  const storage = new Storage(client);
+
+  const file = await storage.createFile({
+      bucketId: '<BUCKET_ID>',
+      fileId: ID.unique(),
+      file: {
+          name: 'Pink.png',
+          type: 'image/png',
+          size: 1234567,
+          uri: 'file:///path/to/Pink.png',
+      },
+      folder: 'photos/2026'
+  });
+  ```
+{% /multicode %}
+
+{% info title="Folder naming rules" %}
+Folder paths are `/`-separated segments. A folder path must not start with `/`, must not contain empty, `.`, or `..` segments or control characters, and can be at most 2,048 characters long including the trailing slash.
+{% /info %}
+
+A file's folder can't be changed after upload. To move a file into a different folder, create the file again with the new folder and delete the original.
+
+# List files in a folder {% #list-files-in-a-folder %}
+
+Filter files by folder using [queries](/docs/products/databases/queries) on the `folder` attribute when listing files.
+
+| Goal | Query |
+| ---- | ----- |
+| Files directly inside `photos/2026/` | `Query.equal('folder', ['photos/2026/'])` |
+| Files at the bucket root only | `Query.equal('folder', [''])` |
+| Files anywhere under `photos/`, including nested folders | `Query.startsWith('folder', 'photos/')` |
+
+Query values must match the stored form of the folder path, which always includes the trailing slash.
+For example, `Query.equal('folder', ['photos/2026/'])` matches files in `photos/2026/`, but `Query.equal('folder', ['photos/2026'])` matches nothing.
+
+{% multicode %}
+  ```client-web
+  import { Client, Storage, Query } from "appwrite";
+
+  const client = new Client()
+      .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+      .setProject('<PROJECT_ID>');
+
+  const storage = new Storage(client);
+
+  const result = await storage.listFiles({
+      bucketId: '<BUCKET_ID>',
+      queries: [
+          Query.equal('folder', ['photos/2026/'])
+      ]
+  });
+
+  console.log(result.files);
+  ```
+
+  ```server-nodejs
+  const sdk = require('node-appwrite');
+
+  const client = new sdk.Client()
+      .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+      .setProject('<PROJECT_ID>')
+      .setKey('<API_KEY>');
+
+  const storage = new sdk.Storage(client);
+
+  const result = await storage.listFiles({
+      bucketId: '<BUCKET_ID>',
+      queries: [
+          sdk.Query.equal('folder', ['photos/2026/'])
+      ]
+  });
+
+  console.log(result.files);
+  ```
+
+  ```client-flutter
+  import 'package:appwrite/appwrite.dart';
+
+  void main() async {
+    final client = Client()
+        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+        .setProject('<PROJECT_ID>');
+
+    final storage = Storage(client);
+
+    final result = await storage.listFiles(
+      bucketId: '<BUCKET_ID>',
+      queries: [
+        Query.equal('folder', ['photos/2026/'])
+      ],
+    );
+  }
+  ```
+
+  ```client-android-kotlin
+  import io.appwrite.Client
+  import io.appwrite.Query
+  import io.appwrite.services.Storage
+
+  suspend fun main() {
+      val client = Client(applicationContext)
+          .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+          .setProject("<PROJECT_ID>") // Your project ID
+
+      val storage = Storage(client)
+
+      val result = storage.listFiles(
+          bucketId = "<BUCKET_ID>",
+          queries = listOf(
+              Query.equal("folder", listOf("photos/2026/"))
+          )
+      )
+  }
+  ```
+
+  ```client-apple
+  import Appwrite
+
+  func main() async throws {
+      let client = Client()
+          .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+          .setProject("<PROJECT_ID>")
+
+      let storage = Storage(client)
+
+      let result = try await storage.listFiles(
+          bucketId: "<BUCKET_ID>",
+          queries: [
+              Query.equal("folder", value: ["photos/2026/"])
+          ]
+      )
+  }
+  ```
+
+  ```client-react-native
+  import { Client, Storage, Query } from 'react-native-appwrite';
+
+  const client = new Client()
+      .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+      .setProject('<PROJECT_ID>');
+
+  const storage = new Storage(client);
+
+  const result = await storage.listFiles({
+      bucketId: '<BUCKET_ID>',
+      queries: [
+          Query.equal('folder', ['photos/2026/'])
+      ]
+  });
+  ```
+{% /multicode %}
+
+# List folders {% #list-folders %}
+
+Folders are aggregated from the files inside a bucket.
+To browse them, [paginate](/docs/products/databases/pagination) through the bucket's files and collect the unique folder paths from each file's `folder` attribute, including the implied parent folders.
+
+{% multicode %}
+  ```client-web
+  import { Client, Storage, Query } from "appwrite";
+
+  const client = new Client()
+      .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+      .setProject('<PROJECT_ID>');
+
+  const storage = new Storage(client);
+
+  const limit = 100;
+  let cursor = '';
+  const folders = new Set();
+
+  while (true) {
+      const page = await storage.listFiles({
+          bucketId: '<BUCKET_ID>',
+          queries: [
+              Query.limit(limit),
+              ...(cursor ? [Query.cursorAfter(cursor)] : [])
+          ]
+      });
+
+      for (const file of page.files) {
+          let path = '';
+
+          // Add the folder and its implied parent folders
+          for (const part of file.folder.split('/').filter(Boolean)) {
+              path += `${part}/`;
+              folders.add(path);
+          }
+      }
+
+      if (page.files.length < limit) {
+          break; // All files scanned
+      }
+
+      cursor = page.files[page.files.length - 1].$id;
+  }
+
+  console.log([...folders].sort());
+  ```
+
+  ```server-nodejs
+  const sdk = require('node-appwrite');
+
+  const client = new sdk.Client()
+      .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+      .setProject('<PROJECT_ID>')
+      .setKey('<API_KEY>');
+
+  const storage = new sdk.Storage(client);
+
+  const limit = 100;
+  let cursor = '';
+  const folders = new Set();
+
+  while (true) {
+      const page = await storage.listFiles({
+          bucketId: '<BUCKET_ID>',
+          queries: [
+              sdk.Query.limit(limit),
+              ...(cursor ? [sdk.Query.cursorAfter(cursor)] : [])
+          ]
+      });
+
+      for (const file of page.files) {
+          let path = '';
+
+          // Add the folder and its implied parent folders
+          for (const part of file.folder.split('/').filter(Boolean)) {
+              path += `${part}/`;
+              folders.add(path);
+          }
+      }
+
+      if (page.files.length < limit) {
+          break; // All files scanned
+      }
+
+      cursor = page.files[page.files.length - 1].$id;
+  }
+
+  console.log([...folders].sort());
+  ```
+
+  ```client-flutter
+  import 'package:appwrite/appwrite.dart';
+
+  void main() async {
+    final client = Client()
+        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+        .setProject('<PROJECT_ID>');
+
+    final storage = Storage(client);
+
+    const limit = 100;
+    var cursor = '';
+    final folders = <String>{};
+
+    while (true) {
+      final page = await storage.listFiles(
+        bucketId: '<BUCKET_ID>',
+        queries: [
+          Query.limit(limit),
+          if (cursor.isNotEmpty) Query.cursorAfter(cursor),
+        ],
+      );
+
+      for (final file in page.files) {
+        var path = '';
+
+        // Add the folder and its implied parent folders
+        for (final part in file.folder.split('/').where((p) => p.isNotEmpty)) {
+          path += '$part/';
+          folders.add(path);
+        }
+      }
+
+      if (page.files.length < limit) {
+        break; // All files scanned
+      }
+
+      cursor = page.files.last.$id;
+    }
+
+    print(folders.toList()..sort());
+  }
+  ```
+
+  ```client-android-kotlin
+  import io.appwrite.Client
+  import io.appwrite.Query
+  import io.appwrite.services.Storage
+
+  suspend fun main() {
+      val client = Client(applicationContext)
+          .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+          .setProject("<PROJECT_ID>") // Your project ID
+
+      val storage = Storage(client)
+
+      val limit = 100
+      var cursor = ""
+      val folders = mutableSetOf<String>()
+
+      while (true) {
+          val page = storage.listFiles(
+              bucketId = "<BUCKET_ID>",
+              queries = listOfNotNull(
+                  Query.limit(limit),
+                  if (cursor.isNotEmpty()) Query.cursorAfter(cursor) else null
+              )
+          )
+
+          for (file in page.files) {
+              var path = ""
+
+              // Add the folder and its implied parent folders
+              for (part in file.folder.split("/").filter { it.isNotEmpty() }) {
+                  path += "$part/"
+                  folders.add(path)
+              }
+          }
+
+          if (page.files.size < limit) {
+              break // All files scanned
+          }
+
+          cursor = page.files.last().id
+      }
+  }
+  ```
+
+  ```client-apple
+  import Appwrite
+
+  func main() async throws {
+      let client = Client()
+          .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+          .setProject("<PROJECT_ID>")
+
+      let storage = Storage(client)
+
+      let limit = 100
+      var cursor = ""
+      var folders = Set<String>()
+
+      while true {
+          var queries = [Query.limit(limit)]
+          if !cursor.isEmpty {
+              queries.append(Query.cursorAfter(cursor))
+          }
+
+          let page = try await storage.listFiles(
+              bucketId: "<BUCKET_ID>",
+              queries: queries
+          )
+
+          for file in page.files {
+              var path = ""
+
+              // Add the folder and its implied parent folders
+              for part in file.folder.split(separator: "/") {
+                  path += "\(part)/"
+                  folders.insert(path)
+              }
+          }
+
+          if page.files.count < limit {
+              break // All files scanned
+          }
+
+          cursor = page.files.last!.id
+      }
+  }
+  ```
+
+  ```client-react-native
+  import { Client, Storage, Query } from 'react-native-appwrite';
+
+  const client = new Client()
+      .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+      .setProject('<PROJECT_ID>');
+
+  const storage = new Storage(client);
+
+  const limit = 100;
+  let cursor = '';
+  const folders = new Set();
+
+  while (true) {
+      const page = await storage.listFiles({
+          bucketId: '<BUCKET_ID>',
+          queries: [
+              Query.limit(limit),
+              ...(cursor ? [Query.cursorAfter(cursor)] : [])
+          ]
+      });
+
+      for (const file of page.files) {
+          let path = '';
+
+          // Add the folder and its implied parent folders
+          for (const part of file.folder.split('/').filter(Boolean)) {
+              path += `${part}/`;
+              folders.add(path);
+          }
+      }
+
+      if (page.files.length < limit) {
+          break; // All files scanned
+      }
+
+      cursor = page.files[page.files.length - 1].$id;
+  }
+
+  console.log([...folders].sort());
+  ```
+{% /multicode %}
+
+For example, a file with the folder `photos/2026/july/` produces three folders:
+
+```text
+photos/
+photos/2026/
+photos/2026/july/
+```
+
+Scanning every file works well for small buckets.
+For buckets with many files, maintain your own folder index instead, for example in a [Databases](/docs/products/databases) table that you update whenever you upload or delete files.
+
+# Permissions {% #permissions %}
+
+Folders don't carry their own permissions. Access is derived from the files inside them.
+When a bucket uses [file security](/docs/products/storage/permissions), listing files returns only the files a user can read, so aggregating folders discovers only the folders that contain at least one such file.
+
+{% arrow_link href="/docs/products/storage/permissions" %}
+Learn more about storage permissions
+{% /arrow_link %}

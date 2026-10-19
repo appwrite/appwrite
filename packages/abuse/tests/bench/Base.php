@@ -6,13 +6,13 @@ use PhpBench\Attributes\BeforeMethods;
 use PhpBench\Attributes\Iterations;
 use PhpBench\Attributes\OutputMode;
 use PhpBench\Attributes\OutputTimeUnit;
-use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Abuse\Adapter\TimeLimit;
 
 abstract class Base
 {
-    protected Abuse $abuse;
     protected TimeLimit $adapter;
+
+    abstract public function setUp(): void;
 
     #[BeforeMethods('setUp')]
     #[Iterations([20, 30, 50])]
@@ -20,13 +20,10 @@ abstract class Base
     #[OutputTimeUnit('millisecond')]
     public function benchTimelimit(): void
     {
-        $ip = '';
+        $octets = [];
         for ($i = 0; $i < 4; $i++) {
-            $sub = random_int(0, 255);
-            $ip .= $sub . '.';
-        };
-        $ip = \rtrim($ip, '.');
-        $this->adapter->setParam('{{ip}}', $ip);
-        $this->abuse->check();
+            $octets[] = \random_int(0, 255);
+        }
+        $this->adapter->withParams(['{{ip}}' => \implode('.', $octets)])->check();
     }
 }

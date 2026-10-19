@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Utopia;
+namespace Utopia\Validator;
 
 abstract class Validator
 {

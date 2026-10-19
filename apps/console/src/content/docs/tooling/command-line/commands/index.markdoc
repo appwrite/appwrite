@@ -1,0 +1,326 @@
+---
+layout: article
+title: Commands
+description: Learn about Appwrites CLI and the powerful, feature complete commands to manage Appwrite's auth, databases, functions, storage, and more.
+---
+
+{% info title="CLI Version" %}
+All commands are compatible with the latest version of the CLI. We recommend running the [CLI on its latest version](/docs/tooling/command-line/installation#update-your-cli).
+{% /info %}
+
+
+Other than commands to create and push databases, tables, functions, messaging-topics, teams, and buckets, the Appwrite CLI can be used as a Server SDK as well. The Appwrite CLI has a command for every Server API endpoint.
+
+Commands generally follow the following syntax:
+
+```sh
+appwrite [COMMAND] [OPTIONS]
+```
+
+# Commands {% #commands %}
+
+Below is a list of the available commands in the Appwrite CLI. You can get more information on each command by running `appwrite [COMMAND] --help`.
+
+## General commands {% #general-commands %}
+
+{% table %}
+* Command
+* Description
+---
+* `client [options]`
+* The client command allows you to configure your CLI.
+---
+* `locale`
+* The locale command allows you to customize your app based on your users' location.
+---
+* `graphql`
+* The graphql command allows you to query and mutate any resource type on your Appwrite server.
+---
+* `types [options] <output-directory>`
+* The types command generates type definitions based on your Appwrite database schema. Learn more about [type generation](/docs/products/databases/type-generation).
+---
+* `generate`
+* The generate command creates a type-safe SDK tailored to your project. It detects your project's language and generates typed helpers based on your database schema. Learn more about [SDK generation](/docs/tooling/command-line/generate).
+---
+{% /table %}
+
+## Account commands {% #account-commands %}
+
+{% table %}
+* Command
+* Description
+---
+* `login [options]`
+* The login command allows you to authenticate into the CLI. This command expects the console account that you use to log into the Appwrite Console.
+---
+* `logout`
+* The logout command allows you to log out of your Appwrite account.
+---
+* `register`
+* Prints link to register an Appwrite account.
+---
+* `whoami`
+* The whomai command gives information about the currently logged-in user.
+---
+{% /table %}
+
+## Deployment commands {% #deployment-commands %}
+
+{% table %}
+* Command
+* Description
+---
+* `init [options]`
+* The init command provides a convenient wrapper for creating and initializing projects, functions, tables, buckets, teams, and messaging-topics in Appwrite.
+---
+* `pull`
+* The pull command helps you pull your Appwrite project, functions, tables, buckets, teams, and messaging-topics.
+---
+* `push`
+* The push command provides a convenient wrapper for pushing your functions, tables, buckets, teams, and topics.
+---
+* `run`
+* The run command allows you to run projects locally to allow easy development and quick debugging.
+---
+{% /table %}
+
+The `init`, `pull`, `push`, and `run` commands support [multi-file project configuration](/docs/tooling/command-line/installation#multi-file-configuration). Use the `includes` field in `appwrite.config.json` to move supported resource arrays into separate JSON files while keeping CLI behavior unchanged.
+
+## Project commands {% #appwrite-project-commands %}
+
+{% table %}
+
+* Command
+* Description
+---
+* `account`
+* The account command allows you to authenticate and manage a user account.
+---
+* `users`
+* The users command allows you to manage your project users.
+---
+* `teams`
+* The teams command allows you to group users of your project and enable them to share read and write access to your project resources.
+---
+* `databases`
+* The databases command allows you to create structured tables of rows and query and filter lists of rows.
+---
+* `functions`
+* The functions command allows you to view, create, and manage your Appwrite Functions.
+---
+* `messaging`
+* The messaging command allows you to send, create, edit, and delete messages.
+---
+* `storage`
+* The storage command allows you to manage your project files.
+---
+* `avatars`
+* The avatars command provides utilities to manage images, icons, and avatars.
+---
+{% /table %}
+
+## Command options {% #command-options %}
+
+{% table %}
+
+* Command
+* Description
+---
+* `-v, --version`     
+* Output the version number
+---
+* `-V, --verbose`     
+* Show complete error log
+---
+* `-j, --json`        
+* Output in JSON format
+---
+* `-f,--force`        
+* Flag to confirm all warnings
+---
+* `-a,--all`          
+* Flag to push all resources
+---
+* `--id [id...]`      
+* Flag to pass a list of ids for a given action
+---
+* `--config-file <path>`
+* Project config file to use instead of the nearest `appwrite.config.json`
+---
+* `--report`          
+* Enable reporting in case of CLI errors
+---
+* `-h, --help`        
+* Display help for command
+---
+{% /table %}
+
+# Verbose {% #verbose %}
+In case of errors with any command, you can get more information about what went wrong using the `--verbose` flag
+
+```sh
+appwrite users list --verbose
+```
+
+# JSON {% #json %}
+By default, output is rendered in a tabular format. To format the output as JSON, use the `--json` flag.
+
+```sh
+appwrite users list --json
+```
+
+# Force {% #force %}
+By default, when pushing or pulling resources, the Appwrite CLI will ask you to confirm destructive operations. Use the `--force` flag to verify all questions.
+
+```sh
+appwrite push tables --force
+```
+
+# All {% #all %}
+By default, when pushing or pulling resources, Appwrite CLI would ask you to select specific resources. Use the `--all` flag to select all available options.
+
+```sh
+appwrite pull functions --all
+```
+
+# Config file {% #config-file %}
+By default, the CLI reads the nearest `appwrite.config.json`. Use the `--config-file` flag, or set the `APPWRITE_CONFIG_FILE` environment variable, to read a different project config file. This lets you keep one config per environment in the same repository. [Learn more about multiple environments](/docs/tooling/command-line/installation#multiple-environments).
+
+```sh
+appwrite push --config-file appwrite.config.prod.json
+```
+
+# Error reporting {% #report %}
+If you encounter errors with any command, you can use the --report flag to generate a GitHub reporting link.
+
+```sh
+appwrite login --report
+```
+
+# View on console {% #console-flow %}
+Many resources support the option to view them in the console. Use the `--console` flag to get a direct link to the console, and add the optional `--open` flag to automatically open it in the default browser.
+
+```sh
+appwrite tables-db get-row \
+  --database-id "<DATABASE_ID>" \
+  --table-id "<TABLE_ID>" \
+  --row-id "<ROW_ID>" \
+  --console --open
+```
+
+# Filter, sort, and paginate {% #filter-sort-paginate %}
+
+List commands across services accept a set of dedicated flags for the most common filtering, sorting, and pagination needs, so you don't have to hand-write JSON [query](/docs/products/databases/queries) strings for everyday cases. These flags are supported on `list-*` commands such as `tables-db list-tables`, `tables-db list-rows`, `users list`, `functions list`, `messaging list-messages`, and similar list endpoints across services.
+
+{% table %}
+* Flag
+* Description
+---
+* `--where <expression>`
+* Filter using a simple comparison expression. Supports `field=value`, `field!=value`, `field>value`, `field>=value`, `field<value`, and `field<=value`. Repeat the flag to apply multiple filters. Quote the expression (for example `'year>1999'`) so that `>` and `<` are not interpreted as shell redirection.
+---
+* `--sort-asc <attribute>`
+* Sort results by an attribute in ascending order. Repeat for multiple sort fields.
+---
+* `--sort-desc <attribute>`
+* Sort results by an attribute in descending order. Repeat for multiple sort fields.
+---
+* `--limit <number>`
+* Maximum number of results to return.
+---
+* `--offset <number>`
+* Number of results to skip from the beginning.
+---
+* `--cursor-after <id>`
+* Return results after this cursor ID. Use for forward [cursor pagination](/docs/products/databases/pagination).
+---
+* `--cursor-before <id>`
+* Return results before this cursor ID. Use for backward cursor pagination.
+---
+* `--select <attribute>`
+* Limit returned attributes on list commands such as `tables-db list-rows`. Repeat the flag to include multiple attributes.
+---
+{% /table %}
+
+For example, to fetch the 10 most recently created rows where `year` is greater than 1999:
+
+```sh
+appwrite tables-db list-rows \
+    --database-id "<DATABASE_ID>" \
+    --table-id "<TABLE_ID>" \
+    --where 'year>1999' \
+    --sort-desc '$createdAt' \
+    --limit 10
+```
+
+The `--queries` flag is still supported and remains the way to pass raw [Appwrite query](/docs/products/databases/queries) JSON strings for advanced cases, automation pipelines, or operators that the new flags don't cover. When you mix `--queries` with the new flags, the raw queries are sent first and the flag-generated queries are appended after.
+
+```sh
+appwrite tables-db list-rows \
+    --database-id "<DATABASE_ID>" \
+    --table-id "<TABLE_ID>" \
+    --queries '[{"method":"search","attribute":"title","values":["Avatar"]}]' \
+    --limit 10
+```
+
+# Examples {% #examples %}
+
+## Create user {% #create-user %}
+
+To create a new user in your project, you can use the create command.
+
+```sh
+appwrite users create --user-id "unique()" \
+    --email hello@appwrite.io \
+    --password very_strong_password
+```
+
+## List users {% #list-users %}
+
+To get a list of all your project users, you can use the list command.
+
+```sh
+appwrite users list
+```
+
+You can narrow the result set with the [filter, sort, and pagination flags](#filter-sort-paginate). For example, to fetch the 25 most recently created users whose email is verified:
+
+```sh
+appwrite users list \
+    --where 'emailVerification=true' \
+    --sort-desc '$createdAt' \
+    --limit 25
+```
+
+## List tables {% #list-tables %}
+
+To get a list of all your [tables](/docs/tooling/command-line/tables), you can use the `list-tables` command.
+
+```sh
+appwrite tables-db list-tables --database-id "<DATABASE_ID>"
+```
+
+If you wish to parse the output from the CLI, you can request the CLI output in JSON format using the `--json` flag
+
+```sh
+appwrite tables-db list-tables --database-id "<DATABASE_ID>" --json
+```
+
+## Get table {% #get-table %}
+
+To get more information on a particular table, you can make use of the `get-table` command and pass in the table-id.
+
+```sh
+appwrite tables-db get-table --database-id "<DATABASE_ID>" --table-id "<TABLE_ID>"
+```
+
+## Create row {% #create-row %}
+
+To create a new row in an existing table, use the `create-row` command.
+
+```sh
+appwrite tables-db create-row \
+    --database-id "<DATABASE_ID>" --table-id "<TABLE_ID>" \
+    --row-id 'unique()' --data '{ "Name": "Iron Man" }' \
+    --permissions 'read("any")' 'write("team:abc")' 
+```

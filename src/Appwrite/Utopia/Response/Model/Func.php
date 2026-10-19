@@ -41,6 +41,12 @@ class Func extends Model
                 'default' => '',
                 'example' => 'My Function',
             ])
+            ->addRule('description', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Optional description for the function.',
+                'default' => '',
+                'example' => 'Sends a welcome email to newly registered users.',
+            ])
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Function enabled.',
@@ -127,6 +133,13 @@ class Func extends Model
                 'description' => 'Function execution schedule in CRON format.',
                 'default' => '',
                 'example' => '5 4 * * *',
+            ])
+            ->addRule('interval', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Minutes between scheduled executions. 0 when the function has no interval.',
+                'default' => 0,
+                'required' => false,
+                'example' => 60,
             ])
             ->addRule('timeout', [
                 'type' => self::TYPE_INTEGER,

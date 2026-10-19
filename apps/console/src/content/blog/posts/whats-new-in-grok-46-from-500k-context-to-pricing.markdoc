@@ -1,0 +1,147 @@
+---
+layout: post
+title: "What's new in Grok 4.6 from 500K context to pricing"
+description: "Grok 4.6 is SpaceXAI's frontier model for long-running agents and coding. See full benchmarks, token pricing, the 500K context window, and API setup."
+date: 2026-08-13
+cover: /images/blog/whats-new-in-grok-46-from-500k-context-to-pricing/cover.avif
+timeToRead: 5
+author: aishwari
+category: ai
+featured: false
+faqs:
+  - question: How much does Grok 4.6 cost?
+    answer: Grok 4.6 costs $2 per million input tokens and $6 per million output tokens under standard pricing. Requests that exceed 200K tokens use a higher pricing tier, while a faster variant is available at twice the standard price.
+  - question: Is Grok 4.6 good for coding?
+    answer: Yes. Grok 4.6 is designed for coding and agentic software development, including multi-file changes, testing, debugging, and tool use. Its performance is particularly competitive on knowledge work and agentic coding benchmarks, although other frontier models can perform better on some terminal-heavy coding tasks.
+  - question: Can Grok 4.6 use MCP?
+    answer: Yes. Grok Build supports MCP servers, allowing Grok 4.6 agents to connect to external tools and services. This makes it possible to give the agent controlled access to resources such as Appwrite projects and documentation.
+  - question: Can I use Grok 4.6 with Appwrite?
+    answer: Yes. Grok 4.6 can connect to Appwrite through Appwrite’s remote MCP server. This allows an agent to access Appwrite APIs and documentation while building applications with services such as Auth, Databases, Storage, Functions, and Sites.
+---
+Most coding models are still evaluated as if the job ends with a good first answer. Real agent work does not end there. It runs for many steps, reads unfamiliar code, calls tools, checks its own output, and either holds the task in its head or quietly drifts off it.
+
+That drift is the problem [Grok 4.6](https://x.ai/news/grok-4-6) is designed to address. xAI released it on August 12, 2026, building on [Grok 4.5](/blog/post/grok-45-coding-model) with a focus on long-running agents, coding, and interactive and visual work.
+
+This post covers what is new in Grok 4.6, the official benchmark numbers, how the 500K context window is priced, where you can use it, and when it is the right model to reach for.
+
+# What is Grok 4.6?
+
+**Grok 4.6 is SpaceXAI's current frontier model for coding, agentic tool use, and knowledge work, available as `grok-4.6` with a 500K token context window at $2 per million input tokens and $6 per million output tokens.**
+
+The [official model docs](https://docs.x.ai/developers/models) list the details that matter when you wire it into an application:
+
+| Property          | Grok 4.6            |
+| ----------------- | ------------------- |
+| Model ID          | `grok-4.6`          |
+| Context window    | 500K tokens         |
+| Input modalities  | Text and image      |
+| Output modalities | Text                |
+| Knowledge cutoff  | February 1, 2026    |
+| Released          | August 12, 2026     |
+
+SpaceXAI positions it as its most intelligent and fastest model and recommends it for code and chat applications.
+
+# What's new in Grok 4.6 compared to Grok 4.5
+
+The changes are concentrated in three places: training, sustained multi-step work, and the quality of a first pass on visual and interactive projects.
+
+**Training.** Grok 4.6 went through a longer supplemental training run than Grok 4.5, using curated model-generated data for reasoning and advanced technical concepts, high-quality engineering data, and an improved optimizer and training recipe. SpaceXAI then used Grok 4.5 itself to regenerate the supervised fine-tuning trajectories across reasoning efforts, agent harnesses, and domains including STEM, software engineering, and knowledge work, filtering out problematic traces with model-based checks. Reinforcement learning ran on agentic tasks including general coding, knowledge work, kernel optimization, web development, and computer-aided design.
+
+**Longer trajectories.** SpaceXAI says the model stays with complex tasks across many steps, and that on longer runs it started to see more self-testing and verification, with the model checking its own work before moving on. That makes it better suited to longer-running workflows where the model needs to check its own work before moving on.
+
+**Stronger first passes.** On visual and interactive projects, Grok 4.6 is described as able to establish the structure and visual language of an application in a single pass, then keep refining through several rounds of feedback. The practical read is that it is better suited to starting from something substantial and iterating than to producing generic scaffolding you rewrite.
+
+# Grok 4.6 benchmarks: how it compares to GPT-5.6 and Fable 5
+
+SpaceXAI published a full eval table with the release. Treat these as vendor-reported results, since SpaceXAI controls the harnesses and the comparison set. Third-party model scores are the best of self-reported or publicly available results.
+
+| Benchmark                    | Grok 4.6 High | Grok 4.5 High | GPT-5.6 Sol Max | Fable 5 Max |
+| ---------------------------- | ------------: | ------------: | --------------: | ----------: |
+| AA Intelligence Index        |            61 |            56 |              61 |          62 |
+| GDPVal-AA v2                 |          1753 |          1526 |            1728 |        1741 |
+| CursorBench v3.2             |         69.9% |         66.7% |           67.2% |       70.5% |
+| DeepSWE v1.1                 |         65.9% |           54% |             73% |         70% |
+| FrontierCode v1.1 (Extended) |         61.3% |         56.6% |           60.6% |       63.6% |
+| APEX-Agents                  |         57.5% |         47.1% |           56.7% |       59.2% |
+| Terminal-Bench v3.0          |           26% |         15.7% |           34.6% |       34.1% |
+| APEX-SWE                     |         56.4% |         53.6% |    Not reported |       58.8% |
+| AA-Briefcase                 |          1577 |          1313 |            1502 |        1574 |
+| Harvey LAB (Vals)            |         15.8% |         12.9% |            2.5% |       11.3% |
+
+Three things stand out.
+
+* **The jump over Grok 4.5 is large and consistent.** Every row improves, and several move by ten points or more. Terminal-Bench v3.0 goes from 15.7% to 26%, and DeepSWE v1.1 from 54% to 65.9%.
+* **It matches GPT-5.6 Sol on the composite.** Both sit at 61 on the [Artificial Analysis](https://artificialanalysis.ai/) Intelligence Index, a nine-benchmark composite, with Fable 5 Max one point ahead at 62.
+* **It is not a clean sweep.** GPT-5.6 Sol leads clearly on DeepSWE v1.1 and Terminal-Bench v3.0, and Fable 5 Max leads on CursorBench, FrontierCode, APEX-Agents, and APEX-SWE. Grok 4.6 takes GDPVal-AA v2, AA-Briefcase, and Harvey LAB.
+
+Grok 4.6 is strongest on knowledge work benchmarks and competitive on agentic coding, but terminal-heavy autonomy is still where the gap to GPT-5.6 Sol and Fable 5 is widest.
+
+# How the Grok 4.6 500K context window is priced
+
+**Grok 4.6 keeps the 500K token context window from Grok 4.5, but pricing doubles once a request crosses 200K tokens.** That threshold is the detail most likely to surprise you on a bill.
+
+| Tokens in request | Input per 1M | Cached input per 1M | Output per 1M |
+| ----------------- | -----------: | ------------------: | ------------: |
+| Under 200K        |        $2.00 |               $0.50 |         $6.00 |
+| 200K and above    |        $4.00 |               $1.00 |        $12.00 |
+
+For agent workloads this matters more than the raw window size. A long-running agent accumulates context steadily: file contents, tool results, test output, and its own reasoning.
+
+The practical response is context hygiene rather than avoiding long tasks. Keep tool results trimmed, avoid pasting whole files when a targeted read will do, and lean on cached input for the stable parts of your prompt. A well-scoped MCP tool call that returns exactly the resource an agent asked for is cheaper than a broad dump the model has to read past.
+
+# Grok 4.6 pricing compared to other frontier models
+
+Standard pricing is unchanged from Grok 4.5 at **$2 per million input tokens** and **$6 per million output tokens**. There is also a **fast variant at twice the price**, which trades cost for output speed.
+
+| Model           | Input per 1M | Output per 1M | Context |
+| --------------- | -----------: | ------------: | ------: |
+| Grok 4.6        |           $2 |            $6 |    500K |
+| Grok 4.6 fast   |           $4 |           $12 |    500K |
+| GPT-5.6 Sol     |           $5 |           $30 |      1M |
+| Fable 5         |          $10 |           $50 |      1M |
+| Claude Opus 5   |           $5 |           $25 |      1M |
+
+Agents spend most of their tokens writing: plans, tool arguments, diffs, test summaries, review notes. Moving from $25 or $30 per million output tokens to $6 changes which long tasks are worth automating at all, which is the same argument that made [Grok 4.5 interesting on cost](/blog/post/grok-45-coding-model).
+
+# Where you can use Grok 4.6
+
+Grok 4.6 is available on launch day across SpaceXAI's own surfaces and through several third-party platforms:
+
+* [Cursor](https://cursor.com/) and **Grok Build**, SpaceXAI's coding agent and CLI, both have it available now. SpaceXAI is offering 2x included usage in both for the first week after launch.
+* **The SpaceXAI API**, as `grok-4.6`.
+* **Partner platforms** including [OpenRouter](https://openrouter.ai/x-ai/grok-4.6), Vercel, and Cloudflare.
+
+If you use Grok Build, it supports MCP servers, which is the part that matters for backend work. The distinction is between a model that writes code about your infrastructure and an agent that can inspect and change infrastructure through an explicit tool interface.
+
+# When to use Grok 4.6 for agentic coding
+
+Reach for Grok 4.6 where the expensive part of the task is several minutes of directed tool use rather than one perfect answer:
+
+* Multi-file refactors that need tests, review, and a few rounds of correction.
+* First versions of interactive or visual projects, where a strong structural first pass saves more time than incremental fixes.
+* Knowledge work over messy source material, which is where its GDPVal and AA-Briefcase results are strongest.
+* Long sessions where output token cost would otherwise cap how much you experiment.
+
+Be more careful in two places. Terminal-heavy autonomy is where it trails GPT-5.6 Sol and Fable 5 most, so if your agent lives in a shell, benchmark it against those before committing. And correctness that depends on private production context is still bounded by your integration surface, not the model. Cheap tokens do not substitute for scoped credentials, current docs, and tests the agent can actually run.
+
+# Build Grok 4.6 agents on Appwrite
+
+A model that sustains work across many steps only pays off if there is a real backend on the other end of those steps. Otherwise the agent hands you a diff and you spend the rest of the day wiring auth, a database, storage, and an API layer by hand.
+
+[Appwrite](/) is an open source backend with [Auth](/docs/products/auth), [Databases](/docs/products/databases), [Storage](/docs/products/storage), [Functions](/docs/products/functions), and [Messaging](/docs/products/messaging) built in, plus [Sites](/docs/products/sites) for deploying your frontend next to it. Run it on managed Cloud or self-host it. Instead of assembling that stack, you give your Grok 4.6 agent one project that already has it.
+
+The connection point is MCP. Appwrite's [remote MCP server](/docs/tooling/ai/mcp-servers) gives an agent both API access to your project and current Appwrite documentation, so it writes real SDK calls instead of guessing at them. To add it to Grok Build, follow the [Grok Build integration guide](/docs/tooling/ai/agents/grok-build):
+
+`grok mcp add --transport http appwrite https://mcp.appwrite.io/`
+
+Then hand it something concrete, like scaffolding a Next.js app with email and password auth and a todos table. It pulls the right docs, calls the API, and gives you back product you can review. [Create a free Appwrite project](https://cloud.appwrite.io/) and try the loop on a small, reviewable task first.
+
+# Resources
+
+* [Grok Build with Appwrite](/docs/tooling/ai/agents/grok-build)
+* [Cursor with Appwrite](/docs/tooling/ai/agents/cursor)
+* [Appwrite MCP server docs](/docs/tooling/ai/mcp-servers)
+* [Appwrite AI tooling docs](/docs/tooling/ai)
+* [Grok 4.5 benchmarks and pricing](/blog/post/grok-45-coding-model)
+* [Start building on Appwrite Cloud](https://cloud.appwrite.io/)
+* [Join the Appwrite Discord](https://appwrite.io/discord)

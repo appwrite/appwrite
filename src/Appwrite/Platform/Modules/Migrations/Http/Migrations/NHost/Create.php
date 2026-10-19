@@ -13,7 +13,7 @@ use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Migration\Sources\Appwrite as AppwriteSource;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Platform\Enum;
@@ -89,7 +89,7 @@ class Create extends Action
         MigrationPublisher $publisherForMigrations
     ): void {
         $migration = $dbForProject->createDocument('migrations', new Document([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             'status' => 'pending',
             'stage' => 'init',
             'source' => NHost::getName(),
