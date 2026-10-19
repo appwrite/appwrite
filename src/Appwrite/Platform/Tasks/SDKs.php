@@ -332,8 +332,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new Web();
                         if ($platform['key'] === APP_SDK_PLATFORM_CONSOLE) {
                             $config->setNPMPackage('@appwrite.io/console');
+                            $config->setCdnPath('console');
                         } else {
                             $config->setNPMPackage('appwrite');
+                            $config->setCdnPath('web');
                         }
                         break;
                     case 'cli':

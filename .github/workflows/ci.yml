@@ -824,7 +824,7 @@ jobs:
             -e _APP_E2E_RESPONSE_FORMAT="$API_RESPONSE_FORMAT" \
             -e _TESTS_OAUTH2_GITHUB_CLIENT_ID \
             -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET \
-            appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --exclude-group queueRetry --log-junit "tests/e2e/Services/$SERVICE/junit.xml"
+            appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --exclude-group queueRetry --exclude-group usageOutage --log-junit "tests/e2e/Services/$SERVICE/junit.xml"
 
       - name: Check for native crashes
         if: ${{ !cancelled() }}

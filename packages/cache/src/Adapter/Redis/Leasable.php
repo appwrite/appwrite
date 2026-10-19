@@ -170,9 +170,18 @@ abstract class Leasable implements \Utopia\Cache\Feature\Leasable
             ]);
 
             return $stored ? $data : false;
-        } catch (Throwable) {
+        } catch (Throwable $error) {
+            $this->recordWriteFailure('saveWithLease', $error);
+
             return false;
         }
+    }
+
+    /**
+     * A write that reports its failure as false hands the cause here, so an adapter can make it observable.
+     */
+    protected function recordWriteFailure(string $operation, Throwable $error): void
+    {
     }
 
     public function purge(string $key, string $hash = ''): bool
