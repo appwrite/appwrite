@@ -109,7 +109,7 @@ A large spec can be split: `spec.d/*.json` files hold more `ops`, `generators`, 
 
 | Kind | Replaces | With |
 |---|---|---|
-| `now` | a datetime string within `seconds` (default 3600) of the runner's clock, as `Y-m-d\TH:i:s.vP`, `Y-m-d H:i:s.v` or `Y-m-d H:i:s` (zone optional) | `<now>` |
+| `now` | a datetime string within `seconds` (default 3600) of the runner's clock, as `Y-m-d\TH:i:s.vP`, `Y-m-d H:i:s.v` or `Y-m-d H:i:s` (zone optional), alone or delimited inside a string (a JSON body a library sends) | `<now>` |
 | `uniqid` | a token of 13 to 36 lowercase hex digits whose first 8 are a unix time within a day of the clock (`uniqid()` plus padding, as `ID::unique()` makes, and the `.dddddddd` decimals of `uniqid('', true)`), alone or delimited inside a string | `<uniqid>` |
 | `long` | a string over 64 KiB, kept out of the case files | `<long:<bytes>:<sha256>>` |
 

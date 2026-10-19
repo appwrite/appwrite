@@ -775,6 +775,7 @@
           },
           "expect": [
             {
+              "time": "2024-02-03T04:05:06.789+00:00",
               "actorType": "member",
               "event": "e",
               "$id": "fixed-1",

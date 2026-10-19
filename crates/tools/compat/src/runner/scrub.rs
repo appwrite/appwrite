@@ -12,7 +12,7 @@
 //!
 //! | Kind | Replaces | With |
 //! |---|---|---|
-//! | `now` | a datetime string within `seconds` (default 3600) of the runner's clock: `Y-m-d\TH:i:s.vP`, `Y-m-d H:i:s.v`, `Y-m-d H:i:s` (with or without a zone; none is UTC) | `"<now>"` |
+//! | `now` | a datetime string within `seconds` (default 3600) of the runner's clock: `Y-m-d\TH:i:s.vP`, `Y-m-d H:i:s.v`, `Y-m-d H:i:s` (with or without a zone; none is UTC), as a whole string or delimited by non-alphanumerics inside one (a JSON body a library sends) | `"<now>"` |
 //! | `uniqid` | a token of 13 to 36 lowercase hex digits whose first 8 are a unix time within a day of the runner's clock (PHP's `uniqid()`, plus any random padding, and the `.dddddddd` decimals of `uniqid('', true)`), as a whole string or delimited by non-alphanumerics inside one | `"<uniqid>"` |
 //! | `long` | a string over 64 KiB (not nondeterministic: kept out of recorded expectations, compared by length and digest) | `"<long:<bytes>:<sha256 hex>>"` |
 //! | `uuid7` | a UUID version 7 (`xxxxxxxx-xxxx-7xxx-[89ab]xxx-xxxxxxxxxxxx`, lowercase hex) whose millisecond time is within a day of the runner's clock, as a whole string or inside one | `"<uuid7>"` |
@@ -149,11 +149,38 @@ impl Scrubber {
         if self.now.is_some() && self.is_now(s) {
             return Some("<now>".into());
         }
-        let uuid = if self.uuid7 { self.uuid7s(s) } else { None };
+        let now = if self.now.is_some() { self.nows(s) } else { None };
+        let uuid = if self.uuid7 { self.uuid7s(now.as_deref().unwrap_or(s)).or(now) } else { now };
         if self.uniqid {
             return self.uniqids(uuid.as_deref().unwrap_or(s)).or(uuid);
         }
         uuid
+    }
+
+    /// Replaces every datetime near the clock inside `s`, delimited by
+    /// non-alphanumerics.
+    fn nows(&self, s: &str) -> Option<String> {
+        let b = s.as_bytes();
+        let mut out = String::with_capacity(s.len());
+        let (mut at, mut copied, mut changed) = (0, 0, false);
+        while at + 19 <= b.len() {
+            let before = at == 0 || !b[at - 1].is_ascii_alphanumeric();
+            let end = if before { datetime_end(&b[at..]).map(|len| at + len) } else { None };
+            match end {
+                Some(end) if (end == b.len() || !b[end].is_ascii_alphanumeric()) && self.is_now(&s[at..end]) => {
+                    out.push_str(&s[copied..at]);
+                    out.push_str("<now>");
+                    at = end;
+                    copied = at;
+                    changed = true;
+                }
+                _ => at += 1,
+            }
+        }
+        changed.then(|| {
+            out.push_str(&s[copied..]);
+            out
+        })
     }
 
     fn clock(&self) -> DateTime<Utc> {
@@ -209,6 +236,43 @@ fn more_entropy(s: &str) -> Option<usize> {
     let b = s.as_bytes();
     let digits = b.len() >= 9 && b[0] == b'.' && b[1..9].iter().all(u8::is_ascii_digit);
     (digits && b.get(9).is_none_or(|c| !c.is_ascii_alphanumeric())).then_some(9)
+}
+
+/// The length of the datetime `parse_datetime` reads at the start of `b`:
+/// `dddd-dd-dd`, `T` or a space, `dd:dd:dd`, an optional fraction and an
+/// optional zone (`Z`, `+hh:mm`, `+hhmm`, `+hh`).
+fn datetime_end(b: &[u8]) -> Option<usize> {
+    let digit = |i: usize| b.get(i).is_some_and(u8::is_ascii_digit);
+    let shaped = b.len() >= 19
+        && (0..19).all(|i| match i {
+            4 | 7 => b[i] == b'-',
+            10 => matches!(b[i], b'T' | b' '),
+            13 | 16 => b[i] == b':',
+            _ => digit(i),
+        });
+    if !shaped {
+        return None;
+    }
+    let mut end = 19;
+    if b.get(end) == Some(&b'.') && digit(end + 1) {
+        end += 1;
+        while digit(end) {
+            end += 1;
+        }
+    }
+    match b.get(end) {
+        Some(b'Z') => end += 1,
+        Some(b'+' | b'-') if digit(end + 1) && digit(end + 2) => {
+            end += 3;
+            if b.get(end) == Some(&b':') && digit(end + 1) && digit(end + 2) {
+                end += 3;
+            } else if digit(end) && digit(end + 1) {
+                end += 2;
+            }
+        }
+        _ => {}
+    }
+    Some(end)
 }
 
 /// `Y-m-d\TH:i:s.vP`, `Y-m-d H:i:s.v` or `Y-m-d H:i:s`, any fraction, with an
@@ -321,6 +385,20 @@ mod tests {
         assert_eq!(s.string(&entropy).as_deref(), Some("<uniqid>"));
         assert_eq!(s.string(&format!("id {entropy}, next")).as_deref(), Some("id <uniqid>, next"));
         assert_eq!(s.string(&format!("{t}a1b2c7.1234567x")).as_deref(), Some("<uniqid>.1234567x"));
+    }
+
+    #[test]
+    fn datetimes_inside_a_string() {
+        let s = scrubber();
+        assert_eq!(
+            s.string(r#"{"id":"x","time":"2026-10-12 10:00:01.602","at":"2026-10-12T10:00:00+00:00"}"#).as_deref(),
+            Some(r#"{"id":"x","time":"<now>","at":"<now>"}"#)
+        );
+        assert_eq!(s.string("at 2026-10-12 10:00:00, then").as_deref(), Some("at <now>, then"));
+        // Far from the clock, or run into other text.
+        assert_eq!(s.string(r#"{"time":"2000-01-01 00:00:00.000"}"#), None);
+        assert_eq!(s.string("x2026-10-12 10:00:00"), None);
+        assert_eq!(s.string("2026-10-12 10:00:00x"), None);
     }
 
     #[test]
