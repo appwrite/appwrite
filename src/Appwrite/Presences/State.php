@@ -251,7 +251,7 @@ class State
      * effects: purge the list cache, decrement usage (when counted) and emit the delete event.
      * `$deleted` is the document that release returned.
      */
-    public function triggerUserDeleted(
+    public function triggerPresenceDeleted(
         Database $dbForProject,
         Document $project,
         string $userId,

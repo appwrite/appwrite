@@ -1468,7 +1468,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
 
                             /** @var UsagePublisher $publisherForUsage */
                             $publisherForUsage = $container->get('publisherForUsage');
-                            $presenceState->triggerUserDeleted($dbForProject, $project, $holdUserId, $deleted, $publisherForUsage, getQueueForEvents(), getQueueForRealtime());
+                            $presenceState->triggerPresenceDeleted($dbForProject, $project, $holdUserId, $deleted, $publisherForUsage, getQueueForEvents(), getQueueForRealtime());
                         } catch (Throwable $th) {
                             Span::current()?->setError($th);
                         } finally {
