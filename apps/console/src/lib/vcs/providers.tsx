@@ -207,6 +207,18 @@ export function getKnownVcsProvider(provider?: string): VcsProviderMeta | null {
   return (id && VCS_PROVIDERS[id]) || null
 }
 
+/**
+ * Whether a repository URL is hosted on Entire. Compares the parsed host, so
+ * a URL that only mentions entire.io in its path or another host is not one.
+ */
+export function isEntireRepositoryUrl(url: string): boolean {
+  try {
+    return new URL(url).hostname === 'entire.io'
+  } catch {
+    return false
+  }
+}
+
 /** Older servers and the SDK types don't have `organizationUrl` yet. */
 type InstallationWithOrganizationUrl = Models.Installation & {
   organizationUrl?: string
