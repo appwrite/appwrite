@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Utopia\Cache\Tests\E2E;
 
 use PHPUnit\Framework\Attributes\Depends;
+use Redis;
 use RedisCluster as RedisCluster;
 use RedisClusterException;
 use Utopia\Cache\Adapter\RedisCluster as RedisAdapter;
@@ -56,8 +57,48 @@ final class RedisClusterTest extends Base
         }
 
         Services::compose('up', '-d', '--force-recreate', '--wait', 'redis-cluster');
+        $this->waitForClusterState();
 
         $this->assertSame('reconnect', self::$cache->save('test:reconnect', 'reconnect', 'test:reconnect'));
         $this->assertEquals('reconnect', self::$cache->load('test:reconnect', 5));
+    }
+
+    public function testAPurgeTheServerRejectsThrowsInsteadOfReportingNothingToPurge(): void
+    {
+        self::$redis->set('test:plain', 'value');
+
+        try {
+            self::$cache->purge('test:plain', 'field');
+            $this->fail('A purge Redis rejected must not read as a purge of a missing key');
+        } catch (RedisClusterException $error) {
+            $this->assertStringContainsString('WRONGTYPE', $error->getMessage());
+        } finally {
+            self::$redis->del('test:plain');
+        }
+
+        $this->assertFalse(self::$cache->purge('test:missing'));
+    }
+
+    /**
+     * A healthy container can still answer CLUSTERDOWN until every node has
+     * its slots assigned, so later tests would see the cluster half formed.
+     */
+    private function waitForClusterState(): void
+    {
+        Services::waitUntil(static function (): bool {
+            foreach (Services::CLUSTER_SEEDS as $seed) {
+                [$host, $port] = explode(':', $seed);
+                $node = new Redis();
+                $node->connect($host, (int) $port, self::TIMEOUT);
+                $info = $node->rawCommand('CLUSTER', 'INFO');
+                $node->close();
+
+                if (! \is_string($info) || ! str_contains($info, 'cluster_state:ok')) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
     }
 }

@@ -95,6 +95,10 @@ const DOCS_TOOLING_SECTION_NAV: DocsNavTree = [
             label: 'Grok Build',
             href: '/docs/tooling/ai/agents/grok-build',
           },
+          {
+            label: 'Pi',
+            href: '/docs/tooling/ai/agents/pi',
+          },
         ],
       },
       {
@@ -307,6 +311,10 @@ export const DOCS_LOCAL_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Native sign-in',
             href: '/docs/products/auth/native-sign-in',
+          },
+          {
+            label: 'Passkeys',
+            href: '/docs/products/auth/passkeys',
           },
           {
             label: 'Sign in with Appwrite',

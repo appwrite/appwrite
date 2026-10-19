@@ -101,7 +101,7 @@ export const jaCatalog: EnCatalog = {
         learn: '学習',
         programs: 'プログラム',
         about: '会社情報',
-        compare: '比較',
+        compare: '1対全員',
       },
       links: {
         ...enCatalog.app.footer.links,

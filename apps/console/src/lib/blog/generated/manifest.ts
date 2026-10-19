@@ -3,6 +3,34 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-appwrite-databases-hackathon",
+    "href": "/blog/post/announcing-appwrite-databases-hackathon",
+    "title": "Announcing the Appwrite Databases Hackathon",
+    "description": "Build something new with Appwrite Databases from October 19–31, compete for prizes, and show us what you can create.",
+    "date": "2026-10-19",
+    "lastUpdated": "2026-10-19",
+    "timeToRead": 5,
+    "author": "aditya-oberai",
+    "category": "hackathons",
+    "featured": false,
+    "cover": "/images/blog/announcing-appwrite-databases-hackathon/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-mcp-events",
+    "href": "/blog/post/announcing-mcp-events",
+    "title": "Announcing MCP Events: your agent hears about changes in your Appwrite project",
+    "description": "The Appwrite MCP server now supports MCP Events. Agents can subscribe to new users, failed function executions, finished deployments, new rows, and uploaded files, and react the moment they happen.",
+    "date": "2026-10-19",
+    "lastUpdated": "2026-10-19",
+    "timeToRead": 5,
+    "author": "chirag-aggarwal",
+    "category": "announcements, ai",
+    "featured": false,
+    "cover": "/images/blog/announcing-mcp-events/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-new-oauth2-providers",
     "href": "/blog/post/announcing-new-oauth2-providers",
     "title": "Announcing six new OAuth2 login providers in Appwrite Auth",
@@ -14,6 +42,34 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-new-oauth2-providers/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-passkeys",
+    "href": "/blog/post/announcing-passkeys",
+    "title": "Announcing passkeys: Sign in without a password on the web, Android, and iOS",
+    "description": "Appwrite Auth now supports passkeys. Users sign up and sign in with Face ID, Touch ID, a fingerprint, or the device PIN, and one passkey works on your website and in your Android and iOS apps.",
+    "date": "2026-10-16",
+    "lastUpdated": "2026-10-16",
+    "timeToRead": 6,
+    "author": "chirag-aggarwal",
+    "category": "announcements, security",
+    "featured": false,
+    "cover": "/images/blog/announcing-passkeys/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "announcing-appwrite-helm-chart",
+    "href": "/blog/post/announcing-appwrite-helm-chart",
+    "title": "Announcing the official Appwrite Helm chart for Kubernetes",
+    "description": "Self-host Appwrite on Kubernetes with the official Helm chart, using built-in or managed PostgreSQL, Redis, and ClickHouse, S3, and Functions and Sites.",
+    "date": "2026-10-15",
+    "lastUpdated": "2026-10-15",
+    "timeToRead": 8,
+    "author": "levi-van-noort",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-appwrite-helm-chart/cover.avif",
     "hasCover": true
   },
   {
@@ -501,7 +557,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "slug": "introducing-appwrite-cloud-start-plan",
     "href": "/blog/post/introducing-appwrite-cloud-start-plan",
     "title": "Introducing Appwrite Start",
-    "description": "Appwrite Start is Appwrite Cloud production pricing for India, built so more developers can grow on Appwrite rather than maximize margin on this tier.",
+    "description": "Appwrite Start is Appwrite Cloud production pricing for selected regions, built so more developers can grow on Appwrite rather than maximize margin on this tier.",
     "date": "2026-09-21",
     "lastUpdated": "2026-09-21",
     "timeToRead": 7,

@@ -8,6 +8,10 @@ All notable changes to `utopia-php/validators` are documented in this file.
 
 - New `Port` validator for a published port as Docker accepts it: a port from 1 to 65535 (`8080`), or one bound to a single host interface (`127.0.0.1:8080`, `[::1]:8080`). Integers are accepted; leading zeros, hostnames and unbracketed IPv6 are rejected.
 
+### Fixed
+
+- `Integer` describes the 64-bit signed maximum as 9,223,372,036,854,775,807. It computed the bounds with `**`, which returns a float past `PHP_INT_MAX`, so the description printed 9,223,372,036,854,775,808.
+
 ### Changed
 
 - Move the base class from `Utopia\Validator` to `Utopia\Validator\Validator` and the PHPStan extension from `Utopia\PHPStan\DisallowAssertEqualsExtension` to `Utopia\Validator\PHPStan\DisallowAssertEqualsExtension`, so the package declares a single `Utopia\Validator\` prefix. Every other class keeps its name.

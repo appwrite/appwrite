@@ -13,11 +13,13 @@ use Tests\Unit\Mqtt\Fakes\RecordingAdapter;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\Mqtt\Packet;
@@ -74,12 +76,14 @@ final class UnsubscribeTest extends TestCase
             Permission::update(Role::any()),
             Permission::delete(Role::any()),
         ];
-        $this->database->createCollection('projects', [], [], $any, false);
-        $this->database->createCollection('topics', [], [], $any, false);
-        $this->database->createAttribute('topics', 'name', Database::VAR_STRING, 255, true);
-        $this->database->createCollection('subscribers', [], [], $any, false);
-        $this->database->createAttribute('subscribers', 'topicInternalId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('subscribers', 'userId', Database::VAR_STRING, 255, true);
+        $this->database->createCollection(Collection::create('projects', permissions: $any, documentSecurity: false));
+        $this->database->createCollection(Collection::create('topics', attributes: [
+            Attribute::string('name', 255, true),
+        ], permissions: $any, documentSecurity: false));
+        $this->database->createCollection(Collection::create('subscribers', attributes: [
+            Attribute::string('topicInternalId', 255, true),
+            Attribute::string('userId', 255, true),
+        ], permissions: $any, documentSecurity: false));
 
         $container = new Container();
         $accounts = new Accounts();
@@ -119,7 +123,7 @@ final class UnsubscribeTest extends TestCase
     private function subscribe(string $topicInternalId, string $userId): void
     {
         $this->database->createDocument('subscribers', new Document([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             'topicInternalId' => $topicInternalId,
             'userId' => $userId,
         ]));

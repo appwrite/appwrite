@@ -9,7 +9,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class AvatarsCustomServerTest extends Scope
 {
@@ -24,7 +24,7 @@ final class AvatarsCustomServerTest extends Scope
          * caller: Gravatar and Libravatar miss on the random email, so the
          * target's name renders as initials.
          */
-        $userId = ID::unique();
+        $userId = Id::unique();
 
         $user = $this->client->call(Client::METHOD_POST, '/users', \array_merge([
             'content-type' => 'application/json',
@@ -86,7 +86,7 @@ final class AvatarsCustomServerTest extends Scope
          * gets the static fallback. Initials must never derive from the
          * email address.
          */
-        $namelessId = ID::unique();
+        $namelessId = Id::unique();
 
         $user = $this->client->call(Client::METHOD_POST, '/users', \array_merge([
             'content-type' => 'application/json',
@@ -118,7 +118,7 @@ final class AvatarsCustomServerTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', \array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);

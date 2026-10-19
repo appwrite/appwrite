@@ -1,20 +1,19 @@
 ---
 layout: changelog
-title: "Sign users in with Hugging Face, Resend, Cloudflare, TikTok, Kakao, and Webflow"
+title: "Introducing MCP Events"
 date: 2026-10-19
-cover: /images/blog/announcing-new-oauth2-providers/cover.avif
-description: "Appwrite Auth adds six OAuth2 login providers: Hugging Face, Resend, Cloudflare, TikTok, Kakao, and Webflow, each with its own OAuthProvider enum value."
-tags: auth, sdk
+cover: /images/blog/announcing-mcp-events/cover.avif
+tags: mcp
 ---
 
-[OAuth2 login](/docs/products/auth/oauth2) in Appwrite Auth now supports six more providers: **Hugging Face**, **Resend**, **Cloudflare**, **TikTok**, **Kakao**, and **Webflow**. Enable them in your project under **Auth** > **Settings**, then pass the matching value to `createOAuth2Session` or `createOAuth2Token`: `OAuthProvider.Huggingface`, `Resend`, `Cloudflare`, `Tiktok`, `Kakao`, or `Webflow`.
+Agents connected to the [Appwrite MCP server](/docs/tooling/ai/mcp-servers) can now subscribe to events in your project and react when they happen, without polling. MCP Events is the newest extension to the Model Context Protocol, proposed as [SEP-3415](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3415), and Appwrite is among its earliest adopters, so you can build event-driven agents today.
 
-Appwrite handles PKCE for Cloudflare and Resend and refreshes provider tokens for every new provider except Webflow. TikTok and Resend don't share an email address, so those users are created without one. Resend also needs an explicit scope, either `emails:send` or `full_access`. All six are live on Appwrite Cloud and available in self-hosted Appwrite 2.4 and later.
+Six events are available at launch: new users, failed function executions, finished function and site deployments, new rows, and uploaded files. Agents on your machine receive events over an open stream, and agents with a public HTTPS endpoint receive them as signed webhook calls. Each subscription is an Appwrite webhook in your project.
 
-{% arrow_link href="/blog/post/announcing-new-oauth2-providers" %}
+{% arrow_link href="/blog/post/announcing-mcp-events" %}
 Read the announcement
 {% /arrow_link %}
 
-{% arrow_link href="/docs/products/auth/oauth2" %}
-Set up OAuth2 login
+{% arrow_link href="/docs/tooling/ai/mcp-servers#events" %}
+Learn more about MCP Events
 {% /arrow_link %}
