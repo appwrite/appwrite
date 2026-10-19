@@ -663,7 +663,7 @@ return [
     ],
     Exception::PROVIDER_REPOSITORY_NOT_FOUND => [
         'name' => Exception::PROVIDER_REPOSITORY_NOT_FOUND,
-        'description' => 'VCS (Version Control System) repository with the requested ID could not be found, or the installation no longer has access to it. Check to see if the ID is correct, and if the repository is still granted to the installation you provided.',
+        'description' => 'VCS (Version Control System) repository could not be found, or the installation no longer has access to it.',
         'code' => 404,
     ],
     Exception::REPOSITORY_NOT_FOUND => [
