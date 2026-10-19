@@ -1,14 +1,6 @@
 {
-  "updated": "2026-10-19T19:53:00Z",
+  "updated": "2026-10-19T21:18:00Z",
   "tasks": [
-    {
-      "id": "db-ops-cases",
-      "title": "Database: cases for the 30 ops without any",
-      "area": "Database 8",
-      "status": "progress",
-      "updated": "2026-10-19T20:45:00Z",
-      "note": "Catch-up G, 2-hour box. database is complete, so its default CI shard (postgres) also checks coverage, which fails on 30 spec operations without a recorded case (mutate, with_snapshot, set_filters, authorize_create and others). With every difference fixed, this is what keeps that lane red and the STATUS row at \"regressed\"."
-    },
     {
       "id": "crate-layout",
       "title": "One type per file, modules after PHP namespaces",
@@ -112,6 +104,14 @@
       "status": "todo",
       "note": "On a quiet machine; the last container runs were taken under load.",
       "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "db-ops-cases",
+      "title": "Database: cases for the 30 ops without any",
+      "area": "Database 8",
+      "status": "done",
+      "updated": "2026-10-19T21:18:00Z",
+      "note": "Catch-up G, done in 45 minutes of a 2-hour box. Five of the 30 operations were already exercised, but only inside callbacks, which coverage does not count; the other 25 had no case. Two new case files cover all 30 with success and failure paths: settings and toggles, snapshots and restored authorization, raw statements (from, query, mutate, schema), staged writes (authorize_*, prepare_create, create_prepared, apply_select_filters_to_documents), create_indexes, savepoints, and Mirror's await_replications. Nothing waived. Coverage now passes: 100% API, 568 of 568 PHP test files, 26,798 cases, no operation without one. One gap is designed around: PHP's create_prepared writes $sequence back onto the caller's document object, which Rust's by-value API cannot."
     },
     {
       "id": "usage-gauge-tie",
