@@ -1126,7 +1126,7 @@ class Nats implements Synchronous, Consumer, Bounded
                 $end--;
             }
 
-            if ($start === $at || !str_contains(substr($text, $at + 1, $end - $at - 1), '.')) {
+            if ($start === $at || $end === $at + 1) {
                 continue;
             }
 

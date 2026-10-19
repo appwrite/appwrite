@@ -2661,6 +2661,17 @@ final class NatsBrokerTest extends TestCase
         $this->assertSame(256, \strlen($error), 'truncated');
     }
 
+    /** A local mail setup addresses mailboxes on a host with no dot in its name. */
+    public function testASingleLabelEmailAddressIsMasked(): void
+    {
+        $this->broker->publish($this->queue, ['task' => 'mail']);
+        $this->failThrough($this->broker, new PermanentFailure('550 <alice@localhost> rejected, relay user@internal; quota @ 90%, see admin@'));
+
+        $headers = $this->deadLetter($this->queue);
+        $this->assertInstanceOf(Headers::class, $headers);
+        $this->assertSame('Utopia\\Queue\\PermanentFailure: 550 <[email]> rejected, relay [email]; quota @ 90%, see admin@', $headers->get('Utopia-Queue-Dead-Error'));
+    }
+
     /** A re-driven job is a fresh attempt, not one that already died. */
     public function testARedriveDropsTheDeadLetterHeaders(): void
     {
