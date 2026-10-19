@@ -134,6 +134,7 @@ export const PUBLIC_ICON_FILENAMES = [
   'paypal.svg',
   'perplexity.svg',
   'php.svg',
+  'pi.svg',
   'pinterest.svg',
   'pnpm.svg',
   'podio.svg',

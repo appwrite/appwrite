@@ -28,7 +28,7 @@ _Note: This is for the **Swift Server SDK**, meant for server and backend applic
 ## Step 3: Install Appwrite SDK
 
 - Install the Swift Appwrite SDK by going to **File** > **Add Packages...** and search for the repo url `https://github.com/appwrite/sdk-for-swift` and select `sdk-for-swift`.
-- Specify version as `10.0.0` with rule **Up to Next Major Version**.
+- Specify version as `23.0.0` with rule **Up to Next Major Version**.
 
 ## Step 4: Import Appwrite and initialize client
 
