@@ -356,7 +356,7 @@ class Deletes extends Action
                 $this->deleteExpiredTransactions($project, $getProjectDB);
                 $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
                 $this->deleteExpiredPushLedger($project, $getProjectDB);
-                $this->deleteOldDeployments($publisherForDeletes, $project, $getProjectDB);
+                $this->deleteOldDeployments($dbForPlatform, $publisherForDeletes, $project, $getProjectDB);
                 $this->updateProcessingMigrations($project, $getProjectDB);
                 break;
             case DELETE_TYPE_REPORT:
@@ -575,7 +575,7 @@ class Deletes extends Action
         );
     }
 
-    private function deleteOldDeployments(DeletePublisher $publisherForDeletes, Document $project, callable $getProjectDB): void
+    private function deleteOldDeployments(Database $dbForPlatform, DeletePublisher $publisherForDeletes, Document $project, callable $getProjectDB): void
     {
         if ($project->getId() === 'console') {
             return;
@@ -586,7 +586,7 @@ class Deletes extends Action
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
-        $removalCallback = function (Document $resource) use ($dbForProject, $publisherForDeletes, $project) {
+        $removalCallback = function (Document $resource) use ($dbForPlatform, $dbForProject, $publisherForDeletes, $project) {
             $retention = $resource->getAttribute('deploymentRetention', 0);
 
             // 0 means unlimited - never delete
@@ -594,7 +594,29 @@ class Deletes extends Action
                 return;
             }
 
+            $kept = [];
             $activeDeploymentId = $resource->getAttribute('deploymentId', '');
+            if (!empty($activeDeploymentId)) {
+                $kept[] = $activeDeploymentId;
+            }
+
+            // A custom domain pinned to a branch serves that branch's latest build, which is
+            // rarely the active deployment; deleting the deployment would delete the domain too.
+            $this->listByGroup(
+                'rules',
+                [
+                    Query::equal('projectInternalId', [$project->getSequence()]),
+                    Query::equal('type', ['deployment']),
+                    Query::equal('trigger', ['manual']),
+                    Query::equal('deploymentResourceType', [$resource->getCollection() === 'sites' ? 'site' : 'function']),
+                    Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
+                    Query::notEqual('deploymentId', ''),
+                ],
+                $dbForPlatform,
+                function (Document $rule) use (&$kept) {
+                    $kept[] = $rule->getAttribute('deploymentId');
+                }
+            );
 
             $queries = [
                 Query::createdBefore(DateTime::addSeconds(new \DateTime(), -1 * $retention * 24 * 60 * 60)),
@@ -603,8 +625,8 @@ class Deletes extends Action
                 Query::orderDesc('$createdAt'),
             ];
 
-            if (!empty($activeDeploymentId)) {
-                $queries[] = Query::notEqual('$id', $activeDeploymentId);
+            foreach (\array_unique($kept) as $deploymentId) {
+                $queries[] = Query::notEqual('$id', $deploymentId);
             }
 
             $this->deleteByGroup(
