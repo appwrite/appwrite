@@ -425,6 +425,14 @@ class Create extends Action
         $deliveryId = \strval($parsedPayload['deliveryId'] ?? '');
         $errors = [];
         foreach ($repositories as $repository) {
+            // Every region gets the delivery and they share the platform
+            // database, so a region claims only the repositories it deploys -
+            // a claim on another region's would make that region skip it
+            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $repository->getAttribute('projectId', '')));
+            if ($project->isEmpty() || !$this->isProjectInCurrentRegion($project)) {
+                continue;
+            }
+
             // Document ids are capped at 36 characters; a digest prefix keeps the claim within it
             $claim = 'entire-' . \substr(\hash('sha256', $deliveryId . ':' . $repository->getId()), 0, 29);
             if ($deliveryId !== '') {
