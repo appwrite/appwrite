@@ -30,6 +30,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Lock\Distributed;
 use Utopia\Platform\Action;
 use Utopia\Psr7\Stream;
 use Utopia\Queue\Message;
@@ -170,8 +171,8 @@ class Jobs extends Action
         // Each delivery claims with its own token, so it can tell its claim from a successor's.
         $claim = self::CLAIMED . ':' . \bin2hex(\random_bytes(8));
 
-        try {
-            $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function () use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, $key, $claim, &$failure): void {
+        $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function (Distributed $lock) use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, $key, $claim, &$failure): void {
+            try {
                 // A copy of an event is claimed while it is applied and marked applied once it
                 // has been. A repeat of an applied event is skipped. A repeat that finds a live
                 // claim is failed, so the broker brings it back once the claim has settled: it
@@ -257,18 +258,18 @@ class Jobs extends Action
                 }
 
                 $settle();
-            }, self::LOCK_TIMEOUT);
-        } catch (\Throwable $error) {
-            // A callback that failed part-way gives up its claim, so its redelivery is applied
-            // straight away rather than once the claim lapses. Only while the key still holds this
-            // delivery's claim: a copy that timed out on the lock, or found another copy's claim,
-            // holds none, and a claim that lapsed may have been taken over. The cache has no
-            // compare-and-delete, so a takeover between the load and the purge is still lost.
-            if ($key !== null && $cache->load($key, self::DEDUPE_TTL) === $claim) {
-                $cache->purge($key);
+            } catch (\Throwable $error) {
+                // A callback that failed part-way gives up its claim, so its redelivery is applied
+                // straight away rather than once the claim lapses. Claims are only written under this
+                // lock, so while refresh() confirms it is still held no successor can claim between
+                // the load and the purge. A lease that lapsed may have been taken over, and a copy
+                // that found another copy's claim holds none: both leave the key alone.
+                if ($key !== null && $lock->refresh() && $cache->load($key, self::DEDUPE_TTL) === $claim) {
+                    $cache->purge($key);
+                }
+                throw $error;
             }
-            throw $error;
-        }
+        }, self::LOCK_TIMEOUT);
 
         if ($failure !== null) {
             throw $failure;
