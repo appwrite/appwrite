@@ -7,6 +7,7 @@
 
 import type { ReactElement } from 'react'
 import type { Models } from '@appwrite.io/console'
+import type { ConsoleProfileFeatures } from '@/lib/console-profiles'
 
 export function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -148,27 +149,35 @@ export const VCS_PROVIDERS: Record<VcsProviderId, VcsProviderMeta> = {
 /** Fallback provider for display when a value is unknown or legacy. */
 export const DEFAULT_VCS_OAUTH_PROVIDER: VcsProviderId = 'github'
 
-/** Always available for Git connect, regardless of profile flags. */
-const ALWAYS_ENABLED_VCS_PROVIDERS = new Set<VcsProviderId>([
-  'github',
-  'gitlab',
-  'bitbucket',
-])
+type VcsConnectFlag = keyof Pick<
+  ConsoleProfileFeatures,
+  'extraVcsOAuth' | 'vcsEntire'
+>
+
+/**
+ * The profile flag each provider's Git connect sits behind, or null when it is
+ * always available. A new provider has to pick one.
+ */
+const VCS_CONNECT_FLAGS: Record<VcsProviderId, VcsConnectFlag | null> = {
+  github: null,
+  entire: 'vcsEntire',
+  origin: 'extraVcsOAuth',
+  gitlab: null,
+  bitbucket: null,
+}
 
 /**
  * Connect/authorize providers shown in Git installation UI.
  * Existing installations of a hidden provider still render; only new OAuth
  * connect actions are filtered.
- *
- * `extraVcsOAuth` gates Origin and Entire; every other provider is always visible.
  */
 export function getVisibleVcsOAuthProviders(
-  extraVcsOAuth: boolean,
+  features: Pick<ConsoleProfileFeatures, VcsConnectFlag>,
 ): VcsProviderMeta[] {
-  return Object.values(VCS_PROVIDERS).filter(
-    (provider) =>
-      ALWAYS_ENABLED_VCS_PROVIDERS.has(provider.id) || extraVcsOAuth,
-  )
+  return Object.values(VCS_PROVIDERS).filter((provider) => {
+    const flag = VCS_CONNECT_FLAGS[provider.id]
+    return flag === null || features[flag]
+  })
 }
 
 /**
