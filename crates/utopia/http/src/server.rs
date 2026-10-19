@@ -134,13 +134,19 @@ async fn dispatch<H: Handler>(
 ) -> http::Response<Body> {
     let current = in_flight.fetch_add(1, Ordering::SeqCst);
     let _guard = InFlight(in_flight);
+    let (parts, body) = req.into_parts();
     if current >= options.max_concurrency {
+        // Read the body before answering. Closing here makes the client see a
+        // reset while it is still writing the upload, the same failure a 413
+        // used to cause in front of Traefik.
+        let _ = collect_body(body, options.max_body).await;
         let mut r = Response::new();
         r.set_status(http::StatusCode::SERVICE_UNAVAILABLE);
+        r.add_header("connection", "close");
         r.force_status();
+        r.flush();
         return r.into_http();
     }
-    let (parts, body) = req.into_parts();
     let body = match collect_body(body, options.max_body).await {
         Ok(collected) => collected,
         Err(()) => {

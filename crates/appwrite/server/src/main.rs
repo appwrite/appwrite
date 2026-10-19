@@ -84,6 +84,11 @@ fn serve() {
         let mut options = ServerOptions::default();
         // `app/http.php` sets Swoole's package_max_length to 12MB. A larger body is 413.
         options.max_body = 12 * 1024 * 1024;
+        // The shared default of 1,000 rejects this process once a slow minute
+        // (a busy machine, preview renders, chunked uploads) holds that many
+        // requests. The benchmark client opens up to 1,040 of them at 500
+        // req/s, and each rejection was a 503. 4,096 still bounds a flood.
+        options.max_concurrency = appwrite_core::config::env_int("_APP_RUST_MAX_CONCURRENCY", 4_096).max(1) as usize;
         tracing::info!(workers, "appwrite rust api starting");
         if let Err(e) = utopia_http::serve(addr, Arc::new(platform), options, shutdown_signal()).await {
             tracing::error!(error = %e, "server error");

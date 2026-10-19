@@ -86,7 +86,10 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
 
     let local = Stored::local_root();
     let mime = local.file_mime_type(&upload.tmp).await?;
-    let bytes = std::fs::read(&upload.tmp)
+    let tmp = upload.tmp.clone();
+    let bytes = utopia_async::spawn_blocking(move || std::fs::read(tmp))
+        .await
+        .map_err(|err| Error::with_message(ErrorType::GeneralServerError, err.to_string()))?
         .map_err(|err| Error::with_message(ErrorType::StorageInvalidFile, err.to_string()))?;
     let device = Stored::for_project(&ctx.project.id)?;
     let path = device.file_path(bucket.id(), &file_id, &upload.name);

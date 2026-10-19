@@ -102,12 +102,16 @@ async fn serves_an_application() {
     let silent = request(port, &get("/silent")).await;
     assert!(silent.starts_with("HTTP/1.1 200 OK\r\n"), "{silent}");
 
-    // Past max_concurrency, requests get a 503.
+    // Past max_concurrency, requests get a 503, including one that still has a body to send.
     let slow = utopia_async::spawn(request(port, get("/slow")));
     let slow2 = utopia_async::spawn(request(port, get("/slow")));
     utopia_async::sleep(Duration::from_millis(100)).await;
     let busy = request(port, &get("/")).await;
     assert!(busy.starts_with("HTTP/1.1 503 Service Unavailable\r\n"), "{busy}");
+    let posted =
+        request(port, "POST / HTTP/1.1\r\nHost: localhost\r\nContent-Length: 5\r\nConnection: close\r\n\r\nhello")
+            .await;
+    assert!(posted.starts_with("HTTP/1.1 503 Service Unavailable\r\n"), "{posted}");
     assert!(slow.await.unwrap().ends_with("slow"));
     assert!(slow2.await.unwrap().ends_with("slow"));
 
