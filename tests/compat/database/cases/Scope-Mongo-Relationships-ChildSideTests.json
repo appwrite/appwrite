@@ -4347,7 +4347,8 @@
               "$updatedAt": "<now>",
               "$permissions": [],
               "$sequence": "<uuid7>",
-              "$id": "p1"
+              "$id": "p1",
+              "related": []
             }
           }
         },
@@ -5043,7 +5044,8 @@
               "$updatedAt": "<now>",
               "$permissions": [],
               "$sequence": "<uuid7>",
-              "$id": "c1"
+              "$id": "c1",
+              "back": []
             }
           }
         }
@@ -5699,7 +5701,8 @@
               "$updatedAt": "<now>",
               "$permissions": [],
               "$sequence": "<uuid7>",
-              "$id": "p1"
+              "$id": "p1",
+              "related": []
             }
           }
         },
@@ -5717,7 +5720,8 @@
               "$updatedAt": "<now>",
               "$permissions": [],
               "$sequence": "<uuid7>",
-              "$id": "c1"
+              "$id": "c1",
+              "back": []
             }
           }
         }

@@ -5958,7 +5958,7 @@
               {
                 "$query": {
                   "method": "join",
-                  "attribute": "jda-items",
+                  "attribute": "jda.items",
                   "values": [
                     {
                       "$query": {
@@ -5972,7 +5972,7 @@
                       }
                     }
                   ],
-                  "alias": "jda-items"
+                  "alias": "jda.items"
                 }
               }
             ]
@@ -5980,7 +5980,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Query",
-              "message": "Invalid query: Table ID \"jda-items\" cannot be used as the join alias: an alias must start with a letter or an underscore and contain only letters, digits and underscores. Pass an alias for the join"
+              "message": "Invalid query: Table ID \"jda.items\" cannot be used as the join alias: an alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens. Pass an alias for the join"
             }
           }
         },
@@ -5992,9 +5992,9 @@
               {
                 "$query": {
                   "method": "crossJoin",
-                  "attribute": "jda-items",
+                  "attribute": "jda.items",
                   "values": [],
-                  "alias": "jda-items"
+                  "alias": "jda.items"
                 }
               }
             ]
@@ -6002,7 +6002,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Query",
-              "message": "Invalid query: Table ID \"jda-items\" cannot be used as the join alias: an alias must start with a letter or an underscore and contain only letters, digits and underscores. Pass an alias for the join"
+              "message": "Invalid query: Table ID \"jda.items\" cannot be used as the join alias: an alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens. Pass an alias for the join"
             }
           }
         },
@@ -6014,7 +6014,7 @@
               {
                 "$query": {
                   "method": "join",
-                  "attribute": "jda-items",
+                  "attribute": "jda.items",
                   "values": [
                     {
                       "$query": {
@@ -6068,63 +6068,7 @@
               {
                 "$query": {
                   "method": "join",
-                  "attribute": "jda.items",
-                  "values": [
-                    {
-                      "$query": {
-                        "method": "on",
-                        "attribute": "",
-                        "values": [
-                          "customerId",
-                          "=",
-                          "$id"
-                        ]
-                      }
-                    }
-                  ],
-                  "alias": "jda.items"
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Query",
-              "message": "Invalid query: Table ID \"jda.items\" cannot be used as the join alias: an alias must start with a letter or an underscore and contain only letters, digits and underscores. Pass an alias for the join"
-            }
-          }
-        },
-        {
-          "op": "database.find",
-          "args": {
-            "collection": "jda_orders",
-            "queries": [
-              {
-                "$query": {
-                  "method": "crossJoin",
-                  "attribute": "jda.items",
-                  "values": [],
-                  "alias": "jda.items"
-                }
-              }
-            ]
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Query",
-              "message": "Invalid query: Table ID \"jda.items\" cannot be used as the join alias: an alias must start with a letter or an underscore and contain only letters, digits and underscores. Pass an alias for the join"
-            }
-          }
-        },
-        {
-          "op": "database.find",
-          "args": {
-            "collection": "jda_orders",
-            "queries": [
-              {
-                "$query": {
-                  "method": "join",
-                  "attribute": "jda.items",
+                  "attribute": "jda-items",
                   "values": [
                     {
                       "$query": {
@@ -6138,7 +6082,7 @@
                       }
                     }
                   ],
-                  "alias": "item"
+                  "alias": "jda-items"
                 }
               },
               {
@@ -6147,7 +6091,7 @@
                   "attribute": "",
                   "values": [
                     "total",
-                    "item.label"
+                    "jda-items.label"
                   ]
                 }
               }
@@ -6157,7 +6101,7 @@
             {
               "$document": {
                 "total": 10,
-                "item.label": "first",
+                "jda-items.label": "first",
                 "$id": "o1",
                 "$sequence": "1",
                 "$createdAt": "<now>",
@@ -6192,7 +6136,7 @@
                       }
                     }
                   ],
-                  "alias": "my-alias"
+                  "alias": "my.alias"
                 }
               }
             ]
@@ -6200,7 +6144,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Query",
-              "message": "Invalid query: Join alias must start with a letter or an underscore and contain only letters, digits and underscores"
+              "message": "Invalid query: Join alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens"
             }
           }
         },
@@ -11216,12 +11160,12 @@
               "$hook": "JoinTables",
               "tables": {
                 "customers": "jda_customers",
-                "public-customers": "jda_customers"
+                "public.customers": "jda_customers"
               },
-              "as": "o1120"
+              "as": "o1128"
             }
           },
-          "bind": "s17492",
+          "bind": "s18400",
           "expect": {
             "$database": true
           }
@@ -11309,7 +11253,7 @@
               {
                 "$query": {
                   "method": "join",
-                  "attribute": "public-customers",
+                  "attribute": "public.customers",
                   "values": [
                     {
                       "$query": {
@@ -11323,7 +11267,7 @@
                       }
                     }
                   ],
-                  "alias": "public-customers"
+                  "alias": "public.customers"
                 }
               }
             ]
@@ -11331,7 +11275,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Query",
-              "message": "Invalid query: Table ID \"public-customers\" cannot be used as the join alias: an alias must start with a letter or an underscore and contain only letters, digits and underscores. Pass an alias for the join"
+              "message": "Invalid query: Table ID \"public.customers\" cannot be used as the join alias: an alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens. Pass an alias for the join"
             }
           }
         },
@@ -11339,7 +11283,7 @@
           "op": "database.remove_hook",
           "args": {
             "hook": {
-              "$obj": "o1120"
+              "$obj": "o1128"
             }
           },
           "expect": {

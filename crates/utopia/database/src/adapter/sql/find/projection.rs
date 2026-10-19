@@ -97,15 +97,18 @@ impl Sql {
             list.extend(explicit.iter().map(|k| storage::column(k).to_owned()));
         }
 
-        let quote = self.identifier_quote();
         let mut columns = Vec::with_capacity(list.len());
         for selection in list {
             if let Some((prefix, name)) = selection.split_once('.')
                 && join_aliases.iter().any(|a| a == prefix)
             {
                 let internal = self.filter(storage::column(name));
-                let qualified = format!("{quote}{}{quote}.{quote}{internal}{quote}", self.filter(prefix));
-                columns.push(format!("{qualified} AS {quote}{prefix}.{internal}{quote}"));
+                columns.push(format!(
+                    "{}.{} AS {}",
+                    self.quote(prefix),
+                    self.quote(&internal),
+                    self.quote(&self.join_label(prefix, &internal))
+                ));
                 continue;
             }
             columns.push(self.filter(&selection));
@@ -309,7 +312,7 @@ impl Sql {
 /// no scalar: a list or object in the first string function that reads it
 /// (`str_ends_with()` in `applySelectionProjection()` for `find()`, given
 /// as `first`, else `strpos()` in `mapSelectionsToColumns()`), and `null`
-/// in `filter()` (`Adapter/SQL.php` line 4213 at 8.3.6).
+/// in `filter()` (`Adapter/SQL.php` line 4234 at 8.3.10).
 pub(crate) fn php_selections(
     values: &[utopia_query::Value],
     first: Option<&str>,
@@ -341,7 +344,7 @@ pub(crate) fn php_selections(
         if matches!(v, Q::Null) {
             return Err(Error::new(
                 Kind::TypeError,
-                "Utopia\\Database\\Adapter::filter(): Argument #1 ($value) must be of type string, null given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 4213",
+                "Utopia\\Database\\Adapter::filter(): Argument #1 ($value) must be of type string, null given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 4234",
             ));
         }
     }

@@ -665,22 +665,22 @@
     "joins/invalid_alias postgres/plain": [
         "error",
         "Utopia\\Database\\Exception\\Query",
-        "Join alias must start with a letter or an underscore and contain only letters, digits and underscores"
+        "Join alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens"
     ],
     "joins/invalid_alias mariadb/plain": [
         "error",
         "Utopia\\Database\\Exception\\Query",
-        "Join alias must start with a letter or an underscore and contain only letters, digits and underscores"
+        "Join alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens"
     ],
     "joins/invalid_alias mysql/plain": [
         "error",
         "Utopia\\Database\\Exception\\Query",
-        "Join alias must start with a letter or an underscore and contain only letters, digits and underscores"
+        "Join alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens"
     ],
     "joins/invalid_alias sqlite/plain": [
         "error",
         "Utopia\\Database\\Exception\\Query",
-        "Join alias must start with a letter or an underscore and contain only letters, digits and underscores"
+        "Join alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens"
     ],
     "joins/authorized_right_join_outer_chain postgres/plain": [
         "sql",

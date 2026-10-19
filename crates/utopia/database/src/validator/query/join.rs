@@ -12,13 +12,30 @@ use crate::attribute::Attribute;
 use crate::document;
 use crate::query::DEFAULT_ALIAS;
 use crate::validator::Message;
-use crate::validator::query::base::{INVALID_QUERY, MethodType, base_is_valid, is_alias_identifier, query_validator};
+use crate::validator::query::base::{INVALID_QUERY, MethodType, base_is_valid, matches_identifier, query_validator};
 use crate::validator::query::joined::collection::Collection;
 
 /// The most joins one query set may declare.
 ///
 /// PHP: `Join::MAX_PER_QUERY`.
 pub const MAX_PER_QUERY: usize = 8;
+
+/// The longest join alias: PostgreSQL folds an identifier past 63 bytes, so
+/// two longer aliases could read as one.
+///
+/// PHP: `Join::MAX_ALIAS_LENGTH`.
+pub const MAX_ALIAS_LENGTH: usize = 63;
+
+/// Whether `alias` holds only the characters of an Appwrite ID but `.`, which
+/// separates an alias from its column (`Join::ALIAS_PATTERN`:
+/// `/^[A-Za-z0-9_][A-Za-z0-9_-]*$/`).
+pub fn is_join_alias(alias: &str) -> bool {
+    matches_identifier(
+        alias.as_bytes(),
+        |c| c.is_ascii_alphanumeric() || c == b'_',
+        |c| c.is_ascii_alphanumeric() || c == b'_' || c == b'-',
+    )
+}
 
 const OPERATORS: [&str; 7] = ["=", "!=", "<", ">", "<=", ">=", "<>"];
 
@@ -46,10 +63,11 @@ struct State {
 ///
 /// let join = Join::default();
 /// assert!(join.check(&Query::join("orders", "ord", vec![Query::on("$id", "customerId", "=")]).unwrap()));
-/// assert!(!join.check(&Query::cross_join("orders", "my-alias").unwrap()));
+/// assert!(join.check(&Query::cross_join("orders", "2024-orders").unwrap()));
+/// assert!(!join.check(&Query::cross_join("orders", "my.alias").unwrap()));
 /// assert_eq!(
 ///     join.description(),
-///     "Join alias must start with a letter or an underscore and contain only letters, digits and underscores"
+///     "Join alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens"
 /// );
 /// ```
 ///
@@ -118,15 +136,22 @@ impl Join {
         if alias.is_empty() {
             return Some("Join alias is required".to_owned());
         }
-        if !is_alias_identifier(alias) {
+        if !is_join_alias(alias) {
             return Some(if defaulted {
                 unusable_table(
                     alias,
-                    "an alias must start with a letter or an underscore and contain only letters, digits and underscores",
+                    "an alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens",
                 )
             } else {
-                "Join alias must start with a letter or an underscore and contain only letters, digits and underscores"
+                "Join alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens"
                     .to_owned()
+            });
+        }
+        if alias.len() > MAX_ALIAS_LENGTH {
+            return Some(if defaulted {
+                unusable_table(alias, &format!("an alias must be at most {MAX_ALIAS_LENGTH} characters"))
+            } else {
+                format!("Join alias must be at most {MAX_ALIAS_LENGTH} characters")
             });
         }
         if alias.eq_ignore_ascii_case(DEFAULT_ALIAS) {

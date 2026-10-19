@@ -163,6 +163,8 @@
     "vendor/utopia-php/database/tests/unit/TransactionStateTest.php": "Every test drives the library through test-defined subclasses (TransactionStateConnection)",
     "vendor/utopia-php/database/tests/unit/UnconfirmedSchemaChangeTest.php": "Every test builds anonymous subclasses of Utopia\\Database\\Adapter\\SQLite overriding their internals",
     "vendor/utopia-php/database/tests/unit/UnindexedJoinTenantTest.php": "Every test stubs PDO/PDOStatement (PHPUnit test doubles scripting the driver's replies)",
-    "vendor/utopia-php/database/tests/unit/Vector/VectorValidationTest.php": "Every test uses PHPUnit test doubles (Adapter)"
+    "vendor/utopia-php/database/tests/unit/Vector/VectorValidationTest.php": "Every test uses PHPUnit test doubles (Adapter)",
+    "vendor/utopia-php/database/tests/unit/Adapter/JoinLabelRetentionTest.php": "Every test reads through an anonymous subclass of SQLite that lowers MAX_LABEL_LENGTH to 8, and one reads the private joinLabels by reflection; the digest labels and their retention are covered by the Rust unit tests in adapter/sql/row.rs and by the join cases",
+    "vendor/utopia-php/database/tests/unit/Documents/CacheUnavailableTest.php": "Every test runs over the test's own cache adapters (UnavailableCache, a Leasable wrapper that fails reads or writes on demand) or its CommitHookMemory subclass of Memory: a cache failing mid-write is not something a case can carry"
   }
 }

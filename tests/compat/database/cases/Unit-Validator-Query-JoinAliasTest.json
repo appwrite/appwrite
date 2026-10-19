@@ -16,9 +16,9 @@
               "left": "$id",
               "right": "customerId"
             },
-            "as": "o1660"
+            "as": "o8359"
           },
-          "bind": "s2622",
+          "bind": "s12947",
           "expect": {
             "$query": {
               "method": "on",
@@ -41,13 +41,13 @@
               "alias": "j0",
               "on": [
                 {
-                  "$obj": "o1660"
+                  "$obj": "o8359"
                 }
               ]
             },
-            "as": "o1661"
+            "as": "o8360"
           },
-          "bind": "s2623",
+          "bind": "s12948",
           "expect": {
             "$query": {
               "method": "join",
@@ -74,9 +74,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1669"
+            "as": "o8389"
           },
-          "bind": "s2631",
+          "bind": "s12977",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -86,12 +86,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1669"
+              "$obj": "o8389"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o1661"
+                "$obj": "o8360"
               }
             }
           },
@@ -101,7 +101,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1669"
+              "$obj": "o8389"
             },
             "method": "getDescription",
             "args": {}
@@ -123,9 +123,9 @@
               "left": "$id",
               "right": "customerId"
             },
-            "as": "o1662"
+            "as": "o8361"
           },
-          "bind": "s2624",
+          "bind": "s12949",
           "expect": {
             "$query": {
               "method": "on",
@@ -148,13 +148,13 @@
               "alias": "ord",
               "on": [
                 {
-                  "$obj": "o1662"
+                  "$obj": "o8361"
                 }
               ]
             },
-            "as": "o1663"
+            "as": "o8362"
           },
-          "bind": "s2625",
+          "bind": "s12950",
           "expect": {
             "$query": {
               "method": "join",
@@ -181,9 +181,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1670"
+            "as": "o8390"
           },
-          "bind": "s2634",
+          "bind": "s12980",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -193,12 +193,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1670"
+              "$obj": "o8390"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o1663"
+                "$obj": "o8362"
               }
             }
           },
@@ -208,7 +208,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1670"
+              "$obj": "o8390"
             },
             "method": "getDescription",
             "args": {}
@@ -230,9 +230,9 @@
               "left": "$id",
               "right": "customerId"
             },
-            "as": "o1664"
+            "as": "o8363"
           },
-          "bind": "s2626",
+          "bind": "s12951",
           "expect": {
             "$query": {
               "method": "on",
@@ -255,13 +255,13 @@
               "alias": "_order_2",
               "on": [
                 {
-                  "$obj": "o1664"
+                  "$obj": "o8363"
                 }
               ]
             },
-            "as": "o1665"
+            "as": "o8364"
           },
-          "bind": "s2627",
+          "bind": "s12952",
           "expect": {
             "$query": {
               "method": "leftJoin",
@@ -288,9 +288,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1671"
+            "as": "o8391"
           },
-          "bind": "s2637",
+          "bind": "s12983",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -300,12 +300,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1671"
+              "$obj": "o8391"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o1665"
+                "$obj": "o8364"
               }
             }
           },
@@ -315,7 +315,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1671"
+              "$obj": "o8391"
             },
             "method": "getDescription",
             "args": {}
@@ -337,9 +337,9 @@
               "collection": "orders",
               "alias": "ord"
             },
-            "as": "o1666"
+            "as": "o8365"
           },
-          "bind": "s2628",
+          "bind": "s12953",
           "expect": {
             "$query": {
               "method": "crossJoin",
@@ -354,9 +354,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1672"
+            "as": "o8392"
           },
-          "bind": "s2640",
+          "bind": "s12986",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -366,12 +366,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1672"
+              "$obj": "o8392"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o1666"
+                "$obj": "o8365"
               }
             }
           },
@@ -381,7 +381,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1672"
+              "$obj": "o8392"
             },
             "method": "getDescription",
             "args": {}
@@ -403,9 +403,9 @@
               "left": "$id",
               "right": "customerId"
             },
-            "as": "o1667"
+            "as": "o8366"
           },
-          "bind": "s2629",
+          "bind": "s12954",
           "expect": {
             "$query": {
               "method": "on",
@@ -428,13 +428,13 @@
               "alias": "ord",
               "on": [
                 {
-                  "$obj": "o1667"
+                  "$obj": "o8366"
                 }
               ]
             },
-            "as": "o1668"
+            "as": "o8367"
           },
-          "bind": "s2630",
+          "bind": "s12955",
           "expect": {
             "$query": {
               "method": "rightJoin",
@@ -461,9 +461,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1673"
+            "as": "o8393"
           },
-          "bind": "s2643",
+          "bind": "s12989",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -473,12 +473,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1673"
+              "$obj": "o8393"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o1668"
+                "$obj": "o8367"
               }
             }
           },
@@ -488,7 +488,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1673"
+              "$obj": "o8393"
             },
             "method": "getDescription",
             "args": {}
@@ -502,20 +502,6 @@
       "state": [],
       "steps": [
         {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceIntegerRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceDoubleRange"
-          },
-          "expect": true
-        },
-        {
           "op": "object.call",
           "args": {
             "class": "Query",
@@ -524,9 +510,9 @@
               "left": "$id",
               "right": "customerId"
             },
-            "as": "o5225"
+            "as": "o8368"
           },
-          "bind": "s9183",
+          "bind": "s12956",
           "expect": {
             "$query": {
               "method": "on",
@@ -549,13 +535,13 @@
               "alias": "",
               "on": [
                 {
-                  "$obj": "o5225"
+                  "$obj": "o8368"
                 }
               ]
             },
-            "as": "o5226"
+            "as": "o8369"
           },
-          "bind": "s9184",
+          "bind": "s12957",
           "expect": {
             "$query": {
               "method": "join",
@@ -582,9 +568,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o5239"
+            "as": "o8394"
           },
-          "bind": "s9207",
+          "bind": "s12992",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -594,12 +580,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5239"
+              "$obj": "o8394"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o5226"
+                "$obj": "o8369"
               }
             }
           },
@@ -609,7 +595,674 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5239"
+              "$obj": "o8394"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testAcceptsAlias#no alias on a unique ID that starts with a digit",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "6ad1e9ed691819ab52ee.customerId"
+            },
+            "as": "o8370"
+          },
+          "bind": "s12958",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "6ad1e9ed691819ab52ee.customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "6ad1e9ed691819ab52ee",
+              "alias": "",
+              "on": [
+                {
+                  "$obj": "o8370"
+                }
+              ]
+            },
+            "as": "o8371"
+          },
+          "bind": "s12959",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "6ad1e9ed691819ab52ee",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "6ad1e9ed691819ab52ee.customerId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "6ad1e9ed691819ab52ee"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o8395"
+          },
+          "bind": "s12995",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8395"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o8371"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8395"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testAcceptsAlias#no alias on an ID with a hyphen",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "order-items.customerId"
+            },
+            "as": "o8372"
+          },
+          "bind": "s12960",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "order-items.customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "leftJoin",
+            "args": {
+              "collection": "order-items",
+              "alias": "",
+              "on": [
+                {
+                  "$obj": "o8372"
+                }
+              ]
+            },
+            "as": "o8373"
+          },
+          "bind": "s12961",
+          "expect": {
+            "$query": {
+              "method": "leftJoin",
+              "attribute": "order-items",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "order-items.customerId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "order-items"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o8396"
+          },
+          "bind": "s12998",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8396"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o8373"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8396"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testAcceptsAlias#no alias on a 36 character ID",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8",
+              "alias": ""
+            },
+            "as": "o8374"
+          },
+          "bind": "s12962",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8",
+              "values": [],
+              "alias": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o8397"
+          },
+          "bind": "s13001",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8397"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o8374"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8397"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testAcceptsAlias#an alias that starts with a digit",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "6ad1e9ed691819ab52ef.customerId"
+            },
+            "as": "o8375"
+          },
+          "bind": "s12963",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "6ad1e9ed691819ab52ef.customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "orders",
+              "alias": "6ad1e9ed691819ab52ef",
+              "on": [
+                {
+                  "$obj": "o8375"
+                }
+              ]
+            },
+            "as": "o8376"
+          },
+          "bind": "s12964",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "6ad1e9ed691819ab52ef.customerId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "6ad1e9ed691819ab52ef"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o8398"
+          },
+          "bind": "s13004",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8398"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o8376"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8398"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testAcceptsAlias#an alias with a hyphen",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customerId"
+            },
+            "as": "o8377"
+          },
+          "bind": "s12965",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "orders",
+              "alias": "order-lines",
+              "on": [
+                {
+                  "$obj": "o8377"
+                }
+              ]
+            },
+            "as": "o8378"
+          },
+          "bind": "s12966",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customerId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "order-lines"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o8399"
+          },
+          "bind": "s13007",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8399"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o8378"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8399"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testAcceptsAlias#a digit alias",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "orders",
+              "alias": "0"
+            },
+            "as": "o8379"
+          },
+          "bind": "s12967",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "orders",
+              "values": [],
+              "alias": "0"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o8400"
+          },
+          "bind": "s13010",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8400"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o8379"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8400"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testAcceptsAlias#an alias of 63 characters",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customerId"
+            },
+            "as": "o8380"
+          },
+          "bind": "s12968",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "orders",
+              "alias": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "on": [
+                {
+                  "$obj": "o8380"
+                }
+              ]
+            },
+            "as": "o8381"
+          },
+          "bind": "s12969",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customerId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o8401"
+          },
+          "bind": "s13013",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8401"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o8381"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8401"
             },
             "method": "getDescription",
             "args": {}
@@ -623,20 +1276,6 @@
       "state": [],
       "steps": [
         {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceIntegerRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceDoubleRange"
-          },
-          "expect": true
-        },
-        {
           "op": "object.call",
           "args": {
             "class": "Query",
@@ -645,9 +1284,9 @@
               "left": "$id",
               "right": "orders.customerId"
             },
-            "as": "o5227"
+            "as": "o8382"
           },
-          "bind": "s9185",
+          "bind": "s12970",
           "expect": {
             "$query": {
               "method": "on",
@@ -670,13 +1309,13 @@
               "alias": "",
               "on": [
                 {
-                  "$obj": "o5227"
+                  "$obj": "o8382"
                 }
               ]
             },
-            "as": "o5228"
+            "as": "o8383"
           },
-          "bind": "s9186",
+          "bind": "s12971",
           "expect": {
             "$query": {
               "method": "leftJoin",
@@ -703,9 +1342,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o5240"
+            "as": "o8402"
           },
-          "bind": "s9210",
+          "bind": "s13016",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -715,12 +1354,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5240"
+              "$obj": "o8402"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o5228"
+                "$obj": "o8383"
               }
             }
           },
@@ -730,7 +1369,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5240"
+              "$obj": "o8402"
             },
             "method": "getDescription",
             "args": {}
@@ -744,20 +1383,6 @@
       "state": [],
       "steps": [
         {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceIntegerRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceDoubleRange"
-          },
-          "expect": true
-        },
-        {
           "op": "object.call",
           "args": {
             "class": "Query",
@@ -766,9 +1391,9 @@
               "collection": "orders",
               "alias": ""
             },
-            "as": "o5229"
+            "as": "o8384"
           },
-          "bind": "s9187",
+          "bind": "s12972",
           "expect": {
             "$query": {
               "method": "crossJoin",
@@ -783,9 +1408,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o5241"
+            "as": "o8403"
           },
-          "bind": "s9213",
+          "bind": "s13019",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -795,12 +1420,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5241"
+              "$obj": "o8403"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o5229"
+                "$obj": "o8384"
               }
             }
           },
@@ -810,7 +1435,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5241"
+              "$obj": "o8403"
             },
             "method": "getDescription",
             "args": {}
@@ -824,20 +1449,6 @@
       "state": [],
       "steps": [
         {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceIntegerRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceDoubleRange"
-          },
-          "expect": true
-        },
-        {
           "op": "object.call",
           "args": {
             "class": "Query",
@@ -846,9 +1457,9 @@
               "left": "$id",
               "right": "customerId"
             },
-            "as": "o5230"
+            "as": "o8385"
           },
-          "bind": "s9188",
+          "bind": "s12973",
           "expect": {
             "$query": {
               "method": "on",
@@ -872,13 +1483,13 @@
               "attribute": "orders",
               "values": [
                 {
-                  "$obj": "o5230"
+                  "$obj": "o8385"
                 }
               ]
             },
-            "as": "o5231"
+            "as": "o8386"
           },
-          "bind": "s9189",
+          "bind": "s12974",
           "expect": {
             "$query": {
               "method": "join",
@@ -905,9 +1516,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o5242"
+            "as": "o8404"
           },
-          "bind": "s9216",
+          "bind": "s13022",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -917,12 +1528,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5242"
+              "$obj": "o8404"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o5231"
+                "$obj": "o8386"
               }
             }
           },
@@ -932,7 +1543,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5242"
+              "$obj": "o8404"
             },
             "method": "getDescription",
             "args": {}
@@ -946,20 +1557,6 @@
       "state": [],
       "steps": [
         {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceIntegerRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceDoubleRange"
-          },
-          "expect": true
-        },
-        {
           "op": "object.call",
           "args": {
             "class": "Query",
@@ -968,9 +1565,9 @@
               "left": "$id",
               "right": "main.customerId"
             },
-            "as": "o5232"
+            "as": "o8387"
           },
-          "bind": "s9190",
+          "bind": "s12975",
           "expect": {
             "$query": {
               "method": "on",
@@ -993,13 +1590,13 @@
               "alias": "",
               "on": [
                 {
-                  "$obj": "o5232"
+                  "$obj": "o8387"
                 }
               ]
             },
-            "as": "o5233"
+            "as": "o8388"
           },
-          "bind": "s9191",
+          "bind": "s12976",
           "expect": {
             "$query": {
               "method": "join",
@@ -1026,9 +1623,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o5243"
+            "as": "o8405"
           },
-          "bind": "s9219",
+          "bind": "s13025",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -1038,12 +1635,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5243"
+              "$obj": "o8405"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o5233"
+                "$obj": "o8388"
               }
             }
           },
@@ -1053,7 +1650,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5243"
+              "$obj": "o8405"
             },
             "method": "getDescription",
             "args": {}
@@ -1075,9 +1672,9 @@
               "left": "$id",
               "right": "customerId"
             },
-            "as": "o1676"
+            "as": "o8406"
           },
-          "bind": "s2648",
+          "bind": "s13028",
           "expect": {
             "$query": {
               "method": "on",
@@ -1100,13 +1697,13 @@
               "alias": "table_main",
               "on": [
                 {
-                  "$obj": "o1676"
+                  "$obj": "o8406"
                 }
               ]
             },
-            "as": "o1677"
+            "as": "o8407"
           },
-          "bind": "s2649",
+          "bind": "s13029",
           "expect": {
             "$query": {
               "method": "join",
@@ -1133,9 +1730,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1691"
+            "as": "o8426"
           },
-          "bind": "s2665",
+          "bind": "s13048",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -1145,12 +1742,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1691"
+              "$obj": "o8426"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o1677"
+                "$obj": "o8407"
               }
             }
           },
@@ -1160,7 +1757,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1691"
+              "$obj": "o8426"
             },
             "method": "getDescription",
             "args": {}
@@ -1182,9 +1779,9 @@
               "left": "$id",
               "right": "customerId"
             },
-            "as": "o1678"
+            "as": "o8408"
           },
-          "bind": "s2650",
+          "bind": "s13030",
           "expect": {
             "$query": {
               "method": "on",
@@ -1207,13 +1804,13 @@
               "alias": "TABLE_MAIN",
               "on": [
                 {
-                  "$obj": "o1678"
+                  "$obj": "o8408"
                 }
               ]
             },
-            "as": "o1679"
+            "as": "o8409"
           },
-          "bind": "s2651",
+          "bind": "s13031",
           "expect": {
             "$query": {
               "method": "join",
@@ -1240,9 +1837,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1692"
+            "as": "o8427"
           },
-          "bind": "s2668",
+          "bind": "s13051",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -1252,12 +1849,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1692"
+              "$obj": "o8427"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o1679"
+                "$obj": "o8409"
               }
             }
           },
@@ -1267,7 +1864,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1692"
+              "$obj": "o8427"
             },
             "method": "getDescription",
             "args": {}
@@ -1289,9 +1886,9 @@
               "collection": "orders",
               "alias": "table_main"
             },
-            "as": "o1680"
+            "as": "o8410"
           },
-          "bind": "s2652",
+          "bind": "s13032",
           "expect": {
             "$query": {
               "method": "crossJoin",
@@ -1306,9 +1903,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1693"
+            "as": "o8428"
           },
-          "bind": "s2671",
+          "bind": "s13054",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -1318,12 +1915,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1693"
+              "$obj": "o8428"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o1680"
+                "$obj": "o8410"
               }
             }
           },
@@ -1333,7 +1930,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1693"
+              "$obj": "o8428"
             },
             "method": "getDescription",
             "args": {}
@@ -1355,9 +1952,9 @@
               "left": "$id",
               "right": "customerId"
             },
-            "as": "o1681"
+            "as": "o8411"
           },
-          "bind": "s2653",
+          "bind": "s13033",
           "expect": {
             "$query": {
               "method": "on",
@@ -1380,13 +1977,13 @@
               "alias": "table_main",
               "on": [
                 {
-                  "$obj": "o1681"
+                  "$obj": "o8411"
                 }
               ]
             },
-            "as": "o1682"
+            "as": "o8412"
           },
-          "bind": "s2654",
+          "bind": "s13034",
           "expect": {
             "$query": {
               "method": "fullOuterJoin",
@@ -1413,9 +2010,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1694"
+            "as": "o8429"
           },
-          "bind": "s2674",
+          "bind": "s13057",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -1425,12 +2022,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1694"
+              "$obj": "o8429"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o1682"
+                "$obj": "o8412"
               }
             }
           },
@@ -1440,7 +2037,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1694"
+              "$obj": "o8429"
             },
             "method": "getDescription",
             "args": {}
@@ -1450,7 +2047,7 @@
       ]
     },
     {
-      "name": "JoinAliasTest::testRejectsAlias#a hyphen",
+      "name": "JoinAliasTest::testRejectsAlias#a leading hyphen",
       "state": [],
       "steps": [
         {
@@ -1462,9 +2059,9 @@
               "left": "$id",
               "right": "customerId"
             },
-            "as": "o1683"
+            "as": "o8413"
           },
-          "bind": "s2655",
+          "bind": "s13035",
           "expect": {
             "$query": {
               "method": "on",
@@ -1484,16 +2081,16 @@
             "method": "join",
             "args": {
               "collection": "orders",
-              "alias": "my-alias",
+              "alias": "-alias",
               "on": [
                 {
-                  "$obj": "o1683"
+                  "$obj": "o8413"
                 }
               ]
             },
-            "as": "o1684"
+            "as": "o8414"
           },
-          "bind": "s2656",
+          "bind": "s13036",
           "expect": {
             "$query": {
               "method": "join",
@@ -1511,7 +2108,7 @@
                   }
                 }
               ],
-              "alias": "my-alias"
+              "alias": "-alias"
             }
           }
         },
@@ -1520,9 +2117,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1695"
+            "as": "o8430"
           },
-          "bind": "s2677",
+          "bind": "s13060",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -1532,12 +2129,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1695"
+              "$obj": "o8430"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o1684"
+                "$obj": "o8414"
               }
             }
           },
@@ -1547,17 +2144,17 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1695"
+              "$obj": "o8430"
             },
             "method": "getDescription",
             "args": {}
           },
-          "expect": "Join alias must start with a letter or an underscore and contain only letters, digits and underscores"
+          "expect": "Join alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens"
         }
       ]
     },
     {
-      "name": "JoinAliasTest::testRejectsAlias#a leading digit",
+      "name": "JoinAliasTest::testRejectsAlias#a space",
       "state": [],
       "steps": [
         {
@@ -1569,9 +2166,9 @@
               "left": "$id",
               "right": "customerId"
             },
-            "as": "o1685"
+            "as": "o8415"
           },
-          "bind": "s2657",
+          "bind": "s13037",
           "expect": {
             "$query": {
               "method": "on",
@@ -1591,16 +2188,16 @@
             "method": "leftJoin",
             "args": {
               "collection": "orders",
-              "alias": "1st",
+              "alias": "my alias",
               "on": [
                 {
-                  "$obj": "o1685"
+                  "$obj": "o8415"
                 }
               ]
             },
-            "as": "o1686"
+            "as": "o8416"
           },
-          "bind": "s2658",
+          "bind": "s13038",
           "expect": {
             "$query": {
               "method": "leftJoin",
@@ -1618,7 +2215,7 @@
                   }
                 }
               ],
-              "alias": "1st"
+              "alias": "my alias"
             }
           }
         },
@@ -1627,9 +2224,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1696"
+            "as": "o8431"
           },
-          "bind": "s2680",
+          "bind": "s13063",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -1639,12 +2236,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1696"
+              "$obj": "o8431"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o1686"
+                "$obj": "o8416"
               }
             }
           },
@@ -1654,12 +2251,333 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1696"
+              "$obj": "o8431"
             },
             "method": "getDescription",
             "args": {}
           },
-          "expect": "Join alias must start with a letter or an underscore and contain only letters, digits and underscores"
+          "expect": "Join alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testRejectsAlias#a double quote",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customerId"
+            },
+            "as": "o8417"
+          },
+          "bind": "s13039",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "leftJoin",
+            "args": {
+              "collection": "orders",
+              "alias": "x\"y",
+              "on": [
+                {
+                  "$obj": "o8417"
+                }
+              ]
+            },
+            "as": "o8418"
+          },
+          "bind": "s13040",
+          "expect": {
+            "$query": {
+              "method": "leftJoin",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customerId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "x\"y"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o8432"
+          },
+          "bind": "s13066",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8432"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o8418"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8432"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Join alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testRejectsAlias#a dollar",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customerId"
+            },
+            "as": "o8419"
+          },
+          "bind": "s13041",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "leftJoin",
+            "args": {
+              "collection": "orders",
+              "alias": "$id",
+              "on": [
+                {
+                  "$obj": "o8419"
+                }
+              ]
+            },
+            "as": "o8420"
+          },
+          "bind": "s13042",
+          "expect": {
+            "$query": {
+              "method": "leftJoin",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customerId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "$id"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o8433"
+          },
+          "bind": "s13069",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8433"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o8420"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8433"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Join alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testRejectsAlias#past 63 characters",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customerId"
+            },
+            "as": "o8421"
+          },
+          "bind": "s13043",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "orders",
+              "alias": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "on": [
+                {
+                  "$obj": "o8421"
+                }
+              ]
+            },
+            "as": "o8422"
+          },
+          "bind": "s13044",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customerId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o8434"
+          },
+          "bind": "s13072",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8434"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o8422"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8434"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Join alias must be at most 63 characters"
         }
       ]
     },
@@ -1676,9 +2594,9 @@
               "left": "$id",
               "right": "customerId"
             },
-            "as": "o1687"
+            "as": "o8423"
           },
-          "bind": "s2659",
+          "bind": "s13045",
           "expect": {
             "$query": {
               "method": "on",
@@ -1701,13 +2619,13 @@
               "alias": "a.b",
               "on": [
                 {
-                  "$obj": "o1687"
+                  "$obj": "o8423"
                 }
               ]
             },
-            "as": "o1688"
+            "as": "o8424"
           },
-          "bind": "s2660",
+          "bind": "s13046",
           "expect": {
             "$query": {
               "method": "join",
@@ -1734,9 +2652,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1697"
+            "as": "o8435"
           },
-          "bind": "s2683",
+          "bind": "s13075",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -1746,12 +2664,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1697"
+              "$obj": "o8435"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o1688"
+                "$obj": "o8424"
               }
             }
           },
@@ -1761,12 +2679,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1697"
+              "$obj": "o8435"
             },
             "method": "getDescription",
             "args": {}
           },
-          "expect": "Join alias must start with a letter or an underscore and contain only letters, digits and underscores"
+          "expect": "Join alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens"
         }
       ]
     },
@@ -1783,9 +2701,9 @@
               "collection": "orders",
               "alias": "x`y"
             },
-            "as": "o1689"
+            "as": "o8425"
           },
-          "bind": "s2661",
+          "bind": "s13047",
           "expect": {
             "$query": {
               "method": "crossJoin",
@@ -1800,9 +2718,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o1698"
+            "as": "o8436"
           },
-          "bind": "s2686",
+          "bind": "s13078",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -1812,12 +2730,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1698"
+              "$obj": "o8436"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o1689"
+                "$obj": "o8425"
               }
             }
           },
@@ -1827,144 +2745,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o1698"
+              "$obj": "o8436"
             },
             "method": "getDescription",
             "args": {}
           },
-          "expect": "Join alias must start with a letter or an underscore and contain only letters, digits and underscores"
-        }
-      ]
-    },
-    {
-      "name": "JoinAliasTest::testRejectsATableIdThatCannotBeTheAlias#a hyphen",
-      "state": [],
-      "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceIntegerRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceDoubleRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Query",
-            "method": "on",
-            "args": {
-              "left": "$id",
-              "right": "customerId"
-            },
-            "as": "o5266"
-          },
-          "bind": "s9260",
-          "expect": {
-            "$query": {
-              "method": "on",
-              "attribute": "",
-              "values": [
-                "$id",
-                "=",
-                "customerId"
-              ]
-            }
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Query",
-            "method": "join",
-            "args": {
-              "collection": "my-orders",
-              "alias": "",
-              "on": [
-                {
-                  "$obj": "o5266"
-                }
-              ]
-            },
-            "as": "o5267"
-          },
-          "bind": "s9261",
-          "expect": {
-            "$query": {
-              "method": "join",
-              "attribute": "my-orders",
-              "values": [
-                {
-                  "$query": {
-                    "method": "on",
-                    "attribute": "",
-                    "values": [
-                      "$id",
-                      "=",
-                      "customerId"
-                    ]
-                  }
-                }
-              ],
-              "alias": "my-orders"
-            }
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Validator\\Query\\Join",
-            "args": {},
-            "as": "o5279"
-          },
-          "bind": "s9273",
-          "expect": {
-            "$value": "Validator\\Query\\Join",
-            "fields": {}
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o5267"
-            },
-            "method": "isAliasDefaulted",
-            "args": {}
-          },
-          "expect": true
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o5279"
-            },
-            "method": "isValid",
-            "args": {
-              "value": {
-                "$obj": "o5267"
-              }
-            }
-          },
-          "expect": false
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o5279"
-            },
-            "method": "getDescription",
-            "args": {}
-          },
-          "expect": "Table ID \"my-orders\" cannot be used as the join alias: an alias must start with a letter or an underscore and contain only letters, digits and underscores. Pass an alias for the join"
+          "expect": "Join alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens"
         }
       ]
     },
@@ -1973,20 +2759,6 @@
       "state": [],
       "steps": [
         {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceIntegerRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceDoubleRange"
-          },
-          "expect": true
-        },
-        {
           "op": "object.call",
           "args": {
             "class": "Query",
@@ -1995,9 +2767,9 @@
               "left": "$id",
               "right": "customerId"
             },
-            "as": "o5268"
+            "as": "o8437"
           },
-          "bind": "s9262",
+          "bind": "s13081",
           "expect": {
             "$query": {
               "method": "on",
@@ -2020,13 +2792,13 @@
               "alias": "",
               "on": [
                 {
-                  "$obj": "o5268"
+                  "$obj": "o8437"
                 }
               ]
             },
-            "as": "o5269"
+            "as": "o8438"
           },
-          "bind": "s9263",
+          "bind": "s13082",
           "expect": {
             "$query": {
               "method": "leftJoin",
@@ -2053,9 +2825,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o5280"
+            "as": "o8450"
           },
-          "bind": "s9277",
+          "bind": "s13094",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -2065,7 +2837,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5269"
+              "$obj": "o8438"
             },
             "method": "isAliasDefaulted",
             "args": {}
@@ -2076,12 +2848,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5280"
+              "$obj": "o8450"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o5269"
+                "$obj": "o8438"
               }
             }
           },
@@ -2091,33 +2863,19 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5280"
+              "$obj": "o8450"
             },
             "method": "getDescription",
             "args": {}
           },
-          "expect": "Table ID \"orders.v2\" cannot be used as the join alias: an alias must start with a letter or an underscore and contain only letters, digits and underscores. Pass an alias for the join"
+          "expect": "Table ID \"orders.v2\" cannot be used as the join alias: an alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens. Pass an alias for the join"
         }
       ]
     },
     {
-      "name": "JoinAliasTest::testRejectsATableIdThatCannotBeTheAlias#a leading digit",
+      "name": "JoinAliasTest::testRejectsATableIdThatCannotBeTheAlias#a leading hyphen",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceIntegerRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceDoubleRange"
-          },
-          "expect": true
-        },
         {
           "op": "object.call",
           "args": {
@@ -2127,9 +2885,9 @@
               "left": "$id",
               "right": "customerId"
             },
-            "as": "o5270"
+            "as": "o8439"
           },
-          "bind": "s9264",
+          "bind": "s13083",
           "expect": {
             "$query": {
               "method": "on",
@@ -2148,21 +2906,21 @@
             "class": "Query",
             "method": "rightJoin",
             "args": {
-              "collection": "2024orders",
+              "collection": "-orders",
               "alias": "",
               "on": [
                 {
-                  "$obj": "o5270"
+                  "$obj": "o8439"
                 }
               ]
             },
-            "as": "o5271"
+            "as": "o8440"
           },
-          "bind": "s9265",
+          "bind": "s13084",
           "expect": {
             "$query": {
               "method": "rightJoin",
-              "attribute": "2024orders",
+              "attribute": "-orders",
               "values": [
                 {
                   "$query": {
@@ -2176,7 +2934,7 @@
                   }
                 }
               ],
-              "alias": "2024orders"
+              "alias": "-orders"
             }
           }
         },
@@ -2185,9 +2943,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o5281"
+            "as": "o8451"
           },
-          "bind": "s9281",
+          "bind": "s13098",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -2197,7 +2955,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5271"
+              "$obj": "o8440"
             },
             "method": "isAliasDefaulted",
             "args": {}
@@ -2208,12 +2966,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5281"
+              "$obj": "o8451"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o5271"
+                "$obj": "o8440"
               }
             }
           },
@@ -2223,51 +2981,37 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5281"
+              "$obj": "o8451"
             },
             "method": "getDescription",
             "args": {}
           },
-          "expect": "Table ID \"2024orders\" cannot be used as the join alias: an alias must start with a letter or an underscore and contain only letters, digits and underscores. Pass an alias for the join"
+          "expect": "Table ID \"-orders\" cannot be used as the join alias: an alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens. Pass an alias for the join"
         }
       ]
     },
     {
-      "name": "JoinAliasTest::testRejectsATableIdThatCannotBeTheAlias#a hyphen on a cross join",
+      "name": "JoinAliasTest::testRejectsATableIdThatCannotBeTheAlias#a dot on a cross join",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceIntegerRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceDoubleRange"
-          },
-          "expect": true
-        },
         {
           "op": "object.call",
           "args": {
             "class": "Query",
             "method": "crossJoin",
             "args": {
-              "collection": "my-orders",
+              "collection": "orders.v2",
               "alias": ""
             },
-            "as": "o5272"
+            "as": "o8441"
           },
-          "bind": "s9266",
+          "bind": "s13085",
           "expect": {
             "$query": {
               "method": "crossJoin",
-              "attribute": "my-orders",
+              "attribute": "orders.v2",
               "values": [],
-              "alias": "my-orders"
+              "alias": "orders.v2"
             }
           }
         },
@@ -2276,9 +3020,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o5282"
+            "as": "o8452"
           },
-          "bind": "s9285",
+          "bind": "s13102",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -2288,7 +3032,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5272"
+              "$obj": "o8441"
             },
             "method": "isAliasDefaulted",
             "args": {}
@@ -2299,12 +3043,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5282"
+              "$obj": "o8452"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o5272"
+                "$obj": "o8441"
               }
             }
           },
@@ -2314,33 +3058,19 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5282"
+              "$obj": "o8452"
             },
             "method": "getDescription",
             "args": {}
           },
-          "expect": "Table ID \"my-orders\" cannot be used as the join alias: an alias must start with a letter or an underscore and contain only letters, digits and underscores. Pass an alias for the join"
+          "expect": "Table ID \"orders.v2\" cannot be used as the join alias: an alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens. Pass an alias for the join"
         }
       ]
     },
     {
-      "name": "JoinAliasTest::testRejectsATableIdThatCannotBeTheAlias#a hyphen on a join built without an alias",
+      "name": "JoinAliasTest::testRejectsATableIdThatCannotBeTheAlias#a dot on a join built without an alias",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceIntegerRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceDoubleRange"
-          },
-          "expect": true
-        },
         {
           "op": "object.call",
           "args": {
@@ -2350,9 +3080,9 @@
               "left": "$id",
               "right": "customerId"
             },
-            "as": "o5273"
+            "as": "o8442"
           },
-          "bind": "s9267",
+          "bind": "s13086",
           "expect": {
             "$query": {
               "method": "on",
@@ -2373,20 +3103,20 @@
               "method": {
                 "$enum": "Query\\Method::FullOuterJoin"
               },
-              "attribute": "my-orders",
+              "attribute": "orders.v2",
               "values": [
                 {
-                  "$obj": "o5273"
+                  "$obj": "o8442"
                 }
               ]
             },
-            "as": "o5274"
+            "as": "o8443"
           },
-          "bind": "s9268",
+          "bind": "s13087",
           "expect": {
             "$query": {
               "method": "fullOuterJoin",
-              "attribute": "my-orders",
+              "attribute": "orders.v2",
               "values": [
                 {
                   "$query": {
@@ -2400,7 +3130,7 @@
                   }
                 }
               ],
-              "alias": "my-orders"
+              "alias": "orders.v2"
             }
           }
         },
@@ -2409,9 +3139,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o5283"
+            "as": "o8453"
           },
-          "bind": "s9289",
+          "bind": "s13106",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -2421,7 +3151,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5274"
+              "$obj": "o8443"
             },
             "method": "isAliasDefaulted",
             "args": {}
@@ -2432,12 +3162,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5283"
+              "$obj": "o8453"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o5274"
+                "$obj": "o8443"
               }
             }
           },
@@ -2447,33 +3177,19 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5283"
+              "$obj": "o8453"
             },
             "method": "getDescription",
             "args": {}
           },
-          "expect": "Table ID \"my-orders\" cannot be used as the join alias: an alias must start with a letter or an underscore and contain only letters, digits and underscores. Pass an alias for the join"
+          "expect": "Table ID \"orders.v2\" cannot be used as the join alias: an alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens. Pass an alias for the join"
         }
       ]
     },
     {
-      "name": "JoinAliasTest::testRejectsATableIdThatCannotBeTheAlias#a hyphen on a parsed join",
+      "name": "JoinAliasTest::testRejectsATableIdThatCannotBeTheAlias#a dot on a parsed join",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceIntegerRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceDoubleRange"
-          },
-          "expect": true
-        },
         {
           "op": "object.call",
           "args": {
@@ -2482,7 +3198,7 @@
             "args": {
               "query": {
                 "method": "join",
-                "attribute": "my-orders",
+                "attribute": "orders.v2",
                 "values": [
                   "$id",
                   "=",
@@ -2490,13 +3206,13 @@
                 ]
               }
             },
-            "as": "o5275"
+            "as": "o8444"
           },
-          "bind": "s9269",
+          "bind": "s13088",
           "expect": {
             "$query": {
               "method": "join",
-              "attribute": "my-orders",
+              "attribute": "orders.v2",
               "values": [
                 {
                   "$query": {
@@ -2510,7 +3226,7 @@
                   }
                 }
               ],
-              "alias": "my-orders"
+              "alias": "orders.v2"
             }
           }
         },
@@ -2519,9 +3235,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o5284"
+            "as": "o8454"
           },
-          "bind": "s9293",
+          "bind": "s13110",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -2531,7 +3247,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5275"
+              "$obj": "o8444"
             },
             "method": "isAliasDefaulted",
             "args": {}
@@ -2542,12 +3258,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5284"
+              "$obj": "o8454"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o5275"
+                "$obj": "o8444"
               }
             }
           },
@@ -2557,33 +3273,19 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5284"
+              "$obj": "o8454"
             },
             "method": "getDescription",
             "args": {}
           },
-          "expect": "Table ID \"my-orders\" cannot be used as the join alias: an alias must start with a letter or an underscore and contain only letters, digits and underscores. Pass an alias for the join"
+          "expect": "Table ID \"orders.v2\" cannot be used as the join alias: an alias must start with a letter, a digit or an underscore and contain only letters, digits, underscores and hyphens. Pass an alias for the join"
         }
       ]
     },
     {
-      "name": "JoinAliasTest::testRejectsATableIdThatCannotBeTheAlias#the main collection alias",
+      "name": "JoinAliasTest::testRejectsATableIdThatCannotBeTheAlias#past 63 characters",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceIntegerRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceDoubleRange"
-          },
-          "expect": true
-        },
         {
           "op": "object.call",
           "args": {
@@ -2593,9 +3295,127 @@
               "left": "$id",
               "right": "customerId"
             },
-            "as": "o5276"
+            "as": "o8445"
           },
-          "bind": "s9270",
+          "bind": "s13089",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "alias": "",
+              "on": [
+                {
+                  "$obj": "o8445"
+                }
+              ]
+            },
+            "as": "o8446"
+          },
+          "bind": "s13090",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customerId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o8455"
+          },
+          "bind": "s13114",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8446"
+            },
+            "method": "isAliasDefaulted",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8455"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o8446"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o8455"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Table ID \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\" cannot be used as the join alias: an alias must be at most 63 characters. Pass an alias for the join"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testRejectsATableIdThatCannotBeTheAlias#the main collection alias",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customerId"
+            },
+            "as": "o8447"
+          },
+          "bind": "s13091",
           "expect": {
             "$query": {
               "method": "on",
@@ -2618,13 +3438,13 @@
               "alias": "",
               "on": [
                 {
-                  "$obj": "o5276"
+                  "$obj": "o8447"
                 }
               ]
             },
-            "as": "o5277"
+            "as": "o8448"
           },
-          "bind": "s9271",
+          "bind": "s13092",
           "expect": {
             "$query": {
               "method": "join",
@@ -2651,9 +3471,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o5285"
+            "as": "o8456"
           },
-          "bind": "s9297",
+          "bind": "s13118",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -2663,7 +3483,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5277"
+              "$obj": "o8448"
             },
             "method": "isAliasDefaulted",
             "args": {}
@@ -2674,12 +3494,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5285"
+              "$obj": "o8456"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o5277"
+                "$obj": "o8448"
               }
             }
           },
@@ -2689,7 +3509,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5285"
+              "$obj": "o8456"
             },
             "method": "getDescription",
             "args": {}
@@ -2703,20 +3523,6 @@
       "state": [],
       "steps": [
         {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceIntegerRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceDoubleRange"
-          },
-          "expect": true
-        },
-        {
           "op": "object.call",
           "args": {
             "class": "Query",
@@ -2725,9 +3531,9 @@
               "collection": "TABLE_MAIN",
               "alias": ""
             },
-            "as": "o5278"
+            "as": "o8449"
           },
-          "bind": "s9272",
+          "bind": "s13093",
           "expect": {
             "$query": {
               "method": "crossJoin",
@@ -2742,9 +3548,9 @@
           "args": {
             "class": "Validator\\Query\\Join",
             "args": {},
-            "as": "o5286"
+            "as": "o8457"
           },
-          "bind": "s9301",
+          "bind": "s13122",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -2754,7 +3560,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5278"
+              "$obj": "o8449"
             },
             "method": "isAliasDefaulted",
             "args": {}
@@ -2765,12 +3571,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5286"
+              "$obj": "o8457"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o5278"
+                "$obj": "o8449"
               }
             }
           },
@@ -2780,7 +3586,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5286"
+              "$obj": "o8457"
             },
             "method": "getDescription",
             "args": {}
@@ -2794,20 +3600,6 @@
       "state": [],
       "steps": [
         {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceIntegerRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceDoubleRange"
-          },
-          "expect": true
-        },
-        {
           "op": "object.new",
           "args": {
             "class": "Document",
@@ -2818,9 +3610,9 @@
                 "type": "string"
               }
             },
-            "as": "o5287"
+            "as": "o8458"
           },
-          "bind": "s9305",
+          "bind": "s13126",
           "expect": {
             "$document": {
               "$id": "customerId",
@@ -2845,9 +3637,9 @@
                 }
               }
             },
-            "as": "o5288"
+            "as": "o8459"
           },
-          "bind": "s9306",
+          "bind": "s13127",
           "expect": {
             "$document": {
               "$id": "customers",
@@ -2868,16 +3660,16 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o5287"
+                  "$obj": "o8458"
                 },
                 {
-                  "$obj": "o5288"
+                  "$obj": "o8459"
                 }
               ]
             },
-            "as": "o5289"
+            "as": "o8460"
           },
-          "bind": "s9307",
+          "bind": "s13128",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -2892,9 +3684,9 @@
               "left": "customerId",
               "right": "$id"
             },
-            "as": "o5290"
+            "as": "o8461"
           },
-          "bind": "s9308",
+          "bind": "s13129",
           "expect": {
             "$query": {
               "method": "on",
@@ -2917,13 +3709,13 @@
               "alias": "",
               "on": [
                 {
-                  "$obj": "o5290"
+                  "$obj": "o8461"
                 }
               ]
             },
-            "as": "o5291"
+            "as": "o8462"
           },
-          "bind": "s9309",
+          "bind": "s13130",
           "expect": {
             "$query": {
               "method": "join",
@@ -2949,12 +3741,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5289"
+              "$obj": "o8460"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o5291"
+                "$obj": "o8462"
               }
             }
           },
@@ -2964,7 +3756,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5289"
+              "$obj": "o8460"
             },
             "method": "getDescription",
             "args": {}
@@ -2975,7 +3767,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5289"
+              "$obj": "o8460"
             },
             "method": "resetJoinAliases",
             "args": {}
@@ -2991,9 +3783,9 @@
               "left": "customerId",
               "right": "$id"
             },
-            "as": "o5292"
+            "as": "o8463"
           },
-          "bind": "s9313",
+          "bind": "s13134",
           "expect": {
             "$query": {
               "method": "on",
@@ -3016,13 +3808,13 @@
               "alias": "customers",
               "on": [
                 {
-                  "$obj": "o5292"
+                  "$obj": "o8463"
                 }
               ]
             },
-            "as": "o5293"
+            "as": "o8464"
           },
-          "bind": "s9314",
+          "bind": "s13135",
           "expect": {
             "$query": {
               "method": "join",
@@ -3048,12 +3840,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5289"
+              "$obj": "o8460"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o5293"
+                "$obj": "o8464"
               }
             }
           },
@@ -3063,7 +3855,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5289"
+              "$obj": "o8460"
             },
             "method": "getDescription",
             "args": {}
@@ -3074,7 +3866,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5289"
+              "$obj": "o8460"
             },
             "method": "resetJoinAliases",
             "args": {}
@@ -3090,9 +3882,9 @@
               "left": "customerId",
               "right": "$id"
             },
-            "as": "o5294"
+            "as": "o8465"
           },
-          "bind": "s9318",
+          "bind": "s13139",
           "expect": {
             "$query": {
               "method": "on",
@@ -3115,13 +3907,13 @@
               "alias": "buyer",
               "on": [
                 {
-                  "$obj": "o5294"
+                  "$obj": "o8465"
                 }
               ]
             },
-            "as": "o5295"
+            "as": "o8466"
           },
-          "bind": "s9319",
+          "bind": "s13140",
           "expect": {
             "$query": {
               "method": "join",
@@ -3147,12 +3939,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5289"
+              "$obj": "o8460"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o5295"
+                "$obj": "o8466"
               }
             }
           },
@@ -3162,7 +3954,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5289"
+              "$obj": "o8460"
             },
             "method": "getDescription",
             "args": {}
@@ -3176,20 +3968,6 @@
       "state": [],
       "steps": [
         {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceIntegerRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceDoubleRange"
-          },
-          "expect": true
-        },
-        {
           "op": "object.new",
           "args": {
             "class": "Document",
@@ -3200,9 +3978,9 @@
                 "type": "string"
               }
             },
-            "as": "o5296"
+            "as": "o8467"
           },
-          "bind": "s9322",
+          "bind": "s13143",
           "expect": {
             "$document": {
               "$id": "managerId",
@@ -3218,13 +3996,13 @@
             "args": {
               "attributes": [
                 {
-                  "$obj": "o5296"
+                  "$obj": "o8467"
                 }
               ]
             },
-            "as": "o5297"
+            "as": "o8468"
           },
-          "bind": "s9323",
+          "bind": "s13144",
           "expect": {
             "$value": "Validator\\Query\\Join",
             "fields": {}
@@ -3239,14 +4017,14 @@
                 "$id": "staff",
                 "attributes": [
                   {
-                    "$obj": "o5296"
+                    "$obj": "o8467"
                   }
                 ]
               }
             },
-            "as": "o5298"
+            "as": "o8469"
           },
-          "bind": "s9324",
+          "bind": "s13145",
           "expect": {
             "$document": {
               "$id": "staff",
@@ -3270,12 +4048,12 @@
             "args": {
               "alias": "staff",
               "collection": {
-                "$obj": "o5298"
+                "$obj": "o8469"
               }
             },
-            "as": "o5299"
+            "as": "o8470"
           },
-          "bind": "s9325",
+          "bind": "s13146",
           "expect": {
             "$value": "Validator\\Query\\Joined\\Collection",
             "fields": {
@@ -3313,13 +4091,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5297"
+              "$obj": "o8468"
             },
             "method": "allowJoins",
             "args": {
               "joins": [
                 {
-                  "$obj": "o5299"
+                  "$obj": "o8470"
                 }
               ]
             }
@@ -3335,9 +4113,9 @@
               "left": "managerId",
               "right": "$id"
             },
-            "as": "o5300"
+            "as": "o8471"
           },
-          "bind": "s9327",
+          "bind": "s13148",
           "expect": {
             "$query": {
               "method": "on",
@@ -3360,13 +4138,13 @@
               "alias": "",
               "on": [
                 {
-                  "$obj": "o5300"
+                  "$obj": "o8471"
                 }
               ]
             },
-            "as": "o5301"
+            "as": "o8472"
           },
-          "bind": "s9328",
+          "bind": "s13149",
           "expect": {
             "$query": {
               "method": "join",
@@ -3392,12 +4170,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5297"
+              "$obj": "o8468"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o5301"
+                "$obj": "o8472"
               }
             }
           },
@@ -3407,7 +4185,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5297"
+              "$obj": "o8468"
             },
             "method": "getDescription",
             "args": {}
@@ -3418,7 +4196,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5297"
+              "$obj": "o8468"
             },
             "method": "resetJoinAliases",
             "args": {}
@@ -3434,14 +4212,14 @@
                 "$id": "staff",
                 "attributes": [
                   {
-                    "$obj": "o5296"
+                    "$obj": "o8467"
                   }
                 ]
               }
             },
-            "as": "o5302"
+            "as": "o8473"
           },
-          "bind": "s9332",
+          "bind": "s13153",
           "expect": {
             "$document": {
               "$id": "staff",
@@ -3465,12 +4243,12 @@
             "args": {
               "alias": "staff",
               "collection": {
-                "$obj": "o5302"
+                "$obj": "o8473"
               }
             },
-            "as": "o5303"
+            "as": "o8474"
           },
-          "bind": "s9333",
+          "bind": "s13154",
           "expect": {
             "$value": "Validator\\Query\\Joined\\Collection",
             "fields": {
@@ -3508,13 +4286,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5297"
+              "$obj": "o8468"
             },
             "method": "allowJoins",
             "args": {
               "joins": [
                 {
-                  "$obj": "o5303"
+                  "$obj": "o8474"
                 }
               ]
             }
@@ -3530,9 +4308,9 @@
               "left": "$id",
               "right": "staff.managerId"
             },
-            "as": "o5304"
+            "as": "o8475"
           },
-          "bind": "s9335",
+          "bind": "s13156",
           "expect": {
             "$query": {
               "method": "on",
@@ -3555,13 +4333,13 @@
               "alias": "",
               "on": [
                 {
-                  "$obj": "o5304"
+                  "$obj": "o8475"
                 }
               ]
             },
-            "as": "o5305"
+            "as": "o8476"
           },
-          "bind": "s9336",
+          "bind": "s13157",
           "expect": {
             "$query": {
               "method": "join",
@@ -3587,12 +4365,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5297"
+              "$obj": "o8468"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o5305"
+                "$obj": "o8476"
               }
             }
           },
@@ -3602,7 +4380,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5297"
+              "$obj": "o8468"
             },
             "method": "getDescription",
             "args": {}
@@ -3613,7 +4391,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5297"
+              "$obj": "o8468"
             },
             "method": "resetJoinAliases",
             "args": {}
@@ -3629,9 +4407,9 @@
               "left": "staff.managerId",
               "right": "$id"
             },
-            "as": "o5306"
+            "as": "o8477"
           },
-          "bind": "s9340",
+          "bind": "s13161",
           "expect": {
             "$query": {
               "method": "on",
@@ -3654,13 +4432,13 @@
               "alias": "",
               "on": [
                 {
-                  "$obj": "o5306"
+                  "$obj": "o8477"
                 }
               ]
             },
-            "as": "o5307"
+            "as": "o8478"
           },
-          "bind": "s9341",
+          "bind": "s13162",
           "expect": {
             "$query": {
               "method": "join",
@@ -3686,12 +4464,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5297"
+              "$obj": "o8468"
             },
             "method": "isValid",
             "args": {
               "value": {
-                "$obj": "o5307"
+                "$obj": "o8478"
               }
             }
           },
@@ -3701,7 +4479,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5297"
+              "$obj": "o8468"
             },
             "method": "getDescription",
             "args": {}
@@ -3714,20 +4492,6 @@
       "name": "JoinAliasTest::testAnEmptyAliasIsStillDescribedAsRequired",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceIntegerRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceDoubleRange"
-          },
-          "expect": true
-        },
         {
           "op": "object.call",
           "args": {
@@ -3757,20 +4521,6 @@
       "name": "JoinAliasTest::testDescribesADuplicateAliasByHowItWasGiven",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceIntegerRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "raceDoubleRange"
-          },
-          "expect": true
-        },
         {
           "op": "object.call",
           "args": {

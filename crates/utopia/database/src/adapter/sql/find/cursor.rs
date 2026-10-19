@@ -264,7 +264,7 @@ impl Sql {
             let internal = self.qualify_order_attribute(original, join_aliases);
 
             if !nullable && order_attributes.len() == 1 && i == 0 && original == crate::document::SEQUENCE {
-                let value = comparable(&cursor_value(cursor, original), direction, 5752)?;
+                let value = comparable(&cursor_value(cursor, original), direction, 5794)?;
                 conditions.push(wrap(if direction == OrderDirection::Desc {
                     utopia_query::Query::less_than(internal, value)
                 } else {
@@ -285,7 +285,7 @@ impl Sql {
                     None => continue,
                 }
             } else {
-                let value = comparable(&value, direction, 5777)?;
+                let value = comparable(&value, direction, 5819)?;
                 and.push(wrap(if direction == OrderDirection::Desc {
                     utopia_query::Query::less_than(internal, value)
                 } else {
