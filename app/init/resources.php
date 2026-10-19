@@ -417,8 +417,23 @@ function getDevice(string $root, string $connection = ''): Device
             $endpoint = System::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
             if (! empty($endpoint)) {
                 $bucketRoot = (! empty($bucket) ? "{$bucket}/" : '') . \ltrim($root, '/');
+                // A configured bucket may carry a key prefix (`bucket/prefix`); the bucket is its first segment.
+                $bucketName = \explode('/', \trim($bucket, '/'))[0];
 
-                return new S3($bucketRoot, $accessKey, $accessSecret, $endpoint, $region);
+                return new S3(
+                    $bucketRoot,
+                    $accessKey,
+                    $accessSecret,
+                    $endpoint,
+                    $region,
+                    bucket: $bucketName !== '' ? $bucketName : null,
+                    // Unset lets the device infer it from the endpoint and bucket.
+                    pathStyle: match (System::getEnv('_APP_STORAGE_S3_PATH_STYLE', '')) {
+                        'enabled' => true,
+                        'disabled' => false,
+                        default => null,
+                    },
+                );
             }
 
             return new AWS($root, $accessKey, $accessSecret, $bucket, $region);

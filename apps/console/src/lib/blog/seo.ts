@@ -3,6 +3,7 @@ import { getSeoSiteOrigin, resolveSiteAssetUrl } from '@/lib/marketing/site-orig
 import { BLOG_COVER_OG_HEIGHT, BLOG_COVER_OG_WIDTH } from '@/lib/seo/cover-constants'
 import { buildOgImageUrl, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/lib/seo/og-image'
 import { getCoverImageDimensions } from '@/lib/seo/cover-dimensions'
+import { getOrganizationSchema } from '@/lib/seo/organization'
 import { SEO_SITE_NAME } from '@/lib/seo/page-meta'
 import { getPostCategoryLabel } from './content'
 import type { BlogAuthor, BlogCategory, BlogFaq, BlogPost, BlogPostMeta } from './types'
@@ -186,20 +187,6 @@ export function getBlogAuthorMetaTags(author: BlogAuthor, options?: BlogSeoOptio
   ] as const
 }
 
-export const PUBLISHER_LOGO_URL = `${MARKETING_SITE_ORIGIN}/apple-touch-icon.png`
-
-export function getPublisherSchema() {
-  return {
-    '@type': 'Organization',
-    name: 'Appwrite',
-    url: MARKETING_SITE_ORIGIN,
-    logo: {
-      '@type': 'ImageObject',
-      url: PUBLISHER_LOGO_URL,
-    },
-  }
-}
-
 function getAuthorSchema(author: BlogAuthor) {
   const sameAs = [author.twitter, author.linkedin, author.github].filter(
     (url): url is string => Boolean(url),
@@ -209,6 +196,8 @@ function getAuthorSchema(author: BlogAuthor) {
     '@type': 'Person',
     name: author.name,
     url: getBlogCanonicalUrl(author.href),
+    ...(author.role ? { jobTitle: author.role } : {}),
+    ...(author.bio ? { description: author.bio } : {}),
     ...(author.avatar
       ? {
           image: author.avatar.startsWith('/')
@@ -242,7 +231,7 @@ export function getBlogPostSchema(
     },
     ...(coverImage ? { image: [coverImage] } : {}),
     author: authors.map(getAuthorSchema),
-    publisher: getPublisherSchema(),
+    publisher: getOrganizationSchema(),
   }
 }
 

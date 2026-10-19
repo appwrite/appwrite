@@ -22,10 +22,10 @@
 
 ## Step 3: Add the Appwrite SDK
 
-- Add the following dependency to the app-level `build.gradle.kts` file inside the **dependencies** block:
+- The SDK requires `minSdk` 24 or higher. Add the following dependency to the app-level `build.gradle.kts` file inside the **dependencies** block:
 
 ```kotlin
-implementation("io.appwrite:sdk-for-android:29.2.0")
+implementation("io.appwrite:sdk-for-android:30.0.0")
 ```
 
 - Add the OAuth callback activity inside the `<application>` tag in `AndroidManifest.xml` (replace `<PROJECT_ID>` with actual project ID):

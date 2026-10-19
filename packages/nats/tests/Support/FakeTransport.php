@@ -30,6 +30,12 @@ final class FakeTransport implements Transport
      */
     public bool $answerPings = true;
 
+    /** Thrown by connect() when set. */
+    public ?\Throwable $refuse = null;
+
+    /** The host connect() was asked for. */
+    public string $host = '';
+
     private string $inbound = '';
     private bool $connected = false;
 
@@ -40,6 +46,11 @@ final class FakeTransport implements Transport
 
     public function connect(string $host, int $port, float $timeout): void
     {
+        $this->host = $host;
+        if ($this->refuse instanceof \Throwable) {
+            throw $this->refuse;
+        }
+
         $this->connected = true;
         $this->inbound .= $this->infoLine();
     }

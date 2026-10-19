@@ -430,7 +430,9 @@ class Create extends Action
         } catch (UniqueException $e) {
             throw new Exception($this->getUniqueConstraintException(), previous: $e);
         } catch (DuplicateException $e) {
-            throw new Exception($this->getDuplicateException(), previous: $e, params: [$documentId]);
+            throw $isBulk
+                ? $this->getBatchDuplicateException($dbForDatabases, $collectionTableId, $documents, $e)
+                : new Exception($this->getDuplicateException(), previous: $e, params: [$documentId]);
         } catch (NotFoundException $e) {
             if ($authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId))->isEmpty()) {
                 throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
