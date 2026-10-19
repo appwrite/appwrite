@@ -2,7 +2,6 @@ import { HeadContent, Outlet, Scripts, createRootRoute, useMatch, useRouterState
 import { useEffect, useState, type ReactNode } from 'react'
 import appCss from '../styles.css?url'
 import { Analytics } from '@/components/Analytics'
-import { Crumbs } from '@/components/Crumbs'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { LibraryMenu, Sidebar } from '@/components/Sidebar'
@@ -87,7 +86,6 @@ function Layout() {
           </div>
         ) : null}
         <main className="min-w-0 px-5 pt-8 pb-16 md:px-10">
-          {nav ? null : <Crumbs />}
           <Outlet />
           {index ? <Footer index={index} /> : null}
         </main>

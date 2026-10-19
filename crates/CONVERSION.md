@@ -55,6 +55,7 @@ From the migration brief. These are review criteria, not suggestions.
 - **Backends behind features.** Each optional backend is a cargo feature (`postgres`, `mysql`, `sqlite`, `mongodb`, `memcached`, ...) so binaries only link what they use. CI builds with `--all-features`.
 - **Dependencies.** Add third-party crates to `[workspace.dependencies]` with a reason in the PR. Prefer maintained, pure-Rust crates; avoid C dependencies unless there is no adequate alternative.
 - **Naming.** Rust naming (`get_description()` becomes `description()`, `isValid` becomes `is_valid`). The crate docs carry a table mapping each PHP class to its Rust item, so a reader of one runtime can find the other.
+- **Signatures.** Each PHP method or constructor is one Rust method taking the same parameters in the same order. An optional PHP parameter is an explicit argument (`fresh: bool`, `default: Option<&Value>`, `level: i64`), never a second method (`set_fresh`, `param_or`, `finish_with`) or a `with_*` builder on the constructor. A parameter whose PHP type is a union is one argument of an enum, not one method per type. Allowed exceptions, each documented on the method: a PHP argument that changes the return type (`microtime(true)`); two Rust views of one value forced by ownership or encoding (`message` / `message_bytes`, `get` / `get_mut`); Rust-only test seams with no PHP parameter (`with_clock`, `with_transport`); and the `servers` / `http` / `queue` / `platform` `Param` builder, whose setters are one to one with `param()`'s named arguments.
 - **No `unsafe`** unless a benchmark proves it necessary, with a `// SAFETY:` comment.
 - **Configuration.** Environment variables keep their PHP names (`_APP_*`), read through `utopia-system`.
 
@@ -93,6 +94,7 @@ Not allowed: "unused by Appwrite", "hard to port", "rarely used", or anything wi
 - [ ] `bin/compat check <lib>` passes: coverage 100%, run and fuzz clean, every PHP test class ported, every task ported or waived.
 - [ ] Each task binary matches PHP's commands, arguments, output and exit codes against fixtures, and the data it writes is the crate's own, embedded, and equal to PHP's.
 - [ ] Every PHP backend exists, behind a feature where optional.
+- [ ] Every PHP method and constructor is one Rust method with the same parameters in the same order (§4 Signatures).
 - [ ] Interop cases for every shared format, in both directions.
 - [ ] Each waiver fits §6; each quirk has a pinned case.
 - [ ] The design follows §4: no PHP-shaped APIs, extension points kept as traits, no needless allocation or dispatch.

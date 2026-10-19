@@ -31,7 +31,40 @@ pub struct Point {
     pub attributes: OwnedAttributes,
 }
 
-type Points = Arc<Mutex<Vec<Point>>>;
+/// One instrument's data points, kept as compactly as PHP keeps its
+/// `$values`: the values side by side, and each run of identical attributes
+/// once, with the index of its first point. An instrument that records the
+/// same attributes every time grows by one [`Number`] a point.
+#[derive(Default)]
+struct Series {
+    values: Vec<Number>,
+    runs: Vec<(usize, OwnedAttributes)>,
+}
+
+impl Series {
+    fn push(&mut self, value: Number, attributes: Attributes<'_>) {
+        if !self.runs.last().is_some_and(|(_, run)| same(run, attributes)) {
+            self.runs.push((self.values.len(), to_owned(attributes)));
+        }
+        self.values.push(value);
+    }
+
+    fn points(&self) -> Vec<Point> {
+        let mut out = Vec::with_capacity(self.values.len());
+        for (i, (start, attributes)) in self.runs.iter().enumerate() {
+            let end = self.runs.get(i + 1).map_or(self.values.len(), |(next, _)| *next);
+            out.extend(self.values[*start..end].iter().map(|&value| Point { value, attributes: attributes.clone() }));
+        }
+        out
+    }
+}
+
+/// Whether kept attributes equal a measurement's, without copying them.
+fn same(kept: &OwnedAttributes, attributes: Attributes<'_>) -> bool {
+    kept.len() == attributes.len() && kept.iter().zip(attributes).all(|((k, v), (n, w))| k == n && v == w)
+}
+
+type Points = Arc<Mutex<Series>>;
 
 /// The instruments that recorded, in the order they first did.
 #[derive(Default)]
@@ -98,13 +131,13 @@ impl Record for Recorder {
     fn record(&self, value: Number, attributes: Attributes<'_>) {
         {
             let mut registry = lock(&self.registry);
-            let key = (self.kind, self.name.clone());
-            match registry.recorded.iter_mut().find(|(k, _)| *k == key) {
+            match registry.recorded.iter_mut().find(|((k, n), _)| *k == self.kind && *n == self.name) {
+                Some((_, points)) if Arc::ptr_eq(points, &self.points) => {}
                 Some((_, points)) => *points = self.points.clone(),
-                None => registry.recorded.push((key, self.points.clone())),
+                None => registry.recorded.push(((self.kind, self.name.clone()), self.points.clone())),
             }
         }
-        lock(&self.points).push(Point { value, attributes: to_owned(attributes) });
+        lock(&self.points).push(value, attributes);
     }
 }
 
@@ -144,18 +177,21 @@ impl MemoryTelemetry {
     /// The data points of the last instrument of `kind` named `name` that
     /// recorded; `None` when none did.
     pub fn points(&self, kind: Kind, name: &str) -> Option<Vec<Point>> {
-        let points = {
-            let registry = lock(&self.registry);
-            registry.recorded.iter().find(|((k, n), _)| *k == kind && n == name).map(|(_, p)| p.clone())?
-        };
-        Some(lock(&points).clone())
+        let series = self.series(kind, name)?;
+        Some(lock(&series).points())
     }
 
     /// The values the last instrument of `kind` named `name` recorded.
     ///
     /// PHP: `$telemetry->counters[$name]->values` (and the other kinds).
     pub fn values(&self, kind: Kind, name: &str) -> Option<Vec<Number>> {
-        self.points(kind, name).map(|points| points.into_iter().map(|p| p.value).collect())
+        let series = self.series(kind, name)?;
+        Some(lock(&series).values.clone())
+    }
+
+    fn series(&self, kind: Kind, name: &str) -> Option<Points> {
+        let registry = lock(&self.registry);
+        registry.recorded.iter().find(|((k, n), _)| *k == kind && n == name).map(|(_, p)| p.clone())
     }
 
     /// The number of callbacks the observable gauge `name` has; `None` when
@@ -259,6 +295,22 @@ mod tests {
         assert_eq!(telemetry.values(Kind::Counter, "x"), Some(vec![Number::Int(2)]));
         first.add(3, &[]);
         assert_eq!(telemetry.values(Kind::Counter, "x"), Some(vec![Number::Int(1), Number::Int(3)]));
+    }
+
+    #[test]
+    fn each_point_keeps_its_attributes() {
+        let telemetry = MemoryTelemetry::new();
+        let counter = telemetry.counter("x", None, None);
+        let get = [("method", Value::from("GET"))];
+        let post = [("method", Value::from("POST"))];
+        for attributes in [&get[..], &get, &post, &[], &get] {
+            counter.add(1, attributes);
+        }
+        let points = telemetry.points(Kind::Counter, "x").unwrap();
+        let methods: Vec<Option<&str>> =
+            points.iter().map(|p| p.attributes.first().and_then(|(_, v)| v.as_str())).collect();
+        assert_eq!(methods, vec![Some("GET"), Some("GET"), Some("POST"), None, Some("GET")]);
+        assert_eq!(points[1].attributes, to_owned(&get));
     }
 
     #[utopia_async::test]

@@ -15,6 +15,8 @@
 //!   crates/CONVERSION.md §8);
 //! - its text: the crate's `//!` docs, or the PHP README; modules and items
 //!   from their doc comments; PHP signatures and docblocks by reflection;
+//!   the getting started guide (`guide.md`) and, for a server, the
+//!   lifecycle guide (`lifecycle.md`) next to the crate's manifest;
 //! - its examples: code blocks in doc comments (see [`super::examples`]);
 //! - its tasks: the PHP package's programs besides its API, and the crate's
 //!   binaries that port them (see [`super::tasks`]);
@@ -367,6 +369,14 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
             .map(|g| examples::blocks(&g))
             .unwrap_or_default();
         example_count += guide.iter().filter(|b| matches!(b, examples::Block::Example(_))).count();
+        // The lifecycle guide of a server crate: `lifecycle.md` next to `guide.md`.
+        let lifecycle = lib
+            .rust
+            .as_ref()
+            .and_then(|r| std::fs::read_to_string(root.join(&r.dir).join("lifecycle.md")).ok())
+            .map(|g| examples::blocks(&g))
+            .unwrap_or_default();
+        example_count += lifecycle.iter().filter(|b| matches!(b, examples::Block::Example(_))).count();
         let documented = items.iter().filter(|i| !i.doc.is_empty() || i.inherits.is_some()).count();
         let tasks = super::tasks::docs(
             if php_ok { engine.as_deref_mut() } else { None },
@@ -486,6 +496,7 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
                 "documented": documented,
                 "examples": example_count,
                 "guide": !guide.is_empty(),
+                "lifecycle": !lifecycle.is_empty(),
                 "php_symbols": php_api.len(),
                 "linked": php_api.iter().filter(|p| p["rust"].as_array().is_some_and(|r| !r.is_empty())).count(),
                 "php_functions": php_functions.as_ref().map(|(_, totals)| totals),
@@ -515,6 +526,7 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
             "sync": sync,
             "bench": bench,
             "guide": guide.iter().map(examples::Block::to_json).collect::<Vec<_>>(),
+            "lifecycle": lifecycle.iter().map(examples::Block::to_json).collect::<Vec<_>>(),
             "tasks": tasks,
             "dependencies": dependencies,
             "examples": overview_examples.iter().map(examples::Example::to_json).collect::<Vec<_>>(),

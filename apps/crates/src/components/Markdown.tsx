@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm'
 import { resolve, slug as anchor, type Library } from '@/lib/docs'
 import { Children, isValidElement, type ReactNode } from 'react'
 import { CodeBlock, type Lang } from './Code'
+import { Flow } from './Flow'
 
 /** Rustdoc's intra-doc links (`` [`Text`] ``) as `rustdoc:` links the renderer resolves. */
 function intraDoc(md: string) {
@@ -50,6 +51,7 @@ export function Markdown({ text, lib, slug }: { text: string; lib?: Pick<Library
           code: ({ className, children }) => {
             const lang = /language-(\w+)/.exec(className ?? '')?.[1]
             const text = String(children).replace(/\n$/, '')
+            if (lang === 'flow') return <Flow source={text} />
             if (lang || text.includes('\n')) return <CodeBlock code={text} lang={LANGS[lang ?? ''] ?? 'text'} />
             return <code className="bg-muted px-1 py-px font-mono text-[0.85em] text-foreground">{children}</code>
           },

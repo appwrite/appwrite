@@ -129,6 +129,8 @@ export interface LibrarySummary {
     documented: number
     examples: number
     guide: boolean
+    /** Whether the crate has a lifecycle guide (`lifecycle.md`; older data leaves it out). */
+    lifecycle?: boolean
     php_symbols: number
     linked: number
     /** The PHP library's tasks and how many the crate ports or waives (older data leaves it out). */
@@ -498,6 +500,8 @@ export interface Library {
   overview: string
   overview_notes: string
   guide: GuideBlock[]
+  /** A server's lifecycle guide (`lifecycle.md`); older data leaves it out. */
+  lifecycle?: GuideBlock[]
   /** Older data leaves it out. */
   tasks?: Task[]
   /** Older data leaves it out. */

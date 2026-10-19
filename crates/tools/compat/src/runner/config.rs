@@ -42,11 +42,13 @@ impl Config {
             let exe = std::env::current_exe().map_err(|e| e.to_string())?;
             rust = vec![exe.with_file_name("compat-driver").display().to_string()];
         }
+        // `COMPAT_RUST=bin/compat-rust` runs the container driver already built.
+        let rust_in_container = rust.first().is_some_and(|c| c.ends_with("bin/compat-rust"));
         Ok(Self {
             root: root.to_path_buf(),
             php: command("php", "COMPAT_PHP"),
             rust,
-            rust_in_container: false,
+            rust_in_container,
             services: json.get("services").and_then(Value::as_object).cloned().unwrap_or_default(),
         })
     }

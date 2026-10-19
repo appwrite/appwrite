@@ -3,10 +3,9 @@
 //!
 //! Register a factory under a name with [`Registry::set`], then read the
 //! resource with [`Registry::get`]: the first read runs the factory and later
-//! reads return the same instance. A factory registered with
-//! [`Registry::set_fresh`] runs on every read, and [`Registry::get_fresh`]
-//! forces one new instance. Each context ([`Registry::context`]) keeps its own
-//! instances, so one process can hold one set of connections per worker,
+//! reads return the same instance. A factory registered with `fresh` runs on
+//! every read, and a read with `fresh` forces one new instance. Each context
+//! ([`Registry::context`]) keeps its own instances, so one process can hold one set of connections per worker,
 //! tenant or request.
 //!
 //! PHP: ports `utopia-php/registry`.
@@ -14,8 +13,8 @@
 //! | PHP | Rust |
 //! |---|---|
 //! | `new Registry()` | [`Registry::new`] |
-//! | `set($name, $callback, $fresh = false)` | [`Registry::set`] (`$fresh = true`: [`Registry::set_fresh`]) |
-//! | `get($name, $fresh = false)` | [`Registry::get`] (`$fresh = true`: [`Registry::get_fresh`]) |
+//! | `set($name, $callback, $fresh = false)` | [`Registry::set`] |
+//! | `get($name, $fresh = false)` | [`Registry::get`] |
 //! | `has($name)` | [`Registry::has`] |
 //! | `context($name)` | [`Registry::context`] |
 //! | `\Exception` | [`Error::NotFound`] |
@@ -30,10 +29,10 @@
 //! use utopia_registry::Registry;
 //!
 //! let mut registry = Registry::new();
-//! registry.set("db", || String::from("connection"));
+//! registry.set("db", || String::from("connection"), false);
 //!
 //! assert!(registry.has("db"));
-//! assert_eq!(registry.get::<String>("db")?, "connection");
+//! assert_eq!(registry.get::<String>("db", false)?, "connection");
 //! # Ok::<(), utopia_registry::Error>(())
 //! ```
 //!
@@ -68,7 +67,7 @@ pub enum Error {
     /// use utopia_registry::{Error, Registry};
     ///
     /// let mut registry = Registry::new();
-    /// let error = registry.get::<String>("cache").unwrap_err();
+    /// let error = registry.get::<String>("cache", false).unwrap_err();
     /// assert!(matches!(error, Error::NotFound(_)));
     /// assert_eq!(error.to_string(), r#"No callback named "cache" found when trying to create connection"#);
     /// ```
@@ -134,10 +133,10 @@ struct Factory {
 /// use utopia_registry::Registry;
 ///
 /// let mut registry = Registry::new();
-/// registry.set("list", || vec![String::from("test")]);
+/// registry.set("list", || vec![String::from("test")], false);
 ///
-/// registry.get::<Vec<String>>("list")?.push("Hello World".into());
-/// assert_eq!(registry.get::<Vec<String>>("list")?.len(), 2);
+/// registry.get::<Vec<String>>("list", false)?.push("Hello World".into());
+/// assert_eq!(registry.get::<Vec<String>>("list", false)?.len(), 2);
 /// # Ok::<(), utopia_registry::Error>(())
 /// ```
 ///
@@ -181,20 +180,27 @@ impl Registry {
     }
 
     /// Registers the factory of a resource; its instance is created on the
-    /// first read in each context, then reused.
+    /// first read in each context, then reused. With `fresh`, the factory runs
+    /// on every read instead and each read returns a new instance.
     ///
     /// Registering a name again replaces its factory and drops its instance in
     /// the current context. Instances other contexts already created stay.
     ///
-    /// PHP: `set($name, $callback)`.
+    /// PHP: `set($name, $callback, $fresh = false)`.
     ///
     /// ```
+    /// use std::sync::atomic::{AtomicU32, Ordering};
     /// use utopia_registry::Registry;
     ///
     /// let mut registry = Registry::new();
-    /// registry.set("region", || "fra");
-    /// registry.set("region", || "nyc");
-    /// assert_eq!(*registry.get::<&str>("region")?, "nyc");
+    /// registry.set("region", || "fra", false);
+    /// registry.set("region", || "nyc", false);
+    /// assert_eq!(*registry.get::<&str>("region", false)?, "nyc");
+    ///
+    /// let counter = AtomicU32::new(0);
+    /// registry.set("id", move || counter.fetch_add(1, Ordering::Relaxed), true);
+    /// assert_eq!(*registry.get::<u32>("id", false)?, 0);
+    /// assert_eq!(*registry.get::<u32>("id", false)?, 1);
     /// # Ok::<(), utopia_registry::Error>(())
     /// ```
     ///
@@ -205,50 +211,13 @@ impl Registry {
     /// $registry->set('region', fn () => 'fra');
     /// $registry->set('region', fn () => 'nyc');
     /// echo $registry->get('region'), "\n"; // nyc
-    /// ```
-    pub fn set<T, F>(&mut self, name: &str, factory: F) -> &mut Self
-    where
-        T: Any + Send,
-        F: Fn() -> T + Send + Sync + 'static,
-    {
-        self.register(name, factory, false)
-    }
-
-    /// Registers a factory that runs on every read: each read returns a new
-    /// instance.
     ///
-    /// PHP: `set($name, $callback, true)`.
-    ///
-    /// ```
-    /// use std::sync::atomic::{AtomicU32, Ordering};
-    /// use utopia_registry::Registry;
-    ///
-    /// let mut registry = Registry::new();
-    /// let counter = AtomicU32::new(0);
-    /// registry.set_fresh("id", move || counter.fetch_add(1, Ordering::Relaxed));
-    /// assert_eq!(*registry.get::<u32>("id")?, 0);
-    /// assert_eq!(*registry.get::<u32>("id")?, 1);
-    /// # Ok::<(), utopia_registry::Error>(())
-    /// ```
-    ///
-    /// ```php
-    /// use Utopia\Registry\Registry;
-    ///
-    /// $registry = new Registry();
     /// $counter = 0;
     /// $registry->set('id', function () use (&$counter) { return $counter++; }, true);
     /// echo $registry->get('id'), "\n"; // 0
     /// echo $registry->get('id'), "\n"; // 1
     /// ```
-    pub fn set_fresh<T, F>(&mut self, name: &str, factory: F) -> &mut Self
-    where
-        T: Any + Send,
-        F: Fn() -> T + Send + Sync + 'static,
-    {
-        self.register(name, factory, true)
-    }
-
-    fn register<T, F>(&mut self, name: &str, factory: F, fresh: bool) -> &mut Self
+    pub fn set<T, F>(&mut self, name: &str, factory: F, fresh: bool) -> &mut Self
     where
         T: Any + Send,
         F: Fn() -> T + Send + Sync + 'static,
@@ -261,20 +230,25 @@ impl Registry {
 
     /// The resource registered under `name` in the current context, created
     /// by its factory on the first read (or on every read, for a factory
-    /// registered with [`Registry::set_fresh`]).
+    /// registered with `fresh`). With `fresh`, the factory builds a new
+    /// instance that replaces the cached one in the current context.
     ///
     /// Fails with [`Error::NotFound`] when no factory has that name, and with
     /// [`Error::Type`] when the resource is not a `T`.
     ///
-    /// PHP: `get($name)`.
+    /// PHP: `get($name, $fresh = false)`.
     ///
     /// ```
     /// use utopia_registry::Registry;
     ///
     /// let mut registry = Registry::new();
-    /// registry.set("port", || 6379_u16);
-    /// assert_eq!(*registry.get::<u16>("port")?, 6379);
-    /// assert!(registry.get::<String>("port").is_err());
+    /// registry.set("port", || 6379_u16, false);
+    /// assert_eq!(*registry.get::<u16>("port", false)?, 6379);
+    /// assert!(registry.get::<String>("port", false).is_err());
+    ///
+    /// registry.set("list", || vec![1], false);
+    /// registry.get::<Vec<i32>>("list", false)?.push(2);
+    /// assert_eq!(registry.get::<Vec<i32>>("list", true)?, &[1]);
     /// # Ok::<(), utopia_registry::Error>(())
     /// ```
     ///
@@ -284,39 +258,12 @@ impl Registry {
     /// $registry = new Registry();
     /// $registry->set('port', fn () => 6379);
     /// echo $registry->get('port'), "\n"; // 6379
-    /// ```
-    pub fn get<T: Any>(&mut self, name: &str) -> Result<&mut T, Error> {
-        self.resolve(name, false)
-    }
-
-    /// A new instance of the resource registered under `name`, which replaces
-    /// the cached one in the current context.
     ///
-    /// PHP: `get($name, true)`.
-    ///
-    /// ```
-    /// use utopia_registry::Registry;
-    ///
-    /// let mut registry = Registry::new();
-    /// registry.set("list", || vec![1]);
-    /// registry.get::<Vec<i32>>("list")?.push(2);
-    /// assert_eq!(registry.get_fresh::<Vec<i32>>("list")?, &[1]);
-    /// # Ok::<(), utopia_registry::Error>(())
-    /// ```
-    ///
-    /// ```php
-    /// use Utopia\Registry\Registry;
-    ///
-    /// $registry = new Registry();
     /// $registry->set('list', fn () => new ArrayObject([1]));
     /// $registry->get('list')[] = 2;
     /// echo count($registry->get('list', true)), "\n"; // 1
     /// ```
-    pub fn get_fresh<T: Any>(&mut self, name: &str) -> Result<&mut T, Error> {
-        self.resolve(name, true)
-    }
-
-    fn resolve<T: Any>(&mut self, name: &str, fresh: bool) -> Result<&mut T, Error> {
+    pub fn get<T: Any>(&mut self, name: &str, fresh: bool) -> Result<&mut T, Error> {
         let instances = &mut self.contexts[self.current].1;
         let factory = self.factories.get(name);
         let rebuild = fresh || factory.is_some_and(|f| f.fresh) || !instances.contains_key(name);
@@ -338,7 +285,7 @@ impl Registry {
     /// use utopia_registry::Registry;
     ///
     /// let mut registry = Registry::new();
-    /// registry.set("item", || [1, 2]);
+    /// registry.set("item", || [1, 2], false);
     /// assert!(registry.has("item"));
     /// assert!(!registry.has("other"));
     /// ```
@@ -367,13 +314,13 @@ impl Registry {
     ///
     /// let mut registry = Registry::new();
     /// let counter = AtomicU32::new(0);
-    /// registry.set("connection", move || counter.fetch_add(1, Ordering::Relaxed));
+    /// registry.set("connection", move || counter.fetch_add(1, Ordering::Relaxed), false);
     ///
-    /// assert_eq!(*registry.get::<u32>("connection")?, 0);
+    /// assert_eq!(*registry.get::<u32>("connection", false)?, 0);
     /// registry.context("worker-2");
-    /// assert_eq!(*registry.get::<u32>("connection")?, 1);
+    /// assert_eq!(*registry.get::<u32>("connection", false)?, 1);
     /// registry.context("default");
-    /// assert_eq!(*registry.get::<u32>("connection")?, 0);
+    /// assert_eq!(*registry.get::<u32>("connection", false)?, 0);
     /// # Ok::<(), utopia_registry::Error>(())
     /// ```
     ///
@@ -417,13 +364,13 @@ mod tests {
     #[test]
     fn set_drops_the_instance_of_the_current_context_only() {
         let mut r = Registry::new();
-        r.set("a", || 1_i32);
-        assert_eq!(*r.get::<i32>("a").unwrap(), 1);
+        r.set("a", || 1_i32, false);
+        assert_eq!(*r.get::<i32>("a", false).unwrap(), 1);
         r.context("other");
-        r.set("a", || 2_i32);
-        assert_eq!(*r.get::<i32>("a").unwrap(), 2);
+        r.set("a", || 2_i32, false);
+        assert_eq!(*r.get::<i32>("a", false).unwrap(), 2);
         r.context("default");
-        assert_eq!(*r.get::<i32>("a").unwrap(), 1);
+        assert_eq!(*r.get::<i32>("a", false).unwrap(), 1);
         assert_eq!(r.current_context(), "default");
     }
 }

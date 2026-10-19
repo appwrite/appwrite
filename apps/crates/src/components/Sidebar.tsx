@@ -107,7 +107,7 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
   }
 
   return (
-    <nav className="grid content-start gap-3 p-3" onClick={(e) => (e.target as HTMLElement).closest('a') && onNavigate?.()}>
+    <nav className="grid content-start gap-3 px-5 py-3" onClick={(e) => (e.target as HTMLElement).closest('a') && onNavigate?.()}>
       <div className="grid gap-1.5 border-b border-foreground pb-3">
         <div className="flex items-center justify-between gap-2">
           <Link to="/$lib" params={{ lib: slug }} className="title truncate text-[19px] leading-none">
@@ -130,11 +130,17 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
           className="min-w-0 flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground"
         />
       </label>
-      <div className="grid gap-0.5">
+      {/* The rows' highlight bleeds into the gutter so their text lines up with the header's. */}
+      <div className="-mx-2 grid gap-0.5">
         <div className={heading}>Library</div>
         <Link to="/$lib" params={{ lib: slug }} activeOptions={{ exact: true, includeHash: false }} className={row}>
           Overview
         </Link>
+        {nav.library.counts.lifecycle ? (
+          <Link to="/$lib/lifecycle" params={{ lib: slug }} className={row}>
+            Lifecycle
+          </Link>
+        ) : null}
         {nav.library.rust || migration || dependents ? (
           <Link to="/$lib/dependencies" params={{ lib: slug }} className={item(depsMigration)} title={depsMigration ? MIGRATION_TITLE : undefined}>
             <span className="truncate">Dependencies</span>

@@ -254,6 +254,9 @@ pub fn verify(root: &std::path::Path, crates: &[String], php: &[String]) -> Resu
         if let Ok(guide) = std::fs::read_to_string(root.join(krate).join("guide.md")) {
             docs_of.push(("guide".to_owned(), guide));
         }
+        if let Ok(lifecycle) = std::fs::read_to_string(root.join(krate).join("lifecycle.md")) {
+            docs_of.push(("lifecycle".to_owned(), lifecycle));
+        }
         for (label, doc) in docs_of {
             for (n, example) in split(&doc).1.into_iter().enumerate() {
                 let Some(code) = example.php else {

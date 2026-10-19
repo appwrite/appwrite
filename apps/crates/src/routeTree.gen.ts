@@ -21,6 +21,7 @@ import { Route as LibSplatRouteImport } from './routes/$lib/$'
 import { Route as LibBenchmarksRouteImport } from './routes/$lib/benchmarks'
 import { Route as LibDependenciesRouteImport } from './routes/$lib/dependencies'
 import { Route as LibFunctionsRouteImport } from './routes/$lib/functions'
+import { Route as LibLifecycleRouteImport } from './routes/$lib/lifecycle'
 import { Route as AppwriteIndexRouteImport } from './routes/appwrite/index'
 import { Route as AppwriteSplatRouteImport } from './routes/appwrite/$'
 import { Route as CategoriesCategoryRouteImport } from './routes/categories/$category'
@@ -93,6 +94,11 @@ const LibFunctionsRoute = LibFunctionsRouteImport.update({
   path: '/functions',
   getParentRoute: () => LibRoute,
 } as any)
+const LibLifecycleRoute = LibLifecycleRouteImport.update({
+  id: '/lifecycle',
+  path: '/lifecycle',
+  getParentRoute: () => LibRoute,
+} as any)
 const AppwriteIndexRoute = AppwriteIndexRouteImport.update({
   id: '/appwrite/',
   path: '/appwrite/',
@@ -162,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/$lib/benchmarks': typeof LibBenchmarksRoute
   '/$lib/dependencies': typeof LibDependenciesRoute
   '/$lib/functions': typeof LibFunctionsRoute
+  '/$lib/lifecycle': typeof LibLifecycleRoute
   '/appwrite/$': typeof AppwriteSplatRoute
   '/categories/$category': typeof CategoriesCategoryRoute
   '/migration/facts': typeof MigrationFactsRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/$lib/benchmarks': typeof LibBenchmarksRoute
   '/$lib/dependencies': typeof LibDependenciesRoute
   '/$lib/functions': typeof LibFunctionsRoute
+  '/$lib/lifecycle': typeof LibLifecycleRoute
   '/appwrite/$': typeof AppwriteSplatRoute
   '/categories/$category': typeof CategoriesCategoryRoute
   '/migration/facts': typeof MigrationFactsRoute
@@ -211,6 +219,7 @@ export interface FileRoutesById {
   '/$lib/benchmarks': typeof LibBenchmarksRoute
   '/$lib/dependencies': typeof LibDependenciesRoute
   '/$lib/functions': typeof LibFunctionsRoute
+  '/$lib/lifecycle': typeof LibLifecycleRoute
   '/appwrite/$': typeof AppwriteSplatRoute
   '/categories/$category': typeof CategoriesCategoryRoute
   '/migration/facts': typeof MigrationFactsRoute
@@ -238,6 +247,7 @@ export interface FileRouteTypes {
     | '/$lib/benchmarks'
     | '/$lib/dependencies'
     | '/$lib/functions'
+    | '/$lib/lifecycle'
     | '/appwrite/$'
     | '/categories/$category'
     | '/migration/facts'
@@ -261,6 +271,7 @@ export interface FileRouteTypes {
     | '/$lib/benchmarks'
     | '/$lib/dependencies'
     | '/$lib/functions'
+    | '/$lib/lifecycle'
     | '/appwrite/$'
     | '/categories/$category'
     | '/migration/facts'
@@ -286,6 +297,7 @@ export interface FileRouteTypes {
     | '/$lib/benchmarks'
     | '/$lib/dependencies'
     | '/$lib/functions'
+    | '/$lib/lifecycle'
     | '/appwrite/$'
     | '/categories/$category'
     | '/migration/facts'
@@ -399,6 +411,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LibFunctionsRouteImport
       parentRoute: typeof LibRoute
     }
+    '/$lib/lifecycle': {
+      id: '/$lib/lifecycle'
+      path: '/lifecycle'
+      fullPath: '/$lib/lifecycle'
+      preLoaderRoute: typeof LibLifecycleRouteImport
+      parentRoute: typeof LibRoute
+    }
     '/appwrite/': {
       id: '/appwrite/'
       path: '/appwrite'
@@ -484,6 +503,7 @@ interface LibRouteChildren {
   LibBenchmarksRoute: typeof LibBenchmarksRoute
   LibDependenciesRoute: typeof LibDependenciesRoute
   LibFunctionsRoute: typeof LibFunctionsRoute
+  LibLifecycleRoute: typeof LibLifecycleRoute
   LibIndexRoute: typeof LibIndexRoute
   LibPhpApiSplatRoute: typeof LibPhpApiSplatRoute
 }
@@ -493,6 +513,7 @@ const LibRouteChildren: LibRouteChildren = {
   LibBenchmarksRoute: LibBenchmarksRoute,
   LibDependenciesRoute: LibDependenciesRoute,
   LibFunctionsRoute: LibFunctionsRoute,
+  LibLifecycleRoute: LibLifecycleRoute,
   LibIndexRoute: LibIndexRoute,
   LibPhpApiSplatRoute: LibPhpApiSplatRoute,
 }

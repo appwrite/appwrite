@@ -8,10 +8,10 @@ The factory runs on the first read; later reads return the same instance.
 use utopia_registry::Registry;
 
 let mut registry = Registry::new();
-registry.set("db", || String::from("postgresql://db.internal"));
+registry.set("db", || String::from("postgresql://db.internal"), false);
 
 assert!(registry.has("db"));
-assert_eq!(registry.get::<String>("db")?, "postgresql://db.internal");
+assert_eq!(registry.get::<String>("db", false)?, "postgresql://db.internal");
 # Ok::<(), utopia_registry::Error>(())
 ```
 
@@ -35,10 +35,10 @@ use utopia_registry::Registry;
 
 let mut registry = Registry::new();
 let requests = AtomicU32::new(0);
-registry.set_fresh("request", move || requests.fetch_add(1, Ordering::Relaxed));
+registry.set("request", move || requests.fetch_add(1, Ordering::Relaxed), true);
 
-assert_eq!(*registry.get::<u32>("request")?, 0);
-assert_eq!(*registry.get::<u32>("request")?, 1);
+assert_eq!(*registry.get::<u32>("request", false)?, 0);
+assert_eq!(*registry.get::<u32>("request", false)?, 1);
 # Ok::<(), utopia_registry::Error>(())
 ```
 
@@ -63,11 +63,11 @@ use utopia_registry::Registry;
 
 let mut registry = Registry::new();
 let connections = AtomicU32::new(0);
-registry.set("redis", move || connections.fetch_add(1, Ordering::Relaxed));
+registry.set("redis", move || connections.fetch_add(1, Ordering::Relaxed), false);
 
-let first = *registry.get::<u32>("redis")?;
+let first = *registry.get::<u32>("redis", false)?;
 registry.context("tenant-b");
-let second = *registry.get::<u32>("redis")?;
+let second = *registry.get::<u32>("redis", false)?;
 assert_ne!(first, second);
 # Ok::<(), utopia_registry::Error>(())
 ```

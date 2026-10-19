@@ -31,7 +31,8 @@ use super::spec;
 /// Linux container on the services' Docker network (`bin/compat-rust`), like
 /// the PHP driver, so both runtimes share a kernel and reach services the same
 /// way. `host` (`--host`) builds and runs it natively instead; `COMPAT_RUST`
-/// still wins, and runs on the host.
+/// still wins, and runs on the host, except `bin/compat-rust`: the container
+/// driver as last built, without rebuilding.
 pub fn use_release_driver(engine: &mut Engine, root: &Path, host: bool) -> Result<(), String> {
     if std::env::var_os("COMPAT_RUST").is_some() {
         return Ok(());

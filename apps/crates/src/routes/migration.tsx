@@ -1,5 +1,6 @@
 import { Outlet, createFileRoute } from '@tanstack/react-router'
 import { MigrationGate } from '@/components/Appwrite'
+import { Crumbs } from '@/components/Crumbs'
 import { Tabs } from '@/components/Dashboard'
 import { PageHeader } from '@/components/Page'
 import { loadMigration } from '@/lib/appwrite'
@@ -32,17 +33,20 @@ export const Route = createFileRoute('/migration')({
 function Dashboard() {
   const { progress } = Route.useLoaderData()
   return (
-    <div className="mx-auto grid max-w-[1200px] grid-cols-[minmax(0,1fr)] gap-8">
-      <PageHeader eyebrow="Migration" title="PHP to Rust">
-        Appwrite moves from PHP to Rust in layers: first the Utopia libraries it stands on, each proven identical to PHP; then its API, one service at a
-        time, run side by side with PHP behind Traefik on the same database, caches and queues; and with it the shared logic every request runs through.
-      </PageHeader>
-      <MigrationGate>
-        <div className="grid min-w-0 gap-8">
-          <Tabs progress={progress} />
-          <Outlet />
-        </div>
-      </MigrationGate>
+    <div className="mx-auto max-w-[1200px] min-w-0">
+      <Crumbs />
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8">
+        <PageHeader eyebrow="Migration" title="PHP to Rust">
+          Appwrite moves from PHP to Rust in layers: first the Utopia libraries it stands on, each proven identical to PHP; then its API, one service at a
+          time, run side by side with PHP behind Traefik on the same database, caches and queues; and with it the shared logic every request runs through.
+        </PageHeader>
+        <MigrationGate>
+          <div className="grid min-w-0 gap-8">
+            <Tabs progress={progress} />
+            <Outlet />
+          </div>
+        </MigrationGate>
+      </div>
     </div>
   )
 }

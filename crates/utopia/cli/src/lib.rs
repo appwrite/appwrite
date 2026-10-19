@@ -83,6 +83,11 @@ pub use adapter::{Adapter, Generic, Job, WorkerCallback, Workers};
 #[doc = include_str!("../guide.md")]
 pub struct GettingStarted;
 
+/// The lifecycle guide (`lifecycle.md`), compiled and run with the doctests.
+#[cfg(doctest)]
+#[doc = include_str!("../lifecycle.md")]
+pub struct Lifecycle;
+
 /// A command a [`Cli`] runs: a [`Hook`] with a name. It dereferences to its
 /// hook, so the hook's setters and getters apply to it.
 ///

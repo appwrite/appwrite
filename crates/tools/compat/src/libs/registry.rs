@@ -28,16 +28,16 @@ pub async fn bench(name: &str, _session: &mut Session) -> Result<Bench, Fault> {
     let mut registry = Registry::new();
     Ok(match name {
         "get" => {
-            registry.set("db", || vec![String::from("connection")]);
-            let _ = registry.get::<Vec<String>>("db");
+            registry.set("db", || vec![String::from("connection")], false);
+            let _ = registry.get::<Vec<String>>("db", false);
             Bench::sync(move || {
-                black_box(registry.get::<Vec<String>>(black_box("db")).is_ok());
+                black_box(registry.get::<Vec<String>>(black_box("db"), false).is_ok());
             })
         }
         "get_fresh" => {
-            registry.set_fresh("db", || vec![String::from("connection")]);
+            registry.set("db", || vec![String::from("connection")], true);
             Bench::sync(move || {
-                black_box(registry.get::<Vec<String>>(black_box("db")).is_ok());
+                black_box(registry.get::<Vec<String>>(black_box("db"), false).is_ok());
             })
         }
         _ => return Err(Fault::new(format!("registry: no benchmark `{name}`"))),
@@ -79,16 +79,12 @@ fn set(registry: &mut Registry, name: &str, factory: &Value, fresh: bool) -> Res
         }
         _ => return Err(Fault::new(format!("unknown factory {kind}"))),
     };
-    if fresh {
-        registry.set_fresh(name, make);
-    } else {
-        registry.set(name, make);
-    }
+    registry.set(name, make, fresh);
     Ok(())
 }
 
 fn get<'r>(registry: &'r mut Registry, name: &str, fresh: bool) -> Result<&'r mut Item, Error> {
-    if fresh { registry.get_fresh::<Item>(name) } else { registry.get::<Item>(name) }
+    registry.get::<Item>(name, fresh)
 }
 
 pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {

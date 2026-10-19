@@ -3,6 +3,7 @@ import { ArrowUpRight, BookOpen, Code2, FlaskConical, LayoutGrid, List, Package 
 import type { ReactNode } from 'react'
 import type { LibrarySummary } from '@/lib/docs'
 import { setLayout, useLayout, useMigration, type Layout } from '@/lib/prefs'
+import { Crumbs } from './Crumbs'
 import { MigrationOnly } from './Migration'
 import { StatusBadge } from './Status'
 import { SyncBadge } from './Sync'
@@ -232,11 +233,17 @@ export function ContentWidth({ children, className }: { children: ReactNode; cla
   return <div className={`mx-auto w-full max-w-[1100px] min-w-0 ${className ?? ''}`}>{children}</div>
 }
 
+/** A doc page's body, its breadcrumbs on top so they always start where the content does. */
 export function ContentColumn({ children }: { children: ReactNode }) {
-  return <ContentWidth className="grid content-start gap-9">{children}</ContentWidth>
+  return (
+    <ContentWidth>
+      <Crumbs />
+      <div className="grid content-start gap-9">{children}</div>
+    </ContentWidth>
+  )
 }
 
-/** Grid beside the doc rail (TOC or symbols); breadcrumbs and page body share the same template. */
+/** Grid beside the doc rail (TOC or symbols). */
 export function docAsideColumns(rail: boolean, php: boolean) {
   if (php && !rail) return null
   if (rail) return php ? '2xl:grid-cols-[minmax(0,1fr)_260px]' : 'xl:grid-cols-[minmax(0,1fr)_260px]'
@@ -248,7 +255,7 @@ function docAsideRailClass(rail: boolean, php: boolean) {
   return 'hidden xl:block'
 }
 
-/** Reserves the aside column so stacked rows (breadcrumbs, then content) stay aligned. */
+/** The page body beside its rail, or beside an empty column that keeps the body's width when it has none. */
 export function DocAsideRow({
   rail = false,
   aside,

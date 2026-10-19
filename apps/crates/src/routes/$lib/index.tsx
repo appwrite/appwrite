@@ -1,5 +1,5 @@
 import { Link, createFileRoute, getRouteApi, notFound } from '@tanstack/react-router'
-import { Check, Network } from 'lucide-react'
+import { ArrowRight, Check, Network } from 'lucide-react'
 import { CodeBlock, ExampleView, Examples } from '@/components/Code'
 import { Markdown } from '@/components/Markdown'
 import { PageHeader, Section, WithToc } from '@/components/Page'
@@ -34,6 +34,7 @@ export const Route = createFileRoute('/$lib/')({
       overview: lib.overview,
       overview_notes: lib.overview_notes,
       guide: lib.guide,
+      lifecycle: guideHeadings(lib.lifecycle ?? []),
       tasks: lib.tasks ?? [],
       sync: lib.sync,
       bench: lib.bench,
@@ -192,6 +193,7 @@ function LibraryPage() {
     ...(l.counts.php_functions ? [{ id: 'php-functions', label: 'PHP functions' }] : []),
     ...(migration ? [{ id: 'migration', label: 'Conversion status' }] : []),
     ...(l.rust ? [{ id: 'install', label: 'Install' }] : []),
+    ...(d.lifecycle.length ? [{ id: 'lifecycle', label: 'Lifecycle' }] : []),
     ...(guide.length ? [{ id: 'getting-started', label: 'Getting started' }, ...guideHeadings(guide).map((h) => ({ id: slug(h), label: h, depth: 1 }))] : []),
     ...(d.overview || d.examples.length || (migration && d.overview_notes) ? [{ id: 'overview', label: guide.length ? 'Reference' : 'Overview' }] : []),
     ...(d.modules.length ? [{ id: 'modules', label: 'Modules' }] : []),
@@ -298,6 +300,24 @@ function LibraryPage() {
         <MigrationCard title="PHP package">
           <CodeBlock code={d.install.composer} lang="bash" migration />
         </MigrationCard>
+      ) : null}
+
+      {d.lifecycle.length ? (
+        <Section id="lifecycle" title="Lifecycle" description={`What ${l.title} runs, and in what order, drawn step by step with runnable examples.`}>
+          <Link to="/$lib/lifecycle" params={{ lib: l.slug }} className="group grid gap-3 rounded-lg border border-border bg-card p-4 transition-colors hover:border-ring hover:bg-accent/40">
+            <span className="flex items-center justify-between gap-2 text-[15px] font-medium">
+              Read the lifecycle
+              <ArrowRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
+            </span>
+            <span className="flex flex-wrap gap-1.5">
+              {d.lifecycle.map((h) => (
+                <span key={h} className="rounded border border-border px-2 py-0.5 text-[12px] text-muted-foreground">
+                  {h}
+                </span>
+              ))}
+            </span>
+          </Link>
+        </Section>
       ) : null}
 
       {guide.length ? (

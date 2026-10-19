@@ -95,3 +95,8 @@ pub use server::{Server, Stage};
 #[cfg(doctest)]
 #[doc = include_str!("../guide.md")]
 pub struct GettingStarted;
+
+/// The lifecycle guide (`lifecycle.md`), compiled and run with the doctests.
+#[cfg(doctest)]
+#[doc = include_str!("../lifecycle.md")]
+pub struct Lifecycle;
