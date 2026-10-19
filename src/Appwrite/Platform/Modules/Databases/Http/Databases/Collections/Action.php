@@ -7,7 +7,6 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Query;
 
 abstract class Action extends DatabasesAction
 {
@@ -127,12 +126,17 @@ abstract class Action extends DatabasesAction
      * The metadata row is written first so its sequence can name the collection, which leaves
      * a window where both exist but the schema documents behind them do not. The caller is
      * told the create failed, so nothing it can still see should survive it.
+     *
+     * @param  array<Document>  $attributeDocuments
+     * @param  array<Document>  $indexDocuments
      */
     protected function cleanup(
         Database $dbForProject,
         Database $dbForDatabases,
         Document $database,
-        Document $collection
+        Document $collection,
+        array $attributeDocuments = [],
+        array $indexDocuments = []
     ): void {
         $databaseKey = 'database_' . $database->getSequence();
 
@@ -146,16 +150,17 @@ abstract class Action extends DatabasesAction
         }
 
         // The schema is written as two batches, so the second can fail with the first stored.
-        // Both are keyed to the row's sequence, which the next create will not reuse, so
-        // anything left here is unreachable rather than merely stale.
-        foreach (['attributes', 'indexes'] as $schema) {
-            try {
-                $dbForProject->deleteDocuments($schema, [
-                    Query::equal('databaseInternalId', [$database->getSequence()]),
-                    Query::equal('collectionInternalId', [$collection->getSequence()]),
-                ]);
-            } catch (\Throwable $e) {
-                Console::warning('Failed to remove ' . $schema . ' of ' . $collection->getId() . ' after a failed create: ' . $e->getMessage());
+        // These are removed one id at a time, by the ids the caller built -- not by a query
+        // over the schema collections. Those collections are shared by every project on a
+        // shared-tables host, so a rollback must never be able to select rows it did not
+        // write, whatever the tenant scoping does.
+        foreach (['attributes' => $attributeDocuments, 'indexes' => $indexDocuments] as $schema => $documents) {
+            foreach ($documents as $document) {
+                try {
+                    $dbForProject->deleteDocument($schema, $document->getId());
+                } catch (\Throwable $e) {
+                    Console::warning('Failed to remove ' . $schema . ' ' . $document->getId() . ' after a failed create: ' . $e->getMessage());
+                }
             }
         }
 

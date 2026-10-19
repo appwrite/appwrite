@@ -183,7 +183,11 @@ class Create extends CollectionAction
             throw $e;
         }
 
-        // Past here the backing collection exists too, so a failure has to take both.
+        // Past here the backing collection exists too, so a failure has to take both. Both
+        // lists are declared first so a failure while building them still names what to undo.
+        $attributeDocuments = [];
+        $indexDocuments = [];
+
         try {
             $attributeDocuments = \array_map(function (Attribute $attribute) use ($database, $collection, $databaseId, $collectionId) {
                 return new Document([
@@ -230,16 +234,16 @@ class Create extends CollectionAction
                 $dbForProject->createDocuments('indexes', $indexDocuments);
             }
         } catch (DuplicateException) {
-            $this->cleanup($dbForProject, $dbForDatabases, $database, $collection);
+            $this->cleanup($dbForProject, $dbForDatabases, $database, $collection, $attributeDocuments, $indexDocuments);
             throw new Exception($this->getDuplicateException());
         } catch (IndexException) {
-            $this->cleanup($dbForProject, $dbForDatabases, $database, $collection);
+            $this->cleanup($dbForProject, $dbForDatabases, $database, $collection, $attributeDocuments, $indexDocuments);
             throw new Exception($this->getInvalidIndexException());
         } catch (LimitException) {
-            $this->cleanup($dbForProject, $dbForDatabases, $database, $collection);
+            $this->cleanup($dbForProject, $dbForDatabases, $database, $collection, $attributeDocuments, $indexDocuments);
             throw new Exception($this->getLimitException());
         } catch (\Throwable $e) {
-            $this->cleanup($dbForProject, $dbForDatabases, $database, $collection);
+            $this->cleanup($dbForProject, $dbForDatabases, $database, $collection, $attributeDocuments, $indexDocuments);
             throw $e;
         }
 
