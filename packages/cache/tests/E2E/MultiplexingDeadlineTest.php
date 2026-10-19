@@ -186,15 +186,23 @@ final class MultiplexingDeadlineTest extends TestCase
             $cache = new Cache($this->makeAdapter(readTimeout: 0.05, livenessTimeout: 5.0));
             $cache->setTelemetry($telemetry);
 
+            $generation = $cache->getGeneration('leased');
+
             $this->pauseServer();
 
             try {
                 $this->assertFalse($cache->save('slow', 'value', 'slow'));
+                $this->assertFalse($cache->saveMany('slow', ['field' => 'value']));
+                $this->assertFalse($cache->saveWithLease('leased', 'value', 'leased', $generation));
             } finally {
                 $this->resumeServer();
             }
 
-            $this->assertSame([['operation' => 'save', 'error' => 'TimeoutException']], $failures->attributes);
+            $this->assertSame([
+                ['operation' => 'save', 'error' => 'TimeoutException'],
+                ['operation' => 'saveMany', 'error' => 'TimeoutException'],
+                ['operation' => 'saveWithLease', 'error' => 'TimeoutException'],
+            ], $failures->attributes);
         });
     }
 
