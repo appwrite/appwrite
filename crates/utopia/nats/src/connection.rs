@@ -192,11 +192,20 @@ impl Connection {
     /// Connects to the first server of the pool that completes the
     /// handshake (`INFO`, `CONNECT`, `PING`/`PONG`).
     ///
+    /// Makes up to [`ConnectionOptions::connect_attempts`] passes over the
+    /// pool, pausing `connect_retry_wait` plus up to `connect_retry_jitter`
+    /// between them. Only failures a new connection can fix are retried: an
+    /// authorization violation, a failed TLS handshake or a server at its
+    /// connection limit fails on the first pass. No pass starts after
+    /// `connect_timeout` has elapsed since the call, and a pause that would
+    /// end past that point is not taken.
+    ///
     /// # Errors
     ///
-    /// [`Error::Connection`] (`Failed to connect to any NATS server`) when
-    /// no server answers; [`Error::Authentication`] for an unreadable
-    /// credentials file.
+    /// [`Error::NoServer`] (`Failed to connect to any NATS server`, the
+    /// last attempt's failure as [`Error::previous`]) when no server
+    /// answers; [`Error::Authentication`] for an unreadable credentials
+    /// file.
     ///
     /// PHP: `Connection::connect()`.
     pub async fn connect(options: impl Into<ConnectionOptions>) -> Result<Connection> {
@@ -891,14 +900,53 @@ impl Connection {
 
     async fn do_connect(&mut self) -> Result<()> {
         self.status = Status::Connecting;
-        for url in self.server_pool.clone() {
-            if self.connect_to_server(&url).await.is_ok() {
-                self.status = Status::Connected;
-                return Ok(());
+        let mut last_error = None;
+        let deadline = Instant::now() + self.options.connect_timeout;
+        let mut attempt = 1;
+        loop {
+            let mut retryable = true;
+            for url in self.server_pool.clone() {
+                match self.connect_to_server(&url).await {
+                    Ok(()) => {
+                        self.status = Status::Connected;
+                        return Ok(());
+                    }
+                    Err(error) => {
+                        retryable = retryable && Self::retries_connect(&error);
+                        last_error = Some(Box::new(error));
+                        // Close the failed attempt's socket before the next one.
+                        if let Some(transport) = self.transport.as_deref_mut() {
+                            transport.close().await;
+                        }
+                    }
+                }
             }
+            if !retryable || attempt >= self.options.connect_attempts {
+                break;
+            }
+            // Give up rather than start a pass after connect_timeout.
+            let jitter: f64 = rand::rng().random();
+            let pause = self.options.connect_retry_wait.as_secs_f64()
+                + jitter * self.options.connect_retry_jitter.as_secs_f64();
+            let pause = Duration::from_secs_f64(pause.max(0.0));
+            if Instant::now() + pause >= deadline {
+                break;
+            }
+            if !pause.is_zero() {
+                utopia_async::sleep(pause).await;
+            }
+            attempt += 1;
         }
         self.status = Status::Disconnected;
-        Err(Error::Connection("Failed to connect to any NATS server".into()))
+        Err(Error::NoServer(last_error))
+    }
+
+    /// Whether a new connection could succeed: not for rejected auth or a
+    /// failed TLS handshake.
+    ///
+    /// PHP: `Connection::retriesConnect()` (private).
+    fn retries_connect(error: &Error) -> bool {
+        error.is_connection() && !matches!(error, Error::Tls(_)) && Self::reconnects_after(&error.to_string())
     }
 
     async fn connect_to_server(&mut self, url: &str) -> Result<()> {

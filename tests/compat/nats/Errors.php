@@ -7,6 +7,7 @@ use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\NatsException;
 use Utopia\NATS\Exception\ProtocolException;
 use Utopia\NATS\Exception\TimeoutException;
+use Utopia\NATS\Exception\TlsException;
 use Utopia\NATS\Services\ServiceException;
 
 /**
@@ -24,6 +25,7 @@ final class Errors
             'NatsException' => new NatsException($message),
             'ConnectionException' => new ConnectionException($message),
             'TimeoutException' => new TimeoutException($message),
+            'TlsException' => new TlsException($message),
             'ProtocolException' => new ProtocolException($message),
             'AuthenticationException' => new AuthenticationException($message),
             'ServiceException' => new ServiceException((string) ($spec['code'] ?? '500'), $message),

@@ -133,16 +133,39 @@ fn os_error(error: &std::io::Error) -> String {
     }
 }
 
-/// The TLS client handshake over `tcp`.
+/// The TLS client handshake over `tcp`. A failed handshake is an
+/// [`Error::Tls`] holding only the reason, for the caller to prefix; the
+/// stream is closed then.
 pub(crate) async fn handshake(tcp: TcpStream, host: &str, options: &TlsOptions) -> Result<TlsStream<TcpStream>> {
     let config = client_config(options)?;
     let name = options.peer_name.as_deref().unwrap_or(host);
     let server = ServerName::try_from(name.to_owned())
         .map_err(|_| Error::Connection(format!("Invalid TLS server name: {name}")))?;
-    TlsConnector::from(Arc::new(config))
-        .connect(server, tcp)
-        .await
-        .map_err(|e| Error::Connection(format!("TLS handshake failed: {e}")))
+    TlsConnector::from(Arc::new(config)).connect(server, tcp).await.map_err(|e| Error::Tls(tls_reason(&e)))
+}
+
+/// Why a handshake failed, worded as PHP's `stream_socket_enable_crypto()`
+/// warning reports OpenSSL's error queue.
+fn tls_reason(error: &std::io::Error) -> String {
+    const PREFIX: &str = "stream_socket_enable_crypto(): SSL operation failed with code 1. OpenSSL Error messages:\n";
+    let rustls = error.get_ref().and_then(|inner| inner.downcast_ref::<rustls::Error>());
+    match rustls {
+        // A peer that answers the ClientHello with something that is not a
+        // TLS record.
+        Some(
+            rustls::Error::InvalidMessage(_)
+            | rustls::Error::InappropriateMessage { .. }
+            | rustls::Error::InappropriateHandshakeMessage { .. },
+        ) => format!("{PREFIX}error:0A00010B:SSL routines::wrong version number"),
+        Some(rustls::Error::InvalidCertificate(_)) => {
+            format!("{PREFIX}error:0A000086:SSL routines::certificate verify failed")
+        }
+        Some(other) => format!("{PREFIX}{other}"),
+        None if error.kind() == std::io::ErrorKind::UnexpectedEof => {
+            format!("{PREFIX}error:0A000126:SSL routines::unexpected eof while reading")
+        }
+        None => format!("stream_socket_enable_crypto(): {}", os_error(error)),
+    }
 }
 
 fn provider() -> Arc<CryptoProvider> {

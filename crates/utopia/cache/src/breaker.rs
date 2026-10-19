@@ -31,7 +31,9 @@ fn breaker_error(e: utopia_circuit_breaker::Error) -> Error {
 
 /// An adapter behind a circuit breaker: while the backend fails, operations
 /// return a fallback (a miss, `false`, an empty list, `0`) instead of an
-/// error, and an open circuit skips the backend entirely.
+/// error, and an open circuit skips the backend entirely. A purge is the
+/// exception: one the breaker cannot confirm fails with
+/// [`Error::Unavailable`].
 ///
 /// ```
 /// use php_std::types::Value;
@@ -103,8 +105,23 @@ impl<A: Adapter> Adapter for CircuitBreaker<A> {
         self.guarded(Vec::new(), self.adapter.list(key)).await
     }
 
+    /// A purge the breaker cannot confirm fails with [`Error::Unavailable`]
+    /// instead of falling back to `false`, which callers read as nothing to
+    /// purge: the entry would stay cached after the data behind it changed.
     async fn purge(&self, key: &str, hash: &str) -> Result<bool> {
-        self.guarded(false, self.adapter.purge(key, hash)).await
+        let failure = std::sync::Mutex::new(None);
+        let close = async {
+            self.adapter.purge(key, hash).await.map(Ok).inspect_err(|error| {
+                *failure.lock().unwrap_or_else(|e| e.into_inner()) = Some(Box::new(error.clone()));
+            })
+        };
+        let open = || {
+            Err(Error::Unavailable {
+                message: format!("Cache purge of '{key}' could not be confirmed"),
+                previous: failure.lock().unwrap_or_else(|e| e.into_inner()).take(),
+            })
+        };
+        self.breaker.call(open, close).await.map_err(breaker_error)?
     }
 
     async fn flush(&self) -> Result<bool> {

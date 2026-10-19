@@ -1290,6 +1290,75 @@
           "expect": true
         }
       ]
+    },
+    {
+      "name": "testAPurgeTheServerRejectsThrowsInsteadOfReportingNothingToPurge",
+      "steps": [
+        {
+          "op": "cluster.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cluster.raw_set",
+          "args": {
+            "key": "${ns}:plain",
+            "value": "value"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:plain",
+            "hash": "field"
+          },
+          "expect": {
+            "$error": {
+              "class": "RedisClusterException",
+              "message": "Failed to purge ${ns}:plain: WRONGTYPE Operation against a key holding the wrong kind of value"
+            }
+          }
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:plain"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:missing"
+          },
+          "expect": false
+        }
+      ]
     }
   ]
 }

@@ -279,11 +279,41 @@
             [
               "upgrade",
               {
-                "class": "Utopia\\NATS\\Exception\\ConnectionException",
-                "message": "Failed to upgrade connection to TLS"
+                "class": "Utopia\\NATS\\Exception\\TlsException",
+                "message": "Failed to upgrade connection to TLS: stream_socket_enable_crypto(): SSL operation failed with code 1. OpenSSL Error messages:\nerror:0A00010B:SSL routines::wrong version number"
               }
             ]
           ]
+        }
+      ]
+    },
+    {
+      "name": "testUntrustedServerCertificateIsNotRetried",
+      "steps": [
+        {
+          "op": "conn.connect_counted",
+          "args": {
+            "service": "nats-tls",
+            "options": {
+              "connectAttempts": 3
+            },
+            "tls": {
+              "local_cert": "packages/nats/tests/fixtures/certs/client-cert.pem",
+              "local_pk": "packages/nats/tests/fixtures/certs/client-key.pem"
+            },
+            "contains": "certificate verify failed"
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\NATS\\Exception\\ConnectionException",
+              "message": "Failed to connect to any NATS server",
+              "previous": {
+                "class": "Utopia\\NATS\\Exception\\TlsException",
+                "contains": true
+              }
+            },
+            "connects": 1
+          }
         }
       ]
     }

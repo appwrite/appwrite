@@ -106,12 +106,13 @@ impl Transport for TcpTransport {
                 self.stream = Some(Stream::Tls(tls));
                 Ok(())
             }
+            // A failed handshake drops (closes) the socket, as PHP closes it.
             Some(Stream::Plain(tcp)) => match handshake(tcp, &self.host, options).await {
                 Ok(tls) => {
                     self.stream = Some(Stream::Tls(Box::new(tls)));
                     Ok(())
                 }
-                Err(_) => Err(Error::Connection("Failed to upgrade connection to TLS".into())),
+                Err(e) => Err(Error::Tls(format!("Failed to upgrade connection to TLS: {e}"))),
             },
         }
     }

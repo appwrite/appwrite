@@ -138,17 +138,38 @@ pub(crate) async fn save_with_lease<T: Transport, C: Codec>(
     hash: &str,
     generation: &str,
 ) -> Result<bool> {
+    Ok(try_save_with_lease(transport, envelope, grace_ms, key, data, hash, generation).await?.unwrap_or(false))
+}
+
+/// [`save_with_lease`] with the failure it reports as `false` kept apart:
+/// the inner error is the write that failed (an encoding, the script), the
+/// outer one a value of the wrong type.
+#[cfg_attr(not(feature = "redis"), allow(dead_code))]
+pub(crate) async fn try_save_with_lease<T: Transport, C: Codec>(
+    transport: &T,
+    envelope: &Envelope<C>,
+    grace_ms: i64,
+    key: &str,
+    data: &Value,
+    hash: &str,
+    generation: &str,
+) -> Result<Result<bool>> {
     let data =
         crate::adapter::coerce(data, "Utopia\\Cache\\Adapter\\Redis\\Leasable::saveWithLease(): Argument #2 ($data)")?;
     if crate::adapter::blank(key) || crate::adapter::empty(&data) {
-        return Ok(false);
+        return Ok(Ok(false));
     }
     let hash = crate::adapter::field(key, hash);
     if is_reserved(hash) {
-        return Ok(false);
+        return Ok(Ok(false));
     }
-    let Ok(value) = envelope.encode(&data, crate::adapter::now()) else { return Ok(false) };
-    save_bytes_with_lease(transport, grace_ms, key, &value, hash, generation).await
+    let value = match envelope.encode(&data, crate::adapter::now()) {
+        Ok(value) => value,
+        Err(error) => return Ok(Err(error)),
+    };
+    let window = grace_ms.to_string();
+    let args: [&[u8]; 4] = [hash.as_bytes(), &value, generation.as_bytes(), window.as_bytes()];
+    Ok(run(transport, LUA_SAVE_WITH_LEASE, key, &args).await.map(|reply| reply.truthy()))
 }
 
 /// Stores `bytes` as they are when the lease holds; the stored form of

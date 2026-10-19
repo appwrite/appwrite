@@ -170,13 +170,36 @@ impl Adapter for Filesystem {
         Ok(Vec::new())
     }
 
+    /// Fails when the file is still there after the purge failed to remove
+    /// it, or its directory cannot be searched; a missing file or directory
+    /// is nothing to purge.
     fn purge(&self, key: &str, _hash: &str) -> impl Future<Output = Result<bool>> + Send {
         let file = self.path(key);
         async move {
             if utopia_async::fs::symlink_metadata(&file).await.is_err() {
+                let directory = file.parent().unwrap_or(Path::new("."));
+                let searchable = rustix::fs::access(directory, rustix::fs::Access::EXEC_OK).is_ok();
+                if !searchable && utopia_async::fs::metadata(directory).await.is_ok_and(|m| m.is_dir()) {
+                    return Err(Error::Exception(format!(
+                        "Can't purge {}: {} is not accessible",
+                        file.display(),
+                        directory.display()
+                    )));
+                }
                 return Ok(false);
             }
-            Ok(utopia_async::fs::remove_file(&file).await.is_ok())
+            let Err(error) = utopia_async::fs::remove_file(&file).await else { return Ok(true) };
+            if utopia_async::fs::symlink_metadata(&file).await.is_err() {
+                return Ok(false);
+            }
+            // PHP's unlink() names a directory as Linux does, on any system.
+            let reason = if utopia_async::fs::metadata(&file).await.is_ok_and(|m| m.is_dir()) {
+                "Is a directory".to_owned()
+            } else {
+                let text = error.to_string();
+                text.find(" (os error ").map_or(text.clone(), |at| text[..at].to_owned())
+            };
+            Err(Error::Exception(format!("Can't purge {0}: unlink({0}): {reason}", file.display())))
         }
     }
 

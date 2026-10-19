@@ -17,7 +17,7 @@ use crate::lease::{self, Transport, is_reserved};
 use crate::redis_adapter::text;
 use crate::resp::{self, Reply};
 use crate::{Codec, Envelope, Error, Json, Result};
-use utopia_telemetry::{NoTelemetry, Telemetry, UpDownCounter};
+use utopia_telemetry::{Counter, NoTelemetry, Telemetry, UpDownCounter, Value as Attribute};
 
 /// Settings of a [`Multiplexing`] connection; defaults in parentheses.
 ///
@@ -87,6 +87,7 @@ impl Connection {
 struct Shared {
     current: Mutex<Option<Arc<Connection>>>,
     depth: Mutex<Option<UpDownCounter>>,
+    write_failures: Mutex<Option<Counter>>,
     telemetry: Mutex<Arc<dyn Telemetry>>,
 }
 
@@ -101,6 +102,24 @@ impl Shared {
             )
         });
         counter.add(amount, &[]);
+    }
+
+    /// Counts a write reported as `false`, by operation and the short class
+    /// name of the error that failed it.
+    ///
+    /// PHP: `Multiplexing::recordWriteFailure()`.
+    fn write_failure(&self, operation: &str, error: &Error) {
+        let mut failures = self.write_failures.lock().unwrap_or_else(|e| e.into_inner());
+        let counter = failures.get_or_insert_with(|| {
+            self.telemetry.lock().unwrap_or_else(|e| e.into_inner()).counter(
+                "cache.redis_multiplexing.write.failures",
+                None,
+                Some("Writes reported as false, by operation and the error that failed them."),
+            )
+        });
+        let class = error.php_class();
+        let short = class.rsplit('\\').next().unwrap_or(class);
+        counter.add(1, &[("operation", Attribute::from(operation)), ("error", Attribute::from(short))]);
     }
 
     fn is_current(&self, connection: &Arc<Connection>) -> bool {
@@ -212,6 +231,7 @@ impl<K: Codec> Multiplexing<K> {
             shared: Arc::new(Shared {
                 current: Mutex::new(None),
                 depth: Mutex::new(None),
+                write_failures: Mutex::new(None),
                 telemetry: Mutex::new(Arc::new(NoTelemetry)),
             }),
             connecting: utopia_async::sync::Mutex::new(()),
@@ -493,14 +513,21 @@ impl<K: Codec> Adapter for Multiplexing<K> {
         if is_reserved(hash) {
             return Ok(false);
         }
-        let Ok(value) = self.envelope.encode(data, now()) else { return Ok(false) };
-        if self.command(&[b"HSET", key.as_bytes(), hash.as_bytes(), &value]).await.is_err() {
-            return Ok(false);
+        let written = async {
+            let value = self.envelope.encode(data, now())?;
+            self.command(&[b"HSET", key.as_bytes(), hash.as_bytes(), &value]).await?;
+            if ttl > 0 {
+                self.command(&[b"EXPIRE", key.as_bytes(), ttl.to_string().as_bytes()]).await?;
+            }
+            Ok::<(), Error>(())
+        };
+        match written.await {
+            Ok(()) => Ok(true),
+            Err(error) => {
+                self.shared.write_failure("save", &error);
+                Ok(false)
+            }
         }
-        if ttl > 0 && self.command(&[b"EXPIRE", key.as_bytes(), ttl.to_string().as_bytes()]).await.is_err() {
-            return Ok(false);
-        }
-        Ok(true)
     }
 
     async fn touch(&self, key: &str, hash: &str) -> Result<bool> {
@@ -598,13 +625,20 @@ impl<K: Codec> Adapter for Multiplexing<K> {
             command.push(f.as_bytes());
             command.push(v);
         }
-        if self.command(&command).await.is_err() {
-            return Ok(false);
+        let written = async {
+            self.command(&command).await?;
+            if ttl > 0 {
+                self.command(&[b"EXPIRE", key.as_bytes(), ttl.to_string().as_bytes()]).await?;
+            }
+            Ok::<(), Error>(())
+        };
+        match written.await {
+            Ok(()) => Ok(true),
+            Err(error) => {
+                self.shared.write_failure("saveMany", &error);
+                Ok(false)
+            }
         }
-        if ttl > 0 && self.command(&[b"EXPIRE", key.as_bytes(), ttl.to_string().as_bytes()]).await.is_err() {
-            return Ok(false);
-        }
-        Ok(true)
     }
 
     fn leasable(&self) -> bool {
@@ -616,7 +650,13 @@ impl<K: Codec> Adapter for Multiplexing<K> {
     }
 
     async fn save_with_lease(&self, key: &str, data: &Value, hash: &str, generation: &str) -> Result<bool> {
-        lease::save_with_lease(self, &self.envelope, self.grace_ms, key, data, hash, generation).await
+        match lease::try_save_with_lease(self, &self.envelope, self.grace_ms, key, data, hash, generation).await? {
+            Ok(stored) => Ok(stored),
+            Err(error) => {
+                self.shared.write_failure("saveWithLease", &error);
+                Ok(false)
+            }
+        }
     }
 
     async fn load_bytes(&self, key: &str, hash: &str) -> Result<Option<Vec<u8>>> {
@@ -665,5 +705,6 @@ impl<K: Codec> Adapter for Multiplexing<K> {
     fn set_telemetry(&self, telemetry: Arc<dyn Telemetry>) {
         *self.shared.telemetry.lock().unwrap_or_else(|e| e.into_inner()) = telemetry;
         *self.shared.depth.lock().unwrap_or_else(|e| e.into_inner()) = None;
+        *self.shared.write_failures.lock().unwrap_or_else(|e| e.into_inner()) = None;
     }
 }

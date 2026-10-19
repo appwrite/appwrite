@@ -805,7 +805,12 @@
             },
             "key": "dir"
           },
-          "expect": false
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Can't purge /tmp/compat-fs/${ns}/data/dir: unlink(/tmp/compat-fs/${ns}/data/dir): Is a directory"
+            }
+          }
         },
         {
           "op": "cache.purge",
@@ -994,6 +999,99 @@
       ],
       "state": [
         "files"
+      ]
+    },
+    {
+      "name": "testPurgingFromADirectoryNotYetCreatedReportsNothingToPurge",
+      "steps": [
+        {
+          "op": "filesystem.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/uncreated-data"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fs.delete",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/uncreated-data"
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "missing"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "a purge of a key that names a directory fails",
+      "steps": [
+        {
+          "op": "fs.mkdir",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/dir-data/nested"
+          },
+          "expect": true
+        },
+        {
+          "op": "filesystem.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/dir-data"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "nested"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Can't purge /tmp/compat-fs/${ns}/dir-data/nested: unlink(/tmp/compat-fs/${ns}/dir-data/nested): Is a directory"
+            }
+          }
+        }
       ]
     }
   ]
