@@ -61,11 +61,13 @@ mod http;
 mod multipart;
 mod params;
 mod request;
+mod resources;
 mod response;
+mod route;
 mod router;
 mod server;
 pub mod telemetry;
-mod trusted;
+mod trusted_headers;
 mod view;
 
 pub use compression::{Algorithm, Compression};
@@ -73,18 +75,20 @@ pub use error::{Error, Result};
 pub use files::{EXTENSIONS, File, Files};
 pub use headers::Headers;
 pub use hook::{
-    Action, BoxFuture, Callback, Check, Default as ParamDefault, Hook, IntoResult, Param, Resource, Resources, Route,
-    Scope, action, coerce,
+    Action, BoxFuture, Callback, Check, Default as ParamDefault, DefaultFactory, Hook, IntoResult, Param, Scope,
+    ValidatorFactory, action,
 };
-pub use http::{Http, RouteBuilder, RouteMatch, mode};
+pub use http::{Http, RouteBuilder, RouteMatch, coerce, mode};
 pub use params::{
     Params, array_to_params, decode_payload, params_value, parse_query, parse_query_bytes, value_to_json,
 };
 pub use request::{Range, Request, SCHEMES};
+pub use resources::{Resource, Resources};
 pub use response::{Aborted, Body, CHARSET_UTF8, CHUNK_SIZE, Cookie, Response, Wire, content_type, reason, same_site};
+pub use route::Route;
 pub use router::{METHODS, Match, PLACEHOLDER, PathParams, Router, WILDCARD};
 pub use server::{App, Handler, Mode, ServerOptions, Settings, serve, serve_listener};
-pub use trusted::TrustedHeaders;
+pub use trusted_headers::TrustedHeaders;
 pub use view::{FILTER_ESCAPE, FILTER_NL2P, Filter, Template, View, minify_html};
 
 pub use ::http::{HeaderMap, HeaderName, HeaderValue, Method, StatusCode, header};

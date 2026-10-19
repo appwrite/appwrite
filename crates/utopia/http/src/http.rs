@@ -7,48 +7,37 @@
 //! PHP: `Utopia\Http\Http`, which keeps routes, hooks and the mode in
 //! static properties.
 
+mod at;
+/// The names of the modes an application can run in (see [`Http::set_mode`]).
+///
+/// PHP: `Http::MODE_TYPE_*`.
+pub mod mode;
+mod route_builder;
+mod route_match;
+
 use std::sync::Arc;
 
 use serde_json::Value;
+use utopia_validators::{Type, Validator};
 
 use crate::compression::Compression;
 use crate::error::{Error, Result};
 use crate::files::Files;
-use crate::hook::{BoxFuture, Callback, Hook, IntoResult, Resources, Route, Scope};
+use crate::hook::{BoxFuture, Check, Default as ParamDefault, Hook, Param, Scope};
 use crate::params::Params;
 use crate::request::Request;
+use crate::resources::{Resource, Resources};
 use crate::response::Response;
+use crate::route::Route;
 use crate::router::{Match, PathParams, Router};
 use crate::telemetry::{Attribute, Instruments, NoTelemetry, Telemetry};
 
-/// The names of the modes an application can run in (see [`Http::set_mode`]).
-///
-/// PHP: `Http::MODE_TYPE_*`.
-pub mod mode {
-    /// Development mode.
-    pub const DEVELOPMENT: &str = "development";
-    /// Staging mode.
-    pub const STAGE: &str = "stage";
-    /// Production mode.
-    pub const PRODUCTION: &str = "production";
-}
+use at::At;
+pub use route_builder::RouteBuilder;
+pub use route_match::RouteMatch;
 
-/// A request's match: the route's id and its path params.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct RouteMatch {
-    /// The route's id (see [`Http::route`]).
-    pub id: usize,
-    /// The path params, by name.
-    pub params: PathParams,
-}
-
-/// Where a hook runs: the matched route, its path params and the request params.
-#[derive(Clone, Copy)]
-struct At<'a> {
-    route: Option<&'a Route>,
-    values: &'a PathParams,
-    params: &'a Params,
-}
+/// A hook's resolved arguments: params by key, then injections by name.
+pub(crate) type Arguments = (Vec<(String, Value)>, Vec<(String, Option<Resource>)>);
 
 /// A web application: its routes, hooks, static files, settings and shared
 /// resources.
@@ -75,119 +64,6 @@ impl Default for Http {
     /// An application in the `UTC` time zone.
     fn default() -> Self {
         Self::new("UTC")
-    }
-}
-
-/// A route being configured: [`Http::get`] and the other route methods
-/// return it, and its setters chain.
-pub struct RouteBuilder<'h> {
-    http: &'h mut Http,
-    id: usize,
-}
-
-impl RouteBuilder<'_> {
-    fn route(&mut self) -> &mut Route {
-        self.http.router.get_mut(self.id).unwrap_or_else(|| unreachable!("route ids are stable"))
-    }
-
-    /// The route's id.
-    pub fn id(&self) -> usize {
-        self.id
-    }
-
-    /// Sets the route's description.
-    ///
-    /// PHP: `desc($desc)`.
-    pub fn desc(mut self, desc: &str) -> Self {
-        self.route().desc(desc);
-        self
-    }
-
-    /// Sets the route's groups: the init, shutdown, options and error hooks
-    /// of these groups run for it.
-    ///
-    /// PHP: `groups($groups)`.
-    pub fn groups(mut self, groups: &[&str]) -> Self {
-        self.route().groups(groups);
-        self
-    }
-
-    /// Sets a label: free-form metadata under `key`.
-    ///
-    /// PHP: `label($key, $value)`.
-    pub fn label(mut self, key: &str, value: Value) -> Self {
-        self.route().label(key, value);
-        self
-    }
-
-    /// Declares a param under `key`.
-    ///
-    /// PHP: `param($key, ...)`.
-    pub fn param(mut self, key: &str, param: crate::hook::Param) -> Self {
-        self.route().param(key, param);
-        self
-    }
-
-    /// Declares a resource to inject by name.
-    ///
-    /// PHP: `inject($name)`.
-    pub fn inject(mut self, name: &str) -> Self {
-        self.route().inject(name);
-        self
-    }
-
-    /// Sets whether the global (`*`) init and shutdown hooks run around the
-    /// route.
-    ///
-    /// PHP: `hook($hook)`.
-    pub fn hook(mut self, hooks: bool) -> Self {
-        self.route().set_hooks(hooks);
-        self
-    }
-
-    /// Changes the path the route reports (not the one it matches).
-    ///
-    /// PHP: `path($path)`.
-    pub fn path(mut self, path: &str) -> Self {
-        self.route().set_path(path);
-        self
-    }
-
-    /// Sets the route's callback, an async closure that receives the call's
-    /// [`Scope`].
-    ///
-    /// PHP: `action($callback)`.
-    pub fn action<F, R>(mut self, f: F) -> Self
-    where
-        F: for<'a> Callback<'a> + AsyncFn(Scope<'_>) -> R + Send + Sync + 'static,
-        R: IntoResult,
-    {
-        self.route().action(f);
-        self
-    }
-
-    /// Sets an already wrapped action.
-    pub fn set_action(mut self, action: crate::hook::Action) -> Self {
-        self.route().set_action(action);
-        self
-    }
-
-    /// Also registers the route for `path`, under the same methods. Fails
-    /// like [`Router::insert`] when `path` is taken.
-    ///
-    /// PHP: `alias($path)`.
-    pub fn alias(&mut self, path: &str) -> Result<&mut Self> {
-        let methods: Vec<String> = self.route().methods().to_vec();
-        let methods: Vec<&str> = methods.iter().map(String::as_str).collect();
-        let id = self.id;
-        self.http.router.alias(id, &methods, path)?;
-        self.route().push_alias(path);
-        Ok(self)
-    }
-
-    /// The route being configured.
-    pub fn get(&mut self) -> &mut Route {
-        self.route()
     }
 }
 
@@ -357,7 +233,7 @@ impl Http {
         self.counter += 1;
         let route = Route::new(methods, path, self.counter);
         let id = self.router.insert(methods, path, route)?;
-        Ok(RouteBuilder { http: self, id })
+        Ok(RouteBuilder::new(self, id))
     }
 
     /// Adds a `GET` route (which also answers `HEAD`).
@@ -403,7 +279,7 @@ impl Http {
         self.counter += 1;
         let id = self.router.push(Route::new(&[""], "", self.counter));
         self.router.set_wildcard(Some(id));
-        RouteBuilder { http: self, id }
+        RouteBuilder::new(self, id)
     }
 
     // -- hooks ---------------------------------------------------------------
@@ -709,7 +585,7 @@ impl Http {
     /// hooks.
     ///
     /// PHP: `start()`.
-    pub async fn start(&self, server: crate::hook::Resource) -> Result<()> {
+    pub async fn start(&self, server: Resource) -> Result<()> {
         self.resources.set("server", server);
         let mut request = Request::new("GET", "/", std::iter::empty(), bytes::Bytes::new());
         request.set_method("");
@@ -748,5 +624,123 @@ impl Http {
     /// PHP: `context()`.
     pub fn context(&self) -> Arc<Resources> {
         Arc::new(Resources::child(self.resources.clone()))
+    }
+
+    /// Resolves a hook's arguments (`Http::getArguments`): params from the
+    /// path (`values`) or the request, with aliases, defaults and
+    /// validation, then injections.
+    pub(crate) fn arguments(
+        &self,
+        hook: &Hook,
+        values: &PathParams,
+        request: &Params,
+        context: &Resources,
+    ) -> Result<Arguments> {
+        let mut args = Vec::with_capacity(hook.params().len());
+        for (key, param) in hook.params() {
+            let mut request_key = key.as_str();
+            if !request.contains_key(key)
+                && let Some(alias) = param.aliases.iter().find(|a| request.contains_key(a.as_str()))
+            {
+                request_key = alias;
+            }
+            let in_values = |k: &str| values.iter().find(|(n, _)| n == k).map(|(_, v)| v);
+            let mut values_key = key.as_str();
+            if in_values(key).is_none()
+                && let Some(alias) = param.aliases.iter().find(|a| in_values(a).is_some())
+            {
+                values_key = alias;
+            }
+            let mut exists_in_request = request.contains_key(request_key);
+            let path_value = in_values(values_key);
+
+            // An explicit null counts as omitted unless the validator accepts null.
+            if exists_in_request
+                && path_value.is_none()
+                && request.get(request_key).is_some_and(Value::is_null)
+                && param.optional
+                && !param.default.is_null()
+                && !param.skip_validation
+                && !self.validator(param, context)?.is_valid(&Value::Null)
+            {
+                exists_in_request = false;
+            }
+
+            let exists = exists_in_request || path_value.is_some();
+            let arg = if exists_in_request {
+                request.get(request_key).cloned().unwrap_or(Value::Null)
+            } else {
+                match &param.default {
+                    ParamDefault::Value(v) => v.clone(),
+                    ParamDefault::Factory(f) => f(&context.resolve(&param.injections)?),
+                }
+            };
+            let mut value = match path_value {
+                Some(v) => Value::String(v.clone()),
+                None => arg,
+            };
+
+            if !param.skip_validation {
+                if !exists && !param.optional {
+                    return Err(Error::http(format!("Param \"{key}\" is not optional."), 400));
+                }
+                if exists && !(param.optional && value.is_null()) {
+                    let validator = self.validator(param, context)?;
+                    if !validator.is_valid(&value) {
+                        return Err(Error::http(format!("Invalid `{key}` param: {}", validator.description()), 400));
+                    }
+                }
+                if exists {
+                    value = self.coerce(param, context, value)?;
+                }
+            }
+            args.push((key.clone(), value));
+        }
+
+        let mut injected = Vec::with_capacity(hook.injections().len());
+        for name in hook.injections() {
+            let resource = match name.as_str() {
+                "route" | "params" => None,
+                _ => Some(context.get(name)?),
+            };
+            injected.push((name.clone(), resource));
+        }
+        Ok((args, injected))
+    }
+
+    /// `coerce()`: see [`coerce`].
+    fn coerce(&self, param: &Param, context: &Resources, value: Value) -> Result<Value> {
+        if loose_boolean(&value).is_none() {
+            return Ok(value);
+        }
+        Ok(coerce(&value, self.validator(param, context)?.as_ref()))
+    }
+
+    fn validator(&self, param: &Param, context: &Resources) -> Result<Arc<dyn Validator>> {
+        Ok(match &param.validator {
+            Check::Validator(v) => v.clone(),
+            Check::Factory(f) => f(&context.resolve(&param.injections)?),
+        })
+    }
+}
+
+/// A validated param as the action receives it (`Http::coerce()`): a loose
+/// boolean (`"true"`, `"1"`, `1`, `"false"`, `"0"`, `0`) checked by a
+/// boolean validator (also inside `Nullable`) becomes that boolean; any other
+/// value is left as it is.
+pub fn coerce(value: &Value, validator: &dyn Validator) -> Value {
+    match loose_boolean(value) {
+        Some(b) if validator.kind() == Type::Boolean && !validator.is_array() => Value::Bool(b),
+        _ => value.clone(),
+    }
+}
+
+fn loose_boolean(value: &Value) -> Option<bool> {
+    match value {
+        Value::String(s) if s == "true" || s == "1" => Some(true),
+        Value::String(s) if s == "false" || s == "0" => Some(false),
+        Value::Number(n) if n.as_i64() == Some(1) => Some(true),
+        Value::Number(n) if n.as_i64() == Some(0) => Some(false),
+        _ => None,
     }
 }

@@ -1,6 +1,14 @@
 {
-  "updated": "2026-10-18T16:18:00Z",
+  "updated": "2026-10-19T13:06:00Z",
   "tasks": [
+    {
+      "id": "crate-layout",
+      "title": "One type per file, modules after PHP namespaces",
+      "area": "Libraries",
+      "status": "progress",
+      "updated": "2026-10-19T13:06:00Z",
+      "note": "utopia-http follows it, merged into feat/rust-utopia-conversion: every struct, enum and trait in its own file, satellite types under their class's module directory (request/range.rs, response/cookie.rs, server/mode.rs), public API unchanged. CONVERSION.md §4 has the Layout rule. The other crates follow."
+    },
     {
       "id": "signatures",
       "title": "One Rust method per PHP method",
