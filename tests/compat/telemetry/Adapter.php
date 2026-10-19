@@ -269,16 +269,17 @@ final class Adapter implements Base, Benchmarks
     }
 
     /**
-     * What the Test backend holds: each kind as [name, values] pairs, observable gauges as [name, callbacks].
+     * What the Test backend holds: each kind as [name, values] pairs (histograms as [name, values, attributes]), observable gauges as [name, callbacks].
      */
     private static function dump(Test $t): array
     {
         $pairs = static fn (array $instruments) => array_map(null, array_keys($instruments), array_map(static fn ($i) => $i->values, array_values($instruments)));
+        $histograms = array_map(static fn (string $name, $h) => [$name, $h->values, $h->attributes], array_keys($t->histograms), array_values($t->histograms));
 
         return [
             'counters' => $t->counters === [] ? [] : $pairs($t->counters),
             'upDownCounters' => $t->upDownCounters === [] ? [] : $pairs($t->upDownCounters),
-            'histograms' => $t->histograms === [] ? [] : $pairs($t->histograms),
+            'histograms' => $histograms,
             'gauges' => $t->gauges === [] ? [] : $pairs($t->gauges),
             'observableGauges' => array_map(null, array_keys($t->observableGauges), array_map(static fn ($g) => \count(self::callbacks($g)), array_values($t->observableGauges))) ?: [],
         ];
