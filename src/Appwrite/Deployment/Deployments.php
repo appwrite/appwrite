@@ -169,33 +169,40 @@ readonly class Deployments
         $resourceType = $resource->getCollection();
 
         $archive = \rtrim(\sys_get_temp_dir(), '/') . "/source-{$deploymentId}.tar.gz";
-        $stdout = '';
-        $stderr = '';
-        $exit = Console::execute(
-            (new Command('tar'))->flag('-czf')->argument($archive)->option('-C', $directory)->argument('--exclude=.git')->argument('.'),
-            '',
-            $stdout,
-            $stderr,
-        );
-        if ($exit !== 0) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to pack the source: ' . $stderr);
-        }
-
         $sourcePath = static::sourcePath($projectId, $resourceType, $deploymentId);
         $device = getDevice(($resourceType === 'sites' ? APP_STORAGE_SITES : APP_STORAGE_FUNCTIONS) . "/app-{$projectId}");
 
-        $file = \fopen($archive, 'rb');
-        if ($file === false) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to read the packed source.');
-        }
-
+        // The archive holds the customer's source on a shared host, so it is
+        // removed however packing or storing it ends
         try {
-            if (!$device->write($sourcePath, Stream::fromResource($file), 'application/gzip')) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to store the packed source.');
+            $stdout = '';
+            $stderr = '';
+            $exit = Console::execute(
+                (new Command('tar'))->flag('-czf')->argument($archive)->option('-C', $directory)->argument('--exclude=.git')->argument('.'),
+                '',
+                $stdout,
+                $stderr,
+            );
+            if ($exit !== 0) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to pack the source: ' . $stderr);
+            }
+
+            $file = \fopen($archive, 'rb');
+            if ($file === false) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to read the packed source.');
+            }
+
+            try {
+                if (!$device->write($sourcePath, Stream::fromResource($file), 'application/gzip')) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to store the packed source.');
+                }
+            } finally {
+                \fclose($file);
             }
         } finally {
-            \fclose($file);
-            \unlink($archive);
+            if (\is_file($archive)) {
+                \unlink($archive);
+            }
         }
 
         $size = $device->getFileSize($sourcePath);
@@ -255,6 +262,7 @@ readonly class Deployments
                 type: BUILD_TYPE_DEPLOYMENT,
                 template: new Document(),
                 platform: $this->platform,
+                timeout: $timeout,
             ));
 
             return $deployment;
