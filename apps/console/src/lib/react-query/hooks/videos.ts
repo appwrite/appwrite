@@ -134,14 +134,15 @@ export async function fetchProjectVideos(
   if (!projectId) return { videos: [], total: 0 }
   const orderQuery =
     sortOrder === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy)
+  const trimmedSearch = search?.trim()
   const response = await sdk.forProject(projectId).videos.list({
     queries: [
       ...(filterQueries ?? []),
+      ...(trimmedSearch ? [Query.search('search', trimmedSearch)] : []),
       orderQuery,
       Query.limit(limit),
       Query.offset(page * limit),
     ],
-    search: search?.trim() || undefined,
   })
   return { videos: response.videos ?? [], total: response.total ?? 0 }
 }

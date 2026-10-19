@@ -20,7 +20,6 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Text;
 
 class XList extends Base
 {
@@ -54,7 +53,6 @@ class XList extends Base
                 ]
             ))
             ->param('queries', [], new VideosQueries(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', VideosQueries::ALLOWED_ATTRIBUTES), true)
-            ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -65,7 +63,6 @@ class XList extends Base
 
     public function action(
         array $queries,
-        string $search,
         bool $includeTotal,
         Response $response,
         Database $dbForProject,
@@ -79,10 +76,6 @@ class XList extends Base
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
-
-        if (!empty($search)) {
-            $queries[] = Query::search('search', $search);
         }
 
         $cursor = Query::getCursorQueries($queries, false);

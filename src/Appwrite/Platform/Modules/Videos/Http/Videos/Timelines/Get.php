@@ -106,7 +106,9 @@ class Get extends Base
 
         $response
             ->setContentType('text/vtt')
-            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
+            // A rebuild deletes these thumbnail rows and rewrites timeline.vtt
+            // at this same URL, so a stored copy would point at missing sheets.
+            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate')
             ->send($vtt);
     }
 }

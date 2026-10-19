@@ -71,7 +71,7 @@ Videos have no status. The Console derives one from the renditions (`getVideoEnc
 
 | Method | SDK | HTTP | Notes |
 | --- | --- | --- | --- |
-| List | `list({ queries?, search?, total? })` | `GET /videos` | Filterable: `bucketId`, `fileId`, `name`, `size`, `format`, `duration`, `width`, `height`, `videoCodec`, `videoBitRate`, `audioCodec`, `audioBitRate` |
+| List | `list({ queries?, total? })` | `GET /videos` | Filterable: `bucketId`, `fileId`, `name`, `size`, `format`, `duration`, `width`, `height`, `videoCodec`, `videoBitRate`, `audioCodec`, `audioBitRate`, `search`. Full-text search is `Query.search('search', term)` inside `queries` |
 | Create | `create({ bucketId, fileId, name? })` | `POST /videos` | Source must be video or audio. Does not download or probe |
 | Get | `get({ videoId })` | `GET /videos/{videoId}` | |
 | Update | `update({ videoId, name })` | `PUT /videos/{videoId}` | Name only. The source file cannot be replaced |
@@ -103,7 +103,7 @@ Note the unit mismatch: profile and rendition bitrates are in kilobits per secon
 
 | Method | SDK | HTTP | Notes |
 | --- | --- | --- | --- |
-| List | `listProfiles({ search?, codec? })` | `GET /videos/profiles` | Optional `codec` filter (default `h264`). Search only, no query API |
+| List | `listProfiles({ queries?, codec? })` | `GET /videos/profiles` | Optional `codec` filter (default `h264`). Full-text search is `Query.search('search', term)` inside `queries` |
 | Create | `createProfile({ name, videoBitRate, audioBitRate, width, height, codec? })` | `POST /videos/profiles` | `codec` defaults to `h264` |
 | Get | `getProfile({ profileId })` | `GET /videos/profiles/{profileId}` | |
 | Update | `updateProfile({ profileId, name, videoBitRate, audioBitRate, width, height })` | `PATCH /videos/profiles/{profileId}` | All fields required. Existing renditions are not re-encoded |

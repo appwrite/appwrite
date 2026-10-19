@@ -17,6 +17,7 @@ class Videos extends Base
         'videoBitRate',
         'audioCodec',
         'audioBitRate',
+        'search',
     ];
 
     /**
