@@ -2,6 +2,14 @@
   "updated": "2026-10-19T19:53:00Z",
   "tasks": [
     {
+      "id": "db-ops-cases",
+      "title": "Database: cases for the 30 ops without any",
+      "area": "Database 8",
+      "status": "progress",
+      "updated": "2026-10-19T20:45:00Z",
+      "note": "Catch-up G, 2-hour box. database is complete, so its default CI shard (postgres) also checks coverage, which fails on 30 spec operations without a recorded case (mutate, with_snapshot, set_filters, authorize_create and others). With every difference fixed, this is what keeps that lane red and the STATUS row at \"regressed\"."
+    },
+    {
       "id": "crate-layout",
       "title": "One type per file, modules after PHP namespaces",
       "area": "Libraries",
