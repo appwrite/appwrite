@@ -37,7 +37,9 @@ class Get extends Action
                 namespace: 'vcs',
                 group: 'installations',
                 name: 'createEntireInstallation',
-                description: '/docs/references/vcs/create-entire-installation.md',
+                description: <<<EOT
+                Begin Appwrite's Entire plugin installation to set up version control integration. This endpoint responds with a redirect URL to the plugin's installation page on entire.io, where you pick the Entire project and repositories to connect. The Entire plugin must be configured in your environment for this endpoint to work.
+                EOT,
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
