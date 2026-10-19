@@ -89,8 +89,8 @@ class Realtime extends MessagingAdapter
      *      'expire' -> [UNIX_TIMESTAMP] when that session expires, if any
      *      'jwtExpire' -> [UNIX_TIMESTAMP] when the JWT the connection was opened with expires, if any
      *      'channels' -> [CHANNEL_NAME_X, CHANNEL_NAME_Y, CHANNEL_NAME_Z]
-     *      'presence' -> ['projectId' => ..., 'userId' => ..., 'presenceId' => ...] the row this
-     *                    socket holds, released on close; absent until a presence write
+     *      'presence' -> ['projectId' => ..., 'userId' => ..., 'sequence' => ...] the row this
+     *                    socket holds (by internal sequence), released on close; absent until a presence write
      */
     public array $connections = [];
 

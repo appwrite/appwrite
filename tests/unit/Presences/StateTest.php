@@ -129,7 +129,7 @@ final class StateTest extends TestCase
     public function testSameSocketRefreshDoesNotCount(): void
     {
         $first = $this->hold('user-1', 'online');
-        $refresh = $this->hold('user-1', 'busy', $first['presence']->getId());
+        $refresh = $this->hold('user-1', 'busy', (string) $first['presence']->getSequence());
 
         $this->assertFalse($refresh['created']);
         $this->assertFalse($refresh['counted']);
@@ -140,7 +140,7 @@ final class StateTest extends TestCase
     public function testStaleHeldRowRecounts(): void
     {
         $this->hold('user-1', 'online');
-        $write = $this->hold('user-1', 'online', 'stale-id');
+        $write = $this->hold('user-1', 'online', '999999');
 
         $this->assertFalse($write['created']);
         $this->assertTrue($write['counted']);
@@ -150,9 +150,9 @@ final class StateTest extends TestCase
     public function testGoneHeldRowRecreates(): void
     {
         $first = $this->hold('user-1', 'online');
-        (new State())->releaseConnectionForUser($this->database, 'user-1', $first['presence']->getId());
+        (new State())->releaseConnectionForUser($this->database, 'user-1', (string) $first['presence']->getSequence());
 
-        $write = $this->hold('user-1', 'online', $first['presence']->getId());
+        $write = $this->hold('user-1', 'online', (string) $first['presence']->getSequence());
 
         $this->assertTrue($write['created']);
         $this->assertTrue($write['counted']);
@@ -162,20 +162,20 @@ final class StateTest extends TestCase
     public function testReleaseDecrementsThenDeletesAtZero(): void
     {
         $this->hold('user-1', 'online');
-        $id = $this->hold('user-1', 'online')['presence']->getId();
+        $sequence = (string) $this->hold('user-1', 'online')['presence']->getSequence();
 
-        $this->assertNull((new State())->releaseConnectionForUser($this->database, 'user-1', $id));
+        $this->assertNull((new State())->releaseConnectionForUser($this->database, 'user-1', $sequence));
 
-        $deleted = (new State())->releaseConnectionForUser($this->database, 'user-1', $id);
+        $deleted = (new State())->releaseConnectionForUser($this->database, 'user-1', $sequence);
         $this->assertNotNull($deleted);
-        $this->assertSame($id, $deleted->getId());
+        $this->assertSame($sequence, (string) $deleted->getSequence());
     }
 
-    public function testReleaseIgnoresMismatchedPresenceId(): void
+    public function testReleaseIgnoresMismatchedSequence(): void
     {
         $this->hold('user-1', 'online');
 
-        $this->assertNull((new State())->releaseConnectionForUser($this->database, 'user-1', 'other-id'));
+        $this->assertNull((new State())->releaseConnectionForUser($this->database, 'user-1', '999999'));
 
         $live = $this->database->findOne(State::COLLECTION_ID, [Query::equal('userId', ['user-1'])]);
         $this->assertSame(1, $live->getAttribute('connections'));
@@ -249,7 +249,7 @@ final class StateTest extends TestCase
     /**
      * @return array{presence: Document, created: bool, counted: bool}
      */
-    private function hold(string $userId, string $status, ?string $heldPresenceId = null): array
+    private function hold(string $userId, string $status, ?string $sequence = null): array
     {
         return (new State())->upsertForUserWithConnections(
             $this->database,
@@ -259,7 +259,7 @@ final class StateTest extends TestCase
                 'status' => $status,
             ]),
             $userId,
-            $heldPresenceId,
+            $sequence,
         );
     }
 

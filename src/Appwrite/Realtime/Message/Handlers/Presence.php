@@ -96,13 +96,14 @@ class Presence extends Action
 
         $projectId = $project->getId();
 
-        // Row this socket already counts against; matching it means a status refresh, not a new hold.
+        // Row this socket already counts against; matching its sequence means a status refresh,
+        // not a new hold. Sequence (not id) so a same-id delete-and-recreate is seen as new.
         $stash = $realtime->connections[$connectionId]['presence'] ?? null;
-        $heldPresenceId = (\is_array($stash) && ($stash['userId'] ?? null) === $userId)
-            ? ($stash['presenceId'] ?? null)
+        $sequence = (\is_array($stash) && ($stash['userId'] ?? null) === $userId)
+            ? ($stash['sequence'] ?? null)
             : null;
 
-        $write = $presenceState->upsertForUserWithConnections($database, $presenceDocument, $userId, $heldPresenceId);
+        $write = $presenceState->upsertForUserWithConnections($database, $presenceDocument, $userId, $sequence);
         $presence = $write['presence'];
         $created = $write['created'];
         $counted = $write['counted'];
@@ -111,7 +112,7 @@ class Presence extends Action
         // added, and if that deleted the row announce offline instead of the online upsert below.
         if (!isset($realtime->connections[$connectionId])) {
             $deleted = $counted
-                ? $presenceState->releaseConnectionForUser($database, $userId, $presence->getId())
+                ? $presenceState->releaseConnectionForUser($database, $userId, (string) $presence->getSequence())
                 : null;
 
             if ($deleted !== null) {
@@ -139,7 +140,7 @@ class Presence extends Action
         $realtime->connections[$connectionId]['presence'] = [
             'projectId' => $projectId,
             'userId' => $userId,
-            'presenceId' => $presence->getId(),
+            'sequence' => (string) $presence->getSequence(),
         ];
 
         // Usage +1 only on actual creation (user came online), not on an increment.

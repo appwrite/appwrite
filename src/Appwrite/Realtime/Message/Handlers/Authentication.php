@@ -136,9 +136,9 @@ class Authentication extends Action
                 $realtime->connections[$connectionId]['presence'] = $presenceHold;
             } else {
                 unset($realtime->connections[$connectionId]['presence']);
-                $presenceId = (string) ($presenceHold['presenceId'] ?? '');
-                if ($project !== null && !$project->isEmpty() && $previousUserId !== '' && $presenceId !== '') {
-                    $deleted = $presenceState->releaseConnectionForUser($database, (string) $previousUserId, $presenceId);
+                $sequence = (string) ($presenceHold['sequence'] ?? '');
+                if ($project !== null && !$project->isEmpty() && $previousUserId !== '' && $sequence !== '') {
+                    $deleted = $presenceState->releaseConnectionForUser($database, (string) $previousUserId, $sequence);
                     if ($deleted !== null) {
                         $presenceState->triggerPresenceDeleted($database, $project, (string) $previousUserId, $deleted, $publisherForUsage, $queueForEvents, $queueForRealtime);
                     }

@@ -1444,11 +1444,11 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
             if ($hold !== null) {
                 $holdProjectId = (string) ($hold['projectId'] ?? '');
                 $holdUserId = (string) ($hold['userId'] ?? '');
-                $holdPresenceId = (string) ($hold['presenceId'] ?? '');
+                $holdSequence = (string) ($hold['sequence'] ?? '');
 
                 // This socket gives up its hold; the row is deleted and offline announced at zero.
                 if ($holdProjectId !== '' && $holdProjectId !== 'console' && $holdUserId !== '') {
-                    go(function () use ($holdProjectId, $holdUserId, $holdPresenceId, $container, $presenceState): void {
+                    go(function () use ($holdProjectId, $holdUserId, $holdSequence, $container, $presenceState): void {
                         Span::init('realtime.close.presenceCleanup');
                         Span::add('project.id', $holdProjectId);
                         Span::add('user.id', $holdUserId);
@@ -1461,7 +1461,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                             }
 
                             $dbForProject = getProjectDB($project);
-                            $deleted = $presenceState->releaseConnectionForUser($dbForProject, $holdUserId, $holdPresenceId);
+                            $deleted = $presenceState->releaseConnectionForUser($dbForProject, $holdUserId, $holdSequence);
                             if ($deleted === null) {
                                 return;
                             }

@@ -127,7 +127,8 @@ class State
     /**
      * Upsert a user's presence row and raise its per-socket `connections` refcount -- the
      * connection-aware counterpart to {@see upsertForUser}. A socket still holding the live row
-     * (`$presenceId`) just refreshes it; otherwise the count goes up (create = 1, else +1).
+     * -- matched by its internal `$sequence`, which a delete-and-recreate changes even when the
+     * explicit id is reused -- just refreshes it; otherwise the count goes up (create = 1, else +1).
      *
      * @return array{presence: Document, created: bool, counted: bool}
      */
@@ -135,16 +136,16 @@ class State
         Database $dbForProject,
         Document $presenceDocument,
         string $userId,
-        ?string $presenceId,
+        ?string $sequence,
     ): array {
         $created = false;
         $counted = false;
         try {
-            if ($presenceId !== null) {
+            if ($sequence !== null) {
                 $existing = $dbForProject->getAuthorization()->skip(
                     fn () => $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])])
                 );
-                if (!$existing->isEmpty() && $existing->getId() === $presenceId) {
+                if (!$existing->isEmpty() && (string) $existing->getSequence() === $sequence) {
                     $presenceDocument->setAttribute('$id', $existing->getId());
                     $presence = $dbForProject->updateDocument(self::COLLECTION_ID, $existing->getId(), $presenceDocument);
 
@@ -158,6 +159,11 @@ class State
             for ($attempt = 1; $attempt <= 5; $attempt++) {
                 try {
                     $presence = $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userId, &$created, &$counted) {
+                        // Reset per attempt: a prior attempt that set $created then lost the create
+                        // race must not report a creation when this retry only increments.
+                        $created = false;
+                        $counted = false;
+
                         $existing = $dbForProject->getAuthorization()->skip(
                             fn () => $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])])
                         );
@@ -207,9 +213,9 @@ class State
      * {@see upsertForUserWithConnections}. Decrements `connections`, deleting the row at zero and
      * returning it so the caller can emit the offline event; returns null otherwise.
      */
-    public function releaseConnectionForUser(Database $dbForProject, string $userId, string $presenceId): ?Document
+    public function releaseConnectionForUser(Database $dbForProject, string $userId, string $sequence): ?Document
     {
-        return $dbForProject->withTransaction(function () use ($dbForProject, $userId, $presenceId): ?Document {
+        return $dbForProject->withTransaction(function () use ($dbForProject, $userId, $sequence): ?Document {
             $existing = $dbForProject->getAuthorization()->skip(
                 fn () => $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])])
             );
@@ -224,8 +230,9 @@ class State
                 return null;
             }
 
-            // Row recreated since this socket incremented it: its +1 is already gone, don't touch.
-            if ($current->getId() !== $presenceId) {
+            // Row recreated since this socket incremented it (a delete-and-recreate gets a new
+            // internal sequence even when the id is reused): its +1 is already gone, don't touch.
+            if ((string) $current->getSequence() !== $sequence) {
                 return null;
             }
 
@@ -267,9 +274,16 @@ class State
             $this->triggerUsage($publisherForUsage, $project, -1);
         }
 
-        $user = new User($dbForProject->getAuthorization()->skip(
-            fn () => $dbForProject->getDocument('users', $userId)
-        )->getArrayCopy());
+        // A transient user lookup failure must not suppress the delete event (the close path does
+        // not retry) -- emit with an empty user, as the old close cleanup did.
+        try {
+            $fetched = $dbForProject->getAuthorization()->skip(
+                fn () => $dbForProject->getDocument('users', $userId)
+            );
+            $user = $fetched->isEmpty() ? new User([]) : new User($fetched->getArrayCopy());
+        } catch (\Throwable) {
+            $user = new User([]);
+        }
 
         foreach (['$collection', '$tenant', 'hostname', 'permissionsHash', 'userInternalId', 'connections'] as $attribute) {
             $deleted->removeAttribute($attribute);
