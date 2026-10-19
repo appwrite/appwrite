@@ -153,7 +153,7 @@ class State
             }
 
             // Transactional so the increment serializes against the decrement-to-zero delete; a
-            // create that loses the unique-userId race retries once and then increments.
+            // create that loses the unique-userId race retries and then increments the winner's row.
             $duplicate = null;
             for ($attempt = 1; $attempt <= 5; $attempt++) {
                 try {
