@@ -67,9 +67,8 @@ use Utopia\System\System;
 class Jobs extends Action
 {
     private const DEDUPE_TTL = 3600;
-    // How long a claim on a callback keeps other copies of the event out. Longer than any
-    // callback takes (48s at most on staging over 7 days), short enough that the claim of a
-    // delivery killed mid-callback lapses before the broker runs out of redeliveries.
+    // Longer than any callback runs, short enough that a killed delivery's claim lapses
+    // before the broker runs out of redeliveries.
     private const CLAIM_TTL = 120;
     private const CLAIMED = 'claimed';
     private const APPLIED = 'applied';
@@ -173,10 +172,8 @@ class Jobs extends Action
 
         $locks('jobs-deployment:' . $deploymentId, self::LOCK_TTL, function (Distributed $lock) use ($event, $project, $dbForProject, $dbForPlatform, $queueForRealtime, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $publisherForScreenshots, $publisherForUsage, $usage, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $deploymentId, $bus, $key, $claim, &$failure): void {
             try {
-                // A copy of an event is claimed while it is applied and marked applied once it
-                // has been. A repeat of an applied event is skipped. A repeat that finds a live
-                // claim is failed, so the broker brings it back once the claim has settled: it
-                // is then skipped if the claimer finished, or applied if the claimer died.
+                // A repeat that finds a live claim fails, so the broker redelivers it once the
+                // claim settles: skipped if the claimer finished, applied if it died.
                 $settle = function () use ($cache, $key): void {
                     if ($key !== null) {
                         $cache->save($key, self::APPLIED);
@@ -259,11 +256,8 @@ class Jobs extends Action
 
                 $settle();
             } catch (\Throwable $error) {
-                // A callback that failed part-way gives up its claim, so its redelivery is applied
-                // straight away rather than once the claim lapses. Claims are only written under this
-                // lock, so while refresh() confirms it is still held no successor can claim between
-                // the load and the purge. A lease that lapsed may have been taken over, and a copy
-                // that found another copy's claim holds none: both leave the key alone.
+                // Claims are only written under this lock, so once refresh() confirms it is still
+                // held no successor can claim between the load and the purge.
                 if ($key !== null && $lock->refresh() && $cache->load($key, self::DEDUPE_TTL) === $claim) {
                     $cache->purge($key);
                 }
