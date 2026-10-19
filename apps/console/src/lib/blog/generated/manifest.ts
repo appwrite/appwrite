@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-mcp-events",
+    "href": "/blog/post/announcing-mcp-events",
+    "title": "Announcing MCP Events: your agent hears about changes in your Appwrite project",
+    "description": "The Appwrite MCP server now supports MCP Events. Agents can subscribe to new users, failed function executions, finished deployments, new rows, and uploaded files, and react the moment they happen.",
+    "date": "2026-10-19",
+    "lastUpdated": "2026-10-19",
+    "timeToRead": 5,
+    "author": "chirag-aggarwal",
+    "category": "announcements, ai",
+    "featured": false,
+    "cover": "/images/blog/announcing-mcp-events/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "tanstack-start-stable-appwrite-sites",
     "href": "/blog/post/tanstack-start-stable-appwrite-sites",
     "title": "TanStack Start is stable, and it runs on Appwrite Sites",
@@ -14,20 +28,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "products",
     "featured": false,
     "cover": "/images/blog/tanstack-start-stable-appwrite-sites/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "announcing-mcp-events",
-    "href": "/blog/post/announcing-mcp-events",
-    "title": "Announcing MCP Events: your agent hears about changes in your Appwrite project",
-    "description": "The Appwrite MCP server now supports MCP Events. Agents can subscribe to new users, failed function executions, finished deployments, new rows, and uploaded files, and react the moment they happen.",
-    "date": "2026-10-13",
-    "lastUpdated": "2026-10-13",
-    "timeToRead": 5,
-    "author": "chirag-aggarwal",
-    "category": "announcements, ai",
-    "featured": false,
-    "cover": "/images/blog/announcing-mcp-events/cover.avif",
     "hasCover": true
   },
   {
