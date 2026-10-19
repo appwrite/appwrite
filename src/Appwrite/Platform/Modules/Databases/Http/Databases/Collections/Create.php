@@ -239,10 +239,10 @@ class Create extends Action
                 $dbForProject->createDocuments('indexes', $indexDocuments);
             }
         } catch (DuplicateException) {
-            $this->cleanup($dbForProject, $dbForDatabases, $databaseKey, $collectionKey, $collection->getId());
+            $this->cleanup($dbForProject, $dbForDatabases, $database, $collection);
             throw new Exception($this->getDuplicateException(), params: [$collectionId]);
         } catch (\Throwable $e) {
-            $this->cleanup($dbForProject, $dbForDatabases, $databaseKey, $collectionKey, $collection->getId());
+            $this->cleanup($dbForProject, $dbForDatabases, $database, $collection);
             throw $e;
         }
 

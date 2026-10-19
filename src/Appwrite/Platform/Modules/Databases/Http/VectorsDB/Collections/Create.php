@@ -230,16 +230,16 @@ class Create extends CollectionAction
                 $dbForProject->createDocuments('indexes', $indexDocuments);
             }
         } catch (DuplicateException) {
-            $this->cleanup($dbForProject, $dbForDatabases, $databaseKey, $collectionKey, $collection->getId());
+            $this->cleanup($dbForProject, $dbForDatabases, $database, $collection);
             throw new Exception($this->getDuplicateException());
         } catch (IndexException) {
-            $this->cleanup($dbForProject, $dbForDatabases, $databaseKey, $collectionKey, $collection->getId());
+            $this->cleanup($dbForProject, $dbForDatabases, $database, $collection);
             throw new Exception($this->getInvalidIndexException());
         } catch (LimitException) {
-            $this->cleanup($dbForProject, $dbForDatabases, $databaseKey, $collectionKey, $collection->getId());
+            $this->cleanup($dbForProject, $dbForDatabases, $database, $collection);
             throw new Exception($this->getLimitException());
         } catch (\Throwable $e) {
-            $this->cleanup($dbForProject, $dbForDatabases, $databaseKey, $collectionKey, $collection->getId());
+            $this->cleanup($dbForProject, $dbForDatabases, $database, $collection);
             throw $e;
         }
 

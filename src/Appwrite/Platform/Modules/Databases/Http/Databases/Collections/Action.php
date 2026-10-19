@@ -7,6 +7,7 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 
 abstract class Action extends DatabasesAction
 {
@@ -130,20 +131,35 @@ abstract class Action extends DatabasesAction
     protected function cleanup(
         Database $dbForProject,
         Database $dbForDatabases,
-        string $databaseId,
-        string $collectionId,
-        string $collectionDocumentId
+        Document $database,
+        Document $collection
     ): void {
+        $databaseKey = 'database_' . $database->getSequence();
+
         // Cleanup is best effort -- the caller is already being told the create failed, and a
         // failure to undo it must not replace that with a second one. What it leaves behind is
         // invisible to the caller, so each failure is logged with the id needed to find it.
         try {
-            $dbForDatabases->deleteCollection($collectionId);
+            $dbForDatabases->deleteCollection($databaseKey . '_collection_' . $collection->getSequence());
         } catch (\Throwable $e) {
-            Console::warning('Failed to remove collection ' . $collectionId . ' after a failed create: ' . $e->getMessage());
+            Console::warning('Failed to remove collection ' . $collection->getId() . ' after a failed create: ' . $e->getMessage());
         }
 
-        $this->cleanupDocument($dbForProject, $databaseId, $collectionDocumentId);
+        // The schema is written as two batches, so the second can fail with the first stored.
+        // Both are keyed to the row's sequence, which the next create will not reuse, so
+        // anything left here is unreachable rather than merely stale.
+        foreach (['attributes', 'indexes'] as $schema) {
+            try {
+                $dbForProject->deleteDocuments($schema, [
+                    Query::equal('databaseInternalId', [$database->getSequence()]),
+                    Query::equal('collectionInternalId', [$collection->getSequence()]),
+                ]);
+            } catch (\Throwable $e) {
+                Console::warning('Failed to remove ' . $schema . ' of ' . $collection->getId() . ' after a failed create: ' . $e->getMessage());
+            }
+        }
+
+        $this->cleanupDocument($dbForProject, $databaseKey, $collection->getId());
     }
 
     /**
