@@ -1,14 +1,6 @@
 {
-  "updated": "2026-10-19T15:04:00Z",
+  "updated": "2026-10-19T18:15:00Z",
   "tasks": [
-    {
-      "id": "vcs-entire",
-      "title": "vcs: main's Entire adapter",
-      "area": "Database 8",
-      "status": "progress",
-      "updated": "2026-10-19T17:30:00Z",
-      "note": "Catch-up F, 2-hour box. Main's utopia-php/vcs added a Git adapter for Entire (EdDSA-signed webhooks verified against the issuer's JWKS) plus Adapter::updateCheck, Git::generatePushCommand and Git::supportsRepositoryCloneUrl: 68 PHP symbols and one PHP test file without a Rust port. The benchmark already covers the three /v1/vcs/entire routes."
-    },
     {
       "id": "crate-layout",
       "title": "One type per file, modules after PHP namespaces",
@@ -24,14 +16,6 @@
       "status": "progress",
       "updated": "2026-10-17T19:50:00Z",
       "note": "An optional PHP parameter becomes an explicit Rust argument, never a second method or a with_* builder. registry is converted in the working tree (set and get take fresh; set_fresh and get_fresh are gone), and CONVERSION.md gets the rule in §4 and on the checklist. Not committed yet; the other crates follow."
-    },
-    {
-      "id": "db838",
-      "title": "database: follow PHP from 8.3.6 to 8.3.10",
-      "area": "Database 8",
-      "status": "done",
-      "updated": "2026-10-19T15:46:00Z",
-      "note": "Catch-up A, 2-hour box. Join aliases may start with a digit or a hyphen (63 characters at most), long join labels are read under a hashed name, the document cache retires collections after a committed schema change, and deleteCollection and deleteRelationship re-raise errors that may have committed. API coverage 100% (1,508 symbols), 568 of 568 PHP test files, 26,792 cases; JoinAlias, JoinAliasId and ChildSide re-recorded on every profile with 0 differences. Waived: JoinLabelRetentionTest and CacheUnavailableTest (anonymous adapter subclasses), covered by Rust unit tests."
     },
     {
       "id": "sites-flake",
@@ -128,6 +112,22 @@
       "status": "todo",
       "note": "On a quiet machine; the last container runs were taken under load.",
       "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "vcs-entire",
+      "title": "vcs: main's Entire adapter",
+      "area": "Database 8",
+      "status": "done",
+      "updated": "2026-10-19T18:15:00Z",
+      "note": "Catch-up F, done in 45 minutes of a 2-hour box. The Entire adapter (plugin JWT and installation tokens, core and data-cell routing, EdDSA webhooks checked against each issuer's keys, trails as pull requests, check runs), Adapter::update_check, Git::push_command and supports_repository_clone_url. clone_command is now async, as Entire looks the repository up. 391 of 391 symbols, 15 of 15 PHP test files, 643 cases and 21,500 fuzz inputs, 0 differences; nothing calls entire.io and every key is generated locally."
+    },
+    {
+      "id": "db838",
+      "title": "database: follow PHP from 8.3.6 to 8.3.10",
+      "area": "Database 8",
+      "status": "done",
+      "updated": "2026-10-19T15:46:00Z",
+      "note": "Catch-up A, 2-hour box. Join aliases may start with a digit or a hyphen (63 characters at most), long join labels are read under a hashed name, the document cache retires collections after a committed schema change, and deleteCollection and deleteRelationship re-raise errors that may have committed. API coverage 100% (1,508 symbols), 568 of 568 PHP test files, 26,792 cases; JoinAlias, JoinAliasId and ChildSide re-recorded on every profile with 0 differences. Waived: JoinLabelRetentionTest and CacheUnavailableTest (anonymous adapter subclasses), covered by Rust unit tests."
     },
     {
       "id": "cache-purge",
