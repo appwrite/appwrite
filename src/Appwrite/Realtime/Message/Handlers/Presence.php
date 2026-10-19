@@ -116,7 +116,7 @@ class Presence extends Action
 
             if ($deleted !== null) {
                 // created-then-deleted nets zero usage; otherwise undo the creator's +1.
-                $presenceState->announceOffline($database, $project, $userId, $deleted, $publisherForUsage, $queueForEvents, $queueForRealtime, adjustUsage: !$created);
+                $presenceState->triggerUserDeleted($database, $project, $userId, $deleted, $publisherForUsage, $queueForEvents, $queueForRealtime, triggerUsage: !$created);
             } elseif ($created) {
                 // Created row survives under another socket's hold: count the online transition here.
                 $presenceState->triggerUsage($publisherForUsage, $project, 1);

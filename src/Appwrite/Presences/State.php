@@ -247,11 +247,11 @@ class State
     }
 
     /**
-     * Announce that a user went offline after {@see releaseConnectionForUser} deleted their row:
-     * purge the list cache, decrement usage (unless the online transition was never counted) and
-     * emit the delete event. `$deleted` is the document that release returned.
+     * After {@see releaseConnectionForUser} deletes a user's row, trigger the offline side
+     * effects: purge the list cache, decrement usage (when counted) and emit the delete event.
+     * `$deleted` is the document that release returned.
      */
-    public function announceOffline(
+    public function triggerUserDeleted(
         Database $dbForProject,
         Document $project,
         string $userId,
@@ -259,11 +259,11 @@ class State
         UsagePublisher $publisherForUsage,
         QueueEvent $queueForEvents,
         QueueRealtime $queueForRealtime,
-        bool $adjustUsage = true,
+        bool $triggerUsage = true,
     ): void {
         $this->purgeListCache($dbForProject);
 
-        if ($adjustUsage) {
+        if ($triggerUsage) {
             $this->triggerUsage($publisherForUsage, $project, -1);
         }
 

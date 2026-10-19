@@ -140,7 +140,7 @@ class Authentication extends Action
                 if ($project !== null && !$project->isEmpty() && $previousUserId !== '' && $presenceId !== '') {
                     $deleted = $presenceState->releaseConnectionForUser($database, (string) $previousUserId, $presenceId);
                     if ($deleted !== null) {
-                        $presenceState->announceOffline($database, $project, (string) $previousUserId, $deleted, $publisherForUsage, $queueForEvents, $queueForRealtime);
+                        $presenceState->triggerUserDeleted($database, $project, (string) $previousUserId, $deleted, $publisherForUsage, $queueForEvents, $queueForRealtime);
                     }
                 }
             }
