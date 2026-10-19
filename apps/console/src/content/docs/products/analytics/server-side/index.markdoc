@@ -1,0 +1,96 @@
+---
+layout: article
+title: Track events from your server
+description: Send Appwrite Analytics events from your backend with an API key, and attach server-side actions such as purchases to the visitor who made them.
+---
+
+Some of the events you care about happen on your server: an order that completes, a subscription that renews, a job that finishes. Send these from your backend with an API key. When you pass the visitor's IP address and user agent, the event joins that visitor's visit, next to the pageviews their browser sent.
+
+# Create an API key {% #create-an-api-key %}
+
+Server-side events use an API key with the `analytics.write` scope.
+
+1. In your project, open **API Keys** and click **Create API key**.
+2. Enter a name and select the `analytics.write` scope.
+3. Create the key and copy its secret.
+
+Keep the key on your server. A key with `analytics.write` can also create, change, and delete analytics properties.
+
+# Send an event {% #send-an-event %}
+
+Call `createEvent` with the property ID, the event name, and the URL the event belongs to.
+
+{% multicode %}
+```server-go
+package main
+
+import (
+    "log"
+
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<API_KEY>"),
+    )
+
+    analytics := appwrite.NewAnalytics(client)
+
+    _, err := analytics.CreateEvent(
+        "<PROPERTY_ID>",
+        "purchase_completed",
+        "https://example.com/checkout",
+        analytics.WithCreateEventUserId("<USER_ID>"),
+        analytics.WithCreateEventIp("<VISITOR_IP>"),
+        analytics.WithCreateEventUserAgent("<VISITOR_USER_AGENT>"),
+        analytics.WithCreateEventProps([]string{"plan", "pro", "interval", "yearly"}),
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+}
+```
+```curl
+curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID>/events' \
+    -H 'Content-Type: application/json' \
+    -H 'X-Appwrite-Project: <PROJECT_ID>' \
+    -H 'X-Appwrite-Key: <API_KEY>' \
+    -d '{
+        "name": "purchase_completed",
+        "url": "https://example.com/checkout",
+        "userId": "<USER_ID>",
+        "ip": "<VISITOR_IP>",
+        "userAgent": "<VISITOR_USER_AGENT>",
+        "props": ["plan", "pro", "interval", "yearly"]
+    }'
+```
+{% /multicode %}
+
+From any other language, send the same request with your HTTP client. The event takes the same parameters as a client-side event. See [Send events over REST](/docs/products/analytics/rest#parameters).
+
+# Attribute the event to a visitor {% #visitor %}
+
+Three parameters are available only with an API key that has the `analytics.write` scope:
+
+- `ip`: the visitor's IP address. Appwrite uses it for the visitor's location and identity in place of your server's address.
+- `userAgent`: the visitor's `User-Agent` header. Appwrite uses it for the browser, operating system, and device, and for the visitor's identity.
+- `userId`: your own ID for the user. Appwrite stores it with the event.
+
+Appwrite identifies a visitor by their IP address, user agent, and the hostname of the event URL. When `ip`, `userAgent`, and the URL's hostname match what the visitor's browser sent, the server event counts toward the same visitor, and toward the same visit while that visit is active. For how visits start and end, see [Visitors and sessions](/docs/products/analytics/visitors).
+
+Read the IP address and user agent from the request the visitor made to your server, and pass them on. Behind a load balancer or CDN, take the IP address from the header your platform sets for the client address, such as `CF-Connecting-IP` on Cloudflare. In `X-Forwarded-For`, use the address your own proxy added, not the first one, which the client can set.
+
+Without `ip` and `userAgent`, Appwrite records the event as a visit from your server: located where your server runs, with your HTTP client's user agent, and counted as a visitor of its own.
+
+# Errors {% #errors %}
+
+| Status | Type | Cause |
+| --- | --- | --- |
+| `400` | `general_argument_invalid` | A parameter is missing or invalid. See [Event limits](/docs/products/analytics/limits#event-limits). |
+| `401` | `general_access_forbidden` | The request sets `userId`, `ip`, or `userAgent`, and its API key is missing or doesn't have the `analytics.write` scope. |
+| `404` | `analytics_property_not_found` | The property ID is wrong, or the property is turned off. |
+
+A request with an `analytics.write` key skips the property's allowed origins, so Appwrite accepts server-side events from wherever your server runs.
