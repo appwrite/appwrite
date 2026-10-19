@@ -144,25 +144,52 @@ class Create extends Action
         // before deploying it - a retry of a delivery already being processed
         // must not deploy again.
         // TODO: acknowledge first and process asynchronously instead.
-        foreach ($parsedPayloads as $parsedPayload) {
-            match (true) {
-                \str_starts_with($event, 'ref.') => $this->handlePushEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
-                \str_starts_with($event, Entire::EVENT_INSTALLATION . '.') => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
-                default => null,
-            };
+        $failure = null;
+        try {
+            foreach ($parsedPayloads as $parsedPayload) {
+                match (true) {
+                    \str_starts_with($event, 'ref.') => $this->handlePushEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
+                    \str_starts_with($event, Entire::EVENT_INSTALLATION . '.') => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
+                    default => null,
+                };
+            }
+        } catch (\Throwable $error) {
+            $failure = $error;
+        }
+
+        // Runs whatever happened above, so work elsewhere never waits on this
+        // one; its failure fails the delivery as well, and this one's own
+        // failure is the one reported.
+        try {
+            $this->postprocessEvent($request);
+        } catch (\Throwable $error) {
+            $failure ??= $error;
+        }
+
+        if ($failure !== null) {
+            throw $failure;
         }
 
         $response->json(['events' => $parsedPayloads]);
     }
 
     /**
-     * Runs once a delivery has verified, before it is handled. Cloud overrides
-     * it to forward the delivery to its other regions, as it does for GitHub;
-     * each region verifies the forwarded delivery again.
+     * Runs once a delivery has verified, before it is handled, like GitHub's.
      */
     protected function preprocessEvent(Request $request)
     {
         return;
+    }
+
+    /**
+     * Runs once this region has handled a delivery, before it is acknowledged.
+     * Throwing fails the delivery, so Entire delivers it again, and each
+     * repository that already deployed it has it claimed and skips it. Cloud
+     * overrides it to forward the delivery to its other regions and fail the
+     * delivery when one of them did not take it.
+     */
+    protected function postprocessEvent(Request $request): void
+    {
     }
 
     /**
