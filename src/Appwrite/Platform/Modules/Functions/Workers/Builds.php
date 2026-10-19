@@ -414,7 +414,7 @@ class Builds extends Action
             // other VCS commit, via the same Deployments service the HTTP
             // endpoints use - or, when the jobs-service cannot clone the
             // provider itself, build the tree checked out here.
-            if ($providerAdapter->supportsRepositoryCloneUrl()) {
+            if ($providerAdapter->supportsRepositoryArchives() || $providerAdapter->supportsRepositoryCloneUrl()) {
                 $ref = $deployment->getAttribute('providerCommitHash') ?: $branchName;
                 $deployments->createFromVcs(
                     $resource,
