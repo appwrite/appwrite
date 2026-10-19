@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Utopia\Cache\Tests\E2E;
 
 use PHPUnit\Framework\Attributes\Depends;
+use Redis;
 use RedisCluster as RedisCluster;
 use RedisClusterException;
 use Utopia\Cache\Adapter\RedisCluster as RedisAdapter;
@@ -87,7 +88,10 @@ final class RedisClusterTest extends Base
         Services::waitUntil(static function (): bool {
             foreach (Services::CLUSTER_SEEDS as $seed) {
                 [$host, $port] = explode(':', $seed);
-                $info = self::$redis->rawCommand([$host, (int) $port], 'CLUSTER', 'INFO');
+                $node = new Redis();
+                $node->connect($host, (int) $port, self::TIMEOUT);
+                $info = $node->rawCommand('CLUSTER', 'INFO');
+                $node->close();
 
                 if (! \is_string($info) || ! str_contains($info, 'cluster_state:ok')) {
                     return false;
