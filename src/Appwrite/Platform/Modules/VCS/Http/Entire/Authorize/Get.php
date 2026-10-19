@@ -75,16 +75,25 @@ class Get extends Action
 
         $projectId = $project->getId();
 
+        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
+        if (empty($signingKey)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
+        }
+
         // The callback is public and Entire performs no token exchange, so the
         // state carries an HMAC binding the redirect targets to this project.
         $state = [
             'projectId' => $projectId,
             'success' => $success,
             'failure' => $failure,
-            'signature' => \hash_hmac('sha256', \json_encode([$projectId, $success, $failure]), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
+            'signature' => \hash_hmac('sha256', \json_encode([$projectId, $success, $failure]), $signingKey),
         ];
 
-        if (\strlen((string) \json_encode($state)) > APP_LIMIT_VCS_STATE) {
+        // Entire expects an opaque state token, so the signed JSON travels
+        // base64url-encoded and the callback decodes it. The callback takes
+        // the encoded state, so that is what has to fit its limit.
+        $state = \rtrim(\strtr(\base64_encode(\json_encode($state, JSON_UNESCAPED_SLASHES) ?: ''), '+/', '-_'), '=');
+        if (\strlen($state) > APP_LIMIT_VCS_STATE) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Redirect URLs are too long to complete the installation. Please use shorter success and failure URLs.');
         }
 
@@ -92,16 +101,10 @@ class Get extends Action
         $callback = $protocol . '://' . ($platform['consoleHostname'] ?? '') . '/v1/vcs/entire/callback';
 
         // The permissions are registered on the plugin; the install page asks
-        // the user only for the project and the repositories. Entire expects
-        // an opaque state token, so the signed JSON travels base64url-encoded
-        // and the callback decodes it.
+        // the user only for the project and the repositories.
         /** @var \Utopia\VCS\Adapter\Git\Entire $vcs */
         $vcs = $vcsFactory->fromProvider('entire');
-        $installUrl = $vcs->getInstallUrl(
-            System::getEnv('_APP_VCS_ENTIRE_PLUGIN', ''),
-            $callback,
-            \rtrim(\strtr(\base64_encode(\json_encode($state, JSON_UNESCAPED_SLASHES) ?: ''), '+/', '-_'), '=')
-        );
+        $installUrl = $vcs->getInstallUrl(System::getEnv('_APP_VCS_ENTIRE_PLUGIN', ''), $callback, $state);
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')

@@ -68,6 +68,31 @@ final class VCSEntireConsoleClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
+    public function testCreateInstallationCancelledWithForgedState(): void
+    {
+        /**
+         * Test for FAILURE
+         */
+        // A cancel comes back without a receipt, so only the state's signature
+        // stands between the public callback and an open redirect
+        $state = \rtrim(\strtr(\base64_encode((string) \json_encode([
+            'projectId' => $this->getProject()['$id'],
+            'success' => 'https://attacker.test/success',
+            'failure' => 'https://attacker.test/failure',
+            'signature' => \str_repeat('0', 64),
+        ])), '+/', '-_'), '=');
+
+        $response = $this->client->call(Client::METHOD_GET, '/vcs/entire/callback', [
+            'content-type' => 'application/json',
+        ], [
+            'error' => 'access_denied',
+            'state' => $state,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertArrayNotHasKey('location', $response['headers']);
+    }
+
     public function testCreateEventWithoutToken(): void
     {
         /**

@@ -59,11 +59,12 @@ class Get extends Action
         VcsFactory $vcsFactory,
     ) {
         // A customer who cancels on Entire comes back with an error and the
-        // state instead of a receipt
+        // state instead of a receipt. Nothing else authenticates that request,
+        // so the state must carry this server's signature before its failure
+        // URL is trusted as a redirect.
         if (!empty($error) && empty($receipt)) {
-            $cancelled = \json_decode($this->decodeState($state), true);
-            $redirectFailure = \is_array($cancelled) ? \strval($cancelled['failure'] ?? '') : '';
-            $this->failure($response, $redirectFailure, $error === 'access_denied' ? 'The installation was not approved on Entire.' : 'Entire refused the installation: ' . $error);
+            $cancelled = $this->verifiedState($state);
+            $this->failure($response, \strval($cancelled['failure'] ?? ''), $error === 'access_denied' ? 'The installation was not approved on Entire.' : 'Entire refused the installation: ' . $error);
             return;
         }
 
@@ -86,23 +87,13 @@ class Get extends Action
         $providerInstallationId = \strval($receiptClaims['installation_id'] ?? '');
 
         // Entire echoes the state given to the install URL as a receipt claim;
-        // accept a query parameter carrying the same value as a fallback.
-        $state = !empty($state) ? $state : \strval($receiptClaims['state'] ?? '');
-        if (empty($state)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing state parameter. Please restart the installation from the Appwrite Console.');
-        }
-
-        $state = \json_decode($this->decodeState($state), true) ?? [];
+        // accept a query parameter carrying the same value as a fallback. The
+        // receipt authenticates Entire, and the state's signature the Appwrite
+        // Console that started the flow -- without it anyone could attach an
+        // installation to an arbitrary projectId.
+        $state = $this->verifiedState(!empty($state) ? $state : \strval($receiptClaims['state'] ?? ''));
         $projectId = $state['projectId'] ?? '';
         $redirectFailure = $state['failure'] ?? '';
-
-        // The receipt authenticates Entire, and this HMAC authenticates the
-        // Appwrite Console that started the flow -- without it anyone could
-        // attach an installation to an arbitrary projectId.
-        $signature = \hash_hmac('sha256', \json_encode([$projectId, $state['success'] ?? '', $redirectFailure]), System::getEnv('_APP_OPENSSL_KEY_V1', ''));
-        if (!\hash_equals($signature, \is_string($state['signature'] ?? null) ? $state['signature'] : '')) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
-        }
 
         // Receipts are single-use: one replayed within its five-minute life
         // must not attach the installation again
@@ -184,6 +175,34 @@ class Get extends Action
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($redirectSuccess);
+    }
+
+    /**
+     * The state the Authorize action signed, decoded. Throws when it is
+     * missing, or was not signed by this server with the current key.
+     *
+     * @return array<string, mixed>
+     */
+    private function verifiedState(string $state): array
+    {
+        if (empty($state)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing state parameter. Please restart the installation from the Appwrite Console.');
+        }
+
+        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
+        if (empty($signingKey)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
+        }
+
+        $decoded = \json_decode($this->decodeState($state), true);
+        $decoded = \is_array($decoded) ? $decoded : [];
+
+        $signature = \hash_hmac('sha256', \json_encode([$decoded['projectId'] ?? '', $decoded['success'] ?? '', $decoded['failure'] ?? '']), $signingKey);
+        if (!\hash_equals($signature, \is_string($decoded['signature'] ?? null) ? $decoded['signature'] : '')) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
+        }
+
+        return $decoded;
     }
 
     /**
