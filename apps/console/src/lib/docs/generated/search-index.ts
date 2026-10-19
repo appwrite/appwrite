@@ -5822,7 +5822,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tooling/ai/agents/pi",
     "title": "Pi",
     "description": "Learn how you can add the Appwrite MCP server to Pi to interact with both the Appwrite API and documentation, and to react to events in your project.",
-    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to Pi, a terminal coding agent, for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so you only need Pi itself. If you don't have Pi yet, install it from your terminal. See pi.dev for other ways to install it, such as npm. Pi connects to the server through pi-mcp-adapter, a Pi extension…",
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to Pi, a terminal coding agent, for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so you don't run a server on your machine. If you don't have Pi yet, install it from your terminal on macOS or Linux. On Windows, or to install with npm, see pi.dev. Pi connects to the server…",
     "breadcrumbs": [
       "Tooling",
       "IDEs",

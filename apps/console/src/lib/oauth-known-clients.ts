@@ -139,7 +139,8 @@ const KNOWN_CLIENTS: KnownOAuthClientMatcher[] = [
     name: 'Pi',
     iconPath: '/icons/apps/pi.svg',
     // pi-mcp-adapter registers as "Pi Coding Agent" with a loopback
-    // http://127.0.0.1:19876/callback redirect and its GitHub repo as client_uri.
+    // http://127.0.0.1:<port>/callback redirect (OS-assigned port) and its
+    // GitHub repo as client_uri.
     namePattern: /^pi(\s+coding\s+agent)?$/i,
     uriPatterns: [
       LOOPBACK,

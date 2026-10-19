@@ -23,9 +23,9 @@ Browse all quick start prompts
 
 {% section #step-2 step=2 title="Add the MCP server" %}
 
-Connect the Appwrite MCP server to [Pi](https://pi.dev), a terminal coding agent, for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so you only need Pi itself.
+Connect the Appwrite MCP server to [Pi](https://pi.dev), a terminal coding agent, for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so you don't run a server on your machine.
 
-If you don't have Pi yet, install it from your terminal. See [pi.dev](https://pi.dev) for other ways to install it, such as npm.
+If you don't have Pi yet, install it from your terminal on macOS or Linux. On Windows, or to install with npm, see [pi.dev](https://pi.dev).
 
 ```bash
 curl -fsSL https://pi.dev/install.sh | sh
@@ -37,7 +37,7 @@ Pi connects to the server through [pi-mcp-adapter](https://github.com/nicobailon
 pi install npm:pi-mcp-adapter
 ```
 
-Add the Appwrite MCP server to `~/.pi/agent/mcp-adapter.json`:
+Add the Appwrite MCP server to `~/.pi/agent/mcp-adapter.json`. Create the file if it doesn't exist, or merge this into it:
 
 ```json
 {
@@ -50,11 +50,11 @@ Add the Appwrite MCP server to `~/.pi/agent/mcp-adapter.json`:
 }
 ```
 
-The server uses OAuth for authentication. Start Pi by running `pi` in your terminal, then run `/mcp-auth appwrite`. Your browser opens so you can sign in to your Appwrite account and authorize access. Pi stores the sign-in in your operating system's credential store, so you don't need an API key.
+The server uses OAuth for authentication. Start Pi by running `pi` in your terminal, then run `/mcp-auth appwrite`. Your browser opens so you can sign in to your Appwrite account and authorize access. You don't need an API key. pi-mcp-adapter keeps the sign-in in your operating system's credential store.
 
 {% info title="Pi's built-in MCP support" %}
 
-Pi can also add MCP servers with `pi mcp add`. The events extension in [Step 4](#step-4) works only with pi-mcp-adapter, so this guide uses the adapter. The adapter turns off Pi's built-in MCP support in Pi's settings, so the two don't both run.
+Pi also has built-in MCP support, which you set up with `pi mcp add`. The events extension in [Step 4](#step-4) needs pi-mcp-adapter, so this guide uses the adapter. The adapter turns off the built-in support in Pi's settings and reads the servers you added with `pi mcp add`, so those keep working.
 
 {% /info %}
 
@@ -85,6 +85,8 @@ Pi receives events through [pi-mcp-events](https://github.com/mikekelly/pi-mcp-e
 pi install npm:@realmikekelly/pi-mcp-events
 ```
 
+The pi-mcp-events README asks you to replace pi-mcp-adapter with a fork. You don't need the fork, because pi-mcp-adapter 5.1.0 and later include the hook the extension uses.
+
 Ask Pi to subscribe to `users.user.created`. Replace `<PROJECT_ID>` with your project ID:
 
 ```
@@ -95,12 +97,12 @@ Pi opens the subscription and goes idle.
 
 When a user signs up or you create one in the Appwrite Console, Pi wakes up without a new prompt, looks up the user, and replies with their name and email.
 
-Each subscription is a webhook in your project, so it counts toward your plan's webhook limit. When you no longer need the events, ask Pi to unsubscribe:
+Each subscription is a webhook in your project, so it counts toward your plan's webhook limit. The Free plan allows 2 webhooks per project. When you no longer need the events, ask Pi to unsubscribe:
 
 ```
 Unsubscribe from users.user.created
 ```
 
-Subscriptions last as long as the Pi session. After you restart Pi, ask it to subscribe again. To see every event you can subscribe to and how delivery works, read [Events](/docs/tooling/ai/mcp-servers#events).
+Subscriptions last as long as the Pi session. After you restart Pi or run `/reload`, ask it to subscribe again. To see every event you can subscribe to and how delivery works, read [Events](/docs/tooling/ai/mcp-servers#events).
 
 {% /section %}
