@@ -16,6 +16,7 @@ appwrite-account.workspace = true
 appwrite-core.workspace = true
 appwrite-users.workspace = true
 appwrite-teams.workspace = true
+appwrite-storage.workspace = true
 mimalloc.workspace = true
 serde_json.workspace = true
 utopia-async.workspace = true

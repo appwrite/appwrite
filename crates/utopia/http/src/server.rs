@@ -23,7 +23,8 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
-use http_body_util::{BodyExt, Limited};
+use bytes::Bytes;
+use http_body_util::BodyExt;
 use hyper::body::Incoming;
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
@@ -140,14 +141,39 @@ async fn dispatch<H: Handler>(
         return r.into_http();
     }
     let (parts, body) = req.into_parts();
-    let body = match Limited::new(body, options.max_body).collect().await {
-        Ok(collected) => collected.to_bytes(),
-        Err(_) => {
+    let body = match collect_body(body, options.max_body).await {
+        Ok(collected) => collected,
+        Err(()) => {
+            // Read the whole body first. Closing early makes Traefik answer 502
+            // instead of forwarding this 413, which is what Swoole returns.
             let mut r = Response::text_bytes(http::StatusCode::PAYLOAD_TOO_LARGE, "Request body too large");
+            r.add_header("connection", "close");
             r.flush();
             return r.into_http();
         }
     };
     let request = Request::from_http(&parts, body, Some(remote)).with_trusted(options.trusted.clone());
     handler.respond(request).await
+}
+
+/// The body, or `Err` when it is larger than `max`. A body past the limit is
+/// still read to the end so the response can be written on the same connection.
+async fn collect_body(mut body: Incoming, max: usize) -> Result<Bytes, ()> {
+    let mut collected = Vec::new();
+    let mut over = false;
+    loop {
+        match body.frame().await {
+            Some(Ok(frame)) => {
+                let Ok(data) = frame.into_data() else { continue };
+                if over || collected.len().saturating_add(data.len()) > max {
+                    over = true;
+                    continue;
+                }
+                collected.extend_from_slice(&data);
+            }
+            Some(Err(_)) => return Err(()),
+            None => break,
+        }
+    }
+    if over { Err(()) } else { Ok(Bytes::from(collected)) }
 }

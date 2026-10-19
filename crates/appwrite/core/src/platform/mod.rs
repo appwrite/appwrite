@@ -26,6 +26,7 @@ use serde_json::{Map, Value};
 use utopia_http::{Method, Request, Response, Router};
 
 pub use context::{Context, EventState, Mode, Store};
+pub use hooks::resources::resource_token::ResourceToken;
 pub use state::State;
 
 use crate::Result;
