@@ -365,7 +365,7 @@ return [
                 $allowList
             )
         ],
-        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node-typescript/postgres-with-drizzle">file</a>. The function doesn\'t create tables, so apply the migrations with <code>npm run db:migrate</code> from your machine before the first request.',
+        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node-typescript/postgres-with-drizzle">file</a>. The function doesn\'t create tables, so apply the migrations from your machine with <code>DATABASE_URL="postgresql://..." npm run db:migrate</code> before the first request.',
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
@@ -2290,8 +2290,9 @@ return [
         'timeout' => 15,
         'useCases' => [FunctionUseCases::UTILITIES],
         'runtimes' => [
+            // The Dodo Payments SDK needs Node 20+
             ...getRuntimes(
-                $templateRuntimes['NODE'],
+                \array_diff($templateRuntimes['NODE'], ['node-18.0', 'node-19.0']),
                 'npm install',
                 'src/main.js',
                 'node/subscriptions-with-dodo-payments',
@@ -2351,8 +2352,9 @@ return [
         'timeout' => 15,
         'useCases' => [FunctionUseCases::UTILITIES],
         'runtimes' => [
+            // The Dodo Payments SDK needs Node 20+
             ...getRuntimes(
-                $templateRuntimes['NODE'],
+                \array_diff($templateRuntimes['NODE'], ['node-18.0', 'node-19.0']),
                 'npm install',
                 'src/main.js',
                 'node/payments-with-dodo-payments',
