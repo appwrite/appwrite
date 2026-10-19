@@ -526,6 +526,16 @@
       "services": ["Functions", "Project", "Storage"]
     },
     {
+      "label": "Usage Outage",
+      "group": "usageOutage",
+      "path": "/usr/src/code/tests/e2e/Services/Usage",
+      "options_abuse": "disabled",
+      "storage_antivirus": "disabled",
+      "compose_profiles": "",
+      "wait": "",
+      "services": ["Usage"]
+    },
+    {
       "label": "Queue Retry",
       "group": "queueRetry",
       "path": "/usr/src/code/tests/e2e/Services",
