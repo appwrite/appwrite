@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5db9eaeb7a2992161d6cdbf2d76e216f",
+    "content-hash": "6920f9001dbb179d3d316d456aad05f6",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4426,16 +4426,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-collection-level-column-permissions",
+            "version": "8.3.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "af607ce55bef45271f227bdc4bc6c945500b03b9"
+                "reference": "385995429dcee32194e09ee1d376df7015a942ea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/af607ce55bef45271f227bdc4bc6c945500b03b9",
-                "reference": "af607ce55bef45271f227bdc4bc6c945500b03b9",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/385995429dcee32194e09ee1d376df7015a942ea",
+                "reference": "385995429dcee32194e09ee1d376df7015a942ea",
                 "shasum": ""
             },
             "require": {
@@ -4493,9 +4493,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/collection-level-column-permissions"
+                "source": "https://github.com/utopia-php/database/tree/8.3.10"
             },
-            "time": "2026-10-18T12:32:48+00:00"
+            "time": "2026-10-19T04:46:57+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -4860,16 +4860,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "5.7.1",
+            "version": "5.13.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "54d863c8c419ee7b21fc6271a4a85d910d1d4947"
+                "reference": "36ac9b85d732176cb2599c95bab6392ea445b3de"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/54d863c8c419ee7b21fc6271a4a85d910d1d4947",
-                "reference": "54d863c8c419ee7b21fc6271a4a85d910d1d4947",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/36ac9b85d732176cb2599c95bab6392ea445b3de",
+                "reference": "36ac9b85d732176cb2599c95bab6392ea445b3de",
                 "shasum": ""
             },
             "require": {
@@ -4906,9 +4906,9 @@
             "description": "SDK generator for Appwrite APIs across multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/5.7.1"
+                "source": "https://github.com/appwrite/sdk-generator/tree/5.13.0"
             },
-            "time": "2026-10-12T17:41:14+00:00"
+            "time": "2026-10-19T09:11:15+00:00"
         },
         {
             "name": "brianium/paratest",
@@ -7600,16 +7600,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v3.28.0",
+            "version": "v3.30.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "597c12ed286fb9d1701a36684ce6e0cbe28ebc8b"
+                "reference": "8c737079b726af72ff8ef3c595be9f6a810ea1ef"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/597c12ed286fb9d1701a36684ce6e0cbe28ebc8b",
-                "reference": "597c12ed286fb9d1701a36684ce6e0cbe28ebc8b",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/8c737079b726af72ff8ef3c595be9f6a810ea1ef",
+                "reference": "8c737079b726af72ff8ef3c595be9f6a810ea1ef",
                 "shasum": ""
             },
             "require": {
@@ -7664,7 +7664,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v3.28.0"
+                "source": "https://github.com/twigphp/Twig/tree/v3.30.0"
             },
             "funding": [
                 {
@@ -7676,21 +7676,12 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-07-03T20:44:34+00:00"
+            "time": "2026-09-25T13:20:01+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-collection-level-column-permissions",
-            "alias": "8.3.999",
-            "alias_normalized": "8.3.999.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
@@ -7713,5 +7704,5 @@
     "platform-dev": {
         "ext-fileinfo": "*"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
