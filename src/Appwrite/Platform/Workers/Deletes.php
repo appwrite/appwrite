@@ -6,6 +6,8 @@ use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
 use Appwrite\Deployment\Deployments;
+use Appwrite\Deployment\Retention;
+use Appwrite\Deployment\Retention\Reason;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -49,6 +51,11 @@ class Deletes extends Action
     protected array $selects = ['$sequence', '$id', '$collection', '$permissions', '$updatedAt'];
     public const PROCESSING_STUCK_RETENTION_SECONDS = 3 * 24 * 60 * 60; // 3 days
 
+    /**
+     * Deployment statuses a build never leaves; the count cap counts and retires only these.
+     */
+    private const array FINISHED_DEPLOYMENT_STATUSES = ['ready', 'failed', 'canceled'];
+
     public static function getName(): string
     {
         return 'deletes';
@@ -75,6 +82,7 @@ class Deletes extends Action
             ->inject('executor')
             ->inject('executionRetention')
             ->inject('executionsRetentionCount')
+            ->inject('deploymentRetention')
             ->inject('publisherForDeletes')
             ->inject('publisherForUsage')
             ->inject('bus')
@@ -105,6 +113,7 @@ class Deletes extends Action
         Executor $executor,
         string $executionRetention,
         int $executionsRetentionCount,
+        Retention $deploymentRetention,
         DeletePublisher $publisherForDeletes,
         UsagePublisher $publisherForUsage,
         Bus $bus,
@@ -138,6 +147,7 @@ class Deletes extends Action
             $executor,
             $executionRetention,
             $executionsRetentionCount,
+            $deploymentRetention,
             $publisherForDeletes,
             $publisherForUsage,
             $bus,
@@ -231,6 +241,7 @@ class Deletes extends Action
         Executor $executor,
         string $executionRetention,
         int $executionsRetentionCount,
+        Retention $deploymentRetention,
         DeletePublisher $publisherForDeletes,
         UsagePublisher $publisherForUsage,
         Bus $bus,
@@ -356,7 +367,7 @@ class Deletes extends Action
                 $this->deleteExpiredTransactions($project, $getProjectDB);
                 $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
                 $this->deleteExpiredPushLedger($project, $getProjectDB);
-                $this->deleteOldDeployments($dbForPlatform, $publisherForDeletes, $project, $getProjectDB);
+                $this->deleteOldDeployments($dbForPlatform, $publisherForDeletes, $project, $getProjectDB, $deploymentRetention);
                 $this->updateProcessingMigrations($project, $getProjectDB);
                 break;
             case DELETE_TYPE_REPORT:
@@ -575,7 +586,7 @@ class Deletes extends Action
         );
     }
 
-    private function deleteOldDeployments(Database $dbForPlatform, DeletePublisher $publisherForDeletes, Document $project, callable $getProjectDB): void
+    private function deleteOldDeployments(Database $dbForPlatform, DeletePublisher $publisherForDeletes, Document $project, callable $getProjectDB, Retention $retention): void
     {
         if ($project->getId() === 'console') {
             return;
@@ -586,13 +597,16 @@ class Deletes extends Action
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
-        $removalCallback = function (Document $resource) use ($dbForPlatform, $dbForProject, $publisherForDeletes, $project) {
-            $retention = $resource->getAttribute('deploymentRetention', 0);
+        $removalCallback = function (Document $resource) use ($dbForPlatform, $dbForProject, $publisherForDeletes, $project, $retention) {
+            $requested = (int) $resource->getAttribute('deploymentRetention', 0);
 
-            // 0 means unlimited - never delete
-            if ($retention === 0) {
+            if ($requested === 0 && $retention->days === 0 && $retention->maxDays === 0 && $retention->maxCount === 0) {
                 return;
             }
+
+            $now = new \DateTime();
+            $days = $retention->resolve($requested);
+            $policyCutoff = $days > 0 ? DateTime::addSeconds(clone $now, -86400 * $days) : null;
 
             $kept = [];
             $activeDeploymentId = $resource->getAttribute('deploymentId', '');
@@ -619,28 +633,72 @@ class Deletes extends Action
             );
 
             $queries = [
-                Query::createdBefore(DateTime::addSeconds(new \DateTime(), -1 * $retention * 24 * 60 * 60)),
                 Query::equal('resourceInternalId', [$resource->getSequence()]),
                 Query::equal('resourceType', [$resource->getCollection()]),
-                Query::orderDesc('$createdAt'),
             ];
 
             foreach (\array_unique($kept) as $deploymentId) {
                 $queries[] = Query::notEqual('$id', $deploymentId);
             }
 
-            $this->deleteByGroup(
-                'deployments',
-                $queries,
-                $dbForProject,
-                function (Document $deployment) use ($publisherForDeletes, $project) {
-                    $publisherForDeletes->enqueue(new DeleteMessage(
-                        project: $project,
-                        type: DELETE_TYPE_DOCUMENT,
-                        document: $deployment,
-                    ));
-                }
-            );
+            if ($requested > 0) {
+                $this->retireDeployments(Reason::Requested, [
+                    ...$queries,
+                    Query::createdBefore(DateTime::addSeconds(clone $now, -86400 * $requested)),
+                    Query::orderDesc('$createdAt'),
+                ], $retention, $resource, $dbForProject, $publisherForDeletes, $project);
+            }
+
+            // A clamped request gets its own pass, so an override can tell the policy apart from the request.
+            if ($policyCutoff !== null && $days !== $requested) {
+                $this->retireDeployments(Reason::Policy, [
+                    ...$queries,
+                    Query::createdBefore($policyCutoff),
+                    Query::orderDesc('$createdAt'),
+                ], $retention, $resource, $dbForProject, $publisherForDeletes, $project);
+            }
+
+            if ($retention->maxCount === 0) {
+                return;
+            }
+
+            // The cap keeps the newest finished deployments; a build in progress neither takes a slot nor is retired.
+            $finished = [
+                ...$queries,
+                Query::equal('status', self::FINISHED_DEPLOYMENT_STATUSES),
+            ];
+
+            try {
+                $cutoff = $dbForProject->find('deployments', [
+                    ...$finished,
+                    Query::orderDesc('$createdAt'),
+                    Query::orderDesc('$sequence'),
+                    Query::limit(1),
+                    Query::offset($retention->maxCount),
+                ]);
+            } catch (Throwable $th) {
+                Console::error("Failed to find the deployment count cutoff for {$resource->getCollection()} {$resource->getId()} in project {$project->getId()}: {$th->getMessage()}");
+                return;
+            }
+
+            if (empty($cutoff)) {
+                return;
+            }
+
+            $createdAt = $cutoff[0]->getCreatedAt();
+            $this->retireDeployments(Reason::Count, [
+                ...$finished,
+                Query::or([
+                    Query::lessThan('$createdAt', $createdAt),
+                    Query::and([
+                        Query::equal('$createdAt', [$createdAt]),
+                        Query::lessThanEqual('$sequence', $cutoff[0]->getSequence()),
+                    ]),
+                ]),
+                // Deployments past the age cutoff belong to the age passes, so each one is retired for one reason.
+                ...($policyCutoff !== null ? [Query::greaterThanEqual('$createdAt', $policyCutoff)] : []),
+                Query::orderDesc('$createdAt'),
+            ], $retention, $resource, $dbForProject, $publisherForDeletes, $project);
         };
 
         $this->listByGroup(
@@ -655,6 +713,29 @@ class Deletes extends Action
             [],
             $dbForProject,
             $removalCallback
+        );
+    }
+
+    /**
+     * Retires the deployments of a function or site that match the queries, for one reason.
+     *
+     * @param array<Query> $queries
+     */
+    protected function retireDeployments(Reason $reason, array $queries, Retention $retention, Document $resource, Database $dbForProject, DeletePublisher $publisherForDeletes, Document $project): void
+    {
+        Console::info("Retiring deployments of {$resource->getCollection()} {$resource->getId()} by {$reason->value} retention");
+
+        $this->deleteByGroup(
+            'deployments',
+            $queries,
+            $dbForProject,
+            function (Document $deployment) use ($publisherForDeletes, $project) {
+                $publisherForDeletes->enqueue(new DeleteMessage(
+                    project: $project,
+                    type: DELETE_TYPE_DOCUMENT,
+                    document: $deployment,
+                ));
+            }
         );
     }
 
