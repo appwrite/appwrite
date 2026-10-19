@@ -72,20 +72,20 @@ final class ServerTelemetryTest extends TestCase
         // than the worker's.
         $consumers = [
             'database_shard_1' => new ServerTelemetryMultiMessageConsumer([
-                new Message([
+                (new Message([
                     'pid' => 'shard-1-pid',
                     'queue' => 'database_shard_1',
                     'timestamp' => time() - 120,
                     'payload' => [],
-                ]),
+                ]))->setSize(512),
             ]),
             'database_shard_2' => new ServerTelemetryMultiMessageConsumer([
-                new Message([
+                (new Message([
                     'pid' => 'shard-2-pid',
                     'queue' => 'database_shard_2',
                     'timestamp' => time() - 1,
                     'payload' => [],
-                ]),
+                ]))->setSize(2048),
             ]),
         ];
         $adapter = new ServerTelemetryAdapter(
@@ -126,6 +126,11 @@ final class ServerTelemetryTest extends TestCase
         /** @var object{attributes: array<int, array<string, mixed>>} $duration */
         $duration = $telemetry->histograms['messaging.process.duration'];
         $this->assertSame($expected, $duration->attributes);
+
+        /** @var object{values: array<int, float|int>, attributes: array<int, array<string, mixed>>} $size */
+        $size = $telemetry->histograms['messaging.process.message.size'];
+        $this->assertSame([512, 2048], $size->values);
+        $this->assertSame($expected, $size->attributes);
     }
 
     public function testRecordsQueueDepth(): void
@@ -337,7 +342,7 @@ final class ServerTelemetryAdapter extends Adapter
             $this->queue = $queue;
             while (($message = ($consumer->receive($queue, 0)[0] ?? null)) instanceof Message) {
                 $this->context = new Container($this->resources());
-                $this->process($message, $messageCallback, $successCallback, $errorCallback);
+                $this->processFrom($message, $messageCallback, $successCallback, $errorCallback, $queue, $consumer);
             }
         }
     }
