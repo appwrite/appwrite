@@ -24,13 +24,13 @@ const FIREWALL_ACTIONS = [
   { label: 'Redirect', icon: ArrowRight },
 ] as const
 
-function capabilityIcon(title: string): ProductIcon | null {
+export function capabilityIcon(title: string): ProductIcon | null {
   const id = CAPABILITY_PRODUCT[title]
   if (!id) return null
   return PRODUCT_NAV_REGISTRY[id].icon
 }
 
-function StageMark({ index, group }: { index: string; group: SolutionCapabilityGroup }) {
+export function StageMark({ index, group }: { index: string; group: SolutionCapabilityGroup }) {
   const t = useT()
   const Icon = group.icon
 

@@ -15,6 +15,7 @@ import { ProductToneBackdrop } from '@/components/pages/products/_components/Pro
 import { HeroVisual } from '@/components/pages/solutions/HeroVisual'
 import {
   CapabilityGroups,
+  CapabilityPathSection,
   CapabilityStages,
   Consolidation,
   SolutionLogoCloud,
@@ -171,6 +172,8 @@ export function View({ page }: { page: SolutionPageContent }) {
         <div className="mt-14">
           {page.capabilities.layout === 'stages' ? (
             <CapabilityStages groups={page.capabilities.groups} />
+          ) : page.capabilities.layout === 'path' ? (
+            <CapabilityPathSection groups={page.capabilities.groups} />
           ) : (
             <CapabilityGroups groups={page.capabilities.groups} />
           )}

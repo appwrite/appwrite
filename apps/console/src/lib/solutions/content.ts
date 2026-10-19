@@ -103,8 +103,11 @@ export type SolutionPageContent = {
     eyebrow: string
     title: string
     description: string
-    /** `stages` lays the first group across the row, then the rest beside each other. */
-    layout?: 'columns' | 'stages'
+    /**
+     * `stages` is the product journey (backend, site, firewall).
+     * `path` is a pilot that can move onto Enterprise.
+     */
+    layout?: 'columns' | 'stages' | 'path'
     groups: readonly SolutionCapabilityGroup[]
   }
   faq: {
@@ -607,6 +610,7 @@ export const innovationTeamsPage = {
     title: 'Start small. Keep the APIs.',
     description:
       'Build on Cloud. Move to Enterprise terms when the company is ready to own the product.',
+    layout: 'path',
     groups: [
       {
         title: 'Pilot',

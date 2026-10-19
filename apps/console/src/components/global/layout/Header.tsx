@@ -154,17 +154,17 @@ function getDefaultMarketingHeaderNav(
       menu: 'products',
     },
     {
+      label: copy.solutions,
+      href: '/startups',
+      menu: 'solutions',
+    },
+    {
       label: copy.docs,
       href: '/docs',
     },
     {
       label: copy.pricing,
       href: '/pricing',
-    },
-    {
-      label: copy.solutions,
-      href: '/startups',
-      menu: 'solutions',
     },
     {
       label: copy.customers,

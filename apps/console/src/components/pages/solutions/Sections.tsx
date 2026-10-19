@@ -10,6 +10,7 @@ import { PLATFORM_PRODUCTS } from '@/lib/alternatives/platform'
 import { enterpriseVendorSprawl } from '@/lib/enterprise/content'
 import { PRODUCT_NAV_REGISTRY } from '@/lib/products/registry'
 import { CapabilityJourney } from '@/components/pages/solutions/CapabilityJourney'
+import { CapabilityPath } from '@/components/pages/solutions/CapabilityPath'
 import type { SolutionCapabilityGroup, SolutionFeature } from '@/lib/solutions/content'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -281,4 +282,9 @@ export function CapabilityGroups({ groups }: { groups: readonly SolutionCapabili
 /** First stage spans the row. Later stages sit beside it, wide enough for what they hold. */
 export function CapabilityStages({ groups }: { groups: readonly SolutionCapabilityGroup[] }) {
   return <CapabilityJourney groups={groups} />
+}
+
+/** A pilot, the demo, then the same APIs on Enterprise. */
+export function CapabilityPathSection({ groups }: { groups: readonly SolutionCapabilityGroup[] }) {
+  return <CapabilityPath groups={groups} />
 }
