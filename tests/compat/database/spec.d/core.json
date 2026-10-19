@@ -1003,7 +1003,12 @@
       "covers": [
         "Utopia\\Database\\Database::find",
         "Utopia\\Database\\Trait\\Documents::find"
-      ]
+      ],
+      "mask": {
+        "paths": ["/*/$document/$distance"],
+        "reason": "pgvector computes distances in float32 with the host CPU's vector instructions, so the last digits change with the machine that recorded them; PHP and Rust still compare exactly",
+        "tolerance": 0.0001
+      }
     },
     "database.find_one": {
       "doc": "$db->findOne(...) with named arguments (README: database, Values)",

@@ -205,6 +205,13 @@ pub struct Mask {
     /// `distinct()` read without an order).
     #[serde(default)]
     pub rows: bool,
+    /// Instead of hiding the values at `paths`, accept a recorded float
+    /// within this relative tolerance of the result: for values the engine
+    /// computes with the host CPU's vector instructions (pgvector distances),
+    /// which change with the machine that recorded them. PHP and Rust are
+    /// still compared exactly.
+    #[serde(default)]
+    pub tolerance: Option<f64>,
 }
 
 #[derive(Debug, Deserialize)]
