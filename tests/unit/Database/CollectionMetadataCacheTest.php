@@ -240,4 +240,85 @@ final class CollectionMetadataCacheTest extends TestCase
             \putenv('_APP_DATABASE_SHARED_TABLES');
         }
     }
+
+    public function testHostIsolationForIdenticalDatabaseAndCollection(): void
+    {
+        $conn1 = new PDO('sqlite::memory:', options: [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+        $adapter1 = new class ($conn1) extends SQLite {
+            #[\Override]
+            public function hostname(): string
+            {
+                return 'host_alpha';
+            }
+        };
+
+        $conn2 = new PDO('sqlite::memory:', options: [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+        $adapter2 = new class ($conn2) extends SQLite {
+            #[\Override]
+            public function hostname(): string
+            {
+                return 'host_beta';
+            }
+        };
+
+        $db1 = new Database($adapter1, $this->cache);
+        $db1->setDatabase('shared_db')->setNamespace('ns')->create();
+        $db1->createCollection(Collection::create(id: 'users', attributes: [Attribute::string('name', size: 50)]));
+
+        $db2 = new Database($adapter2, $this->cache);
+        $db2->setDatabase('shared_db')->setNamespace('ns')->create();
+        $db2->createCollection(Collection::create(id: 'users', attributes: [Attribute::string('email', size: 100)]));
+
+        $col1 = $db1->findCollection('users');
+        $col2 = $db2->findCollection('users');
+
+        $this->assertNotNull($col1);
+        $this->assertNotNull($col2);
+        $this->assertSame(2, Database::getCollectionMemoCount(), 'Separate hosts must have isolated memo entries');
+        $this->assertCount(1, $col1->attributes());
+        $this->assertSame('name', $col1->attributes()[0]->key);
+        $this->assertCount(1, $col2->attributes());
+        $this->assertSame('email', $col2->attributes()[0]->key);
+    }
+
+    public function testGenerationChangeDuringReadPreventsStaleMemoization(): void
+    {
+        $this->database->createCollection(
+            Collection::create(
+                id: 'config',
+                attributes: [Attribute::string('setting', size: 64)],
+            )
+        );
+
+        $this->assertSame(0, Database::getCollectionMemoCount());
+
+        // Create an instrumented subclass where metadata lookup triggers a generation increment
+        $racyDb = new class ($this->database->getAdapter(), $this->cache) extends Database {
+            public bool $triggerRace = true;
+
+            #[\Override]
+            public function getDocument(string $collection, string $id, array $queries = [], bool $forUpdate = false): \Utopia\Database\Document
+            {
+                $doc = parent::getDocument($collection, $id, $queries, $forUpdate);
+                if ($this->triggerRace && $collection === self::METADATA) {
+                    // Simulate a cross-node update purging the cache during the metadata fetch
+                    $this->triggerRace = false;
+                    $this->purgeCachedCollection('config');
+                }
+                return $doc;
+            }
+        };
+        $racyDb->setDatabase('test_db')->setNamespace('ns');
+
+        Database::resetCollectionMemo();
+
+        $collection = $racyDb->findCollection('config');
+        $this->assertNotNull($collection);
+        $this->assertSame(0, Database::getCollectionMemoCount(), 'Must not memoize when generation changes during read');
+
+        // Subsequent lookup with stable generation is safely memoized
+        $stable = $racyDb->findCollection('config');
+        $this->assertNotNull($stable);
+        $this->assertSame(1, Database::getCollectionMemoCount(), 'Subsequent stable read memoizes definition');
+    }
 }

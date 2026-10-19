@@ -54,8 +54,9 @@ class Database extends UtopiaDatabase
             return parent::findCollection($collection);
         }
 
-        $cacheKey = $this->getCollectionMetadataCacheKey($collection);
+        $cacheKey = $this->getProcessCollectionMemoKey($collection);
         $now = \microtime(true);
+        [$collectionKey, $documentKey] = $this->getCacheBaseKeys(self::METADATA, $collection);
 
         if (isset(self::$collectionMemo[$cacheKey])) {
             $entry = self::$collectionMemo[$cacheKey];
@@ -66,7 +67,6 @@ class Database extends UtopiaDatabase
             }
 
             // Outside TTL window: check generation with shared cache to detect cross-node updates.
-            [$collectionKey, $documentKey] = $this->getCacheBaseKeys(self::METADATA, $collection);
             $currentVersion = $this->resolveCacheGeneration($documentKey);
 
             if ($currentVersion === $entry['version']) {
@@ -75,22 +75,38 @@ class Database extends UtopiaDatabase
             }
         }
 
+        // Capture generation before reading metadata to detect concurrent schema updates
+        $versionBefore = $this->resolveCacheGeneration($documentKey);
+
         $definition = parent::findCollection($collection);
 
         if ($definition !== null) {
-            [$collectionKey, $documentKey] = $this->getCacheBaseKeys(self::METADATA, $collection);
-            $version = $this->resolveCacheGeneration($documentKey);
+            $versionAfter = $this->resolveCacheGeneration($documentKey);
 
-            self::$collectionMemo[$cacheKey] = [
-                'collection' => clone $definition,
-                'version' => $version,
-                'validatedAt' => $now,
-            ];
+            // Only memoize if generation remained stable during lookup to avoid storing
+            // a stale schema under a newly incremented generation token.
+            if ($versionBefore === $versionAfter) {
+                self::$collectionMemo[$cacheKey] = [
+                    'collection' => clone $definition,
+                    'version' => $versionAfter,
+                    'validatedAt' => $now,
+                ];
+            }
 
             return clone $definition;
         }
 
         return null;
+    }
+
+    /**
+     * Build process-local cache key including adapter hostname to isolate schemas across hosts.
+     */
+    protected function getProcessCollectionMemoKey(string $collection): string
+    {
+        $host = $this->getHostname() ?? 'default';
+
+        return $host . '::' . $this->getCollectionMetadataCacheKey($collection);
     }
 
     /**
@@ -111,7 +127,7 @@ class Database extends UtopiaDatabase
 
         if ($collectionId === self::METADATA && $id !== null) {
             self::$localSequence++;
-            self::invalidateCollectionMemo($this->getCollectionMetadataCacheKey($id));
+            self::invalidateCollectionMemo($this->getProcessCollectionMemoKey($id));
         }
 
         return $result;
@@ -129,7 +145,7 @@ class Database extends UtopiaDatabase
         if ($collection === self::METADATA) {
             self::resetCollectionMemo();
         } else {
-            self::invalidateCollectionMemo($this->getCollectionMetadataCacheKey($collection));
+            self::invalidateCollectionMemo($this->getProcessCollectionMemoKey($collection));
         }
     }
 
