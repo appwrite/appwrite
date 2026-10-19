@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-19T11:49:00Z",
+  "updated": "2026-10-19T12:29:00Z",
   "tasks": [
     {
       "id": "signatures",
@@ -8,6 +8,14 @@
       "status": "progress",
       "updated": "2026-10-17T19:50:00Z",
       "note": "An optional PHP parameter becomes an explicit Rust argument, never a second method or a with_* builder. registry is converted in the working tree (set and get take fresh; set_fresh and get_fresh are gone), and CONVERSION.md gets the rule in §4 and on the checklist. Not committed yet; the other crates follow."
+    },
+    {
+      "id": "php-8511",
+      "title": "php-std: PHP 8.5.11 changed round()",
+      "area": "Libraries",
+      "status": "todo",
+      "updated": "2026-10-19T12:29:00Z",
+      "note": "main's 2f8ca3fc1d bumps appwrite/base to 2.2.1, which brings PHP 8.5.11. php-std follows PHP 8.5.10, where round(4503599627370496.0) is 4503599627370497 (as in Rust); 8.5.11 returns 4503599627370496. CI's php-std fuzz finds that input. Port 8.5.11's round() edge handling and check the other 8.5.11 changes php-std reproduces."
     },
     {
       "id": "audit-order",
