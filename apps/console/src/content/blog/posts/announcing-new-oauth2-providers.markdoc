@@ -276,6 +276,8 @@ app.get('/oauth/success', async (req, res) => {
 });
 ```
 
+> In production, pass a random `state` to `createOAuth2Token`, store it in a cookie, and check it in this callback so a forged success link can't sign users into someone else's account. See the [server-side OAuth2 docs](/docs/products/auth/server-side-rendering#oauth2).
+
 From here, every request that needs the user creates a session client from that cookie, as shown in the [session client docs](/docs/products/auth/server-side-rendering#session-client).
 
 ## Sign in from the browser
@@ -307,4 +309,4 @@ All six providers are live on Appwrite Cloud now. Enable the ones your users alr
 - [OAuth2 login](/docs/products/auth/oauth2)
 - [Server-side OAuth2 login](/docs/products/auth/server-side-rendering#oauth2)
 - [Identities](/docs/products/auth/identities)
-- [Sign up for Appwrite Cloud](/sign-in)
+- [Sign up for Appwrite Cloud](/sign-up)
