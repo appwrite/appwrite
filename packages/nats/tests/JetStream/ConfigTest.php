@@ -107,8 +107,7 @@ final class ConfigTest extends TestCase
 
     public function testMessageSchedulesAreSentOnlyWhenAllowed(): void
     {
-        // Absent rather than false: a server before 2.12 refuses a config naming a
-        // field it does not know, so a stream that does not schedule must not say so.
+        // Absent rather than false: a server before 2.12 refuses fields it doesn't know.
         $this->assertArrayNotHasKey('allow_msg_schedules', (new StreamConfig(name: 'S'))->toArray());
 
         $config = new StreamConfig(name: 'S', allowMsgSchedules: true);
@@ -137,8 +136,7 @@ final class ConfigTest extends TestCase
 
     public function testAFlowControlAckPolicyIsReadBackAsItself(): void
     {
-        // Read back as Explicit, a durable source's consumer would be rewritten into
-        // one the server refuses to source through.
+        // Read back as Explicit, the consumer would be rewritten into one the server won't source through.
         $this->assertSame(AckPolicy::FlowControl, ConsumerConfig::fromArray(['ack_policy' => 'flow_control'])->ackPolicy);
     }
 }

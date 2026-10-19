@@ -79,24 +79,16 @@ use Utopia\Queue\Queue;
  * publish. Its commands connection is opened lazily on the first ack, so a publisher
  * never pays for a socket it will not use.
  *
- * With $delayedRetries a rejected message does not wait out its backoff on the work
- * consumer. A NAK with a delay leaves it in the consumer's pending set, where it holds
- * a maxAckPending slot until it is redelivered, so a dependency that fails every job
- * fills every slot with retries that are asleep and the queue stops. Instead the bytes
- * are scheduled onto a per-queue delay stream (ADR-51, `Nats-Schedule: @at …`) and the
- * original is acknowledged. When the schedule fires the server writes the message to
- * the delay stream's due subject, and the work stream sources it back onto the work
- * subject, through a durable consumer on the delay stream. The attempts the job has
- * spent travel in a header, because every copy starts JetStream's own count at one.
+ * With $delayedRetries a rejected message waits out its backoff on a per-queue delay
+ * stream (ADR-51 schedules) instead of holding a maxAckPending slot as a delayed NAK.
+ * The work stream sources fired schedules back; the attempts spent travel in a header.
  *
  *   Q_<NAME>        work stream; sources q.<name>.due from Q_<NAME>_DELAY as q.<name>.normal
  *   Q_<NAME>_DELAY  q.<name>.delay.<work seq> (one pending schedule per work message)
  *                   and q.<name>.due (what the schedules write when they fire)
  *
- * Two server rules shape it. A stream that accepts schedules may not use discard new,
- * so the schedules cannot live on a work stream that is bounded for backpressure; and a
- * schedule's target must be a subject of its own stream, so the message comes back by
- * sourcing rather than by targeting the work subject directly.
+ * Schedules can't live on the work stream: schedule streams refuse discard new, and a
+ * schedule may only target its own stream's subjects.
  */
 class Nats implements Synchronous, Consumer, Bounded
 {
@@ -110,24 +102,20 @@ class Nats implements Synchronous, Consumer, Bounded
     private const string CONSUMER_RETRY = 'retry';
     private const string CONTENT_TYPE = 'Content-Type';
 
-    // Delayed retries: the delay stream, its subjects, and the durable consumer the work
-    // stream sources it through. See the class docblock.
+    // Delayed retries; see the class docblock.
     private const string DELAY_STREAM_SUFFIX = '_DELAY';
     private const string SUBJECT_DELAY = 'delay';
     private const string SUBJECT_DUE = 'due';
     private const string SUBJECT_SOURCING = 'sourcing';
     private const string CONSUMER_SOURCE = 'source';
 
-    // Deliveries a job had before the copy carrying this header was scheduled. JetStream
-    // counts deliveries per stored message, and a delayed retry is a new one.
+    // Deliveries before this copy: each delayed retry restarts JetStream's count.
     private const string HEADER_ATTEMPTS = 'Utopia-Queue-Attempts';
 
-    // How long a fired retry may wait on the delay stream, past its own backoff, for a
-    // work stream that is full (discard new) to take it. Past this it is discarded.
+    // How long a fired retry may wait for a full work stream before it is discarded.
     private const float DELAY_GRACE = 86_400.0;
 
-    // The flow-control consumer the work stream sources through. JetStream requires a
-    // positive max_ack_pending and fixes the heartbeat at one second.
+    // JetStream requires a positive max_ack_pending here and fixes the heartbeat at 1s.
     private const int SOURCE_MAX_ACK_PENDING = 1000;
     private const float SOURCE_HEARTBEAT = 1.0;
 
@@ -203,9 +191,7 @@ class Nats implements Synchronous, Consumer, Bounded
     private array $spareDelivery = [];
 
     /**
-     * @var array<string, bool> per queue, whether a rejected message is scheduled onto
-     *      the delay stream rather than NAK'd: only when $delayedRetries is set and the
-     *      delay stream, its consumer and the work stream's source are all in place
+     * @var array<string, bool> per queue, whether rejects are scheduled instead of NAK'd
      */
     private array $delayed = [];
 
@@ -340,14 +326,9 @@ class Nats implements Synchronous, Consumer, Bounded
      *        deliveries without running: a fleet scaled down 8 -> 1 lost messages that
      *        way. The delay has to outlast the stopping workers' last fetch. 0
      *        redelivers at once.
-     * @param bool $delayedRetries Wait out a rejected message's backoff on the queue's
-     *        delay stream instead of on the work consumer, so a retry holds no
-     *        maxAckPending slot while it waits (see the class docblock). Requires
-     *        $backoff, a NATS server of 2.14 or later (message schedules came in 2.12,
-     *        the flow-control consumer a durable source reads through in 2.14), and
-     *        every broker that provisions the queue to set it: one without it rewrites
-     *        the work stream, and keeps the delay source only because it finds it there.
-     *        Off, nothing changes. A schedule that cannot be stored falls back to the NAK.
+     * @param bool $delayedRetries Wait out a rejected message's backoff on the delay stream
+     *        so it holds no maxAckPending slot. Requires $backoff, NATS 2.14+, and the flag on
+     *        every broker that provisions the queue. An unstorable schedule falls back to the NAK.
      */
     public function __construct(
         private readonly NatsConnection|\Closure $source,
@@ -428,8 +409,7 @@ class Nats implements Synchronous, Consumer, Bounded
             throw new \InvalidArgumentException('inactiveThreshold must be a positive number of seconds, or null to keep durable consumers forever');
         }
         if ($this->delayedRetries && $this->backoff === null) {
-            // Without a backoff a rejected message is redelivered at once, so it has
-            // nothing to wait out and no slot is held long enough to be worth freeing.
+            // Without a backoff nothing waits, so there is no slot to free.
             throw new \InvalidArgumentException('delayedRetries requires a backoff: it is the backoff a retry waits out on the delay stream');
         }
     }
@@ -1362,9 +1342,7 @@ class Nats implements Synchronous, Consumer, Bounded
         }
         unset($this->inFlight[$pid]);
 
-        // Every delivery the job has had, this one included. A delayed retry is a new
-        // stored message whose own count starts again at one, so the deliveries of the
-        // copies before it come from the header it was scheduled with.
+        // This delivery plus the earlier copies' deliveries, read from the header.
         $attempts = $this->priorAttempts($jsMessage) + $jsMessage->metadata()->numDelivered;
 
         // Read before the closure: the verdict belongs to this delivery, and the
@@ -1408,21 +1386,9 @@ class Nats implements Synchronous, Consumer, Bounded
     /**
      * Wait out a retry's backoff on the delay stream, and give its slot back now.
      *
-     * The bytes go over as they arrived, with a schedule to write them to the due
-     * subject at the time the NAK would have redelivered them, and the original is
-     * acknowledged only once the schedule is stored. A schedule the server refuses
-     * leaves the original untouched, and the caller falls back to the NAK.
-     *
-     * Keyed on the original's work-stream sequence, twice over, so a reject that runs
-     * again for the same stored message adds no second retry. The subject carries it,
-     * and the server keeps one schedule per subject (it rolls each up); the message id
-     * carries it, so a schedule that has already fired is recognised for as long as the
-     * delay stream remembers ids. That is the case of an ack lost after the schedule
-     * was stored: the original comes back after ackWait, fails again, and is rejected
-     * into the retry that already exists.
-     *
-     * On the commands connection, inside the caller's lock: the schedule is a publish
-     * that has to be confirmed before the ack, and both are this delivery's to send.
+     * The original is acked only once the schedule is stored; a refused schedule leaves it
+     * for the NAK. Keyed on the work-stream sequence, in both the subject and the msg id, so a
+     * reject repeated after a lost ack adds no second retry.
      */
     private function schedule(Queue $queue, JetStreamMessage $jsMessage, string $pid, int $attempts, float $delay): bool
     {
@@ -1787,15 +1753,13 @@ class Nats implements Synchronous, Consumer, Bounded
             ? $this->duplicateWindow
             : min($this->duplicateWindow, $maxAge);
 
-        // Created before the work stream that sources from it, so the source is never
-        // set up against a stream that is not there yet.
+        // Before the work stream, so its source never points at a missing stream.
         if ($this->delayedRetries) {
             $this->provisionDelay($queue, $key);
         }
 
-        // A broker without the flag keeps a delay source it finds rather than writing the
-        // stream without it: one process of a fleet that is part-way through enabling it,
-        // or that has turned it off, would otherwise strand every retry already waiting.
+        // Kept even without the flag: dropping it would strand retries already waiting on a
+        // fleet that is part-way through turning it on or off.
         $delaySource = $this->delayedRetries || array_any(
             $existing->sources ?? [],
             fn (StreamSource $source): bool => $source->name === $this->delayStream($queue),
@@ -1866,20 +1830,9 @@ class Nats implements Synchronous, Consumer, Bounded
     /**
      * The delay stream and the durable consumer the work stream sources it through.
      *
-     * Limits retention, because a schedule is consumed by the server, not by a
-     * consumer, and discard old, because the server refuses schedules with discard new.
-     * It is sized by time alone: a schedule waits out at most the longest backoff entry,
-     * and what it writes when it fires stays until the source has copied it, which a
-     * work stream refusing writes (full, discard new) delays. DELAY_GRACE is how long
-     * that may last before the retry is discarded.
-     *
-     * The consumer is what keeps the source's place. Without one the server creates an
-     * ephemeral consumer and, after a restart or a leader change, finds where to resume
-     * by scanning the work stream for the last message it sourced. The work stream
-     * deletes what it has delivered, so that scan finds the oldest retry still pending,
-     * and every retry sourced after it and already acknowledged is copied again --
-     * reproduced against 2.14.8 with a single server restart. A flow-control consumer
-     * keeps the position on the delay stream, replicated with it.
+     * Limits retention and discard old, because the server consumes schedules and refuses
+     * them with discard new. The durable consumer keeps the source's place: an ephemeral
+     * one rescans the work stream after a restart and copies acked retries again.
      */
     private function provisionDelay(Queue $queue, string $key): void
     {
@@ -1898,13 +1851,10 @@ class Nats implements Synchronous, Consumer, Bounded
             storage: $this->storage,
             replicas: $this->replicas,
             discard: DiscardPolicy::Old,
-            // A reject repeated for an original whose ack was lost has to find its
-            // schedule's id here. The original is redelivered once its ack timer runs
-            // out -- at most the longest backoff entry -- and twice that gives the
-            // redelivered handler as long again to fail.
+            // Long enough for a reject repeated after a lost ack to find its schedule's id:
+            // twice the longest backoff entry.
             duplicateWindow: max($this->duplicateWindow, 2 * $longest),
-            // Stated rather than left to the server, which turns it on for schedules
-            // anyway: each schedule rolls up its own subject.
+            // The server turns this on for schedules anyway; stated so the config matches.
             allowRollup: true,
             metadata: [self::METADATA_IDENTITY => $key],
             allowMsgSchedules: true,
@@ -1981,10 +1931,8 @@ class Nats implements Synchronous, Consumer, Bounded
     }
 
     /**
-     * Whether the owner provisioned this queue for delayed retries: a delay stream with
-     * its source consumer, and a work stream sourcing through it. Anything less and a
-     * schedule would be stored where nothing brings it back, so the broker NAKs instead,
-     * and says so.
+     * Whether the delay stream, its consumer and the work stream's source are all in place.
+     * Otherwise a schedule would be stranded, so the broker NAKs instead.
      */
     private function adoptDelay(Queue $queue, ?StreamConfig $work): bool
     {

@@ -15,8 +15,7 @@ final class StreamConfig
      * @param string|null $compression Compression algorithm: "none" or "s2"
      * @param float|null $subjectDeleteMarkerTtl Delete-marker TTL in seconds (ADR-43)
      * @param bool $allowMsgSchedules Accept Nats-Schedule messages (ADR-51, server 2.12+).
-     *        The server refuses it with discard new, on a mirror or alongside sources,
-     *        turns on allowRollup itself, and never lets it be turned off again.
+     *        Refused with discard new, on a mirror or with sources; can't be turned off.
      */
     public function __construct(
         public readonly string $name,

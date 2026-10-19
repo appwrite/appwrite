@@ -364,9 +364,7 @@ final class NatsBrokerTest extends TestCase
 
     public function testADelayedRetryFreesItsInFlightSlotForTheNextOne(): void
     {
-        // One slot, as above, but the failure is an ordinary one. A NAK keeps it in the
-        // consumer's pending set for the whole 30s backoff; scheduled onto the delay
-        // stream, the original is acknowledged and the slot is free at once.
+        // An ordinary failure: a delayed NAK would hold the one slot for the whole 30s backoff.
         $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
         $broker = new Nats(
             Connection::connect($url),
@@ -447,8 +445,7 @@ final class NatsBrokerTest extends TestCase
 
     public function testADelayedRetryIsDeadLetteredOnceItsAttemptsAreSpent(): void
     {
-        // Every copy starts JetStream's count at one, so only the header can say a copy
-        // is the last attempt: without it the job would be rescheduled forever.
+        // Only the header marks the last attempt; without it the job would reschedule forever.
         $broker = new Nats(
             Connection::connect(getenv('NATS_URL') ?: 'nats://127.0.0.1:14225'),
             ackWait: 1.0,
@@ -481,9 +478,8 @@ final class NatsBrokerTest extends TestCase
 
     public function testARetryWhoseAckWasLostIsScheduledOnce(): void
     {
-        // The schedule is stored and the ack of the original is lost on the way out, so
-        // the original comes back after ackWait and fails again. Its reject has to find
-        // the schedule already made -- by then fired, so only its id can tell.
+        // The ack is lost after the schedule is stored, so the redelivered original's reject
+        // has to find the already-fired schedule by its id.
         $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
         $transport = new TcpTransport();
         $fault = $this->createStub(Transport::class);
@@ -533,10 +529,8 @@ final class NatsBrokerTest extends TestCase
             $broker->reject($queue, $original);
             $this->assertFalse($state->fail, 'the ack was sent, and lost');
 
-            // The retry fires at 2s and the original is redelivered at 2s. The original
-            // is rejected again only after the retry has fired, so the second reject
-            // cannot be absorbed by replacing a schedule that is still waiting. A second
-            // schedule would be due 4s later, inside this window.
+            // The second reject comes after the retry fired, so only the id can absorb it;
+            // a second schedule would be due inside this window.
             $retries = [];
             $redeliveries = 0;
             $deadline = microtime(true) + 10.0;
@@ -600,9 +594,7 @@ final class NatsBrokerTest extends TestCase
 
     public function testABrokerWithoutDelayedRetriesKeepsTheDelaySource(): void
     {
-        // A fleet part-way through enabling the flag, or turning it off: a process
-        // without it rewrites the work stream, and the retries already waiting must
-        // still come back.
+        // A process without the flag rewrites the work stream; waiting retries must still return.
         $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
         $enabled = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 5, backoff: [1.0, 3.0], delayedRetries: true);
         $disabled = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 5, backoff: [1.0, 3.0]);
@@ -629,9 +621,8 @@ final class NatsBrokerTest extends TestCase
 
     public function testARequireBrokerNaksWhenTheWorkStreamDoesNotSourceTheDelayStream(): void
     {
-        // What a broker from before delayed retries leaves behind: the delay stream is
-        // there, but its own provisioning rewrote the work stream without the source. A
-        // schedule stored there would never come back.
+        // An older broker rewrote the work stream without the source, so a schedule
+        // stored now would never come back.
         $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
         $owner = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 3, backoff: [1.0], delayedRetries: true);
         $admin = Connection::connect($url);
