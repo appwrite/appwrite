@@ -207,6 +207,64 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(400, $unknown['headers']['status-code']);
     }
 
+    /**
+     * Full-text search is Query.search('search', term) inside queries. The term
+     * filters the seeded ladder and custom profiles; other attributes are rejected.
+     */
+    public function testListProfilesBySearch(): void
+    {
+        $matchName = 'zephyrprofile' . \uniqid();
+        $otherName = 'quasarprofile' . \uniqid();
+
+        $match = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->headers(), [
+            'name' => $matchName,
+            'videoBitRate' => 731,
+            'audioBitRate' => 48,
+            'width' => 426,
+            'height' => 240,
+        ]);
+        $this->assertEquals(201, $match['headers']['status-code']);
+
+        $other = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->headers(), [
+            'name' => $otherName,
+            'videoBitRate' => 732,
+            'audioBitRate' => 48,
+            'width' => 426,
+            'height' => 240,
+        ]);
+        $this->assertEquals(201, $other['headers']['status-code']);
+
+        $found = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers(), [
+            'queries' => [
+                Query::search('search', $matchName)->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $found['headers']['status-code']);
+        $foundIds = \array_column($found['body']['profiles'], '$id');
+        $this->assertContains($match['body']['$id'], $foundIds);
+        $this->assertNotContains($other['body']['$id'], $foundIds);
+        $this->assertEquals([$matchName], \array_column($found['body']['profiles'], 'name'));
+
+        $missing = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers(), [
+            'queries' => [
+                Query::search('search', 'nomatchprofile' . \uniqid())->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $missing['headers']['status-code']);
+        $this->assertEquals(0, $missing['body']['total']);
+        $this->assertSame([], $missing['body']['profiles']);
+
+        $rejected = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->headers(), [
+            'queries' => [
+                Query::equal('name', [$matchName])->toString(),
+            ],
+        ]);
+        $this->assertEquals(400, $rejected['headers']['status-code']);
+
+        $this->client->call(Client::METHOD_DELETE, '/project/profiles/' . $match['body']['$id'], $this->headers());
+        $this->client->call(Client::METHOD_DELETE, '/project/profiles/' . $other['body']['$id'], $this->headers());
+    }
+
     public function testCreateProfileCodecs(): void
     {
         $omit = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->headers(), [
@@ -404,6 +462,52 @@ final class VideosCustomServerTest extends Scope
             ],
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    /**
+     * Full-text search is Query.search('search', term) inside queries. The index
+     * covers the file id and the display name, so a unique name returns only that row.
+     */
+    public function testListVideosBySearch(): void
+    {
+        $alphaName = 'zephyrvideo' . \uniqid();
+        $betaName = 'quasarvideo' . \uniqid();
+        $bucketId = $this->getVideoBucket()['$id'];
+        $fileId = $this->getVideoFile()['$id'];
+
+        $alpha = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
+            'bucketId' => $bucketId,
+            'fileId' => $fileId,
+            'name' => $alphaName,
+        ]);
+        $this->assertEquals(201, $alpha['headers']['status-code']);
+
+        $beta = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
+            'bucketId' => $bucketId,
+            'fileId' => $fileId,
+            'name' => $betaName,
+        ]);
+        $this->assertEquals(201, $beta['headers']['status-code']);
+
+        $found = $this->client->call(Client::METHOD_GET, '/videos', $this->headers(), [
+            'queries' => [
+                Query::search('search', $alphaName)->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $found['headers']['status-code']);
+        $foundIds = \array_column($found['body']['videos'], '$id');
+        $this->assertContains($alpha['body']['$id'], $foundIds);
+        $this->assertNotContains($beta['body']['$id'], $foundIds);
+        $this->assertEquals([$alphaName], \array_column($found['body']['videos'], 'name'));
+
+        $missing = $this->client->call(Client::METHOD_GET, '/videos', $this->headers(), [
+            'queries' => [
+                Query::search('search', 'nomatchvideo' . \uniqid())->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $missing['headers']['status-code']);
+        $this->assertEquals(0, $missing['body']['total']);
+        $this->assertSame([], $missing['body']['videos']);
     }
 
     /**
