@@ -31,11 +31,21 @@ WORKDIR /usr/src/code
 
 # Entire serves git only through its own remote helper, which git runs from
 # the PATH for entire:// remotes; the Builds worker clones Entire repositories with it.
+# Bump the checksums with the version, from the release's checksums.txt.
 ARG TARGETARCH
 ARG ENTIRE_CLI_VERSION=0.11.5
-RUN curl -fsSL "https://github.com/entireio/cli/releases/download/v${ENTIRE_CLI_VERSION}/entire_linux_${TARGETARCH}.tar.gz" \
-    | tar -xz -C /usr/local/bin git-remote-entire && \
-    chmod +x /usr/local/bin/git-remote-entire
+ARG ENTIRE_CLI_SHA256_AMD64=c20476c4ba9689b1800fe8d590601792e2b6f3c89d03a95280d88484029d7eba
+ARG ENTIRE_CLI_SHA256_ARM64=bcd3b4997ef1ed191d38c6d98586cf4b1eafcce11d9adba9e06ec670bb1dbdf2
+RUN case "${TARGETARCH}" in \
+        amd64) checksum="${ENTIRE_CLI_SHA256_AMD64}" ;; \
+        arm64) checksum="${ENTIRE_CLI_SHA256_ARM64}" ;; \
+        *) echo "Unsupported architecture for the Entire CLI: ${TARGETARCH}" >&2; exit 1 ;; \
+    esac && \
+    curl -fsSL -o /tmp/entire.tar.gz "https://github.com/entireio/cli/releases/download/v${ENTIRE_CLI_VERSION}/entire_linux_${TARGETARCH}.tar.gz" && \
+    echo "${checksum}  /tmp/entire.tar.gz" | sha256sum -c - && \
+    tar -xzf /tmp/entire.tar.gz -C /usr/local/bin git-remote-entire && \
+    chmod +x /usr/local/bin/git-remote-entire && \
+    rm /tmp/entire.tar.gz
 
 COPY --from=composer /usr/local/src/vendor /usr/src/code/vendor
 
