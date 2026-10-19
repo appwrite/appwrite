@@ -2588,10 +2588,6 @@ final class NatsBrokerTest extends TestCase
         $fresh->close();
     }
 
-    /**
-     * A dead letter that says only its payload cannot be attributed: 26 production
-     * dead letters had no error, attempt count, origin or worker to go on.
-     */
     public function testALastAttemptsFailureIsRecordedOnTheDeadLetter(): void
     {
         $reported = [];
@@ -2690,7 +2686,6 @@ final class NatsBrokerTest extends TestCase
         }
     }
 
-    /** An exception message is free text; the header carries one line of it, cut where a character ends. */
     public function testTheErrorIsOneHeaderLine(): void
     {
         $this->broker->publish($this->queue, ['task' => 'mail']);
@@ -2705,11 +2700,7 @@ final class NatsBrokerTest extends TestCase
         $this->assertSame(255, \strlen($error), 'one byte short of the limit, which falls inside an é');
     }
 
-    /**
-     * Why a message died must never cost the message. The dead stream takes the work
-     * stream's maxMsgSize, and the record adds a few hundred bytes of headers, so a
-     * message the work stream barely accepted goes over with only its Content-Type.
-     */
+    /** The dead stream takes the work stream's maxMsgSize, and the record adds headers on top. */
     public function testAMessageTooLargeForItsRecordStillReachesTheDeadStream(): void
     {
         $reported = [];

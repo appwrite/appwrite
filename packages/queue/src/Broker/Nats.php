@@ -1048,11 +1048,7 @@ class Nats implements Synchronous, Consumer, Bounded
 
     /**
      * Copy the bytes and their own Content-Type to the dead stream with why they died, and report it.
-     *
-     * The record is headers, and headers count against the same size limit as the
-     * payload. A message the work stream barely accepted may not fit with them, and it
-     * must reach the dead stream regardless: it goes over with only its Content-Type,
-     * which it carried on the work stream too, and the report still has the record.
+     * Headers count against the payload size limit, so a message that does not fit with the record goes over without it.
      */
     private function deadLetter(JetStream $js, Queue $queue, string $data, ?Headers $original, string $reason, string $stream, int $sequence, ?int $deliveries, ?\Throwable $error = null): void
     {
@@ -1097,9 +1093,6 @@ class Nats implements Synchronous, Consumer, Bounded
     /**
      * The failure as one header line: control characters as spaces, email addresses
      * masked (an SMTP refusal quotes the recipient), cut where a character ends.
-     *
-     * One pass, done once the line is full, so a long message is not copied again
-     * for every address in it.
      */
     private function redact(\Throwable $error): string
     {
@@ -1140,8 +1133,7 @@ class Nats implements Synchronous, Consumer, Bounded
             return $line;
         }
 
-        // A continuation byte at the limit means a character straddles it: cut before
-        // that character, not through it.
+        // A continuation byte at the limit: cut before that character, not through it.
         $cut = self::DEAD_ERROR_BYTES;
         while ($cut > self::DEAD_ERROR_BYTES - 3 && (\ord($line[$cut]) & 0xC0) === 0x80) {
             $cut--;
