@@ -72,20 +72,20 @@ final class ServerTelemetryTest extends TestCase
         // than the worker's.
         $consumers = [
             'database_shard_1' => new ServerTelemetryMultiMessageConsumer([
-                (new Message([
+                new Message([
                     'pid' => 'shard-1-pid',
                     'queue' => 'database_shard_1',
                     'timestamp' => time() - 120,
                     'payload' => [],
-                ]))->setSize(512),
+                ])->setSize(512),
             ]),
             'database_shard_2' => new ServerTelemetryMultiMessageConsumer([
-                (new Message([
+                new Message([
                     'pid' => 'shard-2-pid',
                     'queue' => 'database_shard_2',
                     'timestamp' => time() - 1,
                     'payload' => [],
-                ]))->setSize(2048),
+                ])->setSize(2048),
             ]),
         ];
         $adapter = new ServerTelemetryAdapter(
