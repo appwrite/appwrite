@@ -11,8 +11,8 @@
   },
   "environment": {
     "date": "2026-10-19T15:51:04Z",
-    "commit": "ff2db1cb62",
-    "branch": "feat/rust-utopia-conversion",
+    "commit": "25d0e0adfb",
+    "branch": "feat/rust-storage",
     "machine": {
       "os": "Darwin",
       "arch": "arm64",
