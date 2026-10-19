@@ -349,6 +349,14 @@ class Server
                 $messageCallback = function (Message $message) {
                     $receivedAtTimestamp = microtime(true);
                     $job = $this->jobFor($message);
+                    // Same attributes as the depth gauges, so a wait alert can
+                    // name the queue that is late. A worker such as databases
+                    // consumes one queue per shard, and without them a backlog
+                    // on one shard shows up only as the worker's average.
+                    $attributes = [
+                        'messaging.destination.name' => $message->getQueue(),
+                        'messaging.destination.namespace' => $this->adapter->namespace,
+                    ];
                     try {
                         // The enqueue timestamp comes from the publisher's
                         // clock and this from the consumer's, so on an idle
@@ -363,11 +371,11 @@ class Server
                             0.0,
                             microtime(true) - $message->getTimestamp(),
                         );
-                        $this->jobWaitTime->record($waitDuration);
+                        $this->jobWaitTime->record($waitDuration, $attributes);
 
                         $size = $message->getSize();
                         if ($size !== null) {
-                            $this->messageSize->record($size);
+                            $this->messageSize->record($size, $attributes);
                         }
 
                         $this->context()->set('message', fn (): \Utopia\Queue\Message => $message);
@@ -407,7 +415,7 @@ class Server
                             ),
                         );
                     } finally {
-                        $this->processDuration->record(microtime(true) - $receivedAtTimestamp);
+                        $this->processDuration->record(microtime(true) - $receivedAtTimestamp, $attributes);
                     }
                 };
 

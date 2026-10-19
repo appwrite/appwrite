@@ -65,6 +65,69 @@ final class ServerTelemetryTest extends TestCase
         }
     }
 
+    public function testRecordsWhichQueueEachMessageCameFrom(): void
+    {
+        // One worker consuming a queue per database shard: a backlog on one
+        // shard is only visible if every recording names its own queue rather
+        // than the worker's.
+        $consumers = [
+            'database_shard_1' => new ServerTelemetryMultiMessageConsumer([
+                new Message([
+                    'pid' => 'shard-1-pid',
+                    'queue' => 'database_shard_1',
+                    'timestamp' => time() - 120,
+                    'payload' => [],
+                ]),
+            ]),
+            'database_shard_2' => new ServerTelemetryMultiMessageConsumer([
+                new Message([
+                    'pid' => 'shard-2-pid',
+                    'queue' => 'database_shard_2',
+                    'timestamp' => time() - 1,
+                    'payload' => [],
+                ]),
+            ]),
+        ];
+        $adapter = new ServerTelemetryAdapter(
+            fn (string $queue): Consumer => $consumers[$queue] ?? new ServerTelemetryMultiMessageConsumer([]),
+            1,
+            'appwrite',
+        );
+        $telemetry = new TestTelemetry();
+
+        $server = new Server($adapter);
+        $server->setTelemetry($telemetry);
+        foreach (['database_shard_1', 'database_shard_2'] as $queue) {
+            $server
+                ->job($queue)
+                ->inject('message')
+                ->action(fn (Message $message): null => null);
+        }
+
+        $server->start();
+
+        $expected = [
+            [
+                'messaging.destination.name' => 'database_shard_1',
+                'messaging.destination.namespace' => 'appwrite',
+            ],
+            [
+                'messaging.destination.name' => 'database_shard_2',
+                'messaging.destination.namespace' => 'appwrite',
+            ],
+        ];
+
+        /** @var object{values: array<int, float|int>, attributes: array<int, array<string, mixed>>} $wait */
+        $wait = $telemetry->histograms['messaging.process.wait.duration'];
+        $this->assertSame($expected, $wait->attributes);
+        $this->assertGreaterThan(100.0, $wait->values[0]);
+        $this->assertLessThan(100.0, $wait->values[1]);
+
+        /** @var object{attributes: array<int, array<string, mixed>>} $duration */
+        $duration = $telemetry->histograms['messaging.process.duration'];
+        $this->assertSame($expected, $duration->attributes);
+    }
+
     public function testRecordsQueueDepth(): void
     {
         $consumer = new ServerTelemetryPublisherConsumer([3, 2], [1, 0]);
@@ -234,7 +297,7 @@ final class ServerTelemetryAdapter extends Adapter
     private array $onWorkerStop = [];
 
     public function __construct(
-        Consumer $consumer,
+        Consumer|callable $consumer,
         int $workerNum,
         string $namespace = 'utopia-queue',
         Container $resources = new Container(),
@@ -270,8 +333,9 @@ final class ServerTelemetryAdapter extends Adapter
     ): void {
         foreach ($queues as $spec) {
             $queue = $spec['queue'];
+            $consumer = $spec['consumer'] ?? $this->consumer;
             $this->queue = $queue;
-            while (($message = ($this->consumer->receive($queue, 0)[0] ?? null)) instanceof Message) {
+            while (($message = ($consumer->receive($queue, 0)[0] ?? null)) instanceof Message) {
                 $this->context = new Container($this->resources());
                 $this->process($message, $messageCallback, $successCallback, $errorCallback);
             }
