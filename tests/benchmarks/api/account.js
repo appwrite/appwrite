@@ -408,6 +408,7 @@ const bench = define({
             run: (api, d) => api.call('PATCH', '/account/email', { email: email('moved'), password: PASSWORD }, [200], api.session(pick(d.passwords).secret)),
         },
         { name: 'account.identities.list', route: 'GET /v1/account/identities', weight: 2, run: (api, d) => api.call('GET', '/account/identities', null, [200], api.session(pick(d.identities))) },
+        { name: 'account.memberships.list', route: 'GET /v1/account/memberships', weight: 2, run: (api, d) => api.call('GET', '/account/memberships', null, [200], api.session(pick(d.members).secret)) },
         {
             name: 'account.identities.delete', route: 'DELETE /v1/account/identities/:identityId',
             run(api) {
