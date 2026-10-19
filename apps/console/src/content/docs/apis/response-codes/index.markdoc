@@ -194,7 +194,7 @@ Errors found when using Appwrite Functions.
 | 400  | build_not_ready | Build with the requested ID is building and not ready for execution. |
 | 400  | build_in_progress | Build with the requested ID is already in progress. Please wait before you can retry. |
 | 404  | installation_not_found | Installation with the requested ID could not be found. Check to see if the ID is correct, or create the installation. |
-| 404  | provider_repository_not_found | VCS (Version Control System) repository with the requested ID could not be found, or the installation no longer has access to it. Check to see if the ID is correct, and if the repository is still granted to the installation you provided. |
+| 404  | provider_repository_not_found | VCS (Version Control System) repository could not be found, or the installation no longer has access to it. |
 | 404  | repository_not_found | Repository with the requested ID could not be found. Check to see if the ID is correct, or create the repository. |
 | 404  | function_not_found | Function with the requested ID could not be found. |
 | 404  | function_runtime_unsupported | The requested runtime is either inactive or unsupported. Please check the value of the `_APP_FUNCTIONS_RUNTIMES` environment variable. |
