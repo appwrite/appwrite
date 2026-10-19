@@ -91,6 +91,86 @@ final class ClickHouseTest extends TestCase
         $this->assertSame('users.create', $fields['param_param0']);
     }
 
+    public function testFindWithoutOrderSortsNewestFirstWithIdTiebreak(): void
+    {
+        $this->client->respond(200, '{"data":[]}');
+
+        $this->adapter->find([Query::limit(2)]);
+
+        $this->assertStringEndsWith('ORDER BY `time` DESC, `id` DESC LIMIT {param0:Int64} FORMAT JSON', $this->sentQuery());
+    }
+
+    public function testFindAppendsIdTiebreakToTheRequestedOrder(): void
+    {
+        $this->client->respond(200, '{"data":[]}');
+
+        $this->adapter->find([Query::orderAsc('time'), Query::limit(2)]);
+
+        $this->assertStringEndsWith('ORDER BY `time` ASC, `id` ASC LIMIT {param0:Int64} FORMAT JSON', $this->sentQuery());
+    }
+
+    public function testFindKeepsAnExplicitIdOrder(): void
+    {
+        $this->client->respond(200, '{"data":[]}');
+
+        $this->adapter->find([Query::orderDesc('id'), Query::orderAsc('time')]);
+
+        $this->assertStringEndsWith('ORDER BY `id` DESC, `time` ASC FORMAT JSON', $this->sentQuery());
+    }
+
+    public function testFindCursorPageSortsByTheColumnsItComparesOn(): void
+    {
+        $this->client->respond(200, '{"data":[]}');
+
+        $this->adapter->find([
+            Query::limit(2),
+            Query::cursorAfter(['id' => 'b', 'time' => '2026-01-01 00:00:00.000']),
+        ]);
+
+        $query = $this->sentQuery();
+        $this->assertStringContainsString('((`time` < {cursor_cmp_0:DateTime64(3)}) OR (`time` = {cursor_eq_1_0:DateTime64(3)} AND `id` < {cursor_cmp_1:String}))', $query);
+        $this->assertStringEndsWith('ORDER BY `time` DESC, `id` DESC LIMIT {param0:Int64} FORMAT JSON', $query);
+    }
+
+    public function testFindCursorBeforeFlipsTheDefaultOrder(): void
+    {
+        $this->client->respond(200, '{"data":[]}');
+
+        $this->adapter->find([
+            Query::limit(2),
+            Query::cursorBefore(['id' => 'b', 'time' => '2026-01-01 00:00:00.000']),
+        ]);
+
+        $query = $this->sentQuery();
+        $this->assertStringContainsString('((`time` > {cursor_cmp_0:DateTime64(3)}) OR (`time` = {cursor_eq_1_0:DateTime64(3)} AND `id` > {cursor_cmp_1:String}))', $query);
+        $this->assertStringEndsWith('ORDER BY `time` ASC, `id` ASC LIMIT {param0:Int64} FORMAT JSON', $query);
+    }
+
+    public function testFindProjectsTheOrderColumnsASlimSelectLeavesOut(): void
+    {
+        $this->client->respond(200, '{"data":[]}');
+
+        $this->adapter->find([Query::select(['event'])]);
+
+        $this->assertStringStartsWith('SELECT `id`, `time`, `event` FROM', $this->sentQuery());
+    }
+
+    public function testFindRandomOrderHasNoTiebreak(): void
+    {
+        $this->client->respond(200, '{"data":[]}');
+
+        $this->adapter->find([Query::orderRandom()]);
+
+        $this->assertStringEndsWith('ORDER BY rand() FORMAT JSON', $this->sentQuery());
+    }
+
+    private function sentQuery(): string
+    {
+        $request = $this->client->last();
+
+        return $this->fields($request->getHeaderLine('Content-Type'), (string) $request->getBody())['query'];
+    }
+
     public function testBatchInsertSendsRowsAsBody(): void
     {
         $this->client->respond(200);

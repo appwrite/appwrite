@@ -61,6 +61,12 @@ Enable the provider in the Console under **Auth > Settings**. In Expo, set the a
 }
 ```
 
+Install the Expo packages the sign-in flow uses:
+
+```bash
+npx expo install expo-auth-session expo-web-browser
+```
+
 Then create a login URL with `createOAuth2Token`, open it with `expo-web-browser`, and exchange the returned secret for a session:
 
 ```js

@@ -126,7 +126,7 @@ appwrite pull all
 appwrite push all
 ```
 
-`push all` pushes settings, buckets, teams, webhooks, topics, functions, sites and tables, in that order. It skips legacy collections.
+`push all` pushes settings, buckets, teams, webhooks, topics, analytics, functions, sites and tables, in that order. It skips legacy collections.
 
 ## Local development
 
@@ -162,7 +162,7 @@ Generate model types for your tables and collections:
 appwrite types ./types
 ```
 
-The language is detected from your project. Set it with `--language`: `ts`, `js`, `php`, `kotlin`, `swift`, `java`, `dart` or `cs`. Pass `--strict` to convert field names to the language's naming conventions.
+The language is detected from your project. Set it with `--language`: `ts`, `js`, `php`, `kotlin`, `swift`, `java`, `dart`, `cs` or `python`. Pass `--strict` to convert field names to the language's naming conventions.
 
 ## AI agent skills
 
