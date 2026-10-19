@@ -23,7 +23,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "description": "The Appwrite MCP server now supports MCP Events. Agents can subscribe to new users, failed function executions, finished deployments, new rows, and uploaded files, and react the moment they happen.",
     "date": "2026-10-13",
     "lastUpdated": "2026-10-13",
-    "timeToRead": 7,
+    "timeToRead": 5,
     "author": "chirag-aggarwal",
     "category": "announcements, ai",
     "featured": false,
