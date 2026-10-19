@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-19T16:00:00Z",
+  "updated": "2026-10-19T18:05:00Z",
   "summary": "Appwrite's API, a PHP 8.5 and Swoole monolith, is moving to Rust one service at a time. First every Utopia library it stands on is converted and proven identical to PHP, then each API service is ported and run side by side with PHP behind Traefik, on the same database, Redis, queues and caches.",
   "sections": [
     {
@@ -56,24 +56,24 @@
       "title": "Performance: the Storage API",
       "facts": [
         {
-          "value": "2.4×",
+          "value": "2.1×",
           "label": "throughput",
-          "note": "309 vs 130 requests per second with 200 virtual users on an Apple M4 Max, the heaviest closed-loop step. Other builds held the load around 25 to 32."
+          "note": "624 vs 298 requests per second with 200 virtual users on an Apple M4 Max, the heaviest closed-loop step. The load had climbed to about 27 for Rust and 34 for PHP."
         },
         {
-          "value": "15×",
+          "value": "8.0×",
           "label": "less CPU per request",
-          "note": "12.9 vs 192 ms of API CPU per request at the 200 req/s step, which stayed under the 1% error budget. Rust held the rate. PHP delivered 106 req/s and dropped 5,746 iterations."
-        },
-        {
-          "value": "2.4×",
-          "label": "less peak memory",
-          "note": "2,066 vs 4,892 MiB peak at that same 200 req/s step."
+          "note": "6.7 vs 53.2 ms of API CPU per request at 200 req/s, the highest rate where both stayed under the 1% error budget. Rust held the rate with no errors. PHP had one server error and dropped 107 iterations."
         },
         {
           "value": "2.9×",
-          "label": "less CPU at equal load",
-          "note": "At 50 req/s both sides held the rate with no errors. API CPU was 12.6 vs 36.5 ms, and peak memory 928 vs 2,644 MiB."
+          "label": "less peak memory",
+          "note": "1,403 vs 4,132 MiB peak at that same 200 req/s step."
+        },
+        {
+          "value": "506",
+          "label": "req/s at the top rate, no errors",
+          "note": "At 500 req/s Rust held the rate with no server errors and a p50 of 5.8 ms, while the load was about 31. PHP delivered 318 req/s, with 1,780 server errors and 11,078 requests dropped."
         }
       ]
     },
@@ -202,7 +202,7 @@
     {
       "date": "2026-10-19",
       "title": "Storage served by Rust",
-      "note": "14 routes behind Traefik: buckets, files, preview, download, view and push. The PHP suite through Traefik passed, 108 tests and 2,711 assertions, with one skipped because antivirus is disabled. On a busy laptop the service page reads 2.4× the throughput at 200 virtual users. At 50 requests per second, where both held the rate, Rust used 2.9× less API CPU and peaked at 2.8× less memory."
+      "note": "14 routes behind Traefik: buckets, files, preview, download, view and push. The PHP suite through Traefik passed, 108 tests and 2,711 assertions, with one skipped because antivirus is disabled. After the concurrency cap was raised, Rust held 500 req/s with no server errors. The service page reads 2.1× the throughput at 200 virtual users, and 8.0× less API CPU at 200 req/s."
     },
     {
       "date": "2026-10-19",
