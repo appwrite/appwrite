@@ -1466,30 +1466,9 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                                 return;
                             }
 
-                            $presenceState->purgeListCache($dbForProject);
-
                             /** @var UsagePublisher $publisherForUsage */
                             $publisherForUsage = $container->get('publisherForUsage');
-                            $presenceState->triggerUsage($publisherForUsage, $project, -1);
-
-                            $user = new User([]);
-                            $fetched = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('users', $holdUserId));
-                            if (!$fetched->isEmpty()) {
-                                $user = new User($fetched->getArrayCopy());
-                            }
-
-                            foreach (['$collection', '$tenant', 'hostname', 'permissionsHash', 'userInternalId', 'connections'] as $attribute) {
-                                $deleted->removeAttribute($attribute);
-                            }
-
-                            $presenceState->triggerEvent(
-                                getQueueForEvents(),
-                                getQueueForRealtime(),
-                                $project,
-                                $user,
-                                'presences.[presenceId].delete',
-                                $deleted,
-                            );
+                            $presenceState->announceOffline($dbForProject, $project, $holdUserId, $deleted, $publisherForUsage, getQueueForEvents(), getQueueForRealtime());
                         } catch (Throwable $th) {
                             Span::current()?->setError($th);
                         } finally {

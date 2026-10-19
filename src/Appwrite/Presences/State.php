@@ -246,6 +246,38 @@ class State
         });
     }
 
+    /**
+     * Announce that a user went offline after {@see releaseConnectionForUser} deleted their row:
+     * purge the list cache, decrement usage (unless the online transition was never counted) and
+     * emit the delete event. `$deleted` is the document that release returned.
+     */
+    public function announceOffline(
+        Database $dbForProject,
+        Document $project,
+        string $userId,
+        Document $deleted,
+        UsagePublisher $publisherForUsage,
+        QueueEvent $queueForEvents,
+        QueueRealtime $queueForRealtime,
+        bool $adjustUsage = true,
+    ): void {
+        $this->purgeListCache($dbForProject);
+
+        if ($adjustUsage) {
+            $this->triggerUsage($publisherForUsage, $project, -1);
+        }
+
+        $user = new User($dbForProject->getAuthorization()->skip(
+            fn () => $dbForProject->getDocument('users', $userId)
+        )->getArrayCopy());
+
+        foreach (['$collection', '$tenant', 'hostname', 'permissionsHash', 'userInternalId', 'connections'] as $attribute) {
+            $deleted->removeAttribute($attribute);
+        }
+
+        $this->triggerEvent($queueForEvents, $queueForRealtime, $project, $user, 'presences.[presenceId].delete', $deleted);
+    }
+
     public function upsertForUser(
         Database $dbForProject,
         Document $presenceDocument,

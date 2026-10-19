@@ -136,7 +136,13 @@ class Authentication extends Action
                 $realtime->connections[$connectionId]['presence'] = $presenceHold;
             } else {
                 unset($realtime->connections[$connectionId]['presence']);
-                $this->releasePreviousHold($presenceState, $database, $publisherForUsage, $queueForEvents, $queueForRealtime, $project, (string) $previousUserId, (string) ($presenceHold['presenceId'] ?? ''));
+                $presenceId = (string) ($presenceHold['presenceId'] ?? '');
+                if ($project !== null && !$project->isEmpty() && $previousUserId !== '' && $presenceId !== '') {
+                    $deleted = $presenceState->releaseConnectionForUser($database, (string) $previousUserId, $presenceId);
+                    if ($deleted !== null) {
+                        $presenceState->announceOffline($database, $project, (string) $previousUserId, $deleted, $publisherForUsage, $queueForEvents, $queueForRealtime);
+                    }
+                }
             }
         }
 
@@ -157,38 +163,5 @@ class Authentication extends Action
                 'user' => $response->output($user, Response::MODEL_ACCOUNT),
             ],
         ];
-    }
-
-    private function releasePreviousHold(
-        PresenceState $presenceState,
-        Database $database,
-        UsagePublisher $publisherForUsage,
-        QueueEvent $queueForEvents,
-        QueueRealtime $queueForRealtime,
-        ?Document $project,
-        string $previousUserId,
-        string $presenceId,
-    ): void {
-        if ($project === null || $project->isEmpty() || $previousUserId === '' || $presenceId === '') {
-            return;
-        }
-
-        $deleted = $presenceState->releaseConnectionForUser($database, $previousUserId, $presenceId);
-        if ($deleted === null) {
-            return;
-        }
-
-        $presenceState->purgeListCache($database);
-        $presenceState->triggerUsage($publisherForUsage, $project, -1);
-
-        $previousUser = new User($database->getAuthorization()->skip(
-            fn () => $database->getDocument('users', $previousUserId)
-        )->getArrayCopy());
-
-        foreach (['$collection', '$tenant', 'hostname', 'permissionsHash', 'userInternalId', 'connections'] as $attribute) {
-            $deleted->removeAttribute($attribute);
-        }
-
-        $presenceState->triggerEvent($queueForEvents, $queueForRealtime, $project, $previousUser, 'presences.[presenceId].delete', $deleted);
     }
 }

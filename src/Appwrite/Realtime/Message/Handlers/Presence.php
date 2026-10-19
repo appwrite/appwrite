@@ -115,15 +115,8 @@ class Presence extends Action
                 : null;
 
             if ($deleted !== null) {
-                $presenceState->purgeListCache($database);
-                // created-then-deleted nets zero; otherwise undo the creator's +1 for the now-offline user.
-                if (!$created) {
-                    $presenceState->triggerUsage($publisherForUsage, $project, -1);
-                }
-                foreach (['$collection', '$tenant', 'hostname', 'permissionsHash', 'userInternalId', 'connections'] as $attribute) {
-                    $deleted->removeAttribute($attribute);
-                }
-                $presenceState->triggerEvent($queueForEvents, $queueForRealtime, $project, $user, 'presences.[presenceId].delete', $deleted);
+                // created-then-deleted nets zero usage; otherwise undo the creator's +1.
+                $presenceState->announceOffline($database, $project, $userId, $deleted, $publisherForUsage, $queueForEvents, $queueForRealtime, adjustUsage: !$created);
             } elseif ($created) {
                 // Created row survives under another socket's hold: count the online transition here.
                 $presenceState->triggerUsage($publisherForUsage, $project, 1);
