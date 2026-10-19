@@ -52,9 +52,9 @@ export const jaSolutionsDictionary: Record<string, string> = {
   'One signup': '登録はひとつ',
   'Same APIs later': 'あとから同じ API',
   'What you get': '含まれるもの',
-  'Enough to launch': '公開に足りるもの',
-  'These services cover the first version. The same project carries the business as it grows, on Pro, with the same APIs.':
-    'これらのサービスで最初のバージョンを出せます。事業が育っても、同じプロジェクトのまま Pro に進めます。API は同じです。',
+  'The backend, the site, then the firewall': 'バックエンド、サイト、その次に Firewall',
+  'That is the order. The same project moves to Pro when you need higher limits, and the APIs stay the same.':
+    'この順です。上限が必要になったら、同じプロジェクトのまま Pro に移ります。API は同じです。',
   Launch: '公開',
   Grow: '成長',
   'Email, OAuth, and teams, without a separate identity vendor.':
@@ -66,6 +66,11 @@ export const jaSolutionsDictionary: Record<string, string> = {
   'Host the web app next to the API.': 'Web アプリを API のそばでホスティングします。',
   'Email, SMS, and push from the same project.': 'メール、SMS、プッシュを同じプロジェクトから。',
   'Live updates when data changes.': 'データが変わると、その場で更新されます。',
+  Deploy: 'デプロイ',
+  'Search, buy, and connect a domain from the Console.':
+    'Console からドメインを検索し、購入し、接続します。',
+  'Deny, rate limit, or redirect traffic on the project.':
+    'プロジェクトへのトラフィックを拒否、レート制限、またはリダイレクトします。',
   'Higher limits when you have real users.': '実ユーザーがついたら、上限を上げられます。',
   'Per user, team, and API key.': 'ユーザー、チーム、API キーごとに。',
   'The same platform, on your own servers.': '同じプラットフォームを、自社のサーバーで。',

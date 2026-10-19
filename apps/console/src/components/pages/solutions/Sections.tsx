@@ -9,6 +9,7 @@ import { allCustomerLogos } from '@/lib/home/customer-logos'
 import { PLATFORM_PRODUCTS } from '@/lib/alternatives/platform'
 import { enterpriseVendorSprawl } from '@/lib/enterprise/content'
 import { PRODUCT_NAV_REGISTRY } from '@/lib/products/registry'
+import { CapabilityJourney } from '@/components/pages/solutions/CapabilityJourney'
 import type { SolutionCapabilityGroup, SolutionFeature } from '@/lib/solutions/content'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -229,30 +230,55 @@ export function Consolidation({
   )
 }
 
-export function CapabilityGroups({ groups }: { groups: readonly SolutionCapabilityGroup[] }) {
+function CapabilityStage({
+  group,
+  index,
+  itemsClassName,
+  className,
+}: {
+  group: SolutionCapabilityGroup
+  index: number
+  itemsClassName: string
+  className?: string
+}) {
   const t = useT()
+  const GroupIcon = group.icon
+
   return (
-    <div className={cn('grid gap-x-10 gap-y-12 sm:grid-cols-2', groups.length > 2 && 'lg:grid-cols-3')}>
-      {groups.map((group, groupIndex) => {
-        const GroupIcon = group.icon
-        return (
-          <div key={group.title} className="product-hero-rise relative" style={riseStyle(100 + groupIndex * 110)}>
-            <div className="relative flex items-center gap-2.5 border-t border-foreground/15 pt-5">
-              <span className="absolute -top-px start-0 h-px w-12 bg-[var(--tone-ink)]" aria-hidden />
-              <GroupIcon className="size-[18px] text-[var(--tone-ink)]" strokeWidth={1.75} aria-hidden />
-              <h3 className="text-[16px] font-medium text-foreground">{t(group.title)}</h3>
-            </div>
-            <ul className="mt-5 space-y-5">
-              {group.items.map((item) => (
-                <li key={item.title}>
-                  <p className="text-[14px] font-medium text-foreground/90">{t(item.title)}</p>
-                  <p className="mt-1 text-[13px] leading-6 text-muted-foreground">{t(item.description)}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )
-      })}
+    <div className={cn('product-hero-rise relative', className)} style={riseStyle(100 + index * 110)}>
+      <div className="relative flex items-center gap-2.5 border-t border-foreground/15 pt-5">
+        <span className="absolute -top-px start-0 h-px w-12 bg-[var(--tone-ink)]" aria-hidden />
+        <GroupIcon className="size-[18px] text-[var(--tone-ink)]" strokeWidth={1.75} aria-hidden />
+        <h3 className="text-[16px] font-medium text-foreground">{t(group.title)}</h3>
+      </div>
+      <ul className={cn('mt-5', itemsClassName)}>
+        {group.items.map((item) => (
+          <li key={item.title}>
+            <p className="text-[14px] font-medium text-foreground/90">{t(item.title)}</p>
+            <p className="mt-1 text-[13px] leading-6 text-muted-foreground">{t(item.description)}</p>
+          </li>
+        ))}
+      </ul>
     </div>
   )
+}
+
+export function CapabilityGroups({ groups }: { groups: readonly SolutionCapabilityGroup[] }) {
+  return (
+    <div className={cn('grid gap-x-10 gap-y-12 sm:grid-cols-2', groups.length > 2 && 'lg:grid-cols-3')}>
+      {groups.map((group, groupIndex) => (
+        <CapabilityStage
+          key={group.title}
+          group={group}
+          index={groupIndex}
+          itemsClassName="space-y-5"
+        />
+      ))}
+    </div>
+  )
+}
+
+/** First stage spans the row. Later stages sit beside it, wide enough for what they hold. */
+export function CapabilityStages({ groups }: { groups: readonly SolutionCapabilityGroup[] }) {
+  return <CapabilityJourney groups={groups} />
 }

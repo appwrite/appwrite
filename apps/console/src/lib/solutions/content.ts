@@ -15,7 +15,7 @@ import {
   MessageSquare,
   Rocket,
   Server,
-  TrendingUp,
+  Shield,
   Users,
   Zap,
 } from 'lucide-react'
@@ -103,6 +103,8 @@ export type SolutionPageContent = {
     eyebrow: string
     title: string
     description: string
+    /** `stages` lays the first group across the row, then the rest beside each other. */
+    layout?: 'columns' | 'stages'
     groups: readonly SolutionCapabilityGroup[]
   }
   faq: {
@@ -215,13 +217,14 @@ export const startupsPage = {
   },
   capabilities: {
     eyebrow: 'What you get',
-    title: 'Enough to launch',
+    title: 'The backend, the site, then the firewall',
     description:
-      'These services cover the first version. The same project carries the business as it grows, on Pro, with the same APIs.',
+      'That is the order. The same project moves to Pro when you need higher limits, and the APIs stay the same.',
+    layout: 'stages',
     groups: [
       {
-        title: 'Ship',
-        icon: Rocket,
+        title: 'Build',
+        icon: Layers,
         items: [
           {
             title: 'Auth',
@@ -239,16 +242,6 @@ export const startupsPage = {
             title: 'Functions',
             description: 'Custom logic in the runtimes you already use.',
           },
-        ],
-      },
-      {
-        title: 'Launch',
-        icon: Globe,
-        items: [
-          {
-            title: 'Sites',
-            description: 'Host the web app next to the API.',
-          },
           {
             title: 'Messaging',
             description: 'Email, SMS, and push from the same project.',
@@ -260,20 +253,26 @@ export const startupsPage = {
         ],
       },
       {
-        title: 'Grow',
-        icon: TrendingUp,
+        title: 'Deploy',
+        icon: Rocket,
         items: [
           {
-            title: 'Pro plan',
-            description: 'Higher limits when you have real users.',
+            title: 'Sites',
+            description: 'Host the web app next to the API.',
           },
           {
-            title: 'Permissions',
-            description: 'Per user, team, and API key.',
+            title: 'Domains',
+            description: 'Search, buy, and connect a domain from the Console.',
           },
+        ],
+      },
+      {
+        title: 'Protect',
+        icon: Shield,
+        items: [
           {
-            title: 'Open source',
-            description: 'The same platform, on your own servers.',
+            title: 'Firewall',
+            description: 'Deny, rate limit, or redirect traffic on the project.',
           },
         ],
       },

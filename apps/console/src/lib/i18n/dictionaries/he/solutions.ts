@@ -55,9 +55,9 @@ export const heSolutionsDictionary: Record<string, string> = {
   'One signup': 'הרשמה אחת',
   'Same APIs later': 'אותם API אחר כך',
   'What you get': 'מה מקבלים',
-  'Enough to launch': 'מספיק כדי להשיק',
-  'These services cover the first version. The same project carries the business as it grows, on Pro, with the same APIs.':
-    'השירותים האלה מכסים את הגרסה הראשונה. כשהעסק גדל, אותו פרויקט ממשיך איתו ל-Pro, עם אותם API.',
+  'The backend, the site, then the firewall': 'ה-backend, האתר, ואז ה-Firewall',
+  'That is the order. The same project moves to Pro when you need higher limits, and the APIs stay the same.':
+    'זה הסדר. אותו פרויקט עובר ל-Pro כשצריך מגבלות גבוהות יותר, וה-API נשאר אותו API.',
   Launch: 'השקה',
   Grow: 'צמיחה',
   'Email, OAuth, and teams, without a separate identity vendor.':
@@ -68,6 +68,11 @@ export const heSolutionsDictionary: Record<string, string> = {
   'Host the web app next to the API.': 'מארחים את אפליקציית הווב ליד ה-API.',
   'Email, SMS, and push from the same project.': 'אימייל, SMS ופוש מאותו פרויקט.',
   'Live updates when data changes.': 'עדכונים חיים כשהנתונים משתנים.',
+  Deploy: 'פריסה',
+  'Search, buy, and connect a domain from the Console.':
+    'מחפשים, קונים ומחברים דומיין מה-Console.',
+  'Deny, rate limit, or redirect traffic on the project.':
+    'חוסמים, מגבילים קצב או מפנים תעבורה בפרויקט.',
   'Higher limits when you have real users.': 'מגבלות גבוהות יותר כשיש משתמשים אמיתיים.',
   'Per user, team, and API key.': 'לפי משתמש, צוות ומפתח API.',
   'The same platform, on your own servers.': 'אותה פלטפורמה, על השרתים שלכם.',

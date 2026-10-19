@@ -13,7 +13,13 @@ import { MarketingFaqSection } from '@/components/pages/marketing/MarketingFaqSe
 import { riseStyle } from '@/components/pages/products/_components/ArtParts'
 import { ProductToneBackdrop } from '@/components/pages/products/_components/ProductTone'
 import { HeroVisual } from '@/components/pages/solutions/HeroVisual'
-import { CapabilityGroups, Consolidation, SolutionLogoCloud, ValueProps } from '@/components/pages/solutions/Sections'
+import {
+  CapabilityGroups,
+  CapabilityStages,
+  Consolidation,
+  SolutionLogoCloud,
+  ValueProps,
+} from '@/components/pages/solutions/Sections'
 import { Button } from '@/components/ui/button'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
@@ -163,7 +169,11 @@ export function View({ page }: { page: SolutionPageContent }) {
           description={page.capabilities.description}
         />
         <div className="mt-14">
-          <CapabilityGroups groups={page.capabilities.groups} />
+          {page.capabilities.layout === 'stages' ? (
+            <CapabilityStages groups={page.capabilities.groups} />
+          ) : (
+            <CapabilityGroups groups={page.capabilities.groups} />
+          )}
         </div>
       </ComparisonSection>
 
