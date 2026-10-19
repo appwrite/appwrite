@@ -6,6 +6,11 @@ use Utopia\Database\Document;
 
 final readonly class ProjectContext
 {
+    /**
+     * The project attributes a message carries, for selecting only those when reading projects to enqueue.
+     */
+    public const array ATTRIBUTES = ['$id', '$sequence', '$createdAt', 'teamId', 'teamInternalId', 'region', 'database'];
+
     public function __construct(
         public string $id = '',
         public string $sequence = '',

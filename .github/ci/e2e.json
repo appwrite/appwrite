@@ -197,7 +197,9 @@
         "src/Appwrite/Platform/Workers/StatsResources.php",
         "src/Appwrite/Platform/Workers/StatsUsage.php",
         "src/Appwrite/Platform/Workers/Certificates.php",
-        "src/Appwrite/Certificates/"
+        "src/Appwrite/Certificates/",
+        "src/Appwrite/Maintenance/",
+        "src/Appwrite/Platform/Tasks/Maintenance.php"
       ]
     },
     {
