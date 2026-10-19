@@ -2160,8 +2160,9 @@ return [
         'timeout' => 15,
         'useCases' => [FunctionUseCases::UTILITIES],
         'runtimes' => [
+            // The Lemon Squeezy SDK needs Node 20+
             ...getRuntimes(
-                $templateRuntimes['NODE'],
+                \array_diff($templateRuntimes['NODE'], ['node-18.0', 'node-19.0']),
                 'npm install',
                 'src/main.js',
                 'node/subscriptions-with-lemon-squeezy',
@@ -2217,8 +2218,9 @@ return [
         'timeout' => 15,
         'useCases' => [FunctionUseCases::UTILITIES],
         'runtimes' => [
+            // The Lemon Squeezy SDK needs Node 20+
             ...getRuntimes(
-                $templateRuntimes['NODE'],
+                \array_diff($templateRuntimes['NODE'], ['node-18.0', 'node-19.0']),
                 'npm install',
                 'src/main.js',
                 'node/payments-with-lemon-squeezy',
