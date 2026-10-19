@@ -40,6 +40,12 @@ final class Fake implements Transport
 
     public int $connects = 0;
 
+    /** @var array{class: string, message: string}|null thrown by connect() when set */
+    public ?array $refuse = null;
+
+    /** The host connect() was asked for. */
+    public string $host = '';
+
     private string $inbound = '';
 
     private bool $connected = false;
@@ -54,6 +60,10 @@ final class Fake implements Transport
 
     public function connect(string $host, int $port, float $timeout): void
     {
+        $this->host = $host;
+        if ($this->refuse !== null) {
+            throw Errors::make($this->refuse);
+        }
         $this->connected = true;
         $this->connects++;
         $this->inbound .= 'INFO ' . json_encode(array_merge([

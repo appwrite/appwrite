@@ -40,7 +40,10 @@
             "pedantic": false,
             "echo": true,
             "noRandomize": false,
-            "inboxPrefix": "_INBOX"
+            "inboxPrefix": "_INBOX",
+            "connectAttempts": 3,
+            "connectRetryWait": 0.1,
+            "connectRetryJitter": 0.1
           }
         },
         {
@@ -82,7 +85,10 @@
             "pedantic": false,
             "echo": true,
             "noRandomize": false,
-            "inboxPrefix": "_INBOX"
+            "inboxPrefix": "_INBOX",
+            "connectAttempts": 3,
+            "connectRetryWait": 0.1,
+            "connectRetryJitter": 0.1
           }
         },
         {
@@ -128,7 +134,10 @@
             "pedantic": false,
             "echo": true,
             "noRandomize": false,
-            "inboxPrefix": "_INBOX"
+            "inboxPrefix": "_INBOX",
+            "connectAttempts": 3,
+            "connectRetryWait": 0.1,
+            "connectRetryJitter": 0.1
           }
         }
       ]

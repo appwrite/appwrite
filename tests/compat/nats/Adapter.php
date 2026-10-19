@@ -327,6 +327,28 @@ final class Adapter implements Base, Benchmarks
                 return ['connected' => $fake->isConnected(), 'connects' => $fake->connects, 'tls_upgrades' => \count($fake->tlsUpgrades)];
             },
             'fake.tls_options' => fn (array $a, Session $s) => self::sorted((new \ReflectionMethod(Connection::class, 'tlsOptions'))->invoke(self::conn($a, $s)->connection)),
+            'fake.connect_passes' => fn (array $a, Session $s) => self::connectPasses($a),
+            'transport.tls_failure' => fn (array $a, Session $s) => self::tlsFailure($a),
+            'conn.connect_counted' => function (array $a, Session $s) {
+                $connects = 0;
+                $tls = self::plain($a['tls'] ?? []);
+                $options = $a['options'] ?? [];
+                $options['servers'] ??= $s->service($a['service'] ?? 'nats');
+                $conn = new Conn();
+                $error = null;
+                try {
+                    $conn->connection = Connection::connect(self::options($options, $conn, ['transportFactory' => function () use (&$connects, $tls): TlsTransport {
+                        $connects++;
+
+                        return new TlsTransport($tls);
+                    }]));
+                    $conn->connection->close();
+                } catch (\Throwable $e) {
+                    $error = self::connectError($e, $a['contains'] ?? null);
+                }
+
+                return ['error' => $error, 'connects' => $connects];
+            },
 
             // --- Connections ---
             'conn.connect' => function (array $a, Session $s) {
@@ -787,13 +809,13 @@ final class Adapter implements Base, Benchmarks
         foreach ([
             'servers', 'name', 'user', 'pass', 'token', 'nkey', 'nkeySeed', 'credentialsFile', 'tls', 'tlsCaFile', 'tlsCertFile', 'tlsKeyFile',
             'tlsVerify', 'tlsServerName', 'allowReconnect', 'maxReconnectAttempts', 'reconnectBufSize', 'subPendingMsgsLimit', 'subPendingBytesLimit',
-            'maxPingsOut', 'verbose', 'pedantic', 'echo', 'noRandomize', 'inboxPrefix',
+            'maxPingsOut', 'verbose', 'pedantic', 'echo', 'noRandomize', 'inboxPrefix', 'connectAttempts',
         ] as $key) {
             if (\array_key_exists($key, $a)) {
                 $args[$key] = $a[$key];
             }
         }
-        foreach (['reconnectWait', 'maxReconnectWait', 'reconnectJitter', 'connectTimeout', 'requestTimeout', 'drainTimeout', 'pingInterval'] as $key) {
+        foreach (['reconnectWait', 'maxReconnectWait', 'reconnectJitter', 'connectTimeout', 'requestTimeout', 'drainTimeout', 'pingInterval', 'connectRetryWait', 'connectRetryJitter'] as $key) {
             if (\array_key_exists($key, $a)) {
                 $args[$key] = (float) $a[$key];
             }
@@ -1022,6 +1044,7 @@ final class Adapter implements Base, Benchmarks
             'subPendingMsgsLimit' => $o->subPendingMsgsLimit, 'subPendingBytesLimit' => $o->subPendingBytesLimit, 'connectTimeout' => $o->connectTimeout,
             'requestTimeout' => $o->requestTimeout, 'drainTimeout' => $o->drainTimeout, 'pingInterval' => $o->pingInterval, 'maxPingsOut' => $o->maxPingsOut,
             'verbose' => $o->verbose, 'pedantic' => $o->pedantic, 'echo' => $o->echo, 'noRandomize' => $o->noRandomize, 'inboxPrefix' => $o->inboxPrefix,
+            'connectAttempts' => $o->connectAttempts, 'connectRetryWait' => $o->connectRetryWait, 'connectRetryJitter' => $o->connectRetryJitter,
         ];
     }
 
@@ -1122,6 +1145,161 @@ final class Adapter implements Base, Benchmarks
         file_put_contents($path, $a['contents']);
 
         return $path;
+    }
+
+    /**
+     * A connect error with its previous: {class, message, previous: {class,
+     * message} or {class, contains} when $contains is given}.
+     *
+     * @return array<string, mixed>
+     */
+    private static function connectError(\Throwable $e, ?string $contains = null): array
+    {
+        $previous = $e->getPrevious();
+        if ($previous !== null) {
+            $previous = $contains === null
+                ? ['class' => $previous::class, 'message' => $previous->getMessage()]
+                : ['class' => $previous::class, 'contains' => str_contains($previous->getMessage(), $contains)];
+        }
+
+        return ['class' => $e::class, 'message' => $e->getMessage(), 'previous' => $previous];
+    }
+
+    /**
+     * Connection::connect() over a new fake transport per attempt, the
+     * i-th built from transports[i] (the last one repeated), as
+     * ConnectRetryTest's factories do.
+     *
+     * @return array<string, mixed>
+     */
+    private static function connectPasses(array $a): array
+    {
+        $specs = self::plain($a['transports']);
+        /** @var list<Fake> $fakes */
+        $fakes = [];
+        /** @var list<float> $starts */
+        $starts = [];
+        $delay = (int) ($a['factory_sleep_ms'] ?? 0);
+        $factory = function () use (&$fakes, &$starts, $specs, $delay): Fake {
+            $starts[] = hrtime(true) / 1e9;
+            if ($delay > 0) {
+                usleep($delay * 1000);
+            }
+            $spec = $specs[min(\count($fakes), \count($specs) - 1)];
+            $fake = new Fake(self::plain($spec['info'] ?? []));
+            $fake->rules = self::plain($spec['rules'] ?? []);
+            $fake->answerPings = $spec['answer_pings'] ?? true;
+            $fake->refuse = $spec['refuse'] ?? null;
+            $fakes[] = $fake;
+
+            return $fake;
+        };
+        $conn = new Conn();
+        $called = hrtime(true) / 1e9;
+        $error = null;
+        try {
+            $conn->connection = Connection::connect(self::options($a['options'] ?? [], $conn, ['transportFactory' => $factory]));
+        } catch (\Throwable $e) {
+            $error = self::connectError($e);
+        }
+        $returned = hrtime(true) / 1e9;
+        $out = [
+            'connected' => $error === null && $conn->connection->isConnected(),
+            'error' => $error,
+        ];
+        if (isset($a['connects_between'])) {
+            // How many passes fit is timing: only the range is compared.
+            [$min, $max] = $a['connects_between'];
+            $out['connects_between'] = \count($fakes) >= $min && \count($fakes) < $max;
+        } else {
+            $out['hosts'] = array_map(fn (Fake $f) => $f->host, $fakes);
+            $out['open'] = array_map(fn (Fake $f) => $f->isConnected(), $fakes);
+            $out['connects'] = \count($fakes);
+        }
+        if (isset($a['publish']) && $error === null) {
+            $last = $fakes[\count($fakes) - 1];
+            $mark = \strlen($last->written);
+            $conn->connection->publish($a['publish']['subject'], $a['publish']['data']);
+            $out['published'] = substr($last->written, $mark);
+        }
+        if (isset($a['gap_at_least'])) {
+            $gaps = true;
+            for ($i = 1; $i < \count($starts); $i++) {
+                $gaps = $gaps && $starts[$i] - $starts[$i - 1] >= (float) $a['gap_at_least'];
+            }
+            $out['gaps_at_least'] = $gaps;
+        }
+        if (isset($a['within'])) {
+            $within = (float) $a['within'];
+            $out['starts_within'] = array_reduce($starts, fn (bool $ok, float $start) => $ok && $start - $called < $within, true);
+            $out['returned_within'] = $returned - $called < $within;
+        }
+        if ($error === null) {
+            $conn->connection->close();
+        }
+
+        return $out;
+    }
+
+    /**
+     * TlsFailureTest against a loopback listener: "upgrade" connects a
+     * TcpTransport, has the peer answer the ClientHello with HTTP (closing
+     * the peer first when close_peer is set) and upgrades; "refused"
+     * connects a TlsTransport to a port nothing listens on.
+     *
+     * @return array<string, mixed>
+     */
+    private static function tlsFailure(array $a): array
+    {
+        $server = stream_socket_server('tcp://127.0.0.1:0', $errno, $errstr);
+        if ($server === false) {
+            throw new Fault("Could not open a loopback listener: [{$errno}] {$errstr}");
+        }
+        [$host, $port] = explode(':', (string) stream_socket_get_name($server, false));
+        if ($a['mode'] === 'refused') {
+            fclose($server);
+            $transport = new TlsTransport();
+            $error = null;
+            try {
+                $transport->connect($host, (int) $port, 1.0);
+            } catch (\Throwable $e) {
+                // The message carries the OS's errno, which differs between systems.
+                $error = ['class' => $e::class];
+            }
+
+            return ['error' => $error, 'connected' => $transport->isConnected()];
+        }
+        $transport = new TcpTransport();
+        $transport->connect($host, (int) $port, 2.0);
+        $peer = stream_socket_accept($server, 1.0);
+        if ($peer === false) {
+            throw new Fault('the listener accepted nothing');
+        }
+        fwrite($peer, "HTTP/1.1 400 Bad Request\r\n\r\n");
+        $closePeer = $a['close_peer'] ?? false;
+        if ($closePeer) {
+            fclose($peer);
+        }
+        $error = null;
+        try {
+            $transport->upgradeTls(['verify_peer' => false, 'verify_peer_name' => false]);
+        } catch (\Throwable $e) {
+            $error = ['class' => $e::class, 'message' => $e->getMessage()];
+        }
+        $out = ['error' => $error, 'connected' => $transport->isConnected()];
+        if (!$closePeer) {
+            // The peer reads EOF once the client closes.
+            stream_set_timeout($peer, 1);
+            while (!feof($peer) && !stream_get_meta_data($peer)['timed_out']) {
+                fread($peer, 8192);
+            }
+            $out['peer_eof'] = !stream_get_meta_data($peer)['timed_out'] && feof($peer);
+            fclose($peer);
+        }
+        $transport->close();
+        fclose($server);
+
+        return $out;
     }
 
     private static function roundTrip(array $a, Session $s): array
