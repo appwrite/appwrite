@@ -21,9 +21,9 @@
       "id": "db838",
       "title": "database: follow PHP from 8.3.6 to 8.3.10",
       "area": "Database 8",
-      "status": "progress",
-      "updated": "2026-10-19T13:41:00Z",
-      "note": "Catch-up batch, task A (2-hour box). After syncing the branch with main (6edaf6d185), PHP runs utopia-php/database 8.3.8 while Rust follows 8.3.6. Uncovered: Builder\\RaisesFloatOverflow::compileAggregate. PHP tests not ported: tests/unit/IDTest.php, QueryCacheTest.php, Validator/IndexedQueriesTest.php. SQL.php line numbers in TypeError messages moved. Every other library is still at 100% with all PHP tests ported."
+      "status": "done",
+      "updated": "2026-10-19T15:46:00Z",
+      "note": "Catch-up A, 2-hour box. Join aliases may start with a digit or a hyphen (63 characters at most), long join labels are read under a hashed name, the document cache retires collections after a committed schema change, and deleteCollection and deleteRelationship re-raise errors that may have committed. API coverage 100% (1,508 symbols), 568 of 568 PHP test files, 26,792 cases; JoinAlias, JoinAliasId and ChildSide re-recorded on every profile with 0 differences. Waived: JoinLabelRetentionTest and CacheUnavailableTest (anonymous adapter subclasses), covered by Rust unit tests."
     },
     {
       "id": "sites-flake",
