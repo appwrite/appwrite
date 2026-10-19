@@ -1,6 +1,14 @@
 {
-  "updated": "2026-10-19T13:21:00Z",
+  "updated": "2026-10-19T13:41:00Z",
   "tasks": [
+    {
+      "id": "queue-telemetry",
+      "title": "queue and telemetry: main's changes",
+      "area": "Libraries",
+      "status": "progress",
+      "updated": "2026-10-19T13:41:00Z",
+      "note": "Catch-up batch, task E. queue names the queue on its wait, duration and size histograms (cdb86de54b); telemetry checked for changes since its sync."
+    },
     {
       "id": "signatures",
       "title": "One Rust method per PHP method",
@@ -13,41 +21,73 @@
       "id": "cache-purge",
       "title": "cache: main's purges fail when they can't be confirmed",
       "area": "Libraries",
-      "status": "todo",
-      "updated": "2026-10-19T13:21:00Z",
-      "note": "main's 7a3dfbb99d, d4b607d8da and 06a1ae1626: a purge the circuit breaker can't confirm throws Unavailable, a filesystem purge of a directory throws, a missing cache directory is nothing to purge. Rust still returns false: 2 differences in CI. API coverage stays 100%."
+      "status": "progress",
+      "updated": "2026-10-19T13:41:00Z",
+      "note": "Catch-up batch, task D (2-hour box). main's 7a3dfbb99d, d4b607d8da and 06a1ae1626: a purge the circuit breaker can't confirm throws Unavailable, a filesystem purge of a directory throws, a missing cache directory is nothing to purge. Rust still returns false: 2 differences in CI. API coverage stays 100%."
     },
     {
       "id": "php-8511",
       "title": "php-std: PHP 8.5.11 changed round()",
       "area": "Libraries",
-      "status": "todo",
-      "updated": "2026-10-19T12:29:00Z",
-      "note": "main's 2f8ca3fc1d bumps appwrite/base to 2.2.1, which brings PHP 8.5.11. php-std follows PHP 8.5.10, where round(4503599627370496.0) is 4503599627370497 (as in Rust); 8.5.11 returns 4503599627370496. CI's php-std fuzz finds that input. Port 8.5.11's round() edge handling and check the other 8.5.11 changes php-std reproduces."
+      "status": "progress",
+      "updated": "2026-10-19T13:41:00Z",
+      "note": "Catch-up batch, task E (2-hour box). main's 2f8ca3fc1d bumps appwrite/base to 2.2.1, which brings PHP 8.5.11. php-std follows PHP 8.5.10, where round(4503599627370496.0) is 4503599627370497 (as in Rust); 8.5.11 returns 4503599627370496. CI's php-std fuzz finds that input. Port 8.5.11's round() edge handling and check the other 8.5.11 changes php-std reproduces."
     },
     {
       "id": "audit-order",
       "title": "audit: main's total order on ClickHouse finds",
       "area": "Libraries",
-      "status": "todo",
-      "updated": "2026-10-19T11:49:00Z",
-      "note": "main's 405a72de295 sorts every ClickHouse find by a total order and 048888494c9 projects the order columns so any row can be the next cursor: finds now return `time` and select columns in a new order. CI shows 10 audit differences (plus 2 in fuzz). API coverage stays 100%."
+      "status": "progress",
+      "updated": "2026-10-19T13:41:00Z",
+      "note": "Catch-up batch, task C (2-hour box). main's 405a72de295 sorts every ClickHouse find by a total order and 048888494c9 projects the order columns so any row can be the next cursor: finds now return `time` and select columns in a new order. CI shows 10 audit differences (plus 2 in fuzz). API coverage stays 100%."
     },
     {
       "id": "messaging-code",
       "title": "messaging: main's SMTP reply code on send results",
       "area": "Libraries",
-      "status": "todo",
-      "updated": "2026-10-19T11:49:00Z",
-      "note": "main's 501a1c63739 adds a `code` field to every send result; Rust's results lack it, so CI's integrations lane shows 262 messaging differences (plus 3 in fuzz), nearly all on that one field. API coverage stays 100%."
+      "status": "progress",
+      "updated": "2026-10-19T13:41:00Z",
+      "note": "Catch-up batch, task C (2-hour box). main's 501a1c63739 adds a `code` field to every send result; Rust's results lack it, so CI's integrations lane shows 262 messaging differences (plus 3 in fuzz), nearly all on that one field. API coverage stays 100%."
     },
     {
       "id": "nats-tests",
       "title": "nats: main's TLS and connect-retry changes not ported",
       "area": "Libraries",
-      "status": "todo",
-      "updated": "2026-10-19T13:21:00Z",
-      "note": "After the main sync on 2026-10-19 nats has 100% API coverage but 38 of 40 PHP tests ported: packages/nats/tests/ConnectRetryTest.php, packages/nats/tests/Transport/TlsFailureTest.php. audit, cache, messaging, migration and usage also changed on main and stay at 100% with every PHP test ported. Also: a failed TLS upgrade now raises TlsException (with the OpenSSL reason) where Rust raises ConnectionException."
+      "status": "progress",
+      "updated": "2026-10-19T13:41:00Z",
+      "note": "Catch-up batch, task D (2-hour box). After the main sync on 2026-10-19 nats has 100% API coverage but 38 of 40 PHP tests ported: packages/nats/tests/ConnectRetryTest.php, packages/nats/tests/Transport/TlsFailureTest.php. audit, cache, messaging, migration and usage also changed on main and stay at 100% with every PHP test ported. Also: a failed TLS upgrade now raises TlsException (with the OpenSSL reason) where Rust raises ConnectionException."
+    },
+    {
+      "id": "storage-s3-delete",
+      "title": "storage: main's S3 delete and copy changes not ported",
+      "area": "Libraries",
+      "status": "progress",
+      "updated": "2026-10-19T13:41:00Z",
+      "note": "Catch-up batch, task B (2-hour box). After the main sync on 2026-10-18 CI's storage lane shows 8 differences and 1 fuzz difference. Server-side copies: PHP's x-amz-copy-source is now /<key> where Rust sends /<bucket>/<key>. Deletes: PHP refuses the whole bucket, the whole root or paths outside the root, deletes directories rather than name prefixes, deletes every object under a directory on a recursive delete, and fails when the service keeps keys (740f0ee6df, 886fe9aea3, 13bf781ea1, f57d3f9b22). API coverage stays 100% and every PHP test is ported, so these are behaviour changes, not missing symbols."
+    },
+    {
+      "id": "cdn-fuzz",
+      "title": "cdn: a TypeError names its file differently",
+      "area": "Libraries",
+      "status": "progress",
+      "updated": "2026-10-19T13:41:00Z",
+      "note": "Catch-up batch, task E (2-hour box). bin/compat fuzz cdn, certificates.once[fastly tls subscriptions], seed 11510 input 3852: retrySubscription() gets a null subscription id. PHP's TypeError says \"called in /usr/src/code/packages/cdn/src/Certificates/Provider/FastlyTls.php on line 44\", Rust's \"called in FastlyTls.php on line 44\"."
+    },
+    {
+      "id": "audit-fuzz",
+      "title": "audit: one ClickHouse batch fuzz input differs",
+      "area": "Libraries",
+      "status": "progress",
+      "updated": "2026-10-19T13:41:00Z",
+      "note": "Catch-up batch, task C (2-hour box). bin/compat fuzz audit --op clickhouse.call --seed 11509, input 600: createBatch with a log whose data is {\"userId\": false, \"projectId\": \"\"} and userId \"\" builds a different request body in PHP and Rust. Reproducible locally; the legacy-name renaming, isset checks and column filling read the same, so the difference is in a part the truncated diff does not show."
+    },
+    {
+      "id": "db838",
+      "title": "database: follow PHP from 8.3.6 to 8.3.10",
+      "area": "Database 8",
+      "status": "progress",
+      "updated": "2026-10-19T13:41:00Z",
+      "note": "Catch-up batch, task A (2-hour box). After syncing the branch with main (6edaf6d185), PHP runs utopia-php/database 8.3.8 while Rust follows 8.3.6. Uncovered: Builder\\RaisesFloatOverflow::compileAggregate. PHP tests not ported: tests/unit/IDTest.php, QueryCacheTest.php, Validator/IndexedQueriesTest.php. SQL.php line numbers in TypeError messages moved. Every other library is still at 100% with all PHP tests ported."
     },
     {
       "id": "sites-flake",
@@ -56,22 +96,6 @@
       "status": "todo",
       "updated": "2026-10-18T16:18:00Z",
       "note": "SitesCustomServerTest::testScopes, testSSRLogsPersistAndCanBeManaged and testVariablesE2E fail with \"Deployment status is not ready\" in one database mode per run (MariaDB shared, MongoDB dedicated, PostgreSQL shared), each passing in the other modes. Sites is PHP-only and untouched by the migration; report to main as a timing-sensitive test."
-    },
-    {
-      "id": "storage-s3-delete",
-      "title": "storage: main's S3 delete and copy changes not ported",
-      "area": "Libraries",
-      "status": "todo",
-      "updated": "2026-10-18T14:59:00Z",
-      "note": "After the main sync on 2026-10-18 CI's storage lane shows 8 differences and 1 fuzz difference. Server-side copies: PHP's x-amz-copy-source is now /<key> where Rust sends /<bucket>/<key>. Deletes: PHP refuses the whole bucket, the whole root or paths outside the root, deletes directories rather than name prefixes, deletes every object under a directory on a recursive delete, and fails when the service keeps keys (740f0ee6df, 886fe9aea3, 13bf781ea1, f57d3f9b22). API coverage stays 100% and every PHP test is ported, so these are behaviour changes, not missing symbols."
-    },
-    {
-      "id": "cdn-fuzz",
-      "title": "cdn: a TypeError names its file differently",
-      "area": "Libraries",
-      "status": "todo",
-      "updated": "2026-10-17T20:11:00Z",
-      "note": "bin/compat fuzz cdn, certificates.once[fastly tls subscriptions], seed 11510 input 3852: retrySubscription() gets a null subscription id. PHP's TypeError says \"called in /usr/src/code/packages/cdn/src/Certificates/Provider/FastlyTls.php on line 44\", Rust's \"called in FastlyTls.php on line 44\"."
     },
     {
       "id": "avatars-mariadb",
@@ -112,22 +136,6 @@
       "status": "done",
       "updated": "2026-10-17T19:35:00Z",
       "note": "The /appwrite pages became one dashboard in tabs (Utopia, Services, Hooks, Facts, Tasks), each opening on a progress bar of its section. Lists show tests (compat cases, E2E runs, the Rust E2E runs through each hook) and a benchmark's bottom line that expands to the full results; hooks filter by group. Old /appwrite URLs redirect."
-    },
-    {
-      "id": "audit-fuzz",
-      "title": "audit: one ClickHouse batch fuzz input differs",
-      "area": "Libraries",
-      "status": "todo",
-      "updated": "2026-10-17T19:12:00Z",
-      "note": "bin/compat fuzz audit --op clickhouse.call --seed 11509, input 600: createBatch with a log whose data is {\"userId\": false, \"projectId\": \"\"} and userId \"\" builds a different request body in PHP and Rust. Reproducible locally; the legacy-name renaming, isset checks and column filling read the same, so the difference is in a part the truncated diff does not show."
-    },
-    {
-      "id": "db838",
-      "title": "database: main's 8.3.8 not yet ported",
-      "area": "Database 8",
-      "status": "todo",
-      "updated": "2026-10-17T17:45:00Z",
-      "note": "After syncing the branch with main (6edaf6d185), PHP runs utopia-php/database 8.3.8 while Rust follows 8.3.6. Uncovered: Builder\\RaisesFloatOverflow::compileAggregate. PHP tests not ported: tests/unit/IDTest.php, QueryCacheTest.php, Validator/IndexedQueriesTest.php. SQL.php line numbers in TypeError messages moved. Every other library is still at 100% with all PHP tests ported."
     },
     {
       "id": "usage-gauge-tie",
