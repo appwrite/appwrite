@@ -2183,7 +2183,8 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
-     * Thumbnail bytes are re-encoded only when width or height is set.
+     * Thumbnails are always re-encoded to the advertised content type.
+     * Width and height crop the sheet; omitted, the original dimensions are kept.
      * The timeline cue file shares the timelines collection and is not an image.
      */
     public function testThumbnailTransforms(): void
@@ -2230,6 +2231,11 @@ final class VideosCustomServerTest extends Scope
                 'width' => 72,
                 'height' => 36,
             ],
+            [
+                'params' => [],
+                'headers' => ['accept' => 'image/webp'],
+                'type' => 'image/webp',
+            ],
         ];
 
         foreach ($cases as $case) {
@@ -2244,8 +2250,11 @@ final class VideosCustomServerTest extends Scope
 
             $image = new \Imagick();
             $image->readImageBlob($response['body']);
-            $this->assertSame($case['width'], $image->getImageWidth(), $case['type']);
-            $this->assertSame($case['height'], $image->getImageHeight(), $case['type']);
+            $this->assertSame($case['type'], 'image/' . \strtolower($image->getImageFormat()), $case['type']);
+            if (isset($case['width'], $case['height'])) {
+                $this->assertSame($case['width'], $image->getImageWidth(), $case['type']);
+                $this->assertSame($case['height'], $image->getImageHeight(), $case['type']);
+            }
         }
 
         $missing = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/thumbnails/nope', $this->headers());

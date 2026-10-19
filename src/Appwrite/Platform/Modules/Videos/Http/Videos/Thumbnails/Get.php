@@ -127,11 +127,11 @@ class Get extends Base
 
         $source = (string) $deviceForVideos->read($path);
 
+        $image = new Image($source);
         if ($width > 0 || $height > 0) {
-            $image = new Image($source);
             $image->crop($width, $height, Image::GRAVITY_CENTER);
-            $source = $image->output($output, 100);
         }
+        $source = (string) $image->output($output, 100);
 
         $response
             ->setContentType($outputs[$output])
