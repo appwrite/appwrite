@@ -472,7 +472,7 @@ impl Adapter for GitLab {
         Ok(comment_id.to_owned())
     }
 
-    fn clone_command(
+    async fn clone_command(
         &self,
         owner: &str,
         repository_name: &str,

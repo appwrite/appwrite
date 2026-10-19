@@ -5,7 +5,7 @@
 
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
-Version control system adapters: GitHub, GitLab, Gitea, Forgejo, Gogs, Bitbucket and Origin: repositories, branches, tags, files, commits, pull requests, comments, statuses and check runs, webhook parsing and signature validation, app installation tokens, and shallow sparse clone commands.
+Version control system adapters: GitHub, GitLab, Gitea, Forgejo, Gogs, Bitbucket, Origin and Entire: repositories, branches, tags, files, commits, pull requests, comments, statuses and check runs, webhook parsing and signature validation, app installation tokens, and shallow sparse clone commands.
 
 This library is maintained by the [Appwrite team](https://appwrite.io).
 
@@ -18,7 +18,7 @@ utopia-vcs = { git = "https://github.com/utopia-rs/vcs" }
 
 # Getting started
 
-`utopia-vcs` talks to Git providers (GitHub, GitLab, Gitea, Forgejo, Gogs, Bitbucket and Origin) through one contract: the `Adapter` and `Git` traits. An adapter reads and writes repositories, branches, files, commits, pull requests, comments, statuses and check runs; parses the provider's webhook deliveries into events and checks their signatures; and builds the shell command that clones one version of a repository. Payload-shaped results are `php_std::Value` arrays, key for key what the PHP library returns.
+`utopia-vcs` talks to Git providers (GitHub, GitLab, Gitea, Forgejo, Gogs, Bitbucket, Origin and Entire) through one contract: the `Adapter` and `Git` traits. An adapter reads and writes repositories, branches, files, commits, pull requests, comments, statuses and check runs; parses the provider's webhook deliveries into events and checks their signatures; and builds the shell command that clones one version of a repository. Payload-shaped results are `php_std::Value` arrays, key for key what the PHP library returns.
 
 ## Read a webhook delivery
 
@@ -57,7 +57,7 @@ let mut gitea = Gitea::new(Arc::new(Cache::from_dyn(Arc::new(NoCache))));
 gitea.set_endpoint("https://gitea.example.com");
 gitea.initialize("", "", None, Some("token"), None).await?;
 
-let command = gitea.clone_command("acme", "website", "v1.*", clone_type::TAG, "/tmp/build", "apps/web")?;
+let command = gitea.clone_command("acme", "website", "v1.*", clone_type::TAG, "/tmp/build", "apps/web").await?;
 println!("{command}");
 ```
 

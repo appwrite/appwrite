@@ -8,7 +8,7 @@ use php_std::{Array, ArrayKey, Value};
 use utopia_cache::Cache;
 use utopia_console::Command;
 
-use crate::adapter::{Adapter, CheckRun, Git, VcsType, WebhookId, WebhookScope, unsupported};
+use crate::adapter::{Adapter, CheckRun, Git, VcsType, WebhookId, WebhookScope, commit_status_state, unsupported};
 use crate::error::{Error, Result};
 use crate::git::{self, clone_command, normalize_repository_path};
 use crate::github::{concat_if_both, contents_listing, joined};
@@ -722,7 +722,7 @@ impl Adapter for Gitea {
         Ok(php::text(&php::string(&or(at(&body, "id"), ""))))
     }
 
-    fn clone_command(
+    async fn clone_command(
         &self,
         owner: &str,
         repository_name: &str,
@@ -920,7 +920,7 @@ impl Adapter for Gitea {
         if self.is_gogs() {
             return Err(Error::exception("Commit status API is not supported by Gogs", 0));
         }
-        let mut body = object([("state", s(state))]);
+        let mut body = object([("state", s(commit_status_state(state)))]);
         if php::filled(description) {
             php::set(&mut body, "description", s(description));
         }

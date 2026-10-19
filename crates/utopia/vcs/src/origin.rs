@@ -1404,7 +1404,7 @@ fn is_sha(reference: &str) -> bool {
 }
 
 /// A file path confined to the repository, normalized lexically.
-fn confined_path(filepath: &str) -> Result<String> {
+pub(crate) fn confined_path(filepath: &str) -> Result<String> {
     let mut segments: Vec<&str> = Vec::new();
     let replaced = filepath.replace('\\', "/");
     for segment in replaced.split('/') {
@@ -1647,7 +1647,7 @@ impl Adapter for Origin {
         Ok(php::text(&php::string(&at(&body, "id"))))
     }
 
-    fn clone_command(
+    async fn clone_command(
         &self,
         owner: &str,
         repository_name: &str,
@@ -2548,7 +2548,7 @@ impl Git for Origin {
         false
     }
 
-    fn repository_clone_url(&self, owner: &str, repository_name: &str) -> Result<String> {
+    async fn repository_clone_url(&self, owner: &str, repository_name: &str) -> Result<String> {
         Ok(format!(
             "{}/{}/{}.git",
             self.git_endpoint,

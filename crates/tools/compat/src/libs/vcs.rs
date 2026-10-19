@@ -20,7 +20,7 @@ use serde_json::{Map, Value, json};
 use utopia_cache::{Cache, Memory, None as NoCache, Redis};
 use utopia_console::Command;
 use utopia_vcs::{
-    Adapter, BatchCheckRun, Bitbucket, CheckRun, Error, Flavor, Git, GitHub, GitLab, Gitea, Origin, WebhookId,
+    Adapter, BatchCheckRun, Bitbucket, CheckRun, Entire, Error, Flavor, Git, GitHub, GitLab, Gitea, Origin, WebhookId,
 };
 
 use crate::adapter::{Fault, OpResult, Outcome, Session, bytes_value, float_value};
@@ -31,6 +31,7 @@ const METHODS: &[&str] = &[
     "batchGetRepositoryContents",
     "batchUpsertCheckRuns",
     "compareCommits",
+    "compareFiles",
     "createBranch",
     "createCheckRun",
     "createComment",
@@ -45,6 +46,7 @@ const METHODS: &[&str] = &[
     "deleteRepository",
     "dismissPullRequestReview",
     "generateCloneCommand",
+    "generatePushCommand",
     "getAuthenticatedApp",
     "getBlob",
     "getBranchUrl",
@@ -55,6 +57,7 @@ const METHODS: &[&str] = &[
     "getCommitStatuses",
     "getCommitUrl",
     "getEventHeaderName",
+    "getEventType",
     "getEvents",
     "getFileUrl",
     "getInstallUrl",
@@ -66,6 +69,7 @@ const METHODS: &[&str] = &[
     "getPullRequest",
     "getPullRequestFiles",
     "getPullRequestFromBranch",
+    "getPullRequestUrl",
     "getRateLimit",
     "getRepository",
     "getRepositoryCloneHeaders",
@@ -81,8 +85,11 @@ const METHODS: &[&str] = &[
     "getSupportedWebhookScopes",
     "getType",
     "getUser",
+    "getWebhookClaims",
     "hasAccessToAllRepositories",
     "initializeVariables",
+    "isTrustedCore",
+    "isTrustedIssuer",
     "listBranches",
     "listCheckRunsForCommit",
     "listCheckRunsForSuite",
@@ -102,12 +109,16 @@ const METHODS: &[&str] = &[
     "redeliverWebhookDeliveries",
     "searchRepositories",
     "setEndpoint",
+    "setIssuer",
+    "setRepositoryEndpoint",
     "supportsCommentImages",
     "supportsPublicRepositories",
     "supportsRepositoryArchives",
+    "supportsRepositoryCloneUrl",
     "supportsRepositoryCreation",
     "supportsRepositoryDeletion",
     "syncMirror",
+    "updateCheck",
     "updateCheckRun",
     "updateComment",
     "updateCommitStatus",
@@ -129,9 +140,11 @@ pub const OPS: &[&str] = &[
     "clone.ref",
     "clone.command",
     "clone.run",
+    "jwt.sign",
     "vcs.batch_get_repository_contents",
     "vcs.batch_upsert_check_runs",
     "vcs.compare_commits",
+    "vcs.compare_files",
     "vcs.create_branch",
     "vcs.create_check_run",
     "vcs.create_comment",
@@ -146,6 +159,7 @@ pub const OPS: &[&str] = &[
     "vcs.delete_repository",
     "vcs.dismiss_pull_request_review",
     "vcs.generate_clone_command",
+    "vcs.generate_push_command",
     "vcs.get_authenticated_app",
     "vcs.get_blob",
     "vcs.get_branch_url",
@@ -156,6 +170,7 @@ pub const OPS: &[&str] = &[
     "vcs.get_commit_statuses",
     "vcs.get_commit_url",
     "vcs.get_event_header_name",
+    "vcs.get_event_type",
     "vcs.get_events",
     "vcs.get_file_url",
     "vcs.get_install_url",
@@ -167,6 +182,7 @@ pub const OPS: &[&str] = &[
     "vcs.get_pull_request",
     "vcs.get_pull_request_files",
     "vcs.get_pull_request_from_branch",
+    "vcs.get_pull_request_url",
     "vcs.get_rate_limit",
     "vcs.get_repository",
     "vcs.get_repository_clone_headers",
@@ -182,8 +198,11 @@ pub const OPS: &[&str] = &[
     "vcs.get_supported_webhook_scopes",
     "vcs.get_type",
     "vcs.get_user",
+    "vcs.get_webhook_claims",
     "vcs.has_access_to_all_repositories",
     "vcs.initialize_variables",
+    "vcs.is_trusted_core",
+    "vcs.is_trusted_issuer",
     "vcs.list_branches",
     "vcs.list_check_runs_for_commit",
     "vcs.list_check_runs_for_suite",
@@ -203,12 +222,16 @@ pub const OPS: &[&str] = &[
     "vcs.redeliver_webhook_deliveries",
     "vcs.search_repositories",
     "vcs.set_endpoint",
+    "vcs.set_issuer",
+    "vcs.set_repository_endpoint",
     "vcs.supports_comment_images",
     "vcs.supports_public_repositories",
     "vcs.supports_repository_archives",
+    "vcs.supports_repository_clone_url",
     "vcs.supports_repository_creation",
     "vcs.supports_repository_deletion",
     "vcs.sync_mirror",
+    "vcs.update_check",
     "vcs.update_check_run",
     "vcs.update_comment",
     "vcs.update_commit_status",
@@ -225,6 +248,7 @@ enum Any {
     Gitea(Gitea),
     Bitbucket(Bitbucket),
     Origin(Origin),
+    Entire(Box<Entire>),
 }
 
 impl Any {
@@ -235,6 +259,7 @@ impl Any {
             Any::Gitea(a) => a,
             Any::Bitbucket(a) => a,
             Any::Origin(a) => a,
+            Any::Entire(a) => a.as_ref(),
         }
     }
 
@@ -245,6 +270,7 @@ impl Any {
             Any::Gitea(a) => a,
             Any::Bitbucket(a) => a,
             Any::Origin(a) => a,
+            Any::Entire(a) => a.as_mut(),
         }
     }
 
@@ -260,6 +286,7 @@ impl Any {
             },
             Any::Bitbucket(_) => "Utopia\\VCS\\Adapter\\Git\\Bitbucket",
             Any::Origin(_) => "Utopia\\VCS\\Adapter\\Git\\Origin",
+            Any::Entire(_) => "Utopia\\VCS\\Adapter\\Git\\Entire",
         }
     }
 }
@@ -568,6 +595,15 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                 Err(e) => error(&e),
             })
         }
+        "jwt.sign" => {
+            let seed = a.get("seed").and_then(Value::as_str).unwrap_or_default();
+            let token = sign(
+                &decode(a.get("header").unwrap_or(&json!({})))?,
+                &decode(a.get("claims").unwrap_or(&json!({})))?,
+                &hex(seed)?,
+            )?;
+            back(json!({ "token": token }))
+        }
         "clone.run" => Ok(Outcome::ok(
             run(required(&a, "command")?, required(&a, "directory")?, a.get("workspace").and_then(Value::as_str))
                 .await?,
@@ -630,6 +666,17 @@ async fn build(a: &Map<String, Value>, session: &Session) -> Result<Any, Fault> 
                 .with_web_endpoint(string(a, "web", "")?)
                 .with_git_endpoint(string(a, "git", "")?),
         ),
+        "entire" => {
+            let mut entire = Entire::new(cache);
+            if !endpoint.is_empty() {
+                entire.set_endpoint(endpoint);
+            }
+            let issuer = string(a, "issuer", "")?;
+            if !issuer.is_empty() {
+                entire.set_issuer(issuer);
+            }
+            Any::Entire(Box::new(entire))
+        }
         other => return Err(Fault::new(format!("unknown adapter {other}"))),
     })
 }
@@ -668,7 +715,27 @@ async fn invoke(any: &mut Any, method: &str, a: &Map<String, Value>) -> Result<V
         "getBranchUrl" => json!(any.git().branch_url(owner()?, repo()?, required(a, "branch")?)),
         "getCommitUrl" => json!(any.git().commit_url(owner()?, repo()?, required(a, "commitHash")?)),
         "getFileUrl" => json!(any.git().file_url(owner()?, repo()?, required(a, "reference")?)),
-        "getRepositoryCloneUrl" => ok!(any.git().repository_clone_url(owner()?, repo()?), |v: String| json!(v)),
+        "getRepositoryCloneUrl" => ok!(any.git().repository_clone_url(owner()?, repo()?).await, |v: String| json!(v)),
+        "supportsRepositoryCloneUrl" => json!(any.git().supports_repository_clone_url()),
+        "generatePushCommand" => ok!(
+            any.git().push_command(owner()?, repo()?, required(a, "directory")?, required(a, "branch")?),
+            |c: Command| shell(&c)
+        ),
+        "updateCheck" => ok!(
+            any.git()
+                .update_check(
+                    owner()?,
+                    repo()?,
+                    required(a, "SHA")?,
+                    required(a, "state")?,
+                    required(a, "name")?,
+                    required(a, "title")?,
+                    string(a, "summary", "")?,
+                    string(a, "detailsUrl", "")?,
+                )
+                .await,
+            |()| Value::Null
+        ),
         "validateWebhookEvent" => json!(any.git().validate_webhook_event(
             &byte_string(a, "payload")?,
             &byte_string(a, "signature")?,
@@ -676,14 +743,16 @@ async fn invoke(any: &mut Any, method: &str, a: &Map<String, Value>) -> Result<V
         )),
         "getEvents" => ok!(any.git().events(required(a, "event")?, &byte_string(a, "payload")?), list),
         "generateCloneCommand" => ok!(
-            any.git().clone_command(
-                owner()?,
-                repo()?,
-                required(a, "version")?,
-                required(a, "versionType")?,
-                required(a, "directory")?,
-                required(a, "rootDirectory")?,
-            ),
+            any.git()
+                .clone_command(
+                    owner()?,
+                    repo()?,
+                    required(a, "version")?,
+                    required(a, "versionType")?,
+                    required(a, "directory")?,
+                    required(a, "rootDirectory")?,
+                )
+                .await,
             |c: Command| shell(&c)
         ),
         "initializeVariables" => ok!(
@@ -884,6 +953,10 @@ async fn invoke(any: &mut Any, method: &str, a: &Map<String, Value>) -> Result<V
                 g.set_endpoint(required(a, "endpoint")?);
                 Value::Null
             }
+            Any::Entire(g) => {
+                g.set_endpoint(required(a, "endpoint")?);
+                Value::Null
+            }
             other => undefined(other.class(), method),
         },
         "createOrganization" => match any {
@@ -893,6 +966,7 @@ async fn invoke(any: &mut Any, method: &str, a: &Map<String, Value>) -> Result<V
         },
         _ => match any {
             Any::Origin(origin) => origin_method(origin, method, a).await?,
+            Any::Entire(entire) => entire_method(entire, method, a).await?,
             other => undefined(other.class(), method),
         },
     })
@@ -1069,6 +1143,73 @@ async fn origin_method(origin: &mut Origin, method: &str, a: &Map<String, Value>
     })
 }
 
+/// Entire's own methods.
+async fn entire_method(entire: &mut Entire, method: &str, a: &Map<String, Value>) -> Result<Value, Fault> {
+    macro_rules! ok {
+        ($result:expr, $encode:expr) => {
+            match $result {
+                Ok(value) => $encode(value),
+                Err(e) => error(&e),
+            }
+        };
+    }
+    let owner = || required(a, "owner");
+    let repo = || required(a, "repositoryName");
+    let value = |v: Php| encode(&v);
+    Ok(match method {
+        "setIssuer" => {
+            entire.set_issuer(required(a, "issuer")?);
+            Value::Null
+        }
+        "setRepositoryEndpoint" => {
+            entire.set_repository_endpoint(required(a, "repositoryId")?, required(a, "apiBaseUrl")?);
+            Value::Null
+        }
+        "getInstallUrl" => {
+            json!(entire.install_url(required(a, "plugin")?, string(a, "redirectUri", "")?, string(a, "state", "")?))
+        }
+        "verifyReceipt" => ok!(entire.verify_receipt(required(a, "receipt")?, required(a, "plugin")?).await, value),
+        "isTrustedCore" => json!(entire.is_trusted_core(required(a, "origin")?)),
+        "isTrustedIssuer" => json!(entire.is_trusted_issuer(required(a, "issuer")?)),
+        "getSigningKeys" => {
+            ok!(entire.signing_keys(string(a, "issuer", "")?, boolean(a, "refresh", false)?).await, list)
+        }
+        "getWebhookClaims" => ok!(entire.webhook_claims(required(a, "authorization")?), value),
+        "getEventType" => ok!(entire.event_type(&byte_string(a, "payload")?), |v: String| json!(v)),
+        "compareFiles" => {
+            ok!(entire.compare_files(owner()?, repo()?, required(a, "base")?, required(a, "head")?).await, list)
+        }
+        "getPullRequestUrl" => {
+            json!(entire.pull_request_url(owner()?, repo()?, int(a, "pullRequestNumber", None)?))
+        }
+        _ => undefined("Utopia\\VCS\\Adapter\\Git\\Entire", method),
+    })
+}
+
+/// A hex string's bytes.
+fn hex(text: &str) -> Result<Vec<u8>, Fault> {
+    (0..text.len())
+        .step_by(2)
+        .map(|i| {
+            text.get(i..i + 2).and_then(|b| u8::from_str_radix(b, 16).ok()).ok_or_else(|| Fault::new("invalid hex"))
+        })
+        .collect()
+}
+
+/// `jwt.sign`: an EdDSA JWT over a header and claims (PHP's json_encode()),
+/// signed with the Ed25519 key of a 32-byte seed.
+fn sign(header: &Php, claims: &Php, seed: &[u8]) -> Result<String, Fault> {
+    let encode = |value: &Php| -> Result<String, Fault> {
+        let json = php_std::json::encode(value, php_std::json::Flags::NONE, 512).map_err(fault)?;
+        Ok(base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(json))
+    };
+    let input = format!("{}.{}", encode(header)?, encode(claims)?);
+    let key = openssl::pkey::PKey::private_key_from_raw_bytes(seed, openssl::pkey::Id::ED25519).map_err(fault)?;
+    let mut signer = openssl::sign::Signer::new_without_digest(&key).map_err(fault)?;
+    let signature = signer.sign_oneshot_to_vec(input.as_bytes()).map_err(fault)?;
+    Ok(format!("{input}.{}", base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(signature)))
+}
+
 /// The fixture server's control API for this namespace.
 async fn control(session: &Session, http: &str, action: &str, body: Option<Value>) -> Result<Value, Fault> {
     use utopia_client::{Client, Http, Request};
@@ -1238,13 +1379,18 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
         "clone_command" => {
             let mut gitea = Gitea::new(none());
             gitea.initialize("", "", None, Some("bench-token"), None).await.map_err(fault)?;
-            Bench::sync(move || {
-                black_box(
-                    gitea
-                        .clone_command("acme", "website", "v1.*", "tag", "/tmp/build", "apps/web")
-                        .and_then(|c| c.to_shell().map_err(Error::from))
-                        .ok(),
-                );
+            let gitea = std::rc::Rc::new(gitea);
+            Bench::future(move || {
+                let gitea = gitea.clone();
+                async move {
+                    black_box(
+                        gitea
+                            .clone_command("acme", "website", "v1.*", "tag", "/tmp/build", "apps/web")
+                            .await
+                            .and_then(|c| c.to_shell().map_err(Error::from))
+                            .ok(),
+                    );
+                }
             })
         }
         "gitea_latest_commit" => {

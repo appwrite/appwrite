@@ -1,0 +1,566 @@
+{
+  "cases": [
+    {
+      "name": "Gitea: a check reported as a commit status",
+      "steps": [
+        {
+          "op": "vcs.new",
+          "args": {
+            "adapter": "gitea"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "vcs.initialize_variables",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "installationId": "",
+            "privateKey": "",
+            "accessToken": "test-token-gitea"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.set_endpoint",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "endpoint": "${vcs}/~${ns}/gitea"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.create_organization",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "orgName": "checks"
+          },
+          "expect": "checks"
+        },
+        {
+          "op": "vcs.create_repository",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "checks",
+            "repositoryName": "site",
+            "private": false
+          },
+          "expect": {
+            "id": 2,
+            "owner": {
+              "id": 1,
+              "name": "checks",
+              "full_name": "",
+              "avatar_url": "https://secure.gravatar.com/avatar/20f46557dace2132e6fe939596bbfc66?d=identicon",
+              "description": "",
+              "website": "",
+              "location": "",
+              "visibility": "public",
+              "username": "checks",
+              "login": "checks"
+            },
+            "name": "site",
+            "full_name": "checks/site",
+            "description": "",
+            "empty": true,
+            "private": false,
+            "fork": false,
+            "mirror": false,
+            "size": 0,
+            "html_url": "${vcs}/~${ns}/gitea/checks/site",
+            "url": "${vcs}/~${ns}/gitea/api/v1/repos/checks/site",
+            "clone_url": "${vcs}/~${ns}/gitea/checks/site.git",
+            "default_branch": "main",
+            "created_at": "2026-01-01T00:00:00Z",
+            "updated_at": "2026-01-01T00:00:00Z",
+            "pushed_at": "2026-01-01T00:00:00Z"
+          }
+        },
+        {
+          "op": "vcs.create_file",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "checks",
+            "repositoryName": "site",
+            "filepath": "index.html",
+            "content": "<h1>Hi</h1>"
+          },
+          "expect": {
+            "content": {
+              "name": "index.html",
+              "path": "index.html",
+              "sha": "15f747a10559039ba735472f070bd09cd31a2d83",
+              "type": "file",
+              "size": 11
+            },
+            "commit": {
+              "sha": "d75217f968b2fdd34631c273ce91d12a2d2eb0fa",
+              "html_url": "${vcs}/~${ns}/gitea/checks/site/commit/d75217f968b2fdd34631c273ce91d12a2d2eb0fa",
+              "message": "Add file\n"
+            }
+          }
+        },
+        {
+          "op": "vcs.get_latest_commit",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "checks",
+            "repositoryName": "site",
+            "branch": "main"
+          },
+          "bind": "c",
+          "expect": {
+            "commitAuthor": "utopia",
+            "commitMessage": "Add file\n",
+            "commitHash": "d75217f968b2fdd34631c273ce91d12a2d2eb0fa",
+            "commitUrl": "${vcs}/~${ns}/gitea/checks/site/commit/d75217f968b2fdd34631c273ce91d12a2d2eb0fa",
+            "commitAuthorAvatar": "https://secure.gravatar.com/avatar/2cd0e76b53262498aa86190f94cb63cf?d=identicon",
+            "commitAuthorUrl": ""
+          }
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "checks",
+            "repositoryName": "site",
+            "SHA": {
+              "$ref": "c",
+              "path": "/commitHash"
+            },
+            "state": "queued",
+            "name": "Site",
+            "title": "Queued",
+            "summary": "dropped",
+            "detailsUrl": "https://appwrite.test/console"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "checks",
+            "repositoryName": "site",
+            "SHA": {
+              "$ref": "c",
+              "path": "/commitHash"
+            },
+            "state": "in_progress",
+            "name": "Site",
+            "title": "Building",
+            "summary": "dropped",
+            "detailsUrl": "https://appwrite.test/console"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "checks",
+            "repositoryName": "site",
+            "SHA": {
+              "$ref": "c",
+              "path": "/commitHash"
+            },
+            "state": "cancelled",
+            "name": "Function",
+            "title": "Cancelled",
+            "summary": "dropped",
+            "detailsUrl": "https://appwrite.test/console"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.update_check",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "checks",
+            "repositoryName": "site",
+            "SHA": {
+              "$ref": "c",
+              "path": "/commitHash"
+            },
+            "state": "success",
+            "name": "Docs",
+            "title": "Built",
+            "summary": "dropped",
+            "detailsUrl": "https://appwrite.test/console"
+          },
+          "expect": null
+        },
+        {
+          "op": "vcs.get_commit_statuses",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "checks",
+            "repositoryName": "site",
+            "commitHash": {
+              "$ref": "c",
+              "path": "/commitHash"
+            }
+          },
+          "expect": [
+            {
+              "state": "success",
+              "description": "Built",
+              "target_url": "https://appwrite.test/console",
+              "context": "Docs"
+            },
+            {
+              "state": "error",
+              "description": "Cancelled",
+              "target_url": "https://appwrite.test/console",
+              "context": "Function"
+            },
+            {
+              "state": "pending",
+              "description": "Building",
+              "target_url": "https://appwrite.test/console",
+              "context": "Site"
+            },
+            {
+              "state": "pending",
+              "description": "Queued",
+              "target_url": "https://appwrite.test/console",
+              "context": "Site"
+            }
+          ]
+        },
+        {
+          "op": "vcs.supports_repository_clone_url",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "vcs.generate_push_command",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "owner": "checks",
+            "repositoryName": "site",
+            "directory": "/tmp/clone",
+            "branch": "main"
+          },
+          "expect": "'git' '-C' '/tmp/clone' 'push' 'origin' 'main'"
+        },
+        {
+          "op": "fixture.requests",
+          "args": {},
+          "expect": [
+            {
+              "provider": "gitea",
+              "method": "POST",
+              "target": "/api/v1/orgs",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "token test-token-gitea"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"username\":\"checks\",\"visibility\":\"public\"}"
+            },
+            {
+              "provider": "gitea",
+              "method": "POST",
+              "target": "/api/v1/orgs/checks/repos",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "token test-token-gitea"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"name\":\"site\",\"private\":false}"
+            },
+            {
+              "provider": "gitea",
+              "method": "POST",
+              "target": "/api/v1/repos/checks/site/contents/index.html",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "token test-token-gitea"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"content\":\"PGgxPkhpPC9oMT4=\",\"message\":\"Add file\"}"
+            },
+            {
+              "provider": "gitea",
+              "method": "GET",
+              "target": "/api/v1/repos/checks/site/commits?sha=main&limit=1",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "token test-token-gitea"
+                ]
+              ],
+              "body": ""
+            },
+            {
+              "provider": "gitea",
+              "method": "POST",
+              "target": "/api/v1/repos/checks/site/statuses/d75217f968b2fdd34631c273ce91d12a2d2eb0fa",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "token test-token-gitea"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"state\":\"pending\",\"description\":\"Queued\",\"target_url\":\"https:\\/\\/appwrite.test\\/console\",\"context\":\"Site\"}"
+            },
+            {
+              "provider": "gitea",
+              "method": "POST",
+              "target": "/api/v1/repos/checks/site/statuses/d75217f968b2fdd34631c273ce91d12a2d2eb0fa",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "token test-token-gitea"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"state\":\"pending\",\"description\":\"Building\",\"target_url\":\"https:\\/\\/appwrite.test\\/console\",\"context\":\"Site\"}"
+            },
+            {
+              "provider": "gitea",
+              "method": "POST",
+              "target": "/api/v1/repos/checks/site/statuses/d75217f968b2fdd34631c273ce91d12a2d2eb0fa",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "token test-token-gitea"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"state\":\"error\",\"description\":\"Cancelled\",\"target_url\":\"https:\\/\\/appwrite.test\\/console\",\"context\":\"Function\"}"
+            },
+            {
+              "provider": "gitea",
+              "method": "POST",
+              "target": "/api/v1/repos/checks/site/statuses/d75217f968b2fdd34631c273ce91d12a2d2eb0fa",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "token test-token-gitea"
+                ],
+                [
+                  "Content-Length",
+                  "<body>"
+                ]
+              ],
+              "body": "{\"state\":\"success\",\"description\":\"Built\",\"target_url\":\"https:\\/\\/appwrite.test\\/console\",\"context\":\"Docs\"}"
+            },
+            {
+              "provider": "gitea",
+              "method": "GET",
+              "target": "/api/v1/repos/checks/site/commits/d75217f968b2fdd34631c273ce91d12a2d2eb0fa/statuses",
+              "headers": [
+                [
+                  "Host",
+                  "<host>"
+                ],
+                [
+                  "User-Agent",
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+                ],
+                [
+                  "Accept",
+                  "*/*"
+                ],
+                [
+                  "content-type",
+                  "application/json"
+                ],
+                [
+                  "Authorization",
+                  "token test-token-gitea"
+                ]
+              ],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
