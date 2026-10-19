@@ -967,7 +967,6 @@
         ],
         "videos.list": [
             "queries",
-            "search",
             "total"
         ],
         "videos.listCaptions": [
@@ -3151,7 +3150,7 @@
             "total"
         ],
         "project.listProfiles": [
-            "search",
+            "queries",
             "codec"
         ],
         "project.listVariables": [
@@ -5191,7 +5190,6 @@
         ],
         "videos.list": [
             "queries",
-            "search",
             "total"
         ],
         "videos.listCaptions": [
@@ -7242,7 +7240,7 @@
             "total"
         ],
         "project.listProfiles": [
-            "search",
+            "queries",
             "codec"
         ],
         "project.listVariables": [
@@ -9160,7 +9158,6 @@
         ],
         "videos.list": [
             "queries",
-            "search",
             "total"
         ],
         "videos.listCaptions": [
