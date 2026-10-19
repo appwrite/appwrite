@@ -75,15 +75,20 @@ assert!(matches!(stale, Err(Error::PreconditionFailed { .. })));
 
 ## Store files in S3
 
-`S3::new` takes the endpoint with the bucket in its path (path style), or a provider constructor (`S3::aws`, `S3::do_spaces`, `S3::backblaze`, `S3::linode`, `S3::wasabi`) builds the bucket's virtual host. With a bucket name, copies on the device run server side.
+`S3::new` takes the endpoint with the bucket in its path (path style), or a provider constructor (`S3::aws`, `S3::do_spaces`, `S3::backblaze`, `S3::linode`, `S3::wasabi`) builds the bucket's virtual host. With a bucket name, copies on the device run server side, and bucket requests (listings, `delete_path()`, recursive `delete()`) know where the bucket lives: an endpoint that addresses the bucket (its host or last path segment is the bucket) is virtual-hosted, a bare service endpoint is path-style, where every path, the root included, begins with the bucket. `with_path_style()` chooses explicitly. Directory deletes refuse the whole bucket, the whole root and paths outside the root, and fail when the service keeps any object.
 
 ```rust
 use utopia_storage::{Acl, Device, DeviceType, S3};
 
 let device = S3::new("uploads", "access-key", "secret-key", "http://minio:9000/bucket", "us-east-1")?
     .with_acl(Some(Acl::PublicRead))
-    .with_bucket("bucket");
+    .with_bucket("bucket")?;
 assert_eq!(device.path("photo.jpg"), "uploads/photo.jpg");
+
+let service = S3::new("bucket/uploads", "access-key", "secret-key", "http://minio:9000", "us-east-1")?
+    .with_bucket("bucket")?
+    .with_path_style(Some(true))?;
+assert_eq!(service.path("photo.jpg"), "bucket/uploads/photo.jpg");
 
 let aws = S3::aws("uploads", "access-key", "secret-key", "my-bucket", "eu-west-1")?;
 assert_eq!(aws.kind(), DeviceType::AwsS3);

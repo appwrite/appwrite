@@ -2579,7 +2579,7 @@
                 "user-agent": "utopia-php/storage",
                 "x-amz-acl": "private",
                 "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "x-amz-copy-source": "/my-bucket/root/a.jpg",
+                "x-amz-copy-source": "/root/a.jpg",
                 "x-amz-date": "<masked>",
                 "x-amz-metadata-directive": "COPY"
               },
@@ -2730,7 +2730,7 @@
                 "host": "s3.example.com",
                 "user-agent": "utopia-php/storage",
                 "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "x-amz-copy-source": "/my-bucket/root/a.bin",
+                "x-amz-copy-source": "/root/a.bin",
                 "x-amz-copy-source-range": "bytes=0-5368709119",
                 "x-amz-date": "<masked>"
               },
@@ -2747,7 +2747,7 @@
                 "host": "s3.example.com",
                 "user-agent": "utopia-php/storage",
                 "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "x-amz-copy-source": "/my-bucket/root/a.bin",
+                "x-amz-copy-source": "/root/a.bin",
                 "x-amz-copy-source-range": "bytes=5368709120-6442450943",
                 "x-amz-date": "<masked>"
               },
@@ -2927,7 +2927,7 @@
                 "host": "s3.example.com",
                 "user-agent": "utopia-php/storage",
                 "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "x-amz-copy-source": "/my-bucket/root/a.bin",
+                "x-amz-copy-source": "/root/a.bin",
                 "x-amz-copy-source-range": "bytes=0-5368709119",
                 "x-amz-date": "<masked>"
               },
@@ -2944,7 +2944,7 @@
                 "host": "s3.example.com",
                 "user-agent": "utopia-php/storage",
                 "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "x-amz-copy-source": "/my-bucket/root/a.bin",
+                "x-amz-copy-source": "/root/a.bin",
                 "x-amz-copy-source-range": "bytes=5368709120-6442450943",
                 "x-amz-date": "<masked>"
               },
@@ -7156,7 +7156,7 @@
           "expect": [
             {
               "method": "GET",
-              "url": "https://s3.example.com/?list-type=2&prefix=root%2Fbucket&max-keys=1000",
+              "url": "https://s3.example.com/?list-type=2&prefix=root%2Fbucket%2F&max-keys=1000",
               "headers": {
                 "authorization": "<masked>",
                 "content-length": "0",
@@ -7188,7 +7188,7 @@
             },
             {
               "method": "GET",
-              "url": "https://s3.example.com/?list-type=2&prefix=root%2Fbucket&max-keys=1000&continuation-token=t2",
+              "url": "https://s3.example.com/?list-type=2&prefix=root%2Fbucket%2F&max-keys=1000&continuation-token=t2",
               "headers": {
                 "authorization": "<masked>",
                 "content-length": "0",
@@ -7233,6 +7233,16 @@
                 "status": 204,
                 "body": "",
                 "headers": []
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><KeyCount>0</KeyCount><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
               },
               {
                 "status": 204,
@@ -7298,6 +7308,22 @@
                 "authorization": "<masked>",
                 "content-length": "0",
                 "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%20b%2Bc.txt%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
                 "date": "<masked>",
                 "host": "s3.example.com",
                 "user-agent": "utopia-php/storage",
@@ -7509,7 +7535,7 @@
                 "user-agent": "utopia-php/storage",
                 "x-amz-acl": "private",
                 "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                "x-amz-copy-source": "/b/root/a",
+                "x-amz-copy-source": "/root/a",
                 "x-amz-date": "<masked>",
                 "x-amz-metadata-directive": "COPY"
               },
@@ -9175,6 +9201,3926 @@
                 "x-amz-date": "<masked>"
               },
               "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a recursive delete follows the continuation token",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 204,
+                "body": "",
+                "headers": []
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><KeyCount>1</KeyCount><IsTruncated>true</IsTruncated><NextContinuationToken>page-2</NextContinuationToken><Contents><Key>root/a/1.txt</Key><Size>1</Size></Contents></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "",
+                "headers": []
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><KeyCount>1</KeyCount><IsTruncated>false</IsTruncated><Contents><Key>root/a/2.txt</Key><Size>1</Size></Contents></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "",
+                "headers": []
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "/root",
+            "host": "https://s3.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/root/a",
+            "recursive": true
+          },
+          "expect": true
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "DELETE",
+              "url": "https://s3.example.com/root/a",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "url": "https://s3.example.com/?delete=",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "124",
+                "content-md5": "0f6qt//v9jk15AiO6SVScw==",
+                "content-type": "application/xml",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "cd3e95f5b0d17ebbe38fada7e8afec24da3ba9fcbff3847d9aa96f357cd0a1d0",
+                "x-amz-date": "<masked>"
+              },
+              "body": "<Delete xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"><Object><Key>root/a/1.txt</Key></Object><Quiet>true</Quiet></Delete>"
+            },
+            {
+              "method": "GET",
+              "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000&continuation-token=page-2",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "url": "https://s3.example.com/?delete=",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "124",
+                "content-md5": "1ebYIj0QnnEhYYETVryZkA==",
+                "content-type": "application/xml",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "c5c5c78c61dc602a6a22f1ff8a40a3fd1413c2264ddb6466724272bebfa6f10d",
+                "x-amz-date": "<masked>"
+              },
+              "body": "<Delete xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"><Object><Key>root/a/2.txt</Key></Object><Quiet>true</Quiet></Delete>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "an empty truncated page does not end the delete",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><KeyCount>0</KeyCount><IsTruncated>true</IsTruncated><NextContinuationToken>page-2</NextContinuationToken></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><KeyCount>1</KeyCount><IsTruncated>false</IsTruncated><Contents><Key>root/a/1.txt</Key><Size>1</Size></Contents></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "",
+                "headers": []
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "/root",
+            "host": "https://s3.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "a"
+          },
+          "expect": true
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000&continuation-token=page-2",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "url": "https://s3.example.com/?delete=",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "124",
+                "content-md5": "0f6qt//v9jk15AiO6SVScw==",
+                "content-type": "application/xml",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "cd3e95f5b0d17ebbe38fada7e8afec24da3ba9fcbff3847d9aa96f357cd0a1d0",
+                "x-amz-date": "<masked>"
+              },
+              "body": "<Delete xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"><Object><Key>root/a/1.txt</Key></Object><Quiet>true</Quiet></Delete>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a listing that cannot be followed is an error: not a ListObjectsV2 result",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListAllMyBucketsResult><Owner><ID>owner</ID></Owner><Buckets></Buckets></ListAllMyBucketsResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "/root",
+            "host": "https://s3.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\RemoteException",
+              "message": "Unexpected S3 list response for prefix root/a/"
+            }
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a listing that cannot be followed is an error: truncated without a continuation token",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>true</IsTruncated><NextMarker>root/a/1.txt</NextMarker></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "/root",
+            "host": "https://s3.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\RemoteException",
+              "message": "Truncated S3 list response without a continuation token for prefix root/a/"
+            }
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a listing that cannot be followed is an error: the same continuation token twice",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><KeyCount>0</KeyCount><IsTruncated>true</IsTruncated><NextContinuationToken>page-2</NextContinuationToken></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><KeyCount>0</KeyCount><IsTruncated>true</IsTruncated><NextContinuationToken>page-2</NextContinuationToken></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "/root",
+            "host": "https://s3.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\RemoteException",
+              "message": "S3 list response repeated the continuation token for prefix root/a/"
+            }
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000&continuation-token=page-2",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "keys the service failed to delete are an error: two keys",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><KeyCount>2</KeyCount><IsTruncated>true</IsTruncated><NextContinuationToken>page-2</NextContinuationToken><Contents><Key>root/a/1.txt</Key><Size>1</Size></Contents><Contents><Key>root/a/2.txt</Key><Size>1</Size></Contents></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DeleteResult><Error><Key>root/a/1.txt</Key><Code>AccessDenied</Code><Message>Access Denied</Message></Error><Error><Key>root/a/2.txt</Key><Code>InternalError</Code><Message>Internal Error</Message></Error></DeleteResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><KeyCount>0</KeyCount><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "/root",
+            "host": "https://s3.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\RemoteException",
+              "message": "Failed to delete 2 objects under root/a/: root/a/1.txt (AccessDenied: Access Denied), root/a/2.txt (InternalError: Internal Error)"
+            }
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "url": "https://s3.example.com/?delete=",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "164",
+                "content-md5": "jBNm1OwKJn/vlu8ZmEXVzQ==",
+                "content-type": "application/xml",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "95d1413f5ce433ca571d23eb359dfbf5b2aaa2163c41d682608dea0f64dd5c31",
+                "x-amz-date": "<masked>"
+              },
+              "body": "<Delete xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"><Object><Key>root/a/1.txt</Key></Object><Object><Key>root/a/2.txt</Key></Object><Quiet>true</Quiet></Delete>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "keys the service failed to delete are an error: an entry without a key",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><KeyCount>2</KeyCount><IsTruncated>true</IsTruncated><NextContinuationToken>page-2</NextContinuationToken><Contents><Key>root/a/1.txt</Key><Size>1</Size></Contents><Contents><Key>root/a/2.txt</Key><Size>1</Size></Contents></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DeleteResult><Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error></DeleteResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><KeyCount>0</KeyCount><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "/root",
+            "host": "https://s3.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\RemoteException",
+              "message": "Failed to delete 1 objects under root/a/: ? (AccessDenied: Access Denied)"
+            }
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "url": "https://s3.example.com/?delete=",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "164",
+                "content-md5": "jBNm1OwKJn/vlu8ZmEXVzQ==",
+                "content-type": "application/xml",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "95d1413f5ce433ca571d23eb359dfbf5b2aaa2163c41d682608dea0f64dd5c31",
+                "x-amz-date": "<masked>"
+              },
+              "body": "<Delete xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"><Object><Key>root/a/1.txt</Key></Object><Object><Key>root/a/2.txt</Key></Object><Quiet>true</Quiet></Delete>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "keys the service failed to delete are an error: an error without entries",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><KeyCount>2</KeyCount><IsTruncated>true</IsTruncated><NextContinuationToken>page-2</NextContinuationToken><Contents><Key>root/a/1.txt</Key><Size>1</Size></Contents><Contents><Key>root/a/2.txt</Key><Size>1</Size></Contents></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DeleteResult><Error/></DeleteResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><KeyCount>0</KeyCount><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "/root",
+            "host": "https://s3.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\RemoteException",
+              "message": "Failed to delete 2 objects under root/a/"
+            }
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "url": "https://s3.example.com/?delete=",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "164",
+                "content-md5": "jBNm1OwKJn/vlu8ZmEXVzQ==",
+                "content-type": "application/xml",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "95d1413f5ce433ca571d23eb359dfbf5b2aaa2163c41d682608dea0f64dd5c31",
+                "x-amz-date": "<masked>"
+              },
+              "body": "<Delete xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"><Object><Key>root/a/1.txt</Key></Object><Object><Key>root/a/2.txt</Key></Object><Quiet>true</Quiet></Delete>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "keys the service failed to delete are an error: the whole batch",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><KeyCount>2</KeyCount><IsTruncated>true</IsTruncated><NextContinuationToken>page-2</NextContinuationToken><Contents><Key>root/a/1.txt</Key><Size>1</Size></Contents><Contents><Key>root/a/2.txt</Key><Size>1</Size></Contents></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><KeyCount>0</KeyCount><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "/root",
+            "host": "https://s3.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\RemoteException",
+              "message": "Failed to delete 2 objects under root/a/"
+            }
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://s3.example.com/?list-type=2&prefix=root%2Fa%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "url": "https://s3.example.com/?delete=",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "164",
+                "content-md5": "jBNm1OwKJn/vlu8ZmEXVzQ==",
+                "content-type": "application/xml",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "95d1413f5ce433ca571d23eb359dfbf5b2aaa2163c41d682608dea0f64dd5c31",
+                "x-amz-date": "<masked>"
+              },
+              "body": "<Delete xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"><Object><Key>root/a/1.txt</Key></Object><Object><Key>root/a/2.txt</Key></Object><Quiet>true</Quiet></Delete>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "virtual-hosted subclasses keep their request URIs: AWS",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "",
+                "headers": [
+                  [
+                    "etag",
+                    "\"abc\""
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>root/x/a</Key></Contents></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "",
+                "headers": []
+              },
+              {
+                "status": 200,
+                "body": "",
+                "headers": [
+                  [
+                    "content-length",
+                    "1"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><CopyObjectResult><ETag>\"abc\"</ETag></CopyObjectResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "provider.new",
+          "args": {
+            "provider": "aws",
+            "root": "/root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "bucket": "my-bucket",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/root/a",
+            "data": "a",
+            "content_type": ""
+          },
+          "expect": "abc"
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "/root/"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "x"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.copy",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "/root/a",
+            "target": "/root/b"
+          },
+          "expect": true
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "PUT",
+              "url": "https://my-bucket.s3.us-east-1.amazonaws.com/root/a",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "1",
+                "content-md5": "DMF1ucDxtqgxw5niaXcmYQ==",
+                "date": "<masked>",
+                "host": "my-bucket.s3.us-east-1.amazonaws.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-acl": "private",
+                "x-amz-content-sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+                "x-amz-date": "<masked>"
+              },
+              "body": "a"
+            },
+            {
+              "method": "GET",
+              "url": "https://my-bucket.s3.us-east-1.amazonaws.com/?list-type=2&prefix=root%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "my-bucket.s3.us-east-1.amazonaws.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "url": "https://my-bucket.s3.us-east-1.amazonaws.com/?list-type=2&prefix=root%2Fx%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "my-bucket.s3.us-east-1.amazonaws.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "url": "https://my-bucket.s3.us-east-1.amazonaws.com/?delete=",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "120",
+                "content-md5": "c2yOVux3ocBCVbZV8o2L0w==",
+                "content-type": "application/xml",
+                "date": "<masked>",
+                "host": "my-bucket.s3.us-east-1.amazonaws.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "bcabf5656a63a6c978e4b9037032aa449a2af6eac9a9b37c7d13bd4bf4161672",
+                "x-amz-date": "<masked>"
+              },
+              "body": "<Delete xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"><Object><Key>root/x/a</Key></Object><Quiet>true</Quiet></Delete>"
+            },
+            {
+              "method": "HEAD",
+              "url": "https://my-bucket.s3.us-east-1.amazonaws.com/root/a",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "my-bucket.s3.us-east-1.amazonaws.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "PUT",
+              "url": "https://my-bucket.s3.us-east-1.amazonaws.com/root/b",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "my-bucket.s3.us-east-1.amazonaws.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-acl": "private",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-copy-source": "/my-bucket/root/a",
+                "x-amz-date": "<masked>",
+                "x-amz-metadata-directive": "COPY"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "virtual-hosted subclasses keep their request URIs: AWS China",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "",
+                "headers": [
+                  [
+                    "etag",
+                    "\"abc\""
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>root/x/a</Key></Contents></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "",
+                "headers": []
+              },
+              {
+                "status": 200,
+                "body": "",
+                "headers": [
+                  [
+                    "content-length",
+                    "1"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><CopyObjectResult><ETag>\"abc\"</ETag></CopyObjectResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "provider.new",
+          "args": {
+            "provider": "aws",
+            "root": "/root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "bucket": "my-bucket",
+            "region": "cn-north-1",
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/root/a",
+            "data": "a",
+            "content_type": ""
+          },
+          "expect": "abc"
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "/root/"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "x"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.copy",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "/root/a",
+            "target": "/root/b"
+          },
+          "expect": true
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "PUT",
+              "url": "https://my-bucket.s3.cn-north-1.amazonaws.cn/root/a",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "1",
+                "content-md5": "DMF1ucDxtqgxw5niaXcmYQ==",
+                "date": "<masked>",
+                "host": "my-bucket.s3.cn-north-1.amazonaws.cn",
+                "user-agent": "utopia-php/storage",
+                "x-amz-acl": "private",
+                "x-amz-content-sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+                "x-amz-date": "<masked>"
+              },
+              "body": "a"
+            },
+            {
+              "method": "GET",
+              "url": "https://my-bucket.s3.cn-north-1.amazonaws.cn/?list-type=2&prefix=root%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "my-bucket.s3.cn-north-1.amazonaws.cn",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "url": "https://my-bucket.s3.cn-north-1.amazonaws.cn/?list-type=2&prefix=root%2Fx%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "my-bucket.s3.cn-north-1.amazonaws.cn",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "url": "https://my-bucket.s3.cn-north-1.amazonaws.cn/?delete=",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "120",
+                "content-md5": "c2yOVux3ocBCVbZV8o2L0w==",
+                "content-type": "application/xml",
+                "date": "<masked>",
+                "host": "my-bucket.s3.cn-north-1.amazonaws.cn",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "bcabf5656a63a6c978e4b9037032aa449a2af6eac9a9b37c7d13bd4bf4161672",
+                "x-amz-date": "<masked>"
+              },
+              "body": "<Delete xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"><Object><Key>root/x/a</Key></Object><Quiet>true</Quiet></Delete>"
+            },
+            {
+              "method": "HEAD",
+              "url": "https://my-bucket.s3.cn-north-1.amazonaws.cn/root/a",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "my-bucket.s3.cn-north-1.amazonaws.cn",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "PUT",
+              "url": "https://my-bucket.s3.cn-north-1.amazonaws.cn/root/b",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "my-bucket.s3.cn-north-1.amazonaws.cn",
+                "user-agent": "utopia-php/storage",
+                "x-amz-acl": "private",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-copy-source": "/my-bucket/root/a",
+                "x-amz-date": "<masked>",
+                "x-amz-metadata-directive": "COPY"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "virtual-hosted subclasses keep their request URIs: DOSpaces",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "",
+                "headers": [
+                  [
+                    "etag",
+                    "\"abc\""
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>root/x/a</Key></Contents></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "",
+                "headers": []
+              },
+              {
+                "status": 200,
+                "body": "",
+                "headers": [
+                  [
+                    "content-length",
+                    "1"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><CopyObjectResult><ETag>\"abc\"</ETag></CopyObjectResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "provider.new",
+          "args": {
+            "provider": "do_spaces",
+            "root": "/root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "bucket": "my-bucket",
+            "region": "nyc3",
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/root/a",
+            "data": "a",
+            "content_type": ""
+          },
+          "expect": "abc"
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "/root/"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "x"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.copy",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "/root/a",
+            "target": "/root/b"
+          },
+          "expect": true
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "PUT",
+              "url": "https://my-bucket.nyc3.digitaloceanspaces.com/root/a",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "1",
+                "content-md5": "DMF1ucDxtqgxw5niaXcmYQ==",
+                "date": "<masked>",
+                "host": "my-bucket.nyc3.digitaloceanspaces.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-acl": "private",
+                "x-amz-content-sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+                "x-amz-date": "<masked>"
+              },
+              "body": "a"
+            },
+            {
+              "method": "GET",
+              "url": "https://my-bucket.nyc3.digitaloceanspaces.com/?list-type=2&prefix=root%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "my-bucket.nyc3.digitaloceanspaces.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "url": "https://my-bucket.nyc3.digitaloceanspaces.com/?list-type=2&prefix=root%2Fx%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "my-bucket.nyc3.digitaloceanspaces.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "url": "https://my-bucket.nyc3.digitaloceanspaces.com/?delete=",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "120",
+                "content-md5": "c2yOVux3ocBCVbZV8o2L0w==",
+                "content-type": "application/xml",
+                "date": "<masked>",
+                "host": "my-bucket.nyc3.digitaloceanspaces.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "bcabf5656a63a6c978e4b9037032aa449a2af6eac9a9b37c7d13bd4bf4161672",
+                "x-amz-date": "<masked>"
+              },
+              "body": "<Delete xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"><Object><Key>root/x/a</Key></Object><Quiet>true</Quiet></Delete>"
+            },
+            {
+              "method": "HEAD",
+              "url": "https://my-bucket.nyc3.digitaloceanspaces.com/root/a",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "my-bucket.nyc3.digitaloceanspaces.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "PUT",
+              "url": "https://my-bucket.nyc3.digitaloceanspaces.com/root/b",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "my-bucket.nyc3.digitaloceanspaces.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-acl": "private",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-copy-source": "/my-bucket/root/a",
+                "x-amz-date": "<masked>",
+                "x-amz-metadata-directive": "COPY"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "virtual-hosted subclasses keep their request URIs: Backblaze",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "",
+                "headers": [
+                  [
+                    "etag",
+                    "\"abc\""
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>root/x/a</Key></Contents></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "",
+                "headers": []
+              },
+              {
+                "status": 200,
+                "body": "",
+                "headers": [
+                  [
+                    "content-length",
+                    "1"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><CopyObjectResult><ETag>\"abc\"</ETag></CopyObjectResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "provider.new",
+          "args": {
+            "provider": "backblaze",
+            "root": "/root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "bucket": "my-bucket",
+            "region": "us-west-004",
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/root/a",
+            "data": "a",
+            "content_type": ""
+          },
+          "expect": "abc"
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "/root/"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "x"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.copy",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "/root/a",
+            "target": "/root/b"
+          },
+          "expect": true
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "PUT",
+              "url": "https://my-bucket.s3.us-west-004.backblazeb2.com/root/a",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "1",
+                "content-md5": "DMF1ucDxtqgxw5niaXcmYQ==",
+                "date": "<masked>",
+                "host": "my-bucket.s3.us-west-004.backblazeb2.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-acl": "private",
+                "x-amz-content-sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+                "x-amz-date": "<masked>"
+              },
+              "body": "a"
+            },
+            {
+              "method": "GET",
+              "url": "https://my-bucket.s3.us-west-004.backblazeb2.com/?list-type=2&prefix=root%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "my-bucket.s3.us-west-004.backblazeb2.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "url": "https://my-bucket.s3.us-west-004.backblazeb2.com/?list-type=2&prefix=root%2Fx%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "my-bucket.s3.us-west-004.backblazeb2.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "url": "https://my-bucket.s3.us-west-004.backblazeb2.com/?delete=",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "120",
+                "content-md5": "c2yOVux3ocBCVbZV8o2L0w==",
+                "content-type": "application/xml",
+                "date": "<masked>",
+                "host": "my-bucket.s3.us-west-004.backblazeb2.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "bcabf5656a63a6c978e4b9037032aa449a2af6eac9a9b37c7d13bd4bf4161672",
+                "x-amz-date": "<masked>"
+              },
+              "body": "<Delete xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"><Object><Key>root/x/a</Key></Object><Quiet>true</Quiet></Delete>"
+            },
+            {
+              "method": "HEAD",
+              "url": "https://my-bucket.s3.us-west-004.backblazeb2.com/root/a",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "my-bucket.s3.us-west-004.backblazeb2.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "PUT",
+              "url": "https://my-bucket.s3.us-west-004.backblazeb2.com/root/b",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "my-bucket.s3.us-west-004.backblazeb2.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-acl": "private",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-copy-source": "/my-bucket/root/a",
+                "x-amz-date": "<masked>",
+                "x-amz-metadata-directive": "COPY"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "virtual-hosted subclasses keep their request URIs: Linode",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "",
+                "headers": [
+                  [
+                    "etag",
+                    "\"abc\""
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>root/x/a</Key></Contents></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "",
+                "headers": []
+              },
+              {
+                "status": 200,
+                "body": "",
+                "headers": [
+                  [
+                    "content-length",
+                    "1"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><CopyObjectResult><ETag>\"abc\"</ETag></CopyObjectResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "provider.new",
+          "args": {
+            "provider": "linode",
+            "root": "/root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "bucket": "my-bucket",
+            "region": "eu-central-1",
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/root/a",
+            "data": "a",
+            "content_type": ""
+          },
+          "expect": "abc"
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "/root/"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "x"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.copy",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "/root/a",
+            "target": "/root/b"
+          },
+          "expect": true
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "PUT",
+              "url": "https://my-bucket.eu-central-1.linodeobjects.com/root/a",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "1",
+                "content-md5": "DMF1ucDxtqgxw5niaXcmYQ==",
+                "date": "<masked>",
+                "host": "my-bucket.eu-central-1.linodeobjects.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-acl": "private",
+                "x-amz-content-sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+                "x-amz-date": "<masked>"
+              },
+              "body": "a"
+            },
+            {
+              "method": "GET",
+              "url": "https://my-bucket.eu-central-1.linodeobjects.com/?list-type=2&prefix=root%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "my-bucket.eu-central-1.linodeobjects.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "url": "https://my-bucket.eu-central-1.linodeobjects.com/?list-type=2&prefix=root%2Fx%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "my-bucket.eu-central-1.linodeobjects.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "url": "https://my-bucket.eu-central-1.linodeobjects.com/?delete=",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "120",
+                "content-md5": "c2yOVux3ocBCVbZV8o2L0w==",
+                "content-type": "application/xml",
+                "date": "<masked>",
+                "host": "my-bucket.eu-central-1.linodeobjects.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "bcabf5656a63a6c978e4b9037032aa449a2af6eac9a9b37c7d13bd4bf4161672",
+                "x-amz-date": "<masked>"
+              },
+              "body": "<Delete xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"><Object><Key>root/x/a</Key></Object><Quiet>true</Quiet></Delete>"
+            },
+            {
+              "method": "HEAD",
+              "url": "https://my-bucket.eu-central-1.linodeobjects.com/root/a",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "my-bucket.eu-central-1.linodeobjects.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "PUT",
+              "url": "https://my-bucket.eu-central-1.linodeobjects.com/root/b",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "my-bucket.eu-central-1.linodeobjects.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-acl": "private",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-copy-source": "/my-bucket/root/a",
+                "x-amz-date": "<masked>",
+                "x-amz-metadata-directive": "COPY"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "virtual-hosted subclasses keep their request URIs: Wasabi",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "",
+                "headers": [
+                  [
+                    "etag",
+                    "\"abc\""
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>root/x/a</Key></Contents></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "",
+                "headers": []
+              },
+              {
+                "status": 200,
+                "body": "",
+                "headers": [
+                  [
+                    "content-length",
+                    "1"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><CopyObjectResult><ETag>\"abc\"</ETag></CopyObjectResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "provider.new",
+          "args": {
+            "provider": "wasabi",
+            "root": "/root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "bucket": "my-bucket",
+            "region": "eu-central-1",
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/root/a",
+            "data": "a",
+            "content_type": ""
+          },
+          "expect": "abc"
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "/root/"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "x"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.copy",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "/root/a",
+            "target": "/root/b"
+          },
+          "expect": true
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "PUT",
+              "url": "https://my-bucket.s3.eu-central-1.wasabisys.com/root/a",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "1",
+                "content-md5": "DMF1ucDxtqgxw5niaXcmYQ==",
+                "date": "<masked>",
+                "host": "my-bucket.s3.eu-central-1.wasabisys.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-acl": "private",
+                "x-amz-content-sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+                "x-amz-date": "<masked>"
+              },
+              "body": "a"
+            },
+            {
+              "method": "GET",
+              "url": "https://my-bucket.s3.eu-central-1.wasabisys.com/?list-type=2&prefix=root%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "my-bucket.s3.eu-central-1.wasabisys.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "GET",
+              "url": "https://my-bucket.s3.eu-central-1.wasabisys.com/?list-type=2&prefix=root%2Fx%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "my-bucket.s3.eu-central-1.wasabisys.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "url": "https://my-bucket.s3.eu-central-1.wasabisys.com/?delete=",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "120",
+                "content-md5": "c2yOVux3ocBCVbZV8o2L0w==",
+                "content-type": "application/xml",
+                "date": "<masked>",
+                "host": "my-bucket.s3.eu-central-1.wasabisys.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "bcabf5656a63a6c978e4b9037032aa449a2af6eac9a9b37c7d13bd4bf4161672",
+                "x-amz-date": "<masked>"
+              },
+              "body": "<Delete xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"><Object><Key>root/x/a</Key></Object><Quiet>true</Quiet></Delete>"
+            },
+            {
+              "method": "HEAD",
+              "url": "https://my-bucket.s3.eu-central-1.wasabisys.com/root/a",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "my-bucket.s3.eu-central-1.wasabisys.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "PUT",
+              "url": "https://my-bucket.s3.eu-central-1.wasabisys.com/root/b",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "date": "<masked>",
+                "host": "my-bucket.s3.eu-central-1.wasabisys.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-acl": "private",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-copy-source": "/my-bucket/root/a",
+                "x-amz-date": "<masked>",
+                "x-amz-metadata-directive": "COPY"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "addressing follows the endpoint: AWS-style bucket subdomain",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "my-bucket/root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "host": "https://my-bucket.s3.us-east-1.amazonaws.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "bucket": "my-bucket"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "my-bucket/root/x"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://my-bucket.s3.us-east-1.amazonaws.com/?list-type=2&prefix=my-bucket%2Froot%2Fx&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "my-bucket.s3.us-east-1.amazonaws.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "addressing follows the endpoint: dotted bucket subdomain",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "my.dotted.bucket/root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "host": "https://my.dotted.bucket.s3.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "bucket": "my.dotted.bucket"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "my.dotted.bucket/root/x"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://my.dotted.bucket.s3.example.com/?list-type=2&prefix=my.dotted.bucket%2Froot%2Fx&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "my.dotted.bucket.s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "addressing follows the endpoint: uppercase bucket subdomain",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "my-bucket/root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "host": "https://MY-BUCKET.S3.EXAMPLE.COM",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "bucket": "my-bucket"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "my-bucket/root/x"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://my-bucket.s3.example.com/?list-type=2&prefix=my-bucket%2Froot%2Fx&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "my-bucket.s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "addressing follows the endpoint: host named after the bucket",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "assets.example.com/root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "host": "https://assets.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "bucket": "assets.example.com"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "assets.example.com/root/x"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://assets.example.com/?list-type=2&prefix=assets.example.com%2Froot%2Fx&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "assets.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "addressing follows the endpoint: single-label host named like the bucket",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "minio/root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "host": "http://minio:9000",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "bucket": "minio"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "minio/root/x"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "http://minio:9000/minio?list-type=2&prefix=root%2Fx&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "minio:9000",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "addressing follows the endpoint: service host with a port",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "files/root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "host": "http://storage.internal:9000",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "bucket": "files"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "files/root/x"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "http://storage.internal:9000/files?list-type=2&prefix=root%2Fx&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "storage.internal:9000",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "addressing follows the endpoint: scheme-less service host",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "files/root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "host": "storage.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "bucket": "files"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "files/root/x"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://storage.example.com/files?list-type=2&prefix=root%2Fx&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "storage.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "addressing follows the endpoint: service host behind a base path",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "files/root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "host": "https://storage.example.com/s3/",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "bucket": "files"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "files/root/x"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://storage.example.com/s3/files?list-type=2&prefix=root%2Fx&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "storage.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "addressing follows the endpoint: base path ending in the bucket",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "files/root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "host": "https://storage.example.com/s3/files/",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "bucket": "files"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "files/root/x"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://storage.example.com/s3/files/?list-type=2&prefix=files%2Froot%2Fx&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "storage.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "addressing follows the endpoint: endpoint path naming a mixed-case bucket",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "MyBucket/root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "host": "http://minio:9000/MyBucket/",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "bucket": "MyBucket"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "MyBucket/root/x"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "http://minio:9000/MyBucket/?list-type=2&prefix=MyBucket%2Froot%2Fx&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "minio:9000",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "addressing follows the endpoint: endpoint path differing from the bucket in case",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "MyBucket/root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "host": "http://minio:9000/mybucket/",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "bucket": "MyBucket"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "MyBucket/root/x"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "http://minio:9000/mybucket/MyBucket?list-type=2&prefix=root%2Fx&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "minio:9000",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "addressing follows the endpoint: explicitly bucket-addressed",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "files/root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "host": "https://storage.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "bucket": "files",
+            "path_style": false
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "files/root/x"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://storage.example.com/?list-type=2&prefix=files%2Froot%2Fx&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "storage.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "addressing follows the endpoint: explicitly path-style",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "b/root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "host": "https://b.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "bucket": "b",
+            "path_style": true
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "b/root/x"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://b.example.com/b?list-type=2&prefix=root%2Fx&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "b.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "bucket requests collapse repeated slashes: virtual-hosted",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "files/root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "host": "https://storage.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "bucket": "files",
+            "path_style": false
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "//files//root///x//"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://storage.example.com/?list-type=2&prefix=files%2Froot%2Fx%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "storage.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "bucket requests collapse repeated slashes: path-style",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "files/root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "host": "https://storage.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "bucket": "files",
+            "path_style": true
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "//files//root///x//"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://storage.example.com/files?list-type=2&prefix=root%2Fx%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "storage.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "addressing refuses what it cannot address: path-style without a bucket",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "host": "https://storage.example.com",
+            "region": "us-east-1",
+            "path_style": true
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Path-style addressing needs a bucket"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "addressing refuses what it cannot address: path-style with an empty bucket",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "host": "https://storage.example.com",
+            "region": "us-east-1",
+            "bucket": "",
+            "path_style": true
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Path-style addressing needs a bucket"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "addressing refuses what it cannot address: bucket holding a slash",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "root",
+            "access_key": "key",
+            "secret_key": "secret",
+            "host": "https://storage.example.com",
+            "region": "us-east-1",
+            "bucket": "my/bucket"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Bucket name must not contain a slash"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "delete path reports objects the service kept",
+      "steps": [
+        {
+          "op": "scripted.new",
+          "args": {
+            "responses": [
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>root/x/a</Key></Contents><Contents><Key>root/x/b</Key></Contents></ListBucketResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              },
+              {
+                "status": 200,
+                "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><DeleteResult><Error><Key>root/x/b</Key><Code>AccessDenied</Code><Message>Access Denied</Message></Error></DeleteResult>",
+                "headers": [
+                  [
+                    "content-type",
+                    "application/xml"
+                  ]
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "root": "/root",
+            "host": "https://s3.example.com",
+            "region": "us-east-1",
+            "client": {
+              "$ref": "c"
+            },
+            "retry_delay": 0
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\RemoteException",
+              "message": "Failed to delete 1 objects under root/x/: root/x/b (AccessDenied: Access Denied)"
+            }
+          }
+        },
+        {
+          "op": "scripted.requests",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "url": "https://s3.example.com/?list-type=2&prefix=root%2Fx%2F&max-keys=1000",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "0",
+                "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
+                "content-type": "text/plain",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "x-amz-date": "<masked>"
+              },
+              "body": ""
+            },
+            {
+              "method": "POST",
+              "url": "https://s3.example.com/?delete=",
+              "headers": {
+                "authorization": "<masked>",
+                "content-length": "156",
+                "content-md5": "apZ860rHEn0ZfC9NhTtgTg==",
+                "content-type": "application/xml",
+                "date": "<masked>",
+                "host": "s3.example.com",
+                "user-agent": "utopia-php/storage",
+                "x-amz-content-sha256": "05ef9be332f8ed34e1d62fb89951a39a580fefdf741553c6244019e9e0342c5e",
+                "x-amz-date": "<masked>"
+              },
+              "body": "<Delete xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"><Object><Key>root/x/a</Key></Object><Object><Key>root/x/b</Key></Object><Quiet>true</Quiet></Delete>"
             }
           ]
         }

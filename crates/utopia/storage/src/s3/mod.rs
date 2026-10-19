@@ -25,7 +25,7 @@ pub use retry::RetryStrategy;
 
 use crate::device::{self, Acl, Device, DeviceType, FileInfo, FileList, Metadata, Part, Sink, UploadInfo, UploadList};
 use crate::{Body, Error, Result};
-use xml::Decoded;
+use xml::{Decoded, Entry};
 
 /// The most objects or uploads one listing request returns.
 const MAX_PAGE_SIZE: i64 = 1000;
@@ -189,7 +189,11 @@ pub struct S3 {
     kind: DeviceType,
     fqdn: String,
     host: String,
+    /// The endpoint's host name, lowercase and without its port.
+    endpoint_host: String,
     path: String,
+    /// The addressing asked for; `None` infers it ([`S3::is_path_style`]).
+    path_style: Option<bool>,
     client: Arc<dyn Client>,
 }
 
@@ -202,6 +206,7 @@ impl std::fmt::Debug for S3 {
             .field("path", &self.path)
             .field("region", &self.region)
             .field("bucket", &self.bucket)
+            .field("path_style", &self.is_path_style())
             .finish_non_exhaustive()
     }
 }
@@ -242,7 +247,9 @@ impl S3 {
             kind: DeviceType::S3,
             fqdn: format!("{scheme}://{authority}"),
             host: authority,
+            endpoint_host: endpoint.host.to_ascii_lowercase(),
             path,
+            path_style: None,
             client: Arc::new(Retry::new(HttpClient::new(), RetryStrategy::default())),
         })
     }
@@ -266,12 +273,126 @@ impl S3 {
     }
 
     /// The device knowing its bucket's name, so copies on it run server
-    /// side.
+    /// side and bucket requests (listings, upload listings, directory
+    /// deletes) know where the bucket lives.
+    ///
+    /// An endpoint is either virtual-hosted (it addresses the bucket, as
+    /// `<bucket>.s3.<region>.amazonaws.com` or `http://minio:9000/<bucket>`
+    /// do, and paths are keys in it) or path-style (the bare service, as
+    /// `http://minio:9000`, and every path, the root included, begins with
+    /// `<bucket>/`, as the paths listings return do). Unless
+    /// [`S3::with_path_style`] says otherwise, a device with a bucket is
+    /// path-style except when its host is the bucket name (a dotted domain),
+    /// its host begins with `<bucket>.`, or the last segment of the
+    /// endpoint path is the bucket.
+    ///
+    /// Fails with [`Error::InvalidArgument`] when the bucket holds a slash.
     ///
     /// PHP: the `$bucket` argument.
-    pub fn with_bucket(mut self, bucket: impl Into<String>) -> Self {
-        self.bucket = Some(bucket.into());
-        self
+    pub fn with_bucket(mut self, bucket: impl Into<String>) -> Result<Self> {
+        let bucket = bucket.into();
+        if bucket.contains('/') {
+            return Err(Error::InvalidArgument("Bucket name must not contain a slash".into()));
+        }
+        self.bucket = Some(bucket);
+        Ok(self)
+    }
+
+    /// The device addressing its bucket path-style (`true`: the endpoint is
+    /// the bare service and paths begin with the bucket) or virtual-hosted
+    /// (`false`), or inferring it from the endpoint and bucket (`None`, the
+    /// default). See [`S3::with_bucket`], which comes first.
+    ///
+    /// Fails with [`Error::InvalidArgument`] when path-style is asked for
+    /// without a bucket.
+    ///
+    /// PHP: the `$pathStyle` argument.
+    pub fn with_path_style(mut self, path_style: Option<bool>) -> Result<Self> {
+        if path_style == Some(true) && self.bucket.as_deref().is_none_or(str::is_empty) {
+            return Err(Error::InvalidArgument("Path-style addressing needs a bucket".into()));
+        }
+        self.path_style = path_style;
+        Ok(self)
+    }
+
+    /// Whether the endpoint is the bare service rather than the bucket:
+    /// as asked for, or inferred. Hosts compare case-insensitively, the
+    /// endpoint path case-sensitively.
+    ///
+    /// PHP: the private `infersPathStyle()`.
+    fn is_path_style(&self) -> bool {
+        if let Some(path_style) = self.path_style {
+            return path_style;
+        }
+        let Some(bucket) = self.bucket.as_deref().filter(|b| !b.is_empty()) else { return false };
+        let lowercase = bucket.to_ascii_lowercase();
+        if self.endpoint_host == lowercase && self.endpoint_host.contains('.') {
+            return false;
+        }
+        if self.endpoint_host.starts_with(&format!("{lowercase}.")) {
+            return false;
+        }
+        let last = self.path.rsplit('/').next().unwrap_or_default();
+        php_std::encoding::rawurldecode(last.as_bytes()) != bucket.as_bytes()
+    }
+
+    /// The request URI and key prefix of a bucket request for `path`,
+    /// repeated slashes collapsed.
+    ///
+    /// PHP: the private `prefix()`.
+    fn prefix(&self, path: &str) -> Result<(String, String)> {
+        let segments: Vec<&str> = path.split('/').filter(|s| !s.is_empty()).collect();
+        let mut collapsed = segments.join("/");
+        if !segments.is_empty() && path.ends_with('/') {
+            collapsed.push('/');
+        }
+        if !self.is_path_style() {
+            return Ok(("/".into(), collapsed));
+        }
+        if collapsed.split('/').any(|s| s == "." || s == "..") {
+            return Err(Error::InvalidArgument("Path must not contain \".\" or \"..\" segments".into()));
+        }
+        let bucket = self.bucket.as_deref().unwrap_or_default();
+        if collapsed.is_empty() || collapsed == bucket || collapsed == format!("{bucket}/") {
+            return Ok((format!("/{bucket}"), String::new()));
+        }
+        if let Some(key) = collapsed.strip_prefix(&format!("{bucket}/")) {
+            return Ok((format!("/{bucket}"), key.to_owned()));
+        }
+        Err(Error::InvalidArgument("Path is outside the bucket".into()))
+    }
+
+    /// The device path of a key a bucket request returned.
+    ///
+    /// PHP: the private `devicePath()`.
+    fn device_path(&self, key: &str) -> String {
+        if self.is_path_style() {
+            format!("{}/{key}", self.bucket.as_deref().unwrap_or_default())
+        } else {
+            key.to_owned()
+        }
+    }
+
+    /// The key prefix, ending in a slash, of the directory at `path`.
+    /// Refuses the whole bucket, a path outside the bucket or the root, and
+    /// the root itself unless `allow_root`.
+    ///
+    /// PHP: the private `directory()`.
+    fn directory(&self, path: &str, allow_root: bool) -> Result<String> {
+        let directory = device::absolute_path(path).trim_matches('/').to_owned();
+        if self.prefix(&format!("{directory}/"))?.1.is_empty() {
+            return Err(Error::InvalidArgument(format!("Refusing to delete every object in the bucket: {path}")));
+        }
+        let root = device::absolute_path(&self.root).trim_matches('/').to_owned();
+        // Resolved paths are compared, so '.', 'x/..' and '/' are refused as well.
+        if !allow_root && directory == root {
+            return Err(Error::InvalidArgument(format!("Refusing to delete the whole root: {}", self.root)));
+        }
+        // absolute_path() resolves '..' past the root, so root/../other would name a sibling of the root.
+        if !root.is_empty() && !format!("{directory}/").starts_with(&format!("{root}/")) {
+            return Err(Error::InvalidArgument(format!("Refusing to delete outside the root {}: {path}", self.root)));
+        }
+        Ok(format!("{directory}/"))
     }
 
     fn provider(
@@ -283,7 +404,7 @@ impl S3 {
         host: &str,
         region: String,
     ) -> Result<Self> {
-        let mut s3 = S3::new(root, access_key, secret_key, host, region)?.with_bucket(bucket);
+        let mut s3 = S3::new(root, access_key, secret_key, host, region)?.with_bucket(bucket)?;
         s3.kind = kind;
         Ok(s3)
     }
@@ -382,9 +503,10 @@ impl S3 {
         if max > MAX_PAGE_SIZE {
             return Err(Error::InvalidArgument(format!("Cannot list more than {MAX_PAGE_SIZE} uploads")));
         }
+        let (uri, prefix) = self.prefix(prefix)?;
         let mut parameters = vec![
             ("uploads".to_owned(), String::new()),
-            ("prefix".to_owned(), prefix.trim_start_matches('/').to_owned()),
+            ("prefix".to_owned(), prefix),
             ("max-uploads".to_owned(), max.to_string()),
         ];
         if let Some(cursor) = cursor.filter(|c| !c.is_empty()) {
@@ -393,14 +515,14 @@ impl S3 {
             parameters.push(("upload-id-marker".to_owned(), upload));
         }
         let response = self
-            .call(Method::Get, "/", Hashed::empty(), &parameters, &[("content-type", "text/plain")], &[], true, false)
+            .call(Method::Get, &uri, Hashed::empty(), &parameters, &[("content-type", "text/plain")], &[], true, false)
             .await?;
         let body = response.body.decoded().ok_or_else(|| Error::remote("Unexpected S3 upload listing response"))?;
         let mut uploads = Vec::new();
         for entry in body.entries("Upload") {
             let (Some(key), Some(id)) = (xml::text(entry, "Key"), xml::text(entry, "UploadId")) else { continue };
             uploads.push(UploadInfo {
-                path: key.to_owned(),
+                path: self.device_path(key),
                 upload_id: id.to_owned(),
                 initiated_at: xml::text(entry, "Initiated").and_then(date),
             });
@@ -506,16 +628,24 @@ impl S3 {
         if max > MAX_PAGE_SIZE {
             return Err(Error::InvalidArgument(format!("Cannot list more than {MAX_PAGE_SIZE} objects")));
         }
+        let (uri, key) = self.prefix(prefix)?;
+        self.list_bucket(&uri, &key, max, token).await
+    }
+
+    /// A ListObjectsV2 request for a key prefix, sent to the bucket URI.
+    ///
+    /// PHP: the private `listBucket()`.
+    async fn list_bucket(&self, uri: &str, prefix: &str, max: i64, token: &str) -> Result<Decoded> {
         let mut parameters = vec![
             ("list-type".to_owned(), "2".to_owned()),
-            ("prefix".to_owned(), prefix.trim_start_matches('/').to_owned()),
+            ("prefix".to_owned(), prefix.to_owned()),
             ("max-keys".to_owned(), max.to_string()),
         ];
         if !token.is_empty() && token != "0" {
             parameters.push(("continuation-token".to_owned(), token.to_owned()));
         }
         let response = self
-            .call(Method::Get, "/", Hashed::empty(), &parameters, &[("content-type", "text/plain")], &[], true, false)
+            .call(Method::Get, uri, Hashed::empty(), &parameters, &[("content-type", "text/plain")], &[], true, false)
             .await?;
         match response.body {
             ResponseBody::Xml(d @ Decoded::Array(_)) => Ok(d),
@@ -526,8 +656,13 @@ impl S3 {
     async fn copy_object(&self, source: &str, target: &str) -> Result<bool> {
         let info = self.info(source).await?;
         let size = info.get("content-length").map(|s| php_std::format::str_to_int(s.as_bytes())).unwrap_or(0);
-        let bucket = self.bucket.as_deref().unwrap_or_default();
-        let copy_source = format!("/{bucket}/{}", read_uri(source).trim_start_matches('/'));
+        let key = php_std::encoding::rawurlencode(device::absolute_path(source).trim_start_matches('/').as_bytes())
+            .replace("%2F", "/");
+        let copy_source = if self.is_path_style() {
+            format!("/{key}")
+        } else {
+            format!("/{}/{key}", self.bucket.as_deref().unwrap_or_default())
+        };
         let uri = write_uri(target);
         if size <= MAX_COPY_OBJECT_SIZE as i64 {
             let mut amz = vec![("x-amz-copy-source", copy_source.as_str()), ("x-amz-metadata-directive", "COPY")];
@@ -577,6 +712,66 @@ impl S3 {
             return Err(e);
         }
         Ok(true)
+    }
+
+    /// Deletes every object under `directory`, a page of keys per
+    /// DeleteObjects request. A listing that is not a ListObjectsV2 result
+    /// or cannot be followed, and any object the service kept, are
+    /// [`Error::Remote`].
+    ///
+    /// PHP: the private `deletePrefix()`.
+    async fn delete_prefix(&self, directory: &str) -> Result<()> {
+        let (uri, prefix) = self.prefix(directory)?;
+        let mut token = String::new();
+        loop {
+            let objects = self.list_bucket(&uri, &prefix, MAX_PAGE_SIZE, &token).await?;
+            // Every ListObjectsV2 result carries IsTruncated; without it the page cannot be told apart from an empty one.
+            if objects.get("IsTruncated").is_none() {
+                return Err(Error::remote(format!("Unexpected S3 list response for prefix {directory}")));
+            }
+            let next = objects.text("NextContinuationToken").unwrap_or_default().to_owned();
+            if objects.text("IsTruncated") == Some("true") && next.is_empty() {
+                return Err(Error::remote(format!(
+                    "Truncated S3 list response without a continuation token for prefix {directory}"
+                )));
+            }
+            if !next.is_empty() && next == token {
+                return Err(Error::remote(format!(
+                    "S3 list response repeated the continuation token for prefix {directory}"
+                )));
+            }
+            token = next;
+
+            let keys: Vec<&str> = objects.entries("Contents").into_iter().filter_map(|o| xml::text(o, "Key")).collect();
+            if !keys.is_empty() {
+                let mut body = String::from("<Delete xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">");
+                for key in &keys {
+                    let escaped = php_std::encoding::htmlspecialchars(
+                        key.as_bytes(),
+                        php_std::encoding::HtmlFlags::from_php(ENT_XML1_QUOTES),
+                        true,
+                    );
+                    body.push_str(&format!("<Object><Key>{}</Key></Object>", String::from_utf8_lossy(&escaped)));
+                }
+                body.push_str("<Quiet>true</Quiet></Delete>");
+                let response = self
+                    .call(
+                        Method::Post,
+                        &uri,
+                        Hashed::from(Bytes::from(body)),
+                        &[("delete".into(), String::new())],
+                        &[("content-type", "application/xml")],
+                        &[],
+                        true,
+                        false,
+                    )
+                    .await?;
+                kept(response.body.decoded(), response.status, keys.len(), directory)?;
+            }
+            if token.is_empty() {
+                return Ok(());
+            }
+        }
     }
 
     /// Sends a signed request and returns its response; an error status
@@ -932,41 +1127,24 @@ impl Device for S3 {
         device::move_file(self, source, target).await
     }
 
-    async fn delete(&self, path: &str, _recursive: bool) -> Result<bool> {
+    async fn delete(&self, path: &str, recursive: bool) -> Result<bool> {
+        // Checked before any request: an empty key, or a bare bucket on a path-style device, would send DeleteBucket.
+        let key = device::absolute_path(path);
+        let key = key.trim_matches('/');
+        if key.is_empty() || (self.is_path_style() && !key.contains('/')) {
+            return Err(Error::InvalidArgument(format!("Refusing to delete a whole bucket: {path}")));
+        }
+        let directory = if recursive { self.directory(path, true)? } else { String::new() };
         self.call(Method::Delete, &read_uri(path), Hashed::empty(), &[], &[], &[], true, false).await?;
+        if recursive {
+            self.delete_prefix(&directory).await?;
+        }
         Ok(true)
     }
 
     async fn delete_path(&self, path: &str) -> Result<bool> {
-        let path = format!("{}/{path}", self.root);
-        let mut token = String::new();
-        loop {
-            let objects = self.list_objects(&path, MAX_PAGE_SIZE, &token).await?;
-            token = objects.text("NextContinuationToken").unwrap_or_default().to_owned();
-            let keys: Vec<&str> = objects.entries("Contents").into_iter().filter_map(|o| xml::text(o, "Key")).collect();
-            if keys.is_empty() {
-                break;
-            }
-            let mut body = String::from("<Delete xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">");
-            for key in keys {
-                body.push_str(&format!("<Object><Key>{key}</Key></Object>"));
-            }
-            body.push_str("<Quiet>true</Quiet></Delete>");
-            self.call(
-                Method::Post,
-                "/",
-                Hashed::from(Bytes::from(body)),
-                &[("delete".into(), String::new())],
-                &[("content-type", "application/xml")],
-                &[],
-                true,
-                false,
-            )
-            .await?;
-            if token.is_empty() {
-                break;
-            }
-        }
+        let directory = self.directory(&format!("{}/{path}", self.root), false)?;
+        self.delete_prefix(&directory).await?;
         Ok(true)
     }
 
@@ -988,7 +1166,7 @@ impl Device for S3 {
                 .map(|s| php_std::format::str_to_int(s.as_bytes()).max(0) as u64)
                 .unwrap_or(0);
             files.push(FileInfo {
-                path: key.to_owned(),
+                path: self.device_path(key),
                 size,
                 modified_at: xml::text(object, "LastModified").and_then(date),
                 etag: xml::text(object, "ETag").map(|e| unquote(e).to_owned()),
@@ -1028,6 +1206,81 @@ impl Device for S3 {
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+}
+
+/// `ENT_XML1 | ENT_QUOTES`.
+const ENT_XML1_QUOTES: i64 = 16 | 3;
+
+/// The error of a DeleteObjects result that reports objects the service
+/// kept: a top-level `Error` (decoded to its `Code` and `Message`) failed
+/// the whole batch, `Error` entries name the keys it kept.
+///
+/// PHP: the end of `deletePrefix()`'s loop.
+fn kept(result: Option<&Decoded>, status: u16, count: usize, directory: &str) -> Result<()> {
+    let empty = IndexMap::new();
+    let result = result.and_then(Decoded::as_array).unwrap_or(&empty);
+    let code = i64::from(status);
+    if let Some(error_code) = result.get("Code") {
+        return Err(Error::Remote {
+            message: format!("Failed to delete {count} objects under {directory}"),
+            code,
+            error_code: entry_text(Some(error_code)).map(str::to_owned),
+        });
+    }
+    // An array `Error` with a Key or Code is one error, any other array a list of them; strings are skipped.
+    let errors: Vec<Option<&IndexMap<String, Entry>>> = match result.get("Error") {
+        Some(Entry::One(Decoded::Array(map))) if map.contains_key("Key") || map.contains_key("Code") => {
+            vec![Some(map)]
+        }
+        Some(Entry::One(Decoded::Array(map))) => map.values().filter_map(entry_array).collect(),
+        Some(Entry::Many(list)) => list.iter().filter_map(|d| d.as_array().map(Some)).collect(),
+        _ => Vec::new(),
+    };
+    let mut failures = Vec::new();
+    let mut error_code: Option<String> = None;
+    for error in errors {
+        let field = |name: &str| error.and_then(|e| entry_text(e.get(name)));
+        let code = field("Code").unwrap_or_default();
+        if error_code.is_none() && !code.is_empty() {
+            error_code = Some(code.to_owned());
+        }
+        let message = field("Message").map(|m| format!(": {m}")).unwrap_or_default();
+        failures.push(format!("{} ({code}{message})", field("Key").unwrap_or("?")));
+    }
+    if !failures.is_empty() {
+        return Err(Error::Remote {
+            message: format!("Failed to delete {} objects under {directory}: {}", failures.len(), failures.join(", ")),
+            code,
+            error_code,
+        });
+    }
+    if result.contains_key("Error") {
+        return Err(Error::Remote {
+            message: format!("Failed to delete {count} objects under {directory}"),
+            code,
+            error_code: None,
+        });
+    }
+    Ok(())
+}
+
+/// An entry as a string, when it is one.
+fn entry_text(entry: Option<&Entry>) -> Option<&str> {
+    match entry? {
+        Entry::One(Decoded::Text(t)) => Some(t),
+        _ => None,
+    }
+}
+
+/// An entry PHP sees as an array (`Some`), with its fields (`None` for a
+/// list of elements, which has none of an error's fields); a string is
+/// skipped.
+fn entry_array(entry: &Entry) -> Option<Option<&IndexMap<String, Entry>>> {
+    match entry {
+        Entry::One(Decoded::Array(map)) => Some(Some(map)),
+        Entry::Many(_) => Some(None),
+        Entry::One(Decoded::Text(_)) => None,
     }
 }
 
