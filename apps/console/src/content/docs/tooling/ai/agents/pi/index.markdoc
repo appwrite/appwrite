@@ -73,6 +73,13 @@ Run `/mcp` in Pi to check that **appwrite** is listed with its tools. Then try o
 - `Show me how to authenticate users with OAuth`
 - `How do I implement file uploads with Appwrite Storage?`
 
+{% only_dark %}
+![Pi lists the users in an Appwrite project](/images/docs/mcp/pi/list-users-dark.avif)
+{% /only_dark %}
+{% only_light %}
+![Pi lists the users in an Appwrite project](/images/docs/mcp/pi/list-users-light.avif)
+{% /only_light %}
+
 {% /section %}
 
 {% section #step-4 step=4 title="React to project events" %}
@@ -93,9 +100,14 @@ Ask Pi to subscribe to `users.user.created`. Replace `<PROJECT_ID>` with your pr
 Subscribe with mcp_events to users.user.created on the appwrite server for project_id <PROJECT_ID>, then finish your turn and wait. Whenever an event arrives, look up that user and tell me their name and email.
 ```
 
-Pi opens the subscription and goes idle.
+Pi opens the subscription and goes idle. When a user signs up or you create one in the Appwrite Console, Pi wakes up without a new prompt, looks up the user, and replies with their name and email.
 
-When a user signs up or you create one in the Appwrite Console, Pi wakes up without a new prompt, looks up the user, and replies with their name and email.
+{% only_dark %}
+![Pi subscribes to users.user.created, wakes up when a user is created, and unsubscribes](/images/docs/mcp/pi/events-dark.gif)
+{% /only_dark %}
+{% only_light %}
+![Pi subscribes to users.user.created, wakes up when a user is created, and unsubscribes](/images/docs/mcp/pi/events-light.gif)
+{% /only_light %}
 
 Each subscription is a webhook in your project, so it counts toward your plan's webhook limit. The Free plan allows 2 webhooks per project. When you no longer need the events, ask Pi to unsubscribe:
 
