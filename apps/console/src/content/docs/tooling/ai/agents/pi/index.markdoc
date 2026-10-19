@@ -94,8 +94,6 @@ Pi receives events through [pi-mcp-events](https://github.com/mikekelly/pi-mcp-e
 pi install npm:@realmikekelly/pi-mcp-events
 ```
 
-The pi-mcp-events README asks you to replace pi-mcp-adapter with a fork. You don't need the fork, because pi-mcp-adapter 5.1.0 and later include the hook the extension uses.
-
 Ask Pi to subscribe to `users.user.created`. Replace `<PROJECT_ID>` with your project ID:
 
 ```
@@ -104,7 +102,7 @@ Subscribe with mcp_events to users.user.created on the appwrite server for proje
 
 Pi opens the subscription and goes idle. When a user signs up or you create one in the Appwrite Console, Pi wakes up without a new prompt, looks up the user, and replies with their name and email.
 
-Each subscription is a webhook in your project, so it counts toward your plan's webhook limit. The Free plan allows 2 webhooks per project. When you no longer need the events, ask Pi to unsubscribe:
+When you no longer need the events, ask Pi to unsubscribe:
 
 ```
 Unsubscribe from users.user.created
