@@ -274,7 +274,12 @@ final class Adapter implements Base, Benchmarks
     private static function dump(Test $t): array
     {
         $pairs = static fn (array $instruments) => array_map(null, array_keys($instruments), array_map(static fn ($i) => $i->values, array_values($instruments)));
-        $histograms = array_map(static fn (string $name, $h) => [$name, $h->values, $h->attributes], array_keys($t->histograms), array_values($t->histograms));
+        // The Test backend's histograms are anonymous subclasses; their recordings are public properties the abstract Histogram does not declare.
+        $histograms = array_map(static function (string $name, object $h): array {
+            $recorded = get_object_vars($h);
+
+            return [$name, $recorded['values'], $recorded['attributes']];
+        }, array_keys($t->histograms), array_values($t->histograms));
 
         return [
             'counters' => $t->counters === [] ? [] : $pairs($t->counters),
