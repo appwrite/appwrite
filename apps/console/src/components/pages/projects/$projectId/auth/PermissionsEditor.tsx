@@ -1174,10 +1174,12 @@ function LabelInputModal({ open, onOpenChange, onAdd }: LabelInputModalProps) {
   )
 }
 
-/** Valid permission format: user:ID, user:ID/role, team:ID, team:ID/role, or member:ID */
+/** Valid permission format: users/verified, users/unverified, user:ID, user:ID/role, team:ID, team:ID/role, or member:ID */
 function isValidPermissionFormat(value: string): boolean {
   const trimmed = value.trim()
   if (!trimmed) return false
+  // users/verified or users/unverified
+  if (/^users\/(verified|unverified)$/.test(trimmed)) return true
   // user:userId or user:userId/roleName
   if (/^user:[^/]+(\/.+)?$/.test(trimmed)) return true
   // team:teamId or team:teamId/roleName
