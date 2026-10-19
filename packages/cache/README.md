@@ -56,7 +56,7 @@ echo $data;
 | `Hazelcast` | Hazelcast over its Memcached protocol. |
 | `Sharding` | Spreads keys across several adapters. |
 | `Pool` | Checks an adapter out of a `utopia-php/pools` pool per call. |
-| `CircuitBreaker` | Wraps an adapter so a failing cache stops being called. |
+| `CircuitBreaker` | Wraps an adapter so a failing cache stops being called. Reads fall back to a miss; `save`, `saveMany`, `purge` and `flush` throw `Utopia\Cache\Exception\Unavailable`, so an invalidation that did not reach the cache is never mistaken for one that did. |
 
 ## Codecs
 
