@@ -1178,8 +1178,8 @@ function LabelInputModal({ open, onOpenChange, onAdd }: LabelInputModalProps) {
 function isValidPermissionFormat(value: string): boolean {
   const trimmed = value.trim()
   if (!trimmed) return false
-  // users/verified or users/unverified
-  if (/^users\/(verified|unverified)$/.test(trimmed)) return true
+  if (trimmed === 'users/verified' || trimmed === 'users/unverified')
+    return true
   // user:userId or user:userId/roleName
   if (/^user:[^/]+(\/.+)?$/.test(trimmed)) return true
   // team:teamId or team:teamId/roleName
