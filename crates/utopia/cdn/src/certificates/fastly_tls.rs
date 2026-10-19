@@ -10,8 +10,9 @@ use crate::api::{self, DefaultClient, Reply};
 use crate::certificates::{Challenge, Provider, Status};
 use crate::{BoxFuture, Error};
 
-/// The source file PHP names in a `TypeError` raised inside the provider.
-const SOURCE: &str = "FastlyTls.php";
+/// The source file PHP names in a `TypeError` raised inside the provider:
+/// where the dev image has the package.
+const SOURCE: &str = "/usr/src/code/packages/cdn/src/Certificates/Provider/FastlyTls.php";
 
 /// Certificates as Fastly TLS subscriptions, issued by a certificate
 /// authority Fastly works with (`certainly` by default).

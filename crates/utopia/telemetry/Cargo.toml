@@ -30,4 +30,4 @@ utopia-async.workspace = true
 
 [package.metadata.utopia]
 category = "observability"
-php-sync = "da0119eda7c139b8f99b13d814e5a99f9b5ac418"
+php-sync = "cdb86de54b4d3a1db8fe7b4da00a34affdcae61b"

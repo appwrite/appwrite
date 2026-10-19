@@ -1402,7 +1402,7 @@
   "quirks": [
     {
       "symbol": "Utopia\\Cdn\\Certificates\\Provider\\FastlyTls::issueCertificate",
-      "description": "FastlyTls.php has no strict_types, so a subscription ID or state of the wrong type is coerced to a string (an integer ID retries `/tls/subscriptions/7`); an array, or a missing ID, raises TypeError. PHP's message names the source file and line; Rust's ends `called in FastlyTls.php on line <n>`, so the message is masked.",
+      "description": "FastlyTls.php has no strict_types, so a subscription ID or state of the wrong type is coerced to a string (an integer ID retries `/tls/subscriptions/7`); an array, or a missing ID, raises TypeError. The message names the caller as PHP does: the provider's path in the dev image (`/usr/src/code/packages/cdn/src/Certificates/Provider/FastlyTls.php`) and line.",
       "case": "FastlyTlsTest.json#retry of a subscription without an id"
     },
     {

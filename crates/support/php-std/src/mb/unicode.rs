@@ -1,5 +1,5 @@
 //! Unicode case data of PHP's mbstring, generated from php-src
-//! `ext/mbstring/unicode_data.h` (tag `php-8.5.10`) by `data/unicode.py`.
+//! `ext/mbstring/unicode_data.h` (tag `php-8.5.11`) by `data/unicode.py`.
 //! Do not edit by hand.
 //!
 //! The case table maps a code point to its simple mapping, or, when the value

@@ -671,7 +671,7 @@
     },
     {
       "symbol": "mb_strpos() positive $offset",
-      "php": "PHP 8.5.10's offset walk can step past the end of a haystack ending in a truncated UTF-8 sequence and then reads out of bounds (undefined behaviour, later fixed by clamping)",
+      "php": "PHP 8.5.11's offset walk can step past the end of a haystack ending in a truncated UTF-8 sequence and then reads out of bounds (undefined behaviour, later fixed by clamping)",
       "reason": "not reproducible; Rust clamps to the end like later PHP releases. The fuzz profiles end invalid haystacks with ASCII so the walk stays in bounds"
     }
   ],

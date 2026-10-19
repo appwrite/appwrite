@@ -1245,13 +1245,17 @@ struct Recording {
     gauges: Mutex<std::collections::HashMap<String, Vec<utopia_queue::telemetry::Observer>>>,
 }
 
+/// One histogram recording: its value and attributes.
+type Recorded = (f64, Vec<(String, String)>);
+
+/// A histogram's recordings.
 #[derive(Default)]
-struct Values(Mutex<Vec<f64>>);
+struct Values(Mutex<Vec<Recorded>>);
 
 impl utopia_queue::telemetry::Histogram for Values {
-    fn record(&self, value: f64) {
+    fn record(&self, value: f64, attributes: &[(String, String)]) {
         if let Ok(mut v) = self.0.lock() {
-            v.push(value);
+            v.push((value, attributes.to_vec()));
         }
     }
 }
@@ -1279,22 +1283,27 @@ impl utopia_queue::telemetry::Telemetry for Recording {
 }
 
 impl Recording {
-    /// Each duration histogram's size and sign, the message sizes (sorted),
-    /// each depth gauge observed twice.
+    /// Each duration histogram's size, sign and attributes, the message
+    /// sizes and their attributes (each sorted), each depth gauge observed
+    /// twice.
     async fn report(&self) -> Json {
         let mut out = serde_json::Map::new();
         for name in ["messaging.process.wait.duration", "messaging.process.duration"] {
-            let values = self.histograms.lock().ok().and_then(|h| h.get(name).cloned());
-            let values = values.map(|v| v.0.lock().map(|v| v.clone()).unwrap_or_default()).unwrap_or_default();
-            out.insert(name.into(), json!({"count": values.len(), "non_negative": values.iter().all(|v| *v >= 0.0)}));
+            let values = self.recordings(name);
+            out.insert(
+                name.into(),
+                json!({
+                    "count": values.len(),
+                    "non_negative": values.iter().all(|(v, _)| *v >= 0.0),
+                    "attributes": Self::attributes(&values),
+                }),
+            );
         }
         let name = "messaging.process.message.size";
-        let sizes = self.histograms.lock().ok().and_then(|h| h.get(name).cloned());
-        let mut sizes: Vec<i64> = sizes
-            .map(|v| v.0.lock().map(|v| v.iter().map(|s| *s as i64).collect()).unwrap_or_default())
-            .unwrap_or_default();
+        let recorded = self.recordings(name);
+        let mut sizes: Vec<i64> = recorded.iter().map(|(s, _)| *s as i64).collect();
         sizes.sort_unstable();
-        out.insert(name.into(), json!(sizes));
+        out.insert(name.into(), json!({"values": sizes, "attributes": Self::attributes(&recorded)}));
         for name in ["messaging.queue.depth", "messaging.queue.failed.depth"] {
             let observers = self.gauges.lock().ok().and_then(|g| g.get(name).cloned()).unwrap_or_default();
             let mut observed = Vec::new();
@@ -1310,6 +1319,28 @@ impl Recording {
             out.insert(name.into(), Json::Array(observed));
         }
         Json::Object(out)
+    }
+
+    /// What the histogram `name` recorded.
+    fn recordings(&self, name: &str) -> Vec<Recorded> {
+        let values = self.histograms.lock().ok().and_then(|h| h.get(name).cloned());
+        values.map(|v| v.0.lock().map(|v| v.clone()).unwrap_or_default()).unwrap_or_default()
+    }
+
+    /// Each recording's attributes, sorted by their JSON (queues are
+    /// consumed concurrently, so recordings arrive in any order).
+    fn attributes(recorded: &[Recorded]) -> Vec<Json> {
+        let mut all: Vec<(String, Json)> = recorded
+            .iter()
+            .map(|(_, attributes)| {
+                let map: serde_json::Map<String, Json> =
+                    attributes.iter().map(|(k, v)| (k.clone(), Json::String(v.clone()))).collect();
+                let map = Json::Object(map);
+                (map.to_string(), map)
+            })
+            .collect();
+        all.sort_by(|a, b| a.0.cmp(&b.0));
+        all.into_iter().map(|(_, map)| map).collect()
     }
 }
 

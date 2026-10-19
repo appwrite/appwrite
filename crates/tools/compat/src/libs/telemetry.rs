@@ -191,12 +191,32 @@ fn memory_dump(m: &MemoryTelemetry) -> Json {
                 .collect(),
         )
     };
+    // Histograms also keep each recording's attributes (an object, or `[]`
+    // when it had none, as PHP encodes an empty array).
+    let histograms: Vec<Json> = m
+        .names(Kind::Histogram)
+        .into_iter()
+        .map(|n| {
+            let points = m.points(Kind::Histogram, &n).unwrap_or_default();
+            let values: Vec<Json> = points.iter().map(|p| number_json(p.value)).collect();
+            let attributes: Vec<Json> = points
+                .iter()
+                .map(|p| {
+                    if p.attributes.is_empty() {
+                        return json!([]);
+                    }
+                    Json::Object(p.attributes.iter().map(|(k, v)| (k.clone(), attribute_json(v))).collect())
+                })
+                .collect();
+            json!([n, values, attributes])
+        })
+        .collect();
     let observable: Vec<Json> =
         m.names(Kind::ObservableGauge).into_iter().map(|n| json!([n, m.callbacks(&n).unwrap_or(0)])).collect();
     json!({
         "counters": kind(Kind::Counter),
         "upDownCounters": kind(Kind::UpDownCounter),
-        "histograms": kind(Kind::Histogram),
+        "histograms": histograms,
         "gauges": kind(Kind::Gauge),
         "observableGauges": observable,
     })

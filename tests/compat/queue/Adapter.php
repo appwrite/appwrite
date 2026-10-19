@@ -750,20 +750,26 @@ final class Adapter implements Base, Benchmarks
         return $events;
     }
 
-    /** What a run recorded: each duration histogram's size and sign, the message sizes (sorted), each depth gauge observed twice. */
+    /** What a run recorded: each duration histogram's size, sign and attributes, the message sizes and their attributes (each sorted), each depth gauge observed twice. */
     private static function telemetry(TestTelemetry $telemetry): array
     {
         $out = [];
         foreach (['messaging.process.wait.duration', 'messaging.process.duration'] as $name) {
+            $histogram = isset($telemetry->histograms[$name]) ? get_object_vars($telemetry->histograms[$name]) : [];
             /** @var list<float|int> $values */
-            $values = isset($telemetry->histograms[$name]) ? get_object_vars($telemetry->histograms[$name])['values'] ?? [] : [];
-            $out[$name] = ['count' => \count($values), 'non_negative' => array_filter($values, fn (float|int $v): bool => $v < 0) === []];
+            $values = $histogram['values'] ?? [];
+            $out[$name] = [
+                'count' => \count($values),
+                'non_negative' => array_filter($values, fn (float|int $v): bool => $v < 0) === [],
+                'attributes' => self::attributes($histogram['attributes'] ?? []),
+            ];
         }
         $name = 'messaging.process.message.size';
+        $histogram = isset($telemetry->histograms[$name]) ? get_object_vars($telemetry->histograms[$name]) : [];
         /** @var list<int> $sizes */
-        $sizes = isset($telemetry->histograms[$name]) ? get_object_vars($telemetry->histograms[$name])['values'] ?? [] : [];
+        $sizes = $histogram['values'] ?? [];
         sort($sizes);
-        $out[$name] = $sizes;
+        $out[$name] = ['values' => $sizes, 'attributes' => self::attributes($histogram['attributes'] ?? [])];
         foreach (['messaging.queue.depth', 'messaging.queue.failed.depth'] as $name) {
             $observed = [];
             for ($round = 0; $round < 2; $round++) {
@@ -777,5 +783,19 @@ final class Adapter implements Base, Benchmarks
         }
 
         return $out;
+    }
+
+    /**
+     * Each recording's attributes, sorted by their JSON (queues are consumed
+     * concurrently, so recordings arrive in any order).
+     *
+     * @param list<array<string, mixed>> $attributes
+     * @return list<array<string, mixed>>
+     */
+    private static function attributes(array $attributes): array
+    {
+        usort($attributes, fn (array $a, array $b): int => strcmp((string) json_encode($a), (string) json_encode($b)));
+
+        return $attributes;
     }
 }

@@ -1376,16 +1376,10 @@
               }
             ]
           },
-          "mask": {
-            "paths": [
-              "/error/message"
-            ],
-            "reason": "PHP's TypeError names the PHP source file and line it was raised from"
-          },
           "expect": {
             "error": {
               "class": "TypeError",
-              "message": "<masked>"
+              "message": "Utopia\\Cdn\\Certificates\\Provider\\FastlyTls::retrySubscription(): Argument #1 ($subscriptionId) must be of type string, null given, called in /usr/src/code/packages/cdn/src/Certificates/Provider/FastlyTls.php on line 44"
             },
             "requests": [
               {
@@ -1417,16 +1411,10 @@
               }
             ]
           },
-          "mask": {
-            "paths": [
-              "/error/message"
-            ],
-            "reason": "PHP's TypeError names the PHP source file and line it was raised from"
-          },
           "expect": {
             "error": {
               "class": "TypeError",
-              "message": "<masked>"
+              "message": "Utopia\\Cdn\\Certificates\\Provider\\FastlyTls::retrySubscription(): Argument #1 ($subscriptionId) must be of type string, array given, called in /usr/src/code/packages/cdn/src/Certificates/Provider/FastlyTls.php on line 44"
             },
             "requests": [
               {
@@ -1458,16 +1446,10 @@
               }
             ]
           },
-          "mask": {
-            "paths": [
-              "/error/message"
-            ],
-            "reason": "PHP's TypeError names the PHP source file and line it was raised from"
-          },
           "expect": {
             "error": {
               "class": "TypeError",
-              "message": "<masked>"
+              "message": "Utopia\\Cdn\\Certificates\\Provider\\FastlyTls::mapStatus(): Argument #1 ($state) must be of type string, array given, called in /usr/src/code/packages/cdn/src/Certificates/Provider/FastlyTls.php on line 71"
             },
             "requests": [
               {
@@ -1499,16 +1481,10 @@
               }
             ]
           },
-          "mask": {
-            "paths": [
-              "/error/message"
-            ],
-            "reason": "PHP's TypeError names the PHP source file and line it was raised from"
-          },
           "expect": {
             "error": {
               "class": "TypeError",
-              "message": "<masked>"
+              "message": "Utopia\\Cdn\\Certificates\\Provider\\FastlyTls::mapStatus(): Argument #1 ($state) must be of type string, array given, called in /usr/src/code/packages/cdn/src/Certificates/Provider/FastlyTls.php on line 110"
             },
             "requests": [
               {

@@ -1,14 +1,6 @@
 {
-  "updated": "2026-10-19T14:29:00Z",
+  "updated": "2026-10-19T14:52:00Z",
   "tasks": [
-    {
-      "id": "queue-telemetry",
-      "title": "queue and telemetry: main's changes",
-      "area": "Libraries",
-      "status": "progress",
-      "updated": "2026-10-19T13:41:00Z",
-      "note": "Catch-up batch, task E. queue names the queue on its wait, duration and size histograms (cdb86de54b); telemetry checked for changes since its sync."
-    },
     {
       "id": "crate-layout",
       "title": "One type per file, modules after PHP namespaces",
@@ -34,14 +26,6 @@
       "note": "Catch-up batch, task D (2-hour box). main's 7a3dfbb99d, d4b607d8da and 06a1ae1626: a purge the circuit breaker can't confirm throws Unavailable, a filesystem purge of a directory throws, a missing cache directory is nothing to purge. Rust still returns false: 2 differences in CI. API coverage stays 100%."
     },
     {
-      "id": "php-8511",
-      "title": "php-std: PHP 8.5.11 changed round()",
-      "area": "Libraries",
-      "status": "progress",
-      "updated": "2026-10-19T13:41:00Z",
-      "note": "Catch-up batch, task E (2-hour box). main's 2f8ca3fc1d bumps appwrite/base to 2.2.1, which brings PHP 8.5.11. php-std follows PHP 8.5.10, where round(4503599627370496.0) is 4503599627370497 (as in Rust); 8.5.11 returns 4503599627370496. CI's php-std fuzz finds that input. Port 8.5.11's round() edge handling and check the other 8.5.11 changes php-std reproduces."
-    },
-    {
       "id": "audit-order",
       "title": "audit: main's total order on ClickHouse finds",
       "area": "Libraries",
@@ -64,14 +48,6 @@
       "status": "progress",
       "updated": "2026-10-19T13:41:00Z",
       "note": "Catch-up batch, task D (2-hour box). After the main sync on 2026-10-19 nats has 100% API coverage but 38 of 40 PHP tests ported: packages/nats/tests/ConnectRetryTest.php, packages/nats/tests/Transport/TlsFailureTest.php. audit, cache, messaging, migration and usage also changed on main and stay at 100% with every PHP test ported. Also: a failed TLS upgrade now raises TlsException (with the OpenSSL reason) where Rust raises ConnectionException."
-    },
-    {
-      "id": "cdn-fuzz",
-      "title": "cdn: a TypeError names its file differently",
-      "area": "Libraries",
-      "status": "progress",
-      "updated": "2026-10-19T13:41:00Z",
-      "note": "Catch-up batch, task E (2-hour box). bin/compat fuzz cdn, certificates.once[fastly tls subscriptions], seed 11510 input 3852: retrySubscription() gets a null subscription id. PHP's TypeError says \"called in /usr/src/code/packages/cdn/src/Certificates/Provider/FastlyTls.php on line 44\", Rust's \"called in FastlyTls.php on line 44\"."
     },
     {
       "id": "audit-fuzz",
@@ -184,6 +160,30 @@
       "status": "todo",
       "note": "On a quiet machine; the last container runs were taken under load.",
       "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "queue-telemetry",
+      "title": "queue and telemetry: main's changes",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-10-19T14:52:00Z",
+      "note": "Catch-up E. queue histograms record messaging.destination.name and namespace; telemetry's test backend keeps histogram attributes. queue 325 cases and telemetry 38, 0 differences; orchestration's Docker CLI message masked with its reason."
+    },
+    {
+      "id": "php-8511",
+      "title": "php-std: PHP 8.5.11",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-10-19T14:52:00Z",
+      "note": "Catch-up E. GH-22410 in _php_math_round: an integral value rounded to 0 places is returned as it is. No other 8.5.11 change touches what php-std reproduces. 1,622 cases and 692,570 fuzz inputs, 0 differences."
+    },
+    {
+      "id": "cdn-fuzz",
+      "title": "cdn: TypeErrors name PHP's full file path",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-10-19T14:52:00Z",
+      "note": "Catch-up E. FastlyTls TypeErrors name /usr/src/code/packages/cdn/src/Certificates/Provider/FastlyTls.php, as auth, messaging and query already do. 162 cases and 15,500 fuzz inputs, 0 differences."
     },
     {
       "id": "storage-s3-delete",
