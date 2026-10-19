@@ -173,6 +173,11 @@
       "date": "2026-10-18",
       "title": "Every library benchmark re-run with CPU and memory",
       "note": "All 230 benchmarks of 49 libraries re-timed on one commit, both runtimes in containers on a quiet Docker VM: Rust is 3.5x faster, uses 3.5x less CPU per call and 3.8x less driver memory (geometric means). Three gated benchmarks miss: platform's action declaration, mongo's count and telemetry's in-memory counter."
+    },
+    {
+      "date": "2026-10-19",
+      "title": "The in-memory telemetry backend keeps what PHP keeps",
+      "note": "It copied every data point's attributes; it now keeps the values side by side and each run of identical attributes once, as PHP keeps only the values. Per call, a circuit breaker recording telemetry keeps 31 bytes instead of 372 (PHP 16) and a pool 33 instead of 288 (PHP 45), with 2 allocations instead of 12; both run 1.7x faster than before. The in-memory counter is 3.0x faster than PHP (was 0.98x), leaving two gated misses. Those benchmarks keep every point, so Rust's total peak grows with the 6 to 10 times more calls it makes per sample: the telemetry driver peaks at 1.5 GB against PHP's 242 MB."
     }
   ],
   "lessons": [
