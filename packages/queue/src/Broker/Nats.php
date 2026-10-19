@@ -722,7 +722,7 @@ class Nats implements Synchronous, Consumer, Bounded
             return;
         }
 
-        if ((($this->guardStreamName($queue, $identity)?->metadata ?? [])[self::METADATA_IDENTITY] ?? null) === $identity) {
+        if ((($this->guardStreamName($queue, $identity)->metadata ?? [])[self::METADATA_IDENTITY] ?? null) === $identity) {
             self::$ownedStreams[$account][$stream] = $identity;
         }
     }
