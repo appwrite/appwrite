@@ -164,11 +164,13 @@ final class StateTest extends TestCase
         $this->hold('user-1', 'online');
         $sequence = (string) $this->hold('user-1', 'online')['presence']->getSequence();
 
-        $this->assertNull((new State())->releaseConnectionForUser($this->database, 'user-1', $sequence));
+        (new State())->releaseConnectionForUser($this->database, 'user-1', $sequence);
+        $afterFirst = $this->database->findOne(State::COLLECTION_ID, [Query::equal('userId', ['user-1'])]);
+        $this->assertSame(1, $afterFirst->getAttribute('connections'));
 
-        $deleted = (new State())->releaseConnectionForUser($this->database, 'user-1', $sequence);
-        $this->assertNotNull($deleted);
-        $this->assertSame($sequence, (string) $deleted->getSequence());
+        (new State())->releaseConnectionForUser($this->database, 'user-1', $sequence);
+        $afterSecond = $this->database->findOne(State::COLLECTION_ID, [Query::equal('userId', ['user-1'])]);
+        $this->assertTrue($afterSecond->isEmpty());
     }
 
     public function testReleaseIgnoresMismatchedSequence(): void

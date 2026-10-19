@@ -10,6 +10,7 @@ use Utopia\Database\Attribute;
 use Utopia\Database\Attribute\Update as AttributeUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Migration\Resource;
 use Utopia\Query\Schema\ColumnType;
@@ -416,10 +417,15 @@ class V25 extends Migration
                     // Added in 1.9.5 and created only by V24, which an install that ran the 1.9.6
                     // migration or upgraded straight from 1.8.x never ran. createCollection() is a
                     // no-op when it already exists and creates it with connections when it doesn't;
-                    // the attribute-add covers installs that have it from V24 without the column.
-                    // Failures propagate so the version is not recorded with a missing attribute.
+                    // the attribute-add then covers installs that have it from V24 without the column.
+                    // A Duplicate means createCollection already made the row with connections; any
+                    // other failure propagates so the version is not recorded with a missing attribute.
                     $this->createCollection($id);
-                    $this->createAttributeFromCollection($this->dbForProject, $id, 'connections');
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'connections');
+                    } catch (Duplicate) {
+                        // createCollection already made the row with connections; nothing to add.
+                    }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 

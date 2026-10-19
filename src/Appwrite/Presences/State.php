@@ -169,7 +169,7 @@ class State
                         );
 
                         if ($existing->isEmpty()) {
-                            if (!\is_string($presenceDocument->getId()) || $presenceDocument->getId() === '') {
+                            if ($presenceDocument->getId() === '') {
                                 $presenceDocument->setAttribute('$id', Id::unique());
                             }
                             $presenceDocument->setAttribute('connections', 1);
