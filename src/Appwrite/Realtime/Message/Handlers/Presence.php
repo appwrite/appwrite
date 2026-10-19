@@ -96,50 +96,27 @@ class Presence extends Action
 
         $projectId = $project->getId();
 
-        // Bump the row's worker count only on this worker's first hold for the user (0->1).
-        $alreadyHeld = isset($realtime->connections[$connectionId]['presence']);
-        $firstWorkerHold = !$alreadyHeld && empty($realtime->presenceHolders[$projectId][$userId] ?? []);
+        // Row this socket already counts against; matching it means a status refresh, not a new hold.
+        $stash = $realtime->connections[$connectionId]['presence'] ?? null;
+        $heldPresenceId = (\is_array($stash) && ($stash['userId'] ?? null) === $userId)
+            ? ($stash['presenceId'] ?? null)
+            : null;
 
-        // Reserve the hold synchronously (no coroutine yield between the check and this set) so a
-        // concurrent first message on this worker sees it and does not also count as firstWorkerHold.
-        if (!$alreadyHeld) {
-            $realtime->presenceHolders[$projectId][$userId][$connectionId] = true;
-        }
+        $write = $presenceState->upsertForUserWithConnections($database, $presenceDocument, $userId, $heldPresenceId);
+        $presence = $write['presence'];
+        $created = $write['created'];
+        $counted = $write['counted'];
 
-        $created = false;
-        try {
-            $presence = $presenceState->recordPresence($database, $presenceDocument, $userId, $firstWorkerHold, $created);
-        } catch (\Throwable $th) {
-            // Roll back only our own reservation (still `true`); a concurrent message on this
-            // connection that already succeeded has overwritten it with a row id -- leave that.
-            if (!$alreadyHeld && ($realtime->presenceHolders[$projectId][$userId][$connectionId] ?? null) === true) {
-                unset($realtime->presenceHolders[$projectId][$userId][$connectionId]);
-                if (empty($realtime->presenceHolders[$projectId][$userId] ?? [])) {
-                    unset($realtime->presenceHolders[$projectId][$userId]);
-                }
-            }
-            throw $th;
-        }
-
-        // The socket can close during the write; onClose then runs before the hold is tagged and
-        // can't release it. Undo our worker count, and if that deleted the row (last holder),
-        // announce offline instead of the online upsert below -- never resurrect a dead hold.
+        // Socket closed mid-write: onClose ran before this hold was stashed, so undo any count we
+        // added, and if that deleted the row announce offline instead of the online upsert below.
         if (!isset($realtime->connections[$connectionId])) {
-            $deleted = ($created || $firstWorkerHold)
-                ? $presenceState->releaseHolder($database, $userId, $presence->getId())
+            $deleted = $counted
+                ? $presenceState->releaseConnectionForUser($database, $userId, $presence->getId())
                 : null;
-
-            if (!$alreadyHeld) {
-                unset($realtime->presenceHolders[$projectId][$userId][$connectionId]);
-                if (empty($realtime->presenceHolders[$projectId][$userId] ?? [])) {
-                    unset($realtime->presenceHolders[$projectId][$userId]);
-                }
-            }
 
             if ($deleted !== null) {
                 $presenceState->purgeListCache($database);
-                // A row this message created and then deleted nets zero usage; otherwise undo the
-                // +1 its original creator counted for the now-offline user.
+                // created-then-deleted nets zero; otherwise undo the creator's +1 for the now-offline user.
                 if (!$created) {
                     $presenceState->triggerUsage($publisherForUsage, $project, -1);
                 }
@@ -148,8 +125,7 @@ class Presence extends Action
                 }
                 $presenceState->triggerEvent($queueForEvents, $queueForRealtime, $project, $user, 'presences.[presenceId].delete', $deleted);
             } elseif ($created) {
-                // The row this message created survives under another worker's hold: still count
-                // the user coming online, since no one else will.
+                // Created row survives under another socket's hold: count the online transition here.
                 $presenceState->triggerUsage($publisherForUsage, $project, 1);
             }
 
@@ -166,17 +142,14 @@ class Presence extends Action
             ];
         }
 
-        // Tag the hold with the row id, so a delete event for a superseded row only clears holds
-        // on that row, not a recreated one.
-        $realtime->presenceHolders[$projectId][$userId][$connectionId] = $presence->getId();
+        // Stash so onClose releases this exact hold; a heartbeat refreshes without recounting.
         $realtime->connections[$connectionId]['presence'] = [
             'projectId' => $projectId,
             'userId' => $userId,
             'presenceId' => $presence->getId(),
         ];
 
-        // Count usage only on the actual row creation (the user came online), never on an
-        // increment of a row an HTTP upsert already counted.
+        // Usage +1 only on actual creation (user came online), not on an increment.
         if ($created) {
             $presenceState->triggerUsage($publisherForUsage, $project, 1);
         }

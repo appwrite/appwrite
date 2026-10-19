@@ -732,16 +732,6 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     }
                 }
 
-                // A presence delete (HTTP or worker) means that row is gone; forget any holds on
-                // it so a later close does not decrement a count that no longer has them.
-                $deletedPresenceId = Realtime::extractDeletedPresenceId($event);
-                if ($deletedPresenceId !== null) {
-                    $deletedUserId = (string) ($event['data']['payload']['userId'] ?? '');
-                    if ($deletedUserId !== '') {
-                        $realtime->clearPresenceHolders((string) ($event['project'] ?? ''), $deletedUserId, $deletedPresenceId);
-                    }
-                }
-
                 $receivers = $realtime->getSubscribers($event);
 
                 if (System::getEnv('_APP_ENV', 'production') === 'development' && !empty($receivers)) {
@@ -1456,15 +1446,8 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                 $holdUserId = (string) ($hold['userId'] ?? '');
                 $holdPresenceId = (string) ($hold['presenceId'] ?? '');
 
-                unset($realtime->presenceHolders[$holdProjectId][$holdUserId][$connection]);
-                $workerStillHolds = !empty($realtime->presenceHolders[$holdProjectId][$holdUserId] ?? []);
-                if (!$workerStillHolds) {
-                    unset($realtime->presenceHolders[$holdProjectId][$holdUserId]);
-                }
-
-                // The worker gives up its hold only when its last connection for the user closes
-                // (1->0): decrement the row's worker count, and delete + announce offline at zero.
-                if (!$workerStillHolds && $holdProjectId !== '' && $holdProjectId !== 'console' && $holdUserId !== '') {
+                // This socket gives up its hold; the row is deleted and offline announced at zero.
+                if ($holdProjectId !== '' && $holdProjectId !== 'console' && $holdUserId !== '') {
                     go(function () use ($holdProjectId, $holdUserId, $holdPresenceId, $container, $presenceState): void {
                         Span::init('realtime.close.presenceCleanup');
                         Span::add('project.id', $holdProjectId);
@@ -1478,7 +1461,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                             }
 
                             $dbForProject = getProjectDB($project);
-                            $deleted = $presenceState->releaseHolder($dbForProject, $holdUserId, $holdPresenceId);
+                            $deleted = $presenceState->releaseConnectionForUser($dbForProject, $holdUserId, $holdPresenceId);
                             if ($deleted === null) {
                                 return;
                             }

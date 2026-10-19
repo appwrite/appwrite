@@ -129,20 +129,14 @@ class Authentication extends Action
             $realtime->connections[$connectionId]['jwtExpire'] = null;
         }
 
-        // Carry the presence hold across a re-auth to the same user whose connection entry was
-        // restored. Otherwise -- a user change, or the connection entry could not be restored --
-        // give up this connection's hold on the previous user, releasing the worker count at 1->0,
-        // so the holder index never outlives a hold that onClose can no longer release.
+        // Same user with the entry restored keeps its hold; otherwise this socket gives it up --
+        // drop the stash (subscribe() may have carried it over) and release the connection.
         if ($presenceHold !== null && !empty($projectId) && $projectId !== 'console') {
             if ($previousUserId === $user->getId() && isset($realtime->connections[$connectionId])) {
                 $realtime->connections[$connectionId]['presence'] = $presenceHold;
-                $realtime->presenceHolders[$projectId][$previousUserId][$connectionId] = (string) ($presenceHold['presenceId'] ?? '');
             } else {
-                unset($realtime->presenceHolders[$projectId][$previousUserId][$connectionId]);
-                if (empty($realtime->presenceHolders[$projectId][$previousUserId] ?? [])) {
-                    unset($realtime->presenceHolders[$projectId][$previousUserId]);
-                    $this->releasePreviousHold($presenceState, $database, $publisherForUsage, $queueForEvents, $queueForRealtime, $project, (string) $previousUserId, (string) ($presenceHold['presenceId'] ?? ''));
-                }
+                unset($realtime->connections[$connectionId]['presence']);
+                $this->releasePreviousHold($presenceState, $database, $publisherForUsage, $queueForEvents, $queueForRealtime, $project, (string) $previousUserId, (string) ($presenceHold['presenceId'] ?? ''));
             }
         }
 
@@ -179,7 +173,7 @@ class Authentication extends Action
             return;
         }
 
-        $deleted = $presenceState->releaseHolder($database, $previousUserId, $presenceId);
+        $deleted = $presenceState->releaseConnectionForUser($database, $previousUserId, $presenceId);
         if ($deleted === null) {
             return;
         }

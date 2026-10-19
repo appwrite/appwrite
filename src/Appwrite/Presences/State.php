@@ -18,6 +18,7 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Id;
+use Utopia\Database\Operator;
 use Utopia\Database\Permission;
 use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
@@ -124,45 +125,39 @@ class State
     }
 
     /**
-     * Persist a presence message, keeping the worker-holder counter correct.
+     * Upsert a user's presence row and raise its per-socket `connections` refcount -- the
+     * connection-aware counterpart to {@see upsertForUser}. A socket still holding the live row
+     * (`$presenceId`) just refreshes it; otherwise the count goes up (create = 1, else +1).
      *
-     * One row per user holds a `connections` count = how many realtime workers currently hold
-     * the user. `$firstWorkerHold` is true only on a worker's 0->1 transition (its first live
-     * connection for this user), when the count is bumped; every other message just refreshes
-     * the value. Runs in a transaction so the read-modify-write of `connections` is serialized
-     * against another worker's increment or the decrement-to-zero delete.
+     * @return array{presence: Document, created: bool, counted: bool}
      */
-    public function recordPresence(
+    public function upsertForUserWithConnections(
         Database $dbForProject,
         Document $presenceDocument,
         string $userId,
-        bool $firstWorkerHold,
-        ?bool &$created = null,
-    ): Document {
+        ?string $presenceId,
+    ): array {
         $created = false;
+        $counted = false;
         try {
-            // Not this worker's first hold: the counter is already correct, so just refresh the
-            // value with a sparse update (connections is not in the document, so it is left as is).
-            // No transaction -- nothing reads-then-writes the counter here.
-            if (!$firstWorkerHold) {
+            if ($presenceId !== null) {
                 $existing = $dbForProject->getAuthorization()->skip(
                     fn () => $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])])
                 );
-                if (!$existing->isEmpty()) {
+                if (!$existing->isEmpty() && $existing->getId() === $presenceId) {
                     $presenceDocument->setAttribute('$id', $existing->getId());
+                    $presence = $dbForProject->updateDocument(self::COLLECTION_ID, $existing->getId(), $presenceDocument);
 
-                    return $dbForProject->updateDocument(self::COLLECTION_ID, $existing->getId(), $presenceDocument);
+                    return ['presence' => $presence, 'created' => false, 'counted' => false];
                 }
-                // The row is gone (e.g. a REST delete) -- fall through to recreate it.
             }
 
-            // First hold for this worker (or the row vanished): create with connections = 1 or +1,
-            // in a transaction so the counter read-modify-write is serialized against another
-            // worker's increment or the decrement-to-zero delete. If a concurrent create wins the
-            // unique-userId race, retry once: the row now exists, so the retry increments it.
-            for ($attempt = 1; ; $attempt++) {
+            // Transactional so the increment serializes against the decrement-to-zero delete; a
+            // create that loses the unique-userId race retries once and then increments.
+            $duplicate = null;
+            for ($attempt = 1; $attempt <= 5; $attempt++) {
                 try {
-                    return $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userId, &$created) {
+                    $presence = $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userId, &$created, &$counted) {
                         $existing = $dbForProject->getAuthorization()->skip(
                             fn () => $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])])
                         );
@@ -173,11 +168,10 @@ class State
                             }
                             $presenceDocument->setAttribute('connections', 1);
                             $created = true;
+                            $counted = true;
 
                             return $dbForProject->createDocument(self::COLLECTION_ID, $presenceDocument);
                         }
-
-                        $created = false;
 
                         $current = $dbForProject->getAuthorization()->skip(
                             fn () => $dbForProject->getDocument(self::COLLECTION_ID, $existing->getId(), forUpdate: true)
@@ -187,16 +181,20 @@ class State
                         }
 
                         $presenceDocument->setAttribute('$id', $current->getId());
-                        $presenceDocument->setAttribute('connections', (int) $current->getAttribute('connections', 0) + 1);
+                        $presenceDocument->setAttribute('connections', Operator::increment(1));
+                        $counted = true;
 
                         return $dbForProject->updateDocument(self::COLLECTION_ID, $current->getId(), $presenceDocument);
                     });
+
+                    return ['presence' => $presence, 'created' => $created, 'counted' => $counted];
                 } catch (DuplicateException $e) {
-                    if ($attempt >= 2) {
-                        throw new Exception(Exception::PRESENCE_ALREADY_EXISTS, params: [$userId], previous: $e);
-                    }
+                    $duplicate = $e;
                 }
             }
+
+            // Every attempt lost the create race for this user.
+            throw new Exception(Exception::PRESENCE_ALREADY_EXISTS, params: [$userId], previous: $duplicate);
         } catch (StructureException $e) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage(), previous: $e);
         } catch (ConflictException $e) {
@@ -205,12 +203,11 @@ class State
     }
 
     /**
-     * Drop one worker's hold on a user. Decrements `connections` and, when it reaches zero,
-     * deletes the row and returns the deleted document so the caller can emit the offline
-     * event. Returns null when holders remain or the row is already gone. Transactional, so a
-     * concurrent increment-and-recreate cannot be deleted out from under itself.
+     * Release one socket's connection on a user -- the inverse of
+     * {@see upsertForUserWithConnections}. Decrements `connections`, deleting the row at zero and
+     * returning it so the caller can emit the offline event; returns null otherwise.
      */
-    public function releaseHolder(Database $dbForProject, string $userId, string $presenceId): ?Document
+    public function releaseConnectionForUser(Database $dbForProject, string $userId, string $presenceId): ?Document
     {
         return $dbForProject->withTransaction(function () use ($dbForProject, $userId, $presenceId): ?Document {
             $existing = $dbForProject->getAuthorization()->skip(
@@ -227,8 +224,7 @@ class State
                 return null;
             }
 
-            // The row was deleted and recreated since this worker incremented it, so its +1 is
-            // already gone -- do not decrement a row this worker never counted.
+            // Row recreated since this socket incremented it: its +1 is already gone, don't touch.
             if ($current->getId() !== $presenceId) {
                 return null;
             }
