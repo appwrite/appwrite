@@ -663,6 +663,33 @@ trait VideoCustom
     }
 
     /**
+     * Poll until the timeline job settled: timelineStatus leaves pending/started.
+     */
+    public function waitForTimelineTerminalState(string $videoId, int $timeout = 300): array
+    {
+        $deadline = \time() + $timeout;
+        $body = [];
+
+        while (\time() < $deadline) {
+            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            $body = $response['body'];
+
+            if (!\in_array($body['timelineStatus'] ?? '', ['', 'pending', 'started'], true)) {
+                return $body;
+            }
+
+            \usleep(500000);
+        }
+
+        return $body;
+    }
+
+    /**
      * Poll until the video document has probed duration (written by the first
      * rendition or timeline job).
      */

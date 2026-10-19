@@ -151,6 +151,19 @@ class Video extends Model
                 'default' => '',
                 'example' => '48000',
             ])
+            ->addRule('timelineStatus', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Thumbnail timeline job status: one of `pending`, `started`, `ready`, `skipped` (source has no video track) or `error`.',
+                'default' => '',
+                'example' => 'ready',
+                'enum' => ['pending', 'started', 'ready', 'skipped', 'error'],
+            ])
+            ->addRule('timelineError', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Why the timeline job failed. Empty unless `timelineStatus` is `error`.',
+                'default' => '',
+                'example' => 'ffprobe failed: Invalid data found when processing input',
+            ])
         ;
     }
 

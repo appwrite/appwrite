@@ -613,6 +613,9 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
 
         $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '86400');
+        $reason = 'Aborted: no progress for ' . ($retention >= 3600
+            ? \max(1, (int) \round($retention / 3600)) . ' hours'
+            : \max(1, (int) \round($retention / 60)) . ' minutes');
         $date = DateTime::addSeconds(new \DateTime(), -1 * $retention);
 
         $queries = [
@@ -633,11 +636,12 @@ class Deletes extends Action
             'videos_renditions',
             $queries,
             $dbForProject,
-            function (Document $rendition) use ($dbForProject, $project, &$aborted, &$failed) {
+            function (Document $rendition) use ($dbForProject, $project, $reason, &$aborted, &$failed) {
                 try {
                     $dbForProject->updateDocument('videos_renditions', $rendition->getId(), new Document([
                         'status' => VideosBase::STATUS_ABORTED,
                         'endedAt' => DateTime::now(),
+                        'error' => $reason,
                     ]));
                     VideosBase::removeLock(VideosBase::encodeLockPath($rendition->getAttribute('videoId'), $rendition->getId()));
                     $aborted++;
@@ -686,6 +690,9 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
 
         $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '86400');
+        $reason = 'Aborted: no progress for ' . ($retention >= 3600
+            ? \max(1, (int) \round($retention / 3600)) . ' hours'
+            : \max(1, (int) \round($retention / 60)) . ' minutes');
         $date = DateTime::addSeconds(new \DateTime(), -1 * $retention);
 
         $queries = [
@@ -704,10 +711,11 @@ class Deletes extends Action
             'videos_captions',
             $queries,
             $dbForProject,
-            function (Document $caption) use ($dbForProject, $project, &$aborted, &$failed) {
+            function (Document $caption) use ($dbForProject, $project, $reason, &$aborted, &$failed) {
                 try {
                     $dbForProject->updateDocument('videos_captions', $caption->getId(), new Document([
                         'status' => VideosBase::STATUS_ABORTED,
+                        'error' => $reason,
                     ]));
                     VideosBase::removeLock(VideosBase::captionLockPath($caption->getAttribute('videoId'), $caption->getId()));
                     $aborted++;

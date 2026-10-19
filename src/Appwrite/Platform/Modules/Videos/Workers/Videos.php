@@ -6,6 +6,7 @@ use Appwrite\Event\Message\Video as VideoMessage;
 use Appwrite\Event\Message\VideoAction;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Platform\Modules\Videos\Base;
 use Appwrite\Usage\Context;
@@ -41,6 +42,7 @@ use Utopia\Telemetry\UpDownCounter;
 use Utopia\Video\Adapter\FFmpeg;
 use Utopia\Video\Adapter\FFprobe;
 use Utopia\Video\Encoder;
+use Utopia\Video\Exception\Input;
 use Utopia\Video\Exception\Runtime;
 use Utopia\Video\Format\HEVC;
 use Utopia\Video\Format\VP9;
@@ -298,6 +300,15 @@ class Videos extends Action
 
         try {
             Console::info('Videos worker: timeline started for video ' . $video->getId());
+            // The status write doubles as the existence check: a video deleted
+            // before the job ran updates nothing, and the job stops before
+            // downloading instead of leaving orphan timeline rows.
+            $claimed = $this->timelineStatus($dbForProject, $video, Base::STATUS_STARTED);
+            if ($claimed->isEmpty()) {
+                $outcome = 'halted';
+                return;
+            }
+            $video = $claimed;
             [$video, $inPath] = $this->prepareSource(
                 $dbForProject,
                 $deviceForFiles,
@@ -331,10 +342,11 @@ class Videos extends Action
             if ($width <= 0 || $height <= 0) {
                 Span::add('warning.message', 'Source has no video track; timeline skipped');
                 $outcome = 'skipped';
+                $parked = $this->timelineStatus($dbForProject, $video, Base::STATUS_SKIPPED);
                 $this->notify(
                     $queueForRealtime,
                     $project,
-                    $video,
+                    $parked->isEmpty() ? $video : $parked,
                     'videos.[videoId].timelines.update',
                     ['videoId' => $video->getId()],
                     $permissions
@@ -429,10 +441,11 @@ class Videos extends Action
             $this->phase($telemetry, VideoAction::Timeline->value, 'upload', $phaseStart);
             Span::add('timeline.size', $size);
 
+            $parked = $this->timelineStatus($dbForProject, $video, Base::STATUS_READY);
             $this->notify(
                 $queueForRealtime,
                 $project,
-                $video,
+                $parked->isEmpty() ? $video : $parked,
                 'videos.[videoId].timelines.update',
                 ['videoId' => $video->getId()],
                 $permissions
@@ -444,14 +457,26 @@ class Videos extends Action
                 $this->runtime($telemetry, $th, 'ffmpeg', $stage);
             }
 
-            $this->notify(
-                $queueForRealtime,
-                $project,
-                $video,
-                'videos.[videoId].timelines.update',
-                ['videoId' => $video->getId()],
-                $permissions
-            );
+            $reason = $this->reason($th, $stage);
+            Span::add('error.reason', $reason);
+            try {
+                $parked = $this->timelineStatus($dbForProject, $video, Base::STATUS_ERROR, $reason);
+            } catch (\Throwable $park) {
+                // A bookkeeping failure must not replace the job failure.
+                Console::error('Videos worker: failed to park timeline for video ' . $video->getId() . ': ' . $park->getMessage());
+                Span::add('error.park_failed', true);
+                $parked = $video;
+            }
+            if (!$parked->isEmpty()) {
+                $this->notify(
+                    $queueForRealtime,
+                    $project,
+                    $parked,
+                    'videos.[videoId].timelines.update',
+                    ['videoId' => $video->getId()],
+                    $permissions
+                );
+            }
             throw $th;
         } finally {
             Span::add('timeline.outcome', $outcome);
@@ -513,6 +538,7 @@ class Videos extends Action
                 'videos_captions',
                 new Document([
                     'status' => Base::STATUS_STARTED,
+                    'error' => null,
                 ]),
                 [
                     Query::equal('$id', [$caption->getId()]),
@@ -577,15 +603,7 @@ class Videos extends Action
                 // SubRip. A parse failure fails the job — never persist non-WebVTT
                 // bytes under a .vtt path.
                 $conversion = 'srt';
-                try {
-                    $this->subripToWebvtt($downloaded, $captionPath);
-                } catch (\Throwable $parse) {
-                    Span::add('warning.message', 'SubRip parse failed: ' . $parse->getMessage());
-                    throw new \Exception(
-                        'Failed to convert caption to WebVTT: ' . $parse->getMessage(),
-                        previous: $parse
-                    );
-                }
+                $this->subripToWebvtt($downloaded, $captionPath);
             }
             $this->phase($telemetry, VideoAction::Caption->value, 'convert', $phaseStart);
             Span::add('caption.conversion', $conversion);
@@ -625,24 +643,33 @@ class Videos extends Action
                 : $status === Base::STATUS_PENDING;
 
             if (!$current->isEmpty() && $mayPark) {
-                $caption = $dbForProject->updateDocument(
-                    'videos_captions',
-                    $caption->getId(),
-                    new Document([
-                        'status' => Base::STATUS_ERROR,
-                    ])
-                );
-                $this->notify(
-                    $queueForRealtime,
-                    $project,
-                    $caption,
-                    'videos.[videoId].captions.[captionId].update',
-                    [
-                        'videoId' => $caption->getAttribute('videoId', $video->getId()),
-                        'captionId' => $caption->getId(),
-                    ],
-                    $permissions
-                );
+                $reason = $this->reason($th, $stage);
+                Span::add('error.reason', $reason);
+                try {
+                    $caption = $dbForProject->updateDocument(
+                        'videos_captions',
+                        $caption->getId(),
+                        new Document([
+                            'status' => Base::STATUS_ERROR,
+                            'error' => $reason,
+                        ])
+                    );
+                    $this->notify(
+                        $queueForRealtime,
+                        $project,
+                        $caption,
+                        'videos.[videoId].captions.[captionId].update',
+                        [
+                            'videoId' => $caption->getAttribute('videoId', $video->getId()),
+                            'captionId' => $caption->getId(),
+                        ],
+                        $permissions
+                    );
+                } catch (\Throwable $park) {
+                    // A bookkeeping failure must not replace the job failure.
+                    Console::error('Videos worker: failed to park caption ' . $caption->getId() . ': ' . $park->getMessage());
+                    Span::add('error.park_failed', true);
+                }
             }
 
             throw $th;
@@ -799,7 +826,7 @@ class Videos extends Action
 
             $stage = 'probe';
             if (!$packager->valid($inPath)) {
-                throw new \Exception('Not a valid media file: ' . $inPath);
+                throw new AppwriteException(AppwriteException::VIDEO_NOT_VALID);
             }
             $stage = 'encode';
 
@@ -1121,31 +1148,36 @@ class Videos extends Action
                 : $status === Base::STATUS_PENDING;
 
             if (!$current->isEmpty() && $mayPark) {
-                $rendition = $dbForProject->updateDocument(
-                    'videos_renditions',
-                    $rendition->getId(),
-                    new Document([
-                        'status' => Base::STATUS_ERROR,
-                        'endedAt' => DateTime::now(),
-                        'progress' => $rendition->getAttribute('progress', '0'),
-                        'metadata' => [
-                            'code' => (string) $th->getCode(),
-                            'message' => \substr($th->getMessage(), 0, 255),
+                $reason = $this->reason($th, $stage);
+                Span::add('error.reason', $reason);
+                try {
+                    $rendition = $dbForProject->updateDocument(
+                        'videos_renditions',
+                        $rendition->getId(),
+                        new Document([
+                            'status' => Base::STATUS_ERROR,
+                            'endedAt' => DateTime::now(),
+                            'progress' => $rendition->getAttribute('progress', '0'),
+                            'error' => $reason,
+                        ])
+                    );
+                    $this->notify(
+                        $queueForRealtime,
+                        $project,
+                        $rendition,
+                        'videos.[videoId].renditions.[renditionId].update',
+                        [
+                            'videoId' => $rendition->getAttribute('videoId', ''),
+                            'renditionId' => $rendition->getId(),
                         ],
-                    ])
-                );
-                $this->notify(
-                    $queueForRealtime,
-                    $project,
-                    $rendition,
-                    'videos.[videoId].renditions.[renditionId].update',
-                    [
-                        'videoId' => $rendition->getAttribute('videoId', ''),
-                        'renditionId' => $rendition->getId(),
-                    ],
-                    $permissions
-                );
-                $status = Base::STATUS_ERROR;
+                        $permissions
+                    );
+                    $status = Base::STATUS_ERROR;
+                } catch (\Throwable $park) {
+                    // A bookkeeping failure must not replace the job failure.
+                    Console::error('Videos worker: failed to park rendition ' . $rendition->getId() . ': ' . $park->getMessage());
+                    Span::add('error.park_failed', true);
+                }
             }
 
             // The harness finishes the span with this exception, so the exporter
@@ -1213,7 +1245,16 @@ class Videos extends Action
      */
     private function subripToWebvtt(string $srtPath, string $vttPath): void
     {
-        $webvtt = (new SubripFile($srtPath))->convertTo('webvtt');
+        try {
+            $webvtt = (new SubripFile($srtPath))->convertTo('webvtt');
+        } catch (\Throwable $th) {
+            // The library prefixes every message with the local path.
+            $detail = $th->getMessage();
+            if (\str_starts_with($detail, $srtPath)) {
+                $detail = \ltrim(\substr($detail, \strlen($srtPath)));
+            }
+            throw new AppwriteException(AppwriteException::VIDEO_CAPTION_NOT_VALID, 'Caption ' . $detail, previous: $th);
+        }
         $webvtt->build();
         $webvtt->save($vttPath);
     }
@@ -1235,7 +1276,7 @@ class Videos extends Action
         \fclose($handle);
 
         if ($prefix === false || $prefix === '') {
-            throw new \Exception('Staged caption is empty');
+            throw new AppwriteException(AppwriteException::VIDEO_CAPTION_NOT_VALID, 'Caption file is empty');
         }
 
         if (\str_starts_with($prefix, "\xEF\xBB\xBF")) {
@@ -1243,13 +1284,13 @@ class Videos extends Action
         }
 
         if (!\str_starts_with($prefix, 'WEBVTT')) {
-            throw new \Exception('Staged caption is not WebVTT');
+            throw new AppwriteException(AppwriteException::VIDEO_CAPTION_NOT_VALID, 'Caption file is not WebVTT');
         }
 
         if (\strlen($prefix) > 6) {
             $next = $prefix[6];
             if ($next !== ' ' && $next !== "\t" && $next !== "\n" && $next !== "\r") {
-                throw new \Exception('Staged caption is not WebVTT');
+                throw new AppwriteException(AppwriteException::VIDEO_CAPTION_NOT_VALID, 'Caption file is not WebVTT');
             }
         }
     }
@@ -1337,6 +1378,7 @@ class Videos extends Action
             new Document([
                 'targetDuration' => $duration,
                 'status' => Base::STATUS_READY,
+                'error' => null,
                 'path' => $fullPath,
                 'size' => $bytes,
             ])
@@ -1497,6 +1539,7 @@ class Videos extends Action
                 continue;
             }
 
+            $caption = null;
             try {
                 if ($existing !== null) {
                     $caption = $existing;
@@ -1568,6 +1611,32 @@ class Videos extends Action
                     Span::add('captions.error.stream', $track->index);
                     Span::add('captions.error.codec', $codec);
                     Span::add('warning.message', 'Embedded caption registration failed: stream ' . $track->index . ' (' . $codec . '): ' . $th->getMessage());
+                }
+                // Park the row instead of leaving it `started` until maintenance
+                // aborts it; captionsExtracted is released below so a later job retries.
+                if ($caption !== null) {
+                    $current = $dbForProject->getDocument('videos_captions', $caption->getId());
+                    if (!$current->isEmpty() && !\in_array($current->getAttribute('status'), [Base::STATUS_ABORTED, Base::STATUS_ERROR, Base::STATUS_READY], true)) {
+                        try {
+                            $caption = $dbForProject->updateDocument('videos_captions', $caption->getId(), new Document([
+                                'status' => Base::STATUS_ERROR,
+                                'error' => $this->reason($th, 'persist'),
+                            ]));
+                            $this->notify(
+                                $queueForRealtime,
+                                $project,
+                                $caption,
+                                'videos.[videoId].captions.[captionId].update',
+                                [
+                                    'videoId' => $video->getId(),
+                                    'captionId' => $caption->getId(),
+                                ],
+                                $permissions
+                            );
+                        } catch (\Throwable $park) {
+                            Console::warning('Videos worker: failed to park embedded caption ' . $caption->getId() . ': ' . $park->getMessage());
+                        }
+                    }
                 }
             }
         }
@@ -1894,13 +1963,13 @@ class Videos extends Action
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
-            throw new \Exception('Source bucket not found: ' . $bucketId);
+            throw new AppwriteException(AppwriteException::STORAGE_BUCKET_NOT_FOUND);
         }
 
         $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
 
         if ($file->isEmpty()) {
-            throw new \Exception('Source file not found: ' . $fileId);
+            throw new AppwriteException(AppwriteException::STORAGE_FILE_NOT_FOUND);
         }
 
         return $file;
@@ -1917,7 +1986,8 @@ class Videos extends Action
         $localPath = $inDir . $basename;
 
         if (!$deviceForFiles->exists($fullPath)) {
-            throw new \Exception('Source file missing from storage: ' . $fullPath);
+            // The path is on the span as source.path.
+            throw new AppwriteException(AppwriteException::STORAGE_FILE_NOT_FOUND);
         }
 
         $hasEncryption = !empty($file->getAttribute('openSSLCipher'));
@@ -2361,6 +2431,73 @@ class Videos extends Action
             1,
             ['purpose' => $purpose, 'exit_code' => (string) $runtime->getCode(), 'timed_out' => $timedOut ? 'true' : 'false']
         );
+    }
+
+    /**
+     * User-safe text for a parked rendition, caption or timeline, as the Builds
+     * worker does for buildLogs: the owner's own problems (a bad source, a bad
+     * caption, a missing file) are shown as they are, ffmpeg's verdict is quoted
+     * without paths or exit codes, and anything else is reported as internal
+     * with the detail left on the span.
+     */
+    private function reason(\Throwable $th, string $stage): string
+    {
+        if ($th instanceof AppwriteException && $th->getCode() < 500) {
+            return $this->withoutPaths($th->getMessage());
+        }
+        if ($th instanceof Input) {
+            return $this->withoutPaths($th->getMessage());
+        }
+        if ($th instanceof Runtime) {
+            if (\str_contains($th->getMessage(), 'timed out after')) {
+                return $this->withoutPaths($th->getMessage());
+            }
+            if ($th->getCode() !== 0) {
+                // Under Swoole the exit code is the raw wait status, so only the
+                // last stderr line is quoted; the code is on the span.
+                $binary = \basename($th->command()[0] ?? 'ffmpeg');
+                $line = '';
+                foreach (\array_reverse(\explode("\n", \str_replace("\r", "\n", $th->output()))) as $candidate) {
+                    $candidate = \trim($candidate);
+                    if ($candidate !== '' && $candidate !== 'Conversion failed!') {
+                        $line = $candidate;
+                        break;
+                    }
+                }
+
+                return $this->withoutPaths($binary . ' failed' . ($line !== '' ? ': ' . $line : ''));
+            }
+        }
+
+        return 'An internal error occurred during the ' . $stage . ' stage. Please try again, and contact support if the problem persists.';
+    }
+
+    /**
+     * Drops absolute paths from a message; the source path is on the span already.
+     */
+    private function withoutPaths(string $text): string
+    {
+        $words = [];
+        foreach (\explode(' ', \str_replace(["\r", "\n", "\t"], ' ', $text)) as $word) {
+            if ($word === '' || \str_starts_with(\ltrim($word, '"\'([:,'), '/')) {
+                continue;
+            }
+            $words[] = $word;
+        }
+
+        return \mb_substr(\implode(' ', $words), 0, 2048);
+    }
+
+    /**
+     * Sparse timeline state write on the video row. An empty result means the
+     * video was deleted mid-job and there is nothing left to update or notify.
+     */
+    private function timelineStatus(Database $dbForProject, Document $video, string $status, ?string $error = null): Document
+    {
+        return $dbForProject->updateDocument('videos', $video->getId(), new Document([
+            'timelineStatus' => $status,
+            'timelineError' => $error,
+        ]));
     }
 
     /**

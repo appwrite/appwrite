@@ -188,6 +188,7 @@ class Create extends Base
             'name' => $name,
             'size' => $file->getAttribute('sizeOriginal', 0),
             'captionsExtracted' => false,
+            'timelineStatus' => self::STATUS_PENDING,
             'search' => \implode(' ', [$file->getId(), $name]),
         ])));
 

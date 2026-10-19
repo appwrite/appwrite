@@ -93,6 +93,12 @@ class VideoCaption extends Model
                 'default' => '',
                 'example' => 'ready',
             ])
+            ->addRule('error', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Why the caption failed or was aborted. Empty unless `status` is `error` or `aborted`.',
+                'default' => '',
+                'example' => 'Caption is not a proper .srt file (Invalid timestamp delimiter at line 2)',
+            ])
         ;
     }
 

@@ -513,6 +513,21 @@ final class MigrationVersionsTest extends TestCase
             $this->assertContains('size', $attributeIds, "Expected \"{$collectionId}\" to store retained bytes");
         }
 
+        $reasons = [
+            'videos' => ['timelineStatus', 'timelineError'],
+            'videos_renditions' => ['error'],
+            'videos_captions' => ['error'],
+        ];
+        foreach ($reasons as $collectionId => $expected) {
+            $attributeIds = [];
+            foreach ($database->getCollection($collectionId)->getAttribute('attributes', []) as $attribute) {
+                $attributeIds[] = $attribute instanceof Document ? $attribute->getId() : ($attribute['$id'] ?? '');
+            }
+            foreach ($expected as $attributeId) {
+                $this->assertContains($attributeId, $attributeIds, "Expected \"{$collectionId}\" to carry the job failure reason");
+            }
+        }
+
         $timelineAttributeIds = [];
         foreach ($database->getCollection('videos_timelines')->getAttribute('attributes', []) as $attribute) {
             $timelineAttributeIds[] = $attribute instanceof Document ? $attribute->getId() : ($attribute['$id'] ?? '');

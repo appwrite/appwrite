@@ -96,6 +96,12 @@ class VideoRendition extends Model
                 'example' => 'ready',
                 'enum' => ['pending', 'started', 'ended', 'uploading', 'ready', 'error', 'aborted'],
             ])
+            ->addRule('error', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Why the rendition failed or was aborted. Empty unless `status` is `error` or `aborted`.',
+                'default' => '',
+                'example' => 'ffprobe failed: Invalid data found when processing input',
+            ])
             ->addRule('progress', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Transcoding progress as a percentage.',

@@ -416,6 +416,10 @@ return [
             Attribute::string(key: 'name', size: 2048),
             Attribute::integer(key: 'size', width: IntegerWidth::Bits64, signed: false),
             Attribute::boolean(key: 'captionsExtracted', default: false),
+            // Timeline job state: pending, started, ready, skipped (no video
+            // track) or error, with the user-facing reason on error.
+            Attribute::string(key: 'timelineStatus'),
+            Attribute::string(key: 'timelineError', size: 2048),
             Attribute::string(key: 'format'),
             Attribute::integer(key: 'duration', width: IntegerWidth::Bits64, signed: false),
             Attribute::integer(key: 'width', signed: false),
@@ -478,6 +482,9 @@ return [
             // room well beyond the 4096 the original schema allowed.
             Attribute::string(key: 'metadata', size: 65535, filters: [Filter::Json]),
             Attribute::string(key: 'status'),
+            // User-facing reason when status is error or aborted; internal
+            // detail stays on the worker span.
+            Attribute::string(key: 'error', size: 2048),
             Attribute::string(key: 'progress'),
             Attribute::string(key: 'output', required: true),
             // Snapshot of the profile codec at create time so playback does
@@ -550,6 +557,7 @@ return [
             Attribute::boolean(key: 'default', default: false),
             Attribute::string(key: 'targetDuration'),
             Attribute::string(key: 'status'),
+            Attribute::string(key: 'error', size: 2048),
             Attribute::integer(key: 'size', width: IntegerWidth::Bits64, signed: false, default: 0),
         ],
         'indexes' => [

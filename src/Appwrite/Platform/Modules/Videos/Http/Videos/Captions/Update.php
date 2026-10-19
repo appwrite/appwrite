@@ -149,6 +149,7 @@ class Update extends Base
         // track leaves the already-segmented WebVTT valid.
         if ($sourceChanged) {
             $updates['status'] = self::STATUS_PENDING;
+            $updates['error'] = null;
             $updates['targetDuration'] = null;
             $updates['path'] = null;
         }

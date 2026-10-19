@@ -310,6 +310,8 @@ final class VideosCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']['name']);
         $this->assertSame(0, (int) ($response['body']['duration'] ?? 0));
         $this->assertSame(0, (int) ($response['body']['width'] ?? 0));
+        $this->assertSame('pending', $response['body']['timelineStatus']);
+        $this->assertSame('', $response['body']['timelineError']);
     }
 
     public function testVideoIsProbedByJob(): void
@@ -445,6 +447,11 @@ final class VideosCustomServerTest extends Scope
         $xywh = \explode(',', \explode("\n", \explode('#xywh=', (string) $response['body'], 2)[1], 2)[0]);
         $this->assertSame(480, (int) $xywh[2], 'timeline thumbnails should be 480px wide');
 
+        $video = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
+        $this->assertEquals(200, $video['headers']['status-code']);
+        $this->assertSame('ready', $video['body']['timelineStatus']);
+        $this->assertSame('', $video['body']['timelineError']);
+
         $thumbnailId = $this->playlistToken(
             (string) $response['body'],
             'thumbnails/',
@@ -555,10 +562,46 @@ final class VideosCustomServerTest extends Scope
 
         $body = $this->waitForCaptionTerminalState($videoId, $captionId);
         $this->assertEquals('error', $body['status'], 'Malformed SubRip did not fail the caption');
+        $this->assertStringStartsWith('Caption is not a proper .srt file', $body['error']);
+        $this->assertStringNotContainsString('/storage', (string) $body['error']);
 
         $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers());
         $this->assertEquals(200, $list['headers']['status-code']);
         $this->assertContains($captionId, \array_column($list['body']['captions'], '$id'));
+    }
+
+    /**
+     * Replacing the source of a failed caption re-queues it and clears the reason.
+     */
+    public function testCaptionErrorClearedOnSourceReplacement(): void
+    {
+        $videoId = $this->createVideo();
+
+        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getBrokenCaptionFile()['$id'],
+            'name' => 'Broken then fixed',
+            'code' => 'eng',
+            'default' => false,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $captionId = $response['body']['$id'];
+
+        $failed = $this->waitForCaptionTerminalState($videoId, $captionId);
+        $this->assertEquals('error', $failed['status']);
+        $this->assertNotSame('', $failed['error']);
+
+        $replaced = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId . '/captions/' . $captionId, $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getCaptionFile()['$id'],
+        ]);
+        $this->assertEquals(200, $replaced['headers']['status-code']);
+        $this->assertEquals('pending', $replaced['body']['status']);
+        $this->assertSame('', $replaced['body']['error']);
+
+        $ready = $this->waitForCaptionTerminalState($videoId, $captionId);
+        $this->assertEquals('ready', $ready['status']);
+        $this->assertSame('', $ready['error']);
     }
 
     public function testListCaptions(): void
@@ -745,9 +788,38 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('error', $body['status'], 'Truncated source did not fail the encode');
         $this->assertNotEmpty($body['startedAt']);
         $this->assertNotEmpty($body['endedAt']);
+        // The source was never probed (the timeline job failed first), so the
+        // encode dies at its own probe with ffprobe's verdict rather than at valid().
+        $this->assertStringStartsWith('ffprobe failed', (string) $body['error']);
+        $this->assertStringNotContainsString('/storage', (string) $body['error']);
 
         $this->assertEventually(function () use ($videoId) {
             $this->assertSame([], $this->videoTmpJobs($videoId), 'Scratch directory survived a failed encode');
+        });
+    }
+
+    /**
+     * A source ffprobe rejects fails the timeline job with a reason that quotes
+     * ffprobe's verdict but no server path.
+     */
+    public function testTimelineErrorOnInvalidSource(): void
+    {
+        $create = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getInvalidVideoFile()['$id'],
+        ]);
+        $this->assertEquals(201, $create['headers']['status-code']);
+        $this->assertSame('pending', $create['body']['timelineStatus']);
+        $videoId = $create['body']['$id'];
+
+        $body = $this->waitForTimelineTerminalState($videoId);
+        $this->assertSame('error', $body['timelineStatus'], 'Invalid source did not fail the timeline');
+        $this->assertStringStartsWith('ffprobe failed', $body['timelineError']);
+        $this->assertStringNotContainsString('/storage', (string) $body['timelineError']);
+        $this->assertSame(0, (int) $body['duration']);
+
+        $this->assertEventually(function () use ($videoId) {
+            $this->assertSame([], $this->videoTmpJobs($videoId), 'Scratch directory survived a failed timeline');
         });
     }
 
@@ -875,6 +947,7 @@ final class VideosCustomServerTest extends Scope
             $this->assertEquals(200, $stale['headers']['status-code']);
             $this->assertEquals('aborted', $stale['body']['status']);
             $this->assertNotEmpty($stale['body']['endedAt'] ?? '');
+            $this->assertSame('Aborted: no progress for 24 hours', $stale['body']['error']);
             $this->assertFileDoesNotExist($staleLock);
 
             $fresh = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $freshId, $this->headers());
@@ -967,6 +1040,7 @@ final class VideosCustomServerTest extends Scope
 
             $this->assertArrayHasKey($staleId, $byId);
             $this->assertEquals('aborted', $byId[$staleId]['status']);
+            $this->assertSame('Aborted: no progress for 24 hours', $byId[$staleId]['error']);
             $this->assertFileDoesNotExist($staleLock);
 
             $this->assertArrayHasKey($freshId, $byId);
@@ -2668,6 +2742,12 @@ final class VideosCustomServerTest extends Scope
         $this->assertGreaterThan(0, (int) $probed['duration']);
         $this->assertSame(0, (int) $probed['width']);
         $this->assertSame(0, (int) $probed['height']);
+
+        // No video track: the job reports skipped rather than error, and the
+        // timeline endpoint keeps its 404.
+        $settled = $this->waitForTimelineTerminalState($videoId);
+        $this->assertSame('skipped', $settled['timelineStatus']);
+        $this->assertSame('', $settled['timelineError']);
 
         $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', $this->headers());
         $this->assertEquals(404, $response['headers']['status-code']);

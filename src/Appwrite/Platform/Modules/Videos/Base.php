@@ -145,6 +145,8 @@ abstract class Base extends UtopiaAction
     public const STATUS_READY = 'ready';
     public const STATUS_ERROR = 'error';
     public const STATUS_ABORTED = 'aborted';
+    /** Timeline only: the source has no video track, so there is nothing to tile. */
+    public const STATUS_SKIPPED = 'skipped';
 
     /**
      * Default age (seconds) before orphaned job folders under videos-tmp/jobs
