@@ -2,6 +2,14 @@
   "updated": "2026-10-19T15:04:00Z",
   "tasks": [
     {
+      "id": "vcs-entire",
+      "title": "vcs: main's Entire adapter",
+      "area": "Database 8",
+      "status": "progress",
+      "updated": "2026-10-19T17:30:00Z",
+      "note": "Catch-up F, 2-hour box. Main's utopia-php/vcs added a Git adapter for Entire (EdDSA-signed webhooks verified against the issuer's JWKS) plus Adapter::updateCheck, Git::generatePushCommand and Git::supportsRepositoryCloneUrl: 68 PHP symbols and one PHP test file without a Rust port. The benchmark already covers the three /v1/vcs/entire routes."
+    },
+    {
       "id": "crate-layout",
       "title": "One type per file, modules after PHP namespaces",
       "area": "Libraries",
