@@ -166,20 +166,20 @@ class Create extends CollectionAction
                 documentSecurity: $documentSecurity,
             ));
         } catch (DuplicateException) {
-            $dbForProject->deleteDocument($databaseKey, $collection->getId());
+            $this->cleanupDocument($dbForProject, $databaseKey, $collection->getId());
             throw new Exception($this->getDuplicateException());
         } catch (IndexException) {
-            $dbForProject->deleteDocument($databaseKey, $collection->getId());
+            $this->cleanupDocument($dbForProject, $databaseKey, $collection->getId());
             throw new Exception($this->getInvalidIndexException());
         } catch (LimitException) {
-            $dbForProject->deleteDocument($databaseKey, $collection->getId());
+            $this->cleanupDocument($dbForProject, $databaseKey, $collection->getId());
             throw new Exception($this->getLimitException());
         } catch (\Throwable $e) {
             // The row is written before the collection so its sequence can name it, so a
             // refusal here leaves the row and nothing else. Left behind, the caller is told
             // the create failed while the row survives, and retrying the same id fails as a
             // duplicate.
-            $dbForProject->deleteDocument($databaseKey, $collection->getId());
+            $this->cleanupDocument($dbForProject, $databaseKey, $collection->getId());
             throw $e;
         }
 

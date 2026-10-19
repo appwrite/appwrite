@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 
@@ -133,16 +134,35 @@ abstract class Action extends DatabasesAction
         string $collectionId,
         string $collectionDocumentId
     ): void {
+        // Cleanup is best effort -- the caller is already being told the create failed, and a
+        // failure to undo it must not replace that with a second one. What it leaves behind is
+        // invisible to the caller, so each failure is logged with the id needed to find it.
         try {
             $dbForDatabases->deleteCollection($collectionId);
-        } catch (\Throwable) {
-            // Ignore cleanup errors for collection deletion
+        } catch (\Throwable $e) {
+            Console::warning('Failed to remove collection ' . $collectionId . ' after a failed create: ' . $e->getMessage());
         }
 
+        $this->cleanupDocument($dbForProject, $databaseId, $collectionDocumentId);
+    }
+
+    /**
+     * Undo a create that failed before the backing collection was made.
+     *
+     * Only the metadata row exists at that point, so this is the whole of the rollback. It
+     * swallows its own failure for the same reason cleanup() does: the caller is already
+     * being handed the error that stopped the create, and losing it to a second one would
+     * turn a clear refusal into an unexplained server error.
+     */
+    protected function cleanupDocument(
+        Database $dbForProject,
+        string $databaseId,
+        string $collectionDocumentId
+    ): void {
         try {
             $dbForProject->deleteDocument($databaseId, $collectionDocumentId);
-        } catch (\Throwable) {
-            // Ignore cleanup errors for document deletion
+        } catch (\Throwable $e) {
+            Console::warning('Failed to remove row ' . $collectionDocumentId . ' from ' . $databaseId . ' after a failed create: ' . $e->getMessage());
         }
     }
 }
