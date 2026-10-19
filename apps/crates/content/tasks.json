@@ -21,9 +21,9 @@
       "id": "php-8511",
       "title": "php-std: PHP 8.5.11 changed round()",
       "area": "Libraries",
-      "status": "todo",
-      "updated": "2026-10-19T12:29:00Z",
-      "note": "main's 2f8ca3fc1d bumps appwrite/base to 2.2.1, which brings PHP 8.5.11. php-std follows PHP 8.5.10, where round(4503599627370496.0) is 4503599627370497 (as in Rust); 8.5.11 returns 4503599627370496. CI's php-std fuzz finds that input. Port 8.5.11's round() edge handling and check the other 8.5.11 changes php-std reproduces."
+      "status": "done",
+      "updated": "2026-10-19T15:30:00Z",
+      "note": "php-std follows PHP 8.5.11: _php_math_round() returns an integral value as it is at 0 places (GH-22410), so round(4503599627370496.0) is 4503599627370496. No other 8.5.11 change touches a function php-std reproduces (the rest are DOM, intl, SOAP, phar, mysqlnd, streams, hash_pbkdf2 and array_keys internals). Checked against appwrite/base:2.2.1: CONVERTED, 1622 cases and 692570 fuzz inputs with 0 differences."
     },
     {
       "id": "audit-order",
@@ -69,9 +69,9 @@
       "id": "cdn-fuzz",
       "title": "cdn: a TypeError names its file differently",
       "area": "Libraries",
-      "status": "todo",
-      "updated": "2026-10-17T20:11:00Z",
-      "note": "bin/compat fuzz cdn, certificates.once[fastly tls subscriptions], seed 11510 input 3852: retrySubscription() gets a null subscription id. PHP's TypeError says \"called in /usr/src/code/packages/cdn/src/Certificates/Provider/FastlyTls.php on line 44\", Rust's \"called in FastlyTls.php on line 44\"."
+      "status": "done",
+      "updated": "2026-10-19T15:30:00Z",
+      "note": "Rust's FastlyTls TypeError names the caller as PHP does, /usr/src/code/packages/cdn/src/Certificates/Provider/FastlyTls.php, so FastlyTlsTest no longer masks the message. cdn CONVERTED, fuzz 15500 inputs with 0 differences (seed 11510 included)."
     },
     {
       "id": "avatars-mariadb",
