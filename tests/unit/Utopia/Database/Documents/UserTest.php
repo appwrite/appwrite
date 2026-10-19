@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Utopia\Database\Documents;
 
 use Appwrite\Utopia\Database\Documents\User;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Auth\Proofs\Code;
 use Utopia\Auth\Proofs\Token;
@@ -127,6 +128,114 @@ final class UserTest extends TestCase
         $this->assertFalse($user->sessionActive('expired'));
         $this->assertFalse($user->sessionActive('missing-expire'));
         $this->assertFalse($user->sessionActive('missing'));
+    }
+
+    public static function sessionVerifyEpochProvider(): array
+    {
+        $secret = 'secret1';
+        $proofForToken = new Token();
+        $hash = $proofForToken->hash($secret);
+
+        return [
+            'session before epoch is rejected' => [
+                $hash,
+                $secret,
+                $proofForToken,
+                DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -120)), // createdAt: 2 minutes ago
+                DateTime::formatTz(DateTime::now()),                              // validAfter: now
+                false,
+            ],
+            'session at epoch is rejected (<=)' => [
+                $hash,
+                $secret,
+                $proofForToken,
+                DateTime::formatTz(DateTime::now()),                              // createdAt == validAfter
+                DateTime::formatTz(DateTime::now()),
+                false,
+            ],
+            'session after epoch passes' => [
+                $hash,
+                $secret,
+                $proofForToken,
+                DateTime::formatTz(DateTime::addSeconds(new \DateTime(), 60)),    // createdAt: future
+                DateTime::formatTz(DateTime::now()),                              // validAfter: now
+                'sessionId',
+            ],
+            'null validAfter — existing behavior unchanged' => [
+                $hash,
+                $secret,
+                $proofForToken,
+                DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -120)),
+                null,
+                'sessionId',
+            ],
+        ];
+    }
+
+    #[DataProvider('sessionVerifyEpochProvider')]
+    public function testSessionVerifyEpoch(string $hash, string $secret, Token $proofForToken, string $createdAt, ?string $validAfter, string|bool $expected): void
+    {
+        $user = new User([
+            '$id' => Id::custom('sessionId'),
+            'sessions' => [
+                new Document([
+                    '$id' => Id::custom('sessionId'),
+                    '$createdAt' => $createdAt,
+                    'secret' => $hash,
+                    'provider' => SESSION_PROVIDER_EMAIL,
+                    'providerUid' => 'test@example.com',
+                    'expire' => DateTime::addSeconds(new \DateTime(), 60 * 60),
+                ]),
+            ],
+        ]);
+
+        $result = $user->sessionVerify($secret, $proofForToken, $validAfter);
+        $this->assertSame($expected, $result);
+    }
+
+    public static function sessionActiveEpochProvider(): array
+    {
+        return [
+            'session before epoch is rejected' => [
+                DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -120)), // createdAt: 2 minutes ago
+                DateTime::formatTz(DateTime::now()),                              // validAfter: now
+                false,
+            ],
+            'session at epoch is rejected (<=)' => [
+                DateTime::formatTz(DateTime::now()),
+                DateTime::formatTz(DateTime::now()),
+                false,
+            ],
+            'session after epoch passes' => [
+                DateTime::formatTz(DateTime::addSeconds(new \DateTime(), 60)),
+                DateTime::formatTz(DateTime::now()),
+                true,
+            ],
+            'null validAfter — existing behavior unchanged' => [
+                DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -120)),
+                null,
+                true,
+            ],
+        ];
+    }
+
+    #[DataProvider('sessionActiveEpochProvider')]
+    public function testSessionActiveEpoch(string $createdAt, ?string $validAfter, bool $expected): void
+    {
+        $user = new User([
+            '$id' => Id::custom('user1'),
+            'sessions' => [
+                new Document([
+                    '$id' => Id::custom('active'),
+                    '$createdAt' => $createdAt,
+                    'secret' => 'secret',
+                    'provider' => SESSION_PROVIDER_EMAIL,
+                    'expire' => DateTime::addSeconds(new \DateTime(), 60 * 60),
+                ]),
+            ],
+        ]);
+
+        $this->assertSame($expected, $user->sessionActive('active', $validAfter));
     }
 
     public function testGetSessionExpiry(): void

@@ -74,17 +74,24 @@ class Authentication extends Action
         $proofForToken = new Token();
         $proofForToken->setHash(new Sha());
 
-        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $authorization = $realtime->connections[$connectionId]['authorization'] ?? null;
+        $impersonatedUserId = $realtime->connections[$connectionId]['impersonatedUserId'] ?? null;
+        $projectId = $realtime->connections[$connectionId]['projectId'] ?? null;
+
+        $validAfter = null;
+        if ($projectId !== null && $projectId !== '') {
+            $consoleDatabase = getConsoleDB();
+            $projectDoc = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
+            $validAfter = $projectDoc->getAttribute('auths', [])['sessionsValidAfter'] ?? null;
+        }
+
+        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $validAfter);
 
         if (empty($user->getId()) || $sessionId === false) {
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Session is not valid.');
         }
 
         $roles = $user->getRoles($database->getAuthorization());
-
-        $authorization = $realtime->connections[$connectionId]['authorization'] ?? null;
-        $impersonatedUserId = $realtime->connections[$connectionId]['impersonatedUserId'] ?? null;
-        $projectId = $realtime->connections[$connectionId]['projectId'] ?? null;
 
         if ($impersonatedUserId !== null) {
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Cannot re-authenticate on an impersonated connection.');

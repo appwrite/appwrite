@@ -513,10 +513,14 @@ return function (Container $context): void {
             }
         }
 
+        $sessionsValidAfter = $mode === APP_MODE_ADMIN
+            ? ($console->getAttribute('auths', [])['sessionsValidAfter'] ?? null)
+            : ($project->getAttribute('auths', [])['sessionsValidAfter'] ?? null);
+
         if (
             ! $user ||
             $user->isEmpty() // Check a document has been found in the DB
-            || ! $user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+            || ! $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $sessionsValidAfter)
         ) { // Validate user has valid login token
             $user = new User([]);
         }
@@ -556,7 +560,7 @@ return function (Container $context): void {
                 }
             }
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (! empty($jwtSessionId) && ! $user->sessionActive($jwtSessionId)) { // Match JWT to active session
+            if (! empty($jwtSessionId) && ! $user->sessionActive($jwtSessionId, $sessionsValidAfter)) { // Match JWT to active session
                 $user = new User([]);
             }
         }
@@ -665,13 +669,17 @@ return function (Container $context): void {
         return $project;
     }, ['dbForPlatform', 'request', 'console', 'authorization', 'utopia', 'projectIdFromPath']);
 
-    $context->set('session', function (User $user, Store $store, Token $proofForToken, Request $request) {
+    $context->set('session', function (User $user, Store $store, Token $proofForToken, Request $request, Document $project, Document $console, string $mode) {
         if ($user->isEmpty()) {
             return;
         }
 
+        $sessionsValidAfter = $mode === APP_MODE_ADMIN
+            ? ($console->getAttribute('auths', [])['sessionsValidAfter'] ?? null)
+            : ($project->getAttribute('auths', [])['sessionsValidAfter'] ?? null);
+
         $sessions = $user->getAttribute('sessions', []);
-        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $sessionsValidAfter);
 
         $authJWT = $request->getHeaderLine('x-appwrite-jwt', '');
         if (! $sessionId && ! empty($authJWT)) {
@@ -683,7 +691,7 @@ return function (Container $context): void {
             }
 
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (($payload['userId'] ?? '') === $user->getId() && ! empty($jwtSessionId) && $user->sessionActive($jwtSessionId)) {
+            if (($payload['userId'] ?? '') === $user->getId() && ! empty($jwtSessionId) && $user->sessionActive($jwtSessionId, $sessionsValidAfter)) {
                 $sessionId = $jwtSessionId;
             }
         }
@@ -699,7 +707,7 @@ return function (Container $context): void {
         }
 
         return;
-    }, ['user', 'store', 'proofForToken', 'request']);
+    }, ['user', 'store', 'proofForToken', 'request', 'project', 'console', 'mode']);
 
     $context->set('pwnedPasswords', function (Cache $cache) {
         // Nothing is asked until an operator points this at a service

@@ -644,7 +644,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         // been delivered.
                         $revoked = static fn (?string $sessionId): bool => $user->isEmpty()
                             || $user->getAttribute('status') === false
-                            || ($sessionId !== null && !$user->sessionActive($sessionId));
+                            || ($sessionId !== null && !$user->sessionActive($sessionId, $project->getAttribute('auths', [])['sessionsValidAfter'] ?? null));
 
                         foreach ($impersonating as $connection) {
                             $impersonatorSessionId = $realtime->connections[$connection]['impersonator']['sessionId'] ?? null;

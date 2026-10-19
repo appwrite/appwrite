@@ -114,6 +114,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\Variables\Delete as DeleteVar
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\Get as GetVariable;
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\Update as UpdateVariable;
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\XList as ListVariables;
+use Appwrite\Platform\Modules\Project\Http\Project\Sessions\Delete as DeleteSessions;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -131,6 +132,9 @@ class Http extends Service
         $this->addAction(UpdateProjectLabels::getName(), new UpdateProjectLabels());
         $this->addAction(UpdateProjectProtocol::getName(), new UpdateProjectProtocol());
         $this->addAction(UpdateProjectService::getName(), new UpdateProjectService());
+
+        // Sessions
+        $this->addAction(DeleteSessions::getName(), new DeleteSessions());
 
         // SMTP
         $this->addAction(UpdateSMTP::getName(), new UpdateSMTP());

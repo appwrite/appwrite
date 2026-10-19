@@ -64,7 +64,7 @@ return function (Container $container): void {
                 if (
                     $user->isEmpty()
                     || $user->getAttribute('status', true) === false // blocked account
-                    || ($sessionId !== '' && !$user->sessionActive($sessionId))
+                    || ($sessionId !== '' && !$user->sessionActive($sessionId, $project->getAttribute('auths', [])['sessionsValidAfter'] ?? null))
                 ) {
                     return new User([]);
                 }
@@ -84,7 +84,7 @@ return function (Container $container): void {
                 if (
                     $user->isEmpty()
                     || $user->getAttribute('status', true) === false // blocked account
-                    || !$user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+                    || !$user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $project->getAttribute('auths', [])['sessionsValidAfter'] ?? null)
                 ) {
                     return new User([]);
                 }

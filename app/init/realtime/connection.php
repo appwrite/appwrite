@@ -234,7 +234,7 @@ return function (Container $container): void {
         if (
             !$user
             || $user->isEmpty()
-            || !$user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+            || !$user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $project->getAttribute('auths', [])['sessionsValidAfter'] ?? null)
         ) {
             $user = new User([]);
         }
@@ -276,7 +276,7 @@ return function (Container $container): void {
             }
 
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (!empty($jwtSessionId) && !$user->sessionActive($jwtSessionId)) {
+            if (!empty($jwtSessionId) && !$user->sessionActive($jwtSessionId, $project->getAttribute('auths', [])['sessionsValidAfter'] ?? null)) {
                 $user = new User([]);
             }
         }
@@ -323,7 +323,7 @@ return function (Container $container): void {
             return null;
         }
 
-        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $project->getAttribute('auths', [])['sessionsValidAfter'] ?? null);
 
         $authJWT = $request->getHeaderLine('x-appwrite-jwt', (string)($request->getParam('jwt', '')));
         if (!$sessionId && !empty($authJWT)) {
@@ -342,7 +342,7 @@ return function (Container $container): void {
             }
 
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (($payload['userId'] ?? '') === $user->getId() && !empty($jwtSessionId) && $user->sessionActive($jwtSessionId)) {
+            if (($payload['userId'] ?? '') === $user->getId() && !empty($jwtSessionId) && $user->sessionActive($jwtSessionId, $project->getAttribute('auths', [])['sessionsValidAfter'] ?? null)) {
                 $sessionId = $jwtSessionId;
             }
         }
