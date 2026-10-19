@@ -376,6 +376,63 @@ $server->onStart(function () use ($stats, $containerId, &$statsDocument) {
     });
 
     /**
+     * Reconcile presences orphaned by a previous instance on this host. A hard crash
+     * (SIGKILL/OOM) fires no onClose, so this host's rows from the dead process linger until
+     * expiry; on a clean boot every presenceLogs row tagged with this hostname is such an orphan,
+     * as new connections are only accepted after onStart. CE only -- a Cloud host is shared across
+     * tenants on sharded databases, where a hostname sweep does not apply (appwrite/appwrite#14343).
+     */
+    if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
+        go(function (): void {
+            $hostname = \gethostname();
+            if ($hostname === false) {
+                return;
+            }
+
+            Span::init('realtime.start.presenceReconcile');
+            try {
+                $dbForPlatform = getConsoleDB();
+                $presences = new PresenceState();
+
+                $reconcile = function (Database $database) use ($hostname, $presences): void {
+                    if ($database->findCollection('presenceLogs') === null) {
+                        return;
+                    }
+                    $deleted = $database->getAuthorization()->skip(fn () => $database->deleteDocuments('presenceLogs', [
+                        Query::equal('hostname', [$hostname]),
+                    ]));
+                    if ($deleted > 0) {
+                        $presences->purgeListCache($database);
+                    }
+                };
+
+                // Console carries its own presenceLogs; user projects each have their own.
+                $reconcile($dbForPlatform);
+
+                $last = null;
+                while (true) {
+                    $queries = [Query::limit(100), Query::orderAsc('$sequence')];
+                    if ($last !== null) {
+                        $queries[] = Query::cursorAfter($last);
+                    }
+                    $projects = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->find('projects', $queries));
+                    foreach ($projects as $project) {
+                        $reconcile(getProjectDB($project));
+                    }
+                    if (\count($projects) < 100) {
+                        break;
+                    }
+                    $last = \end($projects);
+                }
+            } catch (Throwable $th) {
+                Span::current()?->setError($th);
+            } finally {
+                Span::current()?->finish();
+            }
+        });
+    }
+
+    /**
      * Save current connections to the Database every 5 seconds.
      */
     // TODO: Remove this if check once it doesn't cause issues for cloud
