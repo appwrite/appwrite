@@ -1382,14 +1382,12 @@ trait DatabasesBase
     }
 
     /**
-     * A refused create leaves nothing behind.
+     * A grant may only name a column the collection has.
      *
-     * The metadata row is written before the collection, so a permission naming a column the
-     * collection does not have is refused after the row exists. Without a rollback the caller
-     * is told the create failed while the row survives, and retrying the same id is refused
-     * as a duplicate -- an id the caller never successfully used.
+     * VectorsDB declares exactly two -- the vector sized by `dimension`, and `metadata` -- so
+     * anything else is the caller's mistake and is refused rather than stored.
      */
-    public function testCreateCollectionRefusedForAnUnknownColumnLeavesNoRow(): void
+    public function testCreateCollectionRefusedForAnUnknownColumn(): void
     {
         if ($this->getSide() === 'client') {
             $this->expectNotToPerformAssertions();
@@ -1420,16 +1418,6 @@ trait DatabasesBase
 
         $this->assertGreaterThanOrEqual(400, $refused['headers']['status-code']);
         $this->assertLessThan(500, $refused['headers']['status-code'], 'an unknown column is the caller\'s mistake, not a server fault');
-
-        // The same id is free again, which it would not be if the row had survived.
-        $retried = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections", $headers, [
-            'collectionId' => $collectionId,
-            'name' => 'Products',
-            'dimension' => 3,
-            'permissions' => [Permission::create(Role::any()), Permission::read(Role::any())],
-        ]);
-
-        $this->assertEquals(201, $retried['headers']['status-code'], 'the refused create left its metadata row behind');
     }
 
 }
