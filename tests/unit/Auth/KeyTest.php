@@ -346,6 +346,58 @@ final class KeyTest extends TestCase
         $this->assertSame('Organization key', $decoded->getName());
     }
 
+    public function testFindReturnsTheFirstKeyWithTheSecret(): void
+    {
+        $first = new Document(['$id' => 'first', 'secret' => 'standard_abcd1234']);
+        $second = new Document(['$id' => 'second', 'secret' => 'standard_abcd1234']);
+        $other = new Document(['$id' => 'other', 'secret' => 'standard_efgh5678']);
+
+        $this->assertSame($first, Key::find([$other, $first, $second], 'standard_abcd1234'));
+        $this->assertSame($other, Key::find([$other, $first, $second], 'standard_efgh5678'));
+    }
+
+    public function testFindReturnsNullWhenNoSecretMatches(): void
+    {
+        $keys = [new Document(['secret' => 'standard_abcd1234'])];
+
+        $this->assertNull(Key::find($keys, 'standard_abcd'));
+        $this->assertNull(Key::find($keys, 'standard_abcd12345'));
+        $this->assertNull(Key::find($keys, 'STANDARD_ABCD1234'));
+        $this->assertNull(Key::find([], 'standard_abcd1234'));
+    }
+
+    public function testFindNeverMatchesAnEmptySecret(): void
+    {
+        $this->assertNull(Key::find([new Document(['secret' => ''])], ''));
+    }
+
+    public function testFindSkipsKeysWithoutAStringSecret(): void
+    {
+        $valid = new Document(['$id' => 'valid', 'secret' => '1234']);
+
+        $this->assertSame($valid, Key::find([new Document(), new Document(['secret' => 1234]), $valid], '1234'));
+    }
+
+    public function testDecodeTreatsAnEmptyKeyAsGuest(): void
+    {
+        $decoded = Key::decode(
+            project: new Document(['$id' => 'test', 'keys' => [
+                new Document([
+                    'secret' => '',
+                    'expire' => null,
+                    'name' => 'Empty key',
+                    'scopes' => ['custom.write'],
+                ]),
+            ]]),
+            team: new Document(),
+            user: new Document(),
+            key: '',
+        );
+
+        $this->assertSame(User::ROLE_GUESTS, $decoded->getRole(), 'An empty key must never match a stored key');
+        $this->assertSame('UNKNOWN', $decoded->getName());
+    }
+
     private static function generateKey(
         string $projectId,
         bool $usage,

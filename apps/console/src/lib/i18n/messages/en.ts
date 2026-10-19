@@ -88,7 +88,7 @@ export const enCatalog = {
         learn: 'Learn',
         programs: 'Programs',
         about: 'About',
-        compare: 'Compare',
+        compare: 'One against all',
       },
       links: {
         docs: 'Docs',

@@ -74,4 +74,16 @@ final class MqttTest extends TestCase
             'message' => '{"action":"revoke","project":"project-a","userId":"user-a"}',
         ]], $this->pubsub->published);
     }
+
+    public function testRevokeTopicPublishesControlEvent(): void
+    {
+        $mqtt = $this->adapter();
+
+        $mqtt->revokeTopic('project-a', 'user-a', 'scores/live');
+
+        $this->assertSame([[
+            'channel' => 'mqtt',
+            'message' => '{"action":"unsubscribe","project":"project-a","userId":"user-a","topic":"scores\/live"}',
+        ]], $this->pubsub->published);
+    }
 }

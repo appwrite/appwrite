@@ -53,6 +53,8 @@ class Server
         7200,
     ];
 
+    private const array SIZE_BUCKETS = [1024, 4096, 16384, 65536, 262144, 1048576, 4194304, 16777216, 67108864, 268435456];
+
     /**
      * Job
      */
@@ -121,6 +123,7 @@ class Server
 
     private Histogram $jobWaitTime;
     private Histogram $processDuration;
+    private Histogram $messageSize;
 
     /**
      * Creates an instance of a Queue server.
@@ -236,6 +239,13 @@ class Server
             's',
             null,
             ['ExplicitBucketBoundaries' => self::DURATION_BUCKETS],
+        );
+
+        $this->messageSize = $telemetry->createHistogram(
+            'messaging.process.message.size',
+            'By',
+            null,
+            ['ExplicitBucketBoundaries' => self::SIZE_BUCKETS],
         );
 
         $this->createDepthGauge(
@@ -354,6 +364,11 @@ class Server
                             microtime(true) - $message->getTimestamp(),
                         );
                         $this->jobWaitTime->record($waitDuration);
+
+                        $size = $message->getSize();
+                        if ($size !== null) {
+                            $this->messageSize->record($size);
+                        }
 
                         $this->context()->set('message', fn (): \Utopia\Queue\Message => $message);
 

@@ -144,6 +144,12 @@ class Server
         return $subscribers;
     }
 
+    /** Server-initiated removal of a connection's subscription so delivery stops; a no-op if absent. */
+    public function unsubscribe(string $topic, int $fd): void
+    {
+        $this->store->unsubscribe($topic, $fd);
+    }
+
     private function receive(int $fd, string $data): void
     {
         $connection = $this->connections[$fd] ??= $this->open($fd);

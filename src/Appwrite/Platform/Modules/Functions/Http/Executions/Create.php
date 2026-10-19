@@ -31,9 +31,9 @@ use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
@@ -84,7 +84,7 @@ class Create extends Base
                     )
                 ],
             ))
-            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Function ID.', false, ['dbForProject'])
             ->param('body', '', new Text(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
             ->param('async', false, new Boolean(true), 'Execute code in the background. Default value is false.', true)
             ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
@@ -244,7 +244,7 @@ class Create extends Base
             'scopes' => Deployments::scopes($function)
         ]);
 
-        $executionId = ID::unique();
+        $executionId = Id::unique();
         $headers['x-appwrite-execution-id'] = $executionId;
         $headers['x-appwrite-key'] = API_KEY_EPHEMERAL . '_' . $apiKey;
         $headers['x-appwrite-trigger'] = 'http';
