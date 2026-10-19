@@ -287,22 +287,6 @@ final class ServerTelemetryTest extends TestCase
     }
 }
 
-/**
- * Keeps each histogram recording's attributes, which the released Test adapter does
- * not: the package is tested against the telemetry release it requires.
- */
-final class ServerTelemetryAttributeTelemetry extends TestTelemetry
-{
-    /** @var array<string, ServerTelemetryAttributeHistogram> */
-    public array $histograms = [];
-
-    #[\Override]
-    public function createHistogram(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): Histogram
-    {
-        return $this->histograms[$name] = new ServerTelemetryAttributeHistogram();
-    }
-}
-
 final class ServerTelemetryAttributeHistogram extends Histogram
 {
     /** @var list<float|int> */
@@ -316,6 +300,23 @@ final class ServerTelemetryAttributeHistogram extends Histogram
     {
         $this->values[] = $amount;
         $this->attributes[] = \is_array($attributes) ? $attributes : \iterator_to_array($attributes);
+    }
+}
+
+/**
+ * Keeps each histogram recording's attributes, which the released Test adapter does
+ * not: the package is tested against the telemetry release it requires.
+ */
+final class ServerTelemetryAttributeTelemetry extends TestTelemetry
+{
+    /** @var array<string, ServerTelemetryAttributeHistogram> */
+    #[\Override]
+    public array $histograms = [];
+
+    #[\Override]
+    public function createHistogram(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): ServerTelemetryAttributeHistogram
+    {
+        return $this->histograms[$name] = new ServerTelemetryAttributeHistogram();
     }
 }
 
