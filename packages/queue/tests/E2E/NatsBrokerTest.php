@@ -1455,6 +1455,179 @@ final class NatsBrokerTest extends TestCase
         }
     }
 
+    /** An ack batch written and never answered is retried whole on a new connection. */
+    public function testACommitWhoseAckIsNeverAnsweredIsSentAgain(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $state = new PublishFaults(0);
+        $state->subject = '$JS.ACK.';
+        $broker = new Nats(static fn (): Connection => Connection::connect(new ConnectionOptions(
+            servers: $url,
+            reconnectWait: 0.01,
+            transportFactory: self::faulting('drop', $state),
+        )), ackWait: 10.0, maxDeliver: 1);
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+        $stream = 'Q_' . strtoupper($queue->name);
+        $js = Connection::connect($url)->jetStream();
+
+        try {
+            $broker->publish($queue, ['task' => 'done']);
+            $message = $broker->receive($queue, 2)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $message);
+
+            $state->faults = 1;
+            $broker->commit($queue, $message);
+            $this->assertSame(0, $state->faults, 'the ack was swallowed');
+
+            $consumer = $js->getConsumer($stream, 'worker')->info(true);
+            $this->assertSame($message->getSequence(), $consumer->ackFloor->streamSeq, 'acknowledged by the retry');
+            $this->assertSame(0, $consumer->numAckPending, 'nothing left awaiting an ack');
+            $this->assertSame(0, $js->getStreamInfo($stream)->state->messages, 'removed from the work stream');
+        } finally {
+            $broker->close();
+        }
+    }
+
+    /**
+     * An ack waiting out its retry backoff leaves the commands connection free: every
+     * other ack, heartbeat and depth read on the worker goes through the same lock, and
+     * a heartbeat held past ackWait gets a running job redelivered.
+     */
+    public function testAnAckRetryDoesNotHoldTheCommandsConnectionThroughItsBackoff(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $state = new PublishFaults(0);
+        $state->subject = '$JS.ACK.';
+        $broker = new Nats(static fn (): Connection => Connection::connect(new ConnectionOptions(
+            servers: $url,
+            reconnectWait: 0.01,
+            transportFactory: self::faulting('no-responders', $state),
+        )), ackWait: 10.0, maxDeliver: 1);
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+        $stream = 'Q_' . strtoupper($queue->name);
+
+        $readSeconds = null;
+        $commitSeconds = null;
+        $error = null;
+
+        \Swoole\Coroutine\run(function () use ($broker, $queue, $state, &$readSeconds, &$commitSeconds, &$error): void {
+            $broker->publish($queue, ['task' => 'done']);
+            $message = $broker->receive($queue, 2)[0] ?? null;
+            if (!$message instanceof Message) {
+                $error = new \RuntimeException('the published message was not delivered');
+
+                return;
+            }
+            $broker->getQueueSize($queue);
+
+            // Three 503s: the ack is retried after 0s, 0.25s and 1s.
+            $state->faults = 3;
+            $wg = new \Swoole\Coroutine\WaitGroup();
+
+            $wg->add();
+            \Swoole\Coroutine::create(function () use ($broker, $queue, $message, $wg, &$commitSeconds, &$error): void {
+                $started = microtime(true);
+                try {
+                    $broker->commit($queue, $message);
+                } catch (\Throwable $e) {
+                    $error ??= $e;
+                }
+                $commitSeconds = microtime(true) - $started;
+                $wg->done();
+            });
+
+            $wg->add();
+            \Swoole\Coroutine::create(function () use ($broker, $queue, $wg, &$readSeconds, &$error): void {
+                \Swoole\Coroutine::sleep(0.4); // inside the 1s backoff
+                $started = microtime(true);
+                try {
+                    $broker->getQueueSize($queue);
+                } catch (\Throwable $e) {
+                    $error ??= $e;
+                }
+                $readSeconds = microtime(true) - $started;
+                $wg->done();
+            });
+
+            $wg->wait();
+        });
+
+        try {
+            $this->assertNull($error, (string) $error?->getMessage());
+            $this->assertSame(0, $state->faults, 'every 503 was answered');
+            $this->assertGreaterThan(1.0, $commitSeconds, 'the ack waited out its backoff');
+            $this->assertLessThan(0.5, $readSeconds, 'the depth read waited behind the ack\'s backoff');
+
+            $js = Connection::connect($url)->jetStream();
+            $this->assertSame(0, $js->getConsumer($stream, 'worker')->info(true)->numAckPending, 'the retried ack landed');
+            $this->assertSame(0, $js->getStreamInfo($stream)->state->messages, 'removed from the work stream');
+        } finally {
+            $broker->close();
+        }
+    }
+
+    /**
+     * Handing back a batch whose stream reads never answer stays inside one retry
+     * budget: once it is spent the rest are NAK'd without waiting on the server, and
+     * none is lost.
+     */
+    public function testReleasingABatchStaysInsideOneBudgetWhenTheServerStopsAnswering(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $state = new PublishFaults(0);
+        $state->subject = '$JS.API.STREAM.INFO.';
+        $broker = new Nats(static fn (): Connection => Connection::connect(new ConnectionOptions(
+            servers: $url,
+            reconnectWait: 0.01,
+            requestTimeout: 1.0,
+            transportFactory: self::faulting('drop', $state),
+        )), ackWait: 30.0, maxDeliver: 3, releaseDelay: 0.0);
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+        $stream = 'Q_' . strtoupper($queue->name);
+        $total = 8;
+
+        try {
+            for ($i = 0; $i < $total; $i++) {
+                $broker->publish($queue, ['task' => "job-{$i}"]);
+            }
+            $messages = [];
+            while (\count($messages) < $total) {
+                $batch = $broker->receive($queue, 2, $total - \count($messages));
+                $this->assertNotSame([], $batch, 'every published message is delivered');
+                $messages = [...$messages, ...$batch];
+            }
+
+            $state->faults = 1000;
+            $started = microtime(true);
+            $broker->release($queue, ...$messages);
+            $elapsed = microtime(true) - $started;
+
+            // The 10s budget, plus the attempt already running when it ran out.
+            $this->assertLessThan(12.5, $elapsed, 'release() overran its budget by a request timeout per message');
+        } finally {
+            $broker->close();
+        }
+
+        $clean = new Nats(static fn (): Connection => Connection::connect($url), ackWait: 30.0, maxDeliver: 3);
+        try {
+            $tasks = [];
+            $until = microtime(true) + 5.0;
+            while (\count($tasks) < $total && microtime(true) < $until) {
+                foreach ($clean->receive($queue, 1, $total) as $message) {
+                    $tasks[] = $message->getPayload()['task'];
+                    $clean->commit($queue, $message);
+                }
+            }
+            sort($tasks);
+            $expected = array_map(static fn (int $i): string => "job-{$i}", range(0, $total - 1));
+            sort($expected);
+            $this->assertSame($expected, $tasks, 'every released job is delivered again');
+            $this->assertSame(0, Connection::connect($url)->jetStream()->getStreamInfo($stream . '_DEAD')->state->messages, 'nothing dead-lettered');
+        } finally {
+            $clean->close();
+        }
+    }
+
     /** @return iterable<string, array{string, int}> */
     public static function lostRejectConnection(): iterable
     {
@@ -2000,6 +2173,10 @@ final class NatsBrokerTest extends TestCase
                             ?? throw new \LogicException("no inbox subscription for {$reply}");
                         $this->state->injected .= "HMSG {$reply} {$sid} 16 16\r\nNATS/1.0 503\r\n\r\n\r\n";
 
+                        return \strlen($data);
+                    }
+                    if ($this->fault === 'drop') {
+                        // Swallowed: the request is never answered, so it times out.
                         return \strlen($data);
                     }
                     if ($this->fault === 'before') {
