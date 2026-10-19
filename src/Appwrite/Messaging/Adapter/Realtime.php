@@ -89,7 +89,6 @@ class Realtime extends MessagingAdapter
      *      'expire' -> [UNIX_TIMESTAMP] when that session expires, if any
      *      'jwtExpire' -> [UNIX_TIMESTAMP] when the JWT the connection was opened with expires, if any
      *      'channels' -> [CHANNEL_NAME_X, CHANNEL_NAME_Y, CHANNEL_NAME_Z]
-     *      'presences' -> [PRESENCE_ID_1, PRESENCE_ID_2, ...]
      */
     public array $connections = [];
 
@@ -192,7 +191,6 @@ class Realtime extends MessagingAdapter
             'roles' => \array_values(\array_unique(\array_merge($existingRoles, $roles))),
             'userId' => $userId ?? ($existing['userId'] ?? ''),
             'channels' => \array_values(\array_unique(\array_merge($existingChannels, $channels))),
-            'presences' => $this->connections[$identifier]['presences'] ?? []
         ];
 
         // Recorded once by the connection handler or a presence write; every later (re)subscribe
@@ -251,36 +249,6 @@ class Realtime extends MessagingAdapter
         }
 
         return $subscriptions;
-    }
-
-    /**
-     * Dedup delete presence triggers.
-     * Scenario: when client is connected to realtime and a delete call is made throught rest.
-     * If not dedupe then two delete events will get triggered. So remove the presenceIds
-     *
-     * @param string $projectId
-     * @param string $presenceId
-     * @return int Number of connections whose presences map was updated.
-     */
-    public function removePresenceFromConnections(string $projectId, string $presenceId): int
-    {
-        if ($projectId === '' || $presenceId === '') {
-            return 0;
-        }
-
-        $removed = 0;
-        foreach ($this->connections as $connectionId => $connection) {
-            if (($connection['projectId'] ?? null) !== $projectId) {
-                continue;
-            }
-            if (!isset($connection['presences'][$presenceId])) {
-                continue;
-            }
-            unset($this->connections[$connectionId]['presences'][$presenceId]);
-            $removed++;
-        }
-
-        return $removed;
     }
 
     /**
