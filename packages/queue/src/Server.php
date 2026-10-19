@@ -349,10 +349,6 @@ class Server
                 $messageCallback = function (Message $message) {
                     $receivedAtTimestamp = microtime(true);
                     $job = $this->jobFor($message);
-                    // Same attributes as the depth gauges, so a wait alert can
-                    // name the queue that is late. A worker such as databases
-                    // consumes one queue per shard, and without them a backlog
-                    // on one shard shows up only as the worker's average.
                     $attributes = [
                         'messaging.destination.name' => $message->getQueue(),
                         'messaging.destination.namespace' => $this->adapter->namespace,
