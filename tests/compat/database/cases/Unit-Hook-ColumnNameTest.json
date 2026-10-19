@@ -17,9 +17,9 @@
                 1
               ]
             },
-            "as": "o10705"
+            "as": "o7300"
           },
-          "bind": "s62855",
+          "bind": "s11315",
           "expect": {
             "$value": "Query\\Builder\\Condition",
             "fields": {
@@ -37,11 +37,11 @@
             "method": "wrap",
             "args": {
               "condition": {
-                "$obj": "o10705"
+                "$obj": "o7300"
               },
               "column": "alias._uid"
             },
-            "as": "o10706"
+            "as": "o7301"
           },
           "expect": {
             "$value": "Query\\Builder\\Condition",
@@ -66,9 +66,9 @@
             "args": {
               "expression": "x = 1"
             },
-            "as": "o10707"
+            "as": "o7302"
           },
-          "bind": "s62857",
+          "bind": "s11317",
           "expect": {
             "$value": "Query\\Builder\\Condition",
             "fields": {
@@ -84,7 +84,7 @@
             "method": "wrap",
             "args": {
               "condition": {
-                "$obj": "o10707"
+                "$obj": "o7302"
               },
               "column": "a b"
             }
@@ -109,9 +109,9 @@
             "args": {
               "expression": "x = 1"
             },
-            "as": "o10708"
+            "as": "o7303"
           },
-          "bind": "s62859",
+          "bind": "s11319",
           "expect": {
             "$value": "Query\\Builder\\Condition",
             "fields": {
@@ -127,7 +127,7 @@
             "method": "wrap",
             "args": {
               "condition": {
-                "$obj": "o10708"
+                "$obj": "o7303"
               },
               "column": "x;y"
             }
@@ -152,9 +152,9 @@
             "args": {
               "expression": "x = 1"
             },
-            "as": "o10709"
+            "as": "o7304"
           },
-          "bind": "s62861",
+          "bind": "s11321",
           "expect": {
             "$value": "Query\\Builder\\Condition",
             "fields": {
@@ -170,7 +170,7 @@
             "method": "wrap",
             "args": {
               "condition": {
-                "$obj": "o10709"
+                "$obj": "o7304"
               },
               "column": "x`y"
             }
@@ -195,9 +195,9 @@
             "args": {
               "expression": "x = 1"
             },
-            "as": "o10710"
+            "as": "o7305"
           },
-          "bind": "s62863",
+          "bind": "s11323",
           "expect": {
             "$value": "Query\\Builder\\Condition",
             "fields": {
@@ -213,7 +213,7 @@
             "method": "wrap",
             "args": {
               "condition": {
-                "$obj": "o10710"
+                "$obj": "o7305"
               },
               "column": ""
             }
@@ -241,9 +241,9 @@
               ],
               "permissionsTable": true
             },
-            "as": "o10711"
+            "as": "o7306"
           },
-          "bind": "s62865",
+          "bind": "s11325",
           "expect": {
             "result": {
               "$hook": "Filter"
@@ -259,7 +259,7 @@
             "class": "Adapter\\SQL\\Hook\\Column\\AllowNull",
             "args": {
               "filter": {
-                "$obj": "o10711"
+                "$obj": "o7306"
               },
               "column": "a b"
             }
@@ -287,9 +287,9 @@
               ],
               "permissionsTable": true
             },
-            "as": "o10712"
+            "as": "o7307"
           },
-          "bind": "s62867",
+          "bind": "s11327",
           "expect": {
             "result": {
               "$hook": "Filter"
@@ -305,7 +305,7 @@
             "class": "Adapter\\SQL\\Hook\\Column\\AllowNull",
             "args": {
               "filter": {
-                "$obj": "o10712"
+                "$obj": "o7307"
               },
               "column": "x;y"
             }
@@ -333,9 +333,9 @@
               ],
               "permissionsTable": true
             },
-            "as": "o10713"
+            "as": "o7308"
           },
-          "bind": "s62869",
+          "bind": "s11329",
           "expect": {
             "result": {
               "$hook": "Filter"
@@ -351,7 +351,7 @@
             "class": "Adapter\\SQL\\Hook\\Column\\AllowNull",
             "args": {
               "filter": {
-                "$obj": "o10713"
+                "$obj": "o7308"
               },
               "column": "x`y"
             }
@@ -379,9 +379,9 @@
               ],
               "permissionsTable": true
             },
-            "as": "o10714"
+            "as": "o7309"
           },
-          "bind": "s62871",
+          "bind": "s11331",
           "expect": {
             "result": {
               "$hook": "Filter"
@@ -397,7 +397,7 @@
             "class": "Adapter\\SQL\\Hook\\Column\\AllowNull",
             "args": {
               "filter": {
-                "$obj": "o10714"
+                "$obj": "o7309"
               },
               "column": ""
             }
@@ -425,9 +425,9 @@
               ],
               "permissionsTable": true
             },
-            "as": "o10715"
+            "as": "o7310"
           },
-          "bind": "s62873",
+          "bind": "s11333",
           "expect": {
             "result": {
               "$hook": "Filter"
@@ -443,7 +443,7 @@
             "class": "Adapter\\SQL\\Hook\\Column\\AllowNull",
             "args": {
               "filter": {
-                "$obj": "o10715"
+                "$obj": "o7310"
               },
               "column": "table_main._uid; DROP TABLE"
             }
@@ -969,9 +969,9 @@
               "roles": [],
               "permissionsTable": true
             },
-            "as": "o10716"
+            "as": "o7311"
           },
-          "bind": "s62895",
+          "bind": "s11355",
           "expect": {
             "result": {
               "$hook": "Filter"
@@ -985,13 +985,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o10716"
+              "$obj": "o7311"
             },
             "method": "filter",
             "args": {
               "table": "posts"
             },
-            "as": "o10717"
+            "as": "o7312"
           },
           "expect": {
             "$value": "Query\\Builder\\Condition",
@@ -1026,9 +1026,9 @@
                 ]
               }
             },
-            "as": "o10718"
+            "as": "o7313"
           },
-          "bind": "s62897",
+          "bind": "s11357",
           "expect": {
             "result": {
               "$hook": "Filter"
@@ -1042,7 +1042,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o10718"
+              "$obj": "o7313"
             },
             "method": "filter",
             "args": {
@@ -1082,9 +1082,9 @@
               },
               "columns": []
             },
-            "as": "o10719"
+            "as": "o7314"
           },
-          "bind": "s62899",
+          "bind": "s11359",
           "expect": {
             "result": {
               "$hook": "Filter"
@@ -1098,13 +1098,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o10719"
+              "$obj": "o7314"
             },
             "method": "filter",
             "args": {
               "table": "posts"
             },
-            "as": "o10720"
+            "as": "o7315"
           },
           "expect": {
             "$value": "Query\\Builder\\Condition",
@@ -1147,9 +1147,9 @@
                 "body"
               ]
             },
-            "as": "o10721"
+            "as": "o7316"
           },
-          "bind": "s62901",
+          "bind": "s11361",
           "expect": {
             "result": {
               "$hook": "Filter"
@@ -1163,13 +1163,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o10721"
+              "$obj": "o7316"
             },
             "method": "filter",
             "args": {
               "table": "posts"
             },
-            "as": "o10722"
+            "as": "o7317"
           },
           "expect": {
             "$value": "Query\\Builder\\Condition",
@@ -1188,6 +1188,203 @@
       ]
     },
     {
+      "name": "ColumnNameTest::testPermissionFilterQuotesADocumentColumnUnderAnAppwriteIdAlias",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "posts_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "6ad1e9ed691819ab52ee._uid"
+            },
+            "as": "o7318"
+          },
+          "bind": "s11363",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7318"
+            },
+            "method": "filter",
+            "args": {
+              "table": "posts"
+            },
+            "as": "o7319"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`6ad1e9ed691819ab52ee`.`_uid` IN (SELECT document_id FROM `posts_perms` WHERE role IN (?) AND type = ?)",
+              "bindings": [
+                "any",
+                "read"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "posts_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "order-items._uid"
+            },
+            "as": "o7320"
+          },
+          "bind": "s11365",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7320"
+            },
+            "method": "filter",
+            "args": {
+              "table": "posts"
+            },
+            "as": "o7321"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "`order-items`.`_uid` IN (SELECT document_id FROM `posts_perms` WHERE role IN (?) AND type = ?)",
+              "bindings": [
+                "any",
+                "read"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "posts_perms"
+                    }
+                  }
+                ]
+              },
+              "documentColumn": "6ad1e9ed691819ab52ee._uid",
+              "quoteCharacter": "\""
+            },
+            "as": "o7322"
+          },
+          "bind": "s11367",
+          "expect": {
+            "result": {
+              "$hook": "Filter"
+            },
+            "calls": {
+              "permissionsTable": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o7322"
+            },
+            "method": "filter",
+            "args": {
+              "table": "posts"
+            },
+            "as": "o7323"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "\"6ad1e9ed691819ab52ee\".\"_uid\" IN (SELECT document_id FROM \"posts_perms\" WHERE role IN (?) AND type = ?)",
+              "bindings": [
+                "any",
+                "read"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ColumnNameTest::testPermissionFilterKeepsUnquotedColumnsToPlainIdentifiers",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Permission\\Filter",
+            "args": {
+              "roles": [
+                "any"
+              ],
+              "permissionsTable": true,
+              "permissionDocumentColumn": "1document"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid column name: 1document"
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "ColumnNameTest::testWrapAcceptsADigitOrHyphenLeadingColumnAndQuotesIt",
       "state": [],
       "steps": [
@@ -1198,9 +1395,9 @@
             "args": {
               "expression": "x = 1"
             },
-            "as": "o10723"
+            "as": "o7324"
           },
-          "bind": "s62903",
+          "bind": "s11370",
           "expect": {
             "$value": "Query\\Builder\\Condition",
             "fields": {
@@ -1216,11 +1413,11 @@
             "method": "wrap",
             "args": {
               "condition": {
-                "$obj": "o10723"
+                "$obj": "o7324"
               },
               "column": "1db._uid"
             },
-            "as": "o10724"
+            "as": "o7325"
           },
           "expect": {
             "$value": "Query\\Builder\\Condition",
@@ -1237,9 +1434,9 @@
             "args": {
               "expression": "x = 1"
             },
-            "as": "o10725"
+            "as": "o7326"
           },
-          "bind": "s62905",
+          "bind": "s11372",
           "expect": {
             "$value": "Query\\Builder\\Condition",
             "fields": {
@@ -1255,11 +1452,11 @@
             "method": "wrap",
             "args": {
               "condition": {
-                "$obj": "o10725"
+                "$obj": "o7326"
               },
               "column": "-ns._uid"
             },
-            "as": "o10726"
+            "as": "o7327"
           },
           "expect": {
             "$value": "Query\\Builder\\Condition",
@@ -1294,9 +1491,9 @@
                 ]
               }
             },
-            "as": "o10727"
+            "as": "o7328"
           },
-          "bind": "s62907",
+          "bind": "s11374",
           "expect": {
             "result": {
               "$hook": "Filter"
@@ -1310,13 +1507,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o10727"
+              "$obj": "o7328"
             },
             "method": "filter",
             "args": {
               "table": "posts"
             },
-            "as": "o10728"
+            "as": "o7329"
           },
           "expect": {
             "$value": "Query\\Builder\\Condition",
