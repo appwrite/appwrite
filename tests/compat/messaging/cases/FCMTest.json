@@ -56,7 +56,8 @@
                   "recipient": "token",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -174,7 +175,8 @@
                   "recipient": "token",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -326,19 +328,22 @@
                   "recipient": "t1",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "t2",
                   "status": "failure",
                   "error": "Expired device token",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "t3",
                   "status": "failure",
                   "error": "Could not resolve host (HTTP status 0; cURL error code 6)",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -588,7 +593,8 @@
                   "recipient": "t1",
                   "status": "failure",
                   "error": "Request failed (HTTP status 400; cURL error code 0)",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -696,7 +702,8 @@
                   "recipient": "t1",
                   "status": "failure",
                   "error": "Request failed (HTTP status 500; cURL error code 0)",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -805,7 +812,8 @@
                   "recipient": "t1",
                   "status": "failure",
                   "error": "Expired device token",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -899,7 +907,8 @@
                   "recipient": "t1",
                   "status": "failure",
                   "error": "Request failed (HTTP status 503; cURL error code 0)",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -1426,19 +1435,22 @@
                   "recipient": "tok-1",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "tok-2",
                   "status": "failure",
                   "error": "Expired device token",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "tok-3",
                   "status": "failure",
                   "error": "Internal error encountered.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -1724,7 +1736,8 @@
                   "recipient": "token",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -1854,7 +1867,8 @@
                   "recipient": "token",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },

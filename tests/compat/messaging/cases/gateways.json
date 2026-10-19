@@ -62,7 +62,8 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -116,7 +117,8 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "The 'To' number is not a valid phone number.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -167,7 +169,8 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -220,7 +223,8 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "21211",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -320,7 +324,8 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -400,7 +405,8 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -445,7 +451,8 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -541,7 +548,8 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -617,7 +625,8 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Bad request",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -1051,13 +1060,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -1111,13 +1122,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -1173,13 +1186,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -1260,13 +1275,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -1314,13 +1331,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -1418,13 +1437,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -1501,13 +1522,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -1613,13 +1636,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -1670,13 +1695,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -1729,13 +1756,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -1813,13 +1842,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -1864,13 +1895,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -1965,13 +1998,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -2048,13 +2083,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -2161,13 +2198,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -2220,13 +2259,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -2279,13 +2320,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -2364,13 +2407,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -2415,13 +2460,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -2517,13 +2564,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -2600,13 +2649,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -2713,13 +2764,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -2773,13 +2826,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -2835,13 +2890,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -2923,13 +2980,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -2977,13 +3036,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -3082,13 +3143,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -3165,13 +3228,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -3278,13 +3343,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -3346,13 +3413,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -3414,13 +3483,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -3508,13 +3579,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -3568,13 +3641,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -3679,13 +3754,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -3762,13 +3839,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -3874,13 +3953,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -3945,13 +4026,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Bad sender",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Bad sender",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -4015,13 +4098,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -4085,13 +4170,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "3.5",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "3.5",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -4155,13 +4242,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -4251,13 +4340,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -4313,13 +4404,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -4425,13 +4518,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -4508,13 +4603,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Bad",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Bad",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -4621,13 +4718,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -4681,13 +4780,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Invalid phone",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Invalid phone",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -4739,13 +4840,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -4799,13 +4902,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -4885,13 +4990,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -4937,13 +5044,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -5040,13 +5149,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -5127,13 +5238,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Bad request",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Bad request",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -5243,13 +5356,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -5306,13 +5421,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Invalid phone",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Invalid phone",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -5362,13 +5479,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -5424,13 +5543,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "1",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "1",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -5482,13 +5603,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -5566,13 +5689,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -5616,13 +5741,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -5716,13 +5843,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -5799,13 +5928,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Invalid",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Invalid",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -5911,7 +6042,8 @@
                   "recipient": "+447700900000",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -5969,7 +6101,8 @@
                   "recipient": "+447700900000",
                   "status": "failure",
                   "error": "Bad Credentials",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -6076,7 +6209,8 @@
                   "recipient": "447700900000",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -6127,7 +6261,8 @@
                   "recipient": "+447700900000",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -6180,7 +6315,8 @@
                   "recipient": "+447700900000",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -6259,7 +6395,8 @@
                   "recipient": "+447700900000",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -6304,7 +6441,8 @@
                   "recipient": "+447700900000",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -6400,7 +6538,8 @@
                   "recipient": "447700900000",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -6472,7 +6611,8 @@
                   "recipient": "+447700900000",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -6575,13 +6715,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -6645,13 +6787,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -6715,13 +6859,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -6812,13 +6958,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -6874,13 +7022,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -6987,13 +7137,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -7070,13 +7222,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -7181,13 +7335,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error Status Code: Unknown",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error Status Code: Unknown",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -7244,13 +7400,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Invalid Authentication",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Invalid Authentication",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -7305,13 +7463,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error Status Code: Unknown",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error Status Code: Unknown",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -7366,13 +7526,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error Status Code: 999",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error Status Code: 999",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -7425,13 +7587,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error Status Code: Unknown",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error Status Code: Unknown",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -7488,13 +7652,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error Status Code: Array",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error Status Code: Array",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -7549,13 +7715,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error Status Code: Unknown",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error Status Code: Unknown",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -7638,13 +7806,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error Status Code: Unknown",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error Status Code: Unknown",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -7693,13 +7863,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Unknown error Status Code: Unknown",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Unknown error Status Code: Unknown",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -7797,13 +7969,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -7880,13 +8054,15 @@
                   "recipient": "+15551234567",
                   "status": "failure",
                   "error": "Bad request",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "failure",
                   "error": "Bad request",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -8300,7 +8476,8 @@
                   "recipient": "+911234567890",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -8436,7 +8613,8 @@
                   "recipient": "+911234567890",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -8556,31 +8734,36 @@
                   "recipient": "+91 98765-43210",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "0091987654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "9876543210",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+1 (555) 123",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "abc",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -8666,19 +8849,22 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15550000000",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -8762,13 +8948,15 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+15557654321",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -8867,7 +9055,8 @@
                   "recipient": "+1",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -8946,13 +9135,15 @@
                   "recipient": "+1",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "+2",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -9021,7 +9212,8 @@
                   "recipient": "+1",
                   "status": "failure",
                   "error": "Empty reply from server",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -9123,13 +9315,15 @@
                   "recipient": "tok-1",
                   "status": "failure",
                   "error": "Empty reply from server (HTTP status 0; cURL error code 52)",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "tok-2",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -9384,7 +9578,8 @@
                   "recipient": "+1",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },

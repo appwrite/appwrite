@@ -450,37 +450,43 @@
                 "recipient": "a",
                 "status": "success",
                 "error": "",
-                "permanent": false
+                "permanent": false,
+                "code": 0
               },
               {
                 "recipient": "b",
                 "status": "failure",
                 "error": "boom",
-                "permanent": false
+                "permanent": false,
+                "code": 0
               },
               {
                 "recipient": "c",
                 "status": "success",
                 "error": "0",
-                "permanent": false
+                "permanent": false,
+                "code": 0
               },
               {
                 "recipient": "d",
                 "status": "success",
                 "error": "",
-                "permanent": false
+                "permanent": false,
+                "code": 0
               },
               {
                 "recipient": "e",
                 "status": "failure",
                 "error": "550 no",
-                "permanent": true
+                "permanent": true,
+                "code": 0
               },
               {
                 "recipient": "f",
                 "status": "failure",
                 "error": "450 later",
-                "permanent": false
+                "permanent": false,
+                "code": 0
               }
             ],
             "array": {
@@ -491,37 +497,151 @@
                   "recipient": "a",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "b",
                   "status": "failure",
                   "error": "boom",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "c",
                   "status": "success",
                   "error": "0",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "d",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "e",
                   "status": "failure",
                   "error": "550 no",
-                  "permanent": true
+                  "permanent": true,
+                  "code": 0
                 },
                 {
                   "recipient": "f",
                   "status": "failure",
                   "error": "450 later",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "response.run",
+          "args": {
+            "type": "code",
+            "steps": [
+              {
+                "add_result": [
+                  "a",
+                  "535 no",
+                  true,
+                  535
+                ]
+              },
+              {
+                "add_result": [
+                  "b",
+                  "",
+                  false,
+                  421
+                ]
+              },
+              {
+                "add_result": [
+                  "c",
+                  "0",
+                  true,
+                  550
+                ]
+              },
+              {
+                "add_result": [
+                  "d",
+                  "451 later",
+                  false,
+                  451
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "deliveredTo": 0,
+            "type": "code",
+            "details": [
+              {
+                "recipient": "a",
+                "status": "failure",
+                "error": "535 no",
+                "permanent": true,
+                "code": 535
+              },
+              {
+                "recipient": "b",
+                "status": "success",
+                "error": "",
+                "permanent": false,
+                "code": 0
+              },
+              {
+                "recipient": "c",
+                "status": "success",
+                "error": "0",
+                "permanent": false,
+                "code": 0
+              },
+              {
+                "recipient": "d",
+                "status": "failure",
+                "error": "451 later",
+                "permanent": false,
+                "code": 451
+              }
+            ],
+            "array": {
+              "deliveredTo": 0,
+              "type": "code",
+              "results": [
+                {
+                  "recipient": "a",
+                  "status": "failure",
+                  "error": "535 no",
+                  "permanent": true,
+                  "code": 535
+                },
+                {
+                  "recipient": "b",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false,
+                  "code": 0
+                },
+                {
+                  "recipient": "c",
+                  "status": "success",
+                  "error": "0",
+                  "permanent": false,
+                  "code": 0
+                },
+                {
+                  "recipient": "d",
+                  "status": "failure",
+                  "error": "451 later",
+                  "permanent": false,
+                  "code": 451
                 }
               ]
             }
@@ -571,6 +691,22 @@
             "class": "Utopia\\Messaging\\Adapter\\Email\\SMTP\\NoHostAnswered",
             "message": "m",
             "permanent": false,
+            "code": 0,
+            "connection": true
+          }
+        },
+        {
+          "op": "no_host_answered.new",
+          "args": {
+            "message": "No SMTP host answered: a:25 (535)",
+            "permanent": true,
+            "code": 535
+          },
+          "expect": {
+            "class": "Utopia\\Messaging\\Adapter\\Email\\SMTP\\NoHostAnswered",
+            "message": "No SMTP host answered: a:25 (535)",
+            "permanent": true,
+            "code": 535,
             "connection": true
           }
         }

@@ -37,7 +37,8 @@
                   "recipient": "+15551234567",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },

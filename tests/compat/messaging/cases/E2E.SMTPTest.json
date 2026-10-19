@@ -48,7 +48,8 @@
                   "recipient": "tester@localhost.test",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             }
@@ -140,7 +141,8 @@
                   "recipient": "tester@localhost.test",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             }
@@ -242,7 +244,8 @@
                   "recipient": "tester@localhost.test",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             }
@@ -340,7 +343,8 @@
                   "recipient": "tester2@localhost.test",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             }
@@ -518,7 +522,8 @@
                   "recipient": "tester@localhost.test",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             }
@@ -613,7 +618,8 @@
                   "recipient": "tester@localhost.test",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             }
@@ -645,7 +651,8 @@
                   "recipient": "tester@localhost.test",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             }
@@ -746,13 +753,15 @@
                   "recipient": "tester@localhost.test",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "tester2@localhost.test",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             }
@@ -809,7 +818,8 @@
                   "recipient": "tester@localhost.test",
                   "status": "failure",
                   "error": "No SMTP host answered: 127.0.0.1:1 (Cannot reach 127.0.0.1:1: Connection refused)",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             }
@@ -866,7 +876,8 @@
                   "recipient": "tester@localhost.test",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             }
@@ -956,7 +967,8 @@
                   "recipient": "tester@localhost.test",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             }
@@ -1047,7 +1059,8 @@
                   "recipient": "tester@localhost.test",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             }

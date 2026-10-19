@@ -93,7 +93,7 @@
       ]
     },
     "response.run": {
-      "doc": "new Response(type), then steps ({set_delivered_to: n}, {increment: true}, {set_type: t}, {add_result: [recipient, error?, permanent?]}): {deliveredTo, type, details, array: toArray()}",
+      "doc": "new Response(type), then steps ({set_delivered_to: n}, {increment: true}, {set_type: t}, {add_result: [recipient, error?, permanent?, code?]}): {deliveredTo, type, details, array: toArray()}",
       "covers": [
         "Utopia\\Messaging\\Response::*"
       ]
@@ -105,7 +105,7 @@
       ]
     },
     "no_host_answered.new": {
-      "doc": "new NoHostAnswered(message, permanent): {class, message, permanent, connection: instanceof ConnectionException}",
+      "doc": "new NoHostAnswered(message, permanent, code?): {class, message, permanent, code: getCode(), connection: instanceof ConnectionException}",
       "covers": [
         "Utopia\\Messaging\\Adapter\\Email\\SMTP\\NoHostAnswered::__construct"
       ]
