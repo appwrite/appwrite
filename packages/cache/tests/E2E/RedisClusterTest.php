@@ -60,4 +60,20 @@ final class RedisClusterTest extends Base
         $this->assertSame('reconnect', self::$cache->save('test:reconnect', 'reconnect', 'test:reconnect'));
         $this->assertEquals('reconnect', self::$cache->load('test:reconnect', 5));
     }
+
+    public function testAPurgeTheServerRejectsThrowsInsteadOfReportingNothingToPurge(): void
+    {
+        self::$redis->set('test:plain', 'value');
+
+        try {
+            self::$cache->purge('test:plain', 'field');
+            $this->fail('A purge Redis rejected must not read as a purge of a missing key');
+        } catch (RedisClusterException $error) {
+            $this->assertStringContainsString('WRONGTYPE', $error->getMessage());
+        } finally {
+            self::$redis->del('test:plain');
+        }
+
+        $this->assertFalse(self::$cache->purge('test:missing'));
+    }
 }
