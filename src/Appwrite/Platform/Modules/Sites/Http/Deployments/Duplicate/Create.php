@@ -179,13 +179,16 @@ class Create extends Action
         } elseif ($installationId !== '') {
             $installation = $dbForPlatform->getDocument('installations', $installationId);
 
-            // Reconnecting git leaves older deployments on an installation that may no longer read
-            // the repository, so a site still connected to it redeploys through its own. Repository
-            // IDs are only unique within a provider.
+            // Reconnecting git can delete or strand the installation older deployments were built
+            // through, so a site still connected to the repository redeploys through its own.
+            // Repository IDs are only unique within a provider, so its repository URL must match too.
             $providerRepositoryId = $deployment->getAttribute('providerRepositoryId', '');
             if ($providerRepositoryId !== '' && $providerRepositoryId === $site->getAttribute('providerRepositoryId', '')) {
                 $current = $dbForPlatform->getDocument('installations', $site->getAttribute('installationId', ''));
-                if (!$installation->isEmpty() && !$current->isEmpty() && $current->getAttribute('provider') === $installation->getAttribute('provider')) {
+                if (
+                    !$current->isEmpty()
+                    && $vcsFactory->fromProvider($current->getAttribute('provider', ''))->getRepositoryUrl($owner, $repository) === $deployment->getAttribute('providerRepositoryUrl', '')
+                ) {
                     $installation = $current;
                 }
             }
