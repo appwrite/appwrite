@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-18T16:18:00Z",
+  "updated": "2026-10-19T11:13:00Z",
   "tasks": [
     {
       "id": "signatures",
@@ -8,6 +8,14 @@
       "status": "progress",
       "updated": "2026-10-17T19:50:00Z",
       "note": "An optional PHP parameter becomes an explicit Rust argument, never a second method or a with_* builder. registry is converted in the working tree (set and get take fresh; set_fresh and get_fresh are gone), and CONVERSION.md gets the rule in §4 and on the checklist. Not committed yet; the other crates follow."
+    },
+    {
+      "id": "nats-tests",
+      "title": "nats: two PHP tests from main not ported",
+      "area": "Libraries",
+      "status": "todo",
+      "updated": "2026-10-19T11:13:00Z",
+      "note": "After the main sync on 2026-10-19 nats has 100% API coverage but 38 of 40 PHP tests ported: packages/nats/tests/ConnectRetryTest.php, packages/nats/tests/Transport/TlsFailureTest.php. audit, cache, messaging, migration and usage also changed on main and stay at 100% with every PHP test ported."
     },
     {
       "id": "sites-flake",
