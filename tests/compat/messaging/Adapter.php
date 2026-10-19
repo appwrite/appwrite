@@ -132,9 +132,9 @@ final class Adapter implements Base, Benchmarks
                 return ['class' => $e::class, 'type' => $e->getType(), 'value' => $e->getValue(), 'message' => $e->getMessage(), 'code' => $e->getCode()];
             },
             'no_host_answered.new' => function (array $a, Session $s) {
-                $e = new NoHostAnswered($a['message'], $a['permanent']);
+                $e = new NoHostAnswered($a['message'], $a['permanent'], $a['code'] ?? 0);
 
-                return ['class' => $e::class, 'message' => $e->getMessage(), 'permanent' => $e->permanent, 'connection' => \in_array(\Utopia\SMTP\Exception\ConnectionException::class, class_parents($e), true)];
+                return ['class' => $e::class, 'message' => $e->getMessage(), 'permanent' => $e->permanent, 'code' => $e->getCode(), 'connection' => \in_array(\Utopia\SMTP\Exception\ConnectionException::class, class_parents($e), true)];
             },
             'enums' => fn (array $a, Session $s) => [
                 'priority' => array_map(static fn (Priority $p) => [$p->name, $p->value], Priority::cases()),
@@ -373,7 +373,8 @@ final class Adapter implements Base, Benchmarks
 
     /**
      * A host string with `{port<n>}` replaced by the n-th scripted SMTP
-     * server's port and `{closed}` by a port nobody listens on. `$ports`
+     * server's port, `{closed}` by a port nobody listens on and `{silent}` by
+     * one whose listener never accepts (nothing greets). `$ports`
      * maps each `127.0.0.1:<port>` back to its placeholder, which results
      * report instead of the random port.
      *
@@ -391,6 +392,18 @@ final class Adapter implements Base, Benchmarks
             $port = (string) ScriptedSmtpServer::closedPort();
             $host = str_replace('{closed}', $port, $host);
             $ports['127.0.0.1:' . $port] = '127.0.0.1:{closed}';
+        }
+        if (str_contains($host, '{silent}')) {
+            $socket = stream_socket_server('tcp://127.0.0.1:0');
+            if ($socket === false) {
+                throw new \RuntimeException('Could not listen');
+            }
+            // The session holds the listener open until the case ends.
+            $s->handle($socket);
+            $address = (string) stream_socket_get_name($socket, false);
+            $port = substr($address, (int) strrpos($address, ':') + 1);
+            $host = str_replace('{silent}', $port, $host);
+            $ports['127.0.0.1:' . $port] = '127.0.0.1:{silent}';
         }
         if (str_contains($host, '{mailpit}')) {
             $host = str_replace('{mailpit}', $s->service('messaging-smtp'), $host);

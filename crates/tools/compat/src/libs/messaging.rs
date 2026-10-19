@@ -565,7 +565,7 @@ fn discord_out(d: &Discord) -> Value {
 }
 
 fn delivery_out(d: &Delivery) -> Value {
-    json!({"recipient": d.recipient, "status": d.status.as_str(), "error": d.error, "permanent": d.permanent})
+    json!({"recipient": d.recipient, "status": d.status.as_str(), "error": d.error, "permanent": d.permanent, "code": d.code})
 }
 
 fn response_out(r: &Response) -> Value {
@@ -1166,6 +1166,7 @@ impl Adapter for Scripted {
                     status: if result["status"] == "success" { Status::Success } else { Status::Failure },
                     error: result["error"].as_str().unwrap_or("").to_owned(),
                     permanent: result["permanent"].as_bool().unwrap_or(false),
+                    code: result["code"].as_i64().unwrap_or(0),
                 });
             }
             Ok(Sent::Response(response))
@@ -1233,6 +1234,18 @@ impl SmtpServer {
         }
         self.done.lock().unwrap().clone().unwrap_or_default()
     }
+}
+
+/// Listeners nobody accepts from, kept open for the life of the driver.
+static SILENT: Mutex<Vec<std::net::TcpListener>> = Mutex::new(Vec::new());
+
+/// A port whose listener never accepts: the kernel completes the connection
+/// from the backlog, and nothing ever greets.
+fn silent_port() -> Result<u16, Fault> {
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").map_err(|e| Fault::new(e.to_string()))?;
+    let port = listener.local_addr().map_err(|e| Fault::new(e.to_string()))?.port();
+    SILENT.lock().unwrap().push(listener);
+    Ok(port)
 }
 
 /// A port nobody listens on.
@@ -1480,7 +1493,8 @@ fn service_account(account: &Value) -> Result<String, Fault> {
     php_std::json::encode(&value, php_std::json::Flags::NONE, 512).map_err(|e| Fault::new(e.message().to_owned()))
 }
 
-/// A host string with `{port<n>}`, `{closed}` and `{mailpit}` filled in.
+/// A host string with `{port<n>}`, `{closed}`, `{silent}` and `{mailpit}`
+/// filled in.
 async fn resolve_host(host: &str, a: &Args<'_>, s: &Session) -> Result<(String, Vec<(String, String)>), Fault> {
     let mut host = host.to_owned();
     let mut ports = Vec::new();
@@ -1495,6 +1509,11 @@ async fn resolve_host(host: &str, a: &Args<'_>, s: &Session) -> Result<(String, 
         let port = closed_port().await?.to_string();
         host = host.replace("{closed}", &port);
         ports.push((format!("127.0.0.1:{port}"), "127.0.0.1:{closed}".to_owned()));
+    }
+    if host.contains("{silent}") {
+        let port = silent_port()?.to_string();
+        host = host.replace("{silent}", &port);
+        ports.push((format!("127.0.0.1:{port}"), "127.0.0.1:{silent}".to_owned()));
     }
     if host.contains("{mailpit}") {
         host = host.replace("{mailpit}", s.service("messaging-smtp")?);
@@ -1640,6 +1659,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                             text(&list[0])?,
                             list.get(1).map(text).transpose()?.unwrap_or_default(),
                             list.get(2).and_then(Value::as_bool).unwrap_or(false),
+                            list.get(3).and_then(Value::as_i64).unwrap_or(0),
                         );
                     }
                     other => return Err(Fault::new(format!("unknown response step {other}"))),
@@ -1663,9 +1683,13 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             }))
         }
         "no_host_answered.new" => {
-            let e = email::NoHostAnswered::new(a.str("message")?, a.bool("permanent")?);
+            let e = email::NoHostAnswered::new(
+                a.str("message")?,
+                a.bool("permanent")?,
+                a.opt("code").and_then(Value::as_i64).unwrap_or(0),
+            );
             Outcome::Ok(
-                json!({"class": email::NoHostAnswered::CLASS, "message": e.message, "permanent": e.permanent, "connection": true}),
+                json!({"class": email::NoHostAnswered::CLASS, "message": e.message, "permanent": e.permanent, "code": e.code, "connection": true}),
             )
         }
         "enums" => Outcome::Ok(json!({

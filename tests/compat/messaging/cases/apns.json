@@ -79,25 +79,29 @@
                   "recipient": "tok1",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "tok2",
                   "status": "failure",
                   "error": "Expired device token",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "tok3",
                   "status": "failure",
                   "error": "Expired device token",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "tok4",
                   "status": "failure",
                   "error": "PayloadTooLarge",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -222,19 +226,22 @@
                   "recipient": "tok1",
                   "status": "failure",
                   "error": "Connection reset",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "tok2",
                   "status": "failure",
                   "error": "Unknown error",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "tok3",
                   "status": "failure",
                   "error": "42",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -514,19 +521,22 @@
                   "recipient": "aaa1",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "bbb2",
                   "status": "failure",
                   "error": "Unregistered",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "ccc3",
                   "status": "failure",
                   "error": "Expired device token",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -778,13 +788,15 @@
                   "recipient": "a b",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 },
                 {
                   "recipient": "c%d",
                   "status": "failure",
                   "error": "Expired device token",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },

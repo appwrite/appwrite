@@ -77,7 +77,7 @@ let sent = router.send(&Message::from(Sms::new(["+919876543210", "+15551234567"]
 
 ## Send email through SMTP
 
-The SMTP adapter tries each host of the list in order, and every recipient gets the server's own answer: one refused address does not fail the others, and a 5xx refusal is marked permanent.
+The SMTP adapter tries each host of the list in order, and every recipient gets the server's own answer: one refused address does not fail the others, a 5xx refusal is marked permanent, and a failure carries the reply code behind it (0 when the server gave none).
 
 ```rust
 use utopia_messaging::email::Smtp;
@@ -90,7 +90,7 @@ let email = Email::builder(["john@example.test"], "Hello", "Body", "Acme", "nore
 let sent = smtp.send(&Message::from(email)).await?;
 for result in sent.response().map(|r| r.details()).unwrap_or_default() {
     if result.permanent {
-        println!("do not retry {}: {}", result.recipient, result.error);
+        println!("do not retry {} ({}): {}", result.recipient, result.code, result.error);
     }
 }
 smtp.disconnect().await;

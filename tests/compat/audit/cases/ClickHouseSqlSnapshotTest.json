@@ -708,7 +708,7 @@
                 },
                 "content_type": "multipart/form-data",
                 "fields": {
-                  "query": "SELECT `id`, `actorId`, `event`, `resource`, `userAgent`, `ip`, `time`, `actorType`, `actorInternalId`, `resourceParent`, `resourceType`, `resourceId`, `resourceInternalId`, `country`, `city`, `continentCode`, `subdivisions`, `isp`, `autonomousSystemNumber`, `autonomousSystemOrganization`, `connectionType`, `connectionUsageType`, `connectionOrganization`, `projectId`, `projectInternalId`, `teamId`, `teamInternalId`, `hostname`, `sdk`, `sdkVersion`, `osCode`, `osName`, `osVersion`, `clientType`, `clientCode`, `clientName`, `clientVersion`, `clientEngine`, `clientEngineVersion`, `deviceName`, `deviceBrand`, `deviceModel`, `data` FROM `default`.`audits` WHERE `actorId` IN ({param0:String}) AND `time` BETWEEN {param1:DateTime64(3)} AND {param2:DateTime64(3)} ORDER BY `time` DESC LIMIT {param3:Int64} OFFSET {param4:Int64} FORMAT JSON",
+                  "query": "SELECT `id`, `actorId`, `event`, `resource`, `userAgent`, `ip`, `time`, `actorType`, `actorInternalId`, `resourceParent`, `resourceType`, `resourceId`, `resourceInternalId`, `country`, `city`, `continentCode`, `subdivisions`, `isp`, `autonomousSystemNumber`, `autonomousSystemOrganization`, `connectionType`, `connectionUsageType`, `connectionOrganization`, `projectId`, `projectInternalId`, `teamId`, `teamInternalId`, `hostname`, `sdk`, `sdkVersion`, `osCode`, `osName`, `osVersion`, `clientType`, `clientCode`, `clientName`, `clientVersion`, `clientEngine`, `clientEngineVersion`, `deviceName`, `deviceBrand`, `deviceModel`, `data` FROM `default`.`audits` WHERE `actorId` IN ({param0:String}) AND `time` BETWEEN {param1:DateTime64(3)} AND {param2:DateTime64(3)} ORDER BY `time` DESC, `id` DESC LIMIT {param3:Int64} OFFSET {param4:Int64} FORMAT JSON",
                   "param_param0": "u1",
                   "param_param1": "2025-01-01 00:00:00.000",
                   "param_param2": "2025-12-31 00:00:00.000",
@@ -782,7 +782,7 @@
                 },
                 "content_type": "multipart/form-data",
                 "fields": {
-                  "query": "SELECT `id`, `actorId`, `event`, `resource`, `userAgent`, `ip`, `time`, `actorType`, `actorInternalId`, `resourceParent`, `resourceType`, `resourceId`, `resourceInternalId`, `country`, `city`, `continentCode`, `subdivisions`, `isp`, `autonomousSystemNumber`, `autonomousSystemOrganization`, `connectionType`, `connectionUsageType`, `connectionOrganization`, `projectId`, `projectInternalId`, `teamId`, `teamInternalId`, `hostname`, `sdk`, `sdkVersion`, `osCode`, `osName`, `osVersion`, `clientType`, `clientCode`, `clientName`, `clientVersion`, `clientEngine`, `clientEngineVersion`, `deviceName`, `deviceBrand`, `deviceModel`, `data` FROM `default`.`audits` WHERE `actorId` IN ({param0:String}) AND `time` BETWEEN {param1:DateTime64(3)} AND {param2:DateTime64(3)} ORDER BY `time` DESC LIMIT {param3:Int64} FORMAT JSON",
+                  "query": "SELECT `id`, `actorId`, `event`, `resource`, `userAgent`, `ip`, `time`, `actorType`, `actorInternalId`, `resourceParent`, `resourceType`, `resourceId`, `resourceInternalId`, `country`, `city`, `continentCode`, `subdivisions`, `isp`, `autonomousSystemNumber`, `autonomousSystemOrganization`, `connectionType`, `connectionUsageType`, `connectionOrganization`, `projectId`, `projectInternalId`, `teamId`, `teamInternalId`, `hostname`, `sdk`, `sdkVersion`, `osCode`, `osName`, `osVersion`, `clientType`, `clientCode`, `clientName`, `clientVersion`, `clientEngine`, `clientEngineVersion`, `deviceName`, `deviceBrand`, `deviceModel`, `data` FROM `default`.`audits` WHERE `actorId` IN ({param0:String}) AND `time` BETWEEN {param1:DateTime64(3)} AND {param2:DateTime64(3)} ORDER BY `time` DESC, `id` DESC LIMIT {param3:Int64} FORMAT JSON",
                   "param_param0": "u1",
                   "param_param1": "2025-01-01 00:00:00.000",
                   "param_param2": "2025-12-31 00:00:00.000",
@@ -849,7 +849,7 @@
                 },
                 "content_type": "multipart/form-data",
                 "fields": {
-                  "query": "SELECT `id`, `actorId`, `event`, `resource`, `userAgent`, `ip`, `time`, `actorType`, `actorInternalId`, `resourceParent`, `resourceType`, `resourceId`, `resourceInternalId`, `country`, `city`, `continentCode`, `subdivisions`, `isp`, `autonomousSystemNumber`, `autonomousSystemOrganization`, `connectionType`, `connectionUsageType`, `connectionOrganization`, `projectId`, `projectInternalId`, `teamId`, `teamInternalId`, `hostname`, `sdk`, `sdkVersion`, `osCode`, `osName`, `osVersion`, `clientType`, `clientCode`, `clientName`, `clientVersion`, `clientEngine`, `clientEngineVersion`, `deviceName`, `deviceBrand`, `deviceModel`, `data` FROM `default`.`audits` WHERE `event` NOT IN ({param0:String}, {param1:String}) LIMIT {param2:Int64} FORMAT JSON",
+                  "query": "SELECT `id`, `actorId`, `event`, `resource`, `userAgent`, `ip`, `time`, `actorType`, `actorInternalId`, `resourceParent`, `resourceType`, `resourceId`, `resourceInternalId`, `country`, `city`, `continentCode`, `subdivisions`, `isp`, `autonomousSystemNumber`, `autonomousSystemOrganization`, `connectionType`, `connectionUsageType`, `connectionOrganization`, `projectId`, `projectInternalId`, `teamId`, `teamInternalId`, `hostname`, `sdk`, `sdkVersion`, `osCode`, `osName`, `osVersion`, `clientType`, `clientCode`, `clientName`, `clientVersion`, `clientEngine`, `clientEngineVersion`, `deviceName`, `deviceBrand`, `deviceModel`, `data` FROM `default`.`audits` WHERE `event` NOT IN ({param0:String}, {param1:String}) ORDER BY `time` DESC, `id` DESC LIMIT {param2:Int64} FORMAT JSON",
                   "param_param0": "users.delete",
                   "param_param1": "projects.delete",
                   "param_param2": "25"
@@ -908,7 +908,7 @@
                 },
                 "content_type": "multipart/form-data",
                 "fields": {
-                  "query": "SELECT `id`, `actorId`, `event`, `resource`, `userAgent`, `ip`, `time`, `actorType`, `actorInternalId`, `resourceParent`, `resourceType`, `resourceId`, `resourceInternalId`, `country`, `city`, `continentCode`, `subdivisions`, `isp`, `autonomousSystemNumber`, `autonomousSystemOrganization`, `connectionType`, `connectionUsageType`, `connectionOrganization`, `projectId`, `projectInternalId`, `teamId`, `teamInternalId`, `hostname`, `sdk`, `sdkVersion`, `osCode`, `osName`, `osVersion`, `clientType`, `clientCode`, `clientName`, `clientVersion`, `clientEngine`, `clientEngineVersion`, `deviceName`, `deviceBrand`, `deviceModel`, `data` FROM `default`.`audits` WHERE position(`event`, {param0:String}) > 0 FORMAT JSON",
+                  "query": "SELECT `id`, `actorId`, `event`, `resource`, `userAgent`, `ip`, `time`, `actorType`, `actorInternalId`, `resourceParent`, `resourceType`, `resourceId`, `resourceInternalId`, `country`, `city`, `continentCode`, `subdivisions`, `isp`, `autonomousSystemNumber`, `autonomousSystemOrganization`, `connectionType`, `connectionUsageType`, `connectionOrganization`, `projectId`, `projectInternalId`, `teamId`, `teamInternalId`, `hostname`, `sdk`, `sdkVersion`, `osCode`, `osName`, `osVersion`, `clientType`, `clientCode`, `clientName`, `clientVersion`, `clientEngine`, `clientEngineVersion`, `deviceName`, `deviceBrand`, `deviceModel`, `data` FROM `default`.`audits` WHERE position(`event`, {param0:String}) > 0 ORDER BY `time` DESC, `id` DESC FORMAT JSON",
                   "param_param0": "dat"
                 }
               }
@@ -966,7 +966,7 @@
                 },
                 "content_type": "multipart/form-data",
                 "fields": {
-                  "query": "SELECT `id`, `actorId`, `event`, `resource`, `userAgent`, `ip`, `time`, `actorType`, `actorInternalId`, `resourceParent`, `resourceType`, `resourceId`, `resourceInternalId`, `country`, `city`, `continentCode`, `subdivisions`, `isp`, `autonomousSystemNumber`, `autonomousSystemOrganization`, `connectionType`, `connectionUsageType`, `connectionOrganization`, `projectId`, `projectInternalId`, `teamId`, `teamInternalId`, `hostname`, `sdk`, `sdkVersion`, `osCode`, `osName`, `osVersion`, `clientType`, `clientCode`, `clientName`, `clientVersion`, `clientEngine`, `clientEngineVersion`, `deviceName`, `deviceBrand`, `deviceModel`, `data` FROM `default`.`audits` WHERE (position(`event`, {param0:String}) > 0 OR position(`event`, {param1:String}) > 0) FORMAT JSON",
+                  "query": "SELECT `id`, `actorId`, `event`, `resource`, `userAgent`, `ip`, `time`, `actorType`, `actorInternalId`, `resourceParent`, `resourceType`, `resourceId`, `resourceInternalId`, `country`, `city`, `continentCode`, `subdivisions`, `isp`, `autonomousSystemNumber`, `autonomousSystemOrganization`, `connectionType`, `connectionUsageType`, `connectionOrganization`, `projectId`, `projectInternalId`, `teamId`, `teamInternalId`, `hostname`, `sdk`, `sdkVersion`, `osCode`, `osName`, `osVersion`, `clientType`, `clientCode`, `clientName`, `clientVersion`, `clientEngine`, `clientEngineVersion`, `deviceName`, `deviceBrand`, `deviceModel`, `data` FROM `default`.`audits` WHERE (position(`event`, {param0:String}) > 0 OR position(`event`, {param1:String}) > 0) ORDER BY `time` DESC, `id` DESC FORMAT JSON",
                   "param_param0": "dat",
                   "param_param1": "ins"
                 }
@@ -1025,7 +1025,7 @@
                 },
                 "content_type": "multipart/form-data",
                 "fields": {
-                  "query": "SELECT `id`, `actorId`, `event`, `resource`, `userAgent`, `ip`, `time`, `actorType`, `actorInternalId`, `resourceParent`, `resourceType`, `resourceId`, `resourceInternalId`, `country`, `city`, `continentCode`, `subdivisions`, `isp`, `autonomousSystemNumber`, `autonomousSystemOrganization`, `connectionType`, `connectionUsageType`, `connectionOrganization`, `projectId`, `projectInternalId`, `teamId`, `teamInternalId`, `hostname`, `sdk`, `sdkVersion`, `osCode`, `osName`, `osVersion`, `clientType`, `clientCode`, `clientName`, `clientVersion`, `clientEngine`, `clientEngineVersion`, `deviceName`, `deviceBrand`, `deviceModel`, `data` FROM `default`.`audits` WHERE (position(`event`, {param0:String}) = 0 AND position(`event`, {param1:String}) = 0) FORMAT JSON",
+                  "query": "SELECT `id`, `actorId`, `event`, `resource`, `userAgent`, `ip`, `time`, `actorType`, `actorInternalId`, `resourceParent`, `resourceType`, `resourceId`, `resourceInternalId`, `country`, `city`, `continentCode`, `subdivisions`, `isp`, `autonomousSystemNumber`, `autonomousSystemOrganization`, `connectionType`, `connectionUsageType`, `connectionOrganization`, `projectId`, `projectInternalId`, `teamId`, `teamInternalId`, `hostname`, `sdk`, `sdkVersion`, `osCode`, `osName`, `osVersion`, `clientType`, `clientCode`, `clientName`, `clientVersion`, `clientEngine`, `clientEngineVersion`, `deviceName`, `deviceBrand`, `deviceModel`, `data` FROM `default`.`audits` WHERE (position(`event`, {param0:String}) = 0 AND position(`event`, {param1:String}) = 0) ORDER BY `time` DESC, `id` DESC FORMAT JSON",
                   "param_param0": "update",
                   "param_param1": "delete"
                 }
@@ -1295,7 +1295,7 @@
             "result": null,
             "error": {
               "class": "Exception",
-              "message": "Cursor value for 'id' cannot be null"
+              "message": "Cursor is missing required attribute 'time'"
             },
             "requests": []
           }

@@ -192,7 +192,8 @@
                   "recipient": "123456",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -263,7 +264,8 @@
                   "recipient": "123456",
                   "status": "failure",
                   "error": "Bad Request.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -316,7 +318,8 @@
                   "recipient": "123456",
                   "status": "failure",
                   "error": "Unknown Error.",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },
@@ -429,7 +432,8 @@
                   "recipient": "123456",
                   "status": "success",
                   "error": "",
-                  "permanent": false
+                  "permanent": false,
+                  "code": 0
                 }
               ]
             },

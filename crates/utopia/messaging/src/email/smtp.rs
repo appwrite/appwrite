@@ -25,7 +25,8 @@ pub struct Host {
 
 /// Every host in the list failed before a session was open: the message
 /// names each host's failure, and `permanent` says whether trying the list
-/// again can go differently (only when every host refused for good).
+/// again can go differently (only when every host refused for good). Its
+/// `code` is the first reply code a host refused with, or 0 when none replied.
 ///
 /// PHP: `Utopia\Messaging\Adapter\Email\SMTP\NoHostAnswered`, a
 /// `Utopia\SMTP\Exception\ConnectionException`.
@@ -35,15 +36,19 @@ pub struct NoHostAnswered {
     pub message: String,
     /// Whether every host refused for good.
     pub permanent: bool,
+    /// The first reply code a host refused with, or 0 when none replied.
+    ///
+    /// PHP: `getCode()`.
+    pub code: i64,
 }
 
 impl NoHostAnswered {
     /// The PHP class.
     pub const CLASS: &'static str = "Utopia\\Messaging\\Adapter\\Email\\SMTP\\NoHostAnswered";
 
-    /// PHP: `new NoHostAnswered($message, $permanent)`.
-    pub fn new(message: impl Into<String>, permanent: bool) -> NoHostAnswered {
-        NoHostAnswered { message: message.into(), permanent }
+    /// PHP: `new NoHostAnswered($message, $permanent, $code)`.
+    pub fn new(message: impl Into<String>, permanent: bool, code: i64) -> NoHostAnswered {
+        NoHostAnswered { message: message.into(), permanent, code }
     }
 }
 
@@ -72,6 +77,15 @@ impl Failure {
                 *code != 0 && Outcome::from_code(*code).is_ok_and(|o| o == Outcome::Permanent)
             }
             Failure::Smtp(_) => false,
+        }
+    }
+
+    /// The reply code the server refused with, or 0 when no reply stands
+    /// behind the failure.
+    fn code(&self) -> i64 {
+        match self {
+            Failure::NoHost(e) => e.code,
+            Failure::Smtp(e) => i64::from(e.code()),
         }
     }
 }
@@ -277,6 +291,7 @@ impl Smtp {
     async fn dial(&self) -> Result<Result<Client<TcpTransport>, Failure>, Error> {
         let mut failures = Vec::new();
         let mut permanent = true;
+        let mut code = 0;
         for host in self.hosts() {
             let mut client = self.client_for(&host)?;
             match client.capabilities().await {
@@ -285,12 +300,15 @@ impl Smtp {
                     let failure = Failure::Smtp(e);
                     failures.push(format!("{}:{} ({})", host.host, host.port, failure.message()));
                     permanent = permanent && failure.permanent();
+                    if code == 0 {
+                        code = failure.code();
+                    }
                 }
                 Err(e) => return Err(e.into()),
             }
         }
         let message = format!("No SMTP host answered: {}", failures.join("; "));
-        Ok(Err(Failure::NoHost(NoHostAnswered::new(message, !failures.is_empty() && permanent))))
+        Ok(Err(Failure::NoHost(NoHostAnswered::new(message, !failures.is_empty() && permanent, code))))
     }
 
     async fn reusable(&self, client: &mut Client<TcpTransport>) -> Result<bool, Error> {
@@ -352,7 +370,7 @@ impl Smtp {
             Ok(client) => client,
             Err(failure) => {
                 for recipient in &recipients {
-                    response.add_result(recipient, failure.message(), failure.permanent());
+                    response.add_result(recipient, failure.message(), failure.permanent(), failure.code());
                 }
                 return Ok(Sent::Response(response));
             }
@@ -371,14 +389,24 @@ impl Smtp {
                     response.add_success(accepted);
                 }
                 for (address, reply) in &delivery.rejected {
-                    response.add_result(address, reply.to_string(), reply.outcome() == Outcome::Permanent);
+                    response.add_result(
+                        address,
+                        reply.to_string(),
+                        reply.outcome() == Outcome::Permanent,
+                        i64::from(reply.code()),
+                    );
                 }
                 Ok(())
             }
             Ok(Err(utopia_smtp::Error::Transaction(refusal))) => {
                 for recipient in &recipients {
                     let reply = refusal.rejected.get(recipient).unwrap_or(&refusal.reply);
-                    response.add_result(recipient, reply.to_string(), reply.outcome() == Outcome::Permanent);
+                    response.add_result(
+                        recipient,
+                        reply.to_string(),
+                        reply.outcome() == Outcome::Permanent,
+                        i64::from(reply.code()),
+                    );
                 }
                 keep = keep && client.idle().is_some();
                 Ok(())
@@ -386,7 +414,7 @@ impl Smtp {
             Ok(Err(e)) if e.is_smtp() => {
                 let failure = Failure::Smtp(e);
                 for recipient in &recipients {
-                    response.add_result(recipient, failure.message(), failure.permanent());
+                    response.add_result(recipient, failure.message(), failure.permanent(), failure.code());
                 }
                 keep = false;
                 Ok(())

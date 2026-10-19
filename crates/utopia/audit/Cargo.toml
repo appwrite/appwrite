@@ -35,4 +35,4 @@ utopia-database = { workspace = true, features = ["memory"] }
 
 [package.metadata.utopia]
 category = "observability"
-php-sync = "2ca9a38d36e32854844a172bf7238ec7cb8b5f05"
+php-sync = "048888494c96d08ad5c19a541636ecd3ebb8204f"

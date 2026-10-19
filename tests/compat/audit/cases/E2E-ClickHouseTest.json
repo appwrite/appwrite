@@ -29300,6 +29300,7 @@
           },
           "expect": [
             {
+              "time": "<now>",
               "event": "update",
               "resource": "database/document/1",
               "$id": "<uniqid>"
@@ -29487,6 +29488,7 @@
           "expect": [
             {
               "tenant": 7,
+              "time": "<now>",
               "event": "create",
               "$id": "<uniqid>"
             }
