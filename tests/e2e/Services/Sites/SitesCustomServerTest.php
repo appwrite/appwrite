@@ -146,7 +146,7 @@ final class SitesCustomServerTest extends Scope
                 $this->assertEquals(200, $response['headers']['status-code']);
                 $this->assertEquals('203.0.113.9', $response['body']['ip']);
                 // 203.0.113.0/24 is reserved for documentation, so it has no geo record.
-                $this->assertEquals('', $response['body']['countryCode']);
+                $this->assertNull($response['body']['countryCode']);
                 $this->assertEquals('false', $response['body']['continentEu']);
             });
         } finally {

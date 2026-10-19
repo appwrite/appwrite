@@ -270,8 +270,8 @@ Requests reach a server-side rendered site through Appwrite's network, so the co
 | Header                      | Value                                                                                         |
 |-----------------------------|-----------------------------------------------------------------------------------------------|
 | `x-appwrite-client-ip`      | The visitor's IP address.                                                                     |
-| `x-appwrite-country-code`   | Two-letter country code, such as `DE`. Not set when Appwrite can't locate the IP address.     |
-| `x-appwrite-continent-code` | Two-letter continent code, such as `EU`. Not set when Appwrite can't locate the IP address.   |
+| `x-appwrite-country-code`   | Two-letter country code, such as `DE`. Not sent when Appwrite can't locate the IP address.    |
+| `x-appwrite-continent-code` | Two-letter continent code, such as `EU`. Not sent when Appwrite can't locate the IP address.  |
 | `x-appwrite-continent-eu`   | `true` when the visitor's country is in the European Union, otherwise `false`.                |
 
 ```ts
