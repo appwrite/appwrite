@@ -12,6 +12,7 @@ use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Execution\Store;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Videos\Base as VideosBase;
 use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
@@ -70,6 +71,7 @@ class Deletes extends Action
             ->inject('deviceForFunctions')
             ->inject('deviceForSites')
             ->inject('deviceForBuilds')
+            ->inject('deviceForVideos')
             ->inject('telemetry')
             ->inject('certificates')
             ->inject('executor')
@@ -100,6 +102,7 @@ class Deletes extends Action
         Device $deviceForFunctions,
         Device $deviceForSites,
         Device $deviceForBuilds,
+        Device $deviceForVideos,
         Telemetry $telemetry,
         Provider $certificates,
         Executor $executor,
@@ -133,6 +136,7 @@ class Deletes extends Action
             $deviceForFunctions,
             $deviceForSites,
             $deviceForBuilds,
+            $deviceForVideos,
             $telemetry,
             $certificates,
             $executor,
@@ -226,6 +230,7 @@ class Deletes extends Action
         Device $deviceForFunctions,
         Device $deviceForSites,
         Device $deviceForBuilds,
+        Device $deviceForVideos,
         Telemetry $telemetry,
         Provider $certificates,
         Executor $executor,
@@ -275,6 +280,15 @@ class Deletes extends Action
                         break;
                     case DELETE_TYPE_BUCKETS:
                         $this->deleteBucket($getProjectDB, $deviceForFiles, $document, $project);
+                        break;
+                    case DELETE_TYPE_VIDEOS:
+                        $this->deleteVideo($getProjectDB, $deviceForVideos, $document, $project);
+                        break;
+                    case DELETE_TYPE_VIDEOS_RENDITIONS:
+                        $this->deleteVideoRendition($getProjectDB, $deviceForVideos, $document, $project);
+                        break;
+                    case DELETE_TYPE_VIDEOS_CAPTIONS:
+                        $this->deleteVideoCaption($getProjectDB, $deviceForVideos, $document, $project);
                         break;
                     case DELETE_TYPE_INSTALLATIONS:
                         $this->deleteInstallation($dbForPlatform, $getProjectDB, $document, $project);
@@ -347,6 +361,10 @@ class Deletes extends Action
             case DELETE_TYPE_CSV_EXPORTS:
                 $this->deleteOldCSVExports($dbForPlatform, $deviceForFiles);
                 break;
+            case DELETE_TYPE_VIDEOS_TMP:
+                $this->deleteOldVideoTmp($telemetry);
+                $this->deleteOldVideoLocks($telemetry);
+                break;
             case DELETE_TYPE_MAINTENANCE:
                 $this->deleteExpiredTargets($project, $getProjectDB);
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention, $executionsRetentionCount, $executionStore);
@@ -358,6 +376,8 @@ class Deletes extends Action
                 $this->deleteExpiredPushLedger($project, $getProjectDB);
                 $this->deleteOldDeployments($publisherForDeletes, $project, $getProjectDB);
                 $this->updateProcessingMigrations($project, $getProjectDB);
+                $this->abortStaleRenditions($project, $getProjectDB, $telemetry);
+                $this->abortStaleCaptions($project, $getProjectDB, $telemetry);
                 break;
             case DELETE_TYPE_REPORT:
                 $this->deleteReport($dbForPlatform, $project, $document);
@@ -573,6 +593,148 @@ class Deletes extends Action
                 }
             }
         );
+    }
+
+    /**
+     * Park in-flight renditions that have not progressed past the retention window.
+     *
+     * Encode already stops when the row leaves `started` and will not overwrite
+     * `aborted`, so a live ffmpeg that outlives this pass still settles safely.
+     */
+    private function abortStaleRenditions(Document $project, callable $getProjectDB, Telemetry $telemetry): void
+    {
+        if ($project->getId() === 'console') {
+            return;
+        }
+
+        Console::info('Abort stale video renditions');
+
+        /** @var Database $dbForProject */
+        $dbForProject = $getProjectDB($project);
+
+        $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '86400');
+        $date = DateTime::addSeconds(new \DateTime(), -1 * $retention);
+
+        $queries = [
+            Query::select([...$this->selects, 'status', 'progress', 'videoId']),
+            Query::equal('status', [
+                VideosBase::STATUS_PENDING,
+                VideosBase::STATUS_STARTED,
+                VideosBase::STATUS_ENDED,
+                VideosBase::STATUS_UPLOADING,
+            ]),
+            Query::lessThanEqual('$updatedAt', $date),
+        ];
+
+        $aborted = 0;
+        $failed = 0;
+
+        $this->listByGroup(
+            'videos_renditions',
+            $queries,
+            $dbForProject,
+            function (Document $rendition) use ($dbForProject, $project, &$aborted, &$failed) {
+                try {
+                    $dbForProject->updateDocument('videos_renditions', $rendition->getId(), new Document([
+                        'status' => VideosBase::STATUS_ABORTED,
+                        'endedAt' => DateTime::now(),
+                    ]));
+                    VideosBase::removeLock(VideosBase::encodeLockPath($rendition->getAttribute('videoId'), $rendition->getId()));
+                    $aborted++;
+                    $age = \max(0, \time() - (int) \strtotime((string) $rendition->getUpdatedAt()));
+                    Console::info(
+                        'Aborted stale rendition ' . $rendition->getId()
+                        . ' for project ' . $project->getId()
+                        . ' status=' . $rendition->getAttribute('status', '')
+                        . ' progress=' . $rendition->getAttribute('progress', '0')
+                        . ' age=' . $age . 's'
+                    );
+                } catch (Throwable $th) {
+                    $failed++;
+                    Console::error("Failed to abort stale rendition {$rendition->getId()} for project {$project->getId()}: " . $th->getMessage());
+                }
+            }
+        );
+
+        Span::add('videos.renditions.aborted', $aborted);
+        Span::add('videos.renditions.abort_failed', $failed);
+
+        if ($aborted > 0) {
+            try {
+                $telemetry->createCounter('worker.videos.renditions.aborted', null, 'Renditions parked by the maintenance sweep')->add($aborted);
+            } catch (Throwable) {
+                // Metrics are best-effort.
+            }
+        }
+    }
+
+    /**
+     * Park in-flight captions that have not progressed past the retention window.
+     *
+     * Caption already stops when the row leaves `started` and will not overwrite
+     * `aborted`, so a live job that outlives this pass still settles safely.
+     */
+    private function abortStaleCaptions(Document $project, callable $getProjectDB, Telemetry $telemetry): void
+    {
+        if ($project->getId() === 'console') {
+            return;
+        }
+
+        Console::info('Abort stale video captions');
+
+        /** @var Database $dbForProject */
+        $dbForProject = $getProjectDB($project);
+
+        $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '86400');
+        $date = DateTime::addSeconds(new \DateTime(), -1 * $retention);
+
+        $queries = [
+            Query::select([...$this->selects, 'status', 'videoId']),
+            Query::equal('status', [
+                VideosBase::STATUS_PENDING,
+                VideosBase::STATUS_STARTED,
+            ]),
+            Query::lessThanEqual('$updatedAt', $date),
+        ];
+
+        $aborted = 0;
+        $failed = 0;
+
+        $this->listByGroup(
+            'videos_captions',
+            $queries,
+            $dbForProject,
+            function (Document $caption) use ($dbForProject, $project, &$aborted, &$failed) {
+                try {
+                    $dbForProject->updateDocument('videos_captions', $caption->getId(), new Document([
+                        'status' => VideosBase::STATUS_ABORTED,
+                    ]));
+                    VideosBase::removeLock(VideosBase::captionLockPath($caption->getAttribute('videoId'), $caption->getId()));
+                    $aborted++;
+                    $age = \max(0, \time() - (int) \strtotime((string) $caption->getUpdatedAt()));
+                    Console::info(
+                        'Aborted stale caption ' . $caption->getId()
+                        . ' for project ' . $project->getId()
+                        . ' status=' . $caption->getAttribute('status', '')
+                        . ' age=' . $age . 's'
+                    );
+                } catch (Throwable $th) {
+                    $failed++;
+                    Console::error("Failed to abort stale caption {$caption->getId()} for project {$project->getId()}: " . $th->getMessage());
+                }
+            }
+        );
+
+        Span::add('videos.captions.aborted', $aborted);
+        Span::add('videos.captions.abort_failed', $failed);
+
+        if ($aborted > 0) {
+            try {
+                $telemetry->createCounter('worker.videos.captions.aborted', null, 'Captions parked by the maintenance sweep')->add($aborted);
+            } catch (Throwable) {
+                // Metrics are best-effort.
+            }
+        }
     }
 
     private function deleteOldDeployments(DeletePublisher $publisherForDeletes, Document $project, callable $getProjectDB): void
@@ -1038,6 +1200,26 @@ class Deletes extends Action
                 Console::error('Failed to delete cache storage directory: ' . $th->getMessage());
             }
 
+            try {
+                $deviceForVideos = new TelemetryDevice($telemetry, getDevice(APP_STORAGE_VIDEOS . '/app-' . $projectId));
+                $deviceForVideos->delete($deviceForVideos->getRoot(), true);
+            } catch (Throwable $th) {
+                Console::error('Failed to delete videos storage directory: ' . $th->getMessage());
+            }
+
+            try {
+                // Older workers wrote scratch under videos-tmp/app-{project}.
+                $deviceForVideosTmp = getDevice(APP_STORAGE_VIDEOS_TMP . '/app-' . $projectId);
+                $deviceForVideosTmp->delete($deviceForVideosTmp->getRoot(), true);
+            } catch (Throwable $th) {
+                Console::error('Failed to delete videos temp storage directory: ' . $th->getMessage());
+            }
+
+            try {
+                $this->deleteVideoTmpJobs($projectId);
+            } catch (Throwable $th) {
+                Console::error('Failed to delete videos temp jobs: ' . $th->getMessage());
+            }
         } finally {
             $dbForProject->setValidation(true);
         }
@@ -1333,6 +1515,160 @@ class Deletes extends Action
                 Console::success('Deleted CSV file: ' . $file->getAttribute('name'));
             }
         });
+    }
+
+    /**
+     * Remove orphaned videos-tmp job folders older than the retention window.
+     *
+     * Folder names are `{YmdHi}~{projectId}~{videoId}~{type}-{jobId}`; the
+     * leading stamp is compared as text so this never stats the filesystem.
+     * Cutoff comes from `_APP_MAINTENANCE_RETENTION_VIDEOS_TMP` (default
+     * VideosBase::TMP_TTL, 24 hours).
+     */
+    private function deleteOldVideoTmp(Telemetry $telemetry): void
+    {
+        $root = VideosBase::tmpJobsRoot();
+        $tmpRoot = \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/';
+
+        if (!\is_dir($root)) {
+            return;
+        }
+
+        $retention = (int) System::getEnv(
+            '_APP_MAINTENANCE_RETENTION_VIDEOS_TMP',
+            (string) VideosBase::TMP_TTL
+        );
+        $cutoff = \gmdate('YmdHi', \time() - $retention);
+        Console::info('Deleting video tmp jobs older than ' . $cutoff);
+
+        $scanned = 0;
+        $removed = 0;
+        $failed = 0;
+
+        foreach (\scandir($root) ?: [] as $name) {
+            if ($name[0] === '.') {
+                continue;
+            }
+
+            $scanned++;
+
+            if (!VideosBase::jobExpired($name, $cutoff)) {
+                continue;
+            }
+
+            $path = $root . '/' . $name;
+            if (!\str_starts_with($path, $tmpRoot)) {
+                continue;
+            }
+
+            if (!$this->removeVideoTmp($path)) {
+                $failed++;
+                continue;
+            }
+
+            $removed++;
+        }
+
+        Span::add('videos.tmp.scanned', $scanned);
+        Span::add('videos.tmp.removed', $removed);
+        Span::add('videos.tmp.failed', $failed);
+
+        if ($removed > 0) {
+            try {
+                $telemetry->createCounter('worker.videos.tmp.removed', null, 'Expired video scratch directories removed by the maintenance sweep')->add($removed);
+            } catch (Throwable) {
+                // Metrics are best-effort.
+            }
+        }
+    }
+
+    /**
+     * Remove leftover video job lock files older than the videos-tmp retention window.
+     *
+     * Jobs release the flock and leave the file, so the next job locks the
+     * same inode. This removes idle files older than the retention window.
+     * Age is file mtime — lock paths have no stamp prefix, and acquiring a
+     * flock does not refresh mtime, so a held file is skipped even when old.
+     *
+     * Subfolders are the old `locks/{projectId}/` layout. No worker creates
+     * them any more, so they are emptied of expired locks and then removed.
+     */
+    private function deleteOldVideoLocks(Telemetry $telemetry): void
+    {
+        $root = VideosBase::tmpLocksRoot();
+        $tmpRoot = \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/';
+
+        if (!\is_dir($root)) {
+            return;
+        }
+
+        $retention = (int) System::getEnv(
+            '_APP_MAINTENANCE_RETENTION_VIDEOS_TMP',
+            (string) VideosBase::TMP_TTL
+        );
+        $cutoff = \time() - $retention;
+        Console::info('Deleting video job locks older than ' . $retention . 's');
+
+        $scanned = 0;
+        $removed = 0;
+
+        $sweep = function (string $directory) use ($cutoff, &$scanned, &$removed): void {
+            foreach (\scandir($directory) ?: [] as $name) {
+                if ($name[0] === '.' || !\str_ends_with($name, '.lock')) {
+                    continue;
+                }
+
+                $path = $directory . '/' . $name;
+                if (!\is_file($path)) {
+                    continue;
+                }
+
+                $scanned++;
+
+                $mtime = \filemtime($path);
+                if ($mtime === false || $mtime > $cutoff) {
+                    continue;
+                }
+
+                // removeLock acquires first. Unlinking a held flock frees the
+                // path so a duplicate can lock a new inode beside the live job.
+                if (VideosBase::removeLock($path)) {
+                    $removed++;
+                }
+                // Held (or unlink failed): leave for a later pass. Do not count
+                // a live flock as a sweep failure.
+            }
+        };
+
+        $sweep($root);
+
+        foreach (\scandir($root) ?: [] as $name) {
+            if ($name[0] === '.') {
+                continue;
+            }
+
+            $legacyDir = $root . '/' . $name;
+            if (!\is_dir($legacyDir) || !\str_starts_with($legacyDir, $tmpRoot)) {
+                continue;
+            }
+
+            $sweep($legacyDir);
+
+            if ((\scandir($legacyDir) ?: []) === ['.', '..']) {
+                @\rmdir($legacyDir);
+            }
+        }
+
+        Span::add('videos.locks.scanned', $scanned);
+        Span::add('videos.locks.removed', $removed);
+
+        if ($removed > 0) {
+            try {
+                $telemetry->createCounter('worker.videos.locks.removed', null, 'Expired video job lock files removed by the maintenance sweep')->add($removed);
+            } catch (Throwable) {
+                // Metrics are best-effort.
+            }
+        }
     }
 
     /**
@@ -1799,6 +2135,193 @@ class Deletes extends Action
         $dbForProject->deleteCollection('bucket_' . $document->getSequence());
 
         $deviceForFiles->deletePath($document->getId());
+    }
+
+    /**
+     * Cascades a video deletion across its timelines, renditions and captions —
+     * including the per-rendition and per-caption segment rows — then removes the
+     * transcoded output tree and this video's scratch jobs under videos-tmp/jobs.
+     *
+     * @param callable $getProjectDB
+     * @param Device $deviceForVideos
+     * @param Document $document
+     * @param Document $project
+     * @return void
+     * @throws Exception
+     */
+    private function deleteVideo(callable $getProjectDB, Device $deviceForVideos, Document $document, Document $project): void
+    {
+        $dbForProject = $getProjectDB($project);
+        $videoInternalId = $document->getSequence();
+
+        $this->deleteByGroup('videos_timelines', [
+            Query::equal('videoInternalId', [$videoInternalId]),
+        ], $dbForProject);
+
+        // Child documents still exist here (the HTTP action only deleted the
+        // video row), so reuse the per-child cleaners for segments and files
+        // before dropping the parent rows.
+        $this->listByGroup('videos_renditions', [
+            Query::equal('videoInternalId', [$videoInternalId]),
+        ], $dbForProject, function (Document $rendition) use ($getProjectDB, $deviceForVideos, $project) {
+            $this->deleteVideoRendition($getProjectDB, $deviceForVideos, $rendition, $project);
+        });
+
+        $this->deleteByGroup('videos_renditions', [
+            Query::equal('videoInternalId', [$videoInternalId]),
+        ], $dbForProject);
+
+        $this->listByGroup('videos_captions', [
+            Query::equal('videoInternalId', [$videoInternalId]),
+        ], $dbForProject, function (Document $caption) use ($getProjectDB, $deviceForVideos, $project) {
+            $this->deleteVideoCaption($getProjectDB, $deviceForVideos, $caption, $project);
+        });
+
+        $this->deleteByGroup('videos_captions', [
+            Query::equal('videoInternalId', [$videoInternalId]),
+        ], $dbForProject);
+
+        try {
+            $deviceForVideos->deletePath($document->getId());
+        } catch (Throwable $th) {
+            Console::error('Failed to delete video storage directory: ' . $th->getMessage());
+        }
+
+        try {
+            // Older workers wrote scratch under videos-tmp/app-{project}/{video}.
+            $deviceForVideosTmp = getDevice(APP_STORAGE_VIDEOS_TMP . '/app-' . $project->getId());
+            $deviceForVideosTmp->deletePath($document->getId());
+        } catch (Throwable $th) {
+            Console::error('Failed to delete video temp storage directory: ' . $th->getMessage());
+        }
+
+        try {
+            $this->deleteVideoTmpJobs($project->getId(), $document->getId());
+        } catch (Throwable $th) {
+            Console::error('Failed to delete video temp jobs: ' . $th->getMessage());
+        }
+    }
+
+    /**
+     * Remove scratch folders under videos-tmp/jobs for a project, or one video.
+     *
+     * Folder names are `{YmdHi}~{projectId}~{videoId}~{type}-{jobId}`. An empty
+     * `$videoId` removes every job for the project. The legacy
+     * `videos-tmp/app-{project}` tree is cleaned by the callers.
+     */
+    private function deleteVideoTmpJobs(string $projectId, string $videoId = ''): void
+    {
+        $root = VideosBase::tmpJobsRoot();
+        if (!\is_dir($root)) {
+            return;
+        }
+
+        $tmpRoot = \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/';
+
+        foreach (\scandir($root) ?: [] as $name) {
+            if ($name[0] === '.') {
+                continue;
+            }
+
+            if (!VideosBase::jobMatches($name, $projectId, $videoId)) {
+                continue;
+            }
+
+            $path = $root . '/' . $name;
+            if (!\str_starts_with($path, $tmpRoot)) {
+                continue;
+            }
+
+            $this->removeVideoTmp($path);
+        }
+    }
+
+    private function removeVideoTmp(string $path): bool
+    {
+        $stdout = '';
+        $stderr = '';
+        $code = Console::execute('rm -rf ' . \escapeshellarg($path), '', $stdout, $stderr, 30);
+
+        if ($code !== 0) {
+            Console::error('Failed removing video tmp [' . $path . ']: ' . $stderr);
+
+            return false;
+        }
+
+        Console::info('Removed video tmp [' . $path . ']');
+
+        return true;
+    }
+
+    /**
+     * Removes a rendition's segment rows and packaged output directory.
+     *
+     * Safe to run after the rendition row itself is already gone: the
+     * document snapshot in the delete message still carries `$sequence` and
+     * `path`. Safe to run twice — `deleteByGroup` is a no-op on an empty
+     * match and missing storage is ignored.
+     *
+     * @param callable $getProjectDB
+     * @param Device $deviceForVideos
+     * @param Document $document
+     * @param Document $project
+     * @return void
+     */
+    private function deleteVideoRendition(callable $getProjectDB, Device $deviceForVideos, Document $document, Document $project): void
+    {
+        $dbForProject = $getProjectDB($project);
+
+        $this->deleteByGroup('videos_renditions_segments', [
+            Query::equal('renditionInternalId', [$document->getSequence()]),
+        ], $dbForProject);
+
+        // Drop the encode flock before the empty-path return so a rendition with
+        // no packaged files still clears its lock.
+        VideosBase::removeLock(VideosBase::encodeLockPath($document->getAttribute('videoId'), $document->getId()));
+
+        $path = $document->getAttribute('path', '');
+
+        if ($path === '') {
+            return;
+        }
+
+        try {
+            // `path` is an absolute getPath() value. deletePath() prefixes the
+            // device root, so an absolute argument would miss the directory.
+            $deviceForVideos->delete($path, true);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete rendition storage directory: ' . $th->getMessage());
+        }
+    }
+
+    /**
+     * Removes a caption's segment rows and packaged VTT file.
+     *
+     * @param callable $getProjectDB
+     * @param Device $deviceForVideos
+     * @param Document $document
+     * @param Document $project
+     * @return void
+     */
+    private function deleteVideoCaption(callable $getProjectDB, Device $deviceForVideos, Document $document, Document $project): void
+    {
+        $dbForProject = $getProjectDB($project);
+
+        $this->deleteByGroup('videos_captions_segments', [
+            Query::equal('captionInternalId', [$document->getSequence()]),
+        ], $dbForProject);
+
+        $path = $document->getAttribute('path', '');
+
+        if ($path === '') {
+            return;
+        }
+
+        try {
+            $deviceForVideos->delete($path);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete caption storage file: ' . $th->getMessage());
+        }
     }
 
     /**

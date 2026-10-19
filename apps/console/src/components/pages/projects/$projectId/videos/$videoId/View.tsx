@@ -25,6 +25,7 @@ import {
   useProjectVideo,
   useVideoRenditions,
   useVideoSubtitles,
+  useVideoTimeline,
   videoSourceHasAudio,
 } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
@@ -418,8 +419,10 @@ function SetupChecklist({
   const t = useT()
   const { openCreateRenditions, openCreateSubtitle, writeDisabledReason } =
     useVideoDetailActions()
+  const { data: timeline } = useVideoTimeline(projectId, video.$id)
 
   const hasReady = renditions.some((r) => r.status === 'ready')
+  const hasTimeline = Boolean(timeline && timeline.cues.length > 0)
 
   const linkButton = (to: DetailPath, label: string) => (
     <Button variant="outline" size="sm" className="h-8 text-[12px]" asChild>
@@ -471,7 +474,7 @@ function SetupChecklist({
       description: t('Thumbnails for scrubbing and poster images.'),
       term: 'timeline',
       optional: true,
-      done: Boolean(video.previewId),
+      done: hasTimeline,
       action: linkButton(
         '/projects/$projectId/videos/$videoId/timeline',
         t('Open timeline'),

@@ -58,6 +58,8 @@
         "project.oauth2.write",
         "project.policies.read",
         "project.policies.write",
+        "project.profiles.read",
+        "project.profiles.write",
         "project.read",
         "project.write",
         "providers.read",
@@ -103,6 +105,9 @@
         "vectorsdb.indexes.write",
         "vectorsdb.read",
         "vectorsdb.write",
+        "videos.play",
+        "videos.read",
+        "videos.write",
         "webhooks.read",
         "webhooks.write"
     ],

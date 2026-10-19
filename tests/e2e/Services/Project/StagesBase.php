@@ -198,6 +198,31 @@ trait StagesBase
         $this->awaitStage($projectId, 'teams.create', ONBOARDING_STATUS_COMPLETED);
     }
 
+    public function testCreateVideoProfileCompletesStage(): void
+    {
+        $project = $this->getProject(fresh: true);
+        $projectId = $project['$id'];
+
+        $this->assertSame('pending', $this->getStage($projectId, 'project.createProfile')['status']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/project/profiles', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $project['apiKey'],
+        ], [
+            'name' => 'onboarding-' . ID::unique(),
+            'videoBitRate' => 1000,
+            'audioBitRate' => 64,
+            'width' => 640,
+            'height' => 360,
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+
+        $stage = $this->awaitStage($projectId, 'project.createProfile', ONBOARDING_STATUS_COMPLETED);
+        $this->assertSame(ACTOR_TYPE_KEY_PROJECT, $stage['actorType']);
+        $this->assertSame('pending', $this->getStage($projectId, 'videos.create')['status']);
+    }
+
     protected function listStages(string $projectId, bool $authenticated = true): mixed
     {
         // Stages live under /projects (console scope); use the root console session.

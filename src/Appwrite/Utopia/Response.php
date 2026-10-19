@@ -155,6 +155,18 @@ class Response extends SwooleResponse
     public const MODEL_RESOURCE_TOKEN = 'resourceToken';
     public const MODEL_RESOURCE_TOKEN_LIST = 'resourceTokenList';
 
+    // Videos
+    public const MODEL_VIDEO = 'video';
+    public const MODEL_VIDEO_LIST = 'videoList';
+    public const MODEL_VIDEO_CODEC = 'videoCodec';
+    public const MODEL_VIDEO_CODEC_LIST = 'videoCodecList';
+    public const MODEL_VIDEO_PROFILE = 'videoProfile';
+    public const MODEL_VIDEO_PROFILE_LIST = 'videoProfileList';
+    public const MODEL_VIDEO_RENDITION = 'videoRendition';
+    public const MODEL_VIDEO_RENDITION_LIST = 'videoRenditionList';
+    public const MODEL_VIDEO_CAPTION = 'videoCaption';
+    public const MODEL_VIDEO_CAPTION_LIST = 'videoCaptionList';
+
     // Locale
     public const MODEL_LOCALE = 'locale';
     public const MODEL_LOCALE_CODE = 'localeCode';

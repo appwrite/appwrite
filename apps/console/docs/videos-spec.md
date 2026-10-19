@@ -23,7 +23,7 @@ erDiagram
   VIDEO ||--o{ SUBTITLE : "has"
   BUCKET_FILE ||--o{ SUBTITLE : "source (uploaded)"
   VIDEO ||--o| TIMELINE : "has"
-  TIMELINE ||--o{ PREVIEW : "sprite sheets"
+  TIMELINE ||--o{ PREVIEW : "thumbnail sheets"
 ```
 
 ## Typical flow
@@ -49,8 +49,7 @@ The root resource. Points at a source file in Storage and holds probed media met
 | `$createdAt` / `$updatedAt` | string | ISO 8601 |
 | `bucketId` | string | Bucket holding the source file |
 | `fileId` | string | Source file ID |
-| `name` | string | Defaults to the source file name. Max 128 chars |
-| `previewId` | string | Preview image ID, from the sprite timeline |
+| `name` | string | Defaults to the source file name. Max 2048 chars |
 | `size` | number | Source size in bytes |
 | `format` | string | Container format |
 | `duration` | number | Milliseconds |
@@ -205,29 +204,29 @@ List model: `Models.VideoSubtitleList` (`{ total, subtitles }`).
 
 ---
 
-## 5. Timeline and Preview
+## 5. Timelines and Thumbnails
 
-Sprite sheets plus a WebVTT index used for scrubbing thumbnails. The video's `previewId` points at one of these sprites.
+Thumbnail sheets plus a WebVTT index used for scrubbing.
 
 ### Rules
 
 - No precondition: the job downloads the source itself and probes it if needed.
-- Audio-only sources are accepted but produce no WebVTT, so `getTimeline` keeps returning `video_timeline_not_found`. The Console disables the action once probe metadata shows no video track.
-- `createTimeline` returns immediately. Poll `getTimeline` until it returns WebVTT instead of `video_timeline_not_found`.
+- Audio-only sources are accepted but produce no WebVTT, so `getTimelines` keeps returning `video_timelines_not_found`. The Console disables the action once probe metadata shows no video track.
+- `createTimeline` returns immediately. Poll `getTimelines` until it returns WebVTT instead of `video_timelines_not_found`.
 
 ### Endpoints
 
 | Method | SDK | HTTP | Returns |
 | --- | --- | --- | --- |
 | Create timeline | `createTimeline({ videoId })` | `POST /videos/{videoId}/timeline` | `Models.Video` |
-| Get timeline | `getTimeline({ videoId })` | `GET /videos/{videoId}/timeline` | WebVTT text |
-| Get preview | `getPreview({ videoId, previewId, width?, height?, output? })` | `GET /videos/{videoId}/previews/{previewId}` | Image URL. `output` is `ImageFormat` (jpeg, jpg, png, gif, webp) |
+| Get timelines | `getTimelines({ videoId })` | `GET /videos/{videoId}/timelines` | WebVTT text |
+| Get thumbnail | `getThumbnail({ videoId, thumbnailId, width?, height?, output? })` | `GET /videos/{videoId}/thumbnails/{thumbnailId}` | Image URL. `output` is `ImageFormat` (jpeg, jpg, png, gif, webp) |
 
 ### Errors
 
 | Code | When |
 | --- | --- |
-| `video_timeline_not_found` | Timeline not generated yet |
+| `video_timelines_not_found` | Timeline not generated yet |
 
 ---
 
@@ -410,7 +409,7 @@ A grid of videos by profiles, with one chip per output in each cell. Empty chips
 
 ### 5. Media library grid
 
-A thumbnail grid using `previewId`. Hovering a card scrubs through the timeline sprites. Clicking opens an inspector drawer.
+A thumbnail grid. Hovering a card scrubs through the timeline thumbnails. Clicking opens an inspector drawer.
 
 ```text
 +--------------------------------------------------------------------+
@@ -482,7 +481,7 @@ A full-screen, step-by-step flow that follows the typical flow in this spec.
 
 ### 8. Track timeline editor
 
-A video editor style layout: player on top, horizontal lanes underneath for the timeline sprites and each subtitle track.
+A video editor style layout: player on top, horizontal lanes underneath for the timeline thumbnails and each subtitle track.
 
 ```text
 +--------------------------------------------------------------------+
@@ -500,7 +499,7 @@ A video editor style layout: player on top, horizontal lanes underneath for the 
 +--------------------------------------------------------------------+
 ```
 
-- **Entities:** Timeline (WebVTT sprites), Subtitle (one lane per track, `default` marked with `*`, `embedded` labeled).
+- **Entities:** Timeline (WebVTT thumbnails), Subtitle (one lane per track, `default` marked with `*`, `embedded` labeled).
 - **Strengths:** Built for retagging embedded tracks (`und` to `heb`) and checking subtitle sync against the picture.
 - **Tradeoffs:** Requires fetching and parsing WebVTT for every track. Overkill if subtitles are rare.
 
