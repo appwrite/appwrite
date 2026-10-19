@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-19T13:41:00Z",
+  "updated": "2026-10-19T14:29:00Z",
   "tasks": [
     {
       "id": "queue-telemetry",
@@ -66,14 +66,6 @@
       "note": "Catch-up batch, task D (2-hour box). After the main sync on 2026-10-19 nats has 100% API coverage but 38 of 40 PHP tests ported: packages/nats/tests/ConnectRetryTest.php, packages/nats/tests/Transport/TlsFailureTest.php. audit, cache, messaging, migration and usage also changed on main and stay at 100% with every PHP test ported. Also: a failed TLS upgrade now raises TlsException (with the OpenSSL reason) where Rust raises ConnectionException."
     },
     {
-      "id": "storage-s3-delete",
-      "title": "storage: main's S3 delete and copy changes not ported",
-      "area": "Libraries",
-      "status": "progress",
-      "updated": "2026-10-19T13:41:00Z",
-      "note": "Catch-up batch, task B (2-hour box). After the main sync on 2026-10-18 CI's storage lane shows 8 differences and 1 fuzz difference. Server-side copies: PHP's x-amz-copy-source is now /<key> where Rust sends /<bucket>/<key>. Deletes: PHP refuses the whole bucket, the whole root or paths outside the root, deletes directories rather than name prefixes, deletes every object under a directory on a recursive delete, and fails when the service keeps keys (740f0ee6df, 886fe9aea3, 13bf781ea1, f57d3f9b22). API coverage stays 100% and every PHP test is ported, so these are behaviour changes, not missing symbols."
-    },
-    {
       "id": "cdn-fuzz",
       "title": "cdn: a TypeError names its file differently",
       "area": "Libraries",
@@ -122,30 +114,6 @@
       "note": "36 of Account's 63 routes are implemented in Rust, but Traefik still sends all of them to PHP. The last committed parity diff (d90c55d2f0, Oct 15) had 28 of 2,006 scenarios differ, all in account.sessions (19) and account.mfa (9) and mostly purge counts; re-run it after the Users purge fix, then add the routers."
     },
     {
-      "id": "hooks-rest",
-      "title": "The global hooks",
-      "area": "Hooks",
-      "status": "done",
-      "note": "All 10 global hooks match PHP: auth (console admin mode and path-bound projects included), context (the cache label and resource token), request (request filters V16–V27, exact version comparison, forced HTTPS), certificates, console-forbidden, abuse-reset, session-limit, cache-write (byte-identical cache files), resource-team and resource-database-listeners. Hooks overall: 33 done, 0 partial, 12 missing; the rest belong to unported services.",
-      "updated": "2026-10-18T01:02:00Z"
-    },
-    {
-      "id": "console-playwright",
-      "title": "Console E2E: Playwright on a large PR",
-      "area": "CI",
-      "status": "done",
-      "updated": "2026-10-17T19:58:00Z",
-      "note": "On CI Playwright read the PR's whole git diff into one string and crashed (RangeError) before any test; the config now keeps the commit and skips the diff."
-    },
-    {
-      "id": "migration-dashboard",
-      "title": "Migration dashboard at /migration",
-      "area": "Docs",
-      "status": "done",
-      "updated": "2026-10-17T19:35:00Z",
-      "note": "The /appwrite pages became one dashboard in tabs (Utopia, Services, Hooks, Facts, Tasks), each opening on a progress bar of its section. Lists show tests (compat cases, E2E runs, the Rust E2E runs through each hook) and a benchmark's bottom line that expands to the full results; hooks filter by group. Old /appwrite URLs redirect."
-    },
-    {
       "id": "usage-gauge-tie",
       "title": "usage: gauge total under a millisecond tie",
       "area": "Libraries",
@@ -176,6 +144,78 @@
       "status": "todo",
       "updated": "2026-10-15T23:30:00Z",
       "note": "tests/compat/async/spec.json points at the crate but has no operations yet; write the ops and cases against utopia-php/async 0.2 to mark it complete."
+    },
+    {
+      "id": "async-traits",
+      "title": "Adapter traits take async fn, without BoxFuture",
+      "area": "Libraries",
+      "status": "todo",
+      "updated": "2026-10-15T20:20:00Z",
+      "note": "Implementing a Transport, Client, Consumer or other adapter still means BoxFuture return types and Box::pin bodies (agents, abuse and domains guides show it). Move them to async fn with an object-safe companion trait, as utopia-cache's Adapter and DynAdapter do."
+    },
+    {
+      "id": "filters-mutate",
+      "title": "Database filters that change the document (enum, range)",
+      "area": "Database 8",
+      "status": "todo",
+      "note": "PHP 8.x's enum and range filters edit the attribute document; the Rust Filter trait gets it read-only, so both pass values through. Only user databases' attributes use them, and no Rust service reads those yet.",
+      "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "next-services",
+      "title": "Migrate the next services",
+      "area": "Services",
+      "status": "todo",
+      "note": "After Users and Teams, which Rust serves, and Account, implemented but not routed yet: the next services to port, each with its parity diff matrix and benchmarks.",
+      "updated": "2026-10-17T19:50:00Z"
+    },
+    {
+      "id": "account-dedupe",
+      "title": "Account: dedupe the shared helpers",
+      "area": "Services",
+      "status": "todo",
+      "note": "13 helpers are duplicated between the sign-in and profile halves of the account crate (base/mod.rs, base/profile.rs).",
+      "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "bench-rerun",
+      "title": "Re-run the vcs, agents and messaging benchmarks",
+      "area": "Benchmarks",
+      "status": "todo",
+      "note": "On a quiet machine; the last container runs were taken under load.",
+      "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "storage-s3-delete",
+      "title": "storage: main's S3 copy and delete changes",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-10-19T14:29:00Z",
+      "note": "Catch-up B. Path-style addressing (inferred as PHP does), copy source /<key> on path-style devices, refused bucket/root/outside deletes, directory-bounded and recursive deletes that fail on kept keys. 232 cases and 10,700 fuzz inputs, 0 differences; 12 of 12 PHP tests."
+    },
+    {
+      "id": "hooks-rest",
+      "title": "The global hooks",
+      "area": "Hooks",
+      "status": "done",
+      "note": "All 10 global hooks match PHP: auth (console admin mode and path-bound projects included), context (the cache label and resource token), request (request filters V16–V27, exact version comparison, forced HTTPS), certificates, console-forbidden, abuse-reset, session-limit, cache-write (byte-identical cache files), resource-team and resource-database-listeners. Hooks overall: 33 done, 0 partial, 12 missing; the rest belong to unported services.",
+      "updated": "2026-10-18T01:02:00Z"
+    },
+    {
+      "id": "console-playwright",
+      "title": "Console E2E: Playwright on a large PR",
+      "area": "CI",
+      "status": "done",
+      "updated": "2026-10-17T19:58:00Z",
+      "note": "On CI Playwright read the PR's whole git diff into one string and crashed (RangeError) before any test; the config now keeps the commit and skips the diff."
+    },
+    {
+      "id": "migration-dashboard",
+      "title": "Migration dashboard at /migration",
+      "area": "Docs",
+      "status": "done",
+      "updated": "2026-10-17T19:35:00Z",
+      "note": "The /appwrite pages became one dashboard in tabs (Utopia, Services, Hooks, Facts, Tasks), each opening on a progress bar of its section. Lists show tests (compat cases, E2E runs, the Rust E2E runs through each hook) and a benchmark's bottom line that expands to the full results; hooks filter by group. Old /appwrite URLs redirect."
     },
     {
       "id": "users-purge-flake",
@@ -320,46 +360,6 @@
       "status": "done",
       "updated": "2026-10-15T22:03:00Z",
       "note": "utopia-http actions take async |scope| { .. } and platform callbacks take Callback::http, ::task and ::worker, so guides read like PHP's ->action(function () { .. }). A callback that cannot fail returns nothing; only one that uses ? ends with Ok(()). CONVERSION.md makes it the rule."
-    },
-    {
-      "id": "async-traits",
-      "title": "Adapter traits take async fn, without BoxFuture",
-      "area": "Libraries",
-      "status": "todo",
-      "updated": "2026-10-15T20:20:00Z",
-      "note": "Implementing a Transport, Client, Consumer or other adapter still means BoxFuture return types and Box::pin bodies (agents, abuse and domains guides show it). Move them to async fn with an object-safe companion trait, as utopia-cache's Adapter and DynAdapter do."
-    },
-    {
-      "id": "filters-mutate",
-      "title": "Database filters that change the document (enum, range)",
-      "area": "Database 8",
-      "status": "todo",
-      "note": "PHP 8.x's enum and range filters edit the attribute document; the Rust Filter trait gets it read-only, so both pass values through. Only user databases' attributes use them, and no Rust service reads those yet.",
-      "updated": "2026-10-15T16:30:00Z"
-    },
-    {
-      "id": "next-services",
-      "title": "Migrate the next services",
-      "area": "Services",
-      "status": "todo",
-      "note": "After Users and Teams, which Rust serves, and Account, implemented but not routed yet: the next services to port, each with its parity diff matrix and benchmarks.",
-      "updated": "2026-10-17T19:50:00Z"
-    },
-    {
-      "id": "account-dedupe",
-      "title": "Account: dedupe the shared helpers",
-      "area": "Services",
-      "status": "todo",
-      "note": "13 helpers are duplicated between the sign-in and profile halves of the account crate (base/mod.rs, base/profile.rs).",
-      "updated": "2026-10-15T16:30:00Z"
-    },
-    {
-      "id": "bench-rerun",
-      "title": "Re-run the vcs, agents and messaging benchmarks",
-      "area": "Benchmarks",
-      "status": "todo",
-      "note": "On a quiet machine; the last container runs were taken under load.",
-      "updated": "2026-10-15T16:30:00Z"
     },
     {
       "id": "pr-ready",
