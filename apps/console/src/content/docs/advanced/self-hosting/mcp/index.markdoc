@@ -13,6 +13,8 @@ Here are some of the key benefits of using the local MCP server:
 - **Simplified workflows**: Facilitates complex operations through simple natural language prompts
 - **Customizable tools**: Offers a range of tools for different Appwrite services, which can be enabled as needed
 
+[Events](/docs/tooling/ai/mcp-servers#events) are available only on the hosted MCP server. The local server runs over stdio and does not support them.
+
 # Pre-requisites {% #pre-requisites %}
 
 ## Appwrite API key
