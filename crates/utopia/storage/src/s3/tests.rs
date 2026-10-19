@@ -491,3 +491,87 @@ fn a_range_is_honoured_as_php_checks_it() {
     assert!(!honours_range(206, "bytes +2-5/8", 2, Some(4)));
     assert!(!honours_range(206, "", 2, Some(4)));
 }
+
+fn addressed(host: &str, bucket: &str, path_style: Option<bool>) -> S3 {
+    S3::new(format!("{bucket}/root"), "key", "secret", host, "us-east-1")
+        .unwrap()
+        .with_bucket(bucket)
+        .unwrap()
+        .with_path_style(path_style)
+        .unwrap()
+}
+
+#[test]
+fn addressing_follows_the_endpoint() {
+    let cases = [
+        ("https://my-bucket.s3.us-east-1.amazonaws.com", "my-bucket", None, "/", "my-bucket/root/x"),
+        ("https://MY-BUCKET.S3.EXAMPLE.COM", "my-bucket", None, "/", "my-bucket/root/x"),
+        ("https://assets.example.com", "assets.example.com", None, "/", "assets.example.com/root/x"),
+        ("http://minio:9000", "minio", None, "/minio", "root/x"),
+        ("https://storage.example.com/s3/", "files", None, "/files", "root/x"),
+        ("https://storage.example.com/s3/files/", "files", None, "/", "files/root/x"),
+        ("http://minio:9000/mybucket/", "MyBucket", None, "/MyBucket", "root/x"),
+        ("https://storage.example.com", "files", Some(false), "/", "files/root/x"),
+        ("https://b.example.com", "b", Some(true), "/b", "root/x"),
+    ];
+    for (host, bucket, path_style, uri, prefix) in cases {
+        let device = addressed(host, bucket, path_style);
+        let expected = (uri.to_owned(), prefix.to_owned());
+        assert_eq!(device.prefix(&format!("{bucket}/root/x")).unwrap(), expected, "{host}");
+    }
+}
+
+#[test]
+fn bucket_requests_collapse_repeated_slashes() {
+    let virtual_hosted = addressed("https://storage.example.com", "files", Some(false));
+    assert_eq!(virtual_hosted.prefix("//files//root///x//").unwrap(), ("/".to_owned(), "files/root/x/".to_owned()));
+    let path_style = addressed("https://storage.example.com", "files", Some(true));
+    assert_eq!(path_style.prefix("//files//root///x//").unwrap(), ("/files".to_owned(), "root/x/".to_owned()));
+    assert!(matches!(path_style.prefix("files/../x"), Err(Error::InvalidArgument(_))));
+    assert!(matches!(path_style.prefix("other/x"), Err(Error::InvalidArgument(_))));
+}
+
+#[test]
+fn addressing_refuses_what_it_cannot_address() {
+    let device = || S3::new("root", "key", "secret", "https://storage.example.com", "us-east-1").unwrap();
+    assert!(matches!(device().with_path_style(Some(true)), Err(Error::InvalidArgument(_))));
+    assert!(matches!(device().with_bucket("").unwrap().with_path_style(Some(true)), Err(Error::InvalidArgument(_))));
+    assert!(matches!(device().with_bucket("my/bucket"), Err(Error::InvalidArgument(_))));
+}
+
+#[test]
+fn directory_deletes_stay_inside_the_root() {
+    let device = addressed("http://minio:9000", "files", None);
+    assert_eq!(device.directory("files/root/x", false).unwrap(), "files/root/x/");
+    for (path, allow_root) in
+        [("files/root", false), ("files/root/x/..", false), ("files", true), ("files/other", true)]
+    {
+        assert!(matches!(device.directory(path, allow_root), Err(Error::InvalidArgument(_))), "{path}");
+    }
+    assert_eq!(device.directory("files/root", true).unwrap(), "files/root/");
+}
+
+#[test]
+fn keys_the_service_kept_are_errors() {
+    let decode = |body: &str| xml::parse(body.as_bytes()).unwrap().decode();
+    let kept_error = |body: &str| match kept(Some(&decode(body)), 200, 2, "root/a/") {
+        Err(Error::Remote { message, error_code, .. }) => (message, error_code),
+        other => panic!("{body}: {other:?}"),
+    };
+    assert_eq!(
+        kept_error("<DeleteResult><Error><Code>AccessDenied</Code><Message>Denied</Message></Error></DeleteResult>"),
+        (
+            "Failed to delete 1 objects under root/a/: ? (AccessDenied: Denied)".to_owned(),
+            Some("AccessDenied".to_owned())
+        )
+    );
+    assert_eq!(
+        kept_error("<DeleteResult><Error/></DeleteResult>"),
+        ("Failed to delete 2 objects under root/a/".to_owned(), None)
+    );
+    assert_eq!(
+        kept_error("<Error><Code>AccessDenied</Code></Error>"),
+        ("Failed to delete 2 objects under root/a/".to_owned(), Some("AccessDenied".to_owned()))
+    );
+    assert!(kept(Some(&decode("<DeleteResult></DeleteResult>")), 200, 2, "root/a/").is_ok());
+}

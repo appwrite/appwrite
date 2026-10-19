@@ -472,7 +472,10 @@ fn minio(session: &Session, a: &Args<'_>) -> Result<S3, Fault> {
             s3 = s3.with_acl(acl);
         }
         if let Some(bucket) = a.opt_str("bucket")? {
-            s3 = s3.with_bucket(bucket);
+            s3 = s3.with_bucket(bucket).map_err(|e| Fault::new(e.to_string()))?;
+        }
+        if let Some(path_style) = a.opt_bool("path_style")? {
+            s3 = s3.with_path_style(Some(path_style)).map_err(|e| Fault::new(e.to_string()))?;
         }
     }
     Ok(s3)
@@ -540,7 +543,16 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                     Err(e) => return Ok(err(e)),
                 };
                 if let Some(bucket) = a.opt_str("bucket")? {
-                    s3 = s3.with_bucket(bucket);
+                    s3 = match s3.with_bucket(bucket) {
+                        Ok(s3) => s3,
+                        Err(e) => return Ok(err(e)),
+                    };
+                }
+                if let Some(path_style) = a.opt_bool("path_style")? {
+                    s3 = match s3.with_path_style(Some(path_style)) {
+                        Ok(s3) => s3,
+                        Err(e) => return Ok(err(e)),
+                    };
                 }
                 with_client(s3, &a, session)?
             };

@@ -325,7 +325,11 @@ final class Adapter implements Base, Benchmarks
             'minioadmin',
             $endpoint . '/' . ($a['bucket_path'] ?? 'compat'),
             'us-east-1',
-            ...[...self::acl($a), ...(isset($a['bucket']) ? ['bucket' => $a['bucket']] : [])],
+            ...[
+                ...self::acl($a),
+                ...(isset($a['bucket']) ? ['bucket' => $a['bucket']] : []),
+                ...(isset($a['path_style']) ? ['pathStyle' => $a['path_style']] : []),
+            ],
         );
     }
 
@@ -370,6 +374,7 @@ final class Adapter implements Base, Benchmarks
                 ...self::acl($a),
                 ...(self::client($a, $s) !== null ? ['client' => self::client($a, $s)] : []),
                 ...(isset($a['bucket']) ? ['bucket' => $a['bucket']] : []),
+                ...(isset($a['path_style']) ? ['pathStyle' => $a['path_style']] : []),
             ],
         );
     }
