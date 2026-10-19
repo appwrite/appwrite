@@ -109,6 +109,48 @@ final class SitesCustomServerTest extends Scope
         }
     }
 
+    public function testSiteClientIp(): void
+    {
+        $siteId = '';
+
+        try {
+            $siteId = $this->setupSite([
+                'siteId' => Id::unique(),
+                'name' => 'SSR site client IP',
+                'framework' => 'astro',
+                'adapter' => 'ssr',
+                'buildRuntime' => 'node-22',
+                'outputDirectory' => './dist',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm ci',
+                'fallbackFile' => '',
+            ]);
+
+            $this->setupSiteDomain($siteId);
+
+            $this->setupDeployment($siteId, [
+                'code' => $this->packageSite('astro'),
+                'activate' => 'true',
+            ]);
+
+            $proxyClient = new Client();
+            $proxyClient->setEndpoint('http://' . $this->getSiteDomain($siteId));
+
+            $this->assertEventually(function () use ($proxyClient) {
+                $response = $proxyClient->call(Client::METHOD_GET, '/client-ip', [
+                    'x-forwarded-for' => '203.0.113.9',
+                    'x-appwrite-client-ip' => '198.51.100.1',
+                ]);
+                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertEquals('203.0.113.9', $response['body']['ip']);
+            });
+        } finally {
+            if ($siteId !== '') {
+                $this->cleanupSite($siteId);
+            }
+        }
+    }
+
     public function testListSpecs(): void
     {
         $specifications = $this->listSpecifications(['type' => 'runtimes']);

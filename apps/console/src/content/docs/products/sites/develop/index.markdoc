@@ -263,6 +263,16 @@ class UsersPage extends AsyncStatelessComponent {
 
 {% /tabs %}
 
+# Visitor IP address {% #visitor-ip-address %}
+
+Requests reach a server-side rendered site through Appwrite's network, so the connection your server sees comes from Appwrite, not from the visitor. Appwrite sends the visitor's IP address on the `x-appwrite-client-ip` header of every SSR request and replaces any value the visitor sent, so you can use it for rate limiting, audit logs, or geolocation.
+
+```ts
+const ip = request.headers.get('x-appwrite-client-ip');
+```
+
+Don't read the visitor's IP from headers such as `CF-Connecting-IP` or `True-Client-IP`. Appwrite forwards them exactly as the visitor sent them, so anyone can forge them.
+
 # Project dependencies
 
 To install your dependencies before your site is built, you should add the relevant install command to your site’s build settings. Here are the steps to add the install command:
