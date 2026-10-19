@@ -14,6 +14,7 @@ use utopia_cache::{
     Memcached, MemcachedClient, Memory, Multiplexing, MultiplexingOptions, Native, None as NoneAdapter, Pool, Purges,
     Redis, RedisCluster, Retry, Sharding, resp,
 };
+use utopia_circuit_breaker::CircuitBreaker as Breaker;
 
 use crate::adapter::{Args, Fault, OpResult, Outcome, Session, bytes, bytes_value};
 use crate::libs::php_std::typed;
@@ -29,6 +30,7 @@ pub const OPS: &[&str] = &[
     "memcached.new",
     "hazelcast.new",
     "cluster.new",
+    "cluster.raw_set",
     "cluster.info",
     "sharding.new",
     "pool.new",
@@ -36,6 +38,12 @@ pub const OPS: &[&str] = &[
     "failing.new",
     "counting_failing.new",
     "counting_failing.loads",
+    "counting_failing.purges",
+    "breaker.new",
+    "breaker.is_open",
+    "adapter.purge_failure",
+    "fs.mkdir",
+    "fs.delete",
     "probe.new",
     "probe.calls",
     "null_load.new",
@@ -324,13 +332,14 @@ struct Handle {
     retry: Option<Retry>,
     grace: Option<i64>,
     loads: Option<Arc<AtomicI64>>,
+    purges: Option<Arc<AtomicI64>>,
     probe: Option<Arc<ProbeState>>,
     cluster: Option<(Option<String>, Vec<String>)>,
 }
 
 impl Handle {
     fn new(adapter: Arc<dyn DynAdapter>) -> Self {
-        Handle { adapter, retry: None, grace: None, loads: None, probe: None, cluster: None }
+        Handle { adapter, retry: None, grace: None, loads: None, purges: None, probe: None, cluster: None }
     }
 }
 
@@ -671,6 +680,16 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
             let h = Handle { retry: Some(adapter.retry()), cluster, ..Handle::new(Arc::new(adapter)) };
             Outcome::Ok(session.handle(h))
         }
+        "cluster.raw_set" => {
+            let service = session.service("cache-cluster")?;
+            let urls: Vec<String> =
+                service.trim_start_matches("redis-cluster://").split(',').map(|s| format!("redis://{s}")).collect();
+            let client = redis::cluster::ClusterClient::new(urls).map_err(fault)?;
+            let mut connection = client.get_async_connection().await.map_err(fault)?;
+            let reply: redis::RedisResult<String> =
+                redis::cmd("SET").arg(a.str("key")?).arg(a.str("value")?).query_async(&mut connection).await;
+            Outcome::ok(reply.is_ok())
+        }
         "cluster.info" => {
             let (name, seeds) =
                 handle(session, a.value("adapter")?)?.cluster.ok_or_else(|| Fault::new("not a cluster adapter"))?;
@@ -699,24 +718,82 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
         }
         "circuit_breaker.new" => {
             let inner = handle(session, a.value("adapter")?)?.adapter;
+            if let Some(breaker) = a.opt("breaker") {
+                let breaker = session.get::<Arc<Breaker>>(breaker)?.clone();
+                return Ok(new(session, Arc::new(CircuitBreaker::new(inner, breaker))));
+            }
             let mut options = utopia_circuit_breaker::Options::default();
             if let Some(m) = a.opt_i64("minimum_throughput")? {
                 options.minimum_throughput = m;
             }
-            match utopia_circuit_breaker::CircuitBreaker::new(options) {
+            match Breaker::new(options) {
                 Ok(breaker) => new(session, Arc::new(CircuitBreaker::new(inner, breaker))),
                 Err(e) => Outcome::err(e.php_class(), e.to_string()),
             }
         }
-        "failing.new" => new(session, Arc::new(Failing { loads: None })),
+        "breaker.new" => {
+            let mut options = utopia_circuit_breaker::Options::default();
+            if let Some(m) = a.opt_i64("minimum_throughput")? {
+                options.minimum_throughput = m;
+            }
+            if let Some(t) = a.opt_i64("timeout")? {
+                options.timeout = t;
+            }
+            let breaker = match Breaker::new(options) {
+                Ok(breaker) => Arc::new(breaker),
+                Err(e) => return Ok(Outcome::err(e.php_class(), e.to_string())),
+            };
+            if a.opt_bool("trip")?.unwrap_or(false)
+                && let Err(e) = breaker.trip().await
+            {
+                return Ok(Outcome::err(e.php_class(), e.to_string()));
+            }
+            Outcome::Ok(session.handle(breaker))
+        }
+        "breaker.is_open" => {
+            let breaker = session.get::<Arc<Breaker>>(a.value("breaker")?)?.clone();
+            match breaker.state().await {
+                Ok(state) => Outcome::ok(state == utopia_circuit_breaker::State::Open),
+                Err(e) => Outcome::err(e.php_class(), e.to_string()),
+            }
+        }
+        "failing.new" => new(session, Arc::new(Failing { loads: None, purges: None })),
         "counting_failing.new" => {
             let loads = Arc::new(AtomicI64::new(0));
-            let h = Handle { loads: Some(loads.clone()), ..Handle::new(Arc::new(Failing { loads: Some(loads) })) };
+            let purges = Arc::new(AtomicI64::new(0));
+            let failing = Failing { loads: Some(loads.clone()), purges: Some(purges.clone()) };
+            let h = Handle { loads: Some(loads), purges: Some(purges), ..Handle::new(Arc::new(failing)) };
             Outcome::Ok(session.handle(h))
         }
         "counting_failing.loads" => {
             let h = handle(session, a.value("adapter")?)?;
             Outcome::ok(h.loads.ok_or_else(|| Fault::new("not a counting adapter"))?.load(Ordering::SeqCst))
+        }
+        "counting_failing.purges" => {
+            let h = handle(session, a.value("adapter")?)?;
+            Outcome::ok(h.purges.ok_or_else(|| Fault::new("not a counting adapter"))?.load(Ordering::SeqCst))
+        }
+        "adapter.purge_failure" => {
+            let adapter = handle(session, a.value("adapter")?)?.adapter;
+            match adapter.dyn_purge(a.str("key")?, a.opt_str("hash")?.unwrap_or("")).await {
+                Ok(result) => Outcome::ok(json!({ "result": result })),
+                Err(e) => {
+                    let previous = e.previous().map(|p| json!({"class": p.php_class(), "message": p.to_string()}));
+                    Outcome::ok(
+                        json!({"error": {"class": e.php_class(), "message": e.to_string(), "previous": previous}}),
+                    )
+                }
+            }
+        }
+        "fs.mkdir" => Outcome::ok(std::fs::create_dir_all(a.str("path")?).is_ok()),
+        "fs.delete" => {
+            let path = std::path::Path::new(a.str("path")?);
+            let _ = if path.is_dir() && !path.is_symlink() {
+                std::fs::remove_dir_all(path)
+            } else {
+                std::fs::remove_file(path)
+            };
+            Outcome::ok(Json::Null)
         }
         "probe.new" => {
             let state = Arc::new(ProbeState::default());
@@ -1035,6 +1112,16 @@ async fn multiplexing(session: &Session, a: &Args<'_>) -> Result<Json, Fault> {
     let o = Args(a.opt("options").unwrap_or(&empty));
     let mut options = MultiplexingOptions::new(host, port.parse().map_err(fault)?);
     options.db = db;
+    // A server that accepts connections (the kernel's backlog does) and
+    // never answers.
+    let _silent = if o.opt_bool("silent")?.unwrap_or(false) {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").map_err(fault)?;
+        options = MultiplexingOptions::new("127.0.0.1", listener.local_addr().map_err(fault)?.port());
+        options.db = 0;
+        Some(listener)
+    } else {
+        None
+    };
     if let Some(v) = o.opt_f64("timeout")? {
         options.timeout = v;
     }
@@ -1063,6 +1150,13 @@ async fn multiplexing(session: &Session, a: &Args<'_>) -> Result<Json, Fault> {
     if o.opt_bool("case_sensitive")?.unwrap_or(false) {
         cache.set_case_sensitivity(true);
     }
+    let telemetry = if o.opt_bool("write_failures")?.unwrap_or(false) {
+        let telemetry = MemoryTelemetry::new();
+        cache.set_telemetry(Arc::new(telemetry.clone()));
+        Some(telemetry)
+    } else {
+        None
+    };
     for step in a.array("steps")? {
         let op = step.get("op").and_then(Json::as_str).ok_or_else(|| Fault::new("a step needs an op"))?;
         let args = step.get("args").cloned().unwrap_or(Json::Object(Map::new()));
@@ -1105,6 +1199,12 @@ async fn multiplexing(session: &Session, a: &Args<'_>) -> Result<Json, Fault> {
             name => results.push(method(Target::Cache(cache.as_ref()), name, &sa).await?.to_json()),
         }
     }
+    if let Some(telemetry) = telemetry {
+        let dump = dump_telemetry(&telemetry);
+        let points = dump.get("counter:cache.redis_multiplexing.write.failures").and_then(Json::as_array);
+        let attributes: Vec<Json> = points.into_iter().flatten().filter_map(|p| p.get("attributes").cloned()).collect();
+        results.push(Json::Array(attributes));
+    }
     cache.adapter().disconnect();
     Ok(Json::Array(results))
 }
@@ -1113,6 +1213,7 @@ async fn multiplexing(session: &Session, a: &Args<'_>) -> Result<Json, Fault> {
 /// counting one counts the loads that reached it.
 struct Failing {
     loads: Option<Arc<AtomicI64>>,
+    purges: Option<Arc<AtomicI64>>,
 }
 
 fn failed<T>() -> utopia_cache::Result<T> {
@@ -1136,6 +1237,9 @@ impl Adapter for Failing {
         failed()
     }
     async fn purge(&self, _: &str, _: &str) -> utopia_cache::Result<bool> {
+        if let Some(purges) = &self.purges {
+            purges.fetch_add(1, Ordering::SeqCst);
+        }
         failed()
     }
     async fn flush(&self) -> utopia_cache::Result<bool> {

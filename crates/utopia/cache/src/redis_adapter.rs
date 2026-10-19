@@ -149,7 +149,19 @@ fn connection_error(e: &redis::RedisError) -> bool {
     e.is_io_error() || e.is_connection_dropped() || e.is_connection_refusal() || e.is_timeout()
 }
 
-fn server_error(e: &redis::RedisError) -> String {
+/// A lease script replies with an integer, so an error reply is a failure,
+/// not a result.
+///
+/// PHP: `Redis::confirmScript()` (private).
+fn confirm_script(reply: Reply) -> Result<Reply> {
+    match reply {
+        Reply::Error(e) if e.is_empty() => Err(Error::Redis("Lease script failed".into())),
+        Reply::Error(e) => Err(Error::Redis(text(&e))),
+        other => Ok(other),
+    }
+}
+
+pub(crate) fn server_error(e: &redis::RedisError) -> String {
     match (e.code(), e.detail()) {
         (Some(code), Some(detail)) => format!("{code} {detail}"),
         (Some(code), None) => code.to_owned(),
@@ -194,7 +206,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Transport for 
         }
         match self.execute(&cmd).await? {
             Reply::Error(e) if crate::resp::is_noscript(&text(&e)) => Err(Error::NoScript(text(&e))),
-            other => Ok(other),
+            other => confirm_script(other),
         }
     }
 
@@ -205,7 +217,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Transport for 
         for arg in args {
             cmd.arg(*arg);
         }
-        self.execute(&cmd).await
+        confirm_script(self.execute(&cmd).await?)
     }
 
     /// The value of one field of a hash, `None` when missing.

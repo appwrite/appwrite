@@ -349,7 +349,12 @@
             },
             "key": "key"
           },
-          "expect": false
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Cache purge of 'key' could not be confirmed"
+            }
+          }
         },
         {
           "op": "failing.new",
@@ -735,6 +740,347 @@
               }
             ]
           }
+        }
+      ]
+    },
+    {
+      "name": "testAFailedPurgeThrowsInsteadOfReportingNothingToPurge",
+      "steps": [
+        {
+          "op": "failing.new",
+          "args": {},
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "f"
+            },
+            "minimum_throughput": 1
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.purge_failure",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Cache purge of 'key' could not be confirmed",
+              "previous": {
+                "class": "RuntimeException",
+                "message": "Cache failed."
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testAFailedPurgeCountsTowardsOpeningTheCircuit",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "minimum_throughput": 1
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "failing.new",
+          "args": {},
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "f"
+            },
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.purge_failure",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Cache purge of 'key' could not be confirmed",
+              "previous": {
+                "class": "RuntimeException",
+                "message": "Cache failed."
+              }
+            }
+          }
+        },
+        {
+          "op": "breaker.is_open",
+          "args": {
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testAPurgeWhileTheCircuitIsOpenThrowsWithoutReachingTheAdapter",
+      "steps": [
+        {
+          "op": "counting_failing.new",
+          "args": {},
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 3600,
+            "trip": true
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "f"
+            },
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.purge_failure",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Cache purge of 'key' could not be confirmed",
+              "previous": null
+            }
+          }
+        },
+        {
+          "op": "counting_failing.purges",
+          "args": {
+            "adapter": {
+              "$ref": "f"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "testOtherOperationsKeepTheirFallbacksWhileTheCircuitIsOpen",
+      "steps": [
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 3600,
+            "trip": true
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "breaker": {
+              "$ref": "b"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.load",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key",
+            "ttl": 60
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.save",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key",
+            "data": "value"
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.save_with_lease",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key",
+            "data": "value",
+            "hash": "key",
+            "generation": "0"
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.touch",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.list",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.generation",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "expect": "0"
+        },
+        {
+          "op": "adapter.flush",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.ping",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.size",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "testPurgingAMissingKeyStillReturnsFalse",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.purge",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "missing"
+          },
+          "expect": false
         }
       ]
     }

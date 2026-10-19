@@ -6,7 +6,7 @@ use redis::aio::ConnectionLike;
 use redis::cluster_async::ClusterConnection;
 
 use crate::adapter::{Adapter, Fields, Retry, blank, coerce, empty, field, now};
-use crate::redis_adapter::{reply, text};
+use crate::redis_adapter::{reply, server_error, text};
 use crate::resp::Reply;
 use crate::{Codec, Envelope, Error, Json, Result};
 
@@ -94,7 +94,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> RedisCluster<C
             let mut connection = self.connection.clone();
             match cmd.query_async::<redis::Value>(&mut connection).await {
                 Ok(value) => return Ok(reply(value)),
-                Err(e) if !cluster_failure(&e) => return Ok(Reply::Error(e.to_string().into_bytes())),
+                Err(e) if !cluster_failure(&e) => return Ok(Reply::Error(server_error(&e).into_bytes())),
                 Err(e) => {
                     attempts += 1;
                     if attempts > self.retry.max_retries() {
@@ -163,7 +163,11 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Adapter for Re
         } else {
             redis::cmd("HDEL").arg(key).arg(hash).clone()
         };
-        Ok(self.execute(&cmd).await?.truthy())
+        // An error reply is a purge the server refused, not a missing key.
+        match self.execute(&cmd).await? {
+            Reply::Error(e) => Err(Error::RedisCluster(format!("Failed to purge {key}: {}", text(&e)))),
+            removed => Ok(removed.truthy()),
+        }
     }
 
     async fn flush(&self) -> Result<bool> {

@@ -1929,6 +1929,64 @@
       "state": [
         "redis@cache-redis/11,6"
       ]
+    },
+    {
+      "name": "testAPurgeTheServerRejectsThrowsInsteadOfReportingNothingToPurge",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "raw.set",
+          "args": {
+            "key": "${ns}:plain",
+            "value": "value"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:plain"
+          },
+          "expect": {
+            "$error": {
+              "class": "RedisException",
+              "message": "WRONGTYPE Operation against a key holding the wrong kind of value script: 542e836590c1900b3e492adc3b1dc52a7ed10b1b, on @user_script:3."
+            }
+          }
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:missing"
+          },
+          "expect": false
+        }
+      ]
     }
   ]
 }

@@ -10864,6 +10864,49 @@
       "state": [
         "redis@cache-redis-mux/10,15"
       ]
+    },
+    {
+      "name": "testAPurgeTheServerRejectsThrowsInsteadOfReportingNothingToPurge",
+      "steps": [
+        {
+          "op": "raw.set",
+          "args": {
+            "service": "cache-redis-mux",
+            "key": "${ns}:plain-string",
+            "value": "value"
+          },
+          "expect": true
+        },
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "steps": [
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:plain-string"
+                }
+              },
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:missing"
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$error": {
+                "class": "RedisException",
+                "message": "WRONGTYPE Operation against a key holding the wrong kind of value script: 542e836590c1900b3e492adc3b1dc52a7ed10b1b, on @user_script:3."
+              }
+            },
+            false
+          ]
+        }
+      ]
     }
   ]
 }

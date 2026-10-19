@@ -107,10 +107,16 @@
       ]
     },
     "circuit_breaker.new": {
-      "doc": "new CircuitBreaker(adapter, new UtopiaCircuitBreaker(minimumThroughput?))",
+      "doc": "new CircuitBreaker(adapter, breaker (a breaker.new handle) or new UtopiaCircuitBreaker(minimumThroughput?))",
       "covers": [
         "Utopia\\Cache\\Adapter\\CircuitBreaker::__construct"
       ]
+    },
+    "breaker.new": {
+      "doc": "fixture: new UtopiaCircuitBreaker(minimumThroughput?, timeout?), tripped when trip"
+    },
+    "breaker.is_open": {
+      "doc": "fixture: $breaker->isOpen()"
     },
     "failing.new": {
       "doc": "fixture: CircuitBreakerTest's FailingAdapter (every operation throws)"
@@ -120,6 +126,24 @@
     },
     "counting_failing.loads": {
       "doc": "fixture: loads that reached a CountingFailingAdapter"
+    },
+    "counting_failing.purges": {
+      "doc": "fixture: purges that reached a CountingFailingAdapter"
+    },
+    "adapter.purge_failure": {
+      "doc": "$adapter->purge(key, hash?): {result} or {error: {class, message, previous: {class, message} or null}}",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\CircuitBreaker::purge"
+      ]
+    },
+    "fs.mkdir": {
+      "doc": "fixture: mkdir(path, recursive)"
+    },
+    "fs.delete": {
+      "doc": "fixture: delete a path, recursively"
+    },
+    "cluster.raw_set": {
+      "doc": "fixture: SET key value on the cache-cluster (a string where a cache hash is expected)"
     },
     "probe.new": {
       "doc": "fixture: TelemetryTest's Memory adapter recording setTelemetry calls"
@@ -199,7 +223,7 @@
       ]
     },
     "multiplexing.run": {
-      "doc": "steps (cache methods, sleep, concurrent, load_equals: whether a load == data) on a Cache over a new Multiplexing(host, port, options) in one coroutine scheduler, then disconnect(); each step's result or error",
+      "doc": "steps (cache methods, sleep, concurrent, load_equals: whether a load == data) on a Cache over a new Multiplexing(host, port, options) in one coroutine scheduler, then disconnect(); each step's result or error, (options.silent: against a local listener that never answers), and with options.write_failures the attributes of each cache.redis_multiplexing.write.failures point",
       "covers": [
         "Utopia\\Cache\\Adapter\\Redis\\Client::__construct",
         "Utopia\\Cache\\Adapter\\Redis\\Client::close",
