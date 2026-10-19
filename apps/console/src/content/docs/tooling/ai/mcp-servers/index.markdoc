@@ -68,13 +68,13 @@ The full Appwrite tool catalog stays internal and is searched at runtime, using 
 
 # Events {% #events %}
 
-The MCP server supports [MCP Events](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3415), an extension to the Model Context Protocol that lets an agent subscribe to changes in your Appwrite project. Instead of polling with tool calls, the agent is told about each event when it happens, so you can ask it to "tell me when the deployment finishes" or "investigate any failed execution of the `checkout` function" and walk away.
+The MCP server supports [MCP Events](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3415), an extension to the Model Context Protocol. An agent subscribes to an event in your project, and the server sends the agent each matching event as it happens, so the agent does not need to poll.
 
-Events need an MCP client that supports them. [Pi](https://pi.dev) supports them through the [`pi-mcp-events`](https://github.com/mikekelly/pi-mcp-events) extension.
+Events require an MCP client that supports the extension. [Pi](https://pi.dev) supports it through the [`pi-mcp-events`](https://github.com/mikekelly/pi-mcp-events) extension.
 
 ## Available events
 
-Every event takes a required `project_id`. Payloads contain IDs and metadata only, so the agent fetches any details it needs with a normal tool call.
+Every event requires a `project_id`, and each subscription covers only the project and resource you name.
 
 | Event | Arguments | Delivered when | Payload |
 | --- | --- | --- | --- |
@@ -85,38 +85,38 @@ Every event takes a required `project_id`. Payloads contain IDs and metadata onl
 | `tablesdb.row.created` | `project_id`, `database_id`, `table_id` | A row is created in the table | `database_id`, `table_id`, `row_id`, `created_at` |
 | `storage.file.created` | `project_id`, `bucket_id` | A file is uploaded to the bucket | `bucket_id`, `file_id`, `mime_type`, `size`, `created_at` |
 
-Each subscription is scoped to the exact project and resource you name. IDs can contain only letters, digits, `_`, and `-`, so a subscription cannot be widened with wildcards.
+Payloads contain IDs and metadata only, never row contents, emails, phone numbers, request headers, or execution logs. The agent fetches other details with tool calls, which go through Appwrite's permission checks.
 
 ## Delivery
 
-The server supports both delivery modes from the MCP Events proposal:
+The server supports both delivery modes in the proposal:
 
-- **Push** (`events/stream`): for agents that run on your machine and have no public URL. The agent holds one request open, and the server streams each event back on it, with a heartbeat every 25 seconds. While the stream is open, the server renews the subscription every 2 minutes and re-checks your access. If you revoke access or delete the watched resource, the stream ends with an error that tells the agent why.
-- **Webhook** (`events/subscribe`): for clients with a public HTTPS endpoint. The server verifies the endpoint with a challenge, then sends a POST signed with [Standard Webhooks](https://www.standardwebhooks.com/) for every event. A subscription lasts one hour by default, between 5 minutes and 24 hours on request, and the client refreshes it before it expires.
+- **Push** (`events/stream`): for agents that run on your machine and have no public URL. The agent keeps one request open, and the server streams events on it with a heartbeat every 25 seconds. While the stream is open, the server renews the subscription every 2 minutes. If you lose access to the resource or the resource is deleted, the stream ends with an error.
+- **Webhook** (`events/subscribe`): for clients with a public HTTPS endpoint. The server verifies the endpoint with a challenge, then sends each event as a POST signed with [Standard Webhooks](https://www.standardwebhooks.com/). A subscription lasts 1 hour by default, or between 5 minutes and 24 hours on request. The client must refresh it before it expires.
 
 ## How subscriptions work
 
-The MCP server runs on several replicas and keeps no database. Each subscription is one Appwrite [webhook](/docs/apis/webhooks) in the project you subscribe to, created with your OAuth token:
+The server keeps no subscription state of its own. Each subscription is an Appwrite [webhook](/docs/apis/webhooks) in the subscribed project, created with your OAuth token:
 
-1. When you subscribe, the server checks that you can read the resource you are watching, then creates a webhook that listens to the matching Appwrite events.
-2. The subscription details, such as the event, its arguments, where to deliver, and when it expires, are encrypted and stored on that webhook. Appwrite sends them back with every webhook call, so the server never needs to look anything up.
-3. When Appwrite calls the webhook, the server verifies Appwrite's signature, decrypts the subscription, checks that it has not expired, and keeps only the fields the event declares, never the raw Appwrite payload.
-4. For push delivery, the event goes over an internal message bus to the replica that holds your open stream. For webhook delivery, the server signs the event and posts it to your callback.
+1. When you subscribe, the server creates a webhook that listens for the matching Appwrite events.
+2. The subscription details, such as the event, its arguments, the delivery target, and the expiry, are encrypted and stored on the webhook. Appwrite returns them with each webhook call.
+3. On each call, the server verifies Appwrite's signature, decrypts the subscription, checks the expiry, and keeps only the fields that the event declares.
+4. The server delivers the event on the open stream for push delivery, or as a signed POST to the callback for webhook delivery.
 
-You can see these webhooks in the Appwrite Console, named `MCP events` or `MCP events push`. They are deleted when you unsubscribe or close the stream. A webhook left behind by a client that disconnected expires on its own and is removed the next time you subscribe.
+These webhooks are named `MCP events` or `MCP events push` in the Appwrite Console. The server deletes a webhook when you unsubscribe or close the stream. If a client disconnects without unsubscribing, its webhook expires and is removed the next time you subscribe.
 
-## Permissions and security
+## Permissions
 
-- **Your permissions, no more.** Subscribing uses the same OAuth sign-in as the rest of the server, plus the webhook scopes. The server checks your access to the watched resource when you subscribe and again on every renewal, so revoking access ends the subscription.
-- **IDs, not data.** Payloads never include row contents, emails, phone numbers, request headers, or execution logs. The agent reads details through normal tool calls, which go through Appwrite's permission checks.
-- **No probing.** A project you cannot access looks the same as one that does not exist.
-- **Untrusted by default.** Event payloads are external data. Clients such as `pi-mcp-events` pass them to the model as data, not as new instructions, so a user's name cannot take over your agent.
+- Subscriptions use the same OAuth sign-in as the other tools, plus the webhook scopes.
+- The server checks your access to the watched resource when you subscribe and on every renewal.
+- A project you cannot access returns the same error as a project that does not exist.
+- Event payloads are external data. `pi-mcp-events` passes them to the model as data, not as instructions.
 
 ## Limits
 
-- Each active subscription or open stream uses one webhook in the project. The Free plan allows 2 webhooks per project, and Pro allows unlimited webhooks. When you reach the limit, the server returns an error that tells the agent to upgrade or unsubscribe from another event.
+- Each active subscription or open stream uses one webhook in the project. The Free plan allows 2 webhooks per project, and Pro allows unlimited webhooks. At the limit, subscribing returns an error.
 - Each user can keep up to 25 streams open on each server instance.
-- Events that happen while a stream is reconnecting are not replayed. For critical workflows, have the agent re-check the current state after it reconnects.
+- Events that occur while a stream reconnects are not replayed. After a reconnect, have the agent check the current state.
 
 ## Use events with Pi
 
@@ -148,9 +148,14 @@ You can see these webhooks in the Appwrite Console, named `MCP events` or `MCP e
     Subscribe with mcp_events to users.user.created on the appwrite server for project_id <PROJECT_ID>, then finish your turn and wait. Whenever an event arrives, look up that user and tell me their name and email.
     ```
 
-When a user is created in the project, Pi wakes up without a new prompt and reports the user's details.
+When a user is created in the project, Pi receives the event without a new prompt and reports the user's name and email.
 
+{% only_dark %}
+![Pi receives a users.user.created event and looks up the new user](/images/docs/mcp/events/dark/pi-event-wakeup.avif)
+{% /only_dark %}
+{% only_light %}
 ![Pi receives a users.user.created event and looks up the new user](/images/docs/mcp/events/pi-event-wakeup.avif)
+{% /only_light %}
 
 # Authenticate from a remote machine {% #remote %}
 
