@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from '@tanstack/react-router'
-import { Loader2, RefreshCw, Trash2, Mail, Plus } from 'lucide-react'
+import { Link, useParams, useNavigate } from '@tanstack/react-router'
+import { Loader2, RefreshCw, Trash2, Mail } from 'lucide-react'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { Button } from '@/components/ui/button'
@@ -92,7 +92,7 @@ export function SmtpDomainsSection() {
 
   const verifyMutation = useVerifyDomain(projectId, project?.region)
 
-  const { data, isLoading, isFetching, refetch } = useFunctionSmtpDomains(
+  const { data, isLoading } = useFunctionSmtpDomains(
     projectId,
     functionId,
     currentPage,
@@ -161,54 +161,28 @@ export function SmtpDomainsSection() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 pt-4 sm:px-6 sm:pt-6 space-y-3">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h2 className="text-[15px] font-semibold text-foreground">
-            {t('Email domains')}
-          </h2>
-          <p className="text-[13px] text-muted-foreground mt-1">
-            {t(
-              'Receive mail for this function on domains you own. The default address is on the Email card under Settings → Executions.',
-            )}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-9 text-[13px]"
-            onClick={() => refetch()}
-            disabled={isFetching}
-          >
-            {isFetching ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <RefreshCw className="h-3.5 w-3.5" />
-            )}
-            <span className="ms-1.5">{t('Refresh')}</span>
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            className="h-9 text-[13px]"
-            onClick={goAdd}
-            disabled={!emailEnabled}
-          >
-            <Plus className="h-3.5 w-3.5" />
-            <span className="ms-1.5">{t('Add email domain')}</span>
-          </Button>
-        </div>
-      </div>
-
-      {!emailEnabled ? (
-        <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-[13px] text-muted-foreground">
-          {t(
-            'Enable the email trigger under Settings → Executions to add email domains.',
+    <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6 space-y-3">
+      <div className="min-w-0">
+        <h2 className="text-[15px] font-semibold text-foreground">
+          {t('Email domains')}
+        </h2>
+        <p className="text-[13px] text-muted-foreground mt-1">
+          {emailEnabled ? (
+            t('Run this function on mail sent to domains you own.')
+          ) : (
+            <>
+              {t('Email domains need the email trigger.')}{' '}
+              <Link
+                to="/projects/$projectId/functions/$functionId/settings/executions"
+                params={{ projectId: projectId!, functionId: functionId! }}
+                className="font-medium text-foreground underline underline-offset-2 hover:no-underline"
+              >
+                {t('Enable it in settings')}
+              </Link>
+            </>
           )}
-        </div>
-      ) : null}
+        </p>
+      </div>
 
       {isLoading && rules.length === 0 ? (
         <div className="flex items-center justify-center py-10">
@@ -219,7 +193,7 @@ export function SmtpDomainsSection() {
           icon={Mail}
           title={t('No email domains yet')}
           description={t(
-            'Add a domain you own, publish MX and TXT records, then verify to accept inbound mail.',
+            'Add a domain, publish its MX and TXT records, then verify it to start receiving mail.',
           )}
           isEmpty
           variant="card"
@@ -346,14 +320,18 @@ export function SmtpDomainsSection() {
               }
             }}
           >
-            <DialogContent className="sm:max-w-3xl p-0 gap-0 overflow-hidden">
-              <DialogHeader className="px-6 pt-6 text-start">
-                <DialogTitle>{t('Verify email domain')}</DialogTitle>
+            <DialogContent className="sm:max-w-4xl p-0 gap-0 overflow-hidden">
+              <DialogHeader className="px-6 pt-6 pb-4 text-start">
+                <DialogTitle>
+                  {t('Verify')} {selectedRule.domain}
+                </DialogTitle>
               </DialogHeader>
+              <div className="border-t border-border" />
               <div className="px-6 py-4 max-h-[70dvh] overflow-y-auto">
                 <VerifySmtpDomainContent
                   rule={selectedRule}
                   region={project?.region}
+                  noCard
                   verificationError={verificationError}
                 />
               </div>
