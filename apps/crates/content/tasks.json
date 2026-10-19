@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-19T11:13:00Z",
+  "updated": "2026-10-19T11:49:00Z",
   "tasks": [
     {
       "id": "signatures",
@@ -8,6 +8,22 @@
       "status": "progress",
       "updated": "2026-10-17T19:50:00Z",
       "note": "An optional PHP parameter becomes an explicit Rust argument, never a second method or a with_* builder. registry is converted in the working tree (set and get take fresh; set_fresh and get_fresh are gone), and CONVERSION.md gets the rule in §4 and on the checklist. Not committed yet; the other crates follow."
+    },
+    {
+      "id": "audit-order",
+      "title": "audit: main's total order on ClickHouse finds",
+      "area": "Libraries",
+      "status": "todo",
+      "updated": "2026-10-19T11:49:00Z",
+      "note": "main's 405a72de295 sorts every ClickHouse find by a total order and 048888494c9 projects the order columns so any row can be the next cursor: finds now return `time` and select columns in a new order. CI shows 10 audit differences (plus 2 in fuzz). API coverage stays 100%."
+    },
+    {
+      "id": "messaging-code",
+      "title": "messaging: main's SMTP reply code on send results",
+      "area": "Libraries",
+      "status": "todo",
+      "updated": "2026-10-19T11:49:00Z",
+      "note": "main's 501a1c63739 adds a `code` field to every send result; Rust's results lack it, so CI's integrations lane shows 262 messaging differences (plus 3 in fuzz), nearly all on that one field. API coverage stays 100%."
     },
     {
       "id": "nats-tests",
