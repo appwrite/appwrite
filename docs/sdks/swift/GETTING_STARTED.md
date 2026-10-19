@@ -82,7 +82,7 @@ print(String(decoding: json, as: UTF8.self))
 
 ### Error handling
 
-When a request fails, the SDK throws an `AppwriteError` with `message`, `code`, `type` and `response` properties.
+When Appwrite returns an error, the SDK throws an `AppwriteError` with `message`, `code`, `type` and `response` properties. Network failures, such as a timeout or a lost connection, are thrown as other errors, so add a general `catch` as well.
 
 ```swift
 do {
@@ -92,6 +92,8 @@ do {
     print(error.message)
     print(error.code ?? 0)
     print(error.type ?? "")
+} catch {
+    print(error.localizedDescription)
 }
 ```
 

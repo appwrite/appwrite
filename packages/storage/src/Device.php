@@ -252,12 +252,26 @@ abstract class Device
     }
 
     /**
-     * Delete file in given path return true on success and false on failure.
+     * Delete the file at the given path. When `$recursive` is true, also
+     * removes every object under `path/`. Return true on success and false on
+     * failure.
+     *
+     * A device may refuse a path that resolves to the whole bucket, or a
+     * recursive delete outside the root.
+     *
+     * @throws \InvalidArgumentException When the device refuses the path
      */
     abstract public function delete(string $path, bool $recursive = false): bool;
 
     /**
-     * Delete files in given path, path must be a directory. return true on success and false on failure.
+     * Delete the directory `path/` under the root and everything in it, never
+     * siblings that only share its name as a prefix. Return true on success
+     * and false on failure.
+     *
+     * A device may refuse a path that resolves to the whole root, the whole
+     * bucket or outside the root.
+     *
+     * @throws \InvalidArgumentException When the device refuses the path
      */
     abstract public function deletePath(string $path): bool;
 
