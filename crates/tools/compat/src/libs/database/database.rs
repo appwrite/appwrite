@@ -888,6 +888,15 @@ fn section_documents_reads<'a>(
             "applySelectFiltersToDocuments" => {
                 let mut documents = a.documents("documents")?;
                 db.apply_select_filters_to_documents(&mut documents, &a.queries("selectQueries")?);
+                // PHP strips the documents it is given, objects shared with
+                // whoever holds them: a stored document sees the change.
+                if let Some(Json::Array(items)) = a.raw("documents") {
+                    for (item, document) in items.iter().zip(documents) {
+                        if let Some(name) = item.get("$obj").and_then(Json::as_str) {
+                            a.cx.store(name, document.into_obj());
+                        }
+                    }
+                }
                 Obj::null()
             }
             "purgeCachedCollection" => void(db.purge_cached_collection(&s("collection")?).await)?,
