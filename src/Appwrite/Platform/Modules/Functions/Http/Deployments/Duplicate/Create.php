@@ -109,12 +109,6 @@ class Create extends Action
         // build only serves downloads.
         $path = $deployment->getAttribute('sourcePath');
         $installationId = $deployment->getAttribute('installationId', '');
-        $providerRepositoryId = $deployment->getAttribute('providerRepositoryId', '');
-        // Reconnecting git leaves older deployments on an installation that may be gone,
-        // so a function still connected to the same repository redeploys through its own
-        if ($installationId !== '' && $providerRepositoryId !== '' && $providerRepositoryId === $function->getAttribute('providerRepositoryId', '')) {
-            $installationId = $function->getAttribute('installationId', '');
-        }
         $owner = $deployment->getAttribute('providerRepositoryOwner', '');
         $repository = $deployment->getAttribute('providerRepositoryName', '');
         $hasSource = ($owner === '' || $repository === '') && ! empty($path) && $deviceForFunctions->exists($path);
@@ -159,6 +153,18 @@ class Create extends Action
             $deployment = $deployments->createFromUpload($function, $deployment, $buildTimeout);
         } elseif ($installationId !== '') {
             $installation = $dbForPlatform->getDocument('installations', $installationId);
+
+            // Reconnecting git leaves older deployments on an installation that may no longer read
+            // the repository, so a function still connected to it redeploys through its own. Repository
+            // IDs are only unique within a provider.
+            $providerRepositoryId = $deployment->getAttribute('providerRepositoryId', '');
+            if ($providerRepositoryId !== '' && $providerRepositoryId === $function->getAttribute('providerRepositoryId', '')) {
+                $current = $dbForPlatform->getDocument('installations', $function->getAttribute('installationId', ''));
+                if (!$installation->isEmpty() && !$current->isEmpty() && $current->getAttribute('provider') === $installation->getAttribute('provider')) {
+                    $installation = $current;
+                }
+            }
+
             if ($installation->isEmpty()) {
                 throw new Exception(Exception::INSTALLATION_NOT_FOUND);
             }
