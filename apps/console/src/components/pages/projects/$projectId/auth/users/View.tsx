@@ -34,7 +34,6 @@ import {
   Copy,
   Check,
   ShieldAlert,
-  ShieldCheck,
 } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { AuthenticatorType, MessagingProviderType } from '@appwrite.io/console'
@@ -1181,25 +1180,14 @@ function PasswordBreachStatus({
 }) {
   const t = useT()
 
-  if (passwordPwned === true) {
-    return (
-      <p className="flex items-center gap-1.5 text-[13px] text-red-600 dark:text-red-400 mt-2">
-        <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
-        {t('Password found in a known data breach')}
-      </p>
-    )
+  if (passwordPwned !== true) {
+    return null
   }
-  if (passwordPwned === false) {
-    return (
-      <p className="flex items-center gap-1.5 text-[13px] text-green-600 dark:text-green-400 mt-2">
-        <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-        {t('Password not found in known data breaches')}
-      </p>
-    )
-  }
+
   return (
-    <p className="text-[13px] text-muted-foreground mt-2">
-      {t('Password not checked against known data breaches')}
+    <p className="flex items-center gap-1.5 text-[13px] text-red-600 dark:text-red-400 mt-2">
+      <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+      {t('Password found in a known data breach')}
     </p>
   )
 }

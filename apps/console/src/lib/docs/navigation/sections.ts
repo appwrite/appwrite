@@ -2583,6 +2583,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: 'Grok Build',
             href: '/docs/tooling/ai/agents/grok-build',
           },
+          {
+            label: 'Pi',
+            href: '/docs/tooling/ai/agents/pi',
+          },
         ],
       },
       {

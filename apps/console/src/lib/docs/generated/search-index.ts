@@ -2231,6 +2231,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     ]
   },
   {
+    "slug": "products/auth/passkeys",
+    "title": "Passkeys",
+    "description": "Let users sign up and sign in with a passkey, a key pair stored on their device and unlocked with Face ID, Touch ID, a fingerprint, or a device PIN, on the web, Android, and Apple platforms.",
+    "excerpt": "A passkey replaces a password with a key pair that lives on the user's device or in their password manager, such as iCloud Keychain or Google Password Manager. The user unlocks it with Face ID, Touch ID, a fingerprint, or the device PIN. The private key never leaves the device, and the public key that Appwrite stores is useless to an attacker. A passkey only works on the domain it was created for, so a look-alike phishing site cannot use…",
+    "breadcrumbs": [
+      "Auth",
+      "Guides",
+      "Passkeys"
+    ]
+  },
+  {
     "slug": "products/auth/phone-sms",
     "title": "Phone (SMS) login",
     "description": "Enhance security with SMS and phone authentication in Appwrite. Add multi-factor authentication via SMS, verify phone numbers, and protect user accounts.",
@@ -2399,7 +2410,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/avatars/favicons",
     "title": "Favicons",
     "description": "Fetch favicons from remote websites for link previews and bookmark displays.",
-    "excerpt": "The favicon endpoint retrieves favicons from remote websites. This is useful for displaying website icons in link previews, bookmarks, and social sharing interfaces. Get favicon Retrieve a favicon from a remote website URL. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | | url | string | The URL of the website to fetch the favicon from. Must be a valid HTTP or HTTPS URL. | | width…",
+    "excerpt": "The favicon endpoint retrieves favicons from remote websites. This is useful for displaying website icons in link previews, bookmarks, and social sharing interfaces. Get favicon Retrieve a favicon from a remote website URL. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | | url | string | The URL of the website to fetch the favicon from. Must be a valid HTTP or HTTPS URL. | Favicon retrieval…",
     "breadcrumbs": [
       "Avatars",
       "Concepts",
@@ -5805,6 +5816,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Tooling",
       "IDEs",
       "OpenCode"
+    ]
+  },
+  {
+    "slug": "tooling/ai/agents/pi",
+    "title": "Pi",
+    "description": "Learn how you can add the Appwrite MCP server to Pi to interact with both the Appwrite API and documentation, and to react to events in your project.",
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to Pi, a terminal coding agent, for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so you don't run a server on your machine. If you don't have Pi yet, install it from your terminal on macOS or Linux. On Windows, or to install with npm, see pi.dev. Pi connects to the server…",
+    "breadcrumbs": [
+      "Tooling",
+      "IDEs",
+      "Pi"
     ]
   },
   {

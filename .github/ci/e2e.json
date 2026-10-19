@@ -456,7 +456,9 @@
       "paths": [
         "app/mqtt.php",
         "src/Appwrite/Mqtt/",
-        "src/Appwrite/Messaging/Adapter/Mqtt.php"
+        "src/Appwrite/Messaging/Adapter/Mqtt.php",
+        "src/Appwrite/Messaging/Adapter/Push/",
+        "src/Appwrite/Platform/Workers/Messaging.php"
       ]
     }
   ],
@@ -500,7 +502,17 @@
       "compose_profiles": "s3",
       "wait": "executor",
       "storage_device": "s3",
-      "services": ["Functions", "Storage"]
+      "services": ["Functions", "Project", "Storage"]
+    },
+    {
+      "label": "Usage Outage",
+      "group": "usageOutage",
+      "path": "/usr/src/code/tests/e2e/Services/Usage",
+      "options_abuse": "disabled",
+      "storage_antivirus": "disabled",
+      "compose_profiles": "",
+      "wait": "",
+      "services": ["Usage"]
     },
     {
       "label": "Queue Retry",

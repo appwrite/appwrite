@@ -332,8 +332,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new Web();
                         if ($platform['key'] === APP_SDK_PLATFORM_CONSOLE) {
                             $config->setNPMPackage('@appwrite.io/console');
+                            $config->setCdnPath('console');
                         } else {
                             $config->setNPMPackage('appwrite');
+                            $config->setCdnPath('web');
                         }
                         break;
                     case 'cli':
@@ -365,8 +367,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'nodejs':
                         $config = new Node();
                         $config->setNPMPackage('node-appwrite');
-                        $warning = $warning . "\n\n > This is the Node.js SDK for integrating with Appwrite from your Node.js server-side code.
-                            If you're looking to integrate from the browser, you should check [appwrite/sdk-for-web](https://github.com/appwrite/sdk-for-web)";
+                        $warning = $warning . "\n\n> This is the Node.js SDK for integrating with Appwrite from your Node.js server-side code. If you're looking to integrate from the browser, you should check [appwrite/sdk-for-web](https://github.com/appwrite/sdk-for-web)";
                         break;
                     case 'python':
                         $config = new Python();

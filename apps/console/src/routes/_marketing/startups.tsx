@@ -4,7 +4,11 @@ import {
   marketingRouteLifetime,
 } from '@/lib/marketing/route-static-data'
 import { View } from '@/components/pages/startups/View'
-import { getMarketingRouteHead } from '@/lib/marketing/route-meta'
+import {
+  getMarketingFaqScript,
+  getMarketingRouteHead,
+} from '@/lib/marketing/route-meta'
+import { startupsFaqItems } from '@/lib/startups/content'
 
 export const Route = createFileRoute('/_marketing/startups')({
   ...marketingRouteLifetime,
@@ -17,7 +21,7 @@ export const Route = createFileRoute('/_marketing/startups')({
       description:
         "Get cloud credits to fulfill all your startup's backend and hosting needs. Apply for Appwrite's Startups Program today.",
     });
-    return seo;
+    return { ...seo, scripts: [getMarketingFaqScript(startupsFaqItems)] };
   },
   loader: async ({ context }) => {
   },
