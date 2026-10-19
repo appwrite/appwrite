@@ -45,6 +45,30 @@ final class FilesystemTest extends Base
         $this->assertFalse($cache->purge('locked'));
     }
 
+    public function testAPurgeThatCannotReachTheDirectoryThrowsInsteadOfReportingNothingToPurge(): void
+    {
+        if (\function_exists('posix_getuid') && posix_getuid() === 0) {
+            $this->markTestSkipped('Root reads a directory without the execute bit.');
+        }
+
+        $path = self::scratch('unreachable-data');
+        $cache = new Cache(new Filesystem($path));
+        $cache->save('hidden', 'value');
+        chmod($path, 0666);
+
+        $failure = null;
+        try {
+            $cache->purge('hidden');
+        } catch (\Exception $error) {
+            $failure = $error;
+        } finally {
+            chmod($path, 0755);
+        }
+
+        $this->assertInstanceOf(\Exception::class, $failure, 'A purge that cannot see the file must not read as a purge of a missing key');
+        $this->assertTrue($cache->purge('hidden'));
+    }
+
     public function testGetSize(): void
     {
         self::$cache->save('test', 'test');

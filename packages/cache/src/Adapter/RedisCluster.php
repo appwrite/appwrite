@@ -214,7 +214,7 @@ class RedisCluster implements Adapter, Batchable, Retryable
     {
         $removed = $hash !== '' && $hash !== '0'
             ? $this->execute(fn (): Client|int|false => $this->redis->hdel($key, $hash))
-            : $this->execute(fn (): int => $this->redis->del($key));
+            : $this->execute(fn (): mixed => $this->redis->del($key));
 
         if (! \is_int($removed)) {
             throw new \RedisClusterException('Failed to purge '.$key.': '.$this->redis->getLastError());
