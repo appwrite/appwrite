@@ -56,6 +56,7 @@ final class RedisClusterTest extends Base
         }
 
         Services::compose('up', '-d', '--force-recreate', '--wait', 'redis-cluster');
+        $this->waitForClusterState();
 
         $this->assertSame('reconnect', self::$cache->save('test:reconnect', 'reconnect', 'test:reconnect'));
         $this->assertEquals('reconnect', self::$cache->load('test:reconnect', 5));
@@ -75,5 +76,25 @@ final class RedisClusterTest extends Base
         }
 
         $this->assertFalse(self::$cache->purge('test:missing'));
+    }
+
+    /**
+     * A healthy container can still answer CLUSTERDOWN until every node has
+     * its slots assigned, so later tests would see the cluster half formed.
+     */
+    private function waitForClusterState(): void
+    {
+        Services::waitUntil(static function (): bool {
+            foreach (Services::CLUSTER_SEEDS as $seed) {
+                [$host, $port] = explode(':', $seed);
+                $info = self::$redis->rawCommand([$host, (int) $port], 'CLUSTER', 'INFO');
+
+                if (! \is_string($info) || ! str_contains($info, 'cluster_state:ok')) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
     }
 }
