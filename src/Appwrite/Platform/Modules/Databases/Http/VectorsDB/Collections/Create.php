@@ -221,13 +221,10 @@ class Create extends CollectionAction
                 $dbForProject->createDocuments('indexes', $indexDocuments);
             }
         } catch (DuplicateException) {
-            $dbForProject->deleteDocument('database_' . $database->getSequence(), $collection->getId());
             throw new Exception($this->getDuplicateException());
         } catch (IndexException) {
-            $dbForProject->deleteDocument('database_' . $database->getSequence(), $collection->getId());
             throw new Exception($this->getInvalidIndexException());
         } catch (LimitException) {
-            $dbForProject->deleteDocument('database_' . $database->getSequence(), $collection->getId());
             throw new Exception($this->getLimitException());
         } catch (\Throwable $e) {
             // The metadata row is written before the collection, so anything the collection
