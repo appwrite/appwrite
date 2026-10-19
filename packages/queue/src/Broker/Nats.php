@@ -712,9 +712,8 @@ class Nats implements Synchronous, Consumer, Bounded
      * twice. A refusal -- permissions, payload size, a full stream -- is thrown at
      * once: it would be refused identically again.
      *
-     * Acknowledgements take the same path with $reconnect rebuilding only the
-     * commands connection: an ack is addressed to the delivery's reply subject, not
-     * to the socket that fetched it, so it can be repeated on a new one.
+     * An ack goes to the delivery's reply subject, not the socket that fetched it,
+     * so acks can be repeated on a rebuilt commands connection too.
      *
      * @template T
      * @param \Closure(): T $publish
@@ -1260,9 +1259,7 @@ class Nats implements Synchronous, Consumer, Bounded
 
     /**
      * Run one command on the commands connection, repeating it as republishing() does.
-     *
-     * The lock is taken per attempt, not around the retries: an ack waiting out its
-     * backoff must not hold up every other ack, heartbeat and depth read on the worker.
+     * The lock is taken per attempt so a backoff never blocks other acks or heartbeats.
      *
      * @template T
      * @param \Closure(): T $command

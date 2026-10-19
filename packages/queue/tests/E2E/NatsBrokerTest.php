@@ -1413,11 +1413,7 @@ final class NatsBrokerTest extends TestCase
         yield 'no responders while the consumer moves' => ['no-responders', 2];
     }
 
-    /**
-     * A NATS server restarting one pod at a time closes the commands connection
-     * between a handler finishing and its ack. On maxDeliver 1 the redelivery is the
-     * spare one and is dead-lettered on arrival, so the finished job ends up dead.
-     */
+    /** On maxDeliver 1 a lost ack makes the redelivery the spare one, parked as dead. */
     #[DataProvider('lostAcknowledgementConnection')]
     public function testACommitSurvivesTheServerHavingClosedItsConnection(string $fault, int $times): void
     {
@@ -1455,7 +1451,6 @@ final class NatsBrokerTest extends TestCase
         }
     }
 
-    /** An ack batch written and never answered is retried whole on a new connection. */
     public function testACommitWhoseAckIsNeverAnsweredIsSentAgain(): void
     {
         $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
@@ -1488,11 +1483,7 @@ final class NatsBrokerTest extends TestCase
         }
     }
 
-    /**
-     * An ack waiting out its retry backoff leaves the commands connection free: every
-     * other ack, heartbeat and depth read on the worker goes through the same lock, and
-     * a heartbeat held past ackWait gets a running job redelivered.
-     */
+    /** A heartbeat held past ackWait would get a running job redelivered. */
     public function testAnAckRetryDoesNotHoldTheCommandsConnectionThroughItsBackoff(): void
     {
         $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
@@ -1566,11 +1557,6 @@ final class NatsBrokerTest extends TestCase
         }
     }
 
-    /**
-     * Handing back a batch whose stream reads never answer stays inside one retry
-     * budget: once it is spent the rest are NAK'd without waiting on the server, and
-     * none is lost.
-     */
     public function testReleasingABatchStaysInsideOneBudgetWhenTheServerStopsAnswering(): void
     {
         $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
