@@ -10,8 +10,8 @@ pub type Attributes = Vec<(String, String)>;
 
 /// Records values into a histogram.
 pub trait Histogram: Send + Sync {
-    /// Records one value.
-    fn record(&self, value: f64);
+    /// Records one value with the attributes that split it into series.
+    fn record(&self, value: f64, attributes: &[(String, String)]);
 }
 
 /// Reports a gauge's current values when asked: each `(value, attributes)`.
@@ -33,7 +33,7 @@ pub struct NoTelemetry;
 struct Discard;
 
 impl Histogram for Discard {
-    fn record(&self, _value: f64) {}
+    fn record(&self, _value: f64, _attributes: &[(String, String)]) {}
 }
 
 impl Telemetry for NoTelemetry {
