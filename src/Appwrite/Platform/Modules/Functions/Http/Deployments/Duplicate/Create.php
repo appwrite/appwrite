@@ -17,6 +17,7 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
 use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Create extends Action
 {
@@ -108,6 +109,12 @@ class Create extends Action
         // build only serves downloads.
         $path = $deployment->getAttribute('sourcePath');
         $installationId = $deployment->getAttribute('installationId', '');
+        $providerRepositoryId = $deployment->getAttribute('providerRepositoryId', '');
+        // Reconnecting git leaves older deployments on an installation that may be gone,
+        // so a function still connected to the same repository redeploys through its own
+        if ($installationId !== '' && $providerRepositoryId !== '' && $providerRepositoryId === $function->getAttribute('providerRepositoryId', '')) {
+            $installationId = $function->getAttribute('installationId', '');
+        }
         $owner = $deployment->getAttribute('providerRepositoryOwner', '');
         $repository = $deployment->getAttribute('providerRepositoryName', '');
         $hasSource = ($owner === '' || $repository === '') && ! empty($path) && $deviceForFunctions->exists($path);
@@ -158,17 +165,26 @@ class Create extends Action
 
             $github = $vcsFactory->fromInstallation($installation);
 
+            $deployment->setAttributes([
+                'installationId' => $installation->getId(),
+                'installationInternalId' => $installation->getSequence(),
+            ]);
+
             $ref = $deployment->getAttribute('providerCommitHash') ?: $deployment->getAttribute('providerBranch');
-            $deployment = $deployments->createFromVcs(
-                $function,
-                $deployment,
-                $buildTimeout,
-                $github,
-                $owner,
-                $repository,
-                $ref,
-                $function->getAttribute('providerRootDirectory', ''),
-            );
+            try {
+                $deployment = $deployments->createFromVcs(
+                    $function,
+                    $deployment,
+                    $buildTimeout,
+                    $github,
+                    $owner,
+                    $repository,
+                    $ref,
+                    $function->getAttribute('providerRootDirectory', ''),
+                );
+            } catch (RepositoryNotFound) {
+                throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+            }
         } else {
             // Public template repo: providerBranch holds the resolved ref,
             // fetched commit-style since a branch-type clone breaks on tags.
