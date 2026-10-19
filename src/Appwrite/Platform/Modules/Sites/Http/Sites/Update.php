@@ -285,6 +285,18 @@ class Update extends Base
             }
         }
 
+        // Reconnecting a connected site only moves the site to the new installation, while
+        // webhook deployments take theirs from the repository link
+        if ($isConnected && !empty($providerRepositoryId) && !empty($repositoryId)) {
+            $repository = $dbForPlatform->getDocument('repositories', $repositoryId);
+            if (!$repository->isEmpty() && $repository->getAttribute('installationInternalId') !== $installation->getSequence()) {
+                $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document([
+                    'installationId' => $installation->getId(),
+                    'installationInternalId' => $installation->getSequence(),
+                ]));
+            }
+        }
+
         $live = true;
 
         if (
