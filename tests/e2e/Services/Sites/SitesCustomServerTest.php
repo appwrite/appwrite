@@ -140,9 +140,14 @@ final class SitesCustomServerTest extends Scope
                 $response = $proxyClient->call(Client::METHOD_GET, '/client-ip', [
                     'x-forwarded-for' => '203.0.113.9',
                     'x-appwrite-client-ip' => '198.51.100.1',
+                    'x-appwrite-country-code' => 'XX',
+                    'x-appwrite-continent-eu' => 'true',
                 ]);
                 $this->assertEquals(200, $response['headers']['status-code']);
                 $this->assertEquals('203.0.113.9', $response['body']['ip']);
+                // 203.0.113.0/24 is reserved for documentation, so it has no geo record.
+                $this->assertEquals('', $response['body']['countryCode']);
+                $this->assertEquals('false', $response['body']['continentEu']);
             });
         } finally {
             if ($siteId !== '') {
