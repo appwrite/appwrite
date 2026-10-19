@@ -1004,6 +1004,7 @@ class Nats implements Synchronous, Consumer, Bounded
             $messages[] = new Message($data)
                 // JetStream counts deliveries from 1; expose it as the Redis-style attempt count.
                 ->setAttempts(max(0, $jsMessage->metadata()->numDelivered - 1))
+                ->setMaxAttempts($this->maxDeliver)
                 ->setSequence($jsMessage->metadata()->streamSequence)
                 ->setSize(\strlen($jsMessage->getData()));
         }

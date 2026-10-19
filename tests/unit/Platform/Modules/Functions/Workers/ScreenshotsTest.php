@@ -25,7 +25,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
 use Utopia\Queue\Message;
-use Utopia\Queue\PermanentFailure;
 use Utopia\Storage\Device\Local;
 use Utopia\Telemetry\Adapter\None;
 
@@ -99,18 +98,16 @@ final class ScreenshotsTest extends TestCase
 
     /**
      * The browser service refuses a host whose DNS points at a private or
-     * reserved address. nyc3 dead-lettered the same site's screenshots over and
-     * over for it: no attempt can succeed until the customer changes DNS.
+     * reserved address: no attempt can succeed until the customer changes DNS.
      */
-    public function testUnroutableHostIsRefusedForGood(): void
+    public function testUnroutableHostIsAcknowledgedWithoutRetry(): void
     {
         $error = $this->capture($this->browser(new Response(
             400,
             body: new Stream(\json_encode(['error' => "Host 'admin.example.com' is not publicly routable."])),
         )));
 
-        $this->assertInstanceOf(PermanentFailure::class, $error);
-        $this->assertInstanceOf(ScreenshotsException::class, $error->getPrevious());
+        $this->assertNull($error);
         $this->assertStringContainsString('Screenshot capturing failed', (string) $this->dbForProject->getDocument('deployments', 'deployment')->getAttribute('buildLogs'));
     }
 
@@ -129,13 +126,34 @@ final class ScreenshotsTest extends TestCase
         $this->assertSame(ScreenshotsException::class, $error::class);
     }
 
-    public function testDeletedDeploymentIsRefusedForGood(): void
+    public function testPageTimeoutOnTheLastAttemptIsAcknowledged(): void
+    {
+        $error = $this->capture($this->browser(new Response(
+            400,
+            body: new Stream(\json_encode(['error' => "screenshot: Timeout 30000ms exceeded.\n"])),
+        )), attempts: 1, maxAttempts: 2);
+
+        $this->assertNull($error);
+        $this->assertStringContainsString('Screenshot capturing failed', (string) $this->dbForProject->getDocument('deployments', 'deployment')->getAttribute('buildLogs'));
+    }
+
+    public function testMissingScreenshotsBucketIsAcknowledgedWithoutCapturing(): void
+    {
+        $this->dbForPlatform->deleteDocument('buckets', 'screenshots');
+
+        $error = $this->capture($this->browser(fn () => $this->fail('Nothing can store a capture without the bucket')));
+
+        $this->assertNull($error);
+        $this->assertSame('previous-light', $this->dbForProject->getDocument('sites', 'site')->getAttribute('deploymentScreenshotLight'));
+    }
+
+    public function testDeletedDeploymentIsAcknowledgedWithoutCapturing(): void
     {
         $this->dbForProject->deleteDocument('deployments', 'deployment');
 
         $error = $this->capture($this->browser(fn () => $this->fail('A deleted deployment must not be captured')));
 
-        $this->assertInstanceOf(PermanentFailure::class, $error);
+        $this->assertNull($error);
     }
 
     /**
@@ -144,7 +162,7 @@ final class ScreenshotsTest extends TestCase
      * "Deployment not found". It must end once, and leave the site's preview of
      * its current deployment alone.
      */
-    public function testDeploymentDeletedDuringCaptureIsRefusedForGood(): void
+    public function testDeploymentDeletedDuringCaptureIsAcknowledged(): void
     {
         $error = $this->capture($this->browser(function (): ResponseInterface {
             $this->dbForProject->deleteDocument('deployments', 'deployment');
@@ -152,25 +170,25 @@ final class ScreenshotsTest extends TestCase
             return (new Response(200, body: new Stream('png')))->withHeader('Content-Type', 'image/png');
         }));
 
-        $this->assertInstanceOf(PermanentFailure::class, $error);
+        $this->assertNull($error);
 
         $site = $this->dbForProject->getDocument('sites', 'site');
         $this->assertSame('previous-light', $site->getAttribute('deploymentScreenshotLight'));
         $this->assertSame('previous-dark', $site->getAttribute('deploymentScreenshotDark'));
     }
 
-    private function capture(Client $screenshots): ?\Throwable
+    private function capture(Client $screenshots, int $attempts = 0, ?int $maxAttempts = 2): ?\Throwable
     {
         $project = new Document(['$id' => 'project', '$sequence' => '1', 'teamId' => 'team']);
 
         try {
             (new Screenshots())->action(
-                message: new Message([
+                message: (new Message([
                     'pid' => 'pid',
                     'queue' => 'v1-screenshots',
                     'timestamp' => \time(),
                     'payload' => (new Screenshot($project, 'deployment'))->toArray(),
-                ]),
+                ]))->setAttempts($attempts)->setMaxAttempts($maxAttempts),
                 queueForRealtime: $this->createStub(Realtime::class),
                 dbForPlatform: $this->dbForPlatform,
                 dbForProject: $this->dbForProject,

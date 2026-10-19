@@ -252,6 +252,12 @@ class Mails extends Action
             // The adapter reports a refusal in its result, classified below. What
             // it throws instead is nothing the server said, so nothing says the
             // next attempt fails the same way.
+            if ($type === 'smtp' && $message->isLastAttempt()) {
+                $this->abandon($project, $smtp['host'], $error->getMessage());
+
+                return;
+            }
+
             throw new Exception('Error sending mail: ' . $error->getMessage(), $type === 'smtp' ? 401 : 500);
         }
 
@@ -275,9 +281,26 @@ class Mails extends Action
 
             Span::add('mail.status', 'failure');
 
-            throw new Exception('Error sending mail: ' . ($failure['error'] ?? ($result['error'] ?? 'Unknown error')), $type === 'smtp' ? 401 : 500);
+            $reason = $failure['error'] ?? ($result['error'] ?? 'Unknown error');
+            if ($type === 'smtp' && $message->isLastAttempt()) {
+                $this->abandon($project, $smtp['host'], $reason);
+
+                return;
+            }
+
+            throw new Exception('Error sending mail: ' . $reason, $type === 'smtp' ? 401 : 500);
         }
 
         Span::add('mail.status', 'success');
+    }
+
+    /**
+     * The project's own SMTP server failed the last attempt: nothing on our side can deliver it, so it is not dead-lettered.
+     */
+    private function abandon(Document $project, string $host, string $reason): void
+    {
+        Span::add('mail.status', 'abandoned');
+
+        Console::warning('Mail abandoned after the last attempt on project SMTP: project=' . $project->getId() . ' host=' . $host . ' reason=' . $reason);
     }
 }
