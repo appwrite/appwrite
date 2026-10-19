@@ -216,7 +216,9 @@ impl Job {
             self.publish(queue, message).await;
         }
 
-        if let Some(pattern) = self.event.as_deref().or(self.route.event) {
+        // An action sets the event to "" to match `$queueForEvents->reset()`:
+        // a partial chunk upload must not emit the file create event.
+        if let Some(pattern) = self.event.as_deref().or(self.route.event).filter(|pattern| !pattern.is_empty()) {
             match event::generate_events(pattern, &self.params) {
                 Ok(events) => self.trigger(&events, &project_payload, &trimmed).await,
                 Err(e) => tracing::warn!(error = %e, pattern, "event generation failed"),

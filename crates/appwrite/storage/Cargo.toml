@@ -1,0 +1,27 @@
+[package]
+name = "appwrite-storage"
+description = "Appwrite Storage service (/v1/storage) for the Rust API."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+appwrite-core.workspace = true
+hex.workspace = true
+indexmap.workspace = true
+php-std.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+utopia-async.workspace = true
+utopia-client.workspace = true
+utopia-compression.workspace = true
+utopia-database.workspace = true
+utopia-http.workspace = true
+utopia-image.workspace = true
+utopia-lock.workspace = true
+utopia-query.workspace = true
+utopia-storage.workspace = true
+utopia-system.workspace = true
+utopia-validators.workspace = true

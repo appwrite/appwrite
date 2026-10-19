@@ -1048,12 +1048,12 @@ jobs:
           cache-from: type=registry,ref=${{ env.GCRUNNER_REGISTRY }}/appwrite:rust-buildcache
           cache-to: type=registry,ref=${{ env.GCRUNNER_REGISTRY }}/appwrite:rust-buildcache,mode=max
 
-  # The PHP Users suite, sent through Traefik so /v1/users/* is served by the
-  # Rust API while every other route (account, teams, projects...) stays on PHP.
+  # PHP suites sent through Traefik so migrated paths are served by the Rust
+  # API while every other route stays on PHP.
   e2e_rust:
-    name: Tests / E2E / PostgreSQL (${{ matrix.mode }}) / Users (Rust)
+    name: Tests / E2E / PostgreSQL (${{ matrix.mode }}) / Users and Storage (Rust)
     runs-on: gcrunner=${{ github.run_id }}/runner=e2e
-    timeout-minutes: 75
+    timeout-minutes: 100
     needs: [build, build_rust]
     permissions:
       contents: read
@@ -1161,6 +1161,18 @@ jobs:
             -e _APP_E2E_RESPONSE_FORMAT="${RESPONSE_FORMAT}" \
             appwrite vendor/bin/paratest --processes "$(nproc)" --functional /usr/src/code/tests/e2e/Services/Users \
             --exclude-group abuseEnabled --log-junit tests/e2e/Services/Users/junit-rust.xml
+
+      - name: Run Storage tests
+        timeout-minutes: 25
+        env:
+          RESPONSE_FORMAT: ${{ github.event.inputs.response_format }}
+        run: |
+          docker compose exec -T \
+            -e _APP_E2E_ENDPOINT=http://appwrite.test/v1 \
+            -e _APP_E2E_RESPONSE_FORMAT="${RESPONSE_FORMAT}" \
+            appwrite vendor/bin/paratest --processes "$(nproc)" --functional /usr/src/code/tests/e2e/Services/Storage \
+            --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --exclude-group queueRetry --exclude-group usageOutage \
+            --log-junit tests/e2e/Services/Storage/junit-rust.xml
 
       - name: Failure Logs
         if: failure()

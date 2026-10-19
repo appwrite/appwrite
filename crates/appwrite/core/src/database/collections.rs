@@ -48,6 +48,32 @@ pub const USERS: Schema = Schema {
 /// project's `teams`).
 pub const TEAMS: Schema = Schema { attributes: &[("name", STRING, false), ("total", INTEGER, false)] };
 
+/// `Queries\Buckets`.
+pub const BUCKETS: Schema = Schema {
+    attributes: &[
+        ("enabled", BOOLEAN, false),
+        ("name", STRING, false),
+        ("fileSecurity", BOOLEAN, false),
+        ("maximumFileSize", INTEGER, false),
+        ("encryption", BOOLEAN, false),
+        ("antivirus", BOOLEAN, false),
+        ("transformations", BOOLEAN, false),
+    ],
+};
+
+/// `Queries\Files`.
+pub const FILES: Schema = Schema {
+    attributes: &[
+        ("name", STRING, false),
+        ("folder", STRING, false),
+        ("signature", STRING, false),
+        ("mimeType", STRING, false),
+        ("sizeOriginal", INTEGER, false),
+        ("chunksTotal", INTEGER, false),
+        ("chunksUploaded", INTEGER, false),
+    ],
+};
+
 /// `Queries\Targets`.
 pub const TARGETS: Schema = Schema {
     attributes: &[

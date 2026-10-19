@@ -35,6 +35,9 @@ const PREVIEW: &str = "/v1/storage/buckets/:bucketId/files/:fileId/preview";
 /// fill.
 pub(in crate::platform) async fn context(ctx: &mut Context) -> Result<()> {
     let token = resource_token(ctx).await?;
+    // Download, view and preview read the token after this hook. A cache
+    // miss returns before the action, so keep it on the context either way.
+    ctx.resource_token = token.clone();
     if !ctx.route.labels.cache {
         return Ok(());
     }

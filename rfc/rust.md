@@ -1,6 +1,6 @@
 # RFC: Gradual migration of the Appwrite API from PHP to Rust
 
-Status: in progress — phase 1 (Users service) implemented.
+Status: in progress — Users, Teams and Storage are served by Rust.
 
 ## 1. Goals
 
@@ -74,6 +74,7 @@ PHP splits use the `utopia-php/monorepo` GitHub App (`SPLIT_APP_ID` / `SPLIT_APP
 | `appwrite-core` | `src/Appwrite`, `app/` | config, errors catalogue, auth (keys, sessions, JWT, roles), crypto filter, documents, events, network (CORS, origin, IP), response models, request lifecycle |
 | `appwrite-users` | `Platform/Modules/Users` | all 47 `/v1/users` routes |
 | `appwrite-teams` | `Platform/Modules/Teams` | all 13 `/v1/teams` routes |
+| `appwrite-storage` | `Platform/Modules/Storage` | all 14 `/v1/storage` routes (buckets, files, preview, download, view, push) |
 | `appwrite-server` | `app/http.php` | process entry point, health probe |
 
 Package boundaries are enforced by Cargo: Utopia crates never depend on `appwrite-*`, and service crates depend only on `appwrite-core` and Utopia crates. A Utopia crate is created only when a service needs it (Users needed the twelve above). Its internals are idiomatic Rust, not a mirror of the PHP class.
@@ -82,7 +83,7 @@ Package boundaries are enforced by Cargo: Utopia crates never depend on `appwrit
 
 ```
              ┌──────────── Traefik ────────────┐
- client ───► │ /v1/users*, /v1/teams*  (p=1000) │──► appwrite-rust :8080
+ client ───► │ /v1/users*, /v1/teams*, /v1/storage* (p=1000) │──► appwrite-rust :8080
              │ everything else      (catch-all) │──► appwrite (PHP) :80
              └──────────────────────────────────┘
                      │                     │
@@ -103,6 +104,8 @@ Package boundaries are enforced by Cargo: Utopia crates never depend on `appwrit
 COMPOSE_PROFILES=postgresql,rust docker compose up -d --wait   # dev: profile `rust` in docker-compose.override.yml
 docker compose exec -e _APP_E2E_ENDPOINT=http://appwrite.test/v1 appwrite \
   vendor/bin/paratest --functional tests/e2e/Services/Users           # PHP E2E through Traefik → Rust
+docker compose exec -e _APP_E2E_ENDPOINT=http://appwrite.test/v1 appwrite \
+  vendor/bin/paratest --functional tests/e2e/Services/Storage
 ```
 
 `docker-compose.yml` is the self-hosted installer template, so it is deliberately unchanged in phase 1. Shipping to self-hosted users comes after the CI E2E job has stayed green for a full release cycle.

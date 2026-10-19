@@ -119,6 +119,8 @@ pub struct Context {
     /// before the action, `isSent()` after): the action is skipped, and an
     /// error a later hook throws is not sent.
     pub sent: Option<Response>,
+    /// The file a `token` query parameter grants (`resourceToken`).
+    pub resource_token: Option<super::ResourceToken>,
     /// Whether the security headers were set when [`Context::send`] sent.
     pub sent_secured: bool,
     db: Option<Database>,
@@ -156,6 +158,7 @@ impl Context {
             failed: false,
             store: Store::default(),
             sent: None,
+            resource_token: None,
             sent_secured: false,
             mode: Mode::Default,
             locale,
