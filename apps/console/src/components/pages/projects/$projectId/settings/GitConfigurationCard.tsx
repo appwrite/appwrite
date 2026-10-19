@@ -29,6 +29,7 @@ import {
 } from '@/components/global/shared/ContextMenuIcon'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { Button } from '@/components/ui/button'
+import { ConnectVcsLink } from '@/components/global/shared/ConnectVcsLink'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
@@ -265,8 +266,10 @@ export function GitConfigurationCard({
                   className="h-9 text-[13px]"
                   asChild
                 >
-                  <a
+                  <ConnectVcsLink
                     href={vcsAuthUrl(provider.id)}
+                    projectId={projectId}
+                    provider={provider.id}
                     target="_blank"
                     rel="noreferrer"
                   >
@@ -275,7 +278,7 @@ export function GitConfigurationCard({
                       className={vcsProviderButtonIconClassName}
                     />
                     {t(`Connect to ${provider.label}`)}
-                  </a>
+                  </ConnectVcsLink>
                 </Button>
               ))}
             </div>
@@ -488,8 +491,10 @@ export function GitConfigurationCard({
                 className="h-9 w-full text-[13px] sm:w-auto"
                 asChild
               >
-                <a
+                <ConnectVcsLink
                   href={vcsAuthUrl(provider.id)}
+                  projectId={projectId}
+                  provider={provider.id}
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -498,7 +503,7 @@ export function GitConfigurationCard({
                     className={vcsProviderButtonIconClassName}
                   />
                   {t(`Connect with ${provider.label}`)}
-                </a>
+                </ConnectVcsLink>
               </Button>
             ))}
           </div>

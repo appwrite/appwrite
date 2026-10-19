@@ -10,6 +10,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { ConnectVcsLink } from '@/components/global/shared/ConnectVcsLink'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Select,
@@ -636,13 +637,17 @@ export function CreateFunctionView() {
                     variant="secondary"
                     asChild
                   >
-                    <a href={getVcsAuthUrl(provider.id)}>
+                    <ConnectVcsLink
+                      href={getVcsAuthUrl(provider.id)}
+                      projectId={projectId}
+                      provider={provider.id}
+                    >
                       <VcsIcon
                         type={provider.id}
                         className={vcsProviderButtonIconClassName}
                       />
                       {t(`Connect ${provider.label}`)}
-                    </a>
+                    </ConnectVcsLink>
                   </Button>
                 ))}
               </div>
@@ -706,14 +711,16 @@ export function CreateFunctionView() {
                     )}
                     <div className="border-t border-border mt-1 pt-1">
                       {vcsOAuthProviders.map((p) => (
-                        <a
+                        <ConnectVcsLink
                           key={p.id}
                           href={getVcsAuthUrl(p.id)}
+                          projectId={projectId}
+                          provider={p.id}
                           className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
                         >
                           <p.Icon className="h-3 w-3" />
                           {t(`Add ${p.label} account`)}
-                        </a>
+                        </ConnectVcsLink>
                       ))}
                     </div>
                   </SelectContent>
