@@ -186,7 +186,10 @@ class Message
         return $this->terminal;
     }
 
-    /** The handler's failure on this delivery, for a broker that records why a message died. */
+    /**
+     * The handler's failure on this delivery, for a broker that records why a message
+     * died. Set by the adapter around reject(), and cleared once the broker has read it.
+     */
     public function setError(?\Throwable $error): self
     {
         $this->error = $error;

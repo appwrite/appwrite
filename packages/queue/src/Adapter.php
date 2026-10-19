@@ -404,6 +404,10 @@ abstract class Adapter
                 $consumer->reject($queue, $message);
             } catch (\Throwable) {
             }
+            // Read by the broker during reject(). Held past it, the error's trace -- which
+            // carries this message as the handler's argument -- and the message keep each
+            // other alive until the cycle collector runs.
+            $message->setError(null);
 
             $this->report($errorCallback, $error, $message);
 

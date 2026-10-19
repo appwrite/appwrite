@@ -23,6 +23,7 @@ use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Broker\Nats;
 use Utopia\Queue\Broker\Provisioning;
 use Utopia\Queue\Codec\Igbinary;
+use Utopia\Queue\DeadLetter;
 use Utopia\Queue\Message;
 use Utopia\Queue\PermanentFailure;
 use Utopia\Queue\Queue;
@@ -1010,7 +1011,10 @@ final class NatsBrokerTest extends TestCase
         $stream = 'Q_' . strtoupper($queue->name);
 
         // The worker has consumed before anything is published, as a running fleet has.
-        $consumer = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 2);
+        $reported = [];
+        $consumer = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 2, onError: static function (\Throwable $error) use (&$reported): void {
+            $reported[] = $error;
+        });
         $this->assertSame([], $consumer->receive($queue, 1));
 
         $publishers = [];
@@ -1046,6 +1050,26 @@ final class NatsBrokerTest extends TestCase
 
         $this->assertSame(8, $dead, 'every exhausted message is on the dead stream');
         $this->assertSame(0, $js->getStreamInfo($stream)->state->messages, 'work stream holds nothing');
+
+        $sequences = [];
+        for ($sequence = 1; $sequence <= 8; $sequence++) {
+            $headers = $js->getMessage($stream . '_DEAD', $sequence)->headers;
+            $this->assertInstanceOf(Headers::class, $headers);
+            $this->assertSame('exhausted', $headers->get('Utopia-Queue-Dead-Reason'));
+            $this->assertSame('3', $headers->get('Utopia-Queue-Dead-Deliveries'), 'maxDeliver plus the spare');
+            $this->assertSame($stream, $headers->get('Utopia-Queue-Dead-Stream'));
+            $this->assertSame('application/json', $headers->get('Content-Type'));
+            $this->assertFalse($headers->has('Utopia-Queue-Dead-Error'), 'no handler failed, so there is no error to record');
+            $sequences[] = (int) $headers->get('Utopia-Queue-Dead-Sequence');
+        }
+        sort($sequences);
+        $this->assertSame(range(1, 8), $sequences, 'each names the work-stream message it was');
+
+        $letters = array_filter($reported, static fn (\Throwable $error): bool => $error instanceof DeadLetter);
+        $this->assertCount(8, $letters, 'one report per dead letter');
+        foreach ($letters as $letter) {
+            $this->assertSame('exhausted', $letter->fields['Reason']);
+        }
 
         foreach ($publishers as $publisher) {
             $publisher->close();
@@ -2552,7 +2576,10 @@ final class NatsBrokerTest extends TestCase
 
         $this->assertSame([], $fresh->receive($queue, 3), 'an exhausted message must not reach a handler');
         $this->assertFalse($state->armed, 'the re-read failed');
-        $this->assertSame($failure, $reported[0] ?? null, 'and was reported');
+        $this->assertCount(2, $reported, 'the failed re-read, then the dead letter it still wrote');
+        $this->assertSame($failure, $reported[0], 'and was reported');
+        $this->assertInstanceOf(DeadLetter::class, $reported[1]);
+        $this->assertSame('spare', $reported[1]->fields['Reason']);
 
         $js = Connection::connect($url)->jetStream();
         $this->assertSame(0, $js->getStreamInfo('Q_' . strtoupper($queue->name))->state->messages, 'work stream holds nothing');
@@ -2569,15 +2596,16 @@ final class NatsBrokerTest extends TestCase
     {
         $reported = [];
         $broker = new Nats(Connection::connect(getenv('NATS_URL') ?: 'nats://127.0.0.1:14225'), ackWait: 2.0, maxDeliver: 3, onError: static function (\Throwable $error) use (&$reported): void {
-            $reported[] = $error->getMessage();
+            $reported[] = $error;
         });
         $broker->publish($this->queue, ['task' => 'doomed']);
 
         $sequence = null;
+        $error = null;
         for ($i = 0; $i < 3; $i++) {
-            $sequence = $this->failThrough($broker, new \RuntimeException("SMTP 451 attempt {$i}"));
+            $error = new \RuntimeException("SMTP 451 attempt {$i}");
+            $sequence = $this->failThrough($broker, $error);
         }
-        $broker->receive($this->queue, 1); // hands over what onError is owed
 
         $headers = $this->deadLetter($this->queue);
         $this->assertInstanceOf(Headers::class, $headers);
@@ -2590,9 +2618,14 @@ final class NatsBrokerTest extends TestCase
         $this->assertEqualsWithDelta(time(), (int) $headers->get('Utopia-Queue-Dead-At'), 10);
         $this->assertSame('application/json', $headers->get('Content-Type'), 'still readable by its codec');
 
-        $this->assertCount(1, $reported, 'one line per dead letter');
-        $this->assertStringContainsString('"reason":"rejected"', $reported[0]);
-        $this->assertStringContainsString('"error":"RuntimeException: SMTP 451 attempt 2"', $reported[0]);
+        // Handed over by reject() itself: a worker that stops after its last attempt
+        // may never receive() again.
+        $this->assertCount(1, $reported, 'one report per dead letter');
+        $this->assertInstanceOf(DeadLetter::class, $reported[0], 'told apart from a broker failure');
+        $this->assertSame('rejected', $reported[0]->fields['Reason']);
+        $this->assertSame($error, $reported[0]->getPrevious(), 'the handler\'s own failure');
+        $this->assertStringContainsString('"reason":"rejected"', $reported[0]->getMessage());
+        $this->assertStringContainsString('"error":"RuntimeException: SMTP 451 attempt 2"', $reported[0]->getMessage());
 
         $broker->close();
     }
@@ -2644,6 +2677,50 @@ final class NatsBrokerTest extends TestCase
         foreach (array_keys($headers->all()) as $name) {
             $this->assertStringStartsNotWith('Utopia-Queue-Dead-', $name);
         }
+    }
+
+    /** An exception message is free text; the header carries one line of it, cut where a character ends. */
+    public function testTheErrorIsOneHeaderLine(): void
+    {
+        $this->broker->publish($this->queue, ['task' => 'mail']);
+        $this->failThrough($this->broker, new PermanentFailure("multi\r\nline\r\n\r\nX-Forged: 1\0\x1b[31m a" . str_repeat('é', 200)));
+
+        $headers = $this->deadLetter($this->queue);
+        $this->assertInstanceOf(Headers::class, $headers);
+        $this->assertFalse($headers->has('X-Forged'), 'a line break in the message cannot start a header');
+        $error = (string) $headers->get('Utopia-Queue-Dead-Error');
+        $this->assertStringStartsWith('Utopia\\Queue\\PermanentFailure: multi  line    X-Forged: 1  [31m aé', $error, 'control characters are spaces');
+        $this->assertNotFalse(json_encode($error), 'not cut inside a character');
+        $this->assertSame(255, \strlen($error), 'one byte short of the limit, which falls inside an é');
+    }
+
+    /**
+     * Why a message died must never cost the message. The dead stream takes the work
+     * stream's maxMsgSize, and the record adds a few hundred bytes of headers, so a
+     * message the work stream barely accepted goes over with only its Content-Type.
+     */
+    public function testAMessageTooLargeForItsRecordStillReachesTheDeadStream(): void
+    {
+        $reported = [];
+        $broker = new Nats(Connection::connect(getenv('NATS_URL') ?: 'nats://127.0.0.1:14225'), ackWait: 2.0, maxDeliver: 3, maxMsgSize: 2048, onError: static function (\Throwable $error) use (&$reported): void {
+            $reported[] = $error;
+        });
+        $broker->publish($this->queue, ['blob' => str_repeat('x', 1700)]);
+        $this->failThrough($broker, new PermanentFailure('refused: ' . str_repeat('y', 300)));
+
+        $js = Connection::connect(getenv('NATS_URL') ?: 'nats://127.0.0.1:14225')->jetStream();
+        $this->assertSame(0, $js->getStreamInfo('Q_' . strtoupper($this->queue->name))->state->messages, 'nothing stranded on the work stream');
+        $this->assertSame(1, $js->getStreamInfo('Q_' . strtoupper($this->queue->name) . '_DEAD')->state->messages, 'the message is on the dead stream');
+        $headers = $this->deadLetter($this->queue);
+        $this->assertInstanceOf(Headers::class, $headers);
+        $this->assertSame('application/json', $headers->get('Content-Type'), 'still readable by its codec');
+        $this->assertFalse($headers->has('Utopia-Queue-Dead-Reason'), 'the record did not fit; the message did');
+
+        $this->assertCount(1, $reported, 'the record is still reported');
+        $this->assertInstanceOf(DeadLetter::class, $reported[0]);
+        $this->assertSame('terminal', $reported[0]->fields['Reason']);
+
+        $broker->close();
     }
 
     /** Fail one delivery the way a worker does, through the adapter, and return its stream sequence. */
