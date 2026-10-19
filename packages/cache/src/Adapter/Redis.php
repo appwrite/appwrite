@@ -185,7 +185,9 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
             }
 
             return $data;
-        } catch (Throwable) {
+        } catch (Throwable $error) {
+            $this->recordWriteFailure('save', $error);
+
             return false;
         }
     }
@@ -220,7 +222,9 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
             }
 
             return $data;
-        } catch (Throwable) {
+        } catch (Throwable $error) {
+            $this->recordWriteFailure('saveMany', $error);
+
             return false;
         }
     }
