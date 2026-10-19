@@ -167,4 +167,77 @@ final class CollectionMetadataCacheTest extends TestCase
         $this->assertNotNull($second);
         $this->assertSame(1, Database::getCollectionMemoCount());
     }
+
+    public function testFactoryProvisionedDatabaseEndToEndFlow(): void
+    {
+        $hostname = 'db_main';
+        $namespace = 'shared';
+
+        \putenv('_APP_DATABASE_SHARED_NAMESPACE=' . $namespace);
+        \putenv('_APP_DATABASE_SHARED_TABLES=' . $hostname);
+
+        try {
+            $connection = new PDO('sqlite::memory:', options: [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+            $adapter = new class ($connection) extends SQLite {
+                #[\Override]
+                public function hostname(): string
+                {
+                    return 'mariadb';
+                }
+            };
+
+            $pools = new \Utopia\Pools\Group();
+            $pools->add(new \Utopia\Pools\Pool(new \Utopia\Pools\Adapter\Stack(), $hostname, 1, static fn (): SQLite => $adapter, 1.0));
+
+            $factory = new \Appwrite\Database\Factory($pools, new Cache(new MemoryCache()), new \Utopia\Database\Validator\Authorization());
+
+            $setup = $factory->setup($hostname);
+            $setup->create();
+
+            $projectDoc = new \Utopia\Database\Document([
+                '$id' => 'project-test',
+                '$sequence' => '42',
+                'database' => 'mysql://' . $hostname . '?namespace=' . $namespace,
+            ]);
+
+            $projectDb = $factory->project($projectDoc);
+
+            // Verify Factory produces our Database implementation
+            $this->assertInstanceOf(Database::class, $projectDb);
+
+            // Create a collection
+            $setup->createCollection(Collection::create(
+                id: 'tasks',
+                attributes: [
+                    Attribute::string('title', size: 255),
+                    Attribute::string('status', size: 32),
+                ],
+                permissions: [
+                    \Utopia\Database\Permission::create(\Utopia\Database\Role::any()),
+                    \Utopia\Database\Permission::read(\Utopia\Database\Role::any()),
+                    \Utopia\Database\Permission::update(\Utopia\Database\Role::any()),
+                    \Utopia\Database\Permission::delete(\Utopia\Database\Role::any()),
+                ],
+            ));
+
+            $this->assertSame(0, Database::getCollectionMemoCount());
+
+            // Perform document operations (which internally call findCollection)
+            $created = $projectDb->createDocument('tasks', new \Utopia\Database\Document([
+                '$permissions' => [\Utopia\Database\Permission::read(\Utopia\Database\Role::any()), \Utopia\Database\Permission::write(\Utopia\Database\Role::any())],
+                'title' => 'Optimize metadata resolution',
+                'status' => 'completed',
+            ]));
+
+            $this->assertSame(1, Database::getCollectionMemoCount(), 'Collection metadata should be memoized during document creation');
+
+            $retrieved = $projectDb->getDocument('tasks', $created->getId());
+            $this->assertNotNull($retrieved);
+            $this->assertSame('Optimize metadata resolution', $retrieved->getAttribute('title'));
+            $this->assertSame(1, Database::getCollectionMemoCount(), 'Subsequent document fetch reuses memoized metadata');
+        } finally {
+            \putenv('_APP_DATABASE_SHARED_NAMESPACE');
+            \putenv('_APP_DATABASE_SHARED_TABLES');
+        }
+    }
 }
