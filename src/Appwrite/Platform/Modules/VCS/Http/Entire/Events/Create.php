@@ -271,9 +271,11 @@ class Create extends Action
 
     /**
      * Whether the repository's resource got a deployment of this commit since
-     * the attempt began - a push can fail after its deployment is accepted,
-     * and retrying it then would build the commit twice. A lookup that fails
-     * counts as no deployment, so the push is retried rather than dropped.
+     * the attempt began that did not fail - a push can fail after its
+     * deployment is accepted, and retrying it then would build the commit
+     * twice. One that failed, such as a build that could not be queued, is
+     * retried. A lookup that fails counts as no deployment, so the push is
+     * retried rather than dropped.
      */
     private function hasDeployed(Document $repository, string $commitHash, string $branch, string $since, Database $dbForPlatform, Authorization $authorization, callable $getProjectDB): bool
     {
@@ -291,6 +293,7 @@ class Create extends Action
                 Query::equal('providerCommitHash', [$commitHash]),
                 Query::equal('providerBranch', [$branch]),
                 Query::greaterThanEqual('$createdAt', $since),
+                Query::notEqual('status', 'failed'),
             ]))->isEmpty();
         } catch (\Throwable $error) {
             Console::warning("Failed to look up deployments of repository '{$repository->getId()}': " . $error->getMessage());

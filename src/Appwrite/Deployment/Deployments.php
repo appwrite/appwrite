@@ -255,15 +255,33 @@ readonly class Deployments
             // template push does
             $deployment = $this->upload($resource, $deployment->setAttribute('status', 'waiting'));
 
-            $this->publisherForBuilds->enqueue(new BuildMessage(
-                project: $this->project,
-                resource: $resource,
-                deployment: $deployment,
-                type: BUILD_TYPE_DEPLOYMENT,
-                template: new Document(),
-                platform: $this->platform,
-                timeout: $timeout,
-            ));
+            try {
+                $queued = $this->publisherForBuilds->enqueue(new BuildMessage(
+                    project: $this->project,
+                    resource: $resource,
+                    deployment: $deployment,
+                    type: BUILD_TYPE_DEPLOYMENT,
+                    template: new Document(),
+                    platform: $this->platform,
+                    timeout: $timeout,
+                ));
+                if ($queued === false) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to queue the build.');
+                }
+            } catch (\Throwable $error) {
+                // Failed like a job submit() cannot hand over, rather than left
+                // waiting on a build that never starts
+                $this->dbForProject->updateDocuments('deployments', new Document([
+                    'status' => 'failed',
+                    'buildLogs' => "\nAn internal error occurred while building. Please try again, and contact support if the problem persists.\n",
+                    'buildEndedAt' => DateTime::now(),
+                ]), [
+                    Query::equal('$id', [$deployment->getId()]),
+                    Query::notEqual('status', 'canceled'),
+                ]);
+
+                throw $error;
+            }
 
             return $deployment;
         }
