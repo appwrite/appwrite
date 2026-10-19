@@ -145,6 +145,33 @@ final class SwooleRequestTest extends TestCase
         return $request;
     }
 
+    public function testSizeCountsTheJSONBody(): void
+    {
+        $body = \json_encode(['data' => \str_repeat('a', 100_000)], JSON_THROW_ON_ERROR);
+
+        $request = new Request($this->swooleRequest($body));
+
+        $this->assertGreaterThanOrEqual(\strlen($body), $request->getSize(), 'the request size must include the body, not only the headers');
+    }
+
+    public function testSizeCountsTheMultipartBody(): void
+    {
+        $boundary = 'appwrite-boundary';
+        $file = \str_repeat('b', 100_000);
+        $body = "--{$boundary}\r\n"
+            . "Content-Disposition: form-data; name=\"fileId\"\r\n\r\n"
+            . "unique()\r\n"
+            . "--{$boundary}\r\n"
+            . "Content-Disposition: form-data; name=\"file\"; filename=\"file.bin\"\r\n"
+            . "Content-Type: application/octet-stream\r\n\r\n"
+            . $file . "\r\n"
+            . "--{$boundary}--\r\n";
+
+        $request = new Request($this->swooleRequest($body, 'multipart/form-data; boundary=' . $boundary));
+
+        $this->assertGreaterThanOrEqual(\strlen($body), $request->getSize(), 'the request size must include the uploaded file');
+    }
+
     private function swooleRequest(string $body, string $contentType = 'application/json'): SwooleRequest
     {
         $request = SwooleRequest::create(['parse_cookie' => false, 'parse_files' => false]);

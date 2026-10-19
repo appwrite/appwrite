@@ -6,6 +6,7 @@
 !rustfmt.toml
 !.cargo/config.toml
 !crates
+!example
 !app/config/locale/translations
 !app/config/locale/templates
 !app/assets/security/10k-common-passwords

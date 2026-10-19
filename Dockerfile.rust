@@ -21,6 +21,7 @@ RUN apt-get update \
 COPY Cargo.toml Cargo.lock rustfmt.toml ./
 COPY .cargo ./.cargo
 COPY crates ./crates
+COPY example ./example
 
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/usr/local/cargo/git \
