@@ -591,16 +591,19 @@ trait Deployment
                 }
 
                 if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {
-                    $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
+                    // The deployment exists by now, so a refused report is logged like
+                    // every later one: failing the push here would make a provider that
+                    // retries deliveries deploy the commit again.
                     try {
+                        $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
                         $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
-                    } catch (RepositoryNotFound $e) {
-                        throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
-                    }
-                    $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
+                        $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
 
-                    // The comment above already lists this build; only the check is still owed
-                    $authorization->skip(fn () => GitAction::check('waiting', $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform));
+                        // The comment above already lists this build; only the check is still owed
+                        $authorization->skip(fn () => GitAction::check('waiting', $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform));
+                    } catch (\Throwable $e) {
+                        Console::warning("Failed to report deployment '{$deploymentId}' as waiting: " . $e->getMessage());
+                    }
                 }
 
                 Span::add("{$logBase}.build.triggered", 'true');

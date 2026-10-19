@@ -36,13 +36,6 @@ class Create extends Action
      */
     protected static array $signingKeys = [];
 
-    /**
-     * Whether the delivery being handled has started creating deployments.
-     * A failure before that is safe to retry; one after it would deploy the
-     * same commit again, so the delivery stays claimed.
-     */
-    private bool $deploying = false;
-
     public static function getName()
     {
         return 'createVCSEntireEvent';
@@ -144,50 +137,19 @@ class Create extends Action
 
         // Entire delivers at least once and retries anything not acknowledged
         // with a 2xx in time. Processing here is synchronous and can outlast
-        // that window, so claim the delivery id before doing the work - a
-        // retry of a delivery already being processed must not deploy again.
+        // that window, so a push claims the delivery for each repository
+        // before deploying it - a retry of a delivery already being processed
+        // must not deploy again.
         // TODO: acknowledge first and process asynchronously instead.
-        $deliveryId = \strval($parsedPayloads[0]['deliveryId'] ?? '');
-        // Document ids are capped at 36 characters; a digest prefix keeps the claim within it
-        $claim = 'entire-' . \substr(\hash('sha256', $deliveryId), 0, 29);
-        if (!empty($deliveryId)) {
-            try {
-                $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document(['$id' => $claim])));
-            } catch (Duplicate) {
-                $response->json(['events' => [], 'duplicate' => true]);
-                return;
-            }
-        }
-
-        $this->deploying = false;
-
-        try {
-            foreach ($parsedPayloads as $parsedPayload) {
-                match (true) {
-                    \str_starts_with($event, 'ref.') => $this->handlePushEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
-                    \str_starts_with($event, Entire::EVENT_INSTALLATION . '.') => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
-                    default => null,
-                };
-            }
-        } catch (\Throwable $error) {
-            // A delivery that failed is answered with an error, which Entire
-            // retries. One that failed before any deployment was created is
-            // released so the retry is not taken for a duplicate; one that
-            // failed after stays claimed, or the retry would deploy the
-            // commit again.
-            if (!empty($deliveryId) && !$this->isDeploying()) {
-                $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $claim));
-            }
-
-            throw $error;
+        foreach ($parsedPayloads as $parsedPayload) {
+            match (true) {
+                \str_starts_with($event, 'ref.') => $this->handlePushEvent($parsedPayload, $vcsFactory, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory),
+                \str_starts_with($event, Entire::EVENT_INSTALLATION . '.') => $this->handleInstallationEvent($parsedPayload, $dbForPlatform, $authorization, $getProjectDB),
+                default => null,
+            };
         }
 
         $response->json(['events' => $parsedPayloads]);
-    }
-
-    private function isDeploying(): bool
-    {
-        return $this->deploying;
     }
 
     /**
@@ -422,14 +384,48 @@ class Create extends Action
             Console::warning("Failed to look up the trail of branch '{$providerBranch}': " . $e->getMessage());
         }
 
-        // The push creates the deployments; with a pull request id the trait
-        // only comments and links them, the way a pull request event would,
-        // so the trail gets a second pass once they exist
-        $this->deploying = true;
-        $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, '', $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory);
+        // Entire retries a delivery it got an error for. Each repository claims
+        // the delivery once and gives the claim back only when it failed, so a
+        // retry deploys just the repositories that did not deploy, and one that
+        // keeps failing never redeploys the others.
+        $deliveryId = \strval($parsedPayload['deliveryId'] ?? '');
+        $errors = [];
+        foreach ($repositories as $repository) {
+            // Document ids are capped at 36 characters; a digest prefix keeps the claim within it
+            $claim = 'entire-' . \substr(\hash('sha256', $deliveryId . ':' . $repository->getId()), 0, 29);
+            if ($deliveryId !== '') {
+                try {
+                    $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document(['$id' => $claim])));
+                } catch (Duplicate) {
+                    continue;
+                }
+            }
 
-        if ($providerPullRequestId !== '') {
-            $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, '', $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, false, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory);
+            try {
+                $this->createGitDeployments($vcs, $providerInstallationId, [$repository], $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, '', $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory);
+            } catch (\Throwable $error) {
+                if ($deliveryId !== '') {
+                    $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $claim));
+                }
+                $errors[] = $error->getMessage();
+                continue;
+            }
+
+            // With a pull request id the trait only comments and links the
+            // deployment the push created, the way a pull request event would.
+            // The deployment exists, so a failure here must not hand the
+            // delivery back for a retry that would deploy it again.
+            if ($providerPullRequestId !== '') {
+                try {
+                    $this->createGitDeployments($vcs, $providerInstallationId, [$repository], $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, '', $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, false, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory);
+                } catch (\Throwable $error) {
+                    Console::warning("Failed to report on trail #{$providerPullRequestId}: " . $error->getMessage());
+                }
+            }
+        }
+
+        if (!empty($errors)) {
+            throw new Exception(Exception::GENERAL_UNKNOWN, \implode("\n", $errors));
         }
     }
 }
