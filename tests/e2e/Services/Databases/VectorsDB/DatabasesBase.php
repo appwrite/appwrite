@@ -1309,6 +1309,79 @@ trait DatabasesBase
         $this->assertSame('general_argument_invalid', $index['body']['type']);
     }
     /**
+     * A column grant is enforced on a vectors collection, not merely accepted.
+     *
+     * A vectors collection has exactly two columns, so a grant can only ever name `embeddings`
+     * or `metadata` -- but that is a useful thing to say: the raw vectors are large and rarely
+     * meant for clients, while the metadata beside them often is. Every other test here speaks
+     * with an API key, which is unrestricted; a request carrying only the project is the "any"
+     * role, so what comes back for it is the proof.
+     */
+    public function testAColumnGrantWithholdsTheVectorsFromAGuest(): void
+    {
+        if ($this->getSide() === 'client') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/vectorsdb', $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'Column Grants Enforced',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        // Readable in full to start with, so the row exists before anything is narrowed.
+        $collection = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections", $headers, [
+            'collectionId' => ID::unique(),
+            'name' => 'Products',
+            'dimension' => 3,
+            'permissions' => [Permission::create(Role::any()), Permission::read(Role::any())],
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $document = $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents", $headers, [
+            'documentId' => ID::unique(),
+            'data' => [
+                'embeddings' => [1.0, 2.0, 3.0],
+                'metadata' => ['type' => 'sample'],
+            ],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $documentId = $document['body']['$id'];
+
+        // Narrow "any" to the metadata column alone.
+        $scoped = $this->client->call(Client::METHOD_PUT, "/vectorsdb/{$databaseId}/collections/{$collectionId}", $headers, [
+            'name' => 'Products',
+            'permissions' => [Permission::create(Role::any()), Permission::read(Role::any(), 'metadata')],
+        ]);
+        $this->assertEquals(200, $scoped['headers']['status-code']);
+        $this->assertContains('read("any", "metadata")', $scoped['body']['$permissions'], 'the grant was not reported as written');
+
+        $guest = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        $read = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/{$documentId}", $guest);
+
+        $this->assertEquals(200, $read['headers']['status-code'], 'the row is still readable: the grant covers the row, only its columns are narrowed');
+        $this->assertArrayHasKey('metadata', $read['body']);
+        $this->assertArrayNotHasKey('embeddings', $read['body'], 'the vectors came back for a role granted only metadata');
+
+        // Withheld, not erased: the key is still there for a reader that may see it.
+        $withKey = $this->client->call(Client::METHOD_GET, "/vectorsdb/{$databaseId}/collections/{$collectionId}/documents/{$documentId}", $headers);
+        $this->assertArrayHasKey('embeddings', $withKey['body']);
+    }
+
+    /**
      * A refused create leaves nothing behind.
      *
      * The metadata row is written before the collection, so a permission naming a column the
