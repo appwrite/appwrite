@@ -159,12 +159,12 @@ function getDefaultMarketingHeaderNav(
       menu: 'solutions',
     },
     {
-      label: copy.docs,
-      href: '/docs',
-    },
-    {
       label: copy.pricing,
       href: '/pricing',
+    },
+    {
+      label: copy.docs,
+      href: '/docs',
     },
     {
       label: copy.customers,
