@@ -48,16 +48,11 @@ The hackathon runs from **October 19 to October 31, 2026**.
 
 Here are the key details:
 
-| Detail | Information |
-| --- | --- |
-| Start date | October 19, 2026 |
-| Submission deadline | October 31, 2026, at 11:59 PM PT |
-| Participation | Solo only |
-| Entry fee | Free |
-| Who can participate | Developers of all experience levels |
-| Project requirements | A new project using at least one Appwrite database type |
-
-Participation is free. However, Managed PostgreSQL and Managed MySQL run on dedicated infrastructure and may involve additional costs. You can check [Appwrite's pricing](https://appwrite.io/pricing) before choosing your database.
+- **Start date:** October 19, 2026 
+- **Submission deadline:** October 31, 2026, at 11:59 PM PT
+- **Participation:** Solo only
+- **Who can participate:** Developers of all experience levels
+- **Project requirements:** A new project using at least one Appwrite database type
 
 # What's up for grabs?
 
