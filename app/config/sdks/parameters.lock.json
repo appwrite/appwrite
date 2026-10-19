@@ -4842,6 +4842,10 @@
             "success",
             "failure"
         ],
+        "vcs.createEntireInstallation": [
+            "success",
+            "failure"
+        ],
         "vcs.createGitHubInstallation": [
             "success",
             "failure"
