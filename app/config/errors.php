@@ -74,6 +74,11 @@ return [
         'description' => 'The breached password service could not be reached, so the password could not be verified. Please try again later.',
         'code' => 503,
     ],
+    Exception::GENERAL_CACHE_UNAVAILABLE => [
+        'name' => Exception::GENERAL_CACHE_UNAVAILABLE,
+        'description' => 'The cache could not be updated, so the request was not completed. Please try again later.',
+        'code' => 503,
+    ],
     Exception::GENERAL_ARGUMENT_INVALID => [
         'name' => Exception::GENERAL_ARGUMENT_INVALID,
         'description' => 'The request contains one or more invalid arguments. Please refer to the endpoint documentation.',
