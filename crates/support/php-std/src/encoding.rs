@@ -1,7 +1,7 @@
 //! Encodings: URL encoding, `http_build_query`, base64, hex, HTML entities
 //! and quoted-printable.
 //!
-//! Ported from PHP 8.5.10 (`ext/standard/url.c`, `http.c`, `base64.c`,
+//! Ported from PHP 8.5.11 (`ext/standard/url.c`, `http.c`, `base64.c`,
 //! `string.c`, `html.c`, `quot_print.c`). Byte strings in, byte strings out;
 //! encoders whose output is always ASCII return `String`.
 //!
