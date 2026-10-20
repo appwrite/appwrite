@@ -266,39 +266,17 @@ class SDKs extends Action
 
                 Console::info("━━━ {$language['name']} SDK ({$platform['name']}, {$version}) ━━━");
                 $specFormat = $language['spec'] ?? 'openapi3';
+                $specsDirectory = __DIR__ . '/../../../../app/config/specs';
                 $spec = null;
                 if ($specFormat === 'static') {
                     Console::log('  Using static SDK spec...');
+                    $specification = self::staticSpecification($specsDirectory, $version);
                 } else {
                     Console::log('  Fetching API spec...');
-
-                    $specPath = __DIR__ . '/../../../../app/config/specs/open-api3-' . $version . '-' . $language['family'] . '.json';
-
-                    if (!file_exists($specPath)) {
-                        throw new \Exception('Spec file not found: ' . $specPath . '. Please run "docker compose exec appwrite specs --version=' . $version . '" first to generate the specs.');
-                    }
-
-                    $spec = file_get_contents($specPath);
+                    $spec = self::readSpec($specsDirectory, $version, $language['family']);
+                    $specification = Parser::parse($spec);
                 }
-
-                $specification = $specFormat === 'static'
-                    ? Parser::parse([
-                        'openapi' => '3.0.0',
-                        'info' => [
-                            'title' => 'Appwrite',
-                            'description' => 'Appwrite backend as a service',
-                            'version' => $version,
-                            'license' => [
-                                'name' => 'BSD-3-Clause',
-                                'url' => 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
-                            ],
-                        ],
-                        'paths' => [],
-                    ])
-                    : Parser::parse($spec);
-                $serverVersion = $specFormat === 'static'
-                    ? $version
-                    : self::getServerVersion($specification);
+                $serverVersion = self::getServerVersion($specification);
 
                 $cover = 'https://github.com/appwrite/appwrite/raw/main/public/images/github.png';
                 $result = \realpath(__DIR__ . '/../../../../app') . '/sdks/' . $key . '-' . $language['key'];
@@ -671,6 +649,36 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 $this->updateExistingPr($repoName, $gitBranch, $prTitle, $prBody, $platformName, $language['name'], $prUrls, $existingPrUrl);
             }
         }
+    }
+
+    public static function staticSpecification(string $specsDirectory, string $version): Specification
+    {
+        $server = Parser::parse(self::readSpec($specsDirectory, $version, 'server'));
+
+        return Parser::parse([
+            'openapi' => '3.0.0',
+            'info' => [
+                'title' => 'Appwrite',
+                'description' => 'Appwrite backend as a service',
+                'version' => $server->info->version,
+                'license' => [
+                    'name' => 'BSD-3-Clause',
+                    'url' => 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
+                ],
+            ],
+            'paths' => [],
+        ]);
+    }
+
+    private static function readSpec(string $specsDirectory, string $version, string $family): string
+    {
+        $specPath = $specsDirectory . '/open-api3-' . $version . '-' . $family . '.json';
+
+        if (!\file_exists($specPath)) {
+            throw new \Exception('Spec file not found: ' . $specPath . '. Please run "docker compose exec appwrite specs --version=' . $version . '" first to generate the specs.');
+        }
+
+        return \file_get_contents($specPath);
     }
 
     private static function getServerVersion(Specification $specification): string
