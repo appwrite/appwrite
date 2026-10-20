@@ -2,7 +2,9 @@
 
 namespace Utopia\Cache\Adapter;
 
+use Throwable;
 use Utopia\Cache\Adapter;
+use Utopia\Cache\Exception\Unavailable;
 use Utopia\Cache\Feature;
 use Utopia\CircuitBreaker\CircuitBreaker as UtopiaCircuitBreaker;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -117,10 +119,31 @@ class CircuitBreaker implements Adapter, Feature\Batchable, Feature\Leasable, Fe
         return $result;
     }
 
+    /**
+     * A purge the breaker cannot confirm throws instead of falling back to false, which callers read as nothing to
+     * purge: the entry would stay cached after the data behind it changed.
+     *
+     * @throws Unavailable when the circuit is open or the adapter fails the purge
+     */
     public function purge(string $key, string $hash = ''): bool
     {
+        $failure = null;
+
         /** @var bool $result */
-        $result = $this->delegate(__FUNCTION__, \func_get_args(), false);
+        $result = $this->breaker->call(
+            open: function () use ($key, &$failure): never {
+                throw new Unavailable("Cache purge of '{$key}' could not be confirmed", previous: $failure);
+            },
+            close: function () use ($key, $hash, &$failure): bool {
+                try {
+                    return $this->adapter->purge($key, $hash);
+                } catch (Throwable $error) {
+                    $failure = $error;
+
+                    throw $error;
+                }
+            },
+        );
 
         return $result;
     }

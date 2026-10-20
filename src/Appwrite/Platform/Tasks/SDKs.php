@@ -26,6 +26,7 @@ use Appwrite\SDK\Language\Swift;
 use Appwrite\SDK\Language\Unity;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
+use Appwrite\SDK\Specification\Release;
 use CzProject\GitPhp\Git;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
@@ -266,39 +267,17 @@ class SDKs extends Action
 
                 Console::info("━━━ {$language['name']} SDK ({$platform['name']}, {$version}) ━━━");
                 $specFormat = $language['spec'] ?? 'openapi3';
+                $release = new Release(__DIR__ . '/../../../../app/config/specs', $version);
                 $spec = null;
                 if ($specFormat === 'static') {
                     Console::log('  Using static SDK spec...');
+                    $specification = $release->staticSpecification();
                 } else {
                     Console::log('  Fetching API spec...');
-
-                    $specPath = __DIR__ . '/../../../../app/config/specs/open-api3-' . $version . '-' . $language['family'] . '.json';
-
-                    if (!file_exists($specPath)) {
-                        throw new \Exception('Spec file not found: ' . $specPath . '. Please run "docker compose exec appwrite specs --version=' . $version . '" first to generate the specs.');
-                    }
-
-                    $spec = file_get_contents($specPath);
+                    $spec = $release->read($language['family']);
+                    $specification = Parser::parse($spec);
                 }
-
-                $specification = $specFormat === 'static'
-                    ? Parser::parse([
-                        'openapi' => '3.0.0',
-                        'info' => [
-                            'title' => 'Appwrite',
-                            'description' => 'Appwrite backend as a service',
-                            'version' => $version,
-                            'license' => [
-                                'name' => 'BSD-3-Clause',
-                                'url' => 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
-                            ],
-                        ],
-                        'paths' => [],
-                    ])
-                    : Parser::parse($spec);
-                $serverVersion = $specFormat === 'static'
-                    ? $version
-                    : self::getServerVersion($specification);
+                $serverVersion = self::getServerVersion($specification);
 
                 $cover = 'https://github.com/appwrite/appwrite/raw/main/public/images/github.png';
                 $result = \realpath(__DIR__ . '/../../../../app') . '/sdks/' . $key . '-' . $language['key'];
@@ -332,8 +311,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new Web();
                         if ($platform['key'] === APP_SDK_PLATFORM_CONSOLE) {
                             $config->setNPMPackage('@appwrite.io/console');
+                            $config->setCdnPath('console');
                         } else {
                             $config->setNPMPackage('appwrite');
+                            $config->setCdnPath('web');
                         }
                         break;
                     case 'cli':
