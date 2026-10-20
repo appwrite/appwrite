@@ -12,13 +12,15 @@ use Utopia\Schedule\Clock\Test as TestClock;
  * A queue that consumers drain at a fixed rate on the test clock. Its size
  * is what was prefilled and published minus what has drained since, and it
  * never drains below empty, so a queue that sat idle has no credit to
- * swallow a later burst. A rate of zero never drains. $held, given the time,
- * returns a size the queue reports at least, for traffic from elsewhere.
+ * swallow a later burst. A rate of zero never drains.
  */
 final class QueuePublisher implements Synchronous
 {
     /** @var array<string, list<array<string, mixed>>> */
     private array $payloads = [];
+
+    /** @var array<string, list<float>> */
+    private array $times = [];
 
     /** @var array<string, float> */
     private array $levels = [];
@@ -26,14 +28,10 @@ final class QueuePublisher implements Synchronous
     /** @var array<string, float> */
     private array $observed = [];
 
-    /**
-     * @param (\Closure(\DateTimeImmutable): int)|null $held
-     */
     public function __construct(
         private readonly TestClock $clock,
         private readonly float $rate,
         private readonly int $prefill = 0,
-        private readonly ?\Closure $held = null,
     ) {
     }
 
@@ -42,6 +40,7 @@ final class QueuePublisher implements Synchronous
     {
         $this->drain($queue);
         $this->payloads[$queue->name][] = $payload;
+        $this->times[$queue->name][] = (float) $this->clock->now()->format('U.u');
         $this->levels[$queue->name]++;
 
         return true;
@@ -71,9 +70,7 @@ final class QueuePublisher implements Synchronous
 
         $this->drain($queue);
 
-        $size = (int) \ceil($this->levels[$queue->name]);
-
-        return $this->held === null ? $size : \max($size, ($this->held)($this->clock->now()));
+        return (int) \ceil($this->levels[$queue->name]);
     }
 
     #[\Override]
@@ -88,6 +85,16 @@ final class QueuePublisher implements Synchronous
     public function payloads(string $queue): array
     {
         return $this->payloads[$queue] ?? [];
+    }
+
+    /**
+     * When each payload was published, on the test clock.
+     *
+     * @return list<float>
+     */
+    public function times(string $queue): array
+    {
+        return $this->times[$queue] ?? [];
     }
 
     private function drain(Queue $queue): void

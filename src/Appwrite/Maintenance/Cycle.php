@@ -65,8 +65,17 @@ final readonly class Cycle
     }
 
     /**
-     * A deferred slice may wait a whole cycle: slots repeat on the same wall-clock times, so a shorter horizon would
-     * drop the same slices on every cycle whose backlog recurs at the same hour. Backlog bounds the catch-up instead.
+     * The slot a due moment owns. Slots follow the epoch grid, so every replica agrees on it.
+     */
+    public function slot(int $due): int
+    {
+        return \intdiv($due, $this->interval) % $this->slots;
+    }
+
+    /**
+     * Moments missed while no replica could publish are caught up for a whole cycle: each one is a slot that would
+     * otherwise wait for its next turn, and a shorter horizon would skip the same slots whenever outages recur at the
+     * same hour. The worker drops a moment a newer one for its slot has superseded.
      */
     public function scheduler(Store $store, ?string $token = null, Telemetry $telemetry = new NoTelemetry(), Clock $clock = new SystemClock()): Scheduler
     {

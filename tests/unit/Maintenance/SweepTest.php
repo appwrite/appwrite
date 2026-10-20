@@ -4,28 +4,17 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Maintenance;
 
+use Appwrite\Event\Message\Maintenance as MaintenanceMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
-use Appwrite\Maintenance\Backlog;
 use Appwrite\Maintenance\Cycle;
 use Appwrite\Maintenance\Sweep;
-use Appwrite\Schedule\Source\Maintenance;
 use PHPUnit\Framework\TestCase;
-use Utopia\Cache\Adapter\Memory as MemoryCache;
-use Utopia\Cache\Cache;
-use Utopia\Config\Config;
 use Utopia\Database\Adapter;
 use Utopia\Database\Adapter\Memory;
-use Utopia\Database\Collection;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
-use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Queue\Queue;
 use Utopia\Schedule\Clock\Test as TestClock;
-use Utopia\Schedule\Occurrence;
-use Utopia\Schedule\Scheduler;
-use Utopia\Schedule\Store\Memory as MemoryStore;
 
 require_once __DIR__ . '/../../../app/init.php';
 
@@ -94,17 +83,18 @@ final class SweepTest extends TestCase
         }
     }
 
-    public function testSliceAndCutoffComeFromTheOccurrence(): void
+    public function testSliceAndCutoffComeFromTheMessage(): void
     {
         $due = $this->week->modify('+35 minutes');
-        $this->clock = new TestClock($due->modify('+5 days'));
+        // Late enough that a cutoff taken from the clock would count the recent project as inactive.
+        $this->clock = new TestClock($due->modify('+3 hours'));
         $slot = $this->slot($due->getTimestamp());
         $base = $slot * Sweep::BLOCK;
         $wrapped = ($slot + self::SLOTS) * Sweep::BLOCK;
         $neighbour = (($slot + 1) % self::SLOTS) * Sweep::BLOCK;
 
-        $this->database = $this->seed(new Memory(), [
-            ['recent-' . ($base + 1), $base + 1, $due->modify('-29 days'), self::REGION],
+        $this->database = Projects::seed(new Memory(), [
+            ['recent-' . ($base + 1), $base + 1, $due->modify('-30 days +1 hour'), self::REGION],
             ['old-' . ($base + 2), $base + 2, $due->modify('-31 days'), self::REGION],
             ['never-' . ($base + 3), $base + 3, null, self::REGION],
             ['elsewhere-' . ($base + 4), $base + 4, null, self::ELSEWHERE],
@@ -113,7 +103,7 @@ final class SweepTest extends TestCase
         ]);
 
         $publisher = $this->publisher();
-        ($this->sweep($publisher))([$this->occurrence($due)]);
+        ($this->sweep($publisher))($this->message($due));
 
         $this->assertSame(
             $this->sorted(['old-' . ($base + 2), 'never-' . ($base + 3), 'old-' . ($wrapped + 5)]),
@@ -133,106 +123,7 @@ final class SweepTest extends TestCase
         $this->assertSame([], \array_values(\array_intersect(\array_keys($reached), $this->excluded)));
     }
 
-    public function testBacklogDefersTheSliceUntilTheQueueDrains(): void
-    {
-        $due = $this->week->modify('+1 hour');
-        $this->clock = new TestClock($due->modify('-30 seconds'));
-        $expected = $this->slice($due, 4);
-        $this->database = $this->seed(new Memory(), [
-            ...$this->rows($expected, $due),
-            ...$this->rows($this->slice($due->modify('+5 minutes'), 3, 'later'), $due),
-        ]);
-
-        $store = new MemoryStore();
-        $publisher = new QueuePublisher($this->clock, 1, 150);
-
-        $sweep = $this->sweep($publisher);
-        $scheduler = $this->scheduler($store);
-        $deferred = null;
-        try {
-            $scheduler->run(function (array $occurrences) use ($sweep, $scheduler): void {
-                $sweep($occurrences);
-                $scheduler->stop();
-            });
-        } catch (Backlog $backlog) {
-            $deferred = $backlog;
-        }
-
-        $this->assertInstanceOf(Backlog::class, $deferred);
-        $this->assertSame([], $this->projects($publisher));
-        $this->assertLessThanOrEqual((float) $due->getTimestamp(), $store->load()?->coveredUntil);
-
-        $this->clock->advance(200);
-
-        $sweep = $this->sweep($publisher);
-        $scheduler = $this->scheduler($store);
-        $scheduler->run(function (array $occurrences) use ($sweep, $scheduler): void {
-            $sweep($occurrences);
-            $scheduler->stop();
-        });
-
-        $this->assertSame($this->sorted(\array_keys($expected)), $this->sorted($this->projects($publisher)));
-        $this->assertGreaterThan((float) $due->getTimestamp(), $store->load()?->coveredUntil);
-    }
-
-    public function testRedeliveredTickDoesNotRepeatAHandledSlice(): void
-    {
-        $first = $this->week->modify('+2 hours');
-        $second = $first->modify('+5 minutes');
-        $this->clock = new TestClock($first->modify('-30 seconds'));
-        $firstSlice = $this->slice($first, 6, 'first');
-        $secondSlice = $this->slice($second, 3, 'second');
-        $this->database = $this->seed(new Memory(), [...$this->rows($firstSlice, $first), ...$this->rows($secondSlice, $first)]);
-
-        $store = new MemoryStore();
-        // 95 queued: the first slice's six take it to the backlog before the second slice is reached.
-        $publisher = new QueuePublisher($this->clock, 1, Sweep::BACKLOG - 5);
-        $sweep = $this->sweep($publisher);
-
-        $scheduler = $this->scheduler($store);
-        $scheduler->reconcile();
-        $this->assertSame([], $scheduler->tick());
-        $this->assertTrue($scheduler->commit());
-
-        $this->clock->advance(340);
-
-        $handed = [];
-        $deferred = null;
-        try {
-            $scheduler->run(function (array $occurrences) use ($sweep, $scheduler, &$handed): void {
-                \array_push($handed, ...\array_map(fn (Occurrence $occurrence): int => $occurrence->due->getTimestamp(), $occurrences));
-                $sweep($occurrences);
-                $scheduler->stop();
-            });
-        } catch (Backlog $backlog) {
-            $deferred = $backlog;
-        }
-
-        $this->assertInstanceOf(Backlog::class, $deferred);
-        $this->assertSame([$first->getTimestamp(), $second->getTimestamp()], $handed);
-        $this->assertSame($this->sorted(\array_keys($firstSlice)), $this->sorted($this->projects($publisher)));
-
-        $this->clock->advance(150);
-        $before = \count($this->projects($publisher));
-
-        $handed = [];
-        $scheduler = $this->scheduler($store);
-        $scheduler->run(function (array $occurrences) use ($sweep, $scheduler, &$handed): void {
-            \array_push($handed, ...\array_map(fn (Occurrence $occurrence): int => $occurrence->due->getTimestamp(), $occurrences));
-            $sweep($occurrences);
-            $scheduler->stop();
-        });
-
-        $this->assertSame([$first->getTimestamp(), $second->getTimestamp()], $handed);
-        $this->assertSame($this->sorted(\array_keys($secondSlice)), $this->sorted(\array_slice($this->projects($publisher), $before)));
-        $this->assertSame(
-            $this->sorted([...\array_keys($firstSlice), ...\array_keys($secondSlice)]),
-            $this->sorted($this->projects($publisher)),
-        );
-        $this->assertGreaterThan((float) $second->getTimestamp(), $store->load()?->coveredUntil);
-    }
-
-    public function testBacklogIsCheckedBeforeEachBlockOfASlice(): void
+    public function testEachBlockWaitsForTheDeletesQueueToDrain(): void
     {
         $due = $this->week->modify('+3 hours');
         $slot = $this->slot($due->getTimestamp());
@@ -244,47 +135,48 @@ final class SweepTest extends TestCase
                 $rows[] = ['old-' . $sequence, $sequence, $due->modify('-60 days'), self::REGION];
             }
         }
-        $this->database = $this->seed(new Memory(), $rows);
-        $inactive = $this->sorted(\array_column($rows, 0));
+        $this->database = Projects::seed(new Memory(), $rows);
 
+        $start = (float) $due->getTimestamp();
         $this->clock = new TestClock($due);
-        $publisher = new QueuePublisher($this->clock, 1);
-        $sweep = $this->sweep($publisher);
+        // 150 queued, one drained a second: under BACKLOG after 51 seconds, and back over it after each block of 60.
+        $publisher = new QueuePublisher($this->clock, 1, 150);
 
-        $deferred = null;
-        try {
-            $sweep([$this->occurrence($due)]);
-        } catch (Backlog $backlog) {
-            $deferred = $backlog;
-        }
+        ($this->sweep($publisher))($this->message($due));
 
-        // Two blocks take the queue past the backlog, so the third waits instead of piling on.
-        $this->assertInstanceOf(Backlog::class, $deferred);
-        $this->assertSame($this->sorted(\array_column(\array_slice($rows, 0, 120), 0)), $this->sorted($this->projects($publisher)));
+        $this->assertSame($this->sorted(\array_column($rows, 0)), $this->sorted($this->projects($publisher)));
 
-        $this->clock->advance(200);
-        $sweep([$this->occurrence($due)]);
-
-        // The redelivery resumes at the third block rather than enqueueing the first two again.
-        $this->assertSame($inactive, $this->sorted($this->projects($publisher)));
+        $starts = \array_values(\array_unique(\array_map(fn (float $time): int => (int) ($time - $start), $publisher->times(self::QUEUE))));
+        $this->assertSame([60, 120, 180], $starts);
     }
 
-    public function testUnpublishedMessageLeavesTheSliceUncommitted(): void
+    public function testUnpublishedMessageStopsTheSweep(): void
     {
         $due = $this->week->modify('+4 hours');
-        $this->clock = new TestClock($due->modify('-30 seconds'));
-        $expected = $this->slice($due, 4);
-        $this->database = $this->seed(new Memory(), $this->rows($expected, $due));
+        $this->clock = new TestClock($due);
+        $base = $this->slot($due->getTimestamp()) * Sweep::BLOCK;
+
+        $rows = [];
+        for ($offset = 1; $offset <= 6; $offset++) {
+            $rows[] = ['old-' . ($base + $offset), $base + $offset, $due->modify('-60 days'), self::REGION];
+        }
+        $this->database = Projects::seed(new Memory(), $rows);
 
         $refusing = new class () implements Synchronous {
             public int $attempts = 0;
 
+            /** @var list<string> */
+            public array $accepted = [];
+
             #[\Override]
             public function publish(Queue $queue, array $payload): bool
             {
-                $this->attempts++;
+                if (++$this->attempts === 3) {
+                    return false;
+                }
+                $this->accepted[] = $payload['project']['$id'];
 
-                return false;
+                return true;
             }
 
             #[\Override]
@@ -311,96 +203,38 @@ final class SweepTest extends TestCase
             }
         };
 
-        $store = new MemoryStore();
-        $sweep = new Sweep($this->database, new DeletePublisher($refusing, new Queue(self::QUEUE)), self::REGION, $this->cycle());
-        $scheduler = $this->scheduler($store);
         $failed = null;
         try {
-            $scheduler->run(function (array $occurrences) use ($sweep, $scheduler): void {
-                $sweep($occurrences);
-                $scheduler->stop();
-            });
+            (new Sweep($this->database, new DeletePublisher($refusing, new Queue(self::QUEUE)), self::REGION, $this->clock))($this->message($due));
         } catch (\RuntimeException $error) {
             $failed = $error;
         }
 
         $this->assertInstanceOf(\RuntimeException::class, $failed);
-        $this->assertSame(1, $refusing->attempts);
-        $this->assertLessThanOrEqual((float) $due->getTimestamp(), $store->load()?->coveredUntil);
-
-        $publisher = $this->publisher();
-        $sweep = $this->sweep($publisher);
-        $scheduler = $this->scheduler($store);
-        $scheduler->run(function (array $occurrences) use ($sweep, $scheduler): void {
-            $sweep($occurrences);
-            $scheduler->stop();
-        });
-
-        $this->assertSame($this->sorted(\array_keys($expected)), $this->sorted($this->projects($publisher)));
-        $this->assertGreaterThan((float) $due->getTimestamp(), $store->load()?->coveredUntil);
+        $this->assertSame(3, $refusing->attempts);
+        $this->assertCount(2, $refusing->accepted);
     }
 
-    public function testBacklogRecurringAtTheSameTimeEachCycleDelaysSlicesWithoutDroppingThem(): void
+    public function testMessageOlderThanACycleIsSkipped(): void
     {
-        $cycle = $this->cycle();
-        $start = $this->week->getTimestamp();
-        $this->assertSame(0, $start % $cycle->seconds(), 'The fixture starts on slot 0');
+        $due = $this->week->modify('+5 hours');
+        $base = $this->slot($due->getTimestamp()) * Sweep::BLOCK;
+        $this->database = Projects::seed(new Memory(), [['old-' . ($base + 1), $base + 1, $due->modify('-60 days'), self::REGION]]);
 
-        $rows = [];
-        for ($block = 0; $block < 2 * self::SLOTS; $block++) {
-            $rows[] = ['old-' . ($block * Sweep::BLOCK + 1), $block * Sweep::BLOCK + 1, $this->week->modify('-60 days'), self::REGION];
-            $rows[] = ['never-' . ($block * Sweep::BLOCK + 2), $block * Sweep::BLOCK + 2, null, self::REGION];
-        }
-        $this->database = $this->seed(new Memory(), $rows);
-        $inactive = $this->sorted(\array_column($rows, 0));
+        $this->clock = new TestClock($due->modify('+' . ($this->cycle()->seconds() + 1) . ' seconds'));
+        $superseded = $this->publisher();
+        ($this->sweep($superseded))($this->message($due));
 
-        // Another job keeps the deletes queue backlogged for 90 minutes, an hour into every cycle.
-        $held = function (\DateTimeImmutable $now) use ($start, $cycle): int {
-            $offset = ($now->getTimestamp() - $start) % $cycle->seconds();
+        $this->clock = new TestClock($due->modify('+' . $this->cycle()->seconds() . ' seconds'));
+        $late = $this->publisher();
+        ($this->sweep($late))($this->message($due));
 
-            return $offset >= 3600 && $offset < 9000 ? Sweep::BACKLOG : 0;
-        };
-        $this->clock = new TestClock($this->week->modify('-30 seconds'));
-        $publisher = new QueuePublisher($this->clock, 1000, 0, $held);
-
-        $store = new MemoryStore();
-        $sweep = $this->sweep($publisher);
-
-        $reached = [];
-        for ($round = 0; $round < 2; $round++) {
-            $last = $start + ($round + 1) * $cycle->seconds() - $cycle->interval;
-            $before = \count($this->projects($publisher));
-            $deferrals = 0;
-
-            // As ScheduleMaintenance runs it: a Backlog ends the run, and a new scheduler starts after one tick.
-            while (true) {
-                $scheduler = $this->scheduler($store);
-                try {
-                    $scheduler->run(function (array $occurrences) use ($sweep, $scheduler, $last): void {
-                        $sweep($occurrences);
-                        if ($occurrences[\count($occurrences) - 1]->due->getTimestamp() >= $last) {
-                            $scheduler->stop();
-                        }
-                    });
-                    break;
-                } catch (Backlog) {
-                    $deferrals++;
-                    $this->clock->advance($cycle->tick);
-                }
-            }
-
-            $this->assertGreaterThan(60, $deferrals, 'The queue stays backlogged for longer than an hour');
-            $reached[$round] = $this->sorted(\array_slice($this->projects($publisher), $before));
-        }
-
-        foreach ($reached as $round => $projects) {
-            $this->assertSame([], \array_values(\array_diff($inactive, $projects)), 'Projects missed in cycle ' . $round);
-            $this->assertSame($inactive, $projects, 'Each project once in cycle ' . $round);
-        }
+        $this->assertSame([], $this->projects($superseded));
+        $this->assertSame(['old-' . ($base + 1)], $this->projects($late));
     }
 
     /**
-     * Sweeps every slice of the week in order, one occurrence per call, with the clock following the dues.
+     * Sweeps every slice of the week in order, one message per call, with the clock following the dues.
      *
      * @return array<string, list<int>> project => dues of the slices that enqueued it
      */
@@ -412,7 +246,7 @@ final class SweepTest extends TestCase
             $this->clock->advance((float) $due->getTimestamp() - (float) $this->clock->now()->format('U.u') + 1);
 
             $before = \count($publisher->payloads(self::QUEUE));
-            $sweep([$this->occurrence($due)]);
+            $sweep($this->message($due));
 
             foreach (\array_slice($this->projects($publisher), $before) as $id) {
                 $reached[$id][] = $due->getTimestamp();
@@ -464,37 +298,7 @@ final class SweepTest extends TestCase
             }
         }
 
-        return $this->seed($adapter, $rows);
-    }
-
-    /**
-     * Inactive projects in the first block the slot of $due owns, half of them never accessed.
-     *
-     * @return array<string, int> project => sequence
-     */
-    private function slice(\DateTimeImmutable $due, int $count, string $prefix = 'slice'): array
-    {
-        $base = $this->slot($due->getTimestamp()) * Sweep::BLOCK;
-        $projects = [];
-        for ($offset = 1; $offset <= $count; $offset++) {
-            $projects[$prefix . '-' . ($base + $offset)] = $base + $offset;
-        }
-
-        return $projects;
-    }
-
-    /**
-     * @param array<string, int> $projects
-     * @return list<array{0: string, 1: int, 2: ?\DateTimeImmutable, 3: string}>
-     */
-    private function rows(array $projects, \DateTimeImmutable $due): array
-    {
-        $rows = [];
-        foreach ($projects as $id => $sequence) {
-            $rows[] = [$id, $sequence, $sequence % 2 === 0 ? null : $due->modify('-60 days'), self::REGION];
-        }
-
-        return $rows;
+        return Projects::seed($adapter, $rows);
     }
 
     /**
@@ -512,14 +316,14 @@ final class SweepTest extends TestCase
         return \intdiv($due, Cycle::INTERVAL) % self::SLOTS;
     }
 
-    private function occurrence(\DateTimeImmutable $due): Occurrence
+    private function message(\DateTimeImmutable $due): MaintenanceMessage
     {
-        return new Occurrence(Maintenance::ID, $due, null, (string) Cycle::INTERVAL);
-    }
-
-    private function scheduler(MemoryStore $store): Scheduler
-    {
-        return $this->cycle()->scheduler($store, clock: $this->clock);
+        return new MaintenanceMessage(
+            slot: $this->slot($due->getTimestamp()),
+            slots: self::SLOTS,
+            due: $due->getTimestamp(),
+            period: $this->cycle()->seconds(),
+        );
     }
 
     private function cycle(): Cycle
@@ -534,7 +338,7 @@ final class SweepTest extends TestCase
 
     private function sweep(QueuePublisher $publisher): Sweep
     {
-        return new Sweep($this->database, new DeletePublisher($publisher, new Queue(self::QUEUE)), self::REGION, $this->cycle());
+        return new Sweep($this->database, new DeletePublisher($publisher, new Queue(self::QUEUE)), self::REGION, $this->clock);
     }
 
     /**
@@ -565,48 +369,5 @@ final class SweepTest extends TestCase
         \ksort($values);
 
         return $values;
-    }
-
-    /**
-     * @param list<array{0: string, 1: int, 2: ?\DateTimeImmutable, 3: string}> $rows
-     */
-    private function seed(Adapter $adapter, array $rows): Database
-    {
-        $authorization = new Authorization();
-        $authorization->disable();
-
-        $database = (new Database($adapter, new Cache(new MemoryCache())))
-            ->setDatabase('appwrite')
-            ->setNamespace('_console')
-            ->setAuthorization($authorization);
-        $database->create();
-
-        // Projects are written with APP_PROJECTS_SUBQUERIES skipped and Sweep selects none of them, so no
-        // collection a subquery joins has to exist, whichever subqueries the projects collection declares.
-        $collections = Config::getParam('collections', [])['console'];
-        $database->createCollection(Collection::create(
-            id: 'projects',
-            attributes: $collections['projects']['attributes'],
-            indexes: $collections['projects']['indexes'],
-        ));
-
-        $timezone = new \DateTimeZone(\date_default_timezone_get());
-
-        $database->skipValidation(function () use ($database, $rows, $timezone): void {
-            foreach ($rows as [$id, $sequence, $accessedAt, $region]) {
-                $database->skipFilters(fn (): Document => $database->createDocument('projects', new Document([
-                    '$id' => $id,
-                    '$sequence' => (string) $sequence,
-                    'name' => $id,
-                    'region' => $region,
-                    'accessedAt' => $accessedAt === null ? null : DateTime::format(\DateTime::createFromImmutable($accessedAt)->setTimezone($timezone)),
-                    'teamId' => 'team',
-                    'teamInternalId' => '1',
-                    'database' => 'database_db_' . $region,
-                ])), APP_PROJECTS_SUBQUERIES);
-            }
-        });
-
-        return $database;
     }
 }

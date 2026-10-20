@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Platform\Tasks;
 
-use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Event\Publisher\Maintenance as MaintenancePublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Platform\Tasks\Schedule;
 use PHPUnit\Framework\TestCase;
@@ -43,7 +43,7 @@ final class ScheduleTest extends TestCase
                 fn (): Database => $this->createStub(Database::class),
                 new NoTelemetry(),
                 fn (): array => [],
-                $this->createStub(DeletePublisher::class),
+                $this->createStub(MaintenancePublisher::class),
                 $this->createStub(Group::class),
             );
         } catch (\InvalidArgumentException $error) {

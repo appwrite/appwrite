@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Event\Publisher\Maintenance as MaintenancePublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Usage\Connection;
@@ -34,7 +34,7 @@ class Schedule extends Action
             ->inject('getProjectDB')
             ->inject('telemetry')
             ->inject('locks')
-            ->inject('publisherForDeletes')
+            ->inject('publisherForMaintenance')
             ->inject('pools');
 
         if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
@@ -56,10 +56,10 @@ class Schedule extends Action
         callable $getProjectDB,
         Telemetry $telemetry,
         callable $locks,
-        DeletePublisher $publisherForDeletes,
+        MaintenancePublisher $publisherForMaintenance,
         Group $pools,
     ): never {
-        $this->start($publisherForFunctions, $publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks, $publisherForDeletes, $pools);
+        $this->start($publisherForFunctions, $publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks, $publisherForMaintenance, $pools);
     }
 
     public function actionWithUsage(
@@ -70,7 +70,7 @@ class Schedule extends Action
         callable $getProjectDB,
         Telemetry $telemetry,
         callable $locks,
-        DeletePublisher $publisherForDeletes,
+        MaintenancePublisher $publisherForMaintenance,
         Group $pools,
         StatsResourcesPublisher $publisherForStatsResources,
         Connection $usageConnection,
@@ -83,7 +83,7 @@ class Schedule extends Action
             $getProjectDB,
             $telemetry,
             $locks,
-            $publisherForDeletes,
+            $publisherForMaintenance,
             $pools,
             $publisherForStatsResources,
             $usageConnection,
@@ -98,7 +98,7 @@ class Schedule extends Action
         callable $getProjectDB,
         Telemetry $telemetry,
         callable $locks,
-        DeletePublisher $publisherForDeletes,
+        MaintenancePublisher $publisherForMaintenance,
         Group $pools,
         ?StatsResourcesPublisher $publisherForStatsResources = null,
         ?Connection $usageConnection = null,
@@ -110,7 +110,7 @@ class Schedule extends Action
         $this->loop(ScheduleFunctions::getName(), fn () => (new ScheduleFunctions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
         $this->loop(ScheduleExecutions::getName(), fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
         $this->loop(ScheduleMessages::getName(), fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks));
-        $this->loop(ScheduleMaintenance::getName(), fn () => (new ScheduleMaintenance())->run($cycle, $dbForPlatform, $publisherForDeletes, $pools, $telemetry));
+        $this->loop(ScheduleMaintenance::getName(), fn () => (new ScheduleMaintenance())->run($cycle, $publisherForMaintenance, $pools, $telemetry));
 
         if ($publisherForStatsResources !== null && $usageConnection !== null) {
             $this->loop(StatsResources::getName(), fn () => (new StatsResources())->action($dbForPlatform, $publisherForStatsResources, $usageConnection, $telemetry));
