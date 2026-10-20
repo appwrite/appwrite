@@ -255,7 +255,7 @@ final class SweepTest extends TestCase
             $this->sweep($publisher)->run(Cohort::Active, $slot, $this->cutoff);
 
             foreach ($this->projects($publisher) as $id) {
-                $project = $this->database->getDocument('projects', $id);
+                $project = $this->database->skipFilters(fn (): Document => $this->database->getDocument('projects', $id), APP_PROJECTS_SUBQUERIES);
                 $this->assertSame($slot->index, Sweep::owner($project, $slot->count, ColumnType::Uuid7), $id);
                 $owners[$slot->index] = true;
                 $slotsByBlock[\intdiv((int) $project->getSequence(), Sweep::BLOCK)][$slot->index] = true;
@@ -351,15 +351,14 @@ final class SweepTest extends TestCase
             ->setAuthorization($authorization);
         $database->create();
 
-        // Reading a project runs its platforms, webhooks and keys subqueries.
+        // Projects are written and read back with APP_PROJECTS_SUBQUERIES skipped, as Sweep reads them, so no
+        // collection a subquery joins has to exist, whichever subqueries the projects collection declares.
         $collections = Config::getParam('collections', [])['console'];
-        foreach (['projects', 'platforms', 'webhooks', 'keys'] as $id) {
-            $database->createCollection(Collection::create(
-                id: $id,
-                attributes: $collections[$id]['attributes'],
-                indexes: $collections[$id]['indexes'],
-            ));
-        }
+        $database->createCollection(Collection::create(
+            id: 'projects',
+            attributes: $collections['projects']['attributes'],
+            indexes: $collections['projects']['indexes'],
+        ));
 
         $now = $this->clock->now();
         $recent = DateTime::format(\DateTime::createFromImmutable($now->modify('-1 day')));
@@ -384,7 +383,7 @@ final class SweepTest extends TestCase
         $database->skipValidation(function () use ($database, $rows): void {
             foreach ($rows as [$kind, $sequence, $accessedAt, $region]) {
                 $id = $kind . '-' . $sequence;
-                $database->createDocument('projects', new Document([
+                $database->skipFilters(fn (): Document => $database->createDocument('projects', new Document([
                     '$id' => $id,
                     '$sequence' => (string) $sequence,
                     'name' => $id,
@@ -393,7 +392,7 @@ final class SweepTest extends TestCase
                     'teamId' => 'team',
                     'teamInternalId' => '1',
                     'database' => 'database_db_' . $region,
-                ]));
+                ])), APP_PROJECTS_SUBQUERIES);
 
                 match (true) {
                     $region !== self::REGION => $this->elsewhere[] = $id,
