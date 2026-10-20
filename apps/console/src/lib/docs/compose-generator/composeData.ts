@@ -9,6 +9,7 @@ export const TOPOLOGY_SERVICES = {
     'appwrite-worker-stats-usage',
     'appwrite-worker-stats-resources',
     'appwrite-task-stats-resources',
+    'appwrite-task-scheduler-maintenance',
     'appwrite-worker-webhooks',
     'appwrite-worker-deletes',
     'appwrite-worker-databases',
@@ -248,7 +249,6 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_LOGGING_FORMAT
       - _APP_LOCKING_ENABLED
       - _APP_MAINTENANCE_INTERVAL
-      - _APP_MAINTENANCE_INACTIVE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
@@ -667,7 +667,8 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
-      - _APP_FUNCTIONS_SCHEDULE_SPREAD`,
+      - _APP_FUNCTIONS_SCHEDULE_SPREAD
+      - _APP_MAINTENANCE_INACTIVE_INTERVAL`,
   },
   {
     name: 'appwrite-worker-stats-usage',
@@ -1042,7 +1043,64 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
-      - _APP_FUNCTIONS_SCHEDULE_SPREAD`,
+      - _APP_FUNCTIONS_SCHEDULE_SPREAD
+      - _APP_MAINTENANCE_INACTIVE_INTERVAL`,
+  },
+  {
+    name: 'appwrite-task-scheduler-maintenance',
+    block: `  appwrite-task-scheduler-maintenance:
+    entrypoint: schedule-maintenance
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    container_name: appwrite-task-scheduler-maintenance
+    image: appwrite/appwrite:2.5.0
+    networks:
+      - appwrite
+    depends_on:
+      - \${_APP_DB_HOST:-postgresql}
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_USAGE_STATS
+      - _APP_USAGE_PASS
+      - _APP_CONNECTIONS_DB_USAGE
+      - _APP_POOL_SIZE_USAGE
+      - _APP_CONNECTIONS_DB_EXECUTIONS
+      - _APP_POOL_SIZE_EXECUTIONS
+      - _APP_MAINTENANCE_RETENTION_USAGE_TTL
+      - _APP_STATS_USAGE_QUEUE_NAME
+      - _APP_STATS_RESOURCES_QUEUE_NAME
+      - _APP_STATS_RESOURCES_INTERVAL
+      - _APP_LOGGING_FORMAT
+      # Combined mode runs functions/executions/messages timers + enqueue coroutines
+      # against shared console/cache pools; floor must cover concurrent ticks.
+      - _APP_WORKER_MAX_COROUTINES=8
+      - _APP_WORKER_PER_CORE
+      - _APP_OPENSSL_KEY_V1
+      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_DOMAIN
+      - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_SCHEMA
+      - _APP_DOMAIN_FUNCTIONS
+      - _APP_DOMAIN_SITES
+      - _APP_MIGRATION_HOST
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_DATABASE_SHARED_TABLES
+      - _APP_FUNCTIONS_SCHEDULE_SPREAD
+      - _APP_MAINTENANCE_INACTIVE_INTERVAL`,
   },
   {
     name: 'appwrite-worker-webhooks',
@@ -1838,7 +1896,6 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_MAINTENANCE_INTERVAL
-      - _APP_MAINTENANCE_INACTIVE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
