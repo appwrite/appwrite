@@ -199,7 +199,9 @@
         "src/Appwrite/Platform/Workers/Certificates.php",
         "src/Appwrite/Certificates/",
         "src/Appwrite/Maintenance/",
-        "src/Appwrite/Platform/Tasks/Maintenance.php"
+        "src/Appwrite/Platform/Tasks/ScheduleMaintenance.php",
+        "src/Appwrite/Schedule/Source/Maintenance.php",
+        "src/Appwrite/Platform/Workers/Deletes.php"
       ]
     },
     {
