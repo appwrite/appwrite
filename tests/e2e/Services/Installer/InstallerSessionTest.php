@@ -42,7 +42,7 @@ final class InstallerSessionTest extends TestCase
         }
         $this->readyFile = $readyFile;
 
-        $root = dirname(__DIR__, 3);
+        $root = dirname(__DIR__, 4);
         $this->server = proc_open([
             PHP_BINARY,
             $root . '/src/Appwrite/Platform/Installer/Server.php',

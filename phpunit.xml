@@ -30,7 +30,7 @@
             <directory>./tests/e2e/General</directory>
             <directory>./tests/e2e/Security</directory>
             <directory>./tests/e2e/Scopes</directory>
-            <directory>./tests/e2e/Installer</directory>
+            <directory>./tests/e2e/Services/Installer</directory>
             <directory>./tests/e2e/Services/Teams</directory>
             <directory>./tests/e2e/Services/Realtime</directory>
             <directory>./tests/e2e/Services/Account</directory>
