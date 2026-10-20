@@ -461,11 +461,8 @@ class Create extends Action
 
                 // Strip before hashing so the signature and sizes describe the file we store.
                 if ($bucket->getAttribute('stripMetadata', false) && $fileSize <= APP_STORAGE_READ_BUFFER && \in_array($mimeType, self::METADATA_MIME_TYPES, true)) {
-                    $strippedSize = $this->stripMetadata($exiftool, $deviceForFiles, $path, $mimeType);
-                    if ($strippedSize !== null) {
-                        $fileSize = $strippedSize;
-                        $info = $deviceForFiles->getFileInfo($path);
-                    }
+                    $fileSize = $this->stripMetadata($exiftool, $deviceForFiles, $path, $mimeType) ?? $fileSize;
+                    $info = $deviceForFiles->getFileInfo($path);
                 }
 
                 $fileHash = $info->etag ?? $deviceForFiles->getFileHash($path); // Before compression and encryption.
