@@ -14,6 +14,8 @@ final class StreamConfig
      * @param list<StreamSource>|null $sources
      * @param string|null $compression Compression algorithm: "none" or "s2"
      * @param float|null $subjectDeleteMarkerTtl Delete-marker TTL in seconds (ADR-43)
+     * @param bool $allowMsgSchedules Accept Nats-Schedule messages (ADR-51, server 2.12+).
+     *        Refused with discard new, on a mirror or with sources; can't be turned off.
      */
     public function __construct(
         public readonly string $name,
@@ -48,6 +50,7 @@ final class StreamConfig
         public readonly ?ConsumerLimits $consumerLimits = null,
         public readonly bool $allowMsgTtl = false,
         public readonly ?float $subjectDeleteMarkerTtl = null,
+        public readonly bool $allowMsgSchedules = false,
     ) {
     }
 
@@ -123,6 +126,9 @@ final class StreamConfig
         if ($this->subjectDeleteMarkerTtl !== null) {
             $data['subject_delete_marker_ttl'] = self::secondsToNanos($this->subjectDeleteMarkerTtl);
         }
+        if ($this->allowMsgSchedules) {
+            $data['allow_msg_schedules'] = true;
+        }
 
         return $data;
     }
@@ -170,6 +176,7 @@ final class StreamConfig
             subjectDeleteMarkerTtl: isset($data['subject_delete_marker_ttl'])
                 ? self::nanosToSeconds($data['subject_delete_marker_ttl'])
                 : null,
+            allowMsgSchedules: ($data['allow_msg_schedules'] ?? false) === true,
         );
     }
 

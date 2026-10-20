@@ -22,6 +22,9 @@ use Utopia\NATS\JetStream\PubAck;
 use Utopia\NATS\JetStream\RetentionPolicy;
 use Utopia\NATS\JetStream\StorageType;
 use Utopia\NATS\JetStream\StreamConfig;
+use Utopia\NATS\JetStream\StreamConsumerSource;
+use Utopia\NATS\JetStream\StreamSource;
+use Utopia\NATS\JetStream\SubjectTransform;
 use Utopia\Queue\Codec;
 use Utopia\Queue\Codec\Json;
 use Utopia\Queue\Consumer;
@@ -75,6 +78,17 @@ use Utopia\Queue\Queue;
  * publisher-only broker has no consume loop to contend with, and a consumer does not
  * publish. Its commands connection is opened lazily on the first ack, so a publisher
  * never pays for a socket it will not use.
+ *
+ * With $delayedRetries a rejected message waits out its backoff on a per-queue delay
+ * stream (ADR-51 schedules) instead of holding a maxAckPending slot as a delayed NAK.
+ * The work stream sources fired schedules back; the attempts spent travel in a header.
+ *
+ *   Q_<NAME>        work stream; sources q.<name>.due from Q_<NAME>_DELAY as q.<name>.normal
+ *   Q_<NAME>_DELAY  q.<name>.delay.<work seq> (one pending schedule per work message)
+ *                   and q.<name>.due (what the schedules write when they fire)
+ *
+ * Schedules can't live on the work stream: schedule streams refuse discard new, and a
+ * schedule may only target its own stream's subjects.
  */
 class Nats implements Synchronous, Consumer, Bounded
 {
@@ -87,6 +101,24 @@ class Nats implements Synchronous, Consumer, Bounded
     private const string CONSUMER_WORK = 'worker';
     private const string CONSUMER_RETRY = 'retry';
     private const string CONTENT_TYPE = 'Content-Type';
+
+    // Delayed retries; see the class docblock.
+    private const string DELAY_STREAM_SUFFIX = '_DELAY';
+    private const string SUBJECT_DELAY = 'delay';
+    private const string SUBJECT_DUE = 'due';
+    private const string SUBJECT_SOURCING = 'sourcing';
+    private const string CONSUMER_SOURCE = 'source';
+
+    // Deliveries before this copy: each delayed retry restarts JetStream's count.
+    private const string HEADER_ATTEMPTS = 'Utopia-Queue-Attempts';
+
+    // How long a fired retry may wait for a full work stream before it is discarded.
+    private const float DELAY_GRACE = 86_400.0;
+
+    // JetStream requires a positive max_ack_pending here and fixes the heartbeat at 1s.
+    private const int SOURCE_MAX_ACK_PENDING = 1000;
+    private const float SOURCE_HEARTBEAT = 1.0;
+
     private const string ADVISORY_MAX_DELIVERIES = '$JS.EVENT.ADVISORY.CONSUMER.MAX_DELIVERIES';
 
     // Queue group for the advisory subscription, so one worker per queue acts
@@ -157,6 +189,11 @@ class Nats implements Synchronous, Consumer, Bounded
      *      the consumer allows none, and exhaustion falls to the advisory alone
      */
     private array $spareDelivery = [];
+
+    /**
+     * @var array<string, bool> per queue, whether rejects are scheduled instead of NAK'd
+     */
+    private array $delayed = [];
 
     /** Publishes the stream recognised as duplicates of an id it already held. */
     private int $duplicates = 0;
@@ -271,7 +308,8 @@ class Nats implements Synchronous, Consumer, Bounded
      *        includes messages parked in $backoff, which are asleep rather than being
      *        worked and still hold a slot each, so a ceiling sized at the handler count
      *        is filled by exactly as many failures as there are handlers and the queue
-     *        stops being delivered into. The ceiling is per consumer, so replicas share
+     *        stops being delivered into. $delayedRetries takes the parked messages out of
+     *        that count. The ceiling is per consumer, so replicas share
      *        it — {@see \Utopia\Queue\Server::start()} refuses a coroutine cap at or above it.
      * @param int|null $maxWaiting Pull requests a consumer may have parked at once.
      * @param float|null $inactiveThreshold Idle time after which JetStream deletes a
@@ -288,6 +326,9 @@ class Nats implements Synchronous, Consumer, Bounded
      *        deliveries without running: a fleet scaled down 8 -> 1 lost messages that
      *        way. The delay has to outlast the stopping workers' last fetch. 0
      *        redelivers at once.
+     * @param bool $delayedRetries Wait out a rejected message's backoff on the delay stream
+     *        so it holds no maxAckPending slot. Requires $backoff, NATS 2.14+, and the flag on
+     *        every broker that provisions the queue. An unstorable schedule falls back to the NAK.
      */
     public function __construct(
         private readonly NatsConnection|\Closure $source,
@@ -313,6 +354,7 @@ class Nats implements Synchronous, Consumer, Bounded
         // it on a stream that already holds messages.
         private readonly Codec $codec = new Json(),
         private readonly float $releaseDelay = 5.0,
+        private readonly bool $delayedRetries = false,
     ) {
         $this->lock = new Mutex();
 
@@ -365,6 +407,10 @@ class Nats implements Synchronous, Consumer, Bounded
         }
         if ($this->inactiveThreshold !== null && $this->inactiveThreshold <= 0) {
             throw new \InvalidArgumentException('inactiveThreshold must be a positive number of seconds, or null to keep durable consumers forever');
+        }
+        if ($this->delayedRetries && $this->backoff === null) {
+            // Without a backoff nothing waits, so there is no slot to free.
+            throw new \InvalidArgumentException('delayedRetries requires a backoff: it is the backoff a retry waits out on the delay stream');
         }
     }
 
@@ -656,7 +702,7 @@ class Nats implements Synchronous, Consumer, Bounded
             return;
         }
 
-        if ($this->guardStreamName($queue, $identity) === $identity) {
+        if ((($this->guardStreamName($queue, $identity)->metadata ?? [])[self::METADATA_IDENTITY] ?? null) === $identity) {
             self::$ownedStreams[$account][$stream] = $identity;
         }
     }
@@ -1002,8 +1048,9 @@ class Nats implements Synchronous, Consumer, Bounded
             $this->inFlight[$data['pid']] = $jsMessage;
 
             $messages[] = new Message($data)
-                // JetStream counts deliveries from 1; expose it as the Redis-style attempt count.
-                ->setAttempts(max(0, $jsMessage->metadata()->numDelivered - 1))
+                // JetStream counts deliveries from 1; expose it as the Redis-style attempt count,
+                // adding the deliveries a delayed retry's earlier copies had.
+                ->setAttempts(max(0, $this->priorAttempts($jsMessage) + $jsMessage->metadata()->numDelivered - 1))
                 ->setSequence($jsMessage->metadata()->streamSequence)
                 ->setSize(\strlen($jsMessage->getData()));
         }
@@ -1104,6 +1151,11 @@ class Nats implements Synchronous, Consumer, Bounded
                             $contentType = $jsMessage->getHeaders()?->get(self::CONTENT_TYPE);
                             if ($contentType !== null) {
                                 $headers->set(self::CONTENT_TYPE, $contentType);
+                            }
+                            // The release is free; the failures before it were not.
+                            $attempts = $jsMessage->getHeaders()?->get(self::HEADER_ATTEMPTS);
+                            if ($attempts !== null) {
+                                $headers->set(self::HEADER_ATTEMPTS, $attempts);
                             }
                             $this->commandsJs()->publish(
                                 $this->workSubject($queue),
@@ -1216,6 +1268,7 @@ class Nats implements Synchronous, Consumer, Bounded
         $this->consumers = [];
         $this->advisories = [];
         $this->spareDelivery = [];
+        $this->delayed = [];
         $this->provisioned = [];
 
         return true;
@@ -1289,16 +1342,18 @@ class Nats implements Synchronous, Consumer, Bounded
         }
         unset($this->inFlight[$pid]);
 
-        $numDelivered = $jsMessage->metadata()->numDelivered;
+        // This delivery plus the earlier copies' deliveries, read from the header.
+        $attempts = $this->priorAttempts($jsMessage) + $jsMessage->metadata()->numDelivered;
 
         // Read before the closure: the verdict belongs to this delivery, and the
         // message object is the handler's, not the broker's.
         $terminal = $message->isTerminal();
+        $delayed = $this->delayed[$this->identity($queue)] ?? false;
 
-        $this->command(function () use ($queue, $jsMessage, $numDelivered, $terminal): void {
+        $this->command(function () use ($queue, $jsMessage, $pid, $attempts, $terminal, $delayed): void {
             $onCommands = $this->onCommands($jsMessage);
 
-            if ($terminal || $numDelivered >= $this->maxDeliver) {
+            if ($terminal || $attempts >= $this->maxDeliver) {
                 // Exhausted, or declared unrepeatable by the handler: park on the dead
                 // stream and drop it from the work stream.
                 //
@@ -1316,9 +1371,64 @@ class Nats implements Synchronous, Consumer, Bounded
                 return;
             }
 
+            $delay = $this->backoffFor($attempts);
+
+            // The same wait, without the slot: see schedule().
+            if ($delayed && $delay !== null && $this->schedule($queue, $jsMessage, $pid, $attempts, $delay)) {
+                return;
+            }
+
             // Redeliver later (AckWait/NAK); a crashed worker is reclaimed the same way.
-            $onCommands->nak($this->backoffFor($numDelivered));
+            $onCommands->nak($delay);
         });
+    }
+
+    /**
+     * Wait out a retry's backoff on the delay stream, and give its slot back now.
+     *
+     * The original is acked only once the schedule is stored; a refused schedule leaves it
+     * for the NAK. Keyed on the work-stream sequence, in both the subject and the msg id, so a
+     * reject repeated after a lost ack adds no second retry.
+     */
+    private function schedule(Queue $queue, JetStreamMessage $jsMessage, string $pid, int $attempts, float $delay): bool
+    {
+        $sequence = $jsMessage->metadata()->streamSequence;
+
+        // RFC 3339 in UTC to the millisecond; the server takes no time zone with @at.
+        $due = new \DateTimeImmutable('@' . \sprintf('%.6F', microtime(true) + $delay));
+
+        $headers = new Headers()
+            ->set('Nats-Schedule', '@at ' . $due->format('Y-m-d\\TH:i:s.v\\Z'))
+            ->set('Nats-Schedule-Target', $this->dueSubject($queue))
+            ->set(self::HEADER_ATTEMPTS, (string) $attempts);
+        // The message's own Content-Type, as in park(): the bytes go over unread.
+        $contentType = $jsMessage->getHeaders()?->get(self::CONTENT_TYPE);
+        if ($contentType !== null) {
+            $headers->set(self::CONTENT_TYPE, $contentType);
+        }
+
+        try {
+            $this->commandsJs()->publish(
+                $this->delaySubject($queue, $sequence),
+                $jsMessage->getData(),
+                headers: $headers,
+                msgId: "{$pid}.retry.{$sequence}",
+            );
+        } catch (\Throwable $error) {
+            $this->report($error);
+
+            return false;
+        }
+
+        try {
+            $this->onCommands($jsMessage)->ackSync();
+        } catch (\Throwable $error) {
+            // The retry is stored, so a NAK now would run the job twice. Unacknowledged,
+            // the original comes back after ackWait and its reject collapses into it.
+            $this->report($error);
+        }
+
+        return true;
     }
 
     /**
@@ -1627,7 +1737,7 @@ class Nats implements Synchronous, Consumer, Bounded
     /** One provisioning attempt. See ensure() for why this is retried. */
     private function provisionOnce(Queue $queue, string $key): void
     {
-        $this->guardStreamName($queue, $key);
+        $existing = $this->guardStreamName($queue, $key);
 
         // An explicit maxAge states the TTL where producer and consumer read the same
         // value; the jobTtl derivation is per-queue-object, so the two sides agree only
@@ -1642,6 +1752,18 @@ class Nats implements Synchronous, Consumer, Bounded
         $duplicateWindow = $maxAge === null
             ? $this->duplicateWindow
             : min($this->duplicateWindow, $maxAge);
+
+        // Before the work stream, so its source never points at a missing stream.
+        if ($this->delayedRetries) {
+            $this->provisionDelay($queue, $key);
+        }
+
+        // Kept even without the flag: dropping it would strand retries already waiting on a
+        // fleet that is part-way through turning it on or off.
+        $delaySource = $this->delayedRetries || array_any(
+            $existing->sources ?? [],
+            fn (StreamSource $source): bool => $source->name === $this->delayStream($queue),
+        );
 
         $this->js()->createOrUpdateStream(new StreamConfig(
             name: $this->workStream($queue),
@@ -1660,6 +1782,7 @@ class Nats implements Synchronous, Consumer, Bounded
             // retried publish is stored as a second message.
             duplicateWindow: $duplicateWindow,
             metadata: [self::METADATA_IDENTITY => $key],
+            sources: $delaySource ? [$this->delaySource($queue)] : null,
         ));
 
         $this->js()->createOrUpdateStream(new StreamConfig(
@@ -1700,7 +1823,62 @@ class Nats implements Synchronous, Consumer, Bounded
         // also runs on a publisher's first publish, and a publisher never drains it.
 
         $this->spareDelivery[$key] = $this->maxDeliver + 1;
+        $this->delayed[$key] = $this->delayedRetries;
         $this->provisioned[$key] = true;
+    }
+
+    /**
+     * The delay stream and the durable consumer the work stream sources it through.
+     *
+     * Limits retention and discard old, because the server consumes schedules and refuses
+     * them with discard new. The durable consumer keeps the source's place: an ephemeral
+     * one rescans the work stream after a restart and copies acked retries again.
+     */
+    private function provisionDelay(Queue $queue, string $key): void
+    {
+        // Never 0 in practice: the constructor refuses delayedRetries without a backoff.
+        $longest = $this->backoff === null ? 0.0 : max($this->backoff);
+
+        $this->js()->createOrUpdateStream(new StreamConfig(
+            name: $this->delayStream($queue),
+            subjects: [$this->delaySubject($queue, '*'), $this->dueSubject($queue)],
+            description: $key,
+            retention: RetentionPolicy::Limits,
+            // Mirrored, for the work stream's sake: a source refuses an origin that may
+            // hold messages larger than the stream it writes to accepts.
+            maxMsgSize: $this->maxMsgSize,
+            maxAge: $longest + self::DELAY_GRACE,
+            storage: $this->storage,
+            replicas: $this->replicas,
+            discard: DiscardPolicy::Old,
+            // Long enough for a reject repeated after a lost ack to find its schedule's id:
+            // twice the longest backoff entry.
+            duplicateWindow: max($this->duplicateWindow, 2 * $longest),
+            // The server turns this on for schedules anyway; stated so the config matches.
+            allowRollup: true,
+            metadata: [self::METADATA_IDENTITY => $key],
+            allowMsgSchedules: true,
+        ));
+
+        $this->js()->createConsumer($this->delayStream($queue), new ConsumerConfig(
+            durableName: self::CONSUMER_SOURCE,
+            ackPolicy: AckPolicy::FlowControl,
+            filterSubject: $this->dueSubject($queue),
+            maxAckPending: self::SOURCE_MAX_ACK_PENDING,
+            deliverSubject: $this->sourcingSubject($queue),
+            flowControl: true,
+            idleHeartbeat: self::SOURCE_HEARTBEAT,
+        ));
+    }
+
+    /** The work stream's source: what fires on the delay stream, back on the work subject. */
+    private function delaySource(Queue $queue): StreamSource
+    {
+        return new StreamSource(
+            name: $this->delayStream($queue),
+            subjectTransforms: [new SubjectTransform($this->dueSubject($queue), $this->workSubject($queue))],
+            consumer: new StreamConsumerSource(self::CONSUMER_SOURCE, $this->sourcingSubject($queue)),
+        );
     }
 
     /**
@@ -1720,7 +1898,7 @@ class Nats implements Synchronous, Consumer, Bounded
     {
         // Read-only: the length limit and the cross-queue ownership check both hold
         // here, and neither sends configuration.
-        $this->guardStreamName($queue, $key);
+        $work = $this->guardStreamName($queue, $key);
 
         foreach ([$this->workStream($queue), $this->deadStream($queue)] as $stream) {
             try {
@@ -1747,7 +1925,38 @@ class Nats implements Synchronous, Consumer, Bounded
             $this->report(new \RuntimeException('NATS consumer "' . self::CONSUMER_WORK . "\" on stream \"{$this->workStream($queue)}\" allows no delivery past max_deliver {$allowed}, so a message exhausted while no broker is subscribed is left on the work stream; reprovision it from the queue's owner."));
         }
 
+        $this->delayed[$key] = $this->delayedRetries && $this->adoptDelay($queue, $work);
+
         $this->provisioned[$key] = true;
+    }
+
+    /**
+     * Whether the delay stream, its consumer and the work stream's source are all in place.
+     * Otherwise a schedule would be stranded, so the broker NAKs instead.
+     */
+    private function adoptDelay(Queue $queue, ?StreamConfig $work): bool
+    {
+        $sourced = array_any(
+            $work->sources ?? [],
+            fn (StreamSource $source): bool => $source->name === $this->delayStream($queue) && $source->consumer instanceof StreamConsumerSource,
+        );
+
+        if ($sourced) {
+            try {
+                // A missing stream and a missing consumer both answer 404 here.
+                $this->js()->getConsumer($this->delayStream($queue), self::CONSUMER_SOURCE);
+
+                return true;
+            } catch (JetStreamException $e) {
+                if ($e->apiError?->code !== 404) {
+                    throw $e;
+                }
+            }
+        }
+
+        $this->report(new \RuntimeException("NATS stream \"{$this->workStream($queue)}\" is not provisioned for delayed retries (no source through \"{$this->delayStream($queue)}\"), so a rejected message waits out its backoff on the work consumer; provision it from the queue's owner with delayedRetries."));
+
+        return false;
     }
 
     /**
@@ -1786,32 +1995,34 @@ class Nats implements Synchronous, Consumer, Bounded
      * two colliding names provisioned at the very same instant can still both create
      * the (identical) stream before either sees the other.
      *
-     * @return string|null The identity that owns the stream, or null when it is absent
+     * @return StreamConfig|null The work stream's config, or null when it is absent
      */
-    private function guardStreamName(Queue $queue, string $identity): ?string
+    private function guardStreamName(Queue $queue, string $identity): ?StreamConfig
     {
-        // The dead stream (work name + suffix) is the longest, so if it fits, both do.
+        // The longest of the streams in use (work name + suffix): if it fits, all do.
         // Fixed-width names never overflow, but a long queue name can -- fail clearly
         // rather than letting JetStream reject the create with an opaque error.
-        $longest = $this->deadStream($queue);
+        $longest = $this->delayedRetries ? $this->delayStream($queue) : $this->deadStream($queue);
         if (\strlen($longest) > self::MAX_STREAM_NAME) {
             throw new \RuntimeException("NATS stream name \"{$longest}\" exceeds JetStream's " . self::MAX_STREAM_NAME . '-byte limit; shorten queue "' . $queue->name . '".');
         }
 
         $stream = $this->workStream($queue);
         try {
-            $owner = ($this->js()->getStreamInfo($stream)->config->metadata ?? [])[self::METADATA_IDENTITY] ?? null;
+            $config = $this->js()->getStreamInfo($stream)->config;
         } catch (JetStreamException $e) {
             if ($e->apiError?->code !== 404) {
                 throw $e; // a real JetStream error, not "stream absent" -- don't mask it
             }
-            $owner = null; // stream not provisioned yet
+            $config = null; // stream not provisioned yet
         }
+        $owner = ($config->metadata ?? [])[self::METADATA_IDENTITY] ?? null;
         if ($owner !== null && $owner !== $identity) {
             throw new \RuntimeException("NATS stream \"{$stream}\" already belongs to queue \"{$owner}\", not \"{$identity}\"; rename one queue.");
         }
 
-        return $owner;
+        // Returned for the callers that need the stream as it stands, read once here.
+        return $config;
     }
 
     /** Move messages that exhausted maxDeliver (per the advisory) onto the dead stream. */
@@ -1890,6 +2101,40 @@ class Nats implements Synchronous, Consumer, Bounded
     private function deadSubject(Queue $queue): string
     {
         return $this->subjectBase($queue) . '.' . self::SUBJECT_DEAD;
+    }
+
+    private function delayStream(Queue $queue): string
+    {
+        return $this->workStream($queue) . self::DELAY_STREAM_SUFFIX;
+    }
+
+    /** One schedule per work-stream message; '*' for the stream's subject filter. */
+    private function delaySubject(Queue $queue, int|string $sequence): string
+    {
+        return $this->subjectBase($queue) . '.' . self::SUBJECT_DELAY . '.' . $sequence;
+    }
+
+    /** Where a schedule writes its message when it fires, on the delay stream. */
+    private function dueSubject(Queue $queue): string
+    {
+        return $this->subjectBase($queue) . '.' . self::SUBJECT_DUE;
+    }
+
+    /** The delay stream's source consumer pushes here, to the work stream. */
+    private function sourcingSubject(Queue $queue): string
+    {
+        return $this->subjectBase($queue) . '.' . self::SUBJECT_SOURCING;
+    }
+
+    /**
+     * Deliveries the job had before this copy of it was stored: 0 for a message that is
+     * not a delayed retry, and for a header this broker did not write.
+     */
+    private function priorAttempts(JetStreamMessage $jsMessage): int
+    {
+        $attempts = $jsMessage->getHeaders()?->get(self::HEADER_ATTEMPTS);
+
+        return $attempts !== null && ctype_digit($attempts) ? (int) $attempts : 0;
     }
 
     /** Stream names are uppercase and forbid dots; anything outside A-Z 0-9 _ - maps to '_'. */

@@ -26,7 +26,7 @@ services:
       retries: 15
 
   nats:
-    image: nats:2.11-alpine
+    image: nats:2.14-alpine
     command: ["-js", "-m", "8222"]
     ports:
       - "14225:4222"
