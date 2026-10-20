@@ -3052,6 +3052,10 @@ final class VideosCustomServerTest extends Scope
             ]);
             $this->assertEquals(202, $live['headers']['status-code'], $status);
             $liveId = $live['body']['$id'];
+            // Park before encode settles. A racing worker may still finish and
+            // write ready — wait for that flock if it appears, then re-park.
+            $this->timeTravelRendition($projectId, $liveId, status: $status);
+            $this->settleEncodeLock($videoId, $liveId);
             $this->timeTravelRendition($projectId, $liveId, status: $status);
 
             $blocked = $this->client->call(
@@ -3122,8 +3126,10 @@ final class VideosCustomServerTest extends Scope
         ]);
         $this->assertEquals(201, $live['headers']['status-code']);
         $liveId = $live['body']['$id'];
-        // Park off the caption path so the worker cannot settle the row, and keep
-        // $updatedAt current so the retention window still treats it as live.
+        // Park off pending so a new claim fails. A racing caption job may still
+        // finish and write ready — wait for that flock if it appears, then re-park.
+        $this->timeTravelCaption($projectId, $liveId, status: 'started');
+        $this->settleCaptionLock($videoId, $liveId);
         $this->timeTravelCaption($projectId, $liveId, status: 'started');
 
         $blocked = $this->client->call(
@@ -3718,6 +3724,38 @@ final class VideosCustomServerTest extends Scope
         $this->assertNotSame('', $stored, 'timeline.vtt row missing for ' . $videoId);
 
         return $stored;
+    }
+
+    /**
+     * Wait for an encode flock to appear and go idle, or give up if the worker
+     * never opens one (claim already lost / lock swept). Avoids hanging when
+     * waitForIdleLock would wait forever for a missing file.
+     */
+    private function settleEncodeLock(string $videoId, string $renditionId, int $appearTimeout = 30): void
+    {
+        $path = Base::encodeLockPath($videoId, $renditionId);
+        $deadline = \time() + $appearTimeout;
+        while (\time() < $deadline && !\is_file($path)) {
+            \usleep(200000);
+        }
+        if (\is_file($path)) {
+            $this->waitForIdleLock($path);
+        }
+    }
+
+    /**
+     * Same as settleEncodeLock for caption jobs.
+     */
+    private function settleCaptionLock(string $videoId, string $captionId, int $appearTimeout = 30): void
+    {
+        $path = Base::captionLockPath($videoId, $captionId);
+        $deadline = \time() + $appearTimeout;
+        while (\time() < $deadline && !\is_file($path)) {
+            \usleep(200000);
+        }
+        if (\is_file($path)) {
+            $this->waitForIdleLock($path);
+        }
     }
 
     private function timeTravelRendition(
