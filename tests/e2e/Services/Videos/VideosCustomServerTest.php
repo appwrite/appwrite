@@ -1239,47 +1239,6 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
-     * A video accepts CAPTION_LIMIT caption creates per ENCODE_PERIOD. Codes are
-     * not unique per video, so distinct names alone would work; distinct ISO
-     * 639-2 codes keep the fixtures readable.
-     */
-    #[Group('abuseEnabled')]
-    public function testCreateCaptionEncodeLimit(): void
-    {
-        if (System::getEnv('_APP_OPTIONS_ABUSE') === 'disabled') {
-            $this->markTestSkipped('Abuse is not enabled.');
-        }
-
-        $videoId = $this->createVideo();
-        $bucketId = $this->getVideoBucket()['$id'];
-        $fileId = $this->getCaptionFile()['$id'];
-
-        // Enough ISO 639-2 codes for CAPTION_LIMIT + 1 creates.
-        $codes = ['aar', 'abk', 'afr', 'aka', 'amh', 'arg', 'ara', 'asm', 'ava', 'aym', 'aze', 'bak', 'bel', 'bul', 'bih', 'bis', 'bam', 'ben', 'bod', 'bre', 'bos'];
-        $this->assertGreaterThan(Base::CAPTION_LIMIT, \count($codes), 'Need more language codes than CAPTION_LIMIT');
-
-        for ($i = 0; $i < Base::CAPTION_LIMIT; $i++) {
-            $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
-                'bucketId' => $bucketId,
-                'fileId' => $fileId,
-                'name' => 'Caption ' . $i,
-                'code' => $codes[$i],
-            ]);
-            $this->assertEquals(201, $response['headers']['status-code'], 'Caption create ' . ($i + 1) . ' should be accepted');
-            $this->assertSame(Base::CAPTION_LIMIT, (int) $response['headers']['x-ratelimit-limit']);
-        }
-
-        $limited = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
-            'bucketId' => $bucketId,
-            'fileId' => $fileId,
-            'name' => 'Caption over',
-            'code' => $codes[Base::CAPTION_LIMIT],
-        ]);
-        $this->assertEquals(429, $limited['headers']['status-code']);
-        $this->assertEquals('general_rate_limit_exceeded', $limited['body']['type']);
-    }
-
-    /**
      * A video accepts RENDITION_LIMIT rendition creates per ENCODE_PERIOD. The next
      * distinct profile+output pair is rate-limited; a duplicate of an earlier
      * pair is still reported as already existing.

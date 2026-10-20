@@ -332,13 +332,10 @@ abstract class Base extends UtopiaAction
     /** Videos one project may create within ENCODE_PERIOD. */
     public const VIDEO_LIMIT = 10;
 
-    /** Captions one video may add within ENCODE_PERIOD. */
-    public const CAPTION_LIMIT = 20;
-
     /** Renditions one video may encode within ENCODE_PERIOD. */
     public const RENDITION_LIMIT = 15;
 
-    /** Window for VIDEO_LIMIT, CAPTION_LIMIT, and RENDITION_LIMIT, in seconds. */
+    /** Window for VIDEO_LIMIT and RENDITION_LIMIT, in seconds. */
     public const ENCODE_PERIOD = 3600;
 
     /** Mime types accepted as a transcodable source. */
