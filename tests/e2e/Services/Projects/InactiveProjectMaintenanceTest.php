@@ -26,9 +26,9 @@ use function Swoole\Coroutine\run;
  * A project not accessed in the last 30 days still gets maintenance: its expired presence row is deleted, while the
  * same row in a recently accessed project survives.
  *
- * The path is schedule-maintenance -> worker-maintenance -> worker-deletes. The scheduler publishes one message per
- * slice to the maintenance queue, the maintenance worker finds the slice's inactive projects and publishes their
- * deletes, and the deletes worker removes the expired rows. The scheduler reaches every inactive project once per
+ * The path is schedule-maintenance -> worker-maintenance -> worker-deletes. The deleted idle row and the surviving
+ * control row are what prove the sweep; the maintenance queue's success counter only shows that a worker consumed
+ * jobs from that queue while the test waited. The scheduler reaches every inactive project once per
  * _APP_MAINTENANCE_INACTIVE_INTERVAL, so the test only runs when that interval is at most one five-minute slice, as
  * CI sets it.
  */
@@ -93,7 +93,7 @@ final class InactiveProjectMaintenanceTest extends Scope
         }, self::TIMEOUT * 1_000, 1_000);
 
         $this->assertSame(1, $this->countPresenceRows($active['$id'], $activePresenceId), 'the scheduler left the recently accessed project to the daily maintenance');
-        $this->assertGreaterThan($processed, $this->countProcessedJobs($queue), 'the maintenance worker completed a slice from the ' . $queue . ' queue');
+        $this->assertGreaterThan($processed, $this->countProcessedJobs($queue), 'a worker committed at least one job from the ' . $queue . ' queue while the test waited');
 
         $accessedAt = '';
         $this->withFactory(function (DatabaseFactory $factory) use ($idle, &$accessedAt): void {

@@ -207,6 +207,7 @@
         "src/Appwrite/Event/Message/Maintenance.php",
         "src/Appwrite/Event/Publisher/Maintenance.php",
         "app/config/workers.php",
+        "app/init/resources.php",
         "packages/schedule/"
       ]
     },
