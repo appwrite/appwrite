@@ -187,12 +187,8 @@ class Create extends Base
         if ($request->getMethod() === Action::HTTP_REQUEST_METHOD_POST && $key !== '' && $this->query($request, 'uploadId') !== '') {
             $this->authorize($request, $project, $team, $user, ['files.write']);
             $bucket = $this->bucket($dbForProject, $bucketId);
-            // No multipart lock here: clients complete only after every part
-            // returned 200, and each part's state save commits inside its lock
-            // before that response, so the snapshot below always holds all
-            // acknowledged parts. Nesting the multipart lock around the object
-            // lock inside completeMultipartUpload would also need two
-            // connections from the fail-fast lock pool at once.
+            // Part receipts commit before their 200 response. Completion selects
+            // only acknowledged parts, then publishes under the object lock.
             $selected = CompleteMultipartUpload::parts($this->requestBody($request));
             $upload = $this->multipartUploadForBucket($cache, $project, $this->query($request, 'uploadId'), $bucketId, $key);
             [$file, $event] = $this->completeMultipartUpload($locks, $dbForProject, $cache, $project, $publisherForDeletes, $deviceForFiles, $bucket, $upload, $selected);

@@ -760,10 +760,8 @@ abstract class Base extends Action
     }
 
     /**
-     * Serializes part uploads and abort of one multipart upload: the cached
-     * upload state and the device chunk bookkeeping are read-modify-write, so
-     * concurrent parts would drop each other's entries. Never held together
-     * with the object lock — the lock pool fails fast instead of queueing.
+     * Serializes upload-state updates and abort. Distinct backend parts transfer
+     * outside this lock; each receipt is merged into fresh state while held.
      */
     protected function multipartLockKey(Document $project, string $uploadId): string
     {
