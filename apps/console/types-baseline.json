@@ -298,8 +298,6 @@
     "TS2551: Property 'osVersion' does not exist on type 'ActivityEvent'. Did you mean 'sdkVersion'?": 2
   },
   "src/components/pages/projects/$projectId/analytics/View.tsx": {
-    "TS18048: 'stats.pageviews' is possibly 'undefined'.": 1,
-    "TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.": 3,
     "TS2741: Property 'snippetId' is missing in type 'AnalyticsProperty' but required in type 'Pick<AnalyticsProperty, \"name\" | \"$id\" | \"domain\" | \"snippetId\">'.": 2
   },
   "src/components/pages/projects/$projectId/analytics/_components/CustomEventsGuideDialog.tsx": {
@@ -940,10 +938,6 @@
     "TS2571: Object is of type 'unknown'.": 8,
     "TS2820: Type '\"/projects/$projectId/sites/$siteId/\"' is not assignable to type '<paths>'. Did you mean '\"/projects/$projectId/sites/$siteId\"'?": 6
   },
-  "src/components/pages/projects/$projectId/sites/_components/SiteAnalyticsCard.tsx": {
-    "TS18048: 'previousStats.pageviews' is possibly 'undefined'.": 1,
-    "TS18048: 'stats.pageviews' is possibly 'undefined'.": 1
-  },
   "src/components/pages/projects/$projectId/sites/_components/SiteContextMenu.tsx": {
     "TS2353: Object literal may only specify known properties, and 'projectId' does not exist in type 'ParamsReducerFn<RouterCore<Route<Register, any, \"/\", \"/\", string, \"__root__\", undefined, {}, MyRouterContext, AnyContext, ({ location }: BeforeLoadContextOptions<Register, any, undefined, {}, MyRouterContext, AnyContext, \"__root__\", unknown, undefined>) => void, {}, () => Promise<{ currentUser: null; }>, RootRouteChildren, FileRouteTypes, unknown, unknown, undefined>, \"never\", false, RouterHistory, Record<string, any>>, \"PATH\", string, \"/projects/$projectId/sites/$siteId/\">'.": 1,
     "TS2820: Type '\"/projects/$projectId/sites/$siteId/\"' is not assignable to type '<paths>'. Did you mean '\"/projects/$projectId/sites/$siteId\"'?": 1
@@ -1170,9 +1164,6 @@
   "src/lib/docs/route-meta.ts": {
     "TS2741: Property 'readingTimeMinutes' is missing in type '{ slug: string; title: string; description: string; layout: string; }' but required in type 'DocsPageMeta'.": 1
   },
-  "src/lib/domains/search.ts": {
-    "TS6133: 'useRef' is declared but its value is never read.": 1
-  },
   "src/lib/firewall/rule-presets.ts": {
     "TS2339: Property 'id' does not exist on type 'CountryPresetDef | PremiumDenyPresetDef'.": 1,
     "TS2353: Object literal may only specify known properties, and 'id' does not exist in type 'CountryPresetDef'.": 4
@@ -1254,12 +1245,6 @@
     "TS2322: Type 'string' is not assignable to type 'object'.": 1
   },
   "src/lib/react-query/hooks/databases.ts": {
-    "TS2322: Type 'bigint | null | number' is not assignable to type 'bigint | number | undefined'.": 2,
-    "TS2322: Type 'boolean | null' is not assignable to type 'boolean | undefined'.": 1,
-    "TS2322: Type 'null | number' is not assignable to type 'number | undefined'.": 1,
-    "TS2322: Type 'null | number[]' is not assignable to type 'number[] | undefined'.": 1,
-    "TS2322: Type 'null | number[][]' is not assignable to type 'any[][] | undefined'.": 2,
-    "TS2322: Type 'null | string' is not assignable to type 'string | undefined'.": 10,
     "TS2339: Property 'createTextEmbeddings' does not exist on type 'VectorsDB'.": 1,
     "TS2339: Property 'documents' does not exist on type 'RowList<DefaultRow>'.": 1,
     "TS2339: Property 'pricing' does not exist on type 'DedicatedDatabaseSpecificationList'.": 1,
@@ -1302,7 +1287,6 @@
     "TS2322: Type 'string | undefined' is not assignable to type 'string'.": 1,
     "TS2322: Type 'unknown' is not assignable to type 'TemplateReferenceType'.": 1,
     "TS2322: Type 'unknown' is not assignable to type 'VCSReferenceType'.": 1,
-    "TS2345: Argument of type 'unknown' is not assignable to parameter of type '{ siteId: string; name: string; framework: Framework; buildRuntime: BuildRuntime; enabled?: boolean | undefined; logging?: boolean | undefined; timeout?: number | undefined; installCommand?: string | undefined; buildCommand?: string | undefined; startCommand?: string | undefined; outputDirectory?: string | undefined; adapter?: Adapter | undefined; installationId?: string | undefined; fallbackFile?: string | undefined; providerRepositoryId?: string | undefined; providerBranch?: string | undefined; providerSilentMode?: boolean | undefined; providerRootDirectory?: string | undefined; providerBranches?: string[] | undefined; providerPaths?: string[] | undefined; buildSpecification?: string | undefined; runtimeSpecification?: string | undefined; deploymentRetention?: number | undefined; scopes?: ProjectKeyScopes[] | undefined; }'.": 1,
     "TS2345: Argument of type 'unknown' is not assignable to parameter of type 'undefined | { live?: boolean | undefined; latestDeploymentId?: string | null | undefined; latestDeploymentStatus?: string | undefined; latestDeploymentCreatedAt?: string | undefined; }'.": 1,
     "TS2571: Object is of type 'unknown'.": 2,
     "TS2769: No overload matches this call.": 3
@@ -1378,11 +1362,9 @@
     "TS2769: No overload matches this call.": 4
   },
   "src/lib/usage/usage-events-common.ts": {
-    "TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.": 2,
     "TS2769: No overload matches this call.": 1
   },
   "src/lib/usage/usage-gauges-common.ts": {
-    "TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.": 6,
     "TS6133: 'mapGaugeResourceBreakdownGroups' is declared but its value is never read.": 1
   },
   "src/lib/usage/webhooks-usage.ts": {

@@ -427,6 +427,11 @@ class V25 extends Migration
                     } catch (Throwable $th) {
                         Console::warning("Failed to create attribute \"description\" in collection {$id}: {$th->getMessage()}");
                     }
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'stripMetadata');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"stripMetadata\" in collection {$id}: {$th->getMessage()}");
+                    }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 

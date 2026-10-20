@@ -3707,7 +3707,8 @@
             "encryption",
             "antivirus",
             "transformations",
-            "description"
+            "description",
+            "stripMetadata"
         ],
         "storage.createFile": [
             "bucketId",
@@ -3779,7 +3780,8 @@
             "encryption",
             "antivirus",
             "transformations",
-            "description"
+            "description",
+            "stripMetadata"
         ],
         "storage.updateFile": [
             "bucketId",
@@ -7618,7 +7620,8 @@
             "encryption",
             "antivirus",
             "transformations",
-            "description"
+            "description",
+            "stripMetadata"
         ],
         "storage.createFile": [
             "bucketId",
@@ -7690,7 +7693,8 @@
             "encryption",
             "antivirus",
             "transformations",
-            "description"
+            "description",
+            "stripMetadata"
         ],
         "storage.updateFile": [
             "bucketId",
