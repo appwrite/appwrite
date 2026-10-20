@@ -258,6 +258,27 @@ final class NatsBrokerTest extends TestCase
         $this->broker->commit($this->queue, $second);
     }
 
+    public function testOnlyTheDeliveryARejectDeadLettersReportsItselfAsTheLast(): void
+    {
+        $this->broker->publish($this->queue, ['task' => 'last']);
+
+        for ($attempt = 0; $attempt < 2; $attempt++) {
+            $message = $this->broker->receive($this->queue, 3)[0] ?? null;
+            $this->assertInstanceOf(Message::class, $message);
+            $this->assertSame(3, $message->getMaxAttempts());
+            $this->assertFalse($message->isLastAttempt());
+            $this->broker->reject($this->queue, $message);
+            $this->assertSame(0, $this->broker->getQueueSize($this->queue, true), 'a reject before the last attempt dead-lettered');
+        }
+
+        $last = $this->broker->receive($this->queue, 3)[0] ?? null;
+        $this->assertInstanceOf(Message::class, $last);
+        $this->assertTrue($last->isLastAttempt());
+
+        $this->broker->reject($this->queue, $last);
+        $this->assertSame(1, $this->broker->getQueueSize($this->queue, true));
+    }
+
     public function testExhaustedMessageIsDeadLetteredThenRetried(): void
     {
         $this->broker->publish($this->queue, ['task' => 'doomed']);
