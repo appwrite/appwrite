@@ -8,6 +8,7 @@ use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Usage\Connection;
 use Swoole\Coroutine as Co;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
@@ -102,13 +103,17 @@ class Schedule extends Action
         ?StatsResourcesPublisher $publisherForStatsResources = null,
         ?Connection $usageConnection = null,
     ): never {
-        $this->loop(fn () => (new ScheduleFunctions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
-        $this->loop(fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
-        $this->loop(fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks));
-        $this->loop(fn () => (new ScheduleMaintenance())->action($dbForPlatform, $publisherForDeletes, $pools, $telemetry));
+        // Parsed before any loop starts: a loop that throws only ends its own coroutine, so an invalid interval
+        // would otherwise leave the process healthy with inactive projects never maintained.
+        $cycle = ScheduleMaintenance::cycle();
+
+        $this->loop(ScheduleFunctions::getName(), fn () => (new ScheduleFunctions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
+        $this->loop(ScheduleExecutions::getName(), fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
+        $this->loop(ScheduleMessages::getName(), fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks));
+        $this->loop(ScheduleMaintenance::getName(), fn () => (new ScheduleMaintenance())->run($cycle, $dbForPlatform, $publisherForDeletes, $pools, $telemetry));
 
         if ($publisherForStatsResources !== null && $usageConnection !== null) {
-            $this->loop(fn () => (new StatsResources())->action($dbForPlatform, $publisherForStatsResources, $usageConnection, $telemetry));
+            $this->loop(StatsResources::getName(), fn () => (new StatsResources())->action($dbForPlatform, $publisherForStatsResources, $usageConnection, $telemetry));
         }
 
         while (true) {
@@ -116,16 +121,18 @@ class Schedule extends Action
         }
     }
 
-    private function loop(\Closure $task): void
+    private function loop(string $name, \Closure $task): void
     {
-        Co::create(function () use ($task): void {
+        Co::create(function () use ($name, $task): void {
             Span::init('schedule.combined.loop');
+            Span::add('loop', $name);
             $error = null;
 
             try {
                 $task();
             } catch (\Throwable $th) {
                 $error = $th;
+                Console::error('schedule: ' . $name . ' loop stopped: ' . $th->getMessage());
             } finally {
                 Span::current()?->finish(error: $error);
             }

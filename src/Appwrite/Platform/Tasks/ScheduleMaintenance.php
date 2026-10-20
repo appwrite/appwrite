@@ -39,9 +39,21 @@ class ScheduleMaintenance extends Action
             ->callback($this->action(...));
     }
 
+    /**
+     * @throws \InvalidArgumentException when _APP_MAINTENANCE_INACTIVE_INTERVAL is not a whole number of seconds of at least 1
+     */
+    public static function cycle(): Cycle
+    {
+        return Cycle::parse(System::getEnv('_APP_MAINTENANCE_INACTIVE_INTERVAL', self::PERIOD));
+    }
+
     public function action(Database $dbForPlatform, DeletePublisher $publisherForDeletes, Group $pools, Telemetry $telemetry): never
     {
-        $cycle = Cycle::parse(System::getEnv('_APP_MAINTENANCE_INACTIVE_INTERVAL', self::PERIOD));
+        $this->run(self::cycle(), $dbForPlatform, $publisherForDeletes, $pools, $telemetry);
+    }
+
+    public function run(Cycle $cycle, Database $dbForPlatform, DeletePublisher $publisherForDeletes, Group $pools, Telemetry $telemetry): never
+    {
         $region = System::getEnv('_APP_REGION', 'default');
 
         $sweep = new Sweep($dbForPlatform, $publisherForDeletes, $region, $cycle);
