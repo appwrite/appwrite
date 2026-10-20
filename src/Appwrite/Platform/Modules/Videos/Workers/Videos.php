@@ -248,28 +248,47 @@ class Videos extends Action
     ): void {
         $video = $videoMessage->video;
         $projectId = $videoMessage->project->getId();
-        $workspace = $this->jobWorkspace(
-            $projectId,
-            $video->getId(),
-            Base::JOB_TIMELINE,
-            \uniqid('', true)
-        );
+        $workspace = null;
         $permissions = $this->readPermissions($video);
         $started = \microtime(true);
-        $stage = 'download';
+        $stage = 'claim';
         $outcome = 'error';
 
         try {
             Console::info('Videos worker: timeline started for video ' . $video->getId());
-            // The status write doubles as the existence check: a video deleted
-            // before the job ran updates nothing, and the job stops before
-            // downloading instead of leaving orphan timeline rows.
-            $claimed = $this->timelineStatus($dbForProject, $video, Base::STATUS_STARTED);
-            if ($claimed->isEmpty()) {
+            // Compare-and-swap: only one updateDocuments may leave pending.
+            // A deleted video or a stale redelivery updates nothing and stops
+            // before download or tiling.
+            $updated = $dbForProject->updateDocuments(
+                'videos',
+                new Document([
+                    'timelineStatus' => Base::STATUS_STARTED,
+                    'timelineError' => null,
+                ]),
+                [
+                    Query::equal('$id', [$video->getId()]),
+                    Query::equal('timelineStatus', [Base::STATUS_PENDING]),
+                ]
+            );
+            if ($updated === 0) {
+                $current = $dbForProject->getDocument('videos', $video->getId());
+                $outcome = $current->isEmpty() ? 'halted' : 'duplicate';
+                return;
+            }
+
+            $video = $dbForProject->getDocument('videos', $video->getId());
+            if ($video->isEmpty()) {
                 $outcome = 'halted';
                 return;
             }
-            $video = $claimed;
+
+            $workspace = $this->jobWorkspace(
+                $projectId,
+                $video->getId(),
+                Base::JOB_TIMELINE,
+                \uniqid('', true)
+            );
+            $stage = 'download';
             [$video, $inPath] = $this->prepareSource(
                 $dbForProject,
                 $deviceForFiles,
@@ -453,7 +472,9 @@ class Videos extends Action
                 $started,
                 $outcome === 'error' ? ['error_stage' => $stage] : []
             );
-            $this->cleanup($workspace['basePath']);
+            if ($workspace !== null) {
+                $this->cleanup($workspace['basePath']);
+            }
         }
     }
 
@@ -2480,8 +2501,10 @@ class Videos extends Action
     }
 
     /**
-     * Sparse timeline state write on the video row. An empty result means the
-     * video was deleted mid-job and there is nothing left to update or notify.
+     * Sparse timeline state write on the video row after a claim has won.
+     * An empty result means the video was deleted mid-job and there is
+     * nothing left to update or notify. The pending→started claim itself
+     * uses updateDocuments so overlapping deliveries cannot both proceed.
      */
     private function timelineStatus(Database $dbForProject, Document $video, string $status, ?string $error = null): Document
     {
