@@ -31,6 +31,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "announcing-new-oauth2-providers",
+    "href": "/blog/post/announcing-new-oauth2-providers",
+    "title": "Announcing six new OAuth2 login providers in Appwrite Auth",
+    "description": "Appwrite Auth now supports OAuth2 login with Hugging Face, Resend, Cloudflare, TikTok, Kakao, and Webflow. See what each returns and how to add it to a server-side app.",
+    "date": "2026-10-19",
+    "lastUpdated": "2026-10-19",
+    "timeToRead": 8,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-new-oauth2-providers/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-passkeys",
     "href": "/blog/post/announcing-passkeys",
     "title": "Announcing passkeys: Sign in without a password on the web, Android, and iOS",
