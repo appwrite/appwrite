@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace Tests\Unit\Maintenance;
 
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
-use Appwrite\Maintenance\Cadence;
-use Appwrite\Maintenance\Cohort;
-use Appwrite\Maintenance\Slot;
+use Appwrite\Maintenance\Backlog;
 use Appwrite\Maintenance\Sweep;
+use Appwrite\Schedule\Source\Maintenance;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\Memory as MemoryCache;
 use Utopia\Cache\Cache;
@@ -23,6 +22,9 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Queue\Queue;
 use Utopia\Schedule\Clock\Test as TestClock;
+use Utopia\Schedule\Occurrence;
+use Utopia\Schedule\Scheduler;
+use Utopia\Schedule\Store\Memory as MemoryStore;
 
 require_once __DIR__ . '/../../../app/init.php';
 
@@ -34,275 +36,315 @@ final class SweepTest extends TestCase
 
     private const string QUEUE = 'v1-deletes';
 
-    private const int BLOCKS = 34;
+    private const int SLOTS = 2016;
+
+    private const int SPACING = 1009;
+
+    private \DateTimeImmutable $week;
 
     private TestClock $clock;
 
     private Database $database;
 
-    private string $cutoff;
-
-    /** @var list<string> */
-    private array $active = [];
-
-    /** @var list<string> */
+    /** @var array<string, int> inactive project => due of the slice that owns it */
     private array $inactive = [];
 
     /** @var list<string> */
-    private array $elsewhere = [];
+    private array $excluded = [];
 
     protected function setUp(): void
     {
-        $this->clock = new TestClock(new \DateTimeImmutable('2026-03-02 00:00:00', new \DateTimeZone('UTC')));
-        $this->cutoff = Sweep::cutoff($this->clock);
-        $this->database = $this->seed(new Memory());
+        $this->week = new \DateTimeImmutable('2026-03-02 00:00:00', new \DateTimeZone('UTC'));
+        $this->clock = new TestClock($this->week);
     }
 
-    public function testDefaultIntervalReachesEachActiveProjectOncePerCycle(): void
+    public function testWeekOfSlicesReachesEachInactiveProjectOnce(): void
     {
-        $cadence = Cadence::fromIntervals(86400, 604800);
-        $this->assertSame(24, $cadence->slots(Cohort::Active));
+        $this->database = $this->population(new Memory(), 240, fn (string $id, int $sequence): int => \intdiv($sequence, Sweep::BLOCK) % self::SLOTS);
 
-        $reached = [];
-        foreach ($this->ticks($cadence, Cohort::Active) as $slot) {
-            $publisher = $this->publisher();
-            $this->sweep($publisher)->run(Cohort::Active, $slot, $this->cutoff);
-            \array_push($reached, ...$this->projects($publisher));
-        }
+        $publisher = $this->publisher();
+        $reached = $this->week($this->sweep($publisher), $publisher);
 
-        $this->assertSame($this->sorted($this->active), $this->sorted($reached));
-    }
-
-    public function testHourlyIntervalReachesEveryActiveProjectEveryTick(): void
-    {
-        $cadence = Cadence::fromIntervals(3600, 604800);
-        $this->assertSame(1, $cadence->slots(Cohort::Active));
-
-        $anchor = $this->clock->now()->getTimestamp();
-        foreach ([0, 1] as $tick) {
-            $publisher = $this->publisher();
-            $slot = Slot::at($anchor + $tick * $cadence->tick, $anchor, $cadence->tick, 1);
-
-            $this->sweep($publisher)->run(Cohort::Active, $slot, $this->cutoff);
-
-            $this->assertSame($this->sorted($this->active), $this->sorted($this->projects($publisher)), 'tick ' . $tick);
-        }
-    }
-
-    public function testActiveCohortIgnoresAFullQueue(): void
-    {
-        $publisher = new QueuePublisher($this->clock, 0, 1000);
-        $before = $this->clock->now();
-
-        $outcome = $this->sweep($publisher)->run(Cohort::Active, Slot::full(), $this->cutoff);
-
-        $this->assertSame($this->sorted($this->active), $this->sorted($this->projects($publisher)));
-        $this->assertSame(\count($this->active), $outcome->enqueued);
-        $this->assertSame(0, $outcome->waited);
-        $this->assertSame(0, $outcome->dropped);
-        $this->assertSame($before->format('U.u'), $this->clock->now()->format('U.u'));
+        $this->assertSame($this->keyed($this->inactive), $this->keyed(\array_map(fn (array $dues): int => $dues[0], $reached)));
+        $this->assertSame([], \array_keys(\array_filter($reached, fn (array $dues): bool => \count($dues) > 1)));
+        $this->assertSame([], \array_values(\array_intersect(\array_keys($reached), $this->excluded)));
+        $this->assertArrayHasKey('stale-' . (1 + 4 * self::SPACING), $reached);
+        // Block 2068 is past SLOTS blocks, so it wraps round to slot 52.
+        $this->assertArrayHasKey('old-' . (1 + 205 * self::SPACING), $reached);
+        $this->assertArrayNotHasKey('edge-' . (1 + 3 * self::SPACING), $reached);
         foreach ($publisher->payloads(self::QUEUE) as $payload) {
             $this->assertSame(DELETE_TYPE_MAINTENANCE, $payload['type']);
             $this->assertSame(self::REGION, $payload['project']['region']);
         }
     }
 
-    public function testInactiveCohortCoversOldAndNullAccessedAtOncePerWeek(): void
+    public function testSliceAndCutoffComeFromTheOccurrence(): void
     {
-        $cadence = Cadence::fromIntervals(86400, 604800);
-        $this->assertSame(168, $cadence->slots(Cohort::Inactive));
+        $due = $this->week->modify('+35 minutes');
+        $this->clock = new TestClock($due->modify('+5 days'));
+        $slot = $this->slot($due->getTimestamp());
+        $base = $slot * Sweep::BLOCK;
+        $wrapped = ($slot + self::SLOTS) * Sweep::BLOCK;
+        $neighbour = (($slot + 1) % self::SLOTS) * Sweep::BLOCK;
 
-        $reached = [];
-        foreach ($this->ticks($cadence, Cohort::Inactive) as $slot) {
-            $publisher = new QueuePublisher($this->clock, 1000);
-            $deadline = $this->clock->now()->getTimestamp() + $cadence->tick;
+        $this->database = $this->seed(new Memory(), [
+            ['recent-' . ($base + 1), $base + 1, $due->modify('-29 days'), self::REGION],
+            ['old-' . ($base + 2), $base + 2, $due->modify('-31 days'), self::REGION],
+            ['never-' . ($base + 3), $base + 3, null, self::REGION],
+            ['elsewhere-' . ($base + 4), $base + 4, null, self::ELSEWHERE],
+            ['old-' . ($wrapped + 5), $wrapped + 5, $due->modify('-31 days'), self::REGION],
+            ['old-' . ($neighbour + 6), $neighbour + 6, $due->modify('-31 days'), self::REGION],
+        ]);
 
-            $outcome = $this->sweep($publisher)->run(Cohort::Inactive, $slot, $this->cutoff, $deadline);
+        $publisher = $this->publisher();
+        ($this->sweep($publisher))([$this->occurrence($due)]);
 
-            $this->assertSame(0, $outcome->dropped);
-            \array_push($reached, ...$this->projects($publisher));
-        }
-
-        $this->assertSame($this->sorted($this->inactive), $this->sorted($reached));
-        $this->assertContains('old-2', $reached);
-        $this->assertContains('never-1002', $reached);
-    }
-
-    public function testCohortsPartitionEveryProjectAtOneCutoff(): void
-    {
-        $cadence = Cadence::fromIntervals(86400, 604800);
-        $reached = [Cohort::Active->value => [], Cohort::Inactive->value => []];
-
-        foreach ([Cohort::Active, Cohort::Inactive] as $cohort) {
-            foreach ($this->ticks($cadence, $cohort) as $slot) {
-                $publisher = $this->publisher();
-                $this->sweep($publisher)->run($cohort, $slot, $this->cutoff);
-                \array_push($reached[$cohort->value], ...$this->projects($publisher));
-            }
-        }
-
-        $this->assertContains('edge-5003', $reached[Cohort::Active->value]);
-        $this->assertNotContains('edge-5003', $reached[Cohort::Inactive->value]);
-        $this->assertContains('never-1002', $reached[Cohort::Inactive->value]);
-        $this->assertNotContains('never-1002', $reached[Cohort::Active->value]);
         $this->assertSame(
-            $this->sorted([...$this->active, ...$this->inactive]),
-            $this->sorted([...$reached[Cohort::Active->value], ...$reached[Cohort::Inactive->value]]),
+            $this->sorted(['old-' . ($base + 2), 'never-' . ($base + 3), 'old-' . ($wrapped + 5)]),
+            $this->sorted($this->projects($publisher)),
         );
     }
 
-    public function testOtherRegionIsNeverEnqueued(): void
+    public function testDocumentSequencesSpreadByHash(): void
     {
-        $reached = [];
-        foreach ([Cohort::Active, Cohort::Inactive] as $cohort) {
-            $publisher = $this->publisher();
-            $this->sweep($publisher)->run($cohort, Slot::full(), $this->cutoff);
-            \array_push($reached, ...$this->projects($publisher));
-        }
-
-        $this->assertSame([], \array_values(\array_intersect($reached, $this->elsewhere)));
-
-        $elsewhere = [];
-        foreach ([Cohort::Active, Cohort::Inactive] as $cohort) {
-            $publisher = $this->publisher();
-            (new Sweep($this->database, new DeletePublisher($publisher, new Queue(self::QUEUE)), $this->clock, self::ELSEWHERE))
-                ->run($cohort, Slot::full(), $this->cutoff);
-            \array_push($elsewhere, ...$this->projects($publisher));
-        }
-
-        $this->assertSame($this->sorted($this->elsewhere), $this->sorted($elsewhere));
-    }
-
-    public function testInactiveBackpressureWaitsForTheQueueToDrain(): void
-    {
-        $publisher = new QueuePublisher($this->clock, 50, 1000);
-        $start = (float) $this->clock->now()->format('U.u');
-        $deadline = $this->clock->now()->getTimestamp() + Cadence::HOUR;
-
-        $outcome = $this->sweep($publisher)->run(Cohort::Inactive, Slot::full(), $this->cutoff, $deadline);
-
-        $this->assertSame($this->sorted($this->inactive), $this->sorted($this->projects($publisher)));
-        $this->assertSame(\count($this->inactive), $outcome->enqueued);
-        $this->assertSame(0, $outcome->dropped);
-        $this->assertGreaterThan(0, $outcome->waited);
-        // 1000 queued at 50 a second falls below the backlog of 100 after 18 seconds.
-        $this->assertGreaterThan(18.0, (float) $this->clock->now()->format('U.u') - $start);
-    }
-
-    public function testInactiveDropsTheRemainingBlocksAtTheDeadline(): void
-    {
-        // Two publishes fill the queue to the backlog and nothing drains it.
-        $publisher = new QueuePublisher($this->clock, 0, Sweep::BACKLOG - 2);
-        $deadline = $this->clock->now()->getTimestamp() + 5;
-
-        // Slot 0 of 3 owns blocks 0, 3, 6, ... 33: twelve of them.
-        $outcome = $this->sweep($publisher)->run(Cohort::Inactive, new Slot(0, 3), $this->cutoff, $deadline);
-
-        $this->assertSame(['old-2', 'never-3002'], $this->projects($publisher));
-        $this->assertSame(2, $outcome->enqueued);
-        $this->assertSame(10, $outcome->dropped);
-        $this->assertTrue($outcome->truncated);
-        $this->assertGreaterThan(0, $outcome->waited);
-        $this->assertGreaterThanOrEqual($deadline, $this->clock->now()->getTimestamp());
-    }
-
-    public function testInactiveBlockDroppedInOneCycleIsReachedFirstInTheNext(): void
-    {
-        // Slot 1 of 12 owns blocks 1, 13 and 25.
-        $anchor = $this->clock->now()->getTimestamp();
-        $first = Slot::at($anchor + (4 * 12 + 1) * Cadence::HOUR, $anchor, Cadence::HOUR, 12);
-        $second = Slot::at($anchor + (5 * 12 + 1) * Cadence::HOUR, $anchor, Cadence::HOUR, 12);
-        $this->assertSame(1, $first->index);
-        $this->assertSame(1, $second->index);
-
-        $backlogged = new QueuePublisher($this->clock, 0, Sweep::BACKLOG - 1);
-        $outcome = $this->sweep($backlogged)->run(Cohort::Inactive, $first, $this->cutoff, $this->clock->now()->getTimestamp() + 5);
-
-        $this->assertSame(['never-13002'], $this->projects($backlogged));
-        $this->assertSame(2, $outcome->dropped);
-
-        $publisher = $this->publisher();
-        $outcome = $this->sweep($publisher)->run(Cohort::Inactive, $second, $this->cutoff, $this->clock->now()->getTimestamp() + Cadence::HOUR);
-
-        $this->assertSame(['never-25002', 'never-1002', 'never-13002'], $this->projects($publisher));
-        $this->assertSame(0, $outcome->dropped);
-    }
-
-    public function testHashWalkStopsAtTheDeadlineWithoutCountingBlocks(): void
-    {
-        $this->database = $this->seed(new Uuid7Memory());
-        $publisher = new QueuePublisher($this->clock, 0, Sweep::BACKLOG);
-
-        $outcome = $this->sweep($publisher)->run(Cohort::Inactive, new Slot(0, 3), $this->cutoff, $this->clock->now()->getTimestamp() + 5);
-
-        $this->assertSame([], $this->projects($publisher));
-        $this->assertSame(0, $outcome->dropped);
-        $this->assertTrue($outcome->truncated);
-        $this->assertGreaterThan(0, $outcome->waited);
-    }
-
-    public function testUuid7SequencesSelectBySlotHash(): void
-    {
-        $this->database = $this->seed(new Uuid7Memory());
+        $this->database = $this->population(new Uuid7Memory(), 72, fn (string $id, int $sequence): int => \crc32($id) % self::SLOTS);
         $this->assertSame(ColumnType::Uuid7, $this->database->getIdAttributeType());
 
-        $cadence = Cadence::fromIntervals(86400, 604800);
-        $reached = [];
-        $owners = [];
-        $slotsByBlock = [];
-        foreach ($this->ticks($cadence, Cohort::Active) as $slot) {
-            $publisher = $this->publisher();
-            $this->sweep($publisher)->run(Cohort::Active, $slot, $this->cutoff);
+        $publisher = $this->publisher();
+        $reached = $this->week($this->sweep($publisher), $publisher);
 
-            foreach ($this->projects($publisher) as $id) {
-                $project = $this->database->skipFilters(fn (): Document => $this->database->getDocument('projects', $id), APP_PROJECTS_SUBQUERIES);
-                $this->assertSame($slot->index, Sweep::owner($project, $slot->count, ColumnType::Uuid7), $id);
-                $owners[$slot->index] = true;
-                $slotsByBlock[\intdiv((int) $project->getSequence(), Sweep::BLOCK)][$slot->index] = true;
-                $reached[] = $id;
-            }
-        }
-
-        $this->assertSame($this->sorted($this->active), $this->sorted($reached));
-        $this->assertGreaterThan(1, \count($owners));
-        // A UUID7 sequence has no integer order to block on, so neighbours by sequence must not travel together.
-        $this->assertNotEmpty(\array_filter($slotsByBlock, fn (array $slots): bool => \count($slots) > 1));
+        $this->assertSame($this->keyed($this->inactive), $this->keyed(\array_map(fn (array $dues): int => $dues[0], $reached)));
+        $this->assertSame([], \array_keys(\array_filter($reached, fn (array $dues): bool => \count($dues) > 1)));
+        $this->assertSame([], \array_values(\array_intersect(\array_keys($reached), $this->excluded)));
     }
 
-    public function testProjectFilterSelectsOnlyThatProject(): void
+    public function testBacklogDefersTheSliceUntilTheQueueDrains(): void
     {
-        $expectations = [
-            Cohort::Active->value => ['active-5001' => ['active-5001'], 'edge-5003' => ['edge-5003'], 'never-5002' => [], 'elsewhere-5500' => [], 'missing' => []],
-            Cohort::Inactive->value => ['never-5002' => ['never-5002'], 'old-6002' => ['old-6002'], 'active-5001' => [], 'edge-5003' => [], 'elsewhere-5500' => [], 'missing' => []],
-        ];
+        $due = $this->week->modify('+1 hour');
+        $this->clock = new TestClock($due->modify('-30 seconds'));
+        $expected = $this->slice($due, 4);
+        $this->database = $this->seed(new Memory(), [
+            ...$this->rows($expected, $due),
+            ...$this->rows($this->slice($due->modify('+5 minutes'), 3, 'later'), $due),
+        ]);
 
-        foreach ($expectations as $cohort => $projects) {
-            foreach ($projects as $project => $expected) {
-                $publisher = $this->publisher();
+        $store = new MemoryStore();
+        $publisher = new QueuePublisher($this->clock, 1, 150);
 
-                $this->sweep($publisher)->run(Cohort::from($cohort), Slot::full(), $this->cutoff, null, $project);
-
-                $this->assertSame($expected, $this->projects($publisher), $cohort . ' ' . $project);
-            }
+        $sweep = $this->sweep($publisher);
+        $scheduler = $this->scheduler($store);
+        $deferred = null;
+        try {
+            $scheduler->run(function (array $occurrences) use ($sweep, $scheduler): void {
+                $sweep($occurrences);
+                $scheduler->stop();
+            });
+        } catch (Backlog $backlog) {
+            $deferred = $backlog;
         }
+
+        $this->assertInstanceOf(Backlog::class, $deferred);
+        $this->assertSame([], $this->projects($publisher));
+        $this->assertLessThanOrEqual((float) $due->getTimestamp(), $store->load()?->coveredUntil);
+
+        $this->clock->advance(200);
+
+        $sweep = $this->sweep($publisher);
+        $scheduler = $this->scheduler($store);
+        $scheduler->run(function (array $occurrences) use ($sweep, $scheduler): void {
+            $sweep($occurrences);
+            $scheduler->stop();
+        });
+
+        $this->assertSame($this->sorted(\array_keys($expected)), $this->sorted($this->projects($publisher)));
+        $this->assertGreaterThan((float) $due->getTimestamp(), $store->load()?->coveredUntil);
+    }
+
+    public function testRedeliveredTickDoesNotRepeatAHandledSlice(): void
+    {
+        $first = $this->week->modify('+2 hours');
+        $second = $first->modify('+5 minutes');
+        $this->clock = new TestClock($first->modify('-30 seconds'));
+        $firstSlice = $this->slice($first, 6, 'first');
+        $secondSlice = $this->slice($second, 3, 'second');
+        $this->database = $this->seed(new Memory(), [...$this->rows($firstSlice, $first), ...$this->rows($secondSlice, $first)]);
+
+        $store = new MemoryStore();
+        // 95 queued: the first slice's six take it to the backlog before the second slice is reached.
+        $publisher = new QueuePublisher($this->clock, 1, Sweep::BACKLOG - 5);
+        $sweep = $this->sweep($publisher);
+
+        $scheduler = $this->scheduler($store);
+        $scheduler->reconcile();
+        $this->assertSame([], $scheduler->tick());
+        $this->assertTrue($scheduler->commit());
+
+        $this->clock->advance(340);
+
+        $handed = [];
+        $deferred = null;
+        try {
+            $scheduler->run(function (array $occurrences) use ($sweep, $scheduler, &$handed): void {
+                \array_push($handed, ...\array_map(fn (Occurrence $occurrence): int => $occurrence->due->getTimestamp(), $occurrences));
+                $sweep($occurrences);
+                $scheduler->stop();
+            });
+        } catch (Backlog $backlog) {
+            $deferred = $backlog;
+        }
+
+        $this->assertInstanceOf(Backlog::class, $deferred);
+        $this->assertSame([$first->getTimestamp(), $second->getTimestamp()], $handed);
+        $this->assertSame($this->sorted(\array_keys($firstSlice)), $this->sorted($this->projects($publisher)));
+
+        $this->clock->advance(150);
+        $before = \count($this->projects($publisher));
+
+        $handed = [];
+        $scheduler = $this->scheduler($store);
+        $scheduler->run(function (array $occurrences) use ($sweep, $scheduler, &$handed): void {
+            \array_push($handed, ...\array_map(fn (Occurrence $occurrence): int => $occurrence->due->getTimestamp(), $occurrences));
+            $sweep($occurrences);
+            $scheduler->stop();
+        });
+
+        $this->assertSame([$first->getTimestamp(), $second->getTimestamp()], $handed);
+        $this->assertSame($this->sorted(\array_keys($secondSlice)), $this->sorted(\array_slice($this->projects($publisher), $before)));
+        $this->assertSame(
+            $this->sorted([...\array_keys($firstSlice), ...\array_keys($secondSlice)]),
+            $this->sorted($this->projects($publisher)),
+        );
+        $this->assertGreaterThan((float) $second->getTimestamp(), $store->load()?->coveredUntil);
     }
 
     /**
-     * Every slot of one cycle, as consecutive hourly ticks reach them.
+     * Sweeps every slice of the week in order, one occurrence per call, with the clock following the dues.
      *
-     * @return list<Slot>
+     * @return array<string, list<int>> project => dues of the slices that enqueued it
      */
-    private function ticks(Cadence $cadence, Cohort $cohort): array
+    private function week(Sweep $sweep, QueuePublisher $publisher): array
     {
-        $anchor = $this->clock->now()->getTimestamp();
-        $slots = [];
-        for ($tick = 0; $tick < $cadence->slots($cohort); $tick++) {
-            $slots[] = Slot::at($anchor + $tick * $cadence->tick, $anchor, $cadence->tick, $cadence->slots($cohort));
+        $reached = [];
+        for ($slice = 0; $slice < self::SLOTS; $slice++) {
+            $due = $this->week->modify('+' . ($slice * Sweep::INTERVAL) . ' seconds');
+            $this->clock->advance((float) $due->getTimestamp() - (float) $this->clock->now()->format('U.u') + 1);
+
+            $before = \count($publisher->payloads(self::QUEUE));
+            $sweep([$this->occurrence($due)]);
+
+            foreach (\array_slice($this->projects($publisher), $before) as $id) {
+                $reached[$id][] = $due->getTimestamp();
+            }
         }
 
-        $this->assertSame(\range(0, $cadence->slots($cohort) - 1), \array_map(fn (Slot $slot): int => $slot->index, $slots));
+        return $reached;
+    }
 
-        return $slots;
+    /**
+     * $count projects, one per block, SPACING sequences apart. They cycle through: recently accessed, accessed 40 days
+     * ago, never accessed, accessed exactly at the cutoff of the slice that owns them, one second before that cutoff,
+     * and never accessed in another region. Every seventh also has a never-accessed neighbour one sequence later.
+     *
+     * @param \Closure(string, int): int $owner the slot a project belongs to
+     */
+    private function population(Adapter $adapter, int $count, \Closure $owner): Database
+    {
+        $this->inactive = [];
+        $this->excluded = [];
+        $rows = [];
+
+        for ($index = 0; $index < $count; $index++) {
+            $sequence = 1 + $index * self::SPACING;
+            $kind = ['active', 'old', 'never', 'edge', 'stale', 'elsewhere'][$index % 6];
+            $id = $kind . '-' . $sequence;
+            $cutoff = $this->due($owner($id, $sequence))->modify('-' . Sweep::INACTIVITY . ' seconds');
+
+            [$accessedAt, $region] = match ($kind) {
+                'active' => [$this->week->modify('-1 day'), self::REGION],
+                'old' => [$this->week->modify('-40 days'), self::REGION],
+                'never' => [null, self::REGION],
+                'edge' => [$cutoff, self::REGION],
+                'stale' => [$cutoff->modify('-1 second'), self::REGION],
+                'elsewhere' => [null, self::ELSEWHERE],
+            };
+            $rows[] = [$id, $sequence, $accessedAt, $region];
+
+            if (\in_array($kind, ['old', 'never', 'stale'], true)) {
+                $this->inactive[$id] = $this->due($owner($id, $sequence))->getTimestamp();
+            } else {
+                $this->excluded[] = $id;
+            }
+
+            if ($index % 7 === 0) {
+                $pair = 'pair-' . ($sequence + 1);
+                $rows[] = [$pair, $sequence + 1, null, self::REGION];
+                $this->inactive[$pair] = $this->due($owner($pair, $sequence + 1))->getTimestamp();
+            }
+        }
+
+        return $this->seed($adapter, $rows);
+    }
+
+    /**
+     * Inactive projects in the first block the slot of $due owns, half of them never accessed.
+     *
+     * @return array<string, int> project => sequence
+     */
+    private function slice(\DateTimeImmutable $due, int $count, string $prefix = 'slice'): array
+    {
+        $base = $this->slot($due->getTimestamp()) * Sweep::BLOCK;
+        $projects = [];
+        for ($offset = 1; $offset <= $count; $offset++) {
+            $projects[$prefix . '-' . ($base + $offset)] = $base + $offset;
+        }
+
+        return $projects;
+    }
+
+    /**
+     * @param array<string, int> $projects
+     * @return list<array{0: string, 1: int, 2: ?\DateTimeImmutable, 3: string}>
+     */
+    private function rows(array $projects, \DateTimeImmutable $due): array
+    {
+        $rows = [];
+        foreach ($projects as $id => $sequence) {
+            $rows[] = [$id, $sequence, $sequence % 2 === 0 ? null : $due->modify('-60 days'), self::REGION];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Where the week's slices start: the due at which the slot comes round.
+     */
+    private function due(int $slot): \DateTimeImmutable
+    {
+        $offset = ($slot - $this->slot($this->week->getTimestamp()) + self::SLOTS) % self::SLOTS;
+
+        return $this->week->modify('+' . ($offset * Sweep::INTERVAL) . ' seconds');
+    }
+
+    private function slot(int $due): int
+    {
+        return \intdiv($due, Sweep::INTERVAL) % self::SLOTS;
+    }
+
+    private function occurrence(\DateTimeImmutable $due): Occurrence
+    {
+        return new Occurrence(Maintenance::ID, $due, null, (string) Sweep::INTERVAL);
+    }
+
+    private function scheduler(MemoryStore $store): Scheduler
+    {
+        return new Scheduler(
+            source: new Maintenance(Sweep::INTERVAL),
+            store: $store,
+            tickSeconds: 60,
+            recoverSeconds: 3600,
+            leaseSeconds: 600,
+            clock: $this->clock,
+        );
     }
 
     private function publisher(): QueuePublisher
@@ -312,7 +354,7 @@ final class SweepTest extends TestCase
 
     private function sweep(QueuePublisher $publisher): Sweep
     {
-        return new Sweep($this->database, new DeletePublisher($publisher, new Queue(self::QUEUE)), $this->clock, self::REGION);
+        return new Sweep($this->database, new DeletePublisher($publisher, new Queue(self::QUEUE)), self::REGION, Sweep::INTERVAL, self::SLOTS);
     }
 
     /**
@@ -324,23 +366,31 @@ final class SweepTest extends TestCase
     }
 
     /**
-     * @param list<string> $ids
+     * @param list<string> $values
      * @return list<string>
      */
-    private function sorted(array $ids): array
+    private function sorted(array $values): array
     {
-        \sort($ids);
+        \sort($values);
 
-        return $ids;
+        return $values;
     }
 
     /**
-     * Each block holds a recently accessed project, an inactive one (31 days
-     * old in even blocks, never accessed in odd ones) and one in another
-     * region; every fifth block adds one accessed exactly at the cutoff.
-     * Blocks 7 and 8 also hold projects on their boundaries.
+     * @param array<string, int> $values
+     * @return array<string, int>
      */
-    private function seed(Adapter $adapter): Database
+    private function keyed(array $values): array
+    {
+        \ksort($values);
+
+        return $values;
+    }
+
+    /**
+     * @param list<array{0: string, 1: int, 2: ?\DateTimeImmutable, 3: string}> $rows
+     */
+    private function seed(Adapter $adapter, array $rows): Database
     {
         $authorization = new Authorization();
         $authorization->disable();
@@ -360,45 +410,20 @@ final class SweepTest extends TestCase
             indexes: $collections['projects']['indexes'],
         ));
 
-        $now = $this->clock->now();
-        $recent = DateTime::format(\DateTime::createFromImmutable($now->modify('-1 day')));
-        $old = DateTime::format(\DateTime::createFromImmutable($now->modify('-31 days')));
+        $timezone = new \DateTimeZone(\date_default_timezone_get());
 
-        $this->active = [];
-        $this->inactive = [];
-        $this->elsewhere = [];
-        $rows = [];
-        for ($block = 0; $block < self::BLOCKS; $block++) {
-            $base = $block * Sweep::BLOCK;
-            $rows[] = ['active', $base + 1, $recent, self::REGION];
-            $rows[] = $block % 2 === 0 ? ['old', $base + 2, $old, self::REGION] : ['never', $base + 2, null, self::REGION];
-            if ($block % 5 === 0) {
-                $rows[] = ['edge', $base + 3, $this->cutoff, self::REGION];
-            }
-            $rows[] = ['elsewhere', $base + 500, $block % 2 === 0 ? $recent : $old, self::ELSEWHERE];
-        }
-        $rows[] = ['active', 7999, $recent, self::REGION];
-        $rows[] = ['old', 8000, $old, self::REGION];
-
-        $database->skipValidation(function () use ($database, $rows): void {
-            foreach ($rows as [$kind, $sequence, $accessedAt, $region]) {
-                $id = $kind . '-' . $sequence;
+        $database->skipValidation(function () use ($database, $rows, $timezone): void {
+            foreach ($rows as [$id, $sequence, $accessedAt, $region]) {
                 $database->skipFilters(fn (): Document => $database->createDocument('projects', new Document([
                     '$id' => $id,
                     '$sequence' => (string) $sequence,
                     'name' => $id,
                     'region' => $region,
-                    'accessedAt' => $accessedAt,
+                    'accessedAt' => $accessedAt === null ? null : DateTime::format(\DateTime::createFromImmutable($accessedAt)->setTimezone($timezone)),
                     'teamId' => 'team',
                     'teamInternalId' => '1',
                     'database' => 'database_db_' . $region,
                 ])), APP_PROJECTS_SUBQUERIES);
-
-                match (true) {
-                    $region !== self::REGION => $this->elsewhere[] = $id,
-                    $kind === 'old', $kind === 'never' => $this->inactive[] = $id,
-                    default => $this->active[] = $id,
-                };
             }
         });
 
