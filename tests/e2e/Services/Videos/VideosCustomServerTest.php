@@ -2926,8 +2926,11 @@ final class VideosCustomServerTest extends Scope
             'output' => 'hls',
         ]);
         $this->assertEquals(202, $pending['headers']['status-code']);
-        // Park as pending so the worker cannot claim before this assertion.
-        $this->timeTravelRendition($projectId, $pending['body']['$id'], status: 'pending');
+        $pendingId = $pending['body']['$id'];
+        // Wait for encode to finish, then seed pending so a racing worker cannot
+        // claim the row between the park and the delete.
+        $this->assertEquals('ready', $this->waitForRenditionTerminalState($videoId, $pendingId)['status']);
+        $this->timeTravelRendition($projectId, $pendingId, status: 'pending');
 
         $allowedPending = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->headers());
         $this->assertEquals(204, $allowedPending['headers']['status-code']);
@@ -2943,8 +2946,9 @@ final class VideosCustomServerTest extends Scope
             $this->assertEquals(202, $rendition['headers']['status-code']);
             $renditionId = $rendition['body']['$id'];
 
-            // Park off the encode path so the worker cannot settle the row, and keep
-            // $updatedAt current so the retention window still treats it as live.
+            // Wait for encode to finish, then seed the live status so a racing
+            // worker cannot settle the row after the 409 assertion.
+            $this->assertEquals('ready', $this->waitForRenditionTerminalState($videoId, $renditionId)['status'], $status);
             $this->timeTravelRendition($projectId, $renditionId, status: $status);
 
             $blocked = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->headers());
@@ -2971,7 +2975,9 @@ final class VideosCustomServerTest extends Scope
             'output' => 'hls',
         ]);
         $this->assertEquals(202, $rendition['headers']['status-code']);
-        $this->timeTravelRendition($projectId, $rendition['body']['$id'], status: 'aborted');
+        $abortedId = $rendition['body']['$id'];
+        $this->assertEquals('ready', $this->waitForRenditionTerminalState($videoId, $abortedId)['status']);
+        $this->timeTravelRendition($projectId, $abortedId, status: 'aborted');
 
         $allowed = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->headers());
         $this->assertEquals(204, $allowed['headers']['status-code']);
@@ -2995,6 +3001,9 @@ final class VideosCustomServerTest extends Scope
         ]);
         $this->assertEquals(202, $pending['headers']['status-code']);
         $pendingId = $pending['body']['$id'];
+        // Wait for encode to finish, then seed pending so a racing worker cannot
+        // claim the row between the park and the delete.
+        $this->assertEquals('ready', $this->waitForRenditionTerminalState($videoId, $pendingId)['status']);
         $this->timeTravelRendition($projectId, $pendingId, status: 'pending');
 
         $allowedPending = $this->client->call(
@@ -3013,8 +3022,7 @@ final class VideosCustomServerTest extends Scope
             $liveId = $live['body']['$id'];
             // Wait for encode to finish, then seed the live status so a racing
             // worker cannot settle the row after the 409 assertion.
-            $readyBody = $this->waitForRenditionTerminalState($videoId, $liveId);
-            $this->assertEquals('ready', $readyBody['status'], $status);
+            $this->assertEquals('ready', $this->waitForRenditionTerminalState($videoId, $liveId)['status'], $status);
             $this->timeTravelRendition($projectId, $liveId, status: $status);
 
             $blocked = $this->client->call(
@@ -3068,6 +3076,9 @@ final class VideosCustomServerTest extends Scope
         ]);
         $this->assertEquals(201, $pending['headers']['status-code']);
         $pendingId = $pending['body']['$id'];
+        // Wait for the caption job to finish, then seed pending so a racing
+        // worker cannot claim the row between the park and the delete.
+        $this->assertEquals('ready', $this->waitForCaptionTerminalState($videoId, $pendingId)['status']);
         $this->timeTravelCaption($projectId, $pendingId, status: 'pending');
 
         $allowedPending = $this->client->call(
