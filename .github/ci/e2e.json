@@ -203,6 +203,10 @@
         "src/Appwrite/Platform/Tasks/Schedule.php",
         "src/Appwrite/Schedule/Source/Maintenance.php",
         "src/Appwrite/Platform/Workers/Deletes.php",
+        "src/Appwrite/Platform/Workers/Maintenance.php",
+        "src/Appwrite/Event/Message/Maintenance.php",
+        "src/Appwrite/Event/Publisher/Maintenance.php",
+        "app/config/workers.php",
         "packages/schedule/"
       ]
     },

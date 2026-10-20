@@ -702,6 +702,14 @@ services:
     entrypoint: schedule-maintenance
     container_name: appwrite-task-scheduler-maintenance
 
+  appwrite-worker-maintenance:
+    profiles:
+      - separate
+    extends:
+      service: appwrite-worker
+    entrypoint: worker-maintenance
+    container_name: appwrite-worker-maintenance
+
   appwrite-worker-webhooks:
     profiles:
       - separate
