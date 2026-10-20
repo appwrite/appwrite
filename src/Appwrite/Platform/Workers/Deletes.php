@@ -51,11 +51,6 @@ class Deletes extends Action
     protected array $selects = ['$sequence', '$id', '$collection', '$permissions', '$updatedAt'];
     public const PROCESSING_STUCK_RETENTION_SECONDS = 3 * 24 * 60 * 60; // 3 days
 
-    /**
-     * Deployment statuses a build never leaves; the count cap counts and retires only these.
-     */
-    private const array FINISHED_DEPLOYMENT_STATUSES = ['ready', 'failed', 'canceled'];
-
     public static function getName(): string
     {
         return 'deletes';
@@ -605,8 +600,6 @@ class Deletes extends Action
             }
 
             $now = new \DateTime();
-            $days = $retention->resolve($requested);
-            $policyCutoff = $days > 0 ? DateTime::addSeconds(clone $now, -86400 * $days) : null;
 
             $kept = [];
             $activeDeploymentId = $resource->getAttribute('deploymentId', '');
@@ -641,41 +634,16 @@ class Deletes extends Action
                 $queries[] = Query::notEqual('$id', $deploymentId);
             }
 
-            if ($requested > 0) {
-                $this->retireDeployments(Reason::Requested, [
-                    ...$queries,
-                    Query::createdBefore(DateTime::addSeconds(clone $now, -86400 * $requested)),
-                    Query::orderDesc('$createdAt'),
-                ], $retention, $resource, $dbForProject, $publisherForDeletes, $project);
-            }
-
-            // A clamped request gets its own pass, so an override can tell the policy apart from the request.
-            if ($policyCutoff !== null && $days !== $requested) {
-                $this->retireDeployments(Reason::Policy, [
-                    ...$queries,
-                    Query::createdBefore($policyCutoff),
-                    Query::orderDesc('$createdAt'),
-                ], $retention, $resource, $dbForProject, $publisherForDeletes, $project);
+            foreach ($retention->ages($requested, $now) as $pass) {
+                $this->retireDeployments($pass->reason, [...$queries, ...$pass->queries], $retention, $resource, $dbForProject, $publisherForDeletes, $project);
             }
 
             if ($retention->maxCount === 0) {
                 return;
             }
 
-            // The cap keeps the newest finished deployments; a build in progress neither takes a slot nor is retired.
-            $finished = [
-                ...$queries,
-                Query::equal('status', self::FINISHED_DEPLOYMENT_STATUSES),
-            ];
-
             try {
-                $cutoff = $dbForProject->find('deployments', [
-                    ...$finished,
-                    Query::orderDesc('$createdAt'),
-                    Query::orderDesc('$sequence'),
-                    Query::limit(1),
-                    Query::offset($retention->maxCount),
-                ]);
+                $cutoff = $dbForProject->find('deployments', [...$queries, ...$retention->cutoff()]);
             } catch (Throwable $th) {
                 Console::error("Failed to find the deployment count cutoff for {$resource->getCollection()} {$resource->getId()} in project {$project->getId()}: {$th->getMessage()}");
                 return;
@@ -685,20 +653,8 @@ class Deletes extends Action
                 return;
             }
 
-            $createdAt = $cutoff[0]->getCreatedAt();
-            $this->retireDeployments(Reason::Count, [
-                ...$finished,
-                Query::or([
-                    Query::lessThan('$createdAt', $createdAt),
-                    Query::and([
-                        Query::equal('$createdAt', [$createdAt]),
-                        Query::lessThanEqual('$sequence', $cutoff[0]->getSequence()),
-                    ]),
-                ]),
-                // Deployments past the age cutoff belong to the age passes, so each one is retired for one reason.
-                ...($policyCutoff !== null ? [Query::greaterThanEqual('$createdAt', $policyCutoff)] : []),
-                Query::orderDesc('$createdAt'),
-            ], $retention, $resource, $dbForProject, $publisherForDeletes, $project);
+            $pass = $retention->count($cutoff[0], $requested, $now);
+            $this->retireDeployments($pass->reason, [...$queries, ...$pass->queries], $retention, $resource, $dbForProject, $publisherForDeletes, $project);
         };
 
         $this->listByGroup(
