@@ -246,7 +246,7 @@ class Screenshots extends Action
             $this->recordTelemetry($counter, 'failure');
 
             // A screenshot is best-effort and nothing re-drives one, so a failure that cannot pass later, or the last
-            // attempt of one that could, ends here instead of on the dead stream. An unroutable host is the customer's DNS.
+            // attempt of one that could (NATS only), ends here instead of on the dead stream. An unroutable host is the customer's DNS.
             $unroutable = $th instanceof ScreenshotsException && \str_contains($th->getMessage(), 'is not publicly routable');
             if ($th instanceof PermanentFailure || $unroutable || $message->isLastAttempt()) {
                 $this->abandon($project, $deployment->getId(), $th->getMessage());

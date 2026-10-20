@@ -251,7 +251,7 @@ class Mails extends Action
 
             // The adapter reports a refusal in its result, classified below. What
             // it throws instead is nothing the server said, so nothing says the
-            // next attempt fails the same way.
+            // next attempt fails the same way. Only NATS reports the last attempt.
             if ($type === 'smtp' && $message->isLastAttempt()) {
                 $this->abandon($project, $smtp['host'], $error->getMessage());
 
