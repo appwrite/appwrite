@@ -476,7 +476,7 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
   })
 
   // Format backup size (API may return int64 size as bigint)
-  const formatSize = (bytes: number | bigint | undefined) => {
+  const formatSize = (bytes: number | bigint | null | undefined) => {
     const n = toByteCount(bytes)
     if (n <= 0) return '-'
     const mb = n / (1000 * 1000)
@@ -1707,7 +1707,7 @@ function RestoreBackupDialog({
   const [newDatabaseId, setNewDatabaseId] = useState('')
   const [confirmSameDbRestore, setConfirmSameDbRestore] = useState(false)
 
-  const formatSize = (bytes: number | bigint | undefined) => {
+  const formatSize = (bytes: number | bigint | null | undefined) => {
     const n = toByteCount(bytes)
     if (n <= 0) return '-'
     const mb = n / (1000 * 1000)

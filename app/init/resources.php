@@ -22,6 +22,7 @@ use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Publisher\Video as VideoPublisher;
 use Appwrite\Execution\Store as ExecutionStore;
+use Appwrite\Exiftool\Client as ExiftoolClient;
 use Appwrite\Geo\Client as GeoClient;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Messaging\Provider as MessagingProvider;
@@ -162,6 +163,17 @@ $container->set('autogravity', function (Cache $cache) {
 
     return new AutogravityDetector($client === null ? null : new AutogravityClient($client), $cache);
 }, ['cache']);
+
+$container->set('exiftool', function () {
+    $host = System::getEnv('_APP_EXIFTOOL_HOST', '');
+    $client = $host === ''
+        ? null
+        : (new Client(new SwooleClientAdapter()))
+            ->withBaseUri($host)
+            ->withTimeout(30);
+
+    return new ExiftoolClient($client);
+}, []);
 
 $container->set('telemetry', fn () => new NoTelemetry(), []);
 
