@@ -6,12 +6,10 @@ use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Maintenance\Backlog;
 use Appwrite\Maintenance\Cycle;
 use Appwrite\Maintenance\Sweep;
-use Appwrite\Schedule\Source;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
-use Utopia\Schedule\Scheduler;
 use Utopia\Schedule\Store\Redis as RedisStore;
 use Utopia\Span\Span;
 use Utopia\System\System;
@@ -22,8 +20,6 @@ class ScheduleMaintenance extends Action
     private const string POOL = 'lock';
 
     private const string KEY = 'schedule-maintenance-';
-
-    private const int LEASE = 600;
 
     private const string PERIOD = '604800';
 
@@ -59,15 +55,7 @@ class ScheduleMaintenance extends Action
         while (true) {
             try {
                 $pools->get(self::POOL)->use(function (\Redis $redis) use ($cycle, $region, $telemetry, $token, $sweep, &$reported): void {
-                    $scheduler = new Scheduler(
-                        source: new Source\Maintenance($cycle->interval),
-                        store: new RedisStore($redis, self::KEY . $region),
-                        tickSeconds: $cycle->tick,
-                        recoverSeconds: 3600,
-                        leaseSeconds: self::LEASE,
-                        token: $token,
-                        telemetry: $telemetry,
-                    );
+                    $scheduler = $cycle->scheduler(new RedisStore($redis, self::KEY . $region), $token, $telemetry);
 
                     // Caught here so the pool keeps a healthy connection; the slice is redelivered on the next run.
                     try {

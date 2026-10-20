@@ -2,6 +2,14 @@
 
 namespace Appwrite\Maintenance;
 
+use Appwrite\Schedule\Source\Maintenance;
+use Utopia\Schedule\Clock;
+use Utopia\Schedule\Clock\System as SystemClock;
+use Utopia\Schedule\Scheduler;
+use Utopia\Schedule\Store;
+use Utopia\Telemetry\Adapter as Telemetry;
+use Utopia\Telemetry\Adapter\None as NoTelemetry;
+
 /**
  * How a period is split into slices: every inactive project is maintained once per period, one slice per interval.
  *
@@ -12,6 +20,8 @@ final readonly class Cycle
     public const int INTERVAL = 300;
 
     public const int TICK = 60;
+
+    public const int LEASE = 600;
 
     public int $interval;
 
@@ -54,4 +64,21 @@ final readonly class Cycle
         return $this->slots * $this->interval;
     }
 
+    /**
+     * A deferred slice may wait a whole cycle: slots repeat on the same wall-clock times, so a shorter horizon would
+     * drop the same slices on every cycle whose backlog recurs at the same hour. Backlog bounds the catch-up instead.
+     */
+    public function scheduler(Store $store, ?string $token = null, Telemetry $telemetry = new NoTelemetry(), Clock $clock = new SystemClock()): Scheduler
+    {
+        return new Scheduler(
+            source: new Maintenance($this->interval),
+            store: $store,
+            tickSeconds: $this->tick,
+            recoverSeconds: $this->seconds(),
+            leaseSeconds: self::LEASE,
+            token: $token,
+            clock: $clock,
+            telemetry: $telemetry,
+        );
+    }
 }

@@ -216,6 +216,65 @@ final class SweepTest extends TestCase
         $this->assertGreaterThan((float) $second->getTimestamp(), $store->load()?->coveredUntil);
     }
 
+    public function testBacklogRecurringAtTheSameTimeEachCycleDelaysSlicesWithoutDroppingThem(): void
+    {
+        $cycle = $this->cycle();
+        $start = $this->week->getTimestamp();
+        $this->assertSame(0, $start % $cycle->seconds(), 'The fixture starts on slot 0');
+
+        $rows = [];
+        for ($block = 0; $block < 2 * self::SLOTS; $block++) {
+            $rows[] = ['old-' . ($block * Sweep::BLOCK + 1), $block * Sweep::BLOCK + 1, $this->week->modify('-60 days'), self::REGION];
+            $rows[] = ['never-' . ($block * Sweep::BLOCK + 2), $block * Sweep::BLOCK + 2, null, self::REGION];
+        }
+        $this->database = $this->seed(new Memory(), $rows);
+        $inactive = $this->sorted(\array_column($rows, 0));
+
+        // Another job keeps the deletes queue backlogged for 90 minutes, an hour into every cycle.
+        $held = function (\DateTimeImmutable $now) use ($start, $cycle): int {
+            $offset = ($now->getTimestamp() - $start) % $cycle->seconds();
+
+            return $offset >= 3600 && $offset < 9000 ? Sweep::BACKLOG : 0;
+        };
+        $this->clock = new TestClock($this->week->modify('-30 seconds'));
+        $publisher = new QueuePublisher($this->clock, 1000, 0, $held);
+
+        $store = new MemoryStore();
+        $sweep = $this->sweep($publisher);
+
+        $reached = [];
+        for ($round = 0; $round < 2; $round++) {
+            $last = $start + ($round + 1) * $cycle->seconds() - $cycle->interval;
+            $before = \count($this->projects($publisher));
+            $deferrals = 0;
+
+            // As ScheduleMaintenance runs it: a Backlog ends the run, and a new scheduler starts after one tick.
+            while (true) {
+                $scheduler = $this->scheduler($store);
+                try {
+                    $scheduler->run(function (array $occurrences) use ($sweep, $scheduler, $last): void {
+                        $sweep($occurrences);
+                        if ($occurrences[\count($occurrences) - 1]->due->getTimestamp() >= $last) {
+                            $scheduler->stop();
+                        }
+                    });
+                    break;
+                } catch (Backlog) {
+                    $deferrals++;
+                    $this->clock->advance($cycle->tick);
+                }
+            }
+
+            $this->assertGreaterThan(60, $deferrals, 'The queue stays backlogged for longer than an hour');
+            $reached[$round] = $this->sorted(\array_slice($this->projects($publisher), $before));
+        }
+
+        foreach ($reached as $round => $projects) {
+            $this->assertSame([], \array_values(\array_diff($inactive, $projects)), 'Projects missed in cycle ' . $round);
+            $this->assertSame($inactive, $projects, 'Each project once in cycle ' . $round);
+        }
+    }
+
     /**
      * Sweeps every slice of the week in order, one occurrence per call, with the clock following the dues.
      *
@@ -336,14 +395,7 @@ final class SweepTest extends TestCase
 
     private function scheduler(MemoryStore $store): Scheduler
     {
-        return new Scheduler(
-            source: new Maintenance(Cycle::INTERVAL),
-            store: $store,
-            tickSeconds: Cycle::TICK,
-            recoverSeconds: 3600,
-            leaseSeconds: 600,
-            clock: $this->clock,
-        );
+        return $this->cycle()->scheduler($store, clock: $this->clock);
     }
 
     private function cycle(): Cycle

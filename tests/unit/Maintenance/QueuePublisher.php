@@ -12,7 +12,8 @@ use Utopia\Schedule\Clock\Test as TestClock;
  * A queue that consumers drain at a fixed rate on the test clock. Its size
  * is what was prefilled and published minus what has drained since, and it
  * never drains below empty, so a queue that sat idle has no credit to
- * swallow a later burst. A rate of zero never drains.
+ * swallow a later burst. A rate of zero never drains. $held, given the time,
+ * returns a size the queue reports at least, for traffic from elsewhere.
  */
 final class QueuePublisher implements Synchronous
 {
@@ -25,10 +26,14 @@ final class QueuePublisher implements Synchronous
     /** @var array<string, float> */
     private array $observed = [];
 
+    /**
+     * @param (\Closure(\DateTimeImmutable): int)|null $held
+     */
     public function __construct(
         private readonly TestClock $clock,
         private readonly float $rate,
         private readonly int $prefill = 0,
+        private readonly ?\Closure $held = null,
     ) {
     }
 
@@ -66,7 +71,9 @@ final class QueuePublisher implements Synchronous
 
         $this->drain($queue);
 
-        return (int) \ceil($this->levels[$queue->name]);
+        $size = (int) \ceil($this->levels[$queue->name]);
+
+        return $this->held === null ? $size : \max($size, ($this->held)($this->clock->now()));
     }
 
     #[\Override]

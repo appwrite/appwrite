@@ -1840,7 +1840,7 @@ return [
             ],
             [
                 'name' => '_APP_MAINTENANCE_INACTIVE_INTERVAL',
-                'description' => 'How often, in seconds, the scheduler runs maintenance for each project not accessed in the last 30 days or never accessed. Projects are spread across five-minute slices, so use a multiple of 300. Slices held back by a deletes backlog for more than an hour are skipped until the next cycle. The default value is 604800 seconds (7 days).',
+                'description' => 'How often, in seconds, the scheduler runs maintenance for each project not accessed in the last 30 days or never accessed. Projects are spread across five-minute slices, so use a multiple of 300; a value under 600 gives a single slice that reaches every inactive project on each run. A slice held back by a deletes backlog waits until the queue drains, for up to one full interval. The default value is 604800 seconds (7 days).',
                 'introduction' => '2.6.0',
                 'default' => '604800',
                 'required' => false,
