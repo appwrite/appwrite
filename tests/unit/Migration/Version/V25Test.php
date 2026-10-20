@@ -172,6 +172,62 @@ final class V25Test extends TestCase
         }
     }
 
+    public function testAddsCollectionSchemaToDatabaseFromPreviousRelease(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        $collections = Config::getParam('collections', []);
+        foreach ($collections['projects'] as $id => $collection) {
+            if (($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($collection['attributes']),
+                indexes: \array_values($collection['indexes']),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+
+        $row = $database->createDocument('databases', new Document([
+            '$id' => 'legacy',
+            'name' => 'Legacy',
+            'enabled' => true,
+        ]));
+
+        // A database created before these attributes existed: its collection metadata is
+        // built from the current template minus the two the migration has to add.
+        $added = ['description', 'columnPermissions'];
+        $template = $collections['databases']['collections'];
+        $database->createCollection(Collection::create(
+            id: 'database_' . $row->getSequence(),
+            attributes: \array_values(\array_filter(
+                $template['attributes'],
+                static fn (Attribute $attribute): bool => !\in_array($attribute->key, $added, true)
+            )),
+            indexes: \array_values($template['indexes']),
+        ));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $migration->execute();
+
+        $attributes = \array_map(
+            fn (Document $attribute) => $attribute->getId(),
+            $database->getCollection('database_' . $row->getSequence())->getAttribute('attributes', [])
+        );
+        foreach ($added as $attribute) {
+            $this->assertContains($attribute, $attributes);
+        }
+    }
+
     public function testRejectsResourcesCreatedAfterMigration(): void
     {
         $migration = new class () extends V25 {

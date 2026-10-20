@@ -238,10 +238,15 @@ class V25 extends Migration
 
                         foreach ($this->documentsIterator($id) as $database) {
                             $databaseTable = 'database_' . $database->getSequence();
-                            try {
-                                $this->createAttributeFromCollection($this->dbForProject, $databaseTable, 'description', 'collections');
-                            } catch (Throwable $th) {
-                                Console::warning("Failed to create attribute \"description\" in collection {$databaseTable}: {$th->getMessage()}");
+                            // Every product keeps its collection definitions here, and all of them
+                            // declare these two identically, so the shared definition is read once
+                            // from the databases config whatever the database's type.
+                            foreach (['description', 'columnPermissions'] as $attribute) {
+                                try {
+                                    $this->createAttributeFromCollection($this->dbForProject, $databaseTable, $attribute, 'collections');
+                                } catch (Throwable $th) {
+                                    Console::warning("Failed to create attribute \"{$attribute}\" in collection {$databaseTable}: {$th->getMessage()}");
+                                }
                             }
                             $this->dbForProject->purgeCachedCollection($databaseTable);
                         }
