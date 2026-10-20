@@ -893,8 +893,8 @@ final class VideosCustomServerTest extends Scope
         $this->assertNotEmpty($body['startedAt']);
         $this->assertNotEmpty($body['endedAt']);
         // The source was never probed (the timeline job failed first), so the
-        // encode dies at its own probe with ffprobe's verdict rather than at valid().
-        $this->assertStringStartsWith('ffprobe failed', (string) $body['error']);
+        // encode dies at its own probe, which quotes ffprobe's verdict.
+        $this->assertStringStartsWith('The requested file is not a valid video or audio file (ffprobe:', (string) $body['error']);
         $this->assertStringNotContainsString('/storage', (string) $body['error']);
 
         $this->assertEventually(function () use ($videoId) {
@@ -918,7 +918,7 @@ final class VideosCustomServerTest extends Scope
 
         $body = $this->waitForTimelineTerminalState($videoId);
         $this->assertSame('error', $body['timelineStatus'], 'Invalid source did not fail the timeline');
-        $this->assertStringStartsWith('ffprobe failed', $body['timelineError']);
+        $this->assertStringStartsWith('The requested file is not a valid video or audio file (ffprobe:', $body['timelineError']);
         $this->assertStringNotContainsString('/storage', (string) $body['timelineError']);
         $this->assertSame(0, (int) $body['duration']);
 

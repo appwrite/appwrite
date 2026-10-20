@@ -100,7 +100,7 @@ class VideoRendition extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Why the rendition failed or was aborted. Empty unless `status` is `error` or `aborted`.',
                 'default' => '',
-                'example' => 'ffprobe failed: Invalid data found when processing input',
+                'example' => 'The requested file is not a valid video or audio file (ffprobe: Invalid data found when processing input)',
             ])
             ->addRule('progress', [
                 'type' => self::TYPE_STRING,

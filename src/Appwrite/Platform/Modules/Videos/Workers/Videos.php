@@ -42,7 +42,6 @@ use Utopia\Telemetry\UpDownCounter;
 use Utopia\Video\Adapter\FFmpeg;
 use Utopia\Video\Adapter\FFprobe;
 use Utopia\Video\Encoder;
-use Utopia\Video\Exception\Input;
 use Utopia\Video\Exception\Runtime;
 use Utopia\Video\Format\HEVC;
 use Utopia\Video\Format\VP9;
@@ -477,6 +476,11 @@ class Videos extends Action
                     $permissions
                 );
             }
+            if ($th instanceof AppwriteException && $th->getCode() < 500) {
+                Span::add('error.type', $th->getType());
+                Span::add('warning.message', $th->getMessage());
+                return;
+            }
             throw $th;
         } finally {
             Span::add('timeline.outcome', $outcome);
@@ -672,6 +676,12 @@ class Videos extends Action
                 }
             }
 
+            // The owner's problem: recorded as a warning, not raised to the harness.
+            if ($th instanceof AppwriteException && $th->getCode() < 500) {
+                Span::add('error.type', $th->getType());
+                Span::add('warning.message', $th->getMessage());
+                return;
+            }
             throw $th;
         } finally {
             Span::add('caption.outcome', $outcome);
@@ -1188,6 +1198,12 @@ class Videos extends Action
                 $this->runtime($telemetry, $th, 'ffmpeg', $stage);
             }
 
+            // The owner's problem: recorded as a warning, not raised to the harness.
+            if ($th instanceof AppwriteException && $th->getCode() < 500) {
+                Span::add('error.type', $th->getType());
+                Span::add('warning.message', $th->getMessage());
+                return;
+            }
             throw $th;
         } finally {
             Span::add('rendition.outcome', $outcome);
@@ -2036,7 +2052,22 @@ class Videos extends Action
         string $inPath,
         ?Encoder $encoder = null
     ): Document {
-        $info = ($encoder ?? $this->encoder())->probe($inPath);
+        try {
+            $info = ($encoder ?? $this->encoder())->probe($inPath);
+        } catch (Runtime $th) {
+            // ffprobe rejecting the input is the one place that proves the file
+            // is bad; a timeout or a binary that would not start stays internal.
+            if (!\str_contains($th->getMessage(), 'failed with exit code')) {
+                throw $th;
+            }
+            $message = \rtrim((new AppwriteException(AppwriteException::VIDEO_NOT_VALID))->getMessage(), '.');
+            $verdict = $this->verdict($th);
+            throw new AppwriteException(
+                AppwriteException::VIDEO_NOT_VALID,
+                $message . ($verdict !== '' ? ' (ffprobe: ' . $verdict . ')' : ''),
+                previous: $th
+            );
+        }
         $attrs = $this->attributes($info);
 
         return $dbForProject->updateDocument(
@@ -2434,42 +2465,36 @@ class Videos extends Action
     }
 
     /**
-     * User-safe text for a parked rendition, caption or timeline, as the Builds
-     * worker does for buildLogs: the owner's own problems (a bad source, a bad
-     * caption, a missing file) are shown as they are, ffmpeg's verdict is quoted
-     * without paths or exit codes, and anything else is reported as internal
-     * with the detail left on the span.
+     * User-safe text for a parked rendition, caption or timeline. As in the
+     * Builds worker, only a failure this worker raised on purpose with a 4xx
+     * type (a bad source, a bad caption, a missing file) is the owner's and
+     * shown as it is; everything else is internal by default, with the detail
+     * left on the span.
      */
     private function reason(\Throwable $th, string $stage): string
     {
         if ($th instanceof AppwriteException && $th->getCode() < 500) {
             return $this->withoutPaths($th->getMessage());
         }
-        if ($th instanceof Input) {
-            return $this->withoutPaths($th->getMessage());
-        }
-        if ($th instanceof Runtime) {
-            if (\str_contains($th->getMessage(), 'timed out after')) {
-                return $this->withoutPaths($th->getMessage());
-            }
-            if ($th->getCode() !== 0) {
-                // Under Swoole the exit code is the raw wait status, so only the
-                // last stderr line is quoted; the code is on the span.
-                $binary = \basename($th->command()[0] ?? 'ffmpeg');
-                $line = '';
-                foreach (\array_reverse(\explode("\n", \str_replace("\r", "\n", $th->output()))) as $candidate) {
-                    $candidate = \trim($candidate);
-                    if ($candidate !== '' && $candidate !== 'Conversion failed!') {
-                        $line = $candidate;
-                        break;
-                    }
-                }
-
-                return $this->withoutPaths($binary . ' failed' . ($line !== '' ? ': ' . $line : ''));
-            }
-        }
 
         return 'An internal error occurred during the ' . $stage . ' stage. Please try again, and contact support if the problem persists.';
+    }
+
+    /**
+     * ffprobe's last stderr line, without paths: the one line that says why a
+     * file was rejected ("moov atom not found", "Invalid data found when
+     * processing input").
+     */
+    private function verdict(Runtime $runtime): string
+    {
+        foreach (\array_reverse(\explode("\n", \str_replace("\r", "\n", $runtime->output()))) as $line) {
+            $line = \trim($line);
+            if ($line !== '' && $line !== 'Conversion failed!') {
+                return $this->withoutPaths($line);
+            }
+        }
+
+        return '';
     }
 
     /**

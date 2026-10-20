@@ -162,7 +162,7 @@ class Video extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Why the timeline job failed. Empty unless `timelineStatus` is `error`.',
                 'default' => '',
-                'example' => 'ffprobe failed: Invalid data found when processing input',
+                'example' => 'The requested file is not a valid video or audio file (ffprobe: Invalid data found when processing input)',
             ])
         ;
     }
