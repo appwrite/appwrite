@@ -50,6 +50,7 @@ The separate topology replaces `appwrite-worker` with one container per queue, a
 | `appwrite-worker-executions` | |
 | `appwrite-worker-functions` | |
 | `appwrite-worker-mails` | |
+| `appwrite-worker-maintenance` | |
 | `appwrite-worker-notifications` | |
 | `appwrite-worker-messaging` | |
 | `appwrite-worker-migrations` | |
