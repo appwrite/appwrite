@@ -197,7 +197,7 @@ class Upsert extends Action
         } catch (UniqueException $e) {
             throw new Exception($this->getUniqueConstraintException(), previous: $e);
         } catch (DuplicateException $e) {
-            throw new Exception($this->getDuplicateException(), previous: $e, params: ['multiple']);
+            throw $this->getBatchDuplicateException($dbForDatabases, $collectionTableId, $documents, $e);
         } catch (NotFoundException $e) {
             if ($dbForProject->getDocument('database_' . $database->getSequence(), $collectionId)->isEmpty()) {
                 throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);

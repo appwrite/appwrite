@@ -540,6 +540,8 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Identity ID': 'מזהה זהות',
   'If file security is disabled, users can access files': 'אם אבטחת קבצים מושבתת, משתמשים יכולים לגשת לקבצים',
   'If you reduce the limit, users who are currently logged in will be logged out of the application.': 'אם תקטינו את המגבלה, משתמשים המחוברים כעת ינותקו מהאפליקציה.',
+  'Image metadata': 'מטא-נתונים של תמונות',
+  'Image metadata setting has been updated': 'הגדרת המטא-נתונים של התמונות עודכנה',
   'Image transformations': 'טרנספורמציות תמונה',
   'Image transformations setting has been updated': 'הגדרת טרנספורמציות התמונה עודכנה',
   'Impersonation capability': 'יכולת התחזות',
@@ -850,6 +852,8 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Remove': 'הסרה',
   'Remove authenticator': 'הסרת אפליקציית האימות',
   'Remove from team': 'הסרה מהצוות',
+  'Remove metadata from uploaded images': 'הסרת מטא-נתונים מתמונות שהועלו',
+  "Remove metadata such as location, device, and capture time from images uploaded to this bucket. The color profile and orientation are kept. For file size above 20MB metadata is not removed even if it's enabled. This change will only apply to new files uploaded after the update.": 'הסירו מטא-נתונים כמו מיקום, מכשיר ומועד הצילום מתמונות שמועלות לבאקט זה. פרופיל הצבע והכיוון נשמרים. עבור קבצים בגודל מעל 20MB המטא-נתונים אינם מוסרים גם אם האפשרות מופעלת. שינוי זה יחול רק על קבצים חדשים שיועלו לאחר העדכון.',
   'Remove mock phone number': 'הסרת מספר טלפון מדומה',
   'Remove private key': 'הסרת מפתח פרטי',
   'Remove this membership. The user will lose access to this team. This action cannot be undone.': 'הסירו חברות זו. המשתמש יאבד גישה לצוות זה. פעולה זו אינה ניתנת לביטול.',
@@ -1297,6 +1301,20 @@ export const heAuthStorageDictionary: Record<string, string> = {
   'Password not checked against known data breaches':
     'הסיסמה לא נבדקה מול דליפות מידע ידועות',
   'breached password': 'סיסמה שדלפה',
+
+  // Periodic password change (rotation) policy
+  'Periodic password change': 'החלפת סיסמה תקופתית',
+  'Require users to set a new password once the one they have reaches the maximum age. An email/password sign-in with a password past that age is refused until the user resets it through password recovery. Sign-ins with other methods are not affected.':
+    'דרשו ממשתמשים להגדיר סיסמה חדשה כשהסיסמה הנוכחית שלהם מגיעה לגיל המקסימלי. התחברות עם אימייל/סיסמה שעברה את הגיל הזה נדחית עד שהמשתמש מאפס אותה דרך שחזור סיסמה. התחברות בשיטות אחרות אינה מושפעת.',
+  'Require a periodic password change': 'דרישת החלפת סיסמה תקופתית',
+  'Maximum password age': 'גיל סיסמה מקסימלי',
+  'Between 1 day and 10 years': 'בין יום אחד ל-10 שנים',
+  'Minimum is 1 day': 'המינימום הוא יום אחד',
+  'Maximum is 10 years': 'המקסימום הוא 10 שנים',
+  'Updated periodic password change policy':
+    'מדיניות החלפת הסיסמה התקופתית עודכנה',
+  'Failed to update periodic password change policy':
+    'עדכון מדיניות החלפת הסיסמה התקופתית נכשל',
 
   // Passkey relying party policy and auth method
   Passkey: 'מפתח גישה',

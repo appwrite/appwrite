@@ -52,6 +52,10 @@ export function useConsoleVariables(region?: string) {
       : ([] as string[]),
     sitesDomain: vars?._APP_DOMAIN_SITES,
     functionsDomain: vars?._APP_DOMAIN_FUNCTIONS,
+    // MX target for custom inbound email domains. Cloud does not expose it
+    // yet, so the verify screen explains the MX record is unavailable.
+    smtpTarget: (vars as unknown as Record<string, string | undefined>)
+      ?._APP_DOMAIN_TARGET_SMTP,
     // Cloud zone for function testing email addresses (Cloud-only variable).
     emailDomain: (vars as unknown as Record<string, string | undefined>)
       ?._APP_DOMAIN_EMAIL,

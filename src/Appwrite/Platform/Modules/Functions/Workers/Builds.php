@@ -251,11 +251,11 @@ class Builds extends Action
         $owner = '';
         $repositoryName = '';
 
-        // Every other build flow submits its job straight from the request, so a
-        // deployment without a repository to push the template into never
-        // belongs here.
+        // Every other build flow submits its job straight from the request, so
+        // only a deployment with a repository to clone - to push a template
+        // into, or because only this worker can fetch it - belongs here.
         if (empty($providerRepositoryId)) {
-            throw new \Exception('Only template-into-repository deployments build through this worker');
+            throw new \Exception('Only repository deployments build through this worker');
         }
 
         $installation = $dbForPlatform->getDocument('installations', $installationId);
@@ -372,7 +372,8 @@ class Builds extends Action
                     (new Command('git'))->option('-C', $tmpDirectory)->argument('checkout')->flag('-B')->argument($branchName),
                     (new Command('git'))->option('-C', $tmpDirectory)->argument('add')->argument('.'),
                     (new Command('git'))->option('-C', $tmpDirectory)->argument('commit')->option('-m', $commitMessage),
-                    (new Command('git'))->option('-C', $tmpDirectory)->argument('push')->argument('origin')->argument($branchName),
+                    // The provider's remote may need more than the clone URL carries
+                    $providerAdapter->generatePushCommand($cloneOwner, $cloneRepository, $tmpDirectory, $branchName),
                 );
                 $exit = Console::execute($push, '', $stdout, $stderr);
 
@@ -406,22 +407,34 @@ class Builds extends Action
                     ->trigger();
             }
 
-            // The only build reaching this worker is the template-into-repo push
-            // above (a git *write* the jobs-service artifact system has no
-            // primitive for). With the commit pushed, hand the build to the
-            // jobs-service like any other VCS commit, via the same Deployments
-            // service the HTTP endpoints use.
-            $ref = $deployment->getAttribute('providerCommitHash') ?: $branchName;
-            $deployments->createFromVcs(
-                $resource,
-                $deployment,
-                $timeout,
-                $providerAdapter,
-                $cloneOwner,
-                $cloneRepository,
-                $ref,
-                $resource->getAttribute('providerRootDirectory', ''),
-            );
+            // A build reaches this worker for a git operation the jobs-service
+            // artifact system has no primitive for: the template-into-repo push
+            // above, or a clone only the provider's own tooling can make. With
+            // the commit pushed, hand the build to the jobs-service like any
+            // other VCS commit, via the same Deployments service the HTTP
+            // endpoints use - or, when the jobs-service cannot clone the
+            // provider itself, build the tree checked out here.
+            if ($providerAdapter->supportsRepositoryArchives() || $providerAdapter->supportsRepositoryCloneUrl()) {
+                $ref = $deployment->getAttribute('providerCommitHash') ?: $branchName;
+                $deployments->createFromVcs(
+                    $resource,
+                    $deployment,
+                    $timeout,
+                    $providerAdapter,
+                    $cloneOwner,
+                    $cloneRepository,
+                    $ref,
+                    $resource->getAttribute('providerRootDirectory', ''),
+                );
+            } else {
+                $deployment->setAttribute('providerRootDirectory', $resource->getAttribute('providerRootDirectory', ''));
+                $deployments->createFromDirectory(
+                    $resource,
+                    $deployment,
+                    $timeout,
+                    \rtrim($tmpDirectory . '/' . $rootDirectory, '/'),
+                );
+            }
 
             Console::execute((new Command('rm'))->flag('-rf')->argument('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
         } catch (\Throwable $th) {

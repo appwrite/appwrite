@@ -109,6 +109,7 @@ class Update extends Base
             )), 'Runtime specification for the function executions.', true, ['plan'], example: 's-1vcpu-512mb')
             ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
             ->param('interval', null, new Nullable(new Range(0, Database::MAX_INT)), 'Minutes between scheduled executions. Appwrite picks when within each interval the function runs. Use 0 to disable. Cannot be combined with schedule. When omitted, the current interval is kept unless schedule is set.', true)
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the function.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -150,6 +151,7 @@ class Update extends Base
         ?string $runtimeSpecification,
         int $deploymentRetention,
         ?int $interval,
+        ?string $description,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -193,6 +195,7 @@ class Update extends Base
             $runtime = $function->getAttribute('runtime');
         }
 
+        $description ??= $function->getAttribute('description', '');
         $buildSpecification ??= $function->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT);
         $runtimeSpecification ??= $function->getAttribute('runtimeSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT);
 
@@ -312,6 +315,7 @@ class Update extends Base
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
             'name' => $name,
+            'description' => $description,
             'runtime' => $runtime,
             'events' => $events,
             'schedule' => $schedule,
@@ -336,7 +340,7 @@ class Update extends Base
             'providerPaths' => $providerPaths ?? $function->getAttribute('providerPaths', []),
             'buildSpecification' => $buildSpecification,
             'runtimeSpecification' => $runtimeSpecification,
-            'search' => implode(' ', [$functionId, $name, $runtime]),
+            'search' => implode(' ', [$functionId, $name, $description, $runtime]),
         ])));
 
         // Redeploy logic
