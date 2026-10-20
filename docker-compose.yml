@@ -84,6 +84,7 @@ services:
       - ${_APP_DB_HOST:-postgresql}
       - appwrite-geo
       - appwrite-autogravity
+      - appwrite-exiftool
     environment:
       - _APP_DNS_EXTERNAL
       - _APP_ALLOWED_INTERNAL_ADDRESSES
@@ -173,6 +174,7 @@ services:
       - _APP_STORAGE_LIMIT
       - _APP_STORAGE_PREVIEW_LIMIT
       - _APP_AUTOGRAVITY_HOST
+      - _APP_EXIFTOOL_HOST
       - _APP_STORAGE_ANTIVIRUS
       - _APP_STORAGE_ANTIVIRUS_HOST
       - _APP_STORAGE_ANTIVIRUS_PORT
@@ -1701,6 +1703,13 @@ services:
     image: ghcr.io/appwrite/autogravity:0.0.11
     environment:
       - MODEL_BACKEND=focalnet
+    restart: unless-stopped
+    networks:
+      - appwrite
+
+  appwrite-exiftool:
+    container_name: appwrite-exiftool
+    image: ghcr.io/appwrite/exiftool:0.1.0
     restart: unless-stopped
     networks:
       - appwrite

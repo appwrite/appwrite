@@ -309,6 +309,7 @@ return [
             Attribute::boolean(key: 'encryption', required: true),
             Attribute::boolean(key: 'antivirus', required: true),
             Attribute::boolean(key: 'transformations', default: true),
+            Attribute::boolean(key: 'stripMetadata', default: false),
             Attribute::string(key: 'search', size: 16384),
         ],
         'indexes' => [
