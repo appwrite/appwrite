@@ -256,9 +256,9 @@ class Jobs extends Action
 
                 $settle();
             } catch (\Throwable $error) {
-                // Claims are only written under this lock, so once refresh() confirms it is still
-                // held no successor can claim between the load and the purge.
-                if ($key !== null && $lock->refresh() && $cache->load($key, self::DEDUPE_TTL) === $claim) {
+                // Claims are only written under this lock, so the purge needs it held: refreshed, or
+                // retaken when the lease lapsed and no successor took it over.
+                if ($key !== null && ($lock->refresh() || $lock->tryAcquire()) && $cache->load($key, self::DEDUPE_TTL) === $claim) {
                     $cache->purge($key);
                 }
                 throw $error;
