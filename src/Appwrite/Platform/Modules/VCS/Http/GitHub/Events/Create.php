@@ -129,7 +129,15 @@ class Create extends Action
                 $projectId = $installation->getAttribute('projectId', '');
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
-                if (!$project->isEmpty() && $this->isProjectInCurrentRegion($project)) {
+                // Every region gets the delivery, and the installation and repository
+                // rows are shared, so each region removes only its own projects'
+                // ones - or a region that runs later would find nothing to unlink
+                // its resources from. A deleted project's rows go wherever this runs.
+                if (!$project->isEmpty() && !$this->isProjectInCurrentRegion($project)) {
+                    continue;
+                }
+
+                if (!$project->isEmpty()) {
                     $dbForProject = $getProjectDB($project);
 
                     foreach (['functions', 'sites'] as $collection) {
