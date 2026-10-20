@@ -959,16 +959,10 @@
   },
   "src/components/pages/projects/$projectId/sites/create/ManualUploadView.tsx": {
     "TS18046: 'error' is of type 'unknown'.": 1,
-    "TS2353: Object literal may only specify known properties, and 'projectId' does not exist in type 'ParamsReducerFn<RouterCore<Route<Register, any, \"/\", \"/\", string, \"__root__\", undefined, {}, MyRouterContext, AnyContext, ({ location }: BeforeLoadContextOptions<Register, any, undefined, {}, MyRouterContext, AnyContext, \"__root__\", unknown, undefined>) => void, {}, () => Promise<{ currentUser: null; }>, RootRouteChildren, FileRouteTypes, unknown, unknown, undefined>, \"never\", false, RouterHistory, Record<string, any>>, \"PATH\", string, \"/projects/$projectId/sites/create/repositories\">'.": 1,
-    "TS2353: Object literal may only specify known properties, and 'projectId' does not exist in type 'ParamsReducerFn<RouterCore<Route<Register, any, \"/\", \"/\", string, \"__root__\", undefined, {}, MyRouterContext, AnyContext, ({ location }: BeforeLoadContextOptions<Register, any, undefined, {}, MyRouterContext, AnyContext, \"__root__\", unknown, undefined>) => void, {}, () => Promise<{ currentUser: null; }>, RootRouteChildren, FileRouteTypes, unknown, unknown, undefined>, \"never\", false, RouterHistory, Record<string, any>>, \"PATH\", string, \"/projects/$projectId/sites/create/templates\">'.": 1,
-    "TS2571: Object is of type 'unknown'.": 1,
-    "TS2820: Type '\"/projects/$projectId/sites/create/repositories\"' is not assignable to type '<paths>'. Did you mean '\"/projects/$projectId/sites/create/deploy\"'?": 1,
-    "TS2820: Type '\"/projects/$projectId/sites/create/templates\"' is not assignable to type '<paths>'. Did you mean '\"/projects/$projectId/sites/create/deploy\"'?": 1
+    "TS2571: Object is of type 'unknown'.": 1
   },
   "src/components/pages/projects/$projectId/sites/create/QuickDeployView.tsx": {
-    "TS18046: 'error' is of type 'unknown'.": 1,
-    "TS2353: Object literal may only specify known properties, and 'projectId' does not exist in type 'ParamsReducerFn<RouterCore<Route<Register, any, \"/\", \"/\", string, \"__root__\", undefined, {}, MyRouterContext, AnyContext, ({ location }: BeforeLoadContextOptions<Register, any, undefined, {}, MyRouterContext, AnyContext, \"__root__\", unknown, undefined>) => void, {}, () => Promise<{ currentUser: null; }>, RootRouteChildren, FileRouteTypes, unknown, unknown, undefined>, \"never\", false, RouterHistory, Record<string, any>>, \"PATH\", string, \"/projects/$projectId/sites/create/repositories\">'.": 1,
-    "TS2820: Type '\"/projects/$projectId/sites/create/repositories\"' is not assignable to type '<paths>'. Did you mean '\"/projects/$projectId/sites/create/deploy\"'?": 1
+    "TS18046: 'error' is of type 'unknown'.": 1
   },
   "src/components/pages/projects/$projectId/sites/create/RepositoryConfigView.tsx": {
     "TS18046: 'error' is of type 'unknown'.": 1,
@@ -976,15 +970,11 @@
     "TS2339: Property 'framework' does not exist on type 'DetectionFramework | DetectionRuntime'.": 1,
     "TS2339: Property 'installCommand' does not exist on type 'DetectionFramework | DetectionRuntime'.": 2,
     "TS2339: Property 'outputDirectory' does not exist on type 'DetectionFramework | DetectionRuntime'.": 2,
-    "TS2339: Property 'url' does not exist on type 'ProviderRepository'.": 2,
-    "TS2353: Object literal may only specify known properties, and 'projectId' does not exist in type 'ParamsReducerFn<RouterCore<Route<Register, any, \"/\", \"/\", string, \"__root__\", undefined, {}, MyRouterContext, AnyContext, ({ location }: BeforeLoadContextOptions<Register, any, undefined, {}, MyRouterContext, AnyContext, \"__root__\", unknown, undefined>) => void, {}, () => Promise<{ currentUser: null; }>, RootRouteChildren, FileRouteTypes, unknown, unknown, undefined>, \"never\", false, RouterHistory, Record<string, any>>, \"PATH\", string, \"/projects/$projectId/sites/create/repositories\">'.": 1,
-    "TS2820: Type '\"/projects/$projectId/sites/create/repositories\"' is not assignable to type '<paths>'. Did you mean '\"/projects/$projectId/sites/create/deploy\"'?": 1
+    "TS2339: Property 'url' does not exist on type 'ProviderRepository'.": 2
   },
   "src/components/pages/projects/$projectId/sites/create/TemplateConfigView.tsx": {
     "TS18046: 'error' is of type 'unknown'.": 1,
-    "TS2339: Property 'providerRootDirectory' does not exist on type 'TemplateSite'.": 5,
-    "TS2353: Object literal may only specify known properties, and 'projectId' does not exist in type 'ParamsReducerFn<RouterCore<Route<Register, any, \"/\", \"/\", string, \"__root__\", undefined, {}, MyRouterContext, AnyContext, ({ location }: BeforeLoadContextOptions<Register, any, undefined, {}, MyRouterContext, AnyContext, \"__root__\", unknown, undefined>) => void, {}, () => Promise<{ currentUser: null; }>, RootRouteChildren, FileRouteTypes, unknown, unknown, undefined>, \"never\", false, RouterHistory, Record<string, any>>, \"PATH\", string, \"/projects/$projectId/sites/create/templates\">'.": 1,
-    "TS2820: Type '\"/projects/$projectId/sites/create/templates\"' is not assignable to type '<paths>'. Did you mean '\"/projects/$projectId/sites/create/deploy\"'?": 1
+    "TS2339: Property 'providerRootDirectory' does not exist on type 'TemplateSite'.": 5
   },
   "src/components/pages/projects/$projectId/sites/domains/AddDomainWizard.tsx": {
     "TS2367: This comparison appears to be unintentional because the types 'ProxyRuleStatus.Unverified | ProxyRuleStatus.Verifying' and '\"created\"' have no overlap.": 1
