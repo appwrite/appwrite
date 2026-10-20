@@ -202,6 +202,49 @@ final class SweepTest extends TestCase
         $this->assertSame($this->sorted(\array_column(\array_slice($rows, 100), 0)), $this->sorted($this->projects($resumed)));
     }
 
+    public function testPageCursorStaysWithinItsPass(): void
+    {
+        $due = $this->week->modify('+3 hours');
+        $this->clock = new TestClock($due);
+
+        // Interleaved, so the never-accessed pass has projects sequenced before the accessedAt pass's cursor.
+        $rows = [];
+        for ($sequence = 1; $sequence <= 120; $sequence++) {
+            $old = $sequence % 2 === 1;
+            $rows[] = [($old ? 'old-' : 'never-') . $sequence, $sequence, $old ? $due->modify('-60 days') : null, self::REGION];
+        }
+        $this->database = Projects::seed(new Uuid7Memory(), $rows);
+
+        $publisher = $this->publisher();
+        ($this->sweep($publisher))(new MaintenanceMessage(slot: 0, slots: 1, due: $due->getTimestamp(), period: $this->cycle()->seconds(), region: self::REGION, pass: 0, cursor: 'old-55'));
+
+        $expected = \array_filter(\array_column($rows, 0), fn (string $id): bool => \str_starts_with($id, 'never-') || (int) \substr($id, 4) > 55);
+        $this->assertSame($this->sorted(\array_values($expected)), $this->sorted($this->projects($publisher)));
+        $this->assertContains('never-2', $this->projects($publisher));
+    }
+
+    public function testRefusedDeferralStopsTheSweep(): void
+    {
+        $due = $this->week->modify('+3 hours');
+        $this->blocks($due);
+        $this->clock = new TestClock($due);
+        // Backed up with nothing draining, so the first publish attempt is the deferral itself.
+        $publisher = new QueuePublisher($this->clock, 0, 150);
+        $publisher->refuse = 1;
+
+        $failed = null;
+        try {
+            ($this->sweep($publisher))($this->message($due));
+        } catch (\RuntimeException $error) {
+            $failed = $error;
+        }
+
+        $this->assertInstanceOf(\RuntimeException::class, $failed);
+        $this->assertSame([], $publisher->payloads(self::QUEUE));
+        $this->assertSame([], $publisher->payloads(self::MAINTENANCE));
+        $this->assertSame((float) ($due->getTimestamp() + Sweep::WAIT), (float) $this->clock->now()->format('U.u'));
+    }
+
     public function testUnpublishedMessageStopsTheSweep(): void
     {
         $due = $this->week->modify('+4 hours');
