@@ -14,16 +14,14 @@ use Utopia\Schedule\Occurrence;
 /**
  * Scheduler handler that enqueues maintenance for the slice of inactive projects one due moment owns.
  *
- * Moments map to $slots slots in turn, so a full cycle of $slots moments reaches every inactive project once. With
- * integer sequences, block b of BLOCK sequences belongs to slot b % $slots, which stays stable as the table grows.
+ * Moments map to the cycle's slots in turn, so a full cycle reaches every inactive project once. With integer
+ * sequences, block b of BLOCK sequences belongs to slot b % slots, which stays stable as the table grows.
  *
  * While the deletes queue holds BACKLOG messages or more the handler throws Backlog: the tick is not committed and
  * the scheduler delivers it again. Moments already enqueued are remembered, so a redelivery skips them.
  */
 final class Sweep
 {
-    public const int INTERVAL = 300;
-
     public const int BLOCK = 100;
 
     public const int BACKLOG = 100;
@@ -37,8 +35,7 @@ final class Sweep
         private readonly Database $dbForPlatform,
         private readonly DeletePublisher $publisherForDeletes,
         private readonly string $region,
-        private readonly int $interval,
-        private readonly int $slots,
+        private readonly Cycle $cycle,
     ) {
     }
 
@@ -83,9 +80,9 @@ final class Sweep
         }
     }
 
-    public function slot(\DateTimeImmutable $due): int
+    private function slot(\DateTimeImmutable $due): int
     {
-        return \intdiv((int) $due->format('U'), $this->interval) % $this->slots;
+        return \intdiv((int) $due->format('U'), $this->cycle->interval) % $this->cycle->slots;
     }
 
     /**
@@ -105,7 +102,7 @@ final class Sweep
 
         $last = \intdiv((int) $latest[0]->getSequence(), self::BLOCK);
 
-        for ($block = $slot; $block <= $last; $block += $this->slots) {
+        for ($block = $slot; $block <= $last; $block += $this->cycle->slots) {
             $start = $block * self::BLOCK;
 
             $this->enqueue($this->find([
@@ -138,7 +135,7 @@ final class Sweep
 
             $cursor = $projects[\count($projects) - 1];
 
-            $this->enqueue(\array_filter($projects, fn (Document $project): bool => \crc32($project->getId()) % $this->slots === $slot));
+            $this->enqueue(\array_filter($projects, fn (Document $project): bool => \crc32($project->getId()) % $this->cycle->slots === $slot));
         } while (\count($projects) === self::BLOCK);
     }
 

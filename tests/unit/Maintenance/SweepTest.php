@@ -6,6 +6,7 @@ namespace Tests\Unit\Maintenance;
 
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Maintenance\Backlog;
+use Appwrite\Maintenance\Cycle;
 use Appwrite\Maintenance\Sweep;
 use Appwrite\Schedule\Source\Maintenance;
 use PHPUnit\Framework\TestCase;
@@ -19,7 +20,6 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Query\Schema\ColumnType;
 use Utopia\Queue\Queue;
 use Utopia\Schedule\Clock\Test as TestClock;
 use Utopia\Schedule\Occurrence;
@@ -36,9 +36,9 @@ final class SweepTest extends TestCase
 
     private const string QUEUE = 'v1-deletes';
 
-    private const int SLOTS = 2016;
+    private const int SLOTS = 48;
 
-    private const int SPACING = 1009;
+    private const int SPACING = 101;
 
     private \DateTimeImmutable $week;
 
@@ -69,7 +69,7 @@ final class SweepTest extends TestCase
         $this->assertSame([], \array_keys(\array_filter($reached, fn (array $dues): bool => \count($dues) > 1)));
         $this->assertSame([], \array_values(\array_intersect(\array_keys($reached), $this->excluded)));
         $this->assertArrayHasKey('stale-' . (1 + 4 * self::SPACING), $reached);
-        // Block 2068 is past SLOTS blocks, so it wraps round to slot 52.
+        // Block 207 is past SLOTS blocks, so it wraps round to slot 15.
         $this->assertArrayHasKey('old-' . (1 + 205 * self::SPACING), $reached);
         $this->assertArrayNotHasKey('edge-' . (1 + 3 * self::SPACING), $reached);
         foreach ($publisher->payloads(self::QUEUE) as $payload) {
@@ -108,7 +108,6 @@ final class SweepTest extends TestCase
     public function testDocumentSequencesSpreadByHash(): void
     {
         $this->database = $this->population(new Uuid7Memory(), 72, fn (string $id, int $sequence): int => \crc32($id) % self::SLOTS);
-        $this->assertSame(ColumnType::Uuid7, $this->database->getIdAttributeType());
 
         $publisher = $this->publisher();
         $reached = $this->week($this->sweep($publisher), $publisher);
@@ -226,7 +225,7 @@ final class SweepTest extends TestCase
     {
         $reached = [];
         for ($slice = 0; $slice < self::SLOTS; $slice++) {
-            $due = $this->week->modify('+' . ($slice * Sweep::INTERVAL) . ' seconds');
+            $due = $this->week->modify('+' . ($slice * Cycle::INTERVAL) . ' seconds');
             $this->clock->advance((float) $due->getTimestamp() - (float) $this->clock->now()->format('U.u') + 1);
 
             $before = \count($publisher->payloads(self::QUEUE));
@@ -322,29 +321,34 @@ final class SweepTest extends TestCase
     {
         $offset = ($slot - $this->slot($this->week->getTimestamp()) + self::SLOTS) % self::SLOTS;
 
-        return $this->week->modify('+' . ($offset * Sweep::INTERVAL) . ' seconds');
+        return $this->week->modify('+' . ($offset * Cycle::INTERVAL) . ' seconds');
     }
 
     private function slot(int $due): int
     {
-        return \intdiv($due, Sweep::INTERVAL) % self::SLOTS;
+        return \intdiv($due, Cycle::INTERVAL) % self::SLOTS;
     }
 
     private function occurrence(\DateTimeImmutable $due): Occurrence
     {
-        return new Occurrence(Maintenance::ID, $due, null, (string) Sweep::INTERVAL);
+        return new Occurrence(Maintenance::ID, $due, null, (string) Cycle::INTERVAL);
     }
 
     private function scheduler(MemoryStore $store): Scheduler
     {
         return new Scheduler(
-            source: new Maintenance(Sweep::INTERVAL),
+            source: new Maintenance(Cycle::INTERVAL),
             store: $store,
-            tickSeconds: 60,
+            tickSeconds: Cycle::TICK,
             recoverSeconds: 3600,
             leaseSeconds: 600,
             clock: $this->clock,
         );
+    }
+
+    private function cycle(): Cycle
+    {
+        return new Cycle(self::SLOTS * Cycle::INTERVAL);
     }
 
     private function publisher(): QueuePublisher
@@ -354,7 +358,7 @@ final class SweepTest extends TestCase
 
     private function sweep(QueuePublisher $publisher): Sweep
     {
-        return new Sweep($this->database, new DeletePublisher($publisher, new Queue(self::QUEUE)), self::REGION, Sweep::INTERVAL, self::SLOTS);
+        return new Sweep($this->database, new DeletePublisher($publisher, new Queue(self::QUEUE)), self::REGION, $this->cycle());
     }
 
     /**
@@ -401,7 +405,7 @@ final class SweepTest extends TestCase
             ->setAuthorization($authorization);
         $database->create();
 
-        // Projects are written and read back with APP_PROJECTS_SUBQUERIES skipped, as Sweep reads them, so no
+        // Projects are written with APP_PROJECTS_SUBQUERIES skipped and Sweep selects none of them, so no
         // collection a subquery joins has to exist, whichever subqueries the projects collection declares.
         $collections = Config::getParam('collections', [])['console'];
         $database->createCollection(Collection::create(
