@@ -1,3 +1,4 @@
+import { formatDate } from '@/lib/date-utils'
 import { MARKETING_SITE_ORIGIN } from '@/lib/marketing/urls'
 import { getSeoSiteOrigin, resolveSiteAssetUrl } from '@/lib/marketing/site-origin'
 import { BLOG_COVER_OG_HEIGHT, BLOG_COVER_OG_WIDTH } from '@/lib/seo/cover-constants'
@@ -8,9 +9,16 @@ import {
   OG_IMAGE_WIDTH,
 } from '@/lib/seo/og-image'
 import { getCoverImageDimensions } from '@/lib/seo/cover-dimensions'
+import {
+  DISCORD_EMBED_ACCENT_COLOR,
+  escapeDiscordMarkdown,
+  getDiscordLinkButton,
+  truncateDiscordText,
+  type DiscordContainer,
+} from '@/lib/seo/discord-embed'
 import { getOrganizationSchema } from '@/lib/seo/organization'
 import { SEO_SITE_NAME } from '@/lib/seo/page-meta'
-import { getPostCategoryLabel } from './content'
+import { getBlogCategory, getPostCategoryLabel, getPrimaryPostCategorySlug } from './content'
 import type { BlogAuthor, BlogCategory, BlogFaq, BlogPost, BlogPostMeta } from './types'
 
 export type BlogSeoOptions = {
@@ -142,6 +150,63 @@ export function getBlogPostMetaTags(
     { name: 'twitter:description', content: post.description },
     { name: 'twitter:image', content: ogImage },
   ]
+}
+
+/** Discord link preview for a blog post: cover, title, summary, byline, and links back. */
+export function getBlogPostDiscordEmbed(
+  post: BlogPost,
+  authors: BlogAuthor[] = [],
+  options?: BlogSeoOptions,
+): DiscordContainer {
+  const siteOrigin = getSeoSiteOrigin(options?.siteOrigin)
+  const category = getPostCategoryLabel(post)
+  // Some posts use a category with no page; skip the button rather than link a 404.
+  const categoryPage = getBlogCategory(getPrimaryPostCategorySlug(post))
+  const details = [
+    authors.length
+      ? `By ${authors.map((author) => escapeDiscordMarkdown(author.name)).join(', ')}`
+      : undefined,
+    escapeDiscordMarkdown(category),
+    post.timeToRead ? `${post.timeToRead} min read` : undefined,
+    formatDate(post.date),
+  ].filter(Boolean)
+
+  return {
+    type: 17,
+    accent_color: DISCORD_EMBED_ACCENT_COLOR,
+    components: [
+      ...(post.cover
+        ? [
+            {
+              type: 12 as const,
+              items: [{ media: { url: buildOgCoverUrl(post.cover, siteOrigin) } }],
+            },
+          ]
+        : []),
+      {
+        type: 10,
+        content: [
+          `### ${escapeDiscordMarkdown(truncateDiscordText(getBlogPostTitle(post), 120))}`,
+          escapeDiscordMarkdown(truncateDiscordText(post.description, 200)),
+          `-# ${details.join(' · ')}`,
+        ].join('\n'),
+      },
+      {
+        type: 1,
+        components: [
+          getDiscordLinkButton('Read post', getBlogCanonicalUrl(post.href)),
+          ...(categoryPage
+            ? [
+                getDiscordLinkButton(
+                  `More in ${categoryPage.name}`,
+                  getBlogCanonicalUrl(categoryPage.href),
+                ),
+              ]
+            : []),
+        ],
+      },
+    ],
+  }
 }
 
 export function getBlogCategoryMetaTags(category: BlogCategory, options?: BlogSeoOptions) {

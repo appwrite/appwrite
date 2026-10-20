@@ -11,11 +11,13 @@ import {
 } from '@/lib/changelog/content'
 import {
   getChangelogCanonicalUrl,
+  getChangelogEntryDiscordEmbed,
   getChangelogEntryMetaTags,
   getChangelogEntrySchema,
 } from '@/lib/changelog/seo'
 import { asRouteHead } from '@/lib/seo/route-head'
 import { getRequestSiteOrigin } from '@/lib/marketing/site-origin'
+import { getDiscordEmbedScript } from '@/lib/seo/discord-embed'
 import { stringifyJsonLd } from '@/lib/seo/json-ld'
 import { CHANGELOG_RSS_PATH } from '@/lib/seo/rss'
 import { trackServerPageview } from '@/lib/server-analytics'
@@ -64,11 +66,13 @@ export const Route = createFileRoute('/_marketing/changelog/entry/$entry')({
   head: ({ loaderData }) => {
     if (!loaderData?.entry) return {}
 
+    const seoOptions = { siteOrigin: getRequestSiteOrigin() }
     const seo = asRouteHead(
-      getChangelogEntryMetaTags(loaderData.entry, {
-        siteOrigin: getRequestSiteOrigin(),
-      }),
+      getChangelogEntryMetaTags(loaderData.entry, seoOptions),
       { canonicalHref: getChangelogCanonicalUrl(loaderData.entry.href) },
+    )
+    const discordEmbed = getDiscordEmbedScript(
+      getChangelogEntryDiscordEmbed(loaderData.entry, seoOptions),
     )
 
     return {
@@ -92,6 +96,7 @@ export const Route = createFileRoute('/_marketing/changelog/entry/$entry')({
           type: 'application/ld+json',
           children: stringifyJsonLd(getChangelogEntrySchema(loaderData.entry)),
         },
+        ...(discordEmbed ? [discordEmbed] : []),
       ],
     }
   },
