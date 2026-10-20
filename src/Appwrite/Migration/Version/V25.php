@@ -13,6 +13,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Migration\Resource;
 use Utopia\Query\Schema\ColumnType;
+use Utopia\System\System;
 
 class V25 extends Migration
 {
@@ -21,6 +22,9 @@ class V25 extends Migration
      */
     public function execute(): void
     {
+        Console::info('Adding the collection metadata schema');
+        $this->addColumnPermissionsToMetadata();
+
         Console::info('Migrating collections');
         $this->migrateCollections();
 
@@ -572,6 +576,56 @@ class V25 extends Migration
      * A resource created after the migration is a reused public ID, not the
      * generation the historical migration operated on.
      */
+    /**
+     * Add "columnPermissions" to the collection metadata.
+     *
+     * The library declares this column on its metadata collection in code, so a fresh install
+     * has it and an upgraded one does not -- and neither attribute method will add it there:
+     * createAttribute() sees the declaration and calls it a duplicate, updateAttribute() refuses
+     * the metadata collection outright. Raw DDL is the only way in, as it was for
+     * "documentSecurity" in V18.
+     *
+     * It runs before the collections are migrated because those writes store a collection
+     * definition, which now carries this column.
+     *
+     * Nothing is backfilled. The library reads a missing value as "no column-scoped grants" and
+     * answers with the row's own permissions, which is what an upgraded collection should have.
+     */
+    protected function addColumnPermissionsToMetadata(): void
+    {
+        $adapter = System::getEnv('_APP_DB_ADAPTER', 'postgresql');
+
+        // Schemaless: the field exists on the documents that carry it.
+        if ($adapter === 'mongodb') {
+            return;
+        }
+
+        // The unit tier runs this against an in-memory database and sets no connection, and
+        // there is no table to alter there.
+        if (! isset($this->pdo)) {
+            return;
+        }
+
+        // MEDIUMTEXT and TEXT are what the two engines give a 1,000,000 character string, so an
+        // upgraded install ends up with the column a fresh one would have been created with.
+        [$quote, $type] = $adapter === 'postgresql'
+            ? ['"', 'TEXT']
+            : ['`', 'MEDIUMTEXT'];
+
+        $table = \implode('.', \array_map(
+            static fn (string $part): string => $quote . $part . $quote,
+            [$this->dbForProject->getDatabase(), $this->dbForProject->getNamespace() . '__metadata']
+        ));
+
+        try {
+            $this->pdo
+                ->prepare("ALTER TABLE {$table} ADD COLUMN IF NOT EXISTS {$quote}columnPermissions{$quote} {$type}")
+                ->execute();
+        } catch (Throwable $th) {
+            Console::warning("Failed to create attribute \"columnPermissions\" in the collection metadata: {$th->getMessage()}");
+        }
+    }
+
     protected function predatesMigration(Document $resource, Document $migration): bool
     {
         $resourceCreatedAt = \strtotime($resource->getCreatedAt() ?? '');
