@@ -21,19 +21,17 @@ final class MaintenanceTest extends TestCase
     }
 
     /**
-     * @return array<string, array{array<string, mixed>}>
+     * @return \Iterator<string, array{array<string, mixed>}>
      */
-    public static function incomplete(): array
+    public static function incomplete(): \Iterator
     {
         $payload = (new Maintenance(slot: 3, slots: 2016, due: 1772420400, period: 604800, region: 'east'))->toArray();
 
-        return [
-            'no slots' => [\array_diff_key($payload, ['slots' => true])],
-            'zero slots' => [['slots' => 0] + $payload],
-            'no period' => [\array_diff_key($payload, ['period' => true])],
-            'negative period' => [['period' => -1] + $payload],
-            'no region' => [\array_diff_key($payload, ['region' => true])],
-        ];
+        yield 'no slots' => [\array_diff_key($payload, ['slots' => true])];
+        yield 'zero slots' => [['slots' => 0] + $payload];
+        yield 'no period' => [\array_diff_key($payload, ['period' => true])];
+        yield 'negative period' => [['period' => -1] + $payload];
+        yield 'no region' => [\array_diff_key($payload, ['region' => true])];
     }
 
     /**
