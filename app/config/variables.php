@@ -1831,7 +1831,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_MAINTENANCE_INTERVAL',
-                'description' => 'How often, in seconds, the Appwrite maintenance process runs system cleanups and maintains each project accessed in the last 30 days. Projects are spread across hourly slots starting at _APP_MAINTENANCE_START_TIME. The default value is 86400 seconds (1 day).',
+                'description' => 'Interval value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 86400 seconds (1 day).',
                 'introduction' => '0.7.0',
                 'default' => '86400',
                 'required' => false,
@@ -1840,7 +1840,7 @@ return [
             ],
             [
                 'name' => '_APP_MAINTENANCE_INACTIVE_INTERVAL',
-                'description' => 'How often, in seconds, the Appwrite maintenance process maintains each project not accessed in the last 30 days, or never accessed. Projects are spread across hourly slots starting at _APP_MAINTENANCE_START_TIME. The default value is 604800 seconds (7 days).',
+                'description' => 'How often, in seconds, the scheduler runs maintenance for each project not accessed in the last 30 days or never accessed. Projects are spread across five-minute slices, so use a multiple of 300. Slices held back by a deletes backlog for more than an hour are skipped until the next cycle. The default value is 604800 seconds (7 days).',
                 'introduction' => '2.6.0',
                 'default' => '604800',
                 'required' => false,
