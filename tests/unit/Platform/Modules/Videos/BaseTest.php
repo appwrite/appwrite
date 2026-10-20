@@ -71,20 +71,6 @@ final class BaseTest extends TestCase
         $this->assertStringEndsWith('~proj1~vid1~rendition-ren1', $name);
     }
 
-    public function testJobExpiredByStamp(): void
-    {
-        $now = \gmdate('YmdHi');
-        $old = \gmdate('YmdHi', \time() - Base::TMP_TTL - 120);
-        $cutoff = \gmdate('YmdHi', \time() - Base::TMP_TTL);
-
-        $this->assertTrue(Base::jobExpired($old . '~proj~vid~rendition-a', $cutoff));
-        $this->assertFalse(Base::jobExpired($cutoff . '~proj~vid~rendition-edge', $cutoff));
-        $this->assertFalse(Base::jobExpired($now . '~proj~vid~timeline-b', $cutoff));
-        $this->assertFalse(Base::jobExpired('not-a-stamp', $cutoff));
-        $this->assertFalse(Base::jobExpired('2026100617xx~proj~vid~caption-c', $cutoff));
-        $this->assertFalse(Base::jobExpired('202610061759', $cutoff));
-    }
-
     public function testJobMatchesProjectAndVideo(): void
     {
         $name = '202610121200~proj1~vid1~rendition-ren1';

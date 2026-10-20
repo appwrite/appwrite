@@ -361,9 +361,6 @@ class Deletes extends Action
             case DELETE_TYPE_CSV_EXPORTS:
                 $this->deleteOldCSVExports($dbForPlatform, $deviceForFiles);
                 break;
-            case DELETE_TYPE_VIDEOS_TMP:
-                $this->deleteOldVideoTmp($telemetry);
-                break;
             case DELETE_TYPE_MAINTENANCE:
                 $this->deleteExpiredTargets($project, $getProjectDB);
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention, $executionsRetentionCount, $executionStore);
@@ -1576,71 +1573,6 @@ class Deletes extends Action
                 Console::success('Deleted CSV file: ' . $file->getAttribute('name'));
             }
         });
-    }
-
-    /**
-     * Remove orphaned videos-tmp job folders older than the retention window.
-     *
-     * Folder names are `{YmdHi}~{projectId}~{videoId}~{type}-{jobId}`; the
-     * leading stamp is compared as text so this never stats the filesystem.
-     * Cutoff comes from `_APP_MAINTENANCE_RETENTION_VIDEOS_TMP` (default
-     * VideosBase::TMP_TTL, 24 hours).
-     */
-    private function deleteOldVideoTmp(Telemetry $telemetry): void
-    {
-        $root = VideosBase::tmpJobsRoot();
-        $tmpRoot = \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/';
-
-        if (!\is_dir($root)) {
-            return;
-        }
-
-        $retention = (int) System::getEnv(
-            '_APP_MAINTENANCE_RETENTION_VIDEOS_TMP',
-            (string) VideosBase::TMP_TTL
-        );
-        $cutoff = \gmdate('YmdHi', \time() - $retention);
-        Console::info('Deleting video tmp jobs older than ' . $cutoff);
-
-        $scanned = 0;
-        $removed = 0;
-        $failed = 0;
-
-        foreach (\scandir($root) ?: [] as $name) {
-            if ($name[0] === '.') {
-                continue;
-            }
-
-            $scanned++;
-
-            if (!VideosBase::jobExpired($name, $cutoff)) {
-                continue;
-            }
-
-            $path = $root . '/' . $name;
-            if (!\str_starts_with($path, $tmpRoot)) {
-                continue;
-            }
-
-            if (!$this->removeVideoTmp($path)) {
-                $failed++;
-                continue;
-            }
-
-            $removed++;
-        }
-
-        Span::add('videos.tmp.scanned', $scanned);
-        Span::add('videos.tmp.removed', $removed);
-        Span::add('videos.tmp.failed', $failed);
-
-        if ($removed > 0) {
-            try {
-                $telemetry->createCounter('worker.videos.tmp.removed', null, 'Expired video scratch directories removed by the maintenance sweep')->add($removed);
-            } catch (Throwable) {
-                // Metrics are best-effort.
-            }
-        }
     }
 
     /**

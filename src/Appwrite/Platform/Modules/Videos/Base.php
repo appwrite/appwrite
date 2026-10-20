@@ -147,17 +147,11 @@ abstract class Base extends UtopiaAction
     /** Timeline only: the source has no video track, so there is nothing to tile. */
     public const STATUS_SKIPPED = 'skipped';
 
-    /**
-     * Default age (seconds) before orphaned job folders under videos-tmp/jobs
-     * are swept. Overridden by `_APP_MAINTENANCE_RETENTION_VIDEOS_TMP`.
-     */
-    public const TMP_TTL = 86400;
-
     public const JOB_RENDITION = 'rendition';
     public const JOB_TIMELINE = 'timeline';
     public const JOB_CAPTION = 'caption';
 
-    /** Flat root for all video worker scratch directories on the shared volume. */
+    /** Flat root for video worker scratch directories under videos-tmp. */
     public static function tmpJobsRoot(): string
     {
         return \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/jobs';
@@ -166,9 +160,7 @@ abstract class Base extends UtopiaAction
     /**
      * Per-job directory: `{tmpJobsRoot()}/{YmdHi}~{projectId}~{videoId}~{type}-{jobId}`.
      *
-     * The leading 12-character UTC minute stamp sorts as text so a maintenance
-     * sweep can drop leftovers older than the retention window without reading
-     * file times.
+     * The leading 12-character UTC minute stamp keeps the name parseable.
      * Encode jobs use the rendition id; timeline and caption jobs use a uniqid.
      */
     public static function tmpJobPath(
@@ -185,31 +177,6 @@ abstract class Base extends UtopiaAction
             . '~' . $videoId
             . '~' . $type
             . '-' . $jobId;
-    }
-
-    /**
-     * True when a job folder name is older than `$cutoff` (`gmdate('YmdHi', …)`).
-     *
-     * Requires a 12-digit stamp followed by `~` so accidental entries under
-     * jobs/ are left alone.
-     */
-    public static function jobExpired(string $name, string $cutoff): bool
-    {
-        if (\strlen($name) < 13) {
-            return false;
-        }
-
-        if ($name[12] !== '~') {
-            return false;
-        }
-
-        $stamp = \substr($name, 0, 12);
-
-        if (!\ctype_digit($stamp)) {
-            return false;
-        }
-
-        return $stamp < $cutoff;
     }
 
     /**

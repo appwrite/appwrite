@@ -1928,15 +1928,6 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
-            [
-                'name' => '_APP_MAINTENANCE_RETENTION_VIDEOS_TMP',
-                'description' => 'Maximum age (in seconds) of orphaned video worker scratch folders under videos-tmp before maintenance deletes them. The default value is 86400 seconds (1 day).',
-                'introduction' => '2.4.0',
-                'default' => '86400',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ]
         ],
     ],
     [

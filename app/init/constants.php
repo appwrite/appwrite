@@ -305,7 +305,6 @@ const DELETE_TYPE_BUCKETS = 'buckets';
 const DELETE_TYPE_VIDEOS = 'videos';
 const DELETE_TYPE_VIDEOS_RENDITIONS = 'videos_renditions';
 const DELETE_TYPE_VIDEOS_CAPTIONS = 'videos_captions';
-const DELETE_TYPE_VIDEOS_TMP = 'videos_tmp';
 const DELETE_TYPE_FILES = 'files';
 const DELETE_TYPE_INSTALLATIONS = 'installations';
 const DELETE_TYPE_RULES = 'rules';
