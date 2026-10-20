@@ -16,6 +16,8 @@ use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Http\Adapter\Swoole\Request;
+use Utopia\Lock\Distributed;
+use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action;
 use Utopia\Storage\Device;
 
@@ -137,12 +139,39 @@ class Create extends Base
             }
 
             $etag = \md5($body);
-            // SDKs upload parts of one upload concurrently; the cached parts map
-            // and device chunk bookkeeping are read-modify-write, so load and
-            // save must share the upload's critical section.
-            $locks($this->multipartLockKey($project, $uploadId), 600, function () use ($cache, $project, $deviceForFiles, $bucket, $uploadId, $bucketId, $key, $partNumber, $body, $etag): void {
-                $upload = $this->multipartUploadForBucket($cache, $project, $uploadId, $bucketId, $key);
-                $this->uploadMultipartPart($cache, $project, $deviceForFiles, $bucket, $upload, $partNumber, $body, $etag);
+            $lockKey = $this->multipartLockKey($project, $uploadId);
+            $locks($lockKey . ':part:' . $partNumber, 600, function (Distributed $partLock) use ($locks, $lockKey, $cache, $project, $deviceForFiles, $bucket, $uploadId, $bucketId, $key, $partNumber, $body, $etag): void {
+                $upload = $locks($lockKey, 600, function () use ($cache, $project, $deviceForFiles, $bucket, $uploadId, $bucketId, $key, $partNumber, $body, $etag): ?array {
+                    $upload = $this->multipartUploadForBucket($cache, $project, $uploadId, $bucketId, $key);
+                    if (empty($upload['metadata']['device']['uploadId'])) {
+                        // Local chunks share a directory: keep transfer and abort serialized.
+                        $upload = $this->uploadMultipartPart($cache, $project, $deviceForFiles, $bucket, $upload, $partNumber, $body, $etag);
+                        $this->saveMultipartUpload($cache, $project, $upload);
+                        return null;
+                    }
+                    return $upload;
+                }, timeout: 120.0);
+
+                if ($upload !== null) {
+                    if (!$partLock->refresh()) {
+                        throw new Contention('Part lease lost before transfer');
+                    }
+                    $transferred = $this->uploadMultipartPart($cache, $project, $deviceForFiles, $bucket, $upload, $partNumber, $body, $etag);
+                    if (!$partLock->isHeld()) {
+                        throw new Contention('Part lease lost after transfer');
+                    }
+                    $locks($lockKey, 600, function () use ($cache, $project, $uploadId, $bucketId, $key, $partNumber, $transferred, $partLock): void {
+                        if (!$partLock->refresh()) {
+                            throw new Contention('Part lease lost before recording completion');
+                        }
+                        // Abort removes the state. Never recreate it from the transfer's snapshot.
+                        $current = $this->multipartUploadForBucket($cache, $project, $uploadId, $bucketId, $key);
+                        $current['parts'][$partNumber] = $transferred['parts'][$partNumber];
+                        $current['metadata']['device']['parts'][$partNumber] = $transferred['metadata']['device']['parts'][$partNumber];
+                        $current['metadata']['device']['chunks'] = \count($current['metadata']['device']['parts']);
+                        $this->saveMultipartUpload($cache, $project, $current);
+                    }, timeout: 120.0);
+                }
             }, timeout: 120.0);
             if ($copySource !== '') {
                 $this->sendXml($response, S3Xml::copyPart($etag));

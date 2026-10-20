@@ -13,11 +13,13 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\UID;
+use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
@@ -70,6 +72,8 @@ class Delete extends Action
             ->inject('publisherForDeletes')
             ->inject('authorization')
             ->inject('user')
+            ->inject('project')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -83,6 +87,8 @@ class Delete extends Action
         DeletePublisher $publisherForDeletes,
         Authorization $authorization,
         User $user,
+        Document $project,
+        callable $locks,
     ) {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -99,62 +105,70 @@ class Delete extends Action
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
-        // Read permission should not be required for delete
-        $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+        try {
+            $file = $locks('storage:file:' . $project->getId() . ':' . $bucket->getId() . ':' . $fileId, 600, function () use ($authorization, $dbForProject, $bucket, $fileId, $fileSecurity, $valid, $deviceForFiles, $publisherForDeletes, $queueForEvents): Document {
+                // Read permission should not be required for delete
+                $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
 
-        if ($file->isEmpty()) {
-            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
-        }
+                if ($file->isEmpty()) {
+                    throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+                }
 
-        // Make sure we don't delete the file before the document permission check occurs
-        if ($fileSecurity && !$valid && !$authorization->isValid(new Input(PermissionType::Delete, $file->getPermissionsByType(PermissionType::Delete)))) {
-            throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
-        }
+                // Make sure we don't delete the file before the document permission check occurs
+                if ($fileSecurity && !$valid && !$authorization->isValid(new Input(PermissionType::Delete, $file->getPermissionsByType(PermissionType::Delete)))) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
+                }
 
-        $deviceDeleted = false;
-        if ($file->getAttribute('chunksTotal') !== $file->getAttribute('chunksUploaded')) {
-            try {
-                $deviceDeleted = $deviceForFiles->abort(
-                    $file->getAttribute('path'),
-                    ($file->getAttribute('metadata', [])['uploadId'] ?? '')
-                );
-            } catch (\Exception $e) {
-                // If the partial upload chunks are already gone from the device
-                // (e.g. the upload never wrote anything to disk), treat it as deleted
-                // so the pending file document can still be removed from the database.
-                $deviceDeleted = true;
-            }
-        } else {
-            $deviceDeleted = $deviceForFiles->delete($file->getAttribute('path'));
-        }
-
-        if ($deviceDeleted) {
-            $publisherForDeletes->enqueue(new DeleteMessage(
-                project: $queueForEvents->getProject(),
-                type: DELETE_TYPE_CACHE_BY_RESOURCE,
-                resource: 'file/' . $fileId,
-                resourceType: 'bucket/' . $bucket->getId(),
-            ));
-
-            try {
-                if ($fileSecurity && !$valid) {
-                    $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId);
+                $deviceDeleted = false;
+                if ($file->getAttribute('chunksTotal') !== $file->getAttribute('chunksUploaded')) {
+                    try {
+                        $deviceDeleted = $deviceForFiles->abort(
+                            $file->getAttribute('path'),
+                            ($file->getAttribute('metadata', [])['uploadId'] ?? '')
+                        );
+                    } catch (\Exception $e) {
+                        // If the partial upload chunks are already gone from the device
+                        // (e.g. the upload never wrote anything to disk), treat it as deleted
+                        // so the pending file document can still be removed from the database.
+                        $deviceDeleted = true;
+                    }
                 } else {
-                    $deleted = $authorization->skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId));
+                    $deviceDeleted = $deviceForFiles->delete($file->getAttribute('path'));
                 }
-            } catch (NotFoundException) {
-                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
-            }
 
-            if (!$deleted) {
-                $exists = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
-                if (!$exists->isEmpty()) {
-                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove file from DB');
+                if ($deviceDeleted) {
+                    $publisherForDeletes->enqueue(new DeleteMessage(
+                        project: $queueForEvents->getProject(),
+                        type: DELETE_TYPE_CACHE_BY_RESOURCE,
+                        resource: 'file/' . $fileId,
+                        resourceType: 'bucket/' . $bucket->getId(),
+                    ));
+
+                    try {
+                        if ($fileSecurity && !$valid) {
+                            $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId);
+                        } else {
+                            $deleted = $authorization->skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId));
+                        }
+                    } catch (NotFoundException) {
+                        throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+                    }
+
+                    if (!$deleted) {
+                        $exists = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+                        if (!$exists->isEmpty()) {
+                            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove file from DB');
+                        }
+                        throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+                    }
+                } else {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to delete file from device');
                 }
-                throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
-            }
-        } else {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to delete file from device');
+                return $file;
+            }, timeout: 120.0);
+        } catch (Contention) {
+            $response->addHeader('Retry-After', '5');
+            throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'File upload is busy. Try again.');
         }
 
         $queueForEvents

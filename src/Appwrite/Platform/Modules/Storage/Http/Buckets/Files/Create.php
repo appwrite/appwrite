@@ -44,6 +44,7 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
 use Utopia\Storage\DeviceType;
+use Utopia\Storage\Exception\NotFoundException as StorageNotFoundException;
 use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
@@ -55,8 +56,8 @@ class Create extends Action
     use HTTP;
 
     /**
-     * Lease for the per-file upload lock, in seconds. Refreshed before the
-     * transfer and before completion so a single chunk always gets the full window.
+     * Lease for upload coordination, in seconds. Refreshed before transferring
+     * a part and before completion so each phase gets the full window.
      */
     private const LOCK_TTL = 600;
 
@@ -305,12 +306,13 @@ class Create extends Action
             return $merged;
         };
 
-        $prepareUpload = function () use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $folder, $path, $permissions, $response, &$completed, $user): void {
+        $prepareUpload = function () use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $folder, &$path, $permissions, $response, &$completed, $user): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             if (!$file->isEmpty()) {
                 $chunks = $file->getAttribute('chunksTotal', 1);
                 $uploaded = $file->getAttribute('chunksUploaded', 0);
                 $metadata = $file->getAttribute('metadata', []);
+                $path = $file->getAttribute('path', $path);
 
                 if ($uploaded === $chunks && empty($contentRange)) {
                     throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
@@ -335,6 +337,11 @@ class Create extends Action
             }
 
             if ($file->isEmpty()) {
+                // A deleted upload can still have a part in flight. Give its replacement
+                // a different object path as well as a different backend upload ID.
+                if ($chunks > 1 && $deviceForFiles->getType() !== DeviceType::Local) {
+                    $path .= '.' . Id::unique();
+                }
                 $deviceForFiles->prepare($path, $metadata['content_type'] ?? '', $chunks, $metadata);
 
                 if (!empty($contentRange)) {
@@ -370,9 +377,13 @@ class Create extends Action
             }
         };
 
-        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $exiftool, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response, $user): void {
+        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $exiftool, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, &$path, $permissions, $queueForEvents, $response, $user): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             $uploaded = 0;
+
+            if (!empty($metadata['uploadId']) && ($file->isEmpty() || $file->getAttribute('path') !== $path || ($file->getAttribute('metadata', [])['uploadId'] ?? '') !== $metadata['uploadId'])) {
+                throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+            }
 
             if (!$file->isEmpty()) {
                 $chunks = $file->getAttribute('chunksTotal', 1);
@@ -616,40 +627,79 @@ class Create extends Action
         };
 
         try {
-            // upload() can finalize and remove chunk files itself. Keep preparation,
-            // transfer and document completion under the same per-file lock.
-            $locks($lockKey, self::LOCK_TTL, function (Distributed $lock) use ($prepareUpload, $finalizeUpload, &$completed, $queueForEvents, $deviceForFiles, $deviceForLocal, $fileTmpName, $path, $chunk, &$chunks, &$metadata): void {
-                $prepareUpload();
+            $upload = function (?Distributed $partLock = null) use ($locks, $lockKey, $prepareUpload, $finalizeUpload, &$completed, $queueForEvents, $deviceForFiles, $deviceForLocal, $fileTmpName, &$path, $chunk, &$chunks, &$metadata): void {
+                $parallel = false;
+                $locks($lockKey, self::LOCK_TTL, function (Distributed $lock) use ($prepareUpload, $finalizeUpload, &$completed, &$parallel, $queueForEvents, $deviceForFiles, $deviceForLocal, $fileTmpName, &$path, $chunk, &$chunks, &$metadata): void {
+                    $prepareUpload();
 
-                if ($completed) {
-                    $queueForEvents->reset();
+                    if ($completed) {
+                        $queueForEvents->reset();
+                        return;
+                    }
 
-                    return;
+                    // Backend multipart IDs isolate transfers from replacement uploads.
+                    // Local chunk files do not have that isolation, so retain their lock.
+                    $parallel = $chunks > 1 && !empty($metadata['uploadId']);
+                    if ($parallel) {
+                        if (isset($metadata['parts'][$chunk])) {
+                            $parallel = false;
+                            $finalizeUpload(\count($metadata['parts']));
+                        }
+                        return;
+                    }
+
+                    if (!$lock->refresh()) {
+                        throw new LockContention('Upload lease lost before transfer');
+                    }
+                    $chunksUploaded = $deviceForFiles->upload(
+                        $deviceForLocal->read($fileTmpName),
+                        $path,
+                        $metadata['content_type'] ?? '',
+                        $chunk,
+                        $chunks,
+                        $metadata
+                    );
+                    if (!$lock->isHeld()) {
+                        throw new LockContention('Upload lease lost after transfer');
+                    }
+                    $finalizeUpload($chunksUploaded);
+                }, timeout: 120.0);
+
+                if ($parallel) {
+                    if ($partLock !== null && !$partLock->refresh()) {
+                        throw new LockContention('Part lease lost before transfer');
+                    }
+                    // Transfer only: upload() would complete against a stale parts map.
+                    $deviceForFiles->uploadChunk(
+                        $deviceForLocal->read($fileTmpName),
+                        $path,
+                        $chunk,
+                        $chunks,
+                        $metadata
+                    );
+                    // Only this request's receipt may be merged; an older snapshot
+                    // must not replace a newer ETag for another part.
+                    if ($partLock !== null && !$partLock->isHeld()) {
+                        throw new LockContention('Part lease lost after transfer');
+                    }
+                    $metadata['parts'] = [$chunk => $metadata['parts'][$chunk]];
+                    $locks($lockKey, self::LOCK_TTL, function () use ($finalizeUpload, &$metadata, $partLock): void {
+                        if ($partLock !== null && !$partLock->refresh()) {
+                            throw new LockContention('Part lease lost before completion');
+                        }
+                        // Re-read and merge acknowledged parts while locked. Completion
+                        // uses their backend ETags, never a physical part count.
+                        $finalizeUpload(\count($metadata['parts']));
+                    }, timeout: 120.0);
                 }
-
-                // Restart the lease so the transfer gets the full window,
-                // regardless of how long preparation took.
-                if (!$lock->refresh()) {
-                    throw new LockContention('Upload lease lost before transfer: ' . $lock->token());
-                }
-
-                $chunksUploaded = $deviceForFiles->upload(
-                    $deviceForLocal->read($fileTmpName),
-                    $path,
-                    $metadata['content_type'] ?? '',
-                    $chunk,
-                    $chunks,
-                    $metadata
-                );
-
-                // Never record completion under a lapsed lease: another request
-                // may already own the file and be finalizing it.
-                if (!$lock->isHeld()) {
-                    throw new LockContention('Upload lease lost after transfer: ' . $lock->token());
-                }
-
-                $finalizeUpload($chunksUploaded);
-            }, timeout: 120.0);
+            };
+            if ($chunks > 1 && $deviceForFiles->getType() !== DeviceType::Local) {
+                $locks($lockKey . ':part:' . $chunk, self::LOCK_TTL, $upload, timeout: 120.0);
+            } else {
+                $upload();
+            }
+        } catch (StorageNotFoundException) {
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         } catch (LockContention) {
             $response->addHeader('Retry-After', '5');
             throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'File upload is busy. Try again.');

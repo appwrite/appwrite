@@ -36,8 +36,14 @@ final class Distributed implements Lock
 
     private ?Closure $logger = null;
 
+    /**
+     * A provider borrows a connection for each command, not for the lease's lifetime.
+     * This lets nested locks share a bounded connection pool.
+     *
+     * @param Redis|Closure(Closure(Redis): mixed): mixed $redis
+     */
     public function __construct(
-        private readonly Redis $redis,
+        private readonly Redis|Closure $redis,
         private readonly string $key,
         private readonly int $ttl = 600,
     ) {
@@ -91,7 +97,7 @@ final class Distributed implements Lock
     public function tryAcquire(): bool
     {
         $token = $this->generateToken();
-        $acquired = $this->redis->set($this->key, $token, ['NX', 'EX' => $this->ttl]);
+        $acquired = $this->execute(fn (Redis $redis): mixed => $redis->set($this->key, $token, ['NX', 'EX' => $this->ttl]));
 
         if ($acquired) {
             $this->token = $token;
@@ -127,6 +133,7 @@ final class Distributed implements Lock
         }
     }
 
+    /** @phpstan-impure */
     public function refresh(): bool
     {
         if ($this->token === null) {
@@ -136,13 +143,14 @@ final class Distributed implements Lock
         return $this->runScript(self::REFRESH_SCRIPT, [$this->key, $this->token, (string) $this->ttl]) === 1;
     }
 
+    /** @phpstan-impure */
     public function isHeld(): bool
     {
         if ($this->token === null) {
             return false;
         }
 
-        return $this->redis->get($this->key) === $this->token;
+        return $this->execute(fn (Redis $redis): mixed => $redis->get($this->key)) === $this->token;
     }
 
     /**
@@ -202,7 +210,13 @@ final class Distributed implements Lock
     {
         $method = 'eval';
 
-        return $this->redis->$method($script, $arguments, 1);
+        return $this->execute(fn (Redis $redis): mixed => $redis->$method($script, $arguments, 1));
+    }
+
+    /** @param Closure(Redis): mixed $operation */
+    private function execute(Closure $operation): mixed
+    {
+        return $this->redis instanceof Redis ? $operation($this->redis) : ($this->redis)($operation);
     }
 
     /**

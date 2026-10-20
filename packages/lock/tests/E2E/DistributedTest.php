@@ -42,6 +42,46 @@ final class DistributedTest extends TestCase
         }
     }
 
+    public function testConnectionProviderReleasesBeforeRunningTheGuardedWork(): void
+    {
+        $state = new class () {
+            public bool $borrowed = false;
+            public bool $entered = false;
+        };
+        $provider = function (\Closure $operation) use ($state): mixed {
+            if ($state->borrowed) {
+                throw new \RuntimeException('The single connection is already borrowed');
+            }
+            $state->borrowed = true;
+            try {
+                return $operation($this->redis);
+            } finally {
+                $state->borrowed = false;
+            }
+        };
+        $failure = new \RuntimeException('Guarded work failed');
+        $outer = new Distributed($provider, $this->key, 30);
+        $inner = new Distributed($provider, $this->key . ':nested', 30);
+        $this->expectExceptionObject($failure);
+        try {
+            $outer->withLock(function () use ($outer, $inner, $state, $failure): void {
+                $this->assertFalse($state->borrowed);
+                $this->assertTrue($outer->isHeld());
+                $inner->withLock(function () use ($outer, $inner, $failure, $state): void {
+                    $this->assertTrue($outer->refresh());
+                    $this->assertTrue($inner->isHeld());
+                    $state->entered = true;
+                    throw $failure;
+                });
+            });
+        } finally {
+            $this->assertTrue($state->entered);
+            $this->assertFalse($state->borrowed);
+            $this->assertSame(0, $this->redis->exists($this->key));
+            $this->assertSame(0, $this->redis->exists($this->key . ':nested'));
+        }
+    }
+
     public function testAcquireAndRelease(): void
     {
         $lock = new Distributed($this->redis, $this->key, 30);

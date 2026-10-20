@@ -35,8 +35,8 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
 use Utopia\Storage\DeviceType;
-use Utopia\Storage\Exception\NotFoundException;
 use Utopia\System\System;
+use Utopia\Storage\Exception\NotFoundException as StorageNotFoundException;
 
 abstract class Base extends Action
 {
@@ -299,15 +299,17 @@ abstract class Base extends Action
 
         $metadata = $upload['metadata'] ?? [];
         $deviceMetadata = $metadata['device'] ?? [];
-        $chunks = \max(2, (int) ($deviceMetadata['chunks'] ?? 0) + 2, $partNumber + 1);
-        $deviceForFiles->upload(
-            new Stream($body),
-            (string) $upload['path'],
-            (string) ($upload['contentType'] ?? 'application/octet-stream'),
-            $partNumber,
-            $chunks,
-            $deviceMetadata
-        );
+        try {
+            $deviceForFiles->uploadChunk(
+                new Stream($body),
+                (string) $upload['path'],
+                $partNumber,
+                0, // The final part count is chosen by CompleteMultipartUpload.
+                $deviceMetadata
+            );
+        } catch (StorageNotFoundException) {
+            throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, 'Multipart upload not found.');
+        }
 
         // Expiry may have aborted the staging while this part was written.
         if (!\is_string($cache->load($this->multipartStateKey($project, (string) $upload['uploadId']), self::MULTIPART_TTL))) {
@@ -317,8 +319,6 @@ abstract class Base extends Action
         $metadata['device'] = $deviceMetadata;
         $upload['metadata'] = $metadata;
         $upload['parts'][(string) $partNumber] = ['etag' => $etag, 'checksum' => $checksum, 'size' => \strlen($body)];
-        $this->saveMultipartUpload($cache, $project, $upload);
-
         return $upload;
     }
 
@@ -886,7 +886,14 @@ abstract class Base extends Action
             Query::orderAsc('$sequence'),
         ]));
 
-        return $file->isEmpty() ? null : $file;
+        $file = $file->isEmpty() ? null : $file;
+        if ($file !== null && $file->getAttribute('chunksTotal', 1) !== $file->getAttribute('chunksUploaded', 0)) {
+            // Native completion owns this unpublished path until its metadata is
+            // committed. S3 writers must retry rather than replace that document
+            // between its generation check and publication.
+            throw new Contention('A native file upload is still in progress');
+        }
+        return $file;
     }
 
     /**
@@ -1083,7 +1090,7 @@ abstract class Base extends Action
                 if ($committed->isEmpty()) {
                     try {
                         $aborted = $deviceForFiles->abort($path, (string) ($upload['metadata']['device']['uploadId'] ?? ''));
-                    } catch (NotFoundException) {
+                    } catch (StorageNotFoundException) {
                         $aborted = true;
                     } catch (\Throwable $error) {
                         Console::warning('Failed to abort expired S3 multipart upload ' . $uploadId . ': ' . $error->getMessage());
