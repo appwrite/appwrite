@@ -122,8 +122,7 @@ class Message
     }
 
     /**
-     * Whether a failure on this delivery is dead-lettered instead of retried.
-     * Always false on Redis, whose limit belongs to the retry task, not the consumer.
+     * Whether a failure on this delivery is dead-lettered. Always false on Redis.
      */
     public function isLastAttempt(): bool
     {

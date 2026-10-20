@@ -295,7 +295,7 @@ class Mails extends Action
     }
 
     /**
-     * The project's own SMTP server failed the last attempt: nothing on our side can deliver it, so it is not dead-lettered.
+     * The project's own SMTP failed the last attempt; acknowledge instead of dead-lettering.
      */
     private function abandon(Document $project, string $host, string $reason): void
     {
