@@ -396,6 +396,7 @@ abstract class Adapter
             ) {
                 $message->terminal();
             }
+            $message->setError($error);
 
             // The work did not happen, so hand the message back to be retried
             // (or, for a terminal verdict, to be dead-lettered now).
@@ -403,6 +404,9 @@ abstract class Adapter
                 $consumer->reject($queue, $message);
             } catch (\Throwable) {
             }
+            // Read by the broker during reject(). Held past it, the error's trace and this
+            // message reference each other until the cycle collector runs.
+            $message->setError(null);
 
             $this->report($errorCallback, $error, $message);
 

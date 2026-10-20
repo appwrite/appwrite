@@ -8,6 +8,7 @@ use Utopia\Lock\Mutex;
 use Utopia\NATS\Connection as NatsConnection;
 use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\JetStreamException;
+use Utopia\NATS\Exception\MaxPayloadException;
 use Utopia\NATS\Exception\NoRespondersException;
 use Utopia\NATS\Exception\ProtocolException;
 use Utopia\NATS\Exception\TimeoutException;
@@ -26,6 +27,7 @@ use Utopia\Queue\Codec;
 use Utopia\Queue\Codec\Json;
 use Utopia\Queue\Consumer;
 use Utopia\Queue\Consumer\Bounded;
+use Utopia\Queue\DeadLetter;
 use Utopia\Queue\Message;
 use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Queue\Queue;
@@ -87,6 +89,11 @@ class Nats implements Synchronous, Consumer, Bounded
     private const string CONSUMER_WORK = 'worker';
     private const string CONSUMER_RETRY = 'retry';
     private const string CONTENT_TYPE = 'Content-Type';
+    // Prefix of the headers recording why a message was dead-lettered; retry() drops them.
+    private const string DEAD_HEADER = 'Utopia-Queue-Dead-';
+    private const int DEAD_ERROR_BYTES = 256;
+    // JetStream's "message size exceeds maximum allowed", from a stream's maxMsgSize.
+    private const int ERR_MESSAGE_TOO_LARGE = 10054;
     private const string ADVISORY_MAX_DELIVERIES = '$JS.EVENT.ADVISORY.CONSUMER.MAX_DELIVERIES';
 
     // Queue group for the advisory subscription, so one worker per queue acts
@@ -244,9 +251,11 @@ class Nats implements Synchronous, Consumer, Bounded
      *        a failure it cannot raise, because it happens outside any caller's
      *        call — currently the dead-lettering of a message that exhausted
      *        maxDeliver while no handler held it. Omitted, those failures go
-     *        nowhere, which is how a lost dead letter becomes invisible. Called on
-     *        the way out of receive(), after the broker has released its locks, so a
-     *        reporter is free to use this broker.
+     *        nowhere, which is how a lost dead letter becomes invisible. Every dead
+     *        letter the broker writes is reported here too, as a {@see DeadLetter},
+     *        which is not a failure and is told apart by type. Called on the way out
+     *        of receive(), reject(), release() and close(), after the broker has
+     *        released its locks, so a reporter is free to use this broker.
      * @param float|null $maxAge Message TTL on the work stream, in seconds. Null
      *        derives it from the queue's own jobTtl, which is the historical
      *        behaviour — but a queue object is built separately on each side, so
@@ -788,11 +797,10 @@ class Nats implements Synchronous, Consumer, Bounded
     /**
      * Owe a failure to the caller's reporter, if it gave one.
      *
-     * Buffered rather than called here. The only caller is drainDeadLetters(), which
-     * runs under the receive lock, and the reporter is the caller's code: one that
-     * publishes a notification -- onto this very broker, plausibly -- would wait on a
-     * lock its own call stack is holding. {@see self::flushReports()} hands these over
-     * once receive() has let go.
+     * Buffered rather than called here. Callers run under the receive or commands
+     * lock, and the reporter is the caller's code: one that publishes a notification
+     * -- onto this very broker, plausibly -- would wait on a lock its own call stack is
+     * holding. {@see self::flushReports()} hands these over once the lock is let go.
      */
     private function report(\Throwable $error): void
     {
@@ -976,16 +984,17 @@ class Nats implements Synchronous, Consumer, Bounded
                     $this->report($error);
                 }
                 if ($spare !== null && $jsMessage->metadata()->numDelivered >= $spare) {
-                    $this->park($queue, $jsMessage, 'max deliveries exceeded');
+                    $this->park($queue, $jsMessage, 'max deliveries exceeded', 'spare');
 
                     continue;
                 }
             }
 
             Message::warnIfLarge($queue->name, \strlen($jsMessage->getData()));
+            $error = null;
             try {
                 $data = $this->codec->decode($jsMessage->getData());
-            } catch (\Throwable) {
+            } catch (\Throwable $error) {
                 $data = null;
             }
 
@@ -993,7 +1002,7 @@ class Nats implements Synchronous, Consumer, Bounded
                 // Parked rather than thrown: in a batch a throw here would leave
                 // every message behind it unregistered and unacknowledged, each
                 // burning an attempt and a maxAckPending slot for a full ackWait.
-                $this->park($queue, $jsMessage, 'payload could not be decoded');
+                $this->park($queue, $jsMessage, 'payload could not be decoded', 'unreadable', $error);
 
                 continue;
             }
@@ -1026,23 +1035,111 @@ class Nats implements Synchronous, Consumer, Bounded
      * redelivery and ends on the dead stream anyway, where dropping the ack
      * first would lose it outright.
      */
-    private function park(Queue $queue, JetStreamMessage $jsMessage, string $reason): void
+    private function park(Queue $queue, JetStreamMessage $jsMessage, string $reason, string $cause, ?\Throwable $error = null): void
     {
         try {
-            // The message's own Content-Type, not this codec's: the bytes go over
-            // as they arrived, and what could not be read here is precisely what
-            // this worker's codec does not write.
-            $headers = new Headers();
-            $contentType = $jsMessage->getHeaders()?->get(self::CONTENT_TYPE);
-            if ($contentType !== null) {
-                $headers->set(self::CONTENT_TYPE, $contentType);
-            }
-
-            $this->js()->publish($this->deadSubject($queue), $jsMessage->getData(), headers: $headers);
+            $metadata = $jsMessage->metadata();
+            $this->deadLetter($this->js(), $queue, $jsMessage->getData(), $jsMessage->getHeaders(), $cause, $metadata->stream, $metadata->streamSequence, $metadata->numDelivered, $error);
             $jsMessage->term($reason);
         } catch (\Throwable $error) {
             $this->report($error);
         }
+    }
+
+    /**
+     * Copy the bytes and their own Content-Type to the dead stream with why they died, and report it.
+     * Headers count against the payload size limit, so a message that does not fit with the record goes over without it.
+     */
+    private function deadLetter(JetStream $js, Queue $queue, string $data, ?Headers $original, string $reason, string $stream, int $sequence, ?int $deliveries, ?\Throwable $error = null): void
+    {
+        $headers = new Headers();
+        $contentType = $original?->get(self::CONTENT_TYPE);
+        if ($contentType !== null) {
+            $headers->set(self::CONTENT_TYPE, $contentType);
+        }
+
+        $fields = ['Reason' => $reason];
+        if ($deliveries !== null) {
+            $fields['Deliveries'] = (string) $deliveries;
+        }
+        $fields += [
+            'Stream' => $stream,
+            'Sequence' => (string) $sequence,
+            'Host' => (string) gethostname(),
+            'At' => (string) time(),
+        ];
+        if ($error instanceof \Throwable) {
+            $fields['Error'] = $this->redact($error);
+        }
+        foreach ($fields as $name => $value) {
+            $headers->set(self::DEAD_HEADER . $name, $value);
+        }
+
+        try {
+            $js->publish($this->deadSubject($queue), $data, headers: $headers);
+        } catch (MaxPayloadException|JetStreamException $failure) {
+            if ($failure instanceof JetStreamException && $failure->apiError?->errCode !== self::ERR_MESSAGE_TOO_LARGE) {
+                throw $failure;
+            }
+            foreach (array_keys($fields) as $name) {
+                $headers->delete(self::DEAD_HEADER . $name);
+            }
+            $js->publish($this->deadSubject($queue), $data, headers: $headers);
+        }
+
+        $this->report(new DeadLetter($queue->name, $fields, $error));
+    }
+
+    /**
+     * The failure as one header line: control characters as spaces, email addresses
+     * masked (an SMTP refusal quotes the recipient), cut where a character ends.
+     */
+    private function redact(\Throwable $error): string
+    {
+        $controls = implode('', array_map(\chr(...), [...range(0, 31), 127]));
+        $text = strtr($error::class . ': ' . $error->getMessage(), $controls, str_repeat(' ', \strlen($controls)));
+        $length = \strlen($text);
+        $part = static fn (string $char, string $extra): bool => ctype_alnum($char) || \ord($char[0]) >= 0x80 || str_contains($extra, $char);
+
+        $line = '';
+        $copied = 0;
+        $offset = 0;
+        while (\strlen($line) < self::DEAD_ERROR_BYTES && ($at = strpos($text, '@', $offset)) !== false) {
+            $offset = $at + 1;
+
+            $start = $at;
+            while ($start > $copied && $part($text[$start - 1], '.!#$%&\'*+/=?^_`{|}~-')) {
+                $start--;
+            }
+            $end = $at + 1;
+            while ($end < $length && $part($text[$end], '.-')) {
+                $end++;
+            }
+            while ($end > $at + 1 && $text[$end - 1] === '.') {
+                $end--;
+            }
+
+            if ($start === $at || $end === $at + 1) {
+                continue;
+            }
+
+            $line .= substr($text, $copied, $start - $copied) . '[email]';
+            $copied = $offset = $end;
+        }
+        // One byte past the limit, to see whether a character straddles it.
+        $line .= substr($text, $copied, self::DEAD_ERROR_BYTES + 1);
+
+        if (\strlen($line) <= self::DEAD_ERROR_BYTES) {
+            return $line;
+        }
+
+        // A continuation byte at the limit: cut before that character, not through it.
+        $cut = self::DEAD_ERROR_BYTES;
+        while ($cut > self::DEAD_ERROR_BYTES - 3 && (\ord($line[$cut]) & 0xC0) === 0x80) {
+            $cut--;
+        }
+
+        return substr($line, 0, $cut);
     }
 
     /**
@@ -1294,31 +1391,38 @@ class Nats implements Synchronous, Consumer, Bounded
         // Read before the closure: the verdict belongs to this delivery, and the
         // message object is the handler's, not the broker's.
         $terminal = $message->isTerminal();
+        $error = $message->getError();
 
-        $this->command(function () use ($queue, $jsMessage, $numDelivered, $terminal): void {
-            $onCommands = $this->onCommands($jsMessage);
+        try {
+            $this->command(function () use ($queue, $jsMessage, $numDelivered, $terminal, $error): void {
+                $onCommands = $this->onCommands($jsMessage);
 
-            if ($terminal || $numDelivered >= $this->maxDeliver) {
-                // Exhausted, or declared unrepeatable by the handler: park on the dead
-                // stream and drop it from the work stream.
-                //
-                // The terminal case is what keeps one bad payload from taking the queue
-                // down with it. A NAK holds a maxAckPending slot for the whole of its
-                // backoff -- the message is asleep, not being worked, and JetStream
-                // counts it in flight regardless -- so enough messages that fail the
-                // same way every time leave the consumer no slot to deliver into, and
-                // it stops handing out work it could have run. Terminating here returns
-                // the slot immediately and loses nothing: the payload is on the dead
-                // stream, where retry() can re-drive it once the fault is fixed.
-                $this->commandsJs()->publish($this->deadSubject($queue), $jsMessage->getData());
-                $onCommands->term($terminal ? 'permanent failure' : 'max deliveries exceeded');
+                if ($terminal || $numDelivered >= $this->maxDeliver) {
+                    // Exhausted, or declared unrepeatable by the handler: park on the dead
+                    // stream and drop it from the work stream.
+                    //
+                    // The terminal case is what keeps one bad payload from taking the queue
+                    // down with it. A NAK holds a maxAckPending slot for the whole of its
+                    // backoff -- the message is asleep, not being worked, and JetStream
+                    // counts it in flight regardless -- so enough messages that fail the
+                    // same way every time leave the consumer no slot to deliver into, and
+                    // it stops handing out work it could have run. Terminating here returns
+                    // the slot immediately and loses nothing: the payload is on the dead
+                    // stream, where retry() can re-drive it once the fault is fixed.
+                    $this->deadLetter($this->commandsJs(), $queue, $jsMessage->getData(), $jsMessage->getHeaders(), $terminal ? 'terminal' : 'rejected', $jsMessage->metadata()->stream, $jsMessage->metadata()->streamSequence, $numDelivered, $error);
+                    $onCommands->term($terminal ? 'permanent failure' : 'max deliveries exceeded');
 
-                return;
-            }
+                    return;
+                }
 
-            // Redeliver later (AckWait/NAK); a crashed worker is reclaimed the same way.
-            $onCommands->nak($this->backoffFor($numDelivered));
-        });
+                // Redeliver later (AckWait/NAK); a crashed worker is reclaimed the same way.
+                $onCommands->nak($this->backoffFor($numDelivered));
+            });
+        } finally {
+            // A worker that stops after its last attempt may never receive() again, so
+            // the dead letter's report is handed over here.
+            $this->flushReports();
+        }
     }
 
     /**
@@ -1388,8 +1492,13 @@ class Nats implements Synchronous, Consumer, Bounded
                 if (!$jsMessage instanceof JetStreamMessage) {
                     break;
                 }
-                // Re-drive onto the work queue, then remove it from the dead stream.
-                $this->js()->publish($this->workSubject($queue), $jsMessage->getData());
+                // Re-drive onto the work queue without the dead-letter headers, then remove it from the dead stream.
+                $headers = new Headers();
+                $contentType = $jsMessage->getHeaders()?->get(self::CONTENT_TYPE);
+                if ($contentType !== null) {
+                    $headers->set(self::CONTENT_TYPE, $contentType);
+                }
+                $this->js()->publish($this->workSubject($queue), $jsMessage->getData(), headers: $headers);
                 $jsMessage->ackSync();
                 $remaining--;
             }
@@ -1540,6 +1649,9 @@ class Nats implements Synchronous, Consumer, Bounded
 
     public function close(): void
     {
+        // While the connections are still open, so a reporter can use this broker.
+        $this->flushReports();
+
         $this->connection?->close();
 
         // Only when it is a distinct socket; a publisher-only broker reuses one.
@@ -1825,13 +1937,14 @@ class Nats implements Synchronous, Consumer, Bounded
         while (($event = $advisory->nextMessage(0.0)) instanceof \Utopia\NATS\Message) {
             $decoded = json_decode($event->data, true);
             $seq = \is_array($decoded) ? ($decoded['stream_seq'] ?? null) : null;
+            $deliveries = \is_array($decoded) ? ($decoded['deliveries'] ?? null) : null;
             if (!\is_int($seq)) {
                 continue;
             }
 
             try {
                 $stored = $this->js()->getMessage($this->workStream($queue), $seq);
-                $this->js()->publish($this->deadSubject($queue), $stored->data);
+                $this->deadLetter($this->js(), $queue, $stored->data, $stored->headers, 'exhausted', $this->workStream($queue), $seq, \is_int($deliveries) ? $deliveries : null);
                 $this->js()->deleteMessage($this->workStream($queue), $seq);
             } catch (\Throwable $error) {
                 // Usually benign — the message was acked, deleted or claimed by
