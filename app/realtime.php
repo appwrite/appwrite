@@ -292,8 +292,9 @@ if (!function_exists('triggerStats')) {
 
 if (!function_exists('realtimeWorkerExit')) {
     /**
-     * Runs once as a worker exits, after its connections are closed. Override to
-     * release per-worker state, such as a buffered publisher.
+     * Runs once as a worker exits, after it starts closing its connections. Their
+     * onClose callbacks can still run afterwards, so an override must keep working
+     * for them; a buffered publisher, for one, should publish directly once stopped.
      */
     function realtimeWorkerExit(int $workerId): void
     {
