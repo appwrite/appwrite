@@ -112,14 +112,14 @@ export const pricingFaqItems: readonly FaqItem[] = [
     ),
   },
   {
-    question: 'How can I join the Startups program?',
+    question: 'Is Appwrite a fit for startups?',
     answer: (
       <>
         <T>
-          Are you a founder looking to build with Appwrite? Learn more about our Startups program on our Startups {/* pragma: allowlist secret */}
+          Founders ship auth, data, files, functions, and hosting from one Appwrite project. See how on the
         </T>{' '}
         <MarketingSiteLink className={linkClassName} href="/startups">
-          <T>landing page</T>
+          <T>Startups page</T>
         </MarketingSiteLink>
         .
       </>

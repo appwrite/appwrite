@@ -34,6 +34,12 @@ class Topic extends Model
                 'default' => '',
                 'example' => 'events',
             ])
+            ->addRule('description', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Optional description for the topic.',
+                'default' => '',
+                'example' => 'Order status updates sent to customers.',
+            ])
             ->addRule('emailTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total count of email subscribers subscribed to the topic.',

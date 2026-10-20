@@ -7,6 +7,7 @@ use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -57,6 +58,7 @@ class Get extends Base
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
@@ -66,11 +68,17 @@ class Get extends Base
         Database $dbForPlatform,
         Document $project,
         Authorization $authorization,
+        Request $request,
     ) {
         $key = $authorization->skip(fn () => $dbForPlatform->getDocument('keys', $keyId));
 
         if ($key->isEmpty() || $key->getAttribute('resourceType', '') !== 'projects' || $key->getAttribute('resourceInternalId', '') !== $project->getSequence()) {
             throw new Exception(Exception::KEY_NOT_FOUND);
+        }
+
+        // Secrets are only for callers that could replace the key anyway
+        if (!\in_array('keys.write', $request->getScopes(), true)) {
+            $key->setAttribute('secret', '');
         }
 
         $response->dynamic($key, Response::MODEL_KEY);

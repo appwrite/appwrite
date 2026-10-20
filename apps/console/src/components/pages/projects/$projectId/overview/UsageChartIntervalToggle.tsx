@@ -26,6 +26,10 @@ function formatUsageChartIntervalDisabledReason(
 ): string | undefined {
   if (!details) return undefined
 
+  if (details.kind === 'short') {
+    return t('Ranges shorter than 15 minutes use the 1m interval.')
+  }
+
   if (details.kind === 'hours') {
     return `${t('Use a date range of')} ${details.maxHours} ${t('hours or less for this interval.')}`
   }
@@ -84,6 +88,7 @@ export function UsageChartIntervalToggle({
             getUsageChartIntervalDisabledReasonDetails(
               option.value,
               dateRange,
+              options.map((entry) => entry.value),
             ),
             t,
           )

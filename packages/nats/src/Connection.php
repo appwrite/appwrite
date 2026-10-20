@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\NATS;
 
+use Swoole\Coroutine;
 use Utopia\NATS\Auth\Authenticator;
 use Utopia\NATS\Auth\CredentialsAuth;
 use Utopia\NATS\Auth\NKeyAuth;
@@ -18,6 +19,7 @@ use Utopia\NATS\Exception\NoRespondersException;
 use Utopia\NATS\Exception\PermissionException;
 use Utopia\NATS\Exception\ProtocolException;
 use Utopia\NATS\Exception\TimeoutException;
+use Utopia\NATS\Exception\TlsException;
 use Utopia\NATS\Internal\CallbackException;
 use Utopia\NATS\Protocol\Parser;
 use Utopia\NATS\Protocol\ServerOp;
@@ -620,16 +622,37 @@ final class Connection
     {
         $this->status = self::STATUS_CONNECTING;
         $lastError = null;
+        $deadline = microtime(true) + $this->options->connectTimeout;
 
-        foreach ($this->serverPool as $url) {
-            try {
-                $this->connectToServer($url);
-                $this->status = self::STATUS_CONNECTED;
-                return;
-            } catch (\Throwable $e) {
-                $lastError = $e;
-                continue;
+        for ($attempt = 1; ; $attempt++) {
+            $retryable = true;
+
+            foreach ($this->serverPool as $url) {
+                try {
+                    $this->connectToServer($url);
+                    $this->status = self::STATUS_CONNECTED;
+                    return;
+                } catch (\Throwable $e) {
+                    $lastError = $e;
+                    $retryable = $retryable && self::retriesConnect($e);
+                    // Close the failed attempt's socket before the next one.
+                    if (isset($this->transport)) {
+                        $this->transport->close();
+                    }
+                }
             }
+
+            if (!$retryable || $attempt >= $this->options->connectAttempts) {
+                break;
+            }
+
+            // Give up rather than start a pass after connectTimeout.
+            $pause = $this->options->connectRetryWait + mt_rand() / mt_getrandmax() * $this->options->connectRetryJitter;
+            if (microtime(true) + $pause >= $deadline) {
+                break;
+            }
+
+            self::pause($pause);
         }
 
         $this->status = self::STATUS_DISCONNECTED;
@@ -637,6 +660,34 @@ final class Connection
             'Failed to connect to any NATS server',
             previous: $lastError,
         );
+    }
+
+    /**
+     * Whether a new connection could succeed: not for rejected auth or a failed TLS handshake.
+     */
+    private static function retriesConnect(\Throwable $error): bool
+    {
+        return $error instanceof ConnectionException
+            && !$error instanceof TlsException
+            && self::reconnectsAfter($error->getMessage());
+    }
+
+    /**
+     * Sleep without blocking other coroutines.
+     */
+    private static function pause(float $seconds): void
+    {
+        if ($seconds <= 0) {
+            return;
+        }
+
+        if (class_exists(Coroutine::class) && Coroutine::getCid() !== -1) {
+            Coroutine::sleep($seconds);
+
+            return;
+        }
+
+        usleep((int) ($seconds * 1_000_000));
     }
 
     private function connectToServer(string $url): void

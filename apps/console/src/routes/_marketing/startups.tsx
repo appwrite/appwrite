@@ -1,14 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { View } from '@/components/pages/solutions/View'
 import {
   MARKETING_PAGE_ROUTE_STATIC_DATA,
   marketingRouteLifetime,
 } from '@/lib/marketing/route-static-data'
-import { View } from '@/components/pages/startups/View'
 import {
   getMarketingFaqScript,
   getMarketingRouteHead,
 } from '@/lib/marketing/route-meta'
-import { startupsFaqItems } from '@/lib/startups/content'
+import { startupsPage } from '@/lib/solutions/content'
 
 export const Route = createFileRoute('/_marketing/startups')({
   ...marketingRouteLifetime,
@@ -19,16 +19,14 @@ export const Route = createFileRoute('/_marketing/startups')({
       canonicalPath: '/startups',
       pageName: 'Startups',
       description:
-        "Get cloud credits to fulfill all your startup's backend and hosting needs. Apply for Appwrite's Startups Program today.",
-    });
-    return { ...seo, scripts: [getMarketingFaqScript(startupsFaqItems)] };
+        'Auth, databases, storage, functions, and hosting for startups. Start on the Free plan and move to Pro when the product has users.',
+    })
+    return { ...seo, scripts: [getMarketingFaqScript(startupsPage.faq.items)] }
   },
-  loader: async ({ context }) => {
-  },
+  loader: async () => {},
   component: StartupsPage,
 })
 
 function StartupsPage() {
-  return (<View />
-    )
+  return <View page={startupsPage} />
 }

@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files;
 use Appwrite\ClamAV\Network;
 use Appwrite\ClamAV\ScanResult;
 use Appwrite\Event\Event;
+use Appwrite\Exiftool\Client as ExiftoolClient;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
@@ -21,6 +22,7 @@ use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -62,6 +64,17 @@ class Create extends Action
      * Not part of the public file model.
      */
     private const UPLOADER_ID = 'uploaderId';
+
+    private const METADATA_MIME_TYPES = [
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'image/heic',
+        'image/heif',
+        'image/avif',
+        'image/gif',
+        'image/tiff',
+    ];
 
     public static function getName()
     {
@@ -114,6 +127,7 @@ class Create extends Action
             ->inject('deviceForLocal')
             ->inject('authorization')
             ->inject('locks')
+            ->inject('exiftool')
             ->callback($this->action(...));
     }
 
@@ -132,7 +146,8 @@ class Create extends Action
         Device $deviceForFiles,
         Device $deviceForLocal,
         Authorization $authorization,
-        callable $locks
+        callable $locks,
+        ExiftoolClient $exiftool
     ) {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -349,7 +364,7 @@ class Create extends Action
             }
         };
 
-        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response, $user): void {
+        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $exiftool, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response, $user): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             $uploaded = 0;
 
@@ -440,6 +455,11 @@ class Create extends Action
 
                 if (\in_array($mimeType, $formats['ambiguous'], true)) {
                     $mimeType = $formats['extensions'][\strtolower(\pathinfo($fileName, PATHINFO_EXTENSION))] ?? $mimeType;
+                }
+
+                // Strip before hashing so the signature and sizes describe the file we store.
+                if ($bucket->getAttribute('stripMetadata', false) && $fileSize <= APP_STORAGE_READ_BUFFER && \in_array($mimeType, self::METADATA_MIME_TYPES, true)) {
+                    $fileSize = $this->stripMetadata($exiftool, $deviceForFiles, $path, $mimeType) ?? $fileSize;
                 }
 
                 $fileHash = $deviceForFiles->getFileHash($path); // Get file hash before compression and encryption
@@ -539,6 +559,7 @@ class Create extends Action
                     $file = $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, new Document([
                         'signature' => $fileHash,
                         'mimeType' => $mimeType,
+                        'sizeOriginal' => $fileSize,
                         'sizeActual' => $sizeActual,
                         'algorithm' => $algorithm,
                         'openSSLVersion' => $openSSLVersion,
@@ -634,6 +655,29 @@ class Create extends Action
      */
     protected function afterCreateSuccess(Document $file)
     {
+    }
+
+    /**
+     * Returns the stripped size, or null when the file is kept as uploaded.
+     */
+    private function stripMetadata(ExiftoolClient $exiftool, Device $deviceForFiles, string $path, string $mimeType): ?int
+    {
+        try {
+            $stripped = $exiftool->strip($deviceForFiles->read($path));
+
+            if (!$deviceForFiles->write($path, new Stream($stripped), $mimeType)) {
+                Console::warning("Image metadata was not removed from {$path}: the stripped file could not be saved.");
+                return null;
+            }
+
+            // Later size checks stat this path again.
+            \clearstatcache(true, $path);
+
+            return \strlen($stripped);
+        } catch (\Throwable $th) {
+            Console::warning("Image metadata was not removed from {$path}: {$th->getMessage()}");
+            return null;
+        }
     }
 
     /**

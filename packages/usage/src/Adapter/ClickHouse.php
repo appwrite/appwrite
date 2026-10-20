@@ -1397,33 +1397,87 @@ class ClickHouse extends SQL
     }
 
     /**
-     * Adds the skip indexes a table created before them lacks, such as the
-     * events ordinal index. Parts written before stay unindexed until merged.
+     * Adds the skip indexes a table lacks, and realigns a defined name whose
+     * expression or type differs, or another name duplicating a defined index:
+     * the index is dropped and the defined one materialized. Parts written
+     * before an added index stay unindexed until merged, which is also where
+     * an interrupted realignment leaves them.
      *
      * @param array<array<string, mixed>> $indexes
      */
     private function ensureIndexes(string $tableName, array $indexes): void
     {
-        $escapedTable = $this->escapeIdentifier($this->database)
-            . '.' . $this->escapeIdentifier($tableName);
-
-        $adds = [];
-        foreach ($indexes as $index) {
-            /** @var string $indexName */
-            $indexName = $index['$id'];
-            /** @var array<string> $attributes */
-            $attributes = $index['attributes'];
-            $indexType = is_string($index['indexType'] ?? null) ? $index['indexType'] : 'bloom_filter';
-            $adds[] = 'ADD INDEX IF NOT EXISTS ' . $this->escapeIdentifier($indexName)
-                . ' (' . implode(', ', array_map($this->escapeIdentifier(...), $attributes)) . ')'
-                . " TYPE {$indexType} GRANULARITY 1";
-        }
-
-        if ($adds === []) {
+        if ($indexes === []) {
             return;
         }
 
+        $escapedTable = $this->escapeIdentifier($this->database)
+            . '.' . $this->escapeIdentifier($tableName);
+        $live = $this->getSkipIndexes($tableName);
+
+        $defined = [];
+        $adds = [];
+        $drops = [];
+        $materializes = [];
+        foreach ($indexes as $index) {
+            /** @var string $indexName */
+            $indexName = $index['$id'];
+            /** @var list<string> $attributes */
+            $attributes = $index['attributes'];
+            $indexType = is_string($index['indexType'] ?? null) ? $index['indexType'] : 'bloom_filter';
+            $defined[$indexName] = ['attributes' => $attributes, 'type' => $indexType];
+            $adds[] = 'ADD INDEX IF NOT EXISTS ' . $this->escapeIdentifier($indexName)
+                . ' (' . implode(', ', array_map($this->escapeIdentifier(...), $attributes)) . ')'
+                . " TYPE {$indexType} GRANULARITY 1";
+
+            if (isset($live[$indexName]) && !$this->hasIndexShape($live[$indexName], $attributes, $indexType)) {
+                $drops[] = $indexName;
+                $materializes[] = $indexName;
+            }
+        }
+
+        foreach ($live as $liveName => $liveIndex) {
+            if (isset($defined[$liveName])) {
+                continue;
+            }
+            foreach ($defined as $definedName => $definition) {
+                if ($this->hasIndexShape($liveIndex, $definition['attributes'], $definition['type'])) {
+                    $drops[] = $liveName;
+                    $materializes[] = $definedName;
+                    break;
+                }
+            }
+        }
+
+        if ($drops !== []) {
+            $this->query("ALTER TABLE {$escapedTable} " . implode(', ', array_map(
+                fn (string $name): string => 'DROP INDEX IF EXISTS ' . $this->escapeIdentifier($name),
+                $drops,
+            )));
+        }
+
         $this->query("ALTER TABLE {$escapedTable} " . implode(', ', $adds));
+
+        if ($materializes === []) {
+            return;
+        }
+
+        $this->query("ALTER TABLE {$escapedTable} " . implode(', ', array_map(
+            fn (string $name): string => 'MATERIALIZE INDEX ' . $this->escapeIdentifier($name),
+            array_values(array_unique($materializes)),
+        )));
+    }
+
+    /**
+     * Compares identifiers so the quoting and spacing ClickHouse stores are not drift.
+     *
+     * @param array{name: string, expression: string, type: string, granularity: int} $index
+     * @param list<string> $attributes
+     */
+    private function hasIndexShape(array $index, array $attributes, string $type): bool
+    {
+        return $this->getIdentifiers($index['expression']) === $attributes
+            && \str_replace(' ', '', $index['type']) === \str_replace(' ', '', $type);
     }
 
     /**
@@ -1514,6 +1568,17 @@ class ClickHouse extends SQL
      */
     private function getSkipIndexesCovering(string $tableName, array $columns): array
     {
+        return array_values(array_filter(
+            $this->getSkipIndexes($tableName),
+            fn (array $index): bool => array_intersect($columns, $this->getIdentifiers($index['expression'])) !== [],
+        ));
+    }
+
+    /**
+     * @return array<string, array{name: string, expression: string, type: string, granularity: int}>
+     */
+    private function getSkipIndexes(string $tableName): array
+    {
         $rows = $this->decodeRows($this->query(
             'SELECT name, expr, type_full, granularity FROM system.data_skipping_indices '
             . 'WHERE database = {database:String} AND table = {table:String} FORMAT JSON',
@@ -1526,11 +1591,7 @@ class ClickHouse extends SQL
                 continue;
             }
 
-            if (array_intersect($columns, $this->getIdentifiers($row['expr'])) === []) {
-                continue;
-            }
-
-            $indexes[] = [
+            $indexes[$row['name']] = [
                 'name' => $row['name'],
                 'expression' => $row['expr'],
                 'type' => $row['type_full'],
