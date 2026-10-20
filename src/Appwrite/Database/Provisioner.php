@@ -17,5 +17,10 @@ interface Provisioner
      */
     public function platform(int $timeout = 0, int $maxQueryValues = 0, array $metadata = []): Database;
 
+    /**
+     * @param array<string, mixed> $metadata
+     */
+    public function project(Document $project, int $timeout = 0, int $maxQueryValues = 0, array $metadata = []): Database;
+
     public function provisioning(Document $project): Database;
 }

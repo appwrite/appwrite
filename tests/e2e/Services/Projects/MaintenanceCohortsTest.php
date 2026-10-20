@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Projects;
 
-use Appwrite\Database\Factory;
+use Appwrite\Database\Provisioner;
 use Appwrite\Maintenance\Cadence;
 use Appwrite\Maintenance\Sweep;
 use Swoole\Coroutine;
@@ -55,7 +55,7 @@ final class MaintenanceCohortsTest extends Scope
         $this->assertSame(1, $this->countPresenceRows($idle['$id'], $idlePresenceId), 'the idle row outlives its expiry until maintenance');
         $this->assertSame(1, $this->countPresenceRows($active['$id'], $activePresenceId), 'the control row outlives its expiry until maintenance');
 
-        $this->withFactory(function (Factory $factory) use ($idle): void {
+        $this->withFactory(function (Provisioner $factory) use ($idle): void {
             $factory->platform()->updateDocument('projects', $idle['$id'], new Document([
                 'accessedAt' => DateTime::addSeconds(new \DateTime(), -60 * 86400),
             ]));
@@ -138,7 +138,7 @@ final class MaintenanceCohortsTest extends Scope
         ];
 
         $owners = [];
-        $this->withFactory(function (Factory $factory) use ($cohorts, &$owners): void {
+        $this->withFactory(function (Provisioner $factory) use ($cohorts, &$owners): void {
             $platform = $factory->platform();
             foreach ($cohorts as $cohort => [$slots, $projectIds]) {
                 foreach ($projectIds as $projectId) {
@@ -206,7 +206,7 @@ final class MaintenanceCohortsTest extends Scope
     private function countPresenceRows(string $projectId, string $presenceId): int
     {
         $count = -1;
-        $this->withFactory(function (Factory $factory) use ($projectId, $presenceId, &$count): void {
+        $this->withFactory(function (Provisioner $factory) use ($projectId, $presenceId, &$count): void {
             $project = $factory->platform()->getDocument('projects', $projectId);
             $count = \count($factory->project($project)->find('presenceLogs', [Query::equal('$id', [$presenceId])]));
         });
@@ -215,7 +215,7 @@ final class MaintenanceCohortsTest extends Scope
     }
 
     /**
-     * @param callable(Factory): void $callback
+     * @param callable(Provisioner): void $callback
      */
     private function withFactory(callable $callback): void
     {
