@@ -712,13 +712,17 @@ class Nats implements Synchronous, Consumer, Bounded
      * twice. A refusal -- permissions, payload size, a full stream -- is thrown at
      * once: it would be refused identically again.
      *
+     * Acks target the reply subject, so they can be resent on a rebuilt connection.
+     *
      * @template T
      * @param \Closure(): T $publish
+     * @param (\Closure(): bool)|null $reconnect
      * @return T
      */
-    private function republishing(\Closure $publish): mixed
+    private function republishing(\Closure $publish, ?\Closure $reconnect = null, ?float $deadline = null): mixed
     {
-        $deadline = microtime(true) + self::PUBLISH_RETRY_BUDGET;
+        $reconnect ??= $this->reconnect(...);
+        $deadline ??= microtime(true) + self::PUBLISH_RETRY_BUDGET;
         $republishes = 0;
 
         while (true) {
@@ -727,7 +731,7 @@ class Nats implements Synchronous, Consumer, Bounded
             } catch (NoRespondersException $error) {
                 // The server answered; no stream did. Nothing to rebuild, only to wait.
             } catch (ConnectionException|ProtocolException $error) {
-                if (!$this->lostConnection($error) || !$this->reconnect()) {
+                if (!$this->lostConnection($error) || !$reconnect()) {
                     throw $error;
                 }
             }
@@ -1077,27 +1081,31 @@ class Nats implements Synchronous, Consumer, Bounded
      */
     public function release(Queue $queue, Message ...$messages): void
     {
-        try {
-            $this->command(function () use ($queue, $messages): void {
-                $requeue = null;
-                foreach ($messages as $message) {
-                    $pid = $message->getPid();
-                    $jsMessage = $this->inFlight[$pid] ?? null;
-                    if (!$jsMessage instanceof JetStreamMessage) {
-                        continue;
-                    }
-                    unset($this->inFlight[$pid]);
+        // One budget for the whole batch, so a stopping worker is not held per message.
+        $deadline = microtime(true) + self::PUBLISH_RETRY_BUDGET;
 
-                    $stored = false;
+        try {
+            $requeue = null;
+            foreach ($messages as $message) {
+                $pid = $message->getPid();
+                $jsMessage = $this->inFlight[$pid] ?? null;
+                if (!$jsMessage instanceof JetStreamMessage) {
+                    continue;
+                }
+                unset($this->inFlight[$pid]);
+
+                // Budget spent: NAK the rest, which waits for no reply.
+                $stored = false;
+                if (microtime(true) < $deadline) {
                     try {
                         // Read from the server, not from this broker's arguments: a broker
                         // that adopted the stream did not choose its limits.
-                        $requeue ??= (function () use ($queue): bool {
+                        $requeue ??= $this->retryingCommand(function () use ($queue): bool {
                             $config = $this->commandsJs()->getStreamInfo($this->workStream($queue))->config;
 
                             return $config->discard === DiscardPolicy::New
                                 || ($config->maxMsgs === -1 && $config->maxBytes === -1 && $config->maxMsgsPerSubject === -1);
-                        })();
+                        }, $deadline);
 
                         if ($requeue) {
                             // The message's own Content-Type, as in park(): the bytes go back unread.
@@ -1106,14 +1114,14 @@ class Nats implements Synchronous, Consumer, Bounded
                             if ($contentType !== null) {
                                 $headers->set(self::CONTENT_TYPE, $contentType);
                             }
-                            $this->commandsJs()->publish(
+                            $this->retryingCommand(fn (): PubAck => $this->commandsJs()->publish(
                                 $this->workSubject($queue),
                                 $jsMessage->getData(),
                                 headers: $headers,
                                 msgId: $pid . '.released.' . $jsMessage->metadata()->streamSequence,
-                            );
+                            ), $deadline);
                             $stored = true;
-                            $this->onCommands($jsMessage)->ack();
+                            $this->retryingCommand(fn () => $this->onCommands($jsMessage)->ack(), $deadline);
 
                             continue;
                         }
@@ -1124,14 +1132,14 @@ class Nats implements Synchronous, Consumer, Bounded
                             continue;
                         }
                     }
-
-                    try {
-                        $this->onCommands($jsMessage)->nak($this->releaseDelay > 0 ? $this->releaseDelay : null);
-                    } catch (\Throwable $error) {
-                        $this->report($error);
-                    }
                 }
-            });
+
+                try {
+                    $this->retryingCommand(fn () => $this->onCommands($jsMessage)->nak($this->releaseDelay > 0 ? $this->releaseDelay : null), $deadline);
+                } catch (\Throwable $error) {
+                    $this->report($error);
+                }
+            }
         } catch (\Throwable $error) {
             $this->report($error);
         } finally {
@@ -1156,14 +1164,13 @@ class Nats implements Synchronous, Consumer, Bounded
      */
     public function extend(Queue $queue, Message ...$messages): void
     {
-        $this->command(function () use ($messages): void {
-            foreach ($messages as $message) {
-                $jsMessage = $this->inFlight[$message->getPid()] ?? null;
-                if ($jsMessage instanceof JetStreamMessage) {
-                    $this->onCommands($jsMessage)->inProgress();
-                }
+        $deadline = microtime(true) + self::PUBLISH_RETRY_BUDGET;
+        foreach ($messages as $message) {
+            $jsMessage = $this->inFlight[$message->getPid()] ?? null;
+            if ($jsMessage instanceof JetStreamMessage) {
+                $this->retryingCommand(fn () => $this->onCommands($jsMessage)->inProgress(), $deadline);
             }
-        });
+        }
     }
 
     /**
@@ -1249,6 +1256,43 @@ class Nats implements Synchronous, Consumer, Bounded
         return true;
     }
 
+    /**
+     * Run a command with republishing()'s retries, locking per attempt so a backoff blocks nothing else.
+     *
+     * @template T
+     * @param \Closure(): T $command
+     * @return T
+     */
+    private function retryingCommand(\Closure $command, ?float $deadline = null): mixed
+    {
+        return $this->republishing(
+            fn (): mixed => $this->command($command),
+            fn (): bool => $this->command($this->reconnectCommands(...)),
+            $deadline,
+        );
+    }
+
+    /** Rebuild only the commands connection, under its lock. */
+    private function reconnectCommands(): bool
+    {
+        // One socket serves both roles here; rebuilding it is reconnect()'s job.
+        if (!$this->source instanceof \Closure) {
+            return false;
+        }
+
+        try {
+            $this->commandsConnection?->close();
+        } catch (\Throwable) {
+            // Already gone.
+        }
+
+        $this->commandsConnection = null;
+        $this->commandsJs = null;
+        $this->commandsConsumers = [];
+
+        return true;
+    }
+
     private ?\Utopia\Queue\Internal\Buffer $acknowledgements = null;
 
     public function commit(Queue $queue, Message $message): void
@@ -1269,10 +1313,23 @@ class Nats implements Synchronous, Consumer, Bounded
         // the life of the worker, one per failed ack.
         try {
             $this->acknowledgements ??= new \Utopia\Queue\Internal\Buffer(function (array $messages, callable $resolved): void {
-                $this->command(function () use ($messages, $resolved): void {
-                    $this->commandsJs()->ackBatch($messages, static function (int $index, ?\Throwable $error) use ($resolved): void {
-                        $resolved($index, $error ?? true);
+                $this->retryingCommand(function () use (&$messages, $resolved): void {
+                    $indexes = array_keys($messages);
+                    /** @var list<JetStreamMessage> $pending */
+                    $pending = array_values($messages);
+                    $failed = [];
+                    $this->commandsJs()->ackBatch($pending, static function (int $index, ?\Throwable $error) use ($indexes, $resolved, &$failed): void {
+                        if ($error instanceof \Throwable) {
+                            $failed[$indexes[$index]] = $error;
+                        } else {
+                            $resolved($indexes[$index], true);
+                        }
                     });
+                    // Only the unconfirmed acks are sent again.
+                    $messages = array_intersect_key($messages, $failed);
+                    if ($failed !== []) {
+                        throw array_first($failed);
+                    }
                 });
             });
             $this->acknowledgements->request($jsMessage);
@@ -1292,34 +1349,28 @@ class Nats implements Synchronous, Consumer, Bounded
 
         $numDelivered = $jsMessage->metadata()->numDelivered;
 
-        // Read before the closure: the verdict belongs to this delivery, and the
-        // message object is the handler's, not the broker's.
+        // Read up front: the verdict belongs to this delivery.
         $terminal = $message->isTerminal();
 
-        $this->command(function () use ($queue, $jsMessage, $numDelivered, $terminal): void {
-            $onCommands = $this->onCommands($jsMessage);
+        // One budget for the dead-letter copy and the term together.
+        $deadline = microtime(true) + self::PUBLISH_RETRY_BUDGET;
 
-            if ($terminal || $numDelivered >= $this->maxDeliver) {
-                // Exhausted, or declared unrepeatable by the handler: park on the dead
-                // stream and drop it from the work stream.
-                //
-                // The terminal case is what keeps one bad payload from taking the queue
-                // down with it. A NAK holds a maxAckPending slot for the whole of its
-                // backoff -- the message is asleep, not being worked, and JetStream
-                // counts it in flight regardless -- so enough messages that fail the
-                // same way every time leave the consumer no slot to deliver into, and
-                // it stops handing out work it could have run. Terminating here returns
-                // the slot immediately and loses nothing: the payload is on the dead
-                // stream, where retry() can re-drive it once the fault is fixed.
-                $this->commandsJs()->publish($this->deadSubject($queue), $jsMessage->getData());
-                $onCommands->term($terminal ? 'permanent failure' : 'max deliveries exceeded');
+        if ($terminal || $numDelivered >= $this->maxDeliver) {
+            // Exhausted or terminal: park on the dead stream and term it. A NAK would
+            // hold a maxAckPending slot for its whole backoff.
+            // Its own id, so a retry dedupes against a copy that already landed.
+            $this->retryingCommand(fn (): PubAck => $this->commandsJs()->publish(
+                $this->deadSubject($queue),
+                $jsMessage->getData(),
+                msgId: $pid . '.dead.' . $jsMessage->metadata()->streamSequence,
+            ), $deadline);
+            $this->retryingCommand(fn () => $this->onCommands($jsMessage)->term($terminal ? 'permanent failure' : 'max deliveries exceeded'), $deadline);
 
-                return;
-            }
+            return;
+        }
 
-            // Redeliver later (AckWait/NAK); a crashed worker is reclaimed the same way.
-            $onCommands->nak($this->backoffFor($numDelivered));
-        });
+        // Redeliver later (AckWait/NAK); a crashed worker is reclaimed the same way.
+        $this->retryingCommand(fn () => $this->onCommands($jsMessage)->nak($this->backoffFor($numDelivered)), $deadline);
     }
 
     /**
