@@ -12,18 +12,6 @@
         "--strictPort"
       ],
       "port": 3200
-    },
-    {
-      "name": "crates-http-modules",
-      "runtimeExecutable": "/Users/eldadfux/Desktop/vcs.nosync/github/appwrite/appwrite/.claude/worktrees/http-modules/apps/crates/node_modules/.bin/vite",
-      "runtimeArgs": [
-        "dev",
-        "/Users/eldadfux/Desktop/vcs.nosync/github/appwrite/appwrite/.claude/worktrees/http-modules/apps/crates",
-        "--port",
-        "3210",
-        "--strictPort"
-      ],
-      "port": 3210
     }
   ]
 }

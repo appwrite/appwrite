@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { load, pairs, type Benchmark, type BenchStep, type Endpoint } from '@/lib/appwrite'
-import { Duel, DuelLegend, Footnote, Problems, Summary, unit, type SummaryItem } from './Bench'
+import { Duel, DuelLegend, Footnote, Problems, Summary, Verdict, advantage, unit, type SummaryItem } from './Bench'
 
 type Rows = ReturnType<typeof pairs>
 type Timing = BenchStep['endpoints'][string]
@@ -151,7 +151,7 @@ const short = (mode: 'rate' | 'vus', level: number) => (mode === 'rate' ? `${lev
 /**
  * One scenario's latency at every load step at once: the median (solid) and
  * p99 (dashed) of each runtime on a log scale, fixed-rate steps then
- * closed-loop ones, with how many times faster Rust's median is per step.
+ * closed-loop ones. The verdict badges above the curve say how the medians compare.
  */
 function LoadCurve({ rows, name }: { rows: Rows; name: string }) {
   const at = rows.map((r) => ({ row: r, p: r.php?.endpoints[name] as Timing | undefined, r: r.rust?.endpoints[name] as Timing | undefined }))
@@ -160,9 +160,9 @@ function LoadCurve({ rows, name }: { rows: Rows; name: string }) {
   const W = 300
   const H = 100
   const left = 40
-  const right = 8
+  const right = 28
   const top = 6
-  const bottom = 34
+  const bottom = 20
   const lo = Math.log10(Math.min(...values) / 1.3)
   const hi = Math.log10(Math.max(...values) * 1.3)
   // Fixed-rate and closed-loop steps are different experiments: a gap between them.
@@ -205,31 +205,49 @@ function LoadCurve({ rows, name }: { rows: Rows; name: string }) {
           )}
         </g>
       ))}
-      {at.map(({ row, p, r }, i) => {
-        const ratio = p?.p50 && r?.p50 ? p.p50 / r.p50 : null
-        return (
-          <g key={i}>
-            <text x={x(i)} y={H - 19} textAnchor="middle" className="fill-muted-foreground text-[9.5px]">
-              {short(row.mode, row.level)}
-            </text>
-            {ratio ? (
-              <text x={x(i)} y={H - 5} textAnchor="middle" className={`text-[10px] font-semibold tabular-nums ${ratio >= 1 ? 'fill-ok-ink' : 'fill-red-600'}`}>
-                {ratio >= 10 ? Math.round(ratio) : ratio.toFixed(1)}×
-              </text>
-            ) : null}
-          </g>
-        )
-      })}
+      {at.map(({ row }, i) => (
+        <text key={i} x={x(i)} y={H - 6} textAnchor="middle" className="fill-muted-foreground text-[9.5px]">
+          {short(row.mode, row.level)}
+        </text>
+      ))}
     </svg>
   )
 }
 
 /**
+ * Rust's median against PHP at every load step, as the same verdict badges
+ * the other benchmark views use. A step with only one runtime has no badge;
+ * the curve still draws that side.
+ */
+function StepBadges({ rows, name }: { rows: Rows; name: string }) {
+  const steps = rows.flatMap((row) => {
+    const php = row.php?.endpoints[name]?.p50
+    const rust = row.rust?.endpoints[name]?.p50
+    if (!php || !rust) return []
+    return [{ row, php, rust }]
+  })
+  if (!steps.length) return null
+  return (
+    <span className="inline-flex max-w-[340px] flex-wrap items-center gap-x-2 gap-y-1">
+      {steps.map(({ row, php, rust }) => (
+        <span key={`${row.mode}${row.level}`} className="inline-flex items-center gap-1">
+          <span className="font-mono text-[10px] text-muted-foreground tabular-nums">{short(row.mode, row.level)}</span>
+          <Verdict
+            x={advantage('time', php, rust)}
+            title={`Median at ${load(row.mode, row.level)}: PHP ${unit.ms(php)}, Rust ${unit.ms(rust)}`}
+          />
+        </span>
+      ))}
+    </span>
+  )
+}
+
+/**
  * An endpoint's latency at every load step: each scenario that measures it
- * (a route can have several, like a list and a search) as a [`LoadCurve`] of
- * PHP against Rust, or PHP alone while Rust does not serve it. Without
- * timings, why: no scenario yet, a scenario not run yet, or the reason it is
- * skipped.
+ * (a route can have several, like a list and a search) as verdict badges and
+ * a [`LoadCurve`] of PHP against Rust, or PHP alone while Rust does not serve
+ * it. Without timings, why: no scenario yet, a scenario not run yet, or the
+ * reason it is skipped.
  */
 export function EndpointBench({ rows, route, bench }: { rows: Rows; route: string; bench: Endpoint['bench'] }) {
   const names = [
@@ -248,18 +266,27 @@ export function EndpointBench({ rows, route, bench }: { rows: Rows; route: strin
           .map((r) => ({ r, php: r.php?.endpoints[name]?.errors ?? 0, rust: r.rust?.endpoints[name]?.errors ?? 0 }))
           .filter((e) => e.php || e.rust)
         return (
-          <div key={name} className="grid gap-1">
+          <div key={name} className="grid gap-1.5">
             {names.length > 1 || note ? (
-              <span className="text-[11px] text-muted-foreground">
-                {names.length > 1 ? <span className="font-mono">{name}</span> : null}
-                {names.length > 1 && note ? ' · ' : null}
-                {note}
-              </span>
+              <div className="grid gap-0.5">
+                {names.length > 1 ? <span className="font-mono text-[11px]">{name}</span> : null}
+                {note ? <span className="max-w-[340px] text-[12px] text-muted-foreground">{note}</span> : null}
+              </div>
             ) : null}
+            <StepBadges rows={rows} name={name} />
             <LoadCurve rows={rows} name={name} />
             {errors.length ? (
-              <span className="text-[11px] text-red-700 dark:text-red-300">
-                Server errors: {errors.map((e) => `${short(e.r.mode, e.r.level)} PHP ${e.php}, Rust ${e.rust}`).join(' · ')}
+              <span className="max-w-[340px] text-[11px] text-red-700 dark:text-red-300">
+                Server errors:{' '}
+                {errors
+                  .map((e) => {
+                    const sides = [
+                      e.php ? `PHP ${e.php.toLocaleString('en')}` : null,
+                      e.rust ? `Rust ${e.rust.toLocaleString('en')}` : null,
+                    ].filter(Boolean)
+                    return `${short(e.r.mode, e.r.level)} ${sides.join(', ')}`
+                  })
+                  .join(' · ')}
               </span>
             ) : null}
           </div>

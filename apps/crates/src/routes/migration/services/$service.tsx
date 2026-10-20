@@ -150,7 +150,7 @@ function ServicePage() {
           </div>
           {bench.rows.length ? (
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-[12.5px] text-muted-foreground">Latency by load: fixed request rates, then concurrent users (closed loop); × is how many times faster Rust's median is.</span>
+              <span className="text-[12.5px] text-muted-foreground">Latency by load: fixed request rates, then concurrent users (closed loop). Each badge is Rust's median against PHP at that step.</span>
               <DuelLegend percentiles />
             </div>
           ) : null}
