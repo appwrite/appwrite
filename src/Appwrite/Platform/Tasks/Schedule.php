@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
@@ -9,6 +10,7 @@ use Appwrite\Usage\Connection;
 use Swoole\Coroutine as Co;
 use Utopia\Database\Database;
 use Utopia\Platform\Action;
+use Utopia\Pools\Group;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -30,7 +32,9 @@ class Schedule extends Action
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('telemetry')
-            ->inject('locks');
+            ->inject('locks')
+            ->inject('publisherForDeletes')
+            ->inject('pools');
 
         if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
             $this
@@ -51,8 +55,10 @@ class Schedule extends Action
         callable $getProjectDB,
         Telemetry $telemetry,
         callable $locks,
+        DeletePublisher $publisherForDeletes,
+        Group $pools,
     ): never {
-        $this->start($publisherForFunctions, $publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks);
+        $this->start($publisherForFunctions, $publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks, $publisherForDeletes, $pools);
     }
 
     public function actionWithUsage(
@@ -63,6 +69,8 @@ class Schedule extends Action
         callable $getProjectDB,
         Telemetry $telemetry,
         callable $locks,
+        DeletePublisher $publisherForDeletes,
+        Group $pools,
         StatsResourcesPublisher $publisherForStatsResources,
         Connection $usageConnection,
     ): never {
@@ -74,6 +82,8 @@ class Schedule extends Action
             $getProjectDB,
             $telemetry,
             $locks,
+            $publisherForDeletes,
+            $pools,
             $publisherForStatsResources,
             $usageConnection,
         );
@@ -87,12 +97,15 @@ class Schedule extends Action
         callable $getProjectDB,
         Telemetry $telemetry,
         callable $locks,
+        DeletePublisher $publisherForDeletes,
+        Group $pools,
         ?StatsResourcesPublisher $publisherForStatsResources = null,
         ?Connection $usageConnection = null,
     ): never {
         $this->loop(fn () => (new ScheduleFunctions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
         $this->loop(fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
         $this->loop(fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks));
+        $this->loop(fn () => (new ScheduleMaintenance())->action($dbForPlatform, $publisherForDeletes, $pools, $telemetry));
 
         if ($publisherForStatsResources !== null && $usageConnection !== null) {
             $this->loop(fn () => (new StatsResources())->action($dbForPlatform, $publisherForStatsResources, $usageConnection, $telemetry));
