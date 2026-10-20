@@ -454,16 +454,9 @@ class Create extends Action
             }
         }
 
-        // Entire delivers no trail events, so a push onto a branch that has
-        // an open trail reports on it from here. Trails never come from a
-        // fork, so none is ever external.
-        $providerPullRequestId = '';
-        try {
-            $trail = $vcs->getPullRequestFromBranch($providerRepositoryOwner, $providerRepositoryName, $providerBranch);
-            $providerPullRequestId = !empty($trail['number']) ? \strval($trail['number']) : '';
-        } catch (\Throwable $e) {
-            Console::warning("Failed to look up the trail of branch '{$providerBranch}': " . $e->getMessage());
-        }
+        // No trail is consulted: the trait's pull-request path only posts the
+        // first comment on one, which a plugin may not write on Entire. Its
+        // trail.* events are accepted and ignored until that changes.
 
         // Entire retries a delivery it got an error for. Each repository claims
         // the delivery once and gives the claim back only when it failed without
@@ -498,19 +491,6 @@ class Create extends Action
                     $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $claim));
                 }
                 $errors[] = $error->getMessage();
-                continue;
-            }
-
-            // With a pull request id the trait only comments and links the
-            // deployment the push created, the way a pull request event would.
-            // The deployment exists, so a failure here must not hand the
-            // delivery back for a retry that would deploy it again.
-            if ($providerPullRequestId !== '') {
-                try {
-                    $this->createGitDeployments($vcs, $providerInstallationId, [$repository], $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, '', $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, false, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory);
-                } catch (\Throwable $error) {
-                    Console::warning("Failed to report on trail #{$providerPullRequestId}: " . $error->getMessage());
-                }
             }
         }
 
