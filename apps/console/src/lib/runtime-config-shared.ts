@@ -38,6 +38,8 @@ export interface RuntimeConfig {
    * ('' = profile default, off).
    */
   extraVcsOAuth: string
+  /** Override for Entire on Git connect ('' = profile default, off). */
+  vcsEntire: string
   /** Override for backend-powered usage statistics ('' = Console variables). */
   usageStats: string
   /**
@@ -134,6 +136,7 @@ export function readRuntimeConfigFromEnv(env: EnvRecord): RuntimeConfig {
     databasePitrRestore: read('VITE_CONSOLE_DATABASE_PITR_RESTORE'),
     projectEnvironments: read('VITE_CONSOLE_PROJECT_ENVIRONMENTS'),
     extraVcsOAuth: read('VITE_CONSOLE_EXTRA_VCS_OAUTH'),
+    vcsEntire: read('VITE_CONSOLE_VCS_ENTIRE'),
     usageStats: read('VITE_CONSOLE_USAGE_STATS'),
     preLaunch: read('VITE_CONSOLE_PRE_LAUNCH'),
   }

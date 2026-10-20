@@ -171,6 +171,7 @@ const APP_VCS_GITEA_EMAIL = 'team@appwrite.io'; // Used to detect Appwrite's own
 const APP_VCS_GITLAB_EMAIL = 'team@appwrite.io'; // Used to detect Appwrite's own commits
 const APP_VCS_BITBUCKET_EMAIL = 'team@appwrite.io'; // Used to detect Appwrite's own commits
 const APP_VCS_ORIGIN_EMAIL = 'vcs@utopia.dev'; // Used to detect commits the VCS adapter pushes over Git HTTPS
+const APP_VCS_ENTIRE_EMAIL = 'vcs@utopia.dev'; // Used to detect commits the VCS adapter pushes over Git HTTPS
 const APP_BRANDED_EMAIL_BASE_TEMPLATE = 'email-base-styled';
 
 // Embeddings
