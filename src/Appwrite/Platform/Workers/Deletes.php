@@ -635,13 +635,31 @@ class Deletes extends Action
             'videos_renditions',
             $queries,
             $dbForProject,
-            function (Document $rendition) use ($dbForProject, $project, $reason, &$aborted, &$failed) {
+            function (Document $rendition) use ($dbForProject, $project, $reason, $date, &$aborted, &$failed) {
                 try {
-                    $dbForProject->updateDocument('videos_renditions', $rendition->getId(), new Document([
-                        'status' => VideosBase::STATUS_ABORTED,
-                        'endedAt' => DateTime::now(),
-                        'error' => $reason,
-                    ]));
+                    // Re-check status and staleness: progress can refresh $updatedAt
+                    // after the list query and before this write.
+                    $updated = $dbForProject->updateDocuments(
+                        'videos_renditions',
+                        new Document([
+                            'status' => VideosBase::STATUS_ABORTED,
+                            'endedAt' => DateTime::now(),
+                            'error' => $reason,
+                        ]),
+                        [
+                            Query::equal('$id', [$rendition->getId()]),
+                            Query::equal('status', [
+                                VideosBase::STATUS_PENDING,
+                                VideosBase::STATUS_STARTED,
+                                VideosBase::STATUS_ENDED,
+                                VideosBase::STATUS_UPLOADING,
+                            ]),
+                            Query::lessThanEqual('$updatedAt', $date),
+                        ]
+                    );
+                    if ($updated === 0) {
+                        return;
+                    }
                     $aborted++;
                     $age = \max(0, \time() - (int) \strtotime((string) $rendition->getUpdatedAt()));
                     Console::info(
@@ -709,12 +727,28 @@ class Deletes extends Action
             'videos_captions',
             $queries,
             $dbForProject,
-            function (Document $caption) use ($dbForProject, $project, $reason, &$aborted, &$failed) {
+            function (Document $caption) use ($dbForProject, $project, $reason, $date, &$aborted, &$failed) {
                 try {
-                    $dbForProject->updateDocument('videos_captions', $caption->getId(), new Document([
-                        'status' => VideosBase::STATUS_ABORTED,
-                        'error' => $reason,
-                    ]));
+                    // Re-check status and staleness: progress can refresh $updatedAt
+                    // after the list query and before this write.
+                    $updated = $dbForProject->updateDocuments(
+                        'videos_captions',
+                        new Document([
+                            'status' => VideosBase::STATUS_ABORTED,
+                            'error' => $reason,
+                        ]),
+                        [
+                            Query::equal('$id', [$caption->getId()]),
+                            Query::equal('status', [
+                                VideosBase::STATUS_PENDING,
+                                VideosBase::STATUS_STARTED,
+                            ]),
+                            Query::lessThanEqual('$updatedAt', $date),
+                        ]
+                    );
+                    if ($updated === 0) {
+                        return;
+                    }
                     $aborted++;
                     $age = \max(0, \time() - (int) \strtotime((string) $caption->getUpdatedAt()));
                     Console::info(
