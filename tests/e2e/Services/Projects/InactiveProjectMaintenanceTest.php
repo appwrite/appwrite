@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Projects;
 
 use Appwrite\Database\Factory as DatabaseFactory;
+use Appwrite\Event\Event;
 use Swoole\Coroutine;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -40,8 +41,6 @@ final class InactiveProjectMaintenanceTest extends Scope
 
     private const string WORKER = 'appwrite-worker';
 
-    private const string QUEUE = 'v1-maintenance';
-
     private const string DAILY = 'appwrite-task-maintenance';
 
     private const int TIMEOUT = 300;
@@ -57,7 +56,7 @@ final class InactiveProjectMaintenanceTest extends Scope
         if ($worker === null) {
             $this->requireContainer('The ' . self::WORKER . ' container is not running, so nothing consumes the maintenance queue');
         }
-        $queue = ($worker['_APP_MAINTENANCE_QUEUE_NAME'] ?? '') ?: self::QUEUE;
+        $queue = ($worker['_APP_MAINTENANCE_QUEUE_NAME'] ?? '') ?: Event::MAINTENANCE_QUEUE_NAME;
 
         $interval = (int) ($scheduler['_APP_MAINTENANCE_INACTIVE_INTERVAL'] ?? '604800');
         if ($interval > self::TIMEOUT) {
