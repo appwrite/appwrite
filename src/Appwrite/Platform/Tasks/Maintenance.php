@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Certificates\Certificates;
-use Appwrite\Database\Factory as DatabaseFactory;
+use Appwrite\Database\Provisioner;
 use Appwrite\Event\Certificate as CertificateEvent;
 use Appwrite\Event\Message\Certificate as CertificateMessage;
 use Appwrite\Event\Message\Delete as DeleteMessage;
@@ -55,7 +55,7 @@ class Maintenance extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $type, string $cohort, string $project, Database $dbForPlatform, Document $console, Certificate $publisherForCertificates, Certificates $certificateIssuer, DeletePublisher $publisherForDeletes, DatabaseFactory $databaseFactory): void
+    public function action(string $type, string $cohort, string $project, Database $dbForPlatform, Document $console, Certificate $publisherForCertificates, Certificates $certificateIssuer, DeletePublisher $publisherForDeletes, Provisioner $databaseFactory): void
     {
         Console::title('Maintenance V1');
         Console::success(APP_NAME . ' maintenance process v1 has started');

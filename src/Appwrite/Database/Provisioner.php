@@ -12,5 +12,10 @@ use Utopia\Database\Document;
  */
 interface Provisioner
 {
+    /**
+     * @param array<string, mixed> $metadata
+     */
+    public function platform(int $timeout = 0, int $maxQueryValues = 0, array $metadata = []): Database;
+
     public function provisioning(Document $project): Database;
 }
