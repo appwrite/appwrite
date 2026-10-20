@@ -1069,6 +1069,14 @@ return [
                 'question' => '',
             ],
             [
+                'name' => '_APP_STORAGE_S3_PATH_STYLE',
+                'description' => 'Whether requests to _APP_STORAGE_S3_ENDPOINT name the bucket in the path. Set to \'enabled\' when the endpoint is the bare service, or \'disabled\' when it already addresses the bucket. Leave empty to infer it: the endpoint addresses the bucket when its host is the bucket name (a dotted domain), its host begins with the bucket name followed by a dot, or its path ends with the bucket name. A custom domain or CNAME pointing at the bucket is not detected; set \'disabled\'.',
+                'introduction' => '2.6.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
                 'name' => '_APP_STORAGE_DO_SPACES_ACCESS_KEY',
                 'description' => 'Deprecated. DigitalOcean Spaces access key retained for backward compatibility. Use _APP_STORAGE_S3_ACCESS_KEY instead; Open Runtimes Orchestrator does not support this provider-specific variable.',
                 'introduction' => '0.13.0',
@@ -1755,6 +1763,42 @@ return [
                 'name' => '_APP_VCS_ORIGIN_PRIVATE_KEY',
                 'description' => 'Origin app private key. You can generate private keys from your Origin app settings on Cursor.',
                 'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_ENTIRE_PLUGIN',
+                'description' => 'Entire plugin slug, as registered with Entire. It names the plugin in Entire\'s API and is the audience of the webhook tokens Entire signs for it.',
+                'introduction' => '2.1.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_ENTIRE_PRIVATE_KEY',
+                'description' => 'Entire plugin private key: the Ed25519 key whose public half is registered on the plugin, as a PKCS#8 PEM.',
+                'introduction' => '2.1.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_ENTIRE_ISSUER',
+                'description' => 'Issuer registered on the Entire plugin: the iss claim of the JWTs Appwrite signs for it and the audience of the install receipts Entire signs back. Usually this server\'s public URL.',
+                'introduction' => '2.1.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_ENTIRE_ENDPOINT',
+                'description' => 'URL of the Entire core (control plane) Appwrite talks to. Any core serves any installation; defaults to https://us.auth.entire.io when unset, set it to a nearer jurisdiction such as https://eu.auth.entire.io.',
+                'introduction' => '2.1.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',

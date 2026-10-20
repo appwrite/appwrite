@@ -566,7 +566,7 @@ abstract class Base extends Action
         }
     }
 
-    protected function putObject(Database $dbForProject, Device $deviceForFiles, Document $bucket, string $key, string $body, string $contentType, array $metadata = []): Document
+    protected function putObject(Database $dbForProject, Document $project, DeletePublisher $publisherForDeletes, Device $deviceForFiles, Document $bucket, string $key, string $body, string $contentType, array $metadata = []): Document
     {
         $existing = $this->findObject($dbForProject, $bucket, $key);
         $object = $existing === null ? $this->objectPath($key) : [
@@ -627,7 +627,13 @@ abstract class Base extends Action
 
         if ($previousPath !== '' && $previousPath !== $path) {
             try {
-                $deviceForFiles->delete($previousPath);
+                // Backend deletes may wait for an active GET. Do not hold up
+                // publication of the replacement while reclaiming the old version.
+                $publisherForDeletes->enqueue(new DeleteMessage(
+                    project: $project,
+                    type: DELETE_TYPE_FILES,
+                    resource: $previousPath,
+                ));
             } catch (\Throwable) {
                 // The replacement is committed; stale-path cleanup is best effort.
             }
@@ -638,12 +644,12 @@ abstract class Base extends Action
     /**
      * @return array{0: Document, 1: string}
      */
-    protected function putObjectLocked(callable $locks, Database $dbForProject, Document $project, Device $deviceForFiles, Document $bucket, string $key, string $body, string $contentType, array $metadata = []): array
+    protected function putObjectLocked(callable $locks, Database $dbForProject, Document $project, DeletePublisher $publisherForDeletes, Device $deviceForFiles, Document $bucket, string $key, string $body, string $contentType, array $metadata = []): array
     {
         // Storage permits duplicate names, so lookup and write must share one key-scoped critical section.
-        return $locks($this->objectLockKey($project, $bucket, $key), 600, function () use ($dbForProject, $deviceForFiles, $bucket, $key, $body, $contentType, $metadata): array {
+        return $locks($this->objectLockKey($project, $bucket, $key), 600, function () use ($dbForProject, $project, $publisherForDeletes, $deviceForFiles, $bucket, $key, $body, $contentType, $metadata): array {
             $existing = $this->findObject($dbForProject, $bucket, $key);
-            $file = $this->putObject($dbForProject, $deviceForFiles, $bucket, $key, $body, $contentType, $metadata);
+            $file = $this->putObject($dbForProject, $project, $publisherForDeletes, $deviceForFiles, $bucket, $key, $body, $contentType, $metadata);
 
             return [$file, $existing === null ? 'create' : 'update'];
         }, timeout: 120.0);
@@ -848,7 +854,7 @@ abstract class Base extends Action
     /**
      * @return array{0: Document, 1: string|null}
      */
-    protected function completeMultipartUpload(callable $locks, Database $dbForProject, Cache $cache, Document $project, Device $deviceForFiles, Document $bucket, array $upload, array $selected): array
+    protected function completeMultipartUpload(callable $locks, Database $dbForProject, Cache $cache, Document $project, DeletePublisher $publisherForDeletes, Device $deviceForFiles, Document $bucket, array $upload, array $selected): array
     {
         $parts = $this->getMultipartParts($upload);
         $partsByNumber = [];
@@ -881,7 +887,7 @@ abstract class Base extends Action
         $etag = \md5($etagBytes) . '-' . \count($selected);
         $key = (string) ($upload['requestedKey'] ?? $upload['key'] ?? '');
         // Finalization and document replacement are serialized with ordinary PUTs for this key.
-        $result = $locks($this->objectLockKey($project, $bucket, $key), 600, function () use ($dbForProject, $deviceForFiles, $bucket, &$upload, $selected, $size, $etag, $key): array {
+        $result = $locks($this->objectLockKey($project, $bucket, $key), 600, function () use ($dbForProject, $project, $publisherForDeletes, $deviceForFiles, $bucket, &$upload, $selected, $size, $etag, $key): array {
             $path = (string) $upload['path'];
             $committed = $this->findObject($dbForProject, $bucket, $key);
             if ($committed !== null && $committed->getAttribute('path', '') === $path) {
@@ -924,7 +930,13 @@ abstract class Base extends Action
 
                 if ($previousPath !== '' && $previousPath !== $path) {
                     try {
-                        $deviceForFiles->delete($previousPath);
+                        // Backend deletes may wait for an active GET. Do not hold up
+                        // publication of the replacement while reclaiming the old version.
+                        $publisherForDeletes->enqueue(new DeleteMessage(
+                            project: $project,
+                            type: DELETE_TYPE_FILES,
+                            resource: $previousPath,
+                        ));
                     } catch (\Throwable) {
                         // The replacement is already committed; old-path cleanup is best effort.
                     }

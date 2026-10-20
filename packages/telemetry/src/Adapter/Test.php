@@ -99,6 +99,13 @@ class Test implements Adapter
             public array $values = [];
 
             /**
+             * The attributes of each recording, by the same index as $values.
+             *
+             * @phpstan-var list<array<non-empty-string, array<mixed>|bool|float|int|string|null>>
+             */
+            public array $attributes = [];
+
+            /**
              * @param \Closure(Histogram): void $register
              */
             public function __construct(private \Closure $register)
@@ -112,6 +119,7 @@ class Test implements Adapter
             {
                 ($this->register)($this);
                 $this->values[] = $amount;
+                $this->attributes[] = \is_array($attributes) ? $attributes : \iterator_to_array($attributes);
             }
         };
     }
