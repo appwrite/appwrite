@@ -79,7 +79,7 @@ export const Route = createFileRoute('/_marketing/threads/$threadId')({
 
     const { thread, messages, canonicalUrl } = loaderData
     const discordEmbed = getDiscordEmbedScript(
-      getThreadDiscordEmbed({ canonicalUrl, thread, messages }),
+      getThreadDiscordEmbed({ canonicalUrl, thread }),
     )
 
     return {

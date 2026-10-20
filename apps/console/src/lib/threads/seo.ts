@@ -418,17 +418,16 @@ export function getThreadsBreadcrumbSchema(
   }
 }
 
-function pluralize(count: number, singular: string, plural = `${singular}s`): string {
-  return `${count} ${count === 1 ? singular : plural}`
+function pluralize(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? '' : 's'}`
 }
 
 /** Discord link preview for a thread page: question, summary, activity, and links back. */
 export function getThreadDiscordEmbed(options: {
   canonicalUrl: string
   thread: DiscordThread
-  messages: Pick<DiscordMessage, '$id'>[]
 }): DiscordContainer {
-  const { canonicalUrl, thread, messages } = options
+  const { canonicalUrl, thread } = options
   const author = thread.author?.trim() ?? ''
   const lastActivity = thread.last_activity
     ? getDiscordTimestamp(thread.last_activity, 'R')
@@ -436,7 +435,8 @@ export function getThreadDiscordEmbed(options: {
   const details = [
     author ? `Asked by ${escapeDiscordMarkdown(author)}` : undefined,
     isThreadResolved(thread) ? '✅ Resolved' : undefined,
-    pluralize(Math.max(0, messages.length - 1), 'reply', 'replies'),
+    // The stored count, as thread cards show it: the loaded messages stop at one page.
+    thread.message_count ? pluralize(thread.message_count, 'message') : undefined,
     thread.participant_count ? pluralize(thread.participant_count, 'participant') : undefined,
     lastActivity ? `Last active ${lastActivity}` : undefined,
   ].filter(Boolean)

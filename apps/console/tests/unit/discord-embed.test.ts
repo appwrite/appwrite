@@ -180,13 +180,11 @@ describe('getDiscordEmbedScript', () => {
 
 describe('getThreadDiscordEmbed', () => {
   const canonicalUrl = 'https://appwrite.io/threads/1290000000000000000'
-  const messages = [{ $id: 'm1' }, { $id: 'm2' }, { $id: 'm3' }]
 
   test('summarizes the thread with the author avatar', () => {
     const embed = getThreadDiscordEmbed({
       canonicalUrl,
       thread: createThread(),
-      messages,
     })
     const content = getContent(embed)
 
@@ -196,7 +194,7 @@ describe('getThreadDiscordEmbed', () => {
       'Reconnect the client after the function redeploys.',
     )
     expect(content).toContain(
-      '-# Asked by dev\\_jane · ✅ Resolved · 2 replies · 2 participants · Last active <t:1790935200:R>',
+      '-# Asked by dev\\_jane · ✅ Resolved · 4 messages · 2 participants · Last active <t:1790935200:R>',
     )
     expect(embed.components[0]).toMatchObject({
       type: 9,
@@ -208,7 +206,6 @@ describe('getThreadDiscordEmbed', () => {
     const embed = getThreadDiscordEmbed({
       canonicalUrl,
       thread: createThread(),
-      messages,
     })
 
     expect(embed.components.at(-1)).toEqual({
@@ -227,12 +224,19 @@ describe('getThreadDiscordEmbed', () => {
     const embed = getThreadDiscordEmbed({
       canonicalUrl,
       thread: createThread({ author_avatar: '' }),
-      messages: [],
     })
 
     expectValidEmbed(embed)
     expect(embed.components[0]?.type).toBe(10)
-    expect(getContent(embed)).toContain('0 replies')
+  })
+
+  test('counts messages from the stored total, not the loaded page', () => {
+    const embed = getThreadDiscordEmbed({
+      canonicalUrl,
+      thread: createThread({ message_count: 120 }),
+    })
+
+    expect(getContent(embed)).toContain(' · 120 messages · ')
   })
 
   test('renders user markdown literally', () => {
@@ -242,7 +246,6 @@ describe('getThreadDiscordEmbed', () => {
         title: '# **Help** with <@everyone>',
         is_resolved: false,
       }),
-      messages,
     })
     const content = getContent(embed)
 
@@ -260,7 +263,6 @@ describe('getThreadDiscordEmbed', () => {
           20,
         ),
       }),
-      messages,
     })
 
     expectValidEmbed(embed)
