@@ -6,13 +6,13 @@ namespace Tests\Unit\Maintenance;
 
 use Appwrite\Event\Message\Maintenance as MaintenanceMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Event\Publisher\Maintenance as MaintenancePublisher;
 use Appwrite\Maintenance\Cycle;
 use Appwrite\Maintenance\Sweep;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Adapter;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Database;
-use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Queue\Queue;
 use Utopia\Schedule\Clock\Test as TestClock;
 
@@ -25,6 +25,8 @@ final class SweepTest extends TestCase
     private const string ELSEWHERE = 'west';
 
     private const string QUEUE = 'v1-deletes';
+
+    private const string MAINTENANCE = 'v1-maintenance';
 
     private const int SLOTS = 48;
 
@@ -123,31 +125,81 @@ final class SweepTest extends TestCase
         $this->assertSame([], \array_values(\array_intersect(\array_keys($reached), $this->excluded)));
     }
 
-    public function testEachBlockWaitsForTheDeletesQueueToDrain(): void
+    public function testBackedUpQueueDefersTheSliceAtTheNextBlock(): void
     {
         $due = $this->week->modify('+3 hours');
-        $slot = $this->slot($due->getTimestamp());
-
-        $rows = [];
-        foreach ([$slot, $slot + self::SLOTS, $slot + 2 * self::SLOTS] as $block) {
-            for ($offset = 1; $offset <= 60; $offset++) {
-                $sequence = $block * Sweep::BLOCK + $offset;
-                $rows[] = ['old-' . $sequence, $sequence, $due->modify('-60 days'), self::REGION];
-            }
-        }
-        $this->database = Projects::seed(new Memory(), $rows);
-
-        $start = (float) $due->getTimestamp();
+        $rows = $this->blocks($due);
         $this->clock = new TestClock($due);
-        // 150 queued, one drained a second: under BACKLOG after 51 seconds, and back over it after each block of 60.
-        $publisher = new QueuePublisher($this->clock, 1, 150);
+        // 50 queued and nothing draining: the first block takes it past BACKLOG, so the second cannot start.
+        $publisher = new QueuePublisher($this->clock, 0, 50);
+
+        ($this->sweep($publisher))($this->message($due));
+
+        $second = ($this->slot($due->getTimestamp()) + self::SLOTS) * Sweep::BLOCK;
+        $this->assertSame($this->sorted(\array_column(\array_slice($rows, 0, 60), 0)), $this->sorted($this->projects($publisher)));
+        $this->assertSame([$this->message($due, cursor: (string) ($second - 1))->toArray()], $publisher->payloads(self::MAINTENANCE));
+        $this->assertSame((float) ($due->getTimestamp() + Sweep::WAIT), (float) $this->clock->now()->format('U.u'));
+    }
+
+    public function testQueueDrainingWithinTheWaitContinuesTheSlice(): void
+    {
+        $due = $this->week->modify('+3 hours');
+        $rows = $this->blocks($due);
+        $this->clock = new TestClock($due);
+        // 150 queued, six drained a second: under BACKLOG after the wait, and back at 150 after each block of 60.
+        $publisher = new QueuePublisher($this->clock, 6, 150);
 
         ($this->sweep($publisher))($this->message($due));
 
         $this->assertSame($this->sorted(\array_column($rows, 0)), $this->sorted($this->projects($publisher)));
+        $this->assertSame([], $publisher->payloads(self::MAINTENANCE));
 
+        $start = (float) $due->getTimestamp();
         $starts = \array_values(\array_unique(\array_map(fn (float $time): int => (int) ($time - $start), $publisher->times(self::QUEUE))));
-        $this->assertSame([60, 120, 180], $starts);
+        $this->assertSame([Sweep::WAIT, 2 * Sweep::WAIT, 3 * Sweep::WAIT], $starts);
+    }
+
+    public function testCursorResumesAfterTheBlocksAlreadyEnqueued(): void
+    {
+        $due = $this->week->modify('+3 hours');
+        $rows = $this->blocks($due);
+        $this->clock = new TestClock($due);
+        $second = ($this->slot($due->getTimestamp()) + self::SLOTS) * Sweep::BLOCK;
+
+        $publisher = $this->publisher();
+        ($this->sweep($publisher))($this->message($due, cursor: (string) ($second - 1)));
+
+        $this->assertSame($this->sorted(\array_column(\array_slice($rows, 60), 0)), $this->sorted($this->projects($publisher)));
+    }
+
+    public function testPagesDeferAndResumeWithinTheirPass(): void
+    {
+        $due = $this->week->modify('+3 hours');
+        $this->clock = new TestClock($due);
+
+        $rows = [];
+        for ($sequence = 1; $sequence <= 120; $sequence++) {
+            $rows[] = [($sequence <= 60 ? 'old-' : 'never-') . $sequence, $sequence, $sequence <= 60 ? $due->modify('-60 days') : null, self::REGION];
+        }
+        $this->database = Projects::seed(new Uuid7Memory(), $rows);
+        $message = new MaintenanceMessage(slot: 0, slots: 1, due: $due->getTimestamp(), period: $this->cycle()->seconds(), region: self::REGION);
+
+        // The accessedAt pass takes the queue from 50 past BACKLOG, so the never-accessed pass defers from its start.
+        $deferred = new QueuePublisher($this->clock, 0, 50);
+        ($this->sweep($deferred))($message);
+
+        $this->assertSame($this->sorted(\array_column(\array_slice($rows, 0, 60), 0)), $this->sorted($this->projects($deferred)));
+        $this->assertSame([(new MaintenanceMessage(slot: 0, slots: 1, due: $due->getTimestamp(), period: $this->cycle()->seconds(), region: self::REGION, pass: 1))->toArray()], $deferred->payloads(self::MAINTENANCE));
+
+        $resumed = $this->publisher();
+        ($this->sweep($resumed))(new MaintenanceMessage(slot: 0, slots: 1, due: $due->getTimestamp(), period: $this->cycle()->seconds(), region: self::REGION, pass: 0, cursor: 'old-55'));
+
+        $this->assertSame($this->sorted(\array_column(\array_slice($rows, 55), 0)), $this->sorted($this->projects($resumed)));
+
+        $resumed = $this->publisher();
+        ($this->sweep($resumed))(new MaintenanceMessage(slot: 0, slots: 1, due: $due->getTimestamp(), period: $this->cycle()->seconds(), region: self::REGION, pass: 1, cursor: 'never-100'));
+
+        $this->assertSame($this->sorted(\array_column(\array_slice($rows, 100), 0)), $this->sorted($this->projects($resumed)));
     }
 
     public function testUnpublishedMessageStopsTheSweep(): void
@@ -162,57 +214,19 @@ final class SweepTest extends TestCase
         }
         $this->database = Projects::seed(new Memory(), $rows);
 
-        $refusing = new class () implements Synchronous {
-            public int $attempts = 0;
-
-            /** @var list<string> */
-            public array $accepted = [];
-
-            #[\Override]
-            public function publish(Queue $queue, array $payload): bool
-            {
-                if (++$this->attempts === 3) {
-                    return false;
-                }
-                $this->accepted[] = $payload['project']['$id'];
-
-                return true;
-            }
-
-            #[\Override]
-            public function publishMany(Queue $queue, array $payloads): bool
-            {
-                return false;
-            }
-
-            #[\Override]
-            public function retry(Queue $queue, ?int $limit = null): void
-            {
-            }
-
-            #[\Override]
-            public function getQueueSize(Queue $queue, bool $failedJobs = false): int
-            {
-                return 0;
-            }
-
-            #[\Override]
-            public function getFailedCount(Queue $queue): int
-            {
-                return 0;
-            }
-        };
+        $publisher = $this->publisher();
+        $publisher->refuse = 3;
 
         $failed = null;
         try {
-            (new Sweep($this->database, new DeletePublisher($refusing, new Queue(self::QUEUE)), self::REGION, $this->clock))($this->message($due));
+            ($this->sweep($publisher))($this->message($due));
         } catch (\RuntimeException $error) {
             $failed = $error;
         }
 
         $this->assertInstanceOf(\RuntimeException::class, $failed);
-        $this->assertSame(3, $refusing->attempts);
-        $this->assertCount(2, $refusing->accepted);
+        $this->assertCount(2, $this->projects($publisher));
+        $this->assertSame([], $publisher->payloads(self::MAINTENANCE));
     }
 
     public function testMessageOlderThanACycleIsSkipped(): void
@@ -316,14 +330,37 @@ final class SweepTest extends TestCase
         return \intdiv($due, Cycle::INTERVAL) % self::SLOTS;
     }
 
-    private function message(\DateTimeImmutable $due): MaintenanceMessage
+    private function message(\DateTimeImmutable $due, string $cursor = ''): MaintenanceMessage
     {
         return new MaintenanceMessage(
             slot: $this->slot($due->getTimestamp()),
             slots: self::SLOTS,
             due: $due->getTimestamp(),
             period: $this->cycle()->seconds(),
+            region: self::REGION,
+            cursor: $cursor,
         );
+    }
+
+    /**
+     * Seeds three blocks of the slot due at $due, 60 long-inactive projects each.
+     *
+     * @return list<array{0: string, 1: int, 2: ?\DateTimeImmutable, 3: string}>
+     */
+    private function blocks(\DateTimeImmutable $due): array
+    {
+        $slot = $this->slot($due->getTimestamp());
+
+        $rows = [];
+        foreach ([$slot, $slot + self::SLOTS, $slot + 2 * self::SLOTS] as $block) {
+            for ($offset = 1; $offset <= 60; $offset++) {
+                $sequence = $block * Sweep::BLOCK + $offset;
+                $rows[] = ['old-' . $sequence, $sequence, $due->modify('-60 days'), self::REGION];
+            }
+        }
+        $this->database = Projects::seed(new Memory(), $rows);
+
+        return $rows;
     }
 
     private function cycle(): Cycle
@@ -338,7 +375,12 @@ final class SweepTest extends TestCase
 
     private function sweep(QueuePublisher $publisher): Sweep
     {
-        return new Sweep($this->database, new DeletePublisher($publisher, new Queue(self::QUEUE)), self::REGION, $this->clock);
+        return new Sweep(
+            $this->database,
+            new DeletePublisher($publisher, new Queue(self::QUEUE)),
+            new MaintenancePublisher($publisher, new Queue(self::MAINTENANCE)),
+            $this->clock,
+        );
     }
 
     /**

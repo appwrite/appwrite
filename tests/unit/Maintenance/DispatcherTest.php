@@ -8,7 +8,6 @@ use Appwrite\Event\Publisher\Maintenance as MaintenancePublisher;
 use Appwrite\Maintenance\Cycle;
 use Appwrite\Maintenance\Dispatcher;
 use PHPUnit\Framework\TestCase;
-use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Queue\Queue;
 use Utopia\Schedule\Clock\Test as TestClock;
 use Utopia\Schedule\Store\Memory as MemoryStore;
@@ -16,6 +15,8 @@ use Utopia\Schedule\Store\Memory as MemoryStore;
 final class DispatcherTest extends TestCase
 {
     private const string QUEUE = 'v1-maintenance';
+
+    private const string REGION = 'east';
 
     private const int PERIOD = 604800;
 
@@ -37,11 +38,11 @@ final class DispatcherTest extends TestCase
         $publisher = new QueuePublisher($this->clock, 0);
         $end = $this->start->getTimestamp() + 3600;
 
-        $this->dispatch(new MemoryStore(), $publisher, $end);
+        $this->dispatch(new MemoryStore(), $this->dispatcher($publisher), $end);
 
         $expected = [];
         for ($due = $this->start->getTimestamp(); $due <= $end; $due += Cycle::INTERVAL) {
-            $expected[] = ['slot' => \intdiv($due, 300) % 2016, 'slots' => 2016, 'due' => $due, 'period' => self::PERIOD];
+            $expected[] = ['slot' => \intdiv($due, 300) % 2016, 'slots' => 2016, 'due' => $due, 'period' => self::PERIOD, 'region' => self::REGION, 'pass' => 0, 'cursor' => ''];
         }
 
         $this->assertCount(13, $expected);
@@ -53,46 +54,12 @@ final class DispatcherTest extends TestCase
         $due = $this->start->getTimestamp();
         $store = new MemoryStore();
         $queue = new QueuePublisher($this->clock, 0);
-        $refusing = new class ($queue) implements Synchronous {
-            public bool $refuse = true;
-
-            public function __construct(private readonly QueuePublisher $queue)
-            {
-            }
-
-            #[\Override]
-            public function publish(Queue $queue, array $payload): bool
-            {
-                return !$this->refuse && $this->queue->publish($queue, $payload);
-            }
-
-            #[\Override]
-            public function publishMany(Queue $queue, array $payloads): bool
-            {
-                return !$this->refuse && $this->queue->publishMany($queue, $payloads);
-            }
-
-            #[\Override]
-            public function retry(Queue $queue, ?int $limit = null): void
-            {
-            }
-
-            #[\Override]
-            public function getQueueSize(Queue $queue, bool $failedJobs = false): int
-            {
-                return $this->queue->getQueueSize($queue, $failedJobs);
-            }
-
-            #[\Override]
-            public function getFailedCount(Queue $queue): int
-            {
-                return 0;
-            }
-        };
+        $queue->refuse = 1;
+        $dispatcher = $this->dispatcher($queue);
 
         $failed = null;
         try {
-            $this->dispatch($store, $refusing, $due);
+            $this->dispatch($store, $dispatcher, $due);
         } catch (\RuntimeException $error) {
             $failed = $error;
         }
@@ -102,19 +69,53 @@ final class DispatcherTest extends TestCase
         $this->assertLessThanOrEqual((float) $due, $store->load()?->coveredUntil);
 
         $this->clock->advance(120);
-        $refusing->refuse = false;
-        $this->dispatch($store, $refusing, $due);
+        $queue->refuse = null;
+        $this->dispatch($store, $dispatcher, $due);
 
         $this->assertSame([$due], \array_column($queue->payloads(self::QUEUE), 'due'));
         $this->assertGreaterThan((float) $due, $store->load()?->coveredUntil);
     }
 
+    public function testRedeliveredTickPublishesEachMomentOnce(): void
+    {
+        $store = new MemoryStore();
+        $queue = new QueuePublisher($this->clock, 0);
+        $dispatcher = $this->dispatcher($queue);
+
+        // The scheduler first starts at now, so let a backlog of moments build up before the first tick.
+        $this->dispatch($store, $dispatcher, $this->start->getTimestamp());
+        $this->clock->advance(Cycle::INTERVAL * 6);
+        $published = \count($queue->payloads(self::QUEUE));
+
+        // The fourth moment of the catch-up tick is refused, after three were published.
+        $queue->refuse = $published + 4;
+        $failed = null;
+        try {
+            $this->dispatch($store, $dispatcher, $this->start->getTimestamp() + Cycle::INTERVAL * 6);
+        } catch (\RuntimeException $error) {
+            $failed = $error;
+        }
+        $this->assertInstanceOf(\RuntimeException::class, $failed);
+        $this->assertCount($published + 3, $queue->payloads(self::QUEUE));
+
+        $queue->refuse = null;
+        $this->dispatch($store, $dispatcher, $this->start->getTimestamp() + Cycle::INTERVAL * 6);
+
+        $dues = \array_column($queue->payloads(self::QUEUE), 'due');
+        $expected = \range($this->start->getTimestamp(), $this->start->getTimestamp() + Cycle::INTERVAL * 6, Cycle::INTERVAL);
+        $this->assertSame($expected, $dues);
+    }
+
+    private function dispatcher(QueuePublisher $queue): Dispatcher
+    {
+        return new Dispatcher(new MaintenancePublisher($queue, new Queue(self::QUEUE)), $this->cycle, self::REGION);
+    }
+
     /**
      * Runs the scheduler as ScheduleMaintenance does, until the moment due at $until has been handed over.
      */
-    private function dispatch(MemoryStore $store, Synchronous $publisher, int $until): void
+    private function dispatch(MemoryStore $store, Dispatcher $dispatcher, int $until): void
     {
-        $dispatcher = new Dispatcher(new MaintenancePublisher($publisher, new Queue(self::QUEUE)), $this->cycle);
         $scheduler = $this->cycle->scheduler($store, clock: $this->clock);
 
         $scheduler->run(function (array $occurrences) use ($dispatcher, $scheduler, $until): void {

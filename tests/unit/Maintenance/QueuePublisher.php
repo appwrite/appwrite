@@ -13,9 +13,16 @@ use Utopia\Schedule\Clock\Test as TestClock;
  * is what was prefilled and published minus what has drained since, and it
  * never drains below empty, so a queue that sat idle has no credit to
  * swallow a later burst. A rate of zero never drains.
+ *
+ * Setting $refuse refuses that publish attempt, counted from 1 across every
+ * queue, and each one after it, until it is set back to null.
  */
 final class QueuePublisher implements Synchronous
 {
+    public ?int $refuse = null;
+
+    private int $attempts = 0;
+
     /** @var array<string, list<array<string, mixed>>> */
     private array $payloads = [];
 
@@ -38,6 +45,10 @@ final class QueuePublisher implements Synchronous
     #[\Override]
     public function publish(Queue $queue, array $payload): bool
     {
+        if (++$this->attempts >= ($this->refuse ?? \PHP_INT_MAX)) {
+            return false;
+        }
+
         $this->drain($queue);
         $this->payloads[$queue->name][] = $payload;
         $this->times[$queue->name][] = (float) $this->clock->now()->format('U.u');
@@ -50,7 +61,9 @@ final class QueuePublisher implements Synchronous
     public function publishMany(Queue $queue, array $payloads): bool
     {
         foreach ($payloads as $payload) {
-            $this->publish($queue, $payload);
+            if (!$this->publish($queue, $payload)) {
+                return false;
+            }
         }
 
         return true;

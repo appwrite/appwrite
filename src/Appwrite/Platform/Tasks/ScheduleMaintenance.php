@@ -53,7 +53,7 @@ class ScheduleMaintenance extends Action
     {
         $region = System::getEnv('_APP_REGION', 'default');
 
-        $dispatcher = new Dispatcher($publisherForMaintenance, $cycle);
+        $dispatcher = new Dispatcher($publisherForMaintenance, $cycle, $region);
 
         // Kept across restarts of the loop: the release in run()'s finally can itself fail, and a new token would
         // then sit out the stale claim as a follower instead of renewing it.

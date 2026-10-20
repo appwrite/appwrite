@@ -4,12 +4,12 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Message\Maintenance as MaintenanceMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Event\Publisher\Maintenance as MaintenancePublisher;
 use Appwrite\Maintenance\Sweep;
 use Utopia\Database\Database;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
-use Utopia\System\System;
 
 class Maintenance extends Action
 {
@@ -25,16 +25,17 @@ class Maintenance extends Action
             ->inject('message')
             ->inject('dbForPlatform')
             ->inject('publisherForDeletes')
+            ->inject('publisherForMaintenance')
             ->callback($this->action(...));
     }
 
-    public function action(Message $message, Database $dbForPlatform, DeletePublisher $publisherForDeletes): void
+    public function action(Message $message, Database $dbForPlatform, DeletePublisher $publisherForDeletes, MaintenancePublisher $publisherForMaintenance): void
     {
         $maintenance = MaintenanceMessage::fromArray($message->getPayload());
 
         Span::add('maintenance.slot', $maintenance->slot);
         Span::add('maintenance.due', $maintenance->due);
 
-        (new Sweep($dbForPlatform, $publisherForDeletes, System::getEnv('_APP_REGION', 'default')))($maintenance);
+        (new Sweep($dbForPlatform, $publisherForDeletes, $publisherForMaintenance))($maintenance);
     }
 }

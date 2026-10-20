@@ -7,6 +7,7 @@ namespace Tests\Unit\Platform\Workers;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Maintenance as MaintenanceMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Event\Publisher\Maintenance as MaintenancePublisher;
 use Appwrite\Platform\Workers\Maintenance;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Maintenance\Projects;
@@ -22,21 +23,16 @@ final class MaintenanceTest extends TestCase
 {
     private string|false $key;
 
-    private string|false $region;
-
     protected function setUp(): void
     {
         // Projects default smtp and oAuthProviders through the encrypt filter on every write and read.
         $this->key = \getenv('_APP_OPENSSL_KEY_V1');
-        $this->region = \getenv('_APP_REGION');
         \putenv('_APP_OPENSSL_KEY_V1=unit-test-key');
-        \putenv('_APP_REGION=east');
     }
 
     protected function tearDown(): void
     {
         \putenv($this->key === false ? '_APP_OPENSSL_KEY_V1' : '_APP_OPENSSL_KEY_V1=' . $this->key);
-        \putenv($this->region === false ? '_APP_REGION' : '_APP_REGION=' . $this->region);
     }
 
     public function testMessageEnqueuesMaintenanceForTheSlotsInactiveProjects(): void
@@ -51,10 +47,9 @@ final class MaintenanceTest extends TestCase
             ['inactive', $base + 1, $when->modify('-40 days'), 'east'],
             ['never', $base + 2, null, 'east'],
             ['active', $base + 3, $when->modify('-1 day'), 'east'],
-            ['deleted', $base + 4, null, 'east'],
+            ['remote', $base + 4, null, 'west'],
             ['other', (($slot + 1) % $slots) * 100 + 5, null, 'east'],
         ]);
-        $database->skipFilters(fn (): bool => $database->deleteDocument('projects', 'deleted'), APP_PROJECTS_SUBQUERIES);
 
         $queue = new QueuePublisher(new TestClock($when), 0);
         $resources = [
@@ -62,10 +57,11 @@ final class MaintenanceTest extends TestCase
                 'pid' => 'pid',
                 'queue' => 'v1-maintenance',
                 'timestamp' => $due,
-                'payload' => (new MaintenanceMessage(slot: $slot, slots: $slots, due: $due, period: $slots * 300))->toArray(),
+                'payload' => (new MaintenanceMessage(slot: $slot, slots: $slots, due: $due, period: $slots * 300, region: 'east'))->toArray(),
             ]),
             'dbForPlatform' => $database,
             'publisherForDeletes' => new DeletePublisher($queue, new Queue('v1-deletes')),
+            'publisherForMaintenance' => new MaintenancePublisher($queue, new Queue('v1-maintenance')),
         ];
 
         $worker = new Maintenance();
