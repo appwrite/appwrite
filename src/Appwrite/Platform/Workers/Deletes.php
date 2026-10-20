@@ -634,27 +634,13 @@ class Deletes extends Action
                 $queries[] = Query::notEqual('$id', $deploymentId);
             }
 
-            foreach ($retention->ages($requested, $now) as $pass) {
-                $this->retireDeployments($pass->reason, [...$queries, ...$pass->queries], $retention, $resource, $dbForProject, $publisherForDeletes, $project);
-            }
-
-            if ($retention->maxCount === 0) {
-                return;
-            }
-
             try {
-                $cutoff = $dbForProject->find('deployments', [...$queries, ...$retention->cutoff()]);
+                foreach ($retention->passes($dbForProject, $queries, $requested, $now) as $pass) {
+                    $this->retireDeployments($pass->reason, [...$queries, ...$pass->queries], $retention, $resource, $dbForProject, $publisherForDeletes, $project);
+                }
             } catch (Throwable $th) {
-                Console::error("Failed to find the deployment count cutoff for {$resource->getCollection()} {$resource->getId()} in project {$project->getId()}: {$th->getMessage()}");
-                return;
+                Console::error("Failed to retire deployments of {$resource->getCollection()} {$resource->getId()} in project {$project->getId()}: {$th->getMessage()}");
             }
-
-            if (empty($cutoff)) {
-                return;
-            }
-
-            $pass = $retention->count($cutoff[0], $requested, $now);
-            $this->retireDeployments($pass->reason, [...$queries, ...$pass->queries], $retention, $resource, $dbForProject, $publisherForDeletes, $project);
         };
 
         $this->listByGroup(
