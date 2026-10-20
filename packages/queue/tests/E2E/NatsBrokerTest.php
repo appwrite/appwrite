@@ -1413,7 +1413,7 @@ final class NatsBrokerTest extends TestCase
         yield 'no responders while the consumer moves' => ['no-responders', 2];
     }
 
-    /** On maxDeliver 1 a lost ack makes the redelivery the spare one, parked as dead. */
+    /** On maxDeliver 1 a lost ack parks the redelivery as dead. */
     #[DataProvider('lostAcknowledgementConnection')]
     public function testACommitSurvivesTheServerHavingClosedItsConnection(string $fault, int $times): void
     {
@@ -1622,7 +1622,7 @@ final class NatsBrokerTest extends TestCase
         yield 'no responders while the stream elects a leader' => ['no-responders', 2];
     }
 
-    /** The dead-letter copy is retried under its own id, so one that landed is not stored twice. */
+    /** A retried dead-letter copy is stored once. */
     #[DataProvider('lostRejectConnection')]
     public function testAnExhaustedRejectSurvivesTheServerHavingClosedItsConnection(string $fault, int $times): void
     {

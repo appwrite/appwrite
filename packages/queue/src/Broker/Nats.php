@@ -712,8 +712,7 @@ class Nats implements Synchronous, Consumer, Bounded
      * twice. A refusal -- permissions, payload size, a full stream -- is thrown at
      * once: it would be refused identically again.
      *
-     * An ack goes to the delivery's reply subject, not the socket that fetched it,
-     * so acks can be repeated on a rebuilt commands connection too.
+     * Acks target the reply subject, so they can be resent on a rebuilt connection.
      *
      * @template T
      * @param \Closure(): T $publish
@@ -1094,8 +1093,7 @@ class Nats implements Synchronous, Consumer, Bounded
                 }
                 unset($this->inFlight[$pid]);
 
-                // Once the budget is spent, the rest go straight to a NAK: it waits for no
-                // reply, where each requeue would start another request.
+                // Budget spent: NAK the rest, which waits for no reply.
                 $stored = false;
                 if (microtime(true) < $deadline) {
                     try {
@@ -1258,8 +1256,7 @@ class Nats implements Synchronous, Consumer, Bounded
     }
 
     /**
-     * Run one command on the commands connection, repeating it as republishing() does.
-     * The lock is taken per attempt so a backoff never blocks other acks or heartbeats.
+     * Run a command with republishing()'s retries, locking per attempt so a backoff blocks nothing else.
      *
      * @template T
      * @param \Closure(): T $command
@@ -1351,26 +1348,16 @@ class Nats implements Synchronous, Consumer, Bounded
 
         $numDelivered = $jsMessage->metadata()->numDelivered;
 
-        // Read up front: the verdict belongs to this delivery, and the message
-        // object is the handler's, not the broker's.
+        // Read up front: the verdict belongs to this delivery.
         $terminal = $message->isTerminal();
 
         // One budget for the dead-letter copy and the term together.
         $deadline = microtime(true) + self::PUBLISH_RETRY_BUDGET;
 
         if ($terminal || $numDelivered >= $this->maxDeliver) {
-            // Exhausted, or declared unrepeatable by the handler: park on the dead
-            // stream and drop it from the work stream.
-            //
-            // The terminal case is what keeps one bad payload from taking the queue
-            // down with it. A NAK holds a maxAckPending slot for the whole of its
-            // backoff -- the message is asleep, not being worked, and JetStream
-            // counts it in flight regardless -- so enough messages that fail the
-            // same way every time leave the consumer no slot to deliver into, and
-            // it stops handing out work it could have run. Terminating here returns
-            // the slot immediately and loses nothing: the payload is on the dead
-            // stream, where retry() can re-drive it once the fault is fixed.
-            // Under an id of its own, so a copy that landed before the socket closed collapses.
+            // Exhausted or terminal: park on the dead stream and term it. A NAK would
+            // hold a maxAckPending slot for its whole backoff.
+            // Its own id, so a retry dedupes against a copy that already landed.
             $this->retryingCommand(fn (): PubAck => $this->commandsJs()->publish(
                 $this->deadSubject($queue),
                 $jsMessage->getData(),
