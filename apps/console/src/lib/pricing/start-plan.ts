@@ -61,7 +61,7 @@ export function getProPlanBadgeLabelForPlans(
 }
 
 type LocationGatedPlan = PlanIdentity & {
-  eligibleCountries?: string[]
+  eligibleCountries?: string[] | null
 }
 
 function planEligibleCountries(
