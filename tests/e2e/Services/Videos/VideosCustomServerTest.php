@@ -1239,6 +1239,42 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
+     * A video accepts CAPTION_LIMIT caption creates per ENCODE_PERIOD. Language
+     * codes are not unique per video, so distinct names alone are enough.
+     */
+    #[Group('abuseEnabled')]
+    public function testCreateCaptionEncodeLimit(): void
+    {
+        if (System::getEnv('_APP_OPTIONS_ABUSE') === 'disabled') {
+            $this->markTestSkipped('Abuse is not enabled.');
+        }
+
+        $videoId = $this->createVideo();
+        $bucketId = $this->getVideoBucket()['$id'];
+        $fileId = $this->getCaptionFile()['$id'];
+
+        for ($i = 0; $i < Base::CAPTION_LIMIT; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
+                'bucketId' => $bucketId,
+                'fileId' => $fileId,
+                'name' => 'Caption ' . $i,
+                'code' => 'eng',
+            ]);
+            $this->assertEquals(201, $response['headers']['status-code'], 'Caption create ' . ($i + 1) . ' should be accepted');
+            $this->assertSame(Base::CAPTION_LIMIT, (int) $response['headers']['x-ratelimit-limit']);
+        }
+
+        $limited = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
+            'bucketId' => $bucketId,
+            'fileId' => $fileId,
+            'name' => 'Caption over',
+            'code' => 'eng',
+        ]);
+        $this->assertEquals(429, $limited['headers']['status-code']);
+        $this->assertEquals('general_rate_limit_exceeded', $limited['body']['type']);
+    }
+
+    /**
      * A video accepts RENDITION_LIMIT rendition creates per ENCODE_PERIOD. The next
      * distinct profile+output pair is rate-limited; a duplicate of an earlier
      * pair is still reported as already existing.

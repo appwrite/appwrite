@@ -13,6 +13,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
+use Utopia\Abuse\Adapter\TimeLimit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -22,6 +23,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -74,6 +76,7 @@ class Create extends Base
             ->inject('project')
             ->inject('user')
             ->inject('authorization')
+            ->inject('timelimit')
             ->inject('queueForEvents')
             ->inject('publisherForVideos')
             ->callback($this->action(...));
@@ -91,6 +94,7 @@ class Create extends Base
         Document $project,
         User $user,
         Authorization $authorization,
+        callable $timelimit,
         Event $queueForEvents,
         VideoPublisher $publisherForVideos
     ): void {
@@ -100,6 +104,32 @@ class Create extends Base
 
         if (!\in_array($file->getAttribute('mimeType', ''), self::CAPTION_MIME_TYPES, true)) {
             throw new Exception(Exception::VIDEO_CAPTION_NOT_VALID);
+        }
+
+        $isRateLimited = $timelimit(
+            'url:/v1/videos/captions,projectId:{projectId},videoId:{videoId}',
+            self::CAPTION_LIMIT,
+            self::ENCODE_PERIOD,
+            function (TimeLimit $timeLimit) use ($project, $video, $response): bool {
+                $timeLimit = $timeLimit->withParams([
+                    '{projectId}' => (string) $project->getId(),
+                    '{videoId}' => (string) $video->getId(),
+                ]);
+
+                $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+                $result = $enabled ? $timeLimit->check() : $timeLimit->peek();
+
+                $response
+                    ->addHeader('X-RateLimit-Limit', (string) $result->limit)
+                    ->addHeader('X-RateLimit-Remaining', (string) $result->remaining)
+                    ->addHeader('X-RateLimit-Reset', (string) $result->reset);
+
+                return $enabled && $result->limited;
+            }
+        );
+
+        if ($isRateLimited) {
+            throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
         }
 
         if ($default) {
