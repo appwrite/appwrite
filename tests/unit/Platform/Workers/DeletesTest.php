@@ -39,8 +39,14 @@ final class DeletesTest extends TestCase
 {
     private Database $database;
 
+    private string|false $key;
+
     protected function setUp(): void
     {
+        // Projects default smtp and oAuthProviders through the encrypt filter on every write and read.
+        $this->key = \getenv('_APP_OPENSSL_KEY_V1');
+        \putenv('_APP_OPENSSL_KEY_V1=unit-test-key');
+
         // Workers run with authorization disabled, as app/worker.php sets it up.
         $authorization = new Authorization();
         $authorization->disable();
@@ -60,6 +66,11 @@ final class DeletesTest extends TestCase
                 indexes: $collection['indexes'],
             ));
         }
+    }
+
+    protected function tearDown(): void
+    {
+        \putenv($this->key === false ? '_APP_OPENSSL_KEY_V1' : '_APP_OPENSSL_KEY_V1=' . $this->key);
     }
 
     public function testQueuedFileCleanupOnlyDeletesTheObsoletePath(): void

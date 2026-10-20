@@ -52,10 +52,21 @@ final class SweepTest extends TestCase
     /** @var list<string> */
     private array $excluded = [];
 
+    private string|false $key;
+
     protected function setUp(): void
     {
+        // Projects default smtp and oAuthProviders through the encrypt filter on every write and read.
+        $this->key = \getenv('_APP_OPENSSL_KEY_V1');
+        \putenv('_APP_OPENSSL_KEY_V1=unit-test-key');
+
         $this->week = new \DateTimeImmutable('2026-03-02 00:00:00', new \DateTimeZone('UTC'));
         $this->clock = new TestClock($this->week);
+    }
+
+    protected function tearDown(): void
+    {
+        \putenv($this->key === false ? '_APP_OPENSSL_KEY_V1' : '_APP_OPENSSL_KEY_V1=' . $this->key);
     }
 
     public function testWeekOfSlicesReachesEachInactiveProjectOnce(): void
