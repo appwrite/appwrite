@@ -24,9 +24,14 @@ final class Sweep
 {
     public const int BLOCK = 100;
 
+    public const int PAGE = 1000;
+
     public const int BACKLOG = 100;
 
     public const int INACTIVITY = 2592000;
+
+    /** What a delete message carries for a project; the worker reloads the rest. */
+    public const array ATTRIBUTES = ['$id', '$sequence', '$createdAt', 'teamId', 'teamInternalId', 'region', 'database'];
 
     /** Due time of the last moment fully enqueued; occurrences arrive oldest first. */
     private ?float $handled = null;
@@ -57,23 +62,25 @@ final class Sweep
                 throw new Backlog($pending);
             }
 
+            // Dues arrive in UTC; accessedAt is written in the default zone.
             $cutoff = \DateTime::createFromImmutable($occurrence->due->modify('-' . self::INACTIVITY . ' seconds'));
             $cutoff->setTimezone(new \DateTimeZone(\date_default_timezone_get()));
-
-            $filters = [
-                Query::equal('region', [$this->region]),
-                Query::or([
-                    Query::lessThan('accessedAt', DateTime::format($cutoff)),
-                    Query::isNull('accessedAt'),
-                ]),
-            ];
+            $cutoff = DateTime::format($cutoff);
 
             $slot = $this->slot($occurrence->due);
+            $region = Query::equal('region', [$this->region]);
 
             if ($this->dbForPlatform->getIdAttributeType() === ColumnType::Integer) {
-                $this->blocks($slot, $filters);
+                $this->blocks($slot, [
+                    $region,
+                    Query::or([
+                        Query::lessThan('accessedAt', $cutoff),
+                        Query::isNull('accessedAt'),
+                    ]),
+                ]);
             } else {
-                $this->pages($slot, $filters);
+                $this->pages($slot, [$region, Query::lessThan('accessedAt', $cutoff)]);
+                $this->pages($slot, [$region, Query::isNull('accessedAt')]);
             }
 
             $this->handled = $due;
@@ -90,7 +97,7 @@ final class Sweep
      */
     private function blocks(int $slot, array $filters): void
     {
-        $latest = $this->find([
+        $latest = $this->dbForPlatform->find('projects', [
             Query::orderDesc('$sequence'),
             Query::select(['$sequence']),
             Query::limit(1),
@@ -105,16 +112,18 @@ final class Sweep
         for ($block = $slot; $block <= $last; $block += $this->cycle->slots) {
             $start = $block * self::BLOCK;
 
-            $this->enqueue($this->find([
+            $this->enqueue($this->dbForPlatform->find('projects', [
                 ...$filters,
                 Query::between('$sequence', \max(1, $start), $start + self::BLOCK - 1),
+                Query::select(self::ATTRIBUTES),
                 Query::limit(self::BLOCK),
             ]));
         }
     }
 
     /**
-     * Without integer sequences ownership is a hash of the ID, so every slice reads the whole inactive cohort.
+     * Without integer sequences ownership is a hash of the ID, so every slice reads the whole inactive cohort, one
+     * condition at a time so each read can use the region and accessedAt index.
      *
      * @param list<Query> $filters
      */
@@ -123,12 +132,12 @@ final class Sweep
         $cursor = null;
 
         do {
-            $queries = [...$filters, Query::orderAsc('$sequence'), Query::limit(self::BLOCK)];
+            $queries = [...$filters, Query::orderAsc('$sequence'), Query::select(self::ATTRIBUTES), Query::limit(self::PAGE)];
             if ($cursor !== null) {
                 $queries[] = Query::cursorAfter($cursor);
             }
 
-            $projects = $this->find($queries);
+            $projects = $this->dbForPlatform->find('projects', $queries);
             if ($projects === []) {
                 return;
             }
@@ -136,19 +145,7 @@ final class Sweep
             $cursor = $projects[\count($projects) - 1];
 
             $this->enqueue(\array_filter($projects, fn (Document $project): bool => \crc32($project->getId()) % $this->cycle->slots === $slot));
-        } while (\count($projects) === self::BLOCK);
-    }
-
-    /**
-     * @param list<Query> $queries
-     * @return array<Document>
-     */
-    private function find(array $queries): array
-    {
-        return $this->dbForPlatform->skipFilters(
-            fn (): array => $this->dbForPlatform->find('projects', $queries),
-            APP_PROJECTS_SUBQUERIES
-        );
+        } while (\count($projects) === self::PAGE);
     }
 
     /**

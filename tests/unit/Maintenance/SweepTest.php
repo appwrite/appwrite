@@ -75,6 +75,10 @@ final class SweepTest extends TestCase
         foreach ($publisher->payloads(self::QUEUE) as $payload) {
             $this->assertSame(DELETE_TYPE_MAINTENANCE, $payload['type']);
             $this->assertSame(self::REGION, $payload['project']['region']);
+            // Everything the worker needs to find the project and its database survives the narrowed read.
+            $this->assertSame('database_db_' . self::REGION, $payload['project']['database']);
+            $this->assertSame('1', $payload['project']['teamInternalId']);
+            $this->assertNotEmpty($payload['project']['$createdAt']);
         }
     }
 
