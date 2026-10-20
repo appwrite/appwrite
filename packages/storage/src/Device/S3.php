@@ -867,6 +867,7 @@ class S3 extends Device
             size: (int) ($headers['content-length'] ?? 0),
             modifiedAt: $modified === false ? null : new \DateTimeImmutable('@' . $modified),
             etag: isset($headers['etag']) ? $this->unquote($headers['etag']) : null,
+            mimeType: $headers['content-type'] ?? '',
         );
     }
 

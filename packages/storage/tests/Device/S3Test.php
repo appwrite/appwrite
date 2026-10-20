@@ -1066,12 +1066,14 @@ final class S3Test extends TestCase
         $client = new ScriptedClient([new Response(200)
             ->withHeader('etag', '"abc123"')
             ->withHeader('content-length', '11')
+            ->withHeader('content-type', 'text/plain')
             ->withHeader('last-modified', 'Fri, 18 Sep 2026 08:41:25 GMT')]);
 
         $info = $this->device($client)->getFileInfo('/root/file.txt');
 
         $this->assertSame('HEAD', $client->requests[0]->getMethod());
         $this->assertSame('/root/file.txt', $info->path);
+        $this->assertSame('text/plain', $info->mimeType);
         $this->assertSame(11, $info->size);
         $this->assertSame('abc123', $info->etag, 'without the quotes, like every other ETag the library hands out');
         $this->assertSame('2026-09-18T08:41:25+00:00', $info->modifiedAt?->format(DATE_ATOM));
