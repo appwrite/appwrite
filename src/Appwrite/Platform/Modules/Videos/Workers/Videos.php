@@ -975,6 +975,10 @@ class Videos extends Action
                 throw $th;
             }
             $this->phase($telemetry, VideoAction::Encode->value, 'encode', $phaseStart);
+            // pack() was the last reader; free the original before persist/upload.
+            if (\is_file($inPath) && !@\unlink($inPath)) {
+                Console::warning('Videos worker: failed to remove source after encode: ' . $inPath);
+            }
             if ($last !== null && $last->speed > 0) {
                 $this->record(
                     $telemetry->createHistogram(
