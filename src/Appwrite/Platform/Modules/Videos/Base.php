@@ -15,7 +15,6 @@ use Utopia\Database\Document;
 use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
-use Utopia\Lock\File;
 use Utopia\Platform\Action as UtopiaAction;
 
 /**
@@ -150,8 +149,7 @@ abstract class Base extends UtopiaAction
 
     /**
      * Default age (seconds) before orphaned job folders under videos-tmp/jobs
-     * and leftover lock files under videos-tmp/locks are swept. Overridden by
-     * `_APP_MAINTENANCE_RETENTION_VIDEOS_TMP`.
+     * are swept. Overridden by `_APP_MAINTENANCE_RETENTION_VIDEOS_TMP`.
      */
     public const TMP_TTL = 86400;
 
@@ -163,67 +161,6 @@ abstract class Base extends UtopiaAction
     public static function tmpJobsRoot(): string
     {
         return \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/jobs';
-    }
-
-    /**
-     * Flat root for video job flock files on the shared volume.
-     *
-     * Stays outside `jobs/` so a job-folder sweep cannot drop a lock under a
-     * live job. Lock files sit directly in this folder, which is never removed,
-     * so a job never races another over a parent directory.
-     */
-    public static function tmpLocksRoot(): string
-    {
-        return \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/locks';
-    }
-
-    /** Timeline job flock file: `{tmpLocksRoot()}/timeline~{videoId}.lock`. */
-    public static function timelineLockPath(string $videoId): string
-    {
-        return self::tmpLocksRoot() . '/timeline~' . $videoId . '.lock';
-    }
-
-    /** Encode job flock file: `{tmpLocksRoot()}/encode~{videoId}~{renditionId}.lock`. */
-    public static function encodeLockPath(string $videoId, string $renditionId): string
-    {
-        return self::tmpLocksRoot() . '/encode~' . $videoId . '~' . $renditionId . '.lock';
-    }
-
-    /** Caption job flock file: `{tmpLocksRoot()}/caption~{videoId}~{captionId}.lock`. */
-    public static function captionLockPath(string $videoId, string $captionId): string
-    {
-        return self::tmpLocksRoot() . '/caption~' . $videoId . '~' . $captionId . '.lock';
-    }
-
-    /**
-     * Unlinks a lock file when no job holds its flock. Missing file is a no-op.
-     *
-     * Acquires the lock first. Unlinking while another process holds the inode
-     * frees the path so a duplicate can create and lock a new inode, and both
-     * jobs run. A held lock is left alone. Never removes `tmpLocksRoot()`.
-     *
-     * @return bool True when the path is gone afterward.
-     */
-    public static function removeLock(string $path): bool
-    {
-        if (!\is_file($path)) {
-            return true;
-        }
-
-        try {
-            $lock = new File($path);
-            if (!$lock->tryAcquire()) {
-                return false;
-            }
-
-            try {
-                return @\unlink($path);
-            } finally {
-                $lock->release();
-            }
-        } catch (\Throwable) {
-            return false;
-        }
     }
 
     /**
@@ -522,8 +459,6 @@ abstract class Base extends UtopiaAction
         if (!$deleted) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove video rendition from DB');
         }
-
-        self::removeLock(self::encodeLockPath($rendition->getAttribute('videoId'), $rendition->getId()));
 
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $project,

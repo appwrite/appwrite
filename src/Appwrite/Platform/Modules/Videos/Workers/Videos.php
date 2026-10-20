@@ -27,7 +27,6 @@ use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Lock\File;
 use Utopia\Platform\Action;
 use Utopia\Psr7\Stream;
 use Utopia\Queue\Message;
@@ -195,39 +194,10 @@ class Videos extends Action
             ['action' => $action->value]
         );
 
-        // Taken before any job code runs so a duplicate message never claims,
-        // downloads or bills. Encode re-reads the status under this lock.
-        $lockPath = match ($action) {
-            VideoAction::Timeline => Base::timelineLockPath($videoMessage->video->getId()),
-            VideoAction::Encode => Base::encodeLockPath(
-                $videoMessage->video->getId(),
-                $videoMessage->rendition?->getId() ?? throw new \Exception('Missing rendition in payload')
-            ),
-            VideoAction::Caption => Base::captionLockPath(
-                $videoMessage->video->getId(),
-                $videoMessage->caption?->getId() ?? throw new \Exception('Missing caption in payload')
-            ),
-        };
-        $lock = null;
-        $held = false;
-
         $inflight = $telemetry->createUpDownCounter('worker.videos.inflight', null, 'Videos jobs currently running');
         $this->record($inflight, 1, ['action' => $action->value]);
 
         try {
-            $root = Base::tmpLocksRoot();
-            if (!\is_dir($root) && !\mkdir($root, 0755, true) && !\is_dir($root)) {
-                throw new \Exception('Failed to create video lock directory');
-            }
-            $lock = new File($lockPath);
-            if (!$lock->tryAcquire()) {
-                Console::info('Videos worker: ' . $action->value . ' lock held at ' . $lockPath . ', skipping duplicate');
-                Span::add('video.outcome', 'duplicate');
-                $this->outcome($telemetry, $action->value, 'duplicate', \microtime(true));
-                return;
-            }
-            $held = true;
-
             match ($action) {
                 VideoAction::Timeline => $this->timeline(
                     $dbForProject,
@@ -260,14 +230,6 @@ class Videos extends Action
                 ),
             };
         } finally {
-            if ($held && $lock !== null) {
-                // flock follows the inode. Unlinking while held frees the path
-                // so a duplicate can create and lock a new inode beside this
-                // job. Timeline and caption have no second claim to stop that,
-                // so leave the file and let the maintenance sweep remove it
-                // only after it can acquire the flock.
-                $lock->release();
-            }
             $this->record($inflight, -1, ['action' => $action->value]);
         }
     }

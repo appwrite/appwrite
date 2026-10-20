@@ -995,16 +995,14 @@ final class VideosCustomServerTest extends Scope
         $videoId = $ready['$id'];
         $projectId = $this->getProject()['$id'];
 
-        // Park before the encode worker claims the row. Leave $updatedAt alone:
-        // this suite runs in parallel, and another process's maintenance sweep
-        // aborts an already-stale row and deletes its idle lock.
         $stale = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
             'profileId' => $this->seededProfile('360p')['$id'],
             'output' => 'hls',
         ]);
         $this->assertEquals(202, $stale['headers']['status-code']);
         $staleId = $stale['body']['$id'];
-        $this->timeTravelRendition($projectId, $staleId, status: 'started');
+        $staleBody = $this->waitForRenditionTerminalState($videoId, $staleId);
+        $this->assertEquals('ready', $staleBody['status']);
 
         $fresh = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
             'profileId' => $this->seededProfile('480p')['$id'],
@@ -1012,7 +1010,8 @@ final class VideosCustomServerTest extends Scope
         ]);
         $this->assertEquals(202, $fresh['headers']['status-code']);
         $freshId = $fresh['body']['$id'];
-        $this->timeTravelRendition($projectId, $freshId, status: 'started');
+        $freshBody = $this->waitForRenditionTerminalState($videoId, $freshId);
+        $this->assertEquals('ready', $freshBody['status']);
 
         $readyRendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
             'profileId' => $this->seededProfile('720p')['$id'],
@@ -1023,22 +1022,9 @@ final class VideosCustomServerTest extends Scope
         $readyBody = $this->waitForRenditionTerminalState($videoId, $readyId);
         $this->assertEquals('ready', $readyBody['status']);
 
-        // Park only after the encode worker has dropped the flock. A live encode
-        // holds it, and abort leaves a held file in place. Re-apply the stale
-        // row in case that encode finished and wrote a terminal status.
-        $staleLock = Base::encodeLockPath($videoId, $staleId);
-        $this->waitForIdleLock($staleLock);
-        $this->timeTravelRendition($projectId, $staleId, status: 'started');
-
-        $freshLock = Base::encodeLockPath($videoId, $freshId);
-        $this->waitForIdleLock($freshLock);
-        $this->timeTravelRendition($projectId, $freshId, status: 'started');
-
-        $this->assertFileExists($staleLock);
-        $this->assertFileExists($freshLock);
-
-        // Age only once both locks are idle, immediately before this test's sweep.
+        // Seed after encode finishes so a racing worker cannot clobber the park.
         $this->timeTravelRendition($projectId, $staleId, status: 'started', updatedAt: '2020-01-01T00:00:00Z');
+        $this->timeTravelRendition($projectId, $freshId, status: 'started');
         $this->timeTravelRendition($projectId, $readyId, updatedAt: '2020-01-01T00:00:00Z');
 
         $stdout = '';
@@ -1051,27 +1037,21 @@ final class VideosCustomServerTest extends Scope
         );
         $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
 
-        $this->assertEventually(function () use ($videoId, $staleId, $freshId, $readyId, $staleLock, $freshLock) {
+        $this->assertEventually(function () use ($videoId, $staleId, $freshId, $readyId) {
             $stale = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $staleId, $this->headers());
             $this->assertEquals(200, $stale['headers']['status-code']);
             $this->assertEquals('aborted', $stale['body']['status']);
             $this->assertNotEmpty($stale['body']['endedAt'] ?? '');
             $this->assertSame('Aborted: no progress for 24 hours', $stale['body']['error']);
-            $this->assertFileDoesNotExist($staleLock);
 
             $fresh = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $freshId, $this->headers());
             $this->assertEquals(200, $fresh['headers']['status-code']);
             $this->assertEquals('started', $fresh['body']['status']);
-            $this->assertFileExists($freshLock);
 
             $ready = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $readyId, $this->headers());
             $this->assertEquals(200, $ready['headers']['status-code']);
             $this->assertEquals('ready', $ready['body']['status']);
         }, 30000);
-
-        if (\is_file($freshLock)) {
-            \unlink($freshLock);
-        }
     }
 
     /**
@@ -1086,9 +1066,6 @@ final class VideosCustomServerTest extends Scope
         $bucketId = $this->getVideoBucket()['$id'];
         $fileId = $this->getCaptionFile()['$id'];
 
-        // Park before the caption worker claims the row. Leave $updatedAt alone
-        // until both locks are idle, so a parallel maintenance sweep cannot
-        // abort the row and delete its lock first.
         $stale = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
             'bucketId' => $bucketId,
             'fileId' => $fileId,
@@ -1097,7 +1074,8 @@ final class VideosCustomServerTest extends Scope
         ]);
         $this->assertEquals(201, $stale['headers']['status-code']);
         $staleId = $stale['body']['$id'];
-        $this->timeTravelCaption($projectId, $staleId, status: 'started');
+        $staleBody = $this->waitForCaptionTerminalState($videoId, $staleId);
+        $this->assertEquals('ready', $staleBody['status']);
 
         $fresh = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
             'bucketId' => $bucketId,
@@ -1107,7 +1085,8 @@ final class VideosCustomServerTest extends Scope
         ]);
         $this->assertEquals(201, $fresh['headers']['status-code']);
         $freshId = $fresh['body']['$id'];
-        $this->timeTravelCaption($projectId, $freshId, status: 'started');
+        $freshBody = $this->waitForCaptionTerminalState($videoId, $freshId);
+        $this->assertEquals('ready', $freshBody['status']);
 
         $ready = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
             'bucketId' => $bucketId,
@@ -1121,19 +1100,9 @@ final class VideosCustomServerTest extends Scope
         $readyBody = $this->waitForCaptionTerminalState($videoId, $readyId);
         $this->assertEquals('ready', $readyBody['status']);
 
-        // Same flock rule as renditions: wait out the caption job, then park.
-        $staleLock = Base::captionLockPath($videoId, $staleId);
-        $this->waitForIdleLock($staleLock);
-        $this->timeTravelCaption($projectId, $staleId, status: 'started');
-
-        $freshLock = Base::captionLockPath($videoId, $freshId);
-        $this->waitForIdleLock($freshLock);
-        $this->timeTravelCaption($projectId, $freshId, status: 'started');
-
-        $this->assertFileExists($staleLock);
-        $this->assertFileExists($freshLock);
-
+        // Seed after caption jobs finish so a racing worker cannot clobber the park.
         $this->timeTravelCaption($projectId, $staleId, status: 'started', updatedAt: '2020-01-01T00:00:00Z');
+        $this->timeTravelCaption($projectId, $freshId, status: 'started');
         $this->timeTravelCaption($projectId, $readyId, updatedAt: '2020-01-01T00:00:00Z');
 
         $stdout = '';
@@ -1146,7 +1115,7 @@ final class VideosCustomServerTest extends Scope
         );
         $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
 
-        $this->assertEventually(function () use ($videoId, $staleId, $freshId, $readyId, $staleLock, $freshLock) {
+        $this->assertEventually(function () use ($videoId, $staleId, $freshId, $readyId) {
             $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers());
             $this->assertEquals(200, $list['headers']['status-code']);
             $byId = \array_column($list['body']['captions'], null, '$id');
@@ -1154,19 +1123,13 @@ final class VideosCustomServerTest extends Scope
             $this->assertArrayHasKey($staleId, $byId);
             $this->assertEquals('aborted', $byId[$staleId]['status']);
             $this->assertSame('Aborted: no progress for 24 hours', $byId[$staleId]['error']);
-            $this->assertFileDoesNotExist($staleLock);
 
             $this->assertArrayHasKey($freshId, $byId);
             $this->assertEquals('started', $byId[$freshId]['status']);
-            $this->assertFileExists($freshLock);
 
             $this->assertArrayHasKey($readyId, $byId);
             $this->assertEquals('ready', $byId[$readyId]['status']);
         }, 30000);
-
-        if (\is_file($freshLock)) {
-            \unlink($freshLock);
-        }
     }
 
     /**
@@ -1468,12 +1431,8 @@ final class VideosCustomServerTest extends Scope
         $this->waitUntilPathExists($secondDir);
         $this->assertDirectoryHasFiles($firstDir);
 
-        $firstLock = $this->plantRenditionLock($videoId, $firstId);
-        $this->assertFileExists($firstLock);
-
         $delete = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId . '/renditions/' . $firstId, $this->headers());
         $this->assertEquals(204, $delete['headers']['status-code']);
-        $this->assertFileDoesNotExist($firstLock);
 
         $missing = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $firstId, $this->headers());
         $this->assertEquals(404, $missing['headers']['status-code']);
@@ -3052,10 +3011,10 @@ final class VideosCustomServerTest extends Scope
             ]);
             $this->assertEquals(202, $live['headers']['status-code'], $status);
             $liveId = $live['body']['$id'];
-            // Park before encode settles. A racing worker may still finish and
-            // write ready — wait for that flock if it appears, then re-park.
-            $this->timeTravelRendition($projectId, $liveId, status: $status);
-            $this->settleEncodeLock($videoId, $liveId);
+            // Wait for encode to finish, then seed the live status so a racing
+            // worker cannot settle the row after the 409 assertion.
+            $readyBody = $this->waitForRenditionTerminalState($videoId, $liveId);
+            $this->assertEquals('ready', $readyBody['status'], $status);
             $this->timeTravelRendition($projectId, $liveId, status: $status);
 
             $blocked = $this->client->call(
@@ -3126,10 +3085,10 @@ final class VideosCustomServerTest extends Scope
         ]);
         $this->assertEquals(201, $live['headers']['status-code']);
         $liveId = $live['body']['$id'];
-        // Park off pending so a new claim fails. A racing caption job may still
-        // finish and write ready — wait for that flock if it appears, then re-park.
-        $this->timeTravelCaption($projectId, $liveId, status: 'started');
-        $this->settleCaptionLock($videoId, $liveId);
+        // Wait for the caption job to finish, then seed started so a racing
+        // worker cannot settle the row after the 409 assertion.
+        $readyBody = $this->waitForCaptionTerminalState($videoId, $liveId);
+        $this->assertEquals('ready', $readyBody['status']);
         $this->timeTravelCaption($projectId, $liveId, status: 'started');
 
         $blocked = $this->client->call(
@@ -3170,8 +3129,6 @@ final class VideosCustomServerTest extends Scope
         $renditionId = $this->createRendition($videoId, 'hls');
         $ready = $this->waitForRenditionTerminalState($videoId, $renditionId);
         $this->assertEquals('ready', $ready['status']);
-        $renditionLock = $this->plantRenditionLock($videoId, $renditionId);
-        $this->assertFileExists($renditionLock);
 
         $jobsRoot = $this->tmpJobsRoot();
         if (!\is_dir($jobsRoot) && !\mkdir($jobsRoot, 0755, true) && !\is_dir($jobsRoot)) {
@@ -3222,16 +3179,12 @@ final class VideosCustomServerTest extends Scope
             }
 
             $this->assertSame(0, $renditions, 'Deletes worker did not cascade the video renditions');
-            $this->waitUntilPathGone($renditionLock);
             $this->waitUntilPathGone($leftover);
             $this->assertDirectoryExists($sibling);
         } finally {
             $this->removePlantedTmp($sibling);
             if (\is_dir($leftover)) {
                 $this->removePlantedTmp($leftover);
-            }
-            if (\is_file($renditionLock)) {
-                \unlink($renditionLock);
             }
         }
     }
@@ -3724,38 +3677,6 @@ final class VideosCustomServerTest extends Scope
         $this->assertNotSame('', $stored, 'timeline.vtt row missing for ' . $videoId);
 
         return $stored;
-    }
-
-    /**
-     * Wait for an encode flock to appear and go idle, or give up if the worker
-     * never opens one (claim already lost / lock swept). Avoids hanging when
-     * waitForIdleLock would wait forever for a missing file.
-     */
-    private function settleEncodeLock(string $videoId, string $renditionId, int $appearTimeout = 30): void
-    {
-        $path = Base::encodeLockPath($videoId, $renditionId);
-        $deadline = \time() + $appearTimeout;
-        while (\time() < $deadline && !\is_file($path)) {
-            \usleep(200000);
-        }
-        if (\is_file($path)) {
-            $this->waitForIdleLock($path);
-        }
-    }
-
-    /**
-     * Same as settleEncodeLock for caption jobs.
-     */
-    private function settleCaptionLock(string $videoId, string $captionId, int $appearTimeout = 30): void
-    {
-        $path = Base::captionLockPath($videoId, $captionId);
-        $deadline = \time() + $appearTimeout;
-        while (\time() < $deadline && !\is_file($path)) {
-            \usleep(200000);
-        }
-        if (\is_file($path)) {
-            $this->waitForIdleLock($path);
-        }
     }
 
     private function timeTravelRendition(

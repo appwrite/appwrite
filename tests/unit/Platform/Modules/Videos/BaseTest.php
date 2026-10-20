@@ -8,19 +8,15 @@ use Appwrite\Platform\Modules\Videos\Base;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Config\Config;
-use Utopia\Lock\File;
 
 final class BaseTest extends TestCase
 {
-    private static string $tmpRoot = '';
-
     protected function setUp(): void
     {
         Config::setParam('videos-codecs', require \dirname(__DIR__, 5) . '/app/config/videos-codecs.php');
 
         if (!\defined('APP_STORAGE_VIDEOS_TMP')) {
-            self::$tmpRoot = \sys_get_temp_dir() . '/appwrite-videos-tmp-' . \uniqid('', true);
-            \define('APP_STORAGE_VIDEOS_TMP', self::$tmpRoot);
+            \define('APP_STORAGE_VIDEOS_TMP', \sys_get_temp_dir() . '/appwrite-videos-tmp-' . \uniqid('', true));
         }
     }
 
@@ -104,98 +100,5 @@ final class BaseTest extends TestCase
         $this->assertFalse(Base::jobMatches('2026101212xx~proj1~vid1~rendition-ren1', 'proj1', 'vid1'));
         $this->assertFalse(Base::jobMatches('202610121200', 'proj1'));
         $this->assertFalse(Base::jobMatches($name, ''));
-    }
-
-    public function testLockPathShape(): void
-    {
-        $this->assertSame(
-            \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/locks',
-            Base::tmpLocksRoot()
-        );
-        $this->assertSame(
-            Base::tmpLocksRoot() . '/timeline~vid1.lock',
-            Base::timelineLockPath('vid1')
-        );
-        $this->assertSame(
-            Base::tmpLocksRoot() . '/encode~vid1~ren1.lock',
-            Base::encodeLockPath('vid1', 'ren1')
-        );
-        $this->assertSame(
-            Base::tmpLocksRoot() . '/caption~vid1~cap1.lock',
-            Base::captionLockPath('vid1', 'cap1')
-        );
-    }
-
-    public function testRemoveLockDeletesFileAndKeepsRoot(): void
-    {
-        $root = Base::tmpLocksRoot();
-        if (!\is_dir($root) && !\mkdir($root, 0755, true) && !\is_dir($root)) {
-            $this->fail('Could not create lock directory');
-        }
-
-        $path = Base::encodeLockPath('vid-rm', 'ren-rm');
-
-        try {
-            \file_put_contents($path, '');
-            $this->assertFileExists($path);
-
-            $this->assertTrue(Base::removeLock($path));
-            $this->assertFileDoesNotExist($path);
-            $this->assertDirectoryExists($root, 'removeLock must never remove the locks root');
-
-            $this->assertTrue(Base::removeLock($path));
-            $this->assertDirectoryExists($root);
-        } finally {
-            if (\is_file($path)) {
-                @\unlink($path);
-            }
-        }
-    }
-
-    public function testLockContendsAcrossFileInstances(): void
-    {
-        $root = Base::tmpLocksRoot();
-        if (!\is_dir($root) && !\mkdir($root, 0755, true) && !\is_dir($root)) {
-            $this->fail('Could not create lock directory');
-        }
-
-        $path = Base::encodeLockPath('vid-lock', 'ren-lock');
-        $holder = new File($path);
-        $waiter = new File($path);
-
-        try {
-            $this->assertTrue($holder->tryAcquire());
-            $this->assertFalse($waiter->tryAcquire(), 'Second File instance must not acquire while first holds');
-            $holder->release();
-            $this->assertTrue($waiter->tryAcquire());
-            $waiter->release();
-        } finally {
-            Base::removeLock($path);
-        }
-    }
-
-    public function testRemoveLockLeavesHeldFileAlone(): void
-    {
-        $root = Base::tmpLocksRoot();
-        if (!\is_dir($root) && !\mkdir($root, 0755, true) && !\is_dir($root)) {
-            $this->fail('Could not create lock directory');
-        }
-
-        $path = Base::encodeLockPath('vid-held', 'ren-held');
-        $holder = new File($path);
-
-        try {
-            $this->assertTrue($holder->tryAcquire());
-            $this->assertFalse(Base::removeLock($path), 'must not unlink a held flock');
-            $this->assertFileExists($path);
-            $holder->release();
-            $this->assertTrue(Base::removeLock($path));
-            $this->assertFileDoesNotExist($path);
-        } finally {
-            $holder->release();
-            if (\is_file($path)) {
-                @\unlink($path);
-            }
-        }
     }
 }
