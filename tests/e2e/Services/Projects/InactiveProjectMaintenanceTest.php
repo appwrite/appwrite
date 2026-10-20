@@ -41,12 +41,16 @@ final class InactiveProjectMaintenanceTest extends Scope
     {
         $scheduler = $this->containerEnvironment(self::SCHEDULER);
         if ($scheduler === null) {
-            $this->markTestSkipped('The ' . self::SCHEDULER . ' container is not running, so nothing schedules inactive projects');
+            $message = 'The ' . self::SCHEDULER . ' container is not running, so nothing schedules inactive projects';
+            if (\getenv('CI') !== false) {
+                $this->fail($message);
+            }
+            $this->markTestSkipped($message);
         }
 
         $interval = (int) ($scheduler['_APP_MAINTENANCE_INACTIVE_INTERVAL'] ?? '604800');
         if ($interval > self::TIMEOUT) {
-            $this->markTestSkipped("_APP_MAINTENANCE_INACTIVE_INTERVAL is {$interval} seconds, longer than the " . self::TIMEOUT . ' seconds this test waits for the scheduler to reach a project');
+            $this->markTestSkipped('_APP_MAINTENANCE_INACTIVE_INTERVAL is ' . $interval . ' seconds, longer than the ' . self::TIMEOUT . ' seconds this test waits for the scheduler to reach a project');
         }
 
         $idle = $this->getProject(true);

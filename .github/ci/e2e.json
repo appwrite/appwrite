@@ -200,8 +200,10 @@
         "src/Appwrite/Certificates/",
         "src/Appwrite/Maintenance/",
         "src/Appwrite/Platform/Tasks/ScheduleMaintenance.php",
+        "src/Appwrite/Platform/Tasks/Schedule.php",
         "src/Appwrite/Schedule/Source/Maintenance.php",
-        "src/Appwrite/Platform/Workers/Deletes.php"
+        "src/Appwrite/Platform/Workers/Deletes.php",
+        "packages/schedule/"
       ]
     },
     {
