@@ -337,6 +337,32 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./packages:/usr/src/code/packages
+  appwrite-task-scheduler-maintenance:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
+  appwrite-task-stats-resources:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   dns:
     image: alpinelinux/unbound:latest@sha256:8d2611fe8fcbd8e26b6f88e2eb0c3b803368195d50cfa0c30fdfaa5087076709
     container_name: appwrite-dns

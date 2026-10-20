@@ -25,7 +25,7 @@ class Schedule extends Action
     public function __construct()
     {
         $this
-            ->desc('Execute functions, executions, and messages scheduled in Appwrite')
+            ->desc('Run the function, execution, message, inactive project maintenance and, when self-hosted, resource stats schedulers in one process')
             ->inject('publisherForFunctions')
             ->inject('publisherForMessaging')
             ->inject('getIsResourceBlocked')
