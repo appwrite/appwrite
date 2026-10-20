@@ -33,8 +33,8 @@ return [
         'queueEnv' => '_APP_DELETE_QUEUE_NAME',
         'coroutines' => 8,
     ],
-    // One slot at a time: each job waits for the deletes queue to drain before
-    // it publishes, so a second one would only add to the same backlog.
+    // One slot at a time: each job defers behind the deletes backlog, so a
+    // second one would only add to it. Jobs pins it against the global override.
     'maintenance' => [
         'queue' => Event::MAINTENANCE_QUEUE_NAME,
         'queueEnv' => '_APP_MAINTENANCE_QUEUE_NAME',
