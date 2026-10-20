@@ -1013,7 +1013,12 @@ class GitHub extends Git
         $url = "/repos/$owner/$repositoryName/statuses/$commitHash";
 
         $body = [
-            'state' => $state,
+            // A commit status knows no queue or cancellation
+            'state' => match ($state) {
+                'queued', 'in_progress' => 'pending',
+                'cancelled' => 'error',
+                default => $state,
+            },
             'target_url' => $target_url,
             'description' => $description,
             'context' => $context,
