@@ -17,15 +17,19 @@ use Utopia\Database\Document;
 use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\System\System;
 
 use function Swoole\Coroutine\run;
 
 /**
- * A project not accessed in the last 30 days still gets maintenance from the scheduler: its expired presence row is
- * deleted, while the same row in a recently accessed project survives.
+ * A project not accessed in the last 30 days still gets maintenance: its expired presence row is deleted, while the
+ * same row in a recently accessed project survives.
  *
- * The scheduler reaches every inactive project once per _APP_MAINTENANCE_INACTIVE_INTERVAL, so the test only runs
- * when that interval is at most one five-minute slice, as CI sets it.
+ * The path is schedule-maintenance -> worker-maintenance -> worker-deletes. The scheduler publishes one message per
+ * slice to the maintenance queue, the maintenance worker finds the slice's inactive projects and publishes their
+ * deletes, and the deletes worker removes the expired rows. The scheduler reaches every inactive project once per
+ * _APP_MAINTENANCE_INACTIVE_INTERVAL, so the test only runs when that interval is at most one five-minute slice, as
+ * CI sets it.
  */
 final class InactiveProjectMaintenanceTest extends Scope
 {
@@ -33,6 +37,10 @@ final class InactiveProjectMaintenanceTest extends Scope
     use SideServer;
 
     private const string SCHEDULER = 'appwrite-task-scheduler';
+
+    private const string WORKER = 'appwrite-worker';
+
+    private const string QUEUE = 'v1-maintenance';
 
     private const string DAILY = 'appwrite-task-maintenance';
 
@@ -42,12 +50,14 @@ final class InactiveProjectMaintenanceTest extends Scope
     {
         $scheduler = $this->containerEnvironment(self::SCHEDULER);
         if ($scheduler === null) {
-            $message = 'The ' . self::SCHEDULER . ' container is not running, so nothing schedules inactive projects';
-            if (\getenv('CI') !== false) {
-                $this->fail($message);
-            }
-            $this->markTestSkipped($message);
+            $this->requireContainer('The ' . self::SCHEDULER . ' container is not running, so nothing schedules inactive projects');
         }
+
+        $worker = $this->containerEnvironment(self::WORKER);
+        if ($worker === null) {
+            $this->requireContainer('The ' . self::WORKER . ' container is not running, so nothing consumes the maintenance queue');
+        }
+        $queue = ($worker['_APP_MAINTENANCE_QUEUE_NAME'] ?? '') ?: self::QUEUE;
 
         $interval = (int) ($scheduler['_APP_MAINTENANCE_INACTIVE_INTERVAL'] ?? '604800');
         if ($interval > self::TIMEOUT) {
@@ -71,6 +81,8 @@ final class InactiveProjectMaintenanceTest extends Scope
         $this->assertSame(1, $this->countPresenceRows($idle['$id'], $idlePresenceId), 'the idle row outlives its expiry until maintenance');
         $this->assertSame(1, $this->countPresenceRows($active['$id'], $activePresenceId), 'the control row outlives its expiry until maintenance');
 
+        $processed = $this->countProcessedJobs($queue);
+
         $this->withFactory(function (DatabaseFactory $factory) use ($idle): void {
             $factory->platform()->updateDocument('projects', $idle['$id'], new Document([
                 'accessedAt' => DateTime::addSeconds(new \DateTime(), -60 * 86400),
@@ -82,12 +94,41 @@ final class InactiveProjectMaintenanceTest extends Scope
         }, self::TIMEOUT * 1_000, 1_000);
 
         $this->assertSame(1, $this->countPresenceRows($active['$id'], $activePresenceId), 'the scheduler left the recently accessed project to the daily maintenance');
+        $this->assertGreaterThan($processed, $this->countProcessedJobs($queue), 'the maintenance worker completed a slice from the ' . $queue . ' queue');
 
         $accessedAt = '';
         $this->withFactory(function (DatabaseFactory $factory) use ($idle, &$accessedAt): void {
             $accessedAt = (string) $factory->platform()->getDocument('projects', $idle['$id'])->getAttribute('accessedAt', '');
         });
         $this->assertLessThan(\time() - 30 * 86400, (new \DateTime($accessedAt))->getTimestamp(), 'the idle project stayed inactive for the whole wait');
+    }
+
+    private function requireContainer(string $message): never
+    {
+        if (\getenv('CI') !== false) {
+            $this->fail($message);
+        }
+        $this->markTestSkipped($message);
+    }
+
+    /**
+     * The broker's count of jobs the queue's consumers committed, which only a worker settling a job moves.
+     */
+    private function countProcessedJobs(string $queue): int
+    {
+        $redis = new \Redis();
+        $redis->connect(System::getEnv('_APP_REDIS_HOST', 'redis'), (int) System::getEnv('_APP_REDIS_PORT', '6379'));
+        $password = System::getEnv('_APP_REDIS_PASS', '');
+        if ($password !== '') {
+            $user = System::getEnv('_APP_REDIS_USER', '');
+            $redis->auth($user !== '' ? [$user, $password] : $password);
+        }
+
+        try {
+            return (int) $redis->get('utopia-queue.stats.' . $queue . '.success');
+        } finally {
+            $redis->close();
+        }
     }
 
     /**
