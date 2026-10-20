@@ -20,6 +20,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Queue\Publisher\Synchronous;
 use Utopia\Queue\Queue;
 use Utopia\Schedule\Clock\Test as TestClock;
 use Utopia\Schedule\Occurrence;
@@ -229,6 +230,114 @@ final class SweepTest extends TestCase
             $this->sorted($this->projects($publisher)),
         );
         $this->assertGreaterThan((float) $second->getTimestamp(), $store->load()?->coveredUntil);
+    }
+
+    public function testBacklogIsCheckedBeforeEachBlockOfASlice(): void
+    {
+        $due = $this->week->modify('+3 hours');
+        $slot = $this->slot($due->getTimestamp());
+
+        $rows = [];
+        foreach ([$slot, $slot + self::SLOTS, $slot + 2 * self::SLOTS] as $block) {
+            for ($offset = 1; $offset <= 60; $offset++) {
+                $sequence = $block * Sweep::BLOCK + $offset;
+                $rows[] = ['old-' . $sequence, $sequence, $due->modify('-60 days'), self::REGION];
+            }
+        }
+        $this->database = $this->seed(new Memory(), $rows);
+        $inactive = $this->sorted(\array_column($rows, 0));
+
+        $this->clock = new TestClock($due);
+        $publisher = new QueuePublisher($this->clock, 1);
+        $sweep = $this->sweep($publisher);
+
+        $deferred = null;
+        try {
+            $sweep([$this->occurrence($due)]);
+        } catch (Backlog $backlog) {
+            $deferred = $backlog;
+        }
+
+        // Two blocks take the queue past the backlog, so the third waits instead of piling on.
+        $this->assertInstanceOf(Backlog::class, $deferred);
+        $this->assertSame($this->sorted(\array_column(\array_slice($rows, 0, 120), 0)), $this->sorted($this->projects($publisher)));
+
+        $this->clock->advance(200);
+        $sweep([$this->occurrence($due)]);
+
+        // The redelivery resumes at the third block rather than enqueueing the first two again.
+        $this->assertSame($inactive, $this->sorted($this->projects($publisher)));
+    }
+
+    public function testUnpublishedMessageLeavesTheSliceUncommitted(): void
+    {
+        $due = $this->week->modify('+4 hours');
+        $this->clock = new TestClock($due->modify('-30 seconds'));
+        $expected = $this->slice($due, 4);
+        $this->database = $this->seed(new Memory(), $this->rows($expected, $due));
+
+        $refusing = new class () implements Synchronous {
+            public int $attempts = 0;
+
+            #[\Override]
+            public function publish(Queue $queue, array $payload): bool
+            {
+                $this->attempts++;
+
+                return false;
+            }
+
+            #[\Override]
+            public function publishMany(Queue $queue, array $payloads): bool
+            {
+                return false;
+            }
+
+            #[\Override]
+            public function retry(Queue $queue, ?int $limit = null): void
+            {
+            }
+
+            #[\Override]
+            public function getQueueSize(Queue $queue, bool $failedJobs = false): int
+            {
+                return 0;
+            }
+
+            #[\Override]
+            public function getFailedCount(Queue $queue): int
+            {
+                return 0;
+            }
+        };
+
+        $store = new MemoryStore();
+        $sweep = new Sweep($this->database, new DeletePublisher($refusing, new Queue(self::QUEUE)), self::REGION, $this->cycle());
+        $scheduler = $this->scheduler($store);
+        $failed = null;
+        try {
+            $scheduler->run(function (array $occurrences) use ($sweep, $scheduler): void {
+                $sweep($occurrences);
+                $scheduler->stop();
+            });
+        } catch (\RuntimeException $error) {
+            $failed = $error;
+        }
+
+        $this->assertInstanceOf(\RuntimeException::class, $failed);
+        $this->assertSame(1, $refusing->attempts);
+        $this->assertLessThanOrEqual((float) $due->getTimestamp(), $store->load()?->coveredUntil);
+
+        $publisher = $this->publisher();
+        $sweep = $this->sweep($publisher);
+        $scheduler = $this->scheduler($store);
+        $scheduler->run(function (array $occurrences) use ($sweep, $scheduler): void {
+            $sweep($occurrences);
+            $scheduler->stop();
+        });
+
+        $this->assertSame($this->sorted(\array_keys($expected)), $this->sorted($this->projects($publisher)));
+        $this->assertGreaterThan((float) $due->getTimestamp(), $store->load()?->coveredUntil);
     }
 
     public function testBacklogRecurringAtTheSameTimeEachCycleDelaysSlicesWithoutDroppingThem(): void

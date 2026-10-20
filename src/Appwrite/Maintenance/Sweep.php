@@ -17,8 +17,9 @@ use Utopia\Schedule\Occurrence;
  * Moments map to the cycle's slots in turn, so a full cycle reaches every inactive project once. With integer
  * sequences, block b of BLOCK sequences belongs to slot b % slots, which stays stable as the table grows.
  *
- * While the deletes queue holds BACKLOG messages or more the handler throws Backlog: the tick is not committed and
- * the scheduler delivers it again. Moments already enqueued are remembered, so a redelivery skips them.
+ * Before each block or page it enqueues, the handler checks the deletes queue: at BACKLOG messages or more it throws
+ * Backlog, so the tick is not committed and the scheduler delivers it again. Moments already enqueued, and the blocks or
+ * pages of the moment that was interrupted, are remembered, so a redelivery resumes where it stopped.
  */
 final class Sweep
 {
@@ -35,6 +36,14 @@ final class Sweep
 
     /** Due time of the last moment fully enqueued; occurrences arrive oldest first. */
     private ?float $handled = null;
+
+    /** Due time of the moment being enqueued, and how many of its blocks or pages were enqueued so far. */
+    private ?float $current = null;
+
+    private int $sent = 0;
+
+    /** Blocks or pages reached in this delivery of the current moment. */
+    private int $position = 0;
 
     public function __construct(
         private readonly Database $dbForPlatform,
@@ -57,10 +66,11 @@ final class Sweep
                 continue;
             }
 
-            $pending = $this->publisherForDeletes->getSize();
-            if ($pending >= self::BACKLOG) {
-                throw new Backlog($pending);
+            if ($this->current !== $due) {
+                $this->current = $due;
+                $this->sent = 0;
             }
+            $this->position = 0;
 
             // Dues arrive in UTC; accessedAt is written in the default zone.
             $cutoff = \DateTime::createFromImmutable($occurrence->due->modify('-' . self::INACTIVITY . ' seconds'));
@@ -150,14 +160,33 @@ final class Sweep
 
     /**
      * @param array<Document> $projects
+     *
+     * @throws Backlog while the deletes queue is backlogged
+     * @throws \RuntimeException when a message is not published
      */
     private function enqueue(array $projects): void
     {
+        $this->position++;
+        if ($projects === [] || $this->position <= $this->sent) {
+            return;
+        }
+
+        $pending = $this->publisherForDeletes->getSize();
+        if ($pending >= self::BACKLOG) {
+            throw new Backlog($pending);
+        }
+
         foreach ($projects as $project) {
-            $this->publisherForDeletes->enqueue(new DeleteMessage(
+            $published = $this->publisherForDeletes->enqueue(new DeleteMessage(
                 project: $project,
                 type: DELETE_TYPE_MAINTENANCE,
             ));
+
+            if ($published === false) {
+                throw new \RuntimeException('Failed to enqueue maintenance for project ' . $project->getId());
+            }
         }
+
+        $this->sent = $this->position;
     }
 }
