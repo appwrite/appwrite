@@ -18,7 +18,7 @@ import {
 } from '@/lib/seo/discord-embed'
 import { getOrganizationSchema } from '@/lib/seo/organization'
 import { SEO_SITE_NAME } from '@/lib/seo/page-meta'
-import { getPostCategoryLabel, getPrimaryPostCategorySlug } from './content'
+import { getBlogCategory, getPostCategoryLabel, getPrimaryPostCategorySlug } from './content'
 import type { BlogAuthor, BlogCategory, BlogFaq, BlogPost, BlogPostMeta } from './types'
 
 export type BlogSeoOptions = {
@@ -160,6 +160,8 @@ export function getBlogPostDiscordEmbed(
 ): DiscordContainer {
   const siteOrigin = getSeoSiteOrigin(options?.siteOrigin)
   const category = getPostCategoryLabel(post)
+  // Some posts use a category with no page; skip the button rather than link a 404.
+  const categoryPage = getBlogCategory(getPrimaryPostCategorySlug(post))
   const details = [
     authors.length
       ? `By ${authors.map((author) => escapeDiscordMarkdown(author.name)).join(', ')}`
@@ -193,10 +195,14 @@ export function getBlogPostDiscordEmbed(
         type: 1,
         components: [
           getDiscordLinkButton('Read post', getBlogCanonicalUrl(post.href)),
-          getDiscordLinkButton(
-            `More in ${category}`,
-            getBlogCanonicalUrl(`/blog/categories/${getPrimaryPostCategorySlug(post)}`),
-          ),
+          ...(categoryPage
+            ? [
+                getDiscordLinkButton(
+                  `More in ${categoryPage.name}`,
+                  getBlogCanonicalUrl(categoryPage.href),
+                ),
+              ]
+            : []),
         ],
       },
     ],
