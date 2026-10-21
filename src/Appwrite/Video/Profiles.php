@@ -30,7 +30,7 @@ final class Profiles
         $database->getAuthorization()->skip(function () use ($database): void {
             foreach (Config::getParam('videos-profiles', []) as $profile) {
                 try {
-                    $database->createDocument('videos_profiles', new Document([
+                    $database->createDocument('videosProfiles', new Document([
                         '$id' => Id::unique(),
                         'name' => $profile['name'],
                         'codec' => $profile['codec'] ?? 'h264',

@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Project\Http\Project\Profiles;
+namespace Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -12,53 +12,55 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
+use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
-class Update extends Base
+class Create extends Base
 {
     use HTTP;
 
     public static function getName()
     {
-        return 'updateProjectProfile';
+        return 'createVideoProfile';
     }
 
     public function __construct()
     {
         $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
-            ->setHttpPath('/v1/project/profiles/:profileId')
-            ->httpAlias('/v1/projects/:projectId/profiles/:profileId')
-            ->desc('Update video profile')
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
+            ->setHttpPath('/v1/project/videos/profiles')
+            ->httpAlias('/v1/projects/:projectId/videos/profiles')
+            ->desc('Create video profile')
             ->groups(['api', 'project'])
             ->label('scope', 'project.profiles.write')
-            ->label('event', 'projects.[projectId].profiles.[profileId].update')
-            ->label('audits.event', 'project.profile.update')
-            ->label('audits.resource', 'project.profile/{request.profileId}')
+            ->label('event', 'projects.[projectId].videos.profiles.[profileId].create')
+            ->label('audits.event', 'project.video-profile.create')
+            ->label('audits.resource', 'project.video-profile/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'profiles',
-                name: 'updateProfile',
-                description: '/docs/references/project/update-profile.md',
+                name: 'createVideoProfile',
+                description: '/docs/references/project/create-video-profile.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
-                        code: Response::STATUS_CODE_OK,
+                        code: Response::STATUS_CODE_CREATED,
                         model: Response::MODEL_VIDEO_PROFILE,
                     )
                 ]
             ))
-            ->param('profileId', '', new UID(), 'Video profile unique ID.')
             ->param('name', '', new Text(128), 'Video profile name.')
             ->param('videoBitRate', null, new Range(self::MIN_VIDEO_BITRATE, self::MAX_VIDEO_BITRATE), 'Target video bitrate in kilobits per second.')
             ->param('audioBitRate', null, new Range(self::MIN_AUDIO_BITRATE, self::MAX_AUDIO_BITRATE), 'Target audio bitrate in kilobits per second.')
             ->param('width', null, new Range(self::MIN_DIMENSION, self::MAX_DIMENSION), 'Target video width in pixels.')
             ->param('height', null, new Range(self::MIN_DIMENSION, self::MAX_DIMENSION), 'Target video height in pixels.')
+            ->param('codec', self::CODEC_H264, new WhiteList(self::enabledCodecs(), true), 'Video encode codec. Only codecs enabled on this instance are accepted. Defaults to `h264`.', true, enum: new Enum(name: 'VideoCodec'))
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -68,27 +70,26 @@ class Update extends Base
     }
 
     public function action(
-        string $profileId,
         string $name,
         int $videoBitRate,
         int $audioBitRate,
         int $width,
         int $height,
+        string $codec,
         Response $response,
         Database $dbForProject,
         Document $project,
         Authorization $authorization,
         Event $queueForEvents
     ): void {
-        $profile = $authorization->skip(fn () => $dbForProject->getDocument('videos_profiles', $profileId));
-
-        if ($profile->isEmpty()) {
-            throw new Exception(Exception::VIDEO_PROFILE_NOT_FOUND);
-        }
+        $codec = self::normalizeCodec($codec);
+        $this->assertCodecEnabled($codec);
 
         try {
-            $profile = $authorization->skip(fn () => $dbForProject->updateDocument('videos_profiles', $profile->getId(), new Document([
+            $profile = $authorization->skip(fn () => $dbForProject->createDocument('videosProfiles', new Document([
+                '$id' => Id::unique(),
                 'name' => $name,
+                'codec' => $codec,
                 'videoBitRate' => $videoBitRate,
                 'audioBitRate' => $audioBitRate,
                 'width' => $width,
@@ -103,6 +104,8 @@ class Update extends Base
             ->setParam('projectId', $project->getId())
             ->setParam('profileId', $profile->getId());
 
-        $response->dynamic($profile, Response::MODEL_VIDEO_PROFILE);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($profile, Response::MODEL_VIDEO_PROFILE);
     }
 }

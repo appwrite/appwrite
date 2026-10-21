@@ -205,7 +205,7 @@ trait StagesBase
 
         $this->assertSame('pending', $this->getStage($projectId, 'project.createProfile')['status']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/project/profiles', [
+        $response = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $project['apiKey'],

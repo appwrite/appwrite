@@ -19,12 +19,12 @@ class V26 extends Migration
      */
     private const VIDEO_COLLECTIONS = [
         'videos',
-        'videos_timelines',
-        'videos_renditions',
-        'videos_renditions_segments',
-        'videos_profiles',
-        'videos_captions',
-        'videos_captions_segments',
+        'videosTimelines',
+        'videosRenditions',
+        'videosRenditionsSegments',
+        'videosProfiles',
+        'videosCaptions',
+        'videosCaptionsSegments',
     ];
 
     /**

@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Project\Http\Project\Profiles;
+namespace Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base;
@@ -28,23 +28,23 @@ class XList extends Base
 
     public static function getName()
     {
-        return 'listProjectProfiles';
+        return 'listVideoProfiles';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/project/profiles')
-            ->httpAlias('/v1/projects/:projectId/profiles')
+            ->setHttpPath('/v1/project/videos/profiles')
+            ->httpAlias('/v1/projects/:projectId/videos/profiles')
             ->desc('List video profiles')
             ->groups(['api', 'project'])
             ->label('scope', 'project.profiles.read')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'profiles',
-                name: 'listProfiles',
-                description: '/docs/references/project/list-profiles.md',
+                name: 'listVideoProfiles',
+                description: '/docs/references/project/list-video-profiles.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
@@ -97,7 +97,7 @@ class XList extends Base
             }
 
             $profileId = $cursor->getValue();
-            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('videos_profiles', $profileId));
+            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('videosProfiles', $profileId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Profile '{$profileId}' for the 'cursor' value not found.");
@@ -107,7 +107,7 @@ class XList extends Base
         }
 
         try {
-            $profiles = $authorization->skip(fn () => $dbForProject->find('videos_profiles', $queries));
+            $profiles = $authorization->skip(fn () => $dbForProject->find('videosProfiles', $queries));
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         } catch (QueryException $e) {

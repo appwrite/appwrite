@@ -303,8 +303,8 @@ const DELETE_TYPE_BUCKETS = 'buckets';
 // Must equal the collection id: the DELETE_TYPE_DOCUMENT branch of the
 // deletes worker dispatches on $document->getCollection().
 const DELETE_TYPE_VIDEOS = 'videos';
-const DELETE_TYPE_VIDEOS_RENDITIONS = 'videos_renditions';
-const DELETE_TYPE_VIDEOS_CAPTIONS = 'videos_captions';
+const DELETE_TYPE_VIDEOS_RENDITIONS = 'videosRenditions';
+const DELETE_TYPE_VIDEOS_CAPTIONS = 'videosCaptions';
 const DELETE_TYPE_FILES = 'files';
 const DELETE_TYPE_INSTALLATIONS = 'installations';
 const DELETE_TYPE_RULES = 'rules';

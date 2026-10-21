@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Project\Http\Project\Profiles;
+namespace Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base;
@@ -20,23 +20,23 @@ class Get extends Base
 
     public static function getName()
     {
-        return 'getProjectProfile';
+        return 'getVideoProfile';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/project/profiles/:profileId')
-            ->httpAlias('/v1/projects/:projectId/profiles/:profileId')
+            ->setHttpPath('/v1/project/videos/profiles/:profileId')
+            ->httpAlias('/v1/projects/:projectId/videos/profiles/:profileId')
             ->desc('Get video profile')
             ->groups(['api', 'project'])
             ->label('scope', 'project.profiles.read')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'profiles',
-                name: 'getProfile',
-                description: '/docs/references/project/get-profile.md',
+                name: 'getVideoProfile',
+                description: '/docs/references/project/get-video-profile.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
@@ -58,7 +58,7 @@ class Get extends Base
         Database $dbForProject,
         Authorization $authorization
     ): void {
-        $profile = $authorization->skip(fn () => $dbForProject->getDocument('videos_profiles', $profileId));
+        $profile = $authorization->skip(fn () => $dbForProject->getDocument('videosProfiles', $profileId));
 
         if ($profile->isEmpty()) {
             throw new Exception(Exception::VIDEO_PROFILE_NOT_FOUND);

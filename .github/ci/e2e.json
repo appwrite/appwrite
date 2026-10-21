@@ -326,7 +326,7 @@
         "src/Appwrite/Video/",
         "src/Appwrite/Event/Publisher/Video.php",
         "src/Appwrite/Event/Message/Video",
-        "src/Appwrite/Platform/Modules/Project/Http/Project/Profiles/",
+        "src/Appwrite/Platform/Modules/Project/Http/Project/Videos/Profiles/",
         "src/Appwrite/Platform/Workers/Deletes.php",
         "src/Appwrite/Utopia/Response/Model/Video",
         "src/Appwrite/Utopia/Database/Validator/Queries/Videos.php",

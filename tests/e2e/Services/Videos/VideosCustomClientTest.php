@@ -296,7 +296,7 @@ final class VideosCustomClientTest extends Scope
         ]);
         $this->assertEquals(401, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->anonymousHeaders(), [
+        $response = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', $this->anonymousHeaders(), [
             'name' => 'guest',
             'videoBitRate' => 1000,
             'audioBitRate' => 64,
@@ -461,29 +461,29 @@ final class VideosCustomClientTest extends Scope
             'height' => 360,
         ];
 
-        $create = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->sessionHeaders(), $payload);
+        $create = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', $this->sessionHeaders(), $payload);
         $this->assertEquals(401, $create['headers']['status-code']);
         $this->assertEquals('general_unauthorized_scope', $create['body']['type']);
 
-        $seeded = $this->client->call(Client::METHOD_POST, '/project/profiles', $this->serverHeaders(), $payload);
+        $seeded = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', $this->serverHeaders(), $payload);
         $this->assertEquals(201, $seeded['headers']['status-code']);
         $profileId = $seeded['body']['$id'];
 
-        $update = $this->client->call(Client::METHOD_PATCH, '/project/profiles/' . $profileId, $this->sessionHeaders(), $payload);
+        $update = $this->client->call(Client::METHOD_PATCH, '/project/videos/profiles/' . $profileId, $this->sessionHeaders(), $payload);
         $this->assertEquals(401, $update['headers']['status-code']);
         $this->assertEquals('general_unauthorized_scope', $update['body']['type']);
 
-        $delete = $this->client->call(Client::METHOD_DELETE, '/project/profiles/' . $profileId, $this->sessionHeaders());
+        $delete = $this->client->call(Client::METHOD_DELETE, '/project/videos/profiles/' . $profileId, $this->sessionHeaders());
         $this->assertEquals(401, $delete['headers']['status-code']);
         $this->assertEquals('general_unauthorized_scope', $delete['body']['type']);
 
-        $cleanup = $this->client->call(Client::METHOD_DELETE, '/project/profiles/' . $profileId, $this->serverHeaders());
+        $cleanup = $this->client->call(Client::METHOD_DELETE, '/project/videos/profiles/' . $profileId, $this->serverHeaders());
         $this->assertEquals(204, $cleanup['headers']['status-code']);
     }
 
     public function testSessionCannotReadProfiles(): void
     {
-        $response = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->sessionHeaders());
+        $response = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->sessionHeaders());
 
         $this->assertEquals(401, $response['headers']['status-code']);
         $this->assertEquals('general_unauthorized_scope', $response['body']['type']);
@@ -535,7 +535,7 @@ final class VideosCustomClientTest extends Scope
         );
         $this->assertSame($videoId, $timeline['data']['payload']['$id'] ?? '');
 
-        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->serverHeaders());
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->serverHeaders());
         $this->assertEquals(200, $profiles['headers']['status-code']);
         $profileId = $profiles['body']['profiles'][0]['$id'] ?? '';
         $this->assertNotEmpty($profileId);
@@ -603,7 +603,7 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(201, $created['headers']['status-code']);
         $videoId = $created['body']['$id'];
 
-        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->serverHeaders());
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->serverHeaders());
         $this->assertEquals(200, $profiles['headers']['status-code']);
         $profileId = $profiles['body']['profiles'][0]['$id'] ?? '';
         $this->assertNotEmpty($profileId);
@@ -806,7 +806,7 @@ final class VideosCustomClientTest extends Scope
         $timeline = $this->waitForTimeline($videoId);
         $this->assertEquals(200, $timeline['headers']['status-code']);
 
-        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->serverHeaders());
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->serverHeaders());
         $this->assertEquals(200, $profiles['headers']['status-code']);
         $profile = null;
         foreach ($profiles['body']['profiles'] as $candidate) {
@@ -900,7 +900,7 @@ final class VideosCustomClientTest extends Scope
     {
         $videoId = $this->createPublicVideo();
 
-        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->serverHeaders());
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->serverHeaders());
         $this->assertEquals(200, $profiles['headers']['status-code']);
         $profileId = $profiles['body']['profiles'][0]['$id'] ?? '';
         $this->assertNotEmpty($profileId);
@@ -988,7 +988,7 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(401, $delete['headers']['status-code']);
         $this->assertEquals('user_unauthorized', $delete['body']['type']);
 
-        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->serverHeaders());
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->serverHeaders());
         $this->assertEquals(200, $profiles['headers']['status-code']);
         $profileId = $profiles['body']['profiles'][0]['$id'] ?? '';
         $this->assertNotEmpty($profileId);
@@ -1109,7 +1109,7 @@ final class VideosCustomClientTest extends Scope
         $this->assertContains((string) Permission::read(Role::any()), $created['body']['$permissions']);
         $videoId = $created['body']['$id'];
 
-        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->serverHeaders());
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->serverHeaders());
         $this->assertEquals(200, $profiles['headers']['status-code']);
         $profile = null;
         foreach ($profiles['body']['profiles'] as $candidate) {
@@ -1227,7 +1227,7 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(200, $updated['headers']['status-code']);
         $this->assertEquals('renamed-owned', $updated['body']['name']);
 
-        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->serverHeaders());
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->serverHeaders());
         $this->assertEquals(200, $profiles['headers']['status-code']);
         $profileId = $profiles['body']['profiles'][0]['$id'] ?? '';
         $this->assertNotEmpty($profileId);

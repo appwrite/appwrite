@@ -87,7 +87,7 @@ class Delete extends Base
         // must wait. Same retention as abortStaleRenditions.
         $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '86400');
         $cutoff = DateTime::addSeconds(new \DateTime(), -1 * $retention);
-        $inProgress = $authorization->skip(fn () => $dbForProject->count('videos_renditions', [
+        $inProgress = $authorization->skip(fn () => $dbForProject->count('videosRenditions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::equal('status', [
                 self::STATUS_STARTED,

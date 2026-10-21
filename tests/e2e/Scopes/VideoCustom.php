@@ -596,7 +596,7 @@ trait VideoCustom
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
 
-        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $headers);
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $headers);
         $this->assertEquals(200, $profiles['headers']['status-code']);
         $profileId = null;
         foreach ($profiles['body']['profiles'] as $profile) {

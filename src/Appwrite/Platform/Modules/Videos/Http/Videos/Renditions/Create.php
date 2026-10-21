@@ -92,7 +92,7 @@ class Create extends Base
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
         $this->assertCanUpdateVideo($authorization, $user, $video);
 
-        $profile = $authorization->skip(fn () => $dbForProject->getDocument('videos_profiles', $profileId));
+        $profile = $authorization->skip(fn () => $dbForProject->getDocument('videosProfiles', $profileId));
 
         if ($profile->isEmpty()) {
             throw new Exception(Exception::VIDEO_PROFILE_NOT_FOUND);
@@ -102,7 +102,7 @@ class Create extends Base
         $this->assertCodecEnabled($codec);
         $this->assertCodecSupportsOutput($codec, $output);
 
-        $existing = $authorization->skip(fn () => $dbForProject->find('videos_renditions', [
+        $existing = $authorization->skip(fn () => $dbForProject->find('videosRenditions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::equal('profileId', [$profile->getId()]),
             Query::equal('output', [$output]),
@@ -144,7 +144,7 @@ class Create extends Base
         $audioBitRate = (int) $profile->getAttribute('audioBitRate', 0);
 
         try {
-            $rendition = $authorization->skip(fn () => $dbForProject->createDocument('videos_renditions', new Document([
+            $rendition = $authorization->skip(fn () => $dbForProject->createDocument('videosRenditions', new Document([
                 '$id' => Id::unique(),
                 'videoId' => $video->getId(),
                 'videoInternalId' => $video->getSequence(),

@@ -99,7 +99,7 @@ class Update extends Base
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
         $this->assertCanUpdateVideo($authorization, $user, $video);
 
-        $caption = $authorization->skip(fn () => $dbForProject->getDocument('videos_captions', $captionId));
+        $caption = $authorization->skip(fn () => $dbForProject->getDocument('videosCaptions', $captionId));
 
         if ($caption->isEmpty() || $caption->getAttribute('videoInternalId') !== $video->getSequence()) {
             throw new Exception(Exception::VIDEO_CAPTION_NOT_FOUND);
@@ -154,7 +154,7 @@ class Update extends Base
             $updates['path'] = null;
         }
 
-        $caption = $authorization->skip(fn () => $dbForProject->updateDocument('videos_captions', $caption->getId(), new Document($updates)));
+        $caption = $authorization->skip(fn () => $dbForProject->updateDocument('videosCaptions', $caption->getId(), new Document($updates)));
 
         if ($sourceChanged) {
             $publisherForVideos->enqueue(new VideoMessage(
@@ -177,7 +177,7 @@ class Update extends Base
      */
     private function clearDefault(Database $dbForProject, Authorization $authorization, Document $video, string $exceptId): void
     {
-        $existing = $authorization->skip(fn () => $dbForProject->find('videos_captions', [
+        $existing = $authorization->skip(fn () => $dbForProject->find('videosCaptions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::equal('default', [true]),
             Query::limit(APP_LIMIT_SUBQUERY),
@@ -189,7 +189,7 @@ class Update extends Base
             }
 
             $authorization->skip(fn () => $dbForProject->updateDocument(
-                'videos_captions',
+                'videosCaptions',
                 $caption->getId(),
                 new Document(['default' => false])
             ));

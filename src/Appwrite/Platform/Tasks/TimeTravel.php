@@ -64,8 +64,8 @@ class TimeTravel extends Action
         $collection = match ($resourceType) {
             'deployment' => 'deployments',
             'video' => 'videos',
-            'videos_rendition' => 'videos_renditions',
-            'videos_caption' => 'videos_captions',
+            'videos_rendition' => 'videosRenditions',
+            'videos_caption' => 'videosCaptions',
             default => throw new \Exception('Resource type not implemented')
         };
 

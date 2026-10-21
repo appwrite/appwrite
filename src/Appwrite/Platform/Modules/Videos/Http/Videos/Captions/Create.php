@@ -136,7 +136,7 @@ class Create extends Base
             $this->clearDefault($dbForProject, $authorization, $video);
         }
 
-        $caption = $authorization->skip(fn () => $dbForProject->createDocument('videos_captions', new Document([
+        $caption = $authorization->skip(fn () => $dbForProject->createDocument('videosCaptions', new Document([
             '$id' => Id::unique(),
             'videoId' => $video->getId(),
             'videoInternalId' => $video->getSequence(),
@@ -191,7 +191,7 @@ class Create extends Base
         Document $video,
         Document $caption
     ): Document {
-        $existing = $authorization->skip(fn () => $dbForProject->find('videos_captions', [
+        $existing = $authorization->skip(fn () => $dbForProject->find('videosCaptions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::equal('default', [true]),
             Query::limit(1),
@@ -211,13 +211,13 @@ class Create extends Base
         }
 
         $authorization->skip(fn () => $dbForProject->updateDocument(
-            'videos_captions',
+            'videosCaptions',
             $current->getId(),
             new Document(['default' => false])
         ));
 
         return $authorization->skip(fn () => $dbForProject->updateDocument(
-            'videos_captions',
+            'videosCaptions',
             $caption->getId(),
             new Document(['default' => true])
         ));
@@ -228,7 +228,7 @@ class Create extends Base
      */
     private function clearDefault(Database $dbForProject, Authorization $authorization, Document $video): void
     {
-        $existing = $authorization->skip(fn () => $dbForProject->find('videos_captions', [
+        $existing = $authorization->skip(fn () => $dbForProject->find('videosCaptions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::equal('default', [true]),
             Query::limit(APP_LIMIT_SUBQUERY),
@@ -236,7 +236,7 @@ class Create extends Base
 
         foreach ($existing as $caption) {
             $authorization->skip(fn () => $dbForProject->updateDocument(
-                'videos_captions',
+                'videosCaptions',
                 $caption->getId(),
                 new Document(['default' => false])
             ));

@@ -65,7 +65,7 @@ class XList extends Base
     ): void {
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
 
-        $captions = $authorization->skip(fn () => $dbForProject->find('videos_captions', [
+        $captions = $authorization->skip(fn () => $dbForProject->find('videosCaptions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::limit(APP_LIMIT_SUBQUERY),
         ]));

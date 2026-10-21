@@ -337,7 +337,7 @@ class Videos extends Action
             // Wipe previous thumbnail sheets so a source-file update can regenerate
             // cleanly against the UNIQUE (videoId, name) index. Leave timeline.vtt
             // for an in-place size update in persistTimelineVtt().
-            $existing = $dbForProject->find('videos_timelines', [
+            $existing = $dbForProject->find('videosTimelines', [
                 Query::equal('videoInternalId', [$video->getSequence()]),
                 Query::notEqual('name', ['timeline.vtt']),
                 Query::limit(APP_LIMIT_SUBQUERY),
@@ -352,7 +352,7 @@ class Videos extends Action
                         // Best-effort; the DB row is the source of truth for readiness.
                     }
                 }
-                $dbForProject->deleteDocument('videos_timelines', $sheetRow->getId());
+                $dbForProject->deleteDocument('videosTimelines', $sheetRow->getId());
             }
 
             // Appwrite rewrites sheet URLs to thumbnail endpoints, so skip the
@@ -389,7 +389,7 @@ class Videos extends Action
                 $bytes = $data->getSize() ?? (\filesize($localFile) ?: 0);
                 $size += $bytes;
 
-                $thumbnail = $dbForProject->createDocument('videos_timelines', new Document([
+                $thumbnail = $dbForProject->createDocument('videosTimelines', new Document([
                     'videoId' => $video->getId(),
                     'videoInternalId' => $video->getSequence(),
                     'name' => $fileName,
@@ -522,7 +522,7 @@ class Videos extends Action
             // A delete that wins while still pending removes the row, this
             // updates nothing, and the job stops before download.
             $updated = $dbForProject->updateDocuments(
-                'videos_captions',
+                'videosCaptions',
                 new Document([
                     'status' => Base::STATUS_STARTED,
                     'error' => null,
@@ -537,7 +537,7 @@ class Videos extends Action
                 return;
             }
 
-            $caption = $dbForProject->getDocument('videos_captions', $caption->getId());
+            $caption = $dbForProject->getDocument('videosCaptions', $caption->getId());
             $claimed = true;
             $this->notify(
                 $queueForRealtime,
@@ -598,7 +598,7 @@ class Videos extends Action
             $stage = 'persist';
             $phaseStart = \microtime(true);
             // Maintenance may park the row as aborted while this job runs.
-            $current = $dbForProject->getDocument('videos_captions', $caption->getId());
+            $current = $dbForProject->getDocument('videosCaptions', $caption->getId());
             if ($current->isEmpty() || $current->getAttribute('status') !== Base::STATUS_STARTED) {
                 $outcome = 'halted';
                 $caption = $current;
@@ -623,7 +623,7 @@ class Videos extends Action
             // Only a run that claimed the row may park it as error — a lost
             // claim must not overwrite a live job or resurrect a deleted caption.
             // Do not overwrite aborted/error parks from maintenance.
-            $current = $dbForProject->getDocument('videos_captions', $caption->getId());
+            $current = $dbForProject->getDocument('videosCaptions', $caption->getId());
             $status = $current->isEmpty() ? '' : (string) $current->getAttribute('status', '');
             $mayPark = $claimed
                 ? !\in_array($status, [Base::STATUS_ABORTED, Base::STATUS_ERROR], true)
@@ -634,7 +634,7 @@ class Videos extends Action
                 Span::add('error.reason', $reason);
                 try {
                     $caption = $dbForProject->updateDocument(
-                        'videos_captions',
+                        'videosCaptions',
                         $caption->getId(),
                         new Document([
                             'status' => Base::STATUS_ERROR,
@@ -738,7 +738,7 @@ class Videos extends Action
         try {
             // Every rendition owns exactly one Encode message, so a message whose
             // row already left `pending` is a stale redelivery and is dropped here.
-            $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
+            $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
             if ($current->isEmpty() || $current->getAttribute('status') !== Base::STATUS_PENDING) {
                 $outcome = 'duplicate';
                 $status = (string) $current->getAttribute('status', '');
@@ -749,7 +749,7 @@ class Videos extends Action
             // only one updateDocuments may transition the row. Claim before
             // downloading so a duplicate redelivery never fetches the source.
             $updated = $dbForProject->updateDocuments(
-                'videos_renditions',
+                'videosRenditions',
                 new Document([
                     'startedAt' => DateTime::now(),
                     'status' => Base::STATUS_STARTED,
@@ -767,7 +767,7 @@ class Videos extends Action
                 return;
             }
 
-            $rendition = $dbForProject->getDocument('videos_renditions', $rendition->getId());
+            $rendition = $dbForProject->getDocument('videosRenditions', $rendition->getId());
             $claimed = true;
             Span::add('rendition.name', (string) $rendition->getAttribute('name', ''));
             Span::add('rendition.output', $output);
@@ -919,7 +919,7 @@ class Videos extends Action
                         }
                         $lastStatusCheck = $now;
 
-                        $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
+                        $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
                         if ($current->isEmpty() || $current->getAttribute('status') !== Base::STATUS_STARTED) {
                             // Stop ffmpeg now instead of letting it finish unused work.
                             $halted = true;
@@ -932,7 +932,7 @@ class Videos extends Action
                         $lastProgress = $percentage;
 
                         $rendition = $dbForProject->updateDocument(
-                            'videos_renditions',
+                            'videosRenditions',
                             $rendition->getId(),
                             new Document([
                                 'progress' => (string) $percentage,
@@ -977,7 +977,7 @@ class Videos extends Action
 
             // Maintenance (or an e2e park) may have moved the row out of
             // `started` while ffmpeg was still running — stop before ending.
-            $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
+            $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
             if (
                 $current->isEmpty()
                 || $current->getAttribute('status') !== Base::STATUS_STARTED
@@ -997,7 +997,7 @@ class Videos extends Action
             // deleteDocuments paginates internally, so a long rendition's >1000
             // segment rows (a ~100-minute HLS ladder at 4s segments) are all
             // removed, not just the first APP_LIMIT_SUBQUERY page.
-            $dbForProject->deleteDocuments('videos_renditions_segments', [
+            $dbForProject->deleteDocuments('videosRenditionsSegments', [
                 Query::equal('renditionInternalId', [$rendition->getSequence()]),
             ]);
 
@@ -1012,7 +1012,7 @@ class Videos extends Action
             Span::add('rendition.segments', \count($package->segments()));
             Span::add('rendition.files', \count($package->files()));
 
-            $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
+            $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
             if (
                 $current->isEmpty()
                 || $current->getAttribute('status') !== Base::STATUS_STARTED
@@ -1023,7 +1023,7 @@ class Videos extends Action
             }
 
             $rendition = $dbForProject->updateDocument(
-                'videos_renditions',
+                'videosRenditions',
                 $rendition->getId(),
                 new Document(\array_filter([
                     'status' => Base::STATUS_ENDED,
@@ -1057,7 +1057,7 @@ class Videos extends Action
                         return;
                     }
 
-                    $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
+                    $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
                     if (
                         $current->isEmpty()
                         || !\in_array($current->getAttribute('status'), [Base::STATUS_STARTED, Base::STATUS_ENDED], true)
@@ -1066,7 +1066,7 @@ class Videos extends Action
                     }
 
                     $rendition = $dbForProject->updateDocument(
-                        'videos_renditions',
+                        'videosRenditions',
                         $rendition->getId(),
                         new Document([
                             'progress' => '100',
@@ -1092,7 +1092,7 @@ class Videos extends Action
             Span::add('rendition.size', $storageBytes);
 
             $stage = 'finalize';
-            $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
+            $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
             if (
                 $current->isEmpty()
                 || !\in_array($current->getAttribute('status'), [Base::STATUS_ENDED, Base::STATUS_UPLOADING], true)
@@ -1103,7 +1103,7 @@ class Videos extends Action
             }
 
             $rendition = $dbForProject->updateDocument(
-                'videos_renditions',
+                'videosRenditions',
                 $rendition->getId(),
                 new Document([
                     'status' => Base::STATUS_READY,
@@ -1128,7 +1128,7 @@ class Videos extends Action
             $outcome = 'ready';
             $status = Base::STATUS_READY;
         } catch (\Throwable $th) {
-            $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
+            $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
             // The progress listener stopped ffmpeg because the row left `started`.
             if ($halted) {
                 $outcome = 'halted';
@@ -1149,7 +1149,7 @@ class Videos extends Action
                 Span::add('error.reason', $reason);
                 try {
                     $rendition = $dbForProject->updateDocument(
-                        'videos_renditions',
+                        'videosRenditions',
                         $rendition->getId(),
                         new Document([
                             'status' => Base::STATUS_ERROR,
@@ -1306,14 +1306,14 @@ class Videos extends Action
      */
     private function persistTimelineVtt(Database $dbForProject, Document $video, string $path, int $bytes): void
     {
-        $existing = $dbForProject->find('videos_timelines', [
+        $existing = $dbForProject->find('videosTimelines', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::equal('name', ['timeline.vtt']),
             Query::limit(1),
         ]);
 
         if (empty($existing)) {
-            $dbForProject->createDocument('videos_timelines', new Document([
+            $dbForProject->createDocument('videosTimelines', new Document([
                 'videoId' => $video->getId(),
                 'videoInternalId' => $video->getSequence(),
                 'name' => 'timeline.vtt',
@@ -1324,7 +1324,7 @@ class Videos extends Action
             return;
         }
 
-        $dbForProject->updateDocument('videos_timelines', $existing[0]->getId(), new Document([
+        $dbForProject->updateDocument('videosTimelines', $existing[0]->getId(), new Document([
             'path' => $path,
             'size' => $bytes,
         ]));
@@ -1345,7 +1345,7 @@ class Videos extends Action
         Document $project,
         array $permissions
     ): Document {
-        $dbForProject->deleteDocuments('videos_captions_segments', [
+        $dbForProject->deleteDocuments('videosCaptionsSegments', [
             Query::equal('captionInternalId', [$caption->getSequence()]),
         ]);
 
@@ -1355,7 +1355,7 @@ class Videos extends Action
         // HLS EXT-X-TARGETDURATION must be a decimal-integer (seconds, rounded up).
         $duration = (string) \max(1, (int) \ceil(((int) $video->getAttribute('duration', 0)) / 1000));
 
-        $dbForProject->createDocument('videos_captions_segments', new Document([
+        $dbForProject->createDocument('videosCaptionsSegments', new Document([
             'captionId' => $caption->getId(),
             'captionInternalId' => $caption->getSequence(),
             'fileName' => $fileName,
@@ -1376,7 +1376,7 @@ class Videos extends Action
         );
 
         $caption = $dbForProject->updateDocument(
-            'videos_captions',
+            'videosCaptions',
             $caption->getId(),
             new Document([
                 'targetDuration' => $duration,
@@ -1555,7 +1555,7 @@ class Videos extends Action
                         $assignedDefault = true;
                     }
 
-                    $caption = $dbForProject->createDocument('videos_captions', new Document([
+                    $caption = $dbForProject->createDocument('videosCaptions', new Document([
                         '$id' => Id::unique(),
                         'videoId' => $video->getId(),
                         'videoInternalId' => $video->getSequence(),
@@ -1618,10 +1618,10 @@ class Videos extends Action
                 // Park the row instead of leaving it `started` until maintenance
                 // aborts it; captionsExtracted is released below so a later job retries.
                 if ($caption !== null) {
-                    $current = $dbForProject->getDocument('videos_captions', $caption->getId());
+                    $current = $dbForProject->getDocument('videosCaptions', $caption->getId());
                     if (!$current->isEmpty() && !\in_array($current->getAttribute('status'), [Base::STATUS_ABORTED, Base::STATUS_ERROR, Base::STATUS_READY], true)) {
                         try {
-                            $caption = $dbForProject->updateDocument('videos_captions', $caption->getId(), new Document([
+                            $caption = $dbForProject->updateDocument('videosCaptions', $caption->getId(), new Document([
                                 'status' => Base::STATUS_ERROR,
                                 'error' => $this->reason($th, 'persist'),
                             ]));
@@ -1647,7 +1647,7 @@ class Videos extends Action
         // If no stream was flagged default, promote the first extracted track
         // when no other track already claims default.
         if (!$assignedDefault && !$this->hasDefaultCaption($dbForProject, $video)) {
-            $embedded = $dbForProject->find('videos_captions', [
+            $embedded = $dbForProject->find('videosCaptions', [
                 Query::equal('videoInternalId', [$video->getSequence()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
@@ -1658,7 +1658,7 @@ class Videos extends Action
                 }
 
                 $caption = $dbForProject->updateDocument(
-                    'videos_captions',
+                    'videosCaptions',
                     $caption->getId(),
                     new Document(['default' => true])
                 );
@@ -1702,7 +1702,7 @@ class Videos extends Action
      */
     private function hasDefaultCaption(Database $dbForProject, Document $video): bool
     {
-        $existing = $dbForProject->find('videos_captions', [
+        $existing = $dbForProject->find('videosCaptions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::equal('default', [true]),
             Query::limit(1),
@@ -1726,7 +1726,7 @@ class Videos extends Action
         string $name,
         array &$used
     ): ?Document {
-        $existing = $dbForProject->find('videos_captions', [
+        $existing = $dbForProject->find('videosCaptions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::equal('code', [$code]),
             Query::limit(APP_LIMIT_SUBQUERY),
@@ -2122,7 +2122,7 @@ class Videos extends Action
                     $longest = $segment->duration;
                 }
 
-                $dbForProject->createDocument('videos_renditions_segments', new Document(\array_filter([
+                $dbForProject->createDocument('videosRenditionsSegments', new Document(\array_filter([
                     'renditionId' => $rendition->getId(),
                     'renditionInternalId' => $rendition->getSequence(),
                     'streamId' => $streamId,

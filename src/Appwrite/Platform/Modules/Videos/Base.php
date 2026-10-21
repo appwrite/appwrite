@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Videos;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -15,7 +16,6 @@ use Utopia\Database\Document;
 use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
-use Utopia\Platform\Action as UtopiaAction;
 
 /**
  * Shared behaviour for the Videos module.
@@ -24,7 +24,7 @@ use Utopia\Platform\Action as UtopiaAction;
  * restricted to the CRUD set — see `src/Appwrite/Platform/AGENTS.md`. Follows
  * the same placement as `Appwrite\Platform\Modules\Compute\Base`.
  */
-abstract class Base extends UtopiaAction
+abstract class Base extends Action
 {
     public const OUTPUT_HLS = 'hls';
     public const OUTPUT_DASH = 'dash';
@@ -421,7 +421,7 @@ abstract class Base extends UtopiaAction
         Document $project,
         Document $rendition
     ): void {
-        $deleted = $authorization->skip(fn () => $dbForProject->deleteDocument('videos_renditions', $rendition->getId()));
+        $deleted = $authorization->skip(fn () => $dbForProject->deleteDocument('videosRenditions', $rendition->getId()));
 
         if (!$deleted) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove video rendition from DB');

@@ -171,7 +171,7 @@ export async function fetchVideoSubtitles(
 export async function fetchVideoProfiles(
   projectId: string,
 ): Promise<Models.VideoProfileList> {
-  return await sdk.forProject(projectId).videos.listProfiles()
+  return await projectVideoProfiles(projectId).listVideoProfiles()
 }
 
 export type VideoCodecOption = {
@@ -682,6 +682,22 @@ export type VideoProfileInput = {
   audioBitRate: number
 }
 
+/** Project video-profile methods (SDK preview; cast until package ships them). */
+type ProjectVideoProfiles = {
+  listVideoProfiles: () => Promise<Models.VideoProfileList>
+  createVideoProfile: (
+    payload: VideoProfileInput,
+  ) => Promise<Models.VideoProfile>
+  updateVideoProfile: (
+    payload: VideoProfileInput & { profileId: string },
+  ) => Promise<Models.VideoProfile>
+  deleteVideoProfile: (payload: { profileId: string }) => Promise<unknown>
+}
+
+function projectVideoProfiles(projectId: string): ProjectVideoProfiles {
+  return sdk.forProject(projectId).project as unknown as ProjectVideoProfiles
+}
+
 /** True when probe metadata includes an audio stream (after prepare / encode probe). */
 export function videoSourceHasAudio(
   video: Pick<Models.Video, 'audioCodec' | 'duration' | 'status'> | null | undefined,
@@ -695,11 +711,11 @@ export function useSaveVideoProfile(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (input: VideoProfileInput & { profileId?: string }) => {
-      const videos = sdk.forProject(projectId!).videos
+      const project = projectVideoProfiles(projectId!)
       const { profileId, ...payload } = input
       return profileId
-        ? videos.updateProfile({ profileId, ...payload })
-        : videos.createProfile(payload)
+        ? project.updateVideoProfile({ profileId, ...payload })
+        : project.createVideoProfile(payload)
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
@@ -713,7 +729,7 @@ export function useDeleteVideoProfile(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (profileId: string) =>
-      sdk.forProject(projectId!).videos.deleteProfile({ profileId }),
+      projectVideoProfiles(projectId!).deleteVideoProfile({ profileId }),
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: videoKeys.profiles(projectId),

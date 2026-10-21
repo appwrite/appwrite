@@ -41,7 +41,7 @@ abstract class Base extends VideosAction
         Document $video,
         string $output
     ): array {
-        $renditions = $authorization->skip(fn () => $dbForProject->find('videos_renditions', [
+        $renditions = $authorization->skip(fn () => $dbForProject->find('videosRenditions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::equal('output', [$output]),
             Query::equal('status', [self::STATUS_READY]),
@@ -76,7 +76,7 @@ abstract class Base extends VideosAction
         Authorization $authorization,
         Document $video
     ): array {
-        return $authorization->skip(fn () => $dbForProject->find('videos_captions', [
+        return $authorization->skip(fn () => $dbForProject->find('videosCaptions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::equal('status', [self::STATUS_READY]),
             Query::limit(APP_LIMIT_SUBQUERY),
@@ -334,7 +334,7 @@ abstract class Base extends VideosAction
             foreach ($parsed['adaptations'] ?? [] as $adaptation) {
                 $streamId = (int) ($adaptation['id'] ?? 0);
 
-                $segments = $this->getSegments($dbForProject, $authorization, 'videos_renditions_segments', [
+                $segments = $this->getSegments($dbForProject, $authorization, 'videosRenditionsSegments', [
                     Query::equal('renditionInternalId', [$rendition->getSequence()]),
                     Query::equal('streamId', [$streamId]),
                 ]);
@@ -465,7 +465,7 @@ abstract class Base extends VideosAction
         // Loaded by id and then checked against the video, rather than the
         // pre-merge `Query::equal('_uid', ...)` which reached for a raw internal
         // column and never verified the rendition belonged to this video.
-        $rendition = $authorization->skip(fn () => $dbForProject->getDocument('videos_renditions', $renditionId));
+        $rendition = $authorization->skip(fn () => $dbForProject->getDocument('videosRenditions', $renditionId));
 
         // Unpublished until ready, and only on the output this rendition was
         // packaged for. A mismatch would advertise the other container's segments.
@@ -478,7 +478,7 @@ abstract class Base extends VideosAction
             throw new Exception(Exception::VIDEO_RENDITION_NOT_FOUND);
         }
 
-        $segments = $this->getSegments($dbForProject, $authorization, 'videos_renditions_segments', [
+        $segments = $this->getSegments($dbForProject, $authorization, 'videosRenditionsSegments', [
             Query::equal('renditionInternalId', [$rendition->getSequence()]),
             Query::equal('streamId', [$streamId]),
         ]);

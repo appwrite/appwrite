@@ -102,11 +102,11 @@ use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionInvalidation\
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionLimit\Update as UpdateSessionLimitPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\UserLimit\Update as UpdateUserLimitPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\XList as ListPolicies;
-use Appwrite\Platform\Modules\Project\Http\Project\Profiles\Create as CreateProfile;
-use Appwrite\Platform\Modules\Project\Http\Project\Profiles\Delete as DeleteProfile;
-use Appwrite\Platform\Modules\Project\Http\Project\Profiles\Get as GetProfile;
-use Appwrite\Platform\Modules\Project\Http\Project\Profiles\Update as UpdateProfile;
-use Appwrite\Platform\Modules\Project\Http\Project\Profiles\XList as ListProfiles;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Create as CreateProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Delete as DeleteProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Get as GetProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Update as UpdateProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\XList as ListProfiles;
 use Appwrite\Platform\Modules\Project\Http\Project\Protocols\Update as UpdateProjectProtocol;
 use Appwrite\Platform\Modules\Project\Http\Project\Services\Update as UpdateProjectService;
 use Appwrite\Platform\Modules\Project\Http\Project\SMTP\Tests\Create as CreateSMTPTest;

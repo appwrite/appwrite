@@ -83,13 +83,13 @@ class Get extends Base
     ): void {
         $video = self::getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
 
-        $caption = $authorization->skip(fn () => $dbForProject->getDocument('videos_captions', $captionId));
+        $caption = $authorization->skip(fn () => $dbForProject->getDocument('videosCaptions', $captionId));
 
         if ($caption->isEmpty() || $caption->getAttribute('videoInternalId') !== $video->getSequence()) {
             throw new Exception(Exception::VIDEO_CAPTION_NOT_FOUND);
         }
 
-        $segment = $authorization->skip(fn () => $dbForProject->getDocument('videos_captions_segments', $segmentId));
+        $segment = $authorization->skip(fn () => $dbForProject->getDocument('videosCaptionsSegments', $segmentId));
 
         if ($segment->isEmpty() || $segment->getAttribute('captionInternalId') !== $caption->getSequence()) {
             throw new Exception(Exception::VIDEO_CAPTION_SEGMENT_NOT_FOUND);

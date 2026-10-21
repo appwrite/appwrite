@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Project\Http\Project\Profiles;
+namespace Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -23,26 +23,26 @@ class Delete extends Base
 
     public static function getName()
     {
-        return 'deleteProjectProfile';
+        return 'deleteVideoProfile';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
-            ->setHttpPath('/v1/project/profiles/:profileId')
-            ->httpAlias('/v1/projects/:projectId/profiles/:profileId')
+            ->setHttpPath('/v1/project/videos/profiles/:profileId')
+            ->httpAlias('/v1/projects/:projectId/videos/profiles/:profileId')
             ->desc('Delete video profile')
             ->groups(['api', 'project'])
             ->label('scope', 'project.profiles.write')
-            ->label('event', 'projects.[projectId].profiles.[profileId].delete')
-            ->label('audits.event', 'project.profile.delete')
-            ->label('audits.resource', 'project.profile/{request.profileId}')
+            ->label('event', 'projects.[projectId].videos.profiles.[profileId].delete')
+            ->label('audits.event', 'project.video-profile.delete')
+            ->label('audits.resource', 'project.video-profile/{request.profileId}')
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'profiles',
-                name: 'deleteProfile',
-                description: '/docs/references/project/delete-profile.md',
+                name: 'deleteVideoProfile',
+                description: '/docs/references/project/delete-video-profile.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
@@ -69,7 +69,7 @@ class Delete extends Base
         Authorization $authorization,
         Event $queueForEvents
     ): void {
-        $profile = $authorization->skip(fn () => $dbForProject->getDocument('videos_profiles', $profileId));
+        $profile = $authorization->skip(fn () => $dbForProject->getDocument('videosProfiles', $profileId));
 
         if ($profile->isEmpty()) {
             throw new Exception(Exception::VIDEO_PROFILE_NOT_FOUND);
@@ -77,7 +77,7 @@ class Delete extends Base
 
         // Renditions already encoded against this profile keep their own copies of
         // the dimensions and bitrates, so they stay playable.
-        $deleted = $authorization->skip(fn () => $dbForProject->deleteDocument('videos_profiles', $profile->getId()));
+        $deleted = $authorization->skip(fn () => $dbForProject->deleteDocument('videosProfiles', $profile->getId()));
 
         if (!$deleted) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove video profile from DB');

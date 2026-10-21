@@ -86,7 +86,7 @@ class Get extends Base
         // id in the project was readable by anyone.
         $video = self::getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
 
-        $rendition = $authorization->skip(fn () => $dbForProject->getDocument('videos_renditions', $renditionId));
+        $rendition = $authorization->skip(fn () => $dbForProject->getDocument('videosRenditions', $renditionId));
 
         // Same gate as the media playlist: segment rows are written before the
         // rendition reaches `ready`, and those bytes must stay unpublished.
@@ -101,7 +101,7 @@ class Get extends Base
             throw new Exception(Exception::VIDEO_RENDITION_NOT_FOUND);
         }
 
-        $segment = $authorization->skip(fn () => $dbForProject->getDocument('videos_renditions_segments', $segmentId));
+        $segment = $authorization->skip(fn () => $dbForProject->getDocument('videosRenditionsSegments', $segmentId));
 
         if ($segment->isEmpty() || $segment->getAttribute('renditionInternalId') !== $rendition->getSequence()) {
             throw new Exception(Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND);

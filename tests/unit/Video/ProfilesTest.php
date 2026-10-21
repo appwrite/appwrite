@@ -85,7 +85,7 @@ final class ProfilesTest extends TestCase
         $database->create();
 
         $database->createCollection(Collection::create(
-            id: 'videos_profiles',
+            id: 'videosProfiles',
             attributes: [
                 Attribute::string(key: 'name', size: 128),
                 Attribute::integer(key: 'videoBitRate', width: IntegerWidth::Bits64, signed: false),
@@ -108,7 +108,7 @@ final class ProfilesTest extends TestCase
      */
     private function findProfiles(Database $database): array
     {
-        return $database->getAuthorization()->skip(fn () => $database->find('videos_profiles', [
+        return $database->getAuthorization()->skip(fn () => $database->find('videosProfiles', [
             Query::limit(100),
         ]));
     }

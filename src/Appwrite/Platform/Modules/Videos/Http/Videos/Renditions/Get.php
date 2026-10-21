@@ -66,7 +66,7 @@ class Get extends Base
     ): void {
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
 
-        $rendition = $authorization->skip(fn () => $dbForProject->getDocument('videos_renditions', $renditionId));
+        $rendition = $authorization->skip(fn () => $dbForProject->getDocument('videosRenditions', $renditionId));
 
         if ($rendition->isEmpty() || $rendition->getAttribute('videoInternalId') !== $video->getSequence()) {
             throw new Exception(Exception::VIDEO_RENDITION_NOT_FOUND);

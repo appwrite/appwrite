@@ -629,7 +629,7 @@ class Deletes extends Action
         $failed = 0;
 
         $this->listByGroup(
-            'videos_renditions',
+            'videosRenditions',
             $queries,
             $dbForProject,
             function (Document $rendition) use ($dbForProject, $project, $reason, $date, &$aborted, &$failed) {
@@ -637,7 +637,7 @@ class Deletes extends Action
                     // Re-check status and staleness: progress can refresh $updatedAt
                     // after the list query and before this write.
                     $updated = $dbForProject->updateDocuments(
-                        'videos_renditions',
+                        'videosRenditions',
                         new Document([
                             'status' => VideosBase::STATUS_ABORTED,
                             'endedAt' => DateTime::now(),
@@ -721,7 +721,7 @@ class Deletes extends Action
         $failed = 0;
 
         $this->listByGroup(
-            'videos_captions',
+            'videosCaptions',
             $queries,
             $dbForProject,
             function (Document $caption) use ($dbForProject, $project, $reason, $date, &$aborted, &$failed) {
@@ -729,7 +729,7 @@ class Deletes extends Action
                     // Re-check status and staleness: progress can refresh $updatedAt
                     // after the list query and before this write.
                     $updated = $dbForProject->updateDocuments(
-                        'videos_captions',
+                        'videosCaptions',
                         new Document([
                             'status' => VideosBase::STATUS_ABORTED,
                             'error' => $reason,
@@ -2058,30 +2058,30 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
         $videoInternalId = $document->getSequence();
 
-        $this->deleteByGroup('videos_timelines', [
+        $this->deleteByGroup('videosTimelines', [
             Query::equal('videoInternalId', [$videoInternalId]),
         ], $dbForProject);
 
         // Child documents still exist here (the HTTP action only deleted the
         // video row), so reuse the per-child cleaners for segments and files
         // before dropping the parent rows.
-        $this->listByGroup('videos_renditions', [
+        $this->listByGroup('videosRenditions', [
             Query::equal('videoInternalId', [$videoInternalId]),
         ], $dbForProject, function (Document $rendition) use ($getProjectDB, $deviceForVideos, $project) {
             $this->deleteVideoRendition($getProjectDB, $deviceForVideos, $rendition, $project);
         });
 
-        $this->deleteByGroup('videos_renditions', [
+        $this->deleteByGroup('videosRenditions', [
             Query::equal('videoInternalId', [$videoInternalId]),
         ], $dbForProject);
 
-        $this->listByGroup('videos_captions', [
+        $this->listByGroup('videosCaptions', [
             Query::equal('videoInternalId', [$videoInternalId]),
         ], $dbForProject, function (Document $caption) use ($getProjectDB, $deviceForVideos, $project) {
             $this->deleteVideoCaption($getProjectDB, $deviceForVideos, $caption, $project);
         });
 
-        $this->deleteByGroup('videos_captions', [
+        $this->deleteByGroup('videosCaptions', [
             Query::equal('videoInternalId', [$videoInternalId]),
         ], $dbForProject);
 
@@ -2175,7 +2175,7 @@ class Deletes extends Action
     {
         $dbForProject = $getProjectDB($project);
 
-        $this->deleteByGroup('videos_renditions_segments', [
+        $this->deleteByGroup('videosRenditionsSegments', [
             Query::equal('renditionInternalId', [$document->getSequence()]),
         ], $dbForProject);
 
@@ -2207,7 +2207,7 @@ class Deletes extends Action
     {
         $dbForProject = $getProjectDB($project);
 
-        $this->deleteByGroup('videos_captions_segments', [
+        $this->deleteByGroup('videosCaptionsSegments', [
             Query::equal('captionInternalId', [$document->getSequence()]),
         ], $dbForProject);
 

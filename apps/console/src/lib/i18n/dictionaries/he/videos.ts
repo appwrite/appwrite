@@ -84,8 +84,8 @@ export const heVideosDictionary: Record<string, string> = {
   'Failed to save profile': 'שמירת הפרופיל נכשלה',
   'Failed to delete profile': 'מחיקת הפרופיל נכשלה',
   'Failed to load profiles': 'טעינת הפרופילים נכשלה',
-  'The console calls GET /videos/profiles on your project API. A server error here usually means the Videos service failed to load or seed profiles for this project, not a problem with your browser.':
-    'ה-Console קורא ל-GET /videos/profiles ב-API של הפרויקט. שגיאת שרת כאן בדרך כלל מצביעה על כשל בטעינה או ב-seed של פרופילים בשירות Videos בפרויקט, לא על בעיה בדפדפן.',
+  'The console calls GET /project/videos/profiles on your project API. A server error here usually means the Videos service failed to load or seed profiles for this project, not a problem with your browser.':
+    'ה-Console קורא ל-GET /project/videos/profiles ב-API של הפרויקט. שגיאת שרת כאן בדרך כלל מצביעה על כשל בטעינה או ב-seed של פרופילים בשירות Videos בפרויקט, לא על בעיה בדפדפן.',
   'No profiles': 'אין פרופילים',
   'Create a profile to choose the resolution and bitrate of your renditions.':
     'צרו פרופיל כדי לבחור את הרזולוציה וה-Bitrate של גרסאות הקידוד.',

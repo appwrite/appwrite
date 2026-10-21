@@ -87,7 +87,7 @@ class XList extends Base
             $queries[] = Query::equal('status', [$status]);
         }
 
-        $renditions = $authorization->skip(fn () => $dbForProject->find('videos_renditions', $queries));
+        $renditions = $authorization->skip(fn () => $dbForProject->find('videosRenditions', $queries));
 
         $response->dynamic(new Document([
             'renditions' => $renditions,

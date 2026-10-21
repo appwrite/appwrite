@@ -30,7 +30,7 @@ erDiagram
 
 1. Upload a video or audio file to a Storage bucket.
 2. `create` a Video from `bucketId` + `fileId`. Only the document is stored; nothing is downloaded or probed yet.
-3. Use the default profiles seeded into every new project, or `createProfile` per encoding target.
+3. Use the default profiles seeded into every new project, or `createVideoProfile` per encoding target.
 4. `createRendition` per profile and output. Follow `status` and `progress`. Each job downloads its own copy of the source, probes metadata and extracts embedded subtitles if that has not happened yet, and deletes the copy when it ends.
 5. Optionally `createTimeline` for scrubbing thumbnails (same per-job download) and `createSubtitle` for authored tracks.
 6. Hand the master manifest URL (`getHlsManifest`, `getDashManifest`, `getCmaf*Manifest`) to a player.
@@ -103,11 +103,11 @@ Note the unit mismatch: profile and rendition bitrates are in kilobits per secon
 
 | Method | SDK | HTTP | Notes |
 | --- | --- | --- | --- |
-| List | `listProfiles({ queries?, codec? })` | `GET /videos/profiles` | Optional `codec` filter (default `h264`). Full-text search is `Query.search('search', term)` inside `queries` |
-| Create | `createProfile({ name, videoBitRate, audioBitRate, width, height, codec? })` | `POST /videos/profiles` | `codec` defaults to `h264` |
-| Get | `getProfile({ profileId })` | `GET /videos/profiles/{profileId}` | |
-| Update | `updateProfile({ profileId, name, videoBitRate, audioBitRate, width, height })` | `PATCH /videos/profiles/{profileId}` | All fields required. Existing renditions are not re-encoded |
-| Delete | `deleteProfile({ profileId })` | `DELETE /videos/profiles/{profileId}` | Existing renditions are kept |
+| List | `listVideoProfiles({ queries?, codec? })` | `GET /project/videos/profiles` | Optional `codec` filter (default `h264`). Full-text search is `Query.search('search', term)` inside `queries` |
+| Create | `createVideoProfile({ name, videoBitRate, audioBitRate, width, height, codec? })` | `POST /project/videos/profiles` | `codec` defaults to `h264` |
+| Get | `getVideoProfile({ profileId })` | `GET /project/videos/profiles/{profileId}` | |
+| Update | `updateVideoProfile({ profileId, name, videoBitRate, audioBitRate, width, height })` | `PATCH /project/videos/profiles/{profileId}` | All fields required. Existing renditions are not re-encoded |
+| Delete | `deleteVideoProfile({ profileId })` | `DELETE /project/videos/profiles/{profileId}` | Existing renditions are kept |
 
 ---
 

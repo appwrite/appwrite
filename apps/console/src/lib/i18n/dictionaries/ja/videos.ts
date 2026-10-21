@@ -88,8 +88,8 @@ export const jaVideosDictionary: Record<string, string> = {
   'Failed to save profile': 'プロファイルを保存できませんでした',
   'Failed to delete profile': 'プロファイルを削除できませんでした',
   'Failed to load profiles': 'プロファイルを読み込めませんでした',
-  'The console calls GET /videos/profiles on your project API. A server error here usually means the Videos service failed to load or seed profiles for this project, not a problem with your browser.':
-    'コンソールはプロジェクト API の GET /videos/profiles を呼び出します。ここでサーバーエラーになる場合、ブラウザではなく、このプロジェクトの Videos サービスがプロファイルの読み込みまたはシードに失敗している可能性が高いです。',
+  'The console calls GET /project/videos/profiles on your project API. A server error here usually means the Videos service failed to load or seed profiles for this project, not a problem with your browser.':
+    'コンソールはプロジェクト API の GET /project/videos/profiles を呼び出します。ここでサーバーエラーになる場合、ブラウザではなく、このプロジェクトの Videos サービスがプロファイルの読み込みまたはシードに失敗している可能性が高いです。',
   'No profiles': 'プロファイルがありません',
   'Create a profile to choose the resolution and bitrate of your renditions.':
     'プロファイルを作成して、レンディションの解像度とビットレートを指定します。',

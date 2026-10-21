@@ -85,7 +85,7 @@ class Get extends Base
     ): void {
         $video = $this->authorizeVideo($dbForProject, $authorization, $user, $videoId);
 
-        $caption = $authorization->skip(fn () => $dbForProject->getDocument('videos_captions', $captionId));
+        $caption = $authorization->skip(fn () => $dbForProject->getDocument('videosCaptions', $captionId));
 
         if (
             $caption->isEmpty()
@@ -116,7 +116,7 @@ class Get extends Base
             return;
         }
 
-        $segments = $this->getSegments($dbForProject, $authorization, 'videos_captions_segments', [
+        $segments = $this->getSegments($dbForProject, $authorization, 'videosCaptionsSegments', [
             Query::equal('captionInternalId', [$caption->getSequence()]),
         ]);
 

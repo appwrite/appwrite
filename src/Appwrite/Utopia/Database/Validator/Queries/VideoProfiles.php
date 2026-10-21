@@ -14,6 +14,6 @@ class VideoProfiles extends Base
      */
     public function __construct()
     {
-        parent::__construct('videos_profiles', self::ALLOWED_ATTRIBUTES);
+        parent::__construct('videosProfiles', self::ALLOWED_ATTRIBUTES);
     }
 }

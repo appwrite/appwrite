@@ -443,9 +443,9 @@ return [
         ],
     ],
 
-    'videos_timelines' => [
+    'videosTimelines' => [
         '$collection' => Id::custom(Database::METADATA),
-        '$id' => Id::custom('videos_timelines'),
+        '$id' => Id::custom('videosTimelines'),
         'name' => 'Videos Timelines',
         'attributes' => [
             Attribute::string(key: 'videoId', required: true),
@@ -460,9 +460,9 @@ return [
         ],
     ],
 
-    'videos_renditions' => [
+    'videosRenditions' => [
         '$collection' => Id::custom(Database::METADATA),
-        '$id' => Id::custom('videos_renditions'),
+        '$id' => Id::custom('videosRenditions'),
         'name' => 'Videos Renditions',
         'attributes' => [
             Attribute::string(key: 'videoId', required: true),
@@ -502,9 +502,9 @@ return [
         ],
     ],
 
-    'videos_renditions_segments' => [
+    'videosRenditionsSegments' => [
         '$collection' => Id::custom(Database::METADATA),
-        '$id' => Id::custom('videos_renditions_segments'),
+        '$id' => Id::custom('videosRenditionsSegments'),
         'name' => 'Videos Renditions Segments',
         'attributes' => [
             Attribute::string(key: 'renditionId', required: true),
@@ -521,9 +521,9 @@ return [
         ],
     ],
 
-    'videos_profiles' => [
+    'videosProfiles' => [
         '$collection' => Id::custom(Database::METADATA),
-        '$id' => Id::custom('videos_profiles'),
+        '$id' => Id::custom('videosProfiles'),
         'name' => 'Videos Profiles',
         'attributes' => [
             Attribute::string(key: 'name', size: 128),
@@ -540,9 +540,9 @@ return [
         ],
     ],
 
-    'videos_captions' => [
+    'videosCaptions' => [
         '$collection' => Id::custom(Database::METADATA),
-        '$id' => Id::custom('videos_captions'),
+        '$id' => Id::custom('videosCaptions'),
         'name' => 'Videos Captions',
         'attributes' => [
             Attribute::string(key: 'videoId', required: true),
@@ -568,9 +568,9 @@ return [
         ],
     ],
 
-    'videos_captions_segments' => [
+    'videosCaptionsSegments' => [
         '$collection' => Id::custom(Database::METADATA),
-        '$id' => Id::custom('videos_captions_segments'),
+        '$id' => Id::custom('videosCaptionsSegments'),
         'name' => 'Videos Captions Segments',
         'attributes' => [
             Attribute::string(key: 'captionId', required: true),

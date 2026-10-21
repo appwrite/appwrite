@@ -84,7 +84,7 @@ class Delete extends Base
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
         $this->assertCanUpdateVideo($authorization, $user, $video);
 
-        $caption = $authorization->skip(fn () => $dbForProject->getDocument('videos_captions', $captionId));
+        $caption = $authorization->skip(fn () => $dbForProject->getDocument('videosCaptions', $captionId));
 
         if ($caption->isEmpty() || $caption->getAttribute('videoInternalId') !== $video->getSequence()) {
             throw new Exception(Exception::VIDEO_CAPTION_NOT_FOUND);
@@ -99,7 +99,7 @@ class Delete extends Base
         ];
 
         $deleted = $authorization->skip(fn () => $dbForProject->deleteDocuments(
-            'videos_captions',
+            'videosCaptions',
             [
                 ...$scope,
                 Query::notEqual('status', [self::STATUS_STARTED]),
@@ -110,7 +110,7 @@ class Delete extends Base
             $retention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_RENDITION', '86400');
             $cutoff = DateTime::addSeconds(new \DateTime(), -1 * $retention);
             $deleted = $authorization->skip(fn () => $dbForProject->deleteDocuments(
-                'videos_captions',
+                'videosCaptions',
                 [
                     ...$scope,
                     Query::equal('status', [self::STATUS_STARTED]),
@@ -120,7 +120,7 @@ class Delete extends Base
         }
 
         if ($deleted === 0) {
-            $current = $authorization->skip(fn () => $dbForProject->getDocument('videos_captions', $captionId));
+            $current = $authorization->skip(fn () => $dbForProject->getDocument('videosCaptions', $captionId));
             if ($current->isEmpty() || $current->getAttribute('videoInternalId') !== $video->getSequence()) {
                 throw new Exception(Exception::VIDEO_CAPTION_NOT_FOUND);
             }

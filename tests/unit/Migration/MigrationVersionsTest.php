@@ -482,12 +482,12 @@ final class MigrationVersionsTest extends TestCase
 
         $collections = [
             'videos',
-            'videos_timelines',
-            'videos_renditions',
-            'videos_renditions_segments',
-            'videos_profiles',
-            'videos_captions',
-            'videos_captions_segments',
+            'videosTimelines',
+            'videosRenditions',
+            'videosRenditionsSegments',
+            'videosProfiles',
+            'videosCaptions',
+            'videosCaptionsSegments',
         ];
         foreach ($collections as $collectionId) {
             $this->assertFalse(
@@ -496,7 +496,7 @@ final class MigrationVersionsTest extends TestCase
             );
         }
 
-        $profiles = $authorization->skip(fn () => $database->find('videos_profiles', [
+        $profiles = $authorization->skip(fn () => $database->find('videosProfiles', [
             Query::limit(100),
         ]));
         $this->assertCount(6, $profiles);
@@ -505,7 +505,7 @@ final class MigrationVersionsTest extends TestCase
         \sort($names);
         $this->assertSame(['1080p', '2160p', '360p', '480p', '576p', '720p'], $names);
 
-        foreach (['videos_renditions', 'videos_captions', 'videos_timelines'] as $collectionId) {
+        foreach (['videosRenditions', 'videosCaptions', 'videosTimelines'] as $collectionId) {
             $attributeIds = [];
             foreach ($database->getCollection($collectionId)->getAttribute('attributes', []) as $attribute) {
                 $attributeIds[] = $attribute instanceof Document ? $attribute->getId() : ($attribute['$id'] ?? '');
@@ -515,8 +515,8 @@ final class MigrationVersionsTest extends TestCase
 
         $reasons = [
             'videos' => ['timelineStatus', 'timelineError'],
-            'videos_renditions' => ['error'],
-            'videos_captions' => ['error'],
+            'videosRenditions' => ['error'],
+            'videosCaptions' => ['error'],
         ];
         foreach ($reasons as $collectionId => $expected) {
             $attributeIds = [];
@@ -529,7 +529,7 @@ final class MigrationVersionsTest extends TestCase
         }
 
         $timelineAttributeIds = [];
-        foreach ($database->getCollection('videos_timelines')->getAttribute('attributes', []) as $attribute) {
+        foreach ($database->getCollection('videosTimelines')->getAttribute('attributes', []) as $attribute) {
             $timelineAttributeIds[] = $attribute instanceof Document ? $attribute->getId() : ($attribute['$id'] ?? '');
         }
         $this->assertNotContains('second', $timelineAttributeIds);
@@ -564,7 +564,7 @@ final class MigrationVersionsTest extends TestCase
         }
 
         $this->assertNull($database->findCollection('videos'));
-        $this->assertNull($database->findCollection('videos_profiles'));
+        $this->assertNull($database->findCollection('videosProfiles'));
     }
 
     /**
@@ -606,7 +606,7 @@ final class MigrationVersionsTest extends TestCase
         $this->assertFalse($metadata->isEmpty());
         $this->assertNull($metadata->getTenant());
 
-        $profilesA = $authorization->skip(fn () => $database->find('videos_profiles', [
+        $profilesA = $authorization->skip(fn () => $database->find('videosProfiles', [
             Query::limit(100),
         ]));
         $this->assertCount(6, $profilesA);
@@ -627,13 +627,13 @@ final class MigrationVersionsTest extends TestCase
             \ob_end_clean();
         }
 
-        $profilesB = $authorization->skip(fn () => $database->find('videos_profiles', [
+        $profilesB = $authorization->skip(fn () => $database->find('videosProfiles', [
             Query::limit(100),
         ]));
         $this->assertCount(6, $profilesB);
 
         $database->setTenant('tenant-a');
-        $profilesAAgain = $authorization->skip(fn () => $database->find('videos_profiles', [
+        $profilesAAgain = $authorization->skip(fn () => $database->find('videosProfiles', [
             Query::limit(100),
         ]));
         $this->assertCount(6, $profilesAAgain);

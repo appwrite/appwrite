@@ -95,7 +95,7 @@ class Get extends Base
 
         $video = self::getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
 
-        $thumbnail = $authorization->skip(fn () => $dbForProject->getDocument('videos_timelines', $thumbnailId));
+        $thumbnail = $authorization->skip(fn () => $dbForProject->getDocument('videosTimelines', $thumbnailId));
 
         // The timeline cue file is stored beside the thumbnails so its bytes are
         // counted. It is not an image.

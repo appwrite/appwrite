@@ -79,7 +79,7 @@ class Get extends Base
 
         // Scoped to this video's thumbnail sheets. The cue file alone is not enough:
         // during a rebuild only timeline.vtt remains until the sheets are rewritten.
-        $sheets = $authorization->skip(fn () => $dbForProject->find('videos_timelines', [
+        $sheets = $authorization->skip(fn () => $dbForProject->find('videosTimelines', [
             Query::equal('videoInternalId', [$video->getSequence()]),
             Query::notEqual('name', ['timeline.vtt']),
             Query::limit(1),
