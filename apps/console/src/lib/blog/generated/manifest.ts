@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "default-deployment-retention",
+    "href": "/blog/post/default-deployment-retention",
+    "title": "Appwrite Cloud will clean up inactive deployments after 30 days by default",
+    "description": "From November 5, 2026, Appwrite Cloud deletes inactive Functions and Sites deployments after 30 days by default, freeing the project storage they use. Active deployments are never deleted.",
+    "date": "2026-10-21",
+    "lastUpdated": "2026-10-21",
+    "timeToRead": 4,
+    "author": "atharva",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/default-deployment-retention/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-appwrite-databases-hackathon",
     "href": "/blog/post/announcing-appwrite-databases-hackathon",
     "title": "Announcing the Appwrite Databases Hackathon",
