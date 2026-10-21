@@ -378,13 +378,11 @@ $server->onStart(function () use ($stats, $containerId, &$statsDocument, $contai
     /**
      * Reconcile presences orphaned by a previous instance on this host. A hard crash
      * (SIGKILL/OOM) fires no onClose, so this host's rows linger until expiry. On a clean boot
-     * every presenceLogs row for this hostname not written since boot is such an orphan. The sweep
-     * runs asynchronously while new connections are already accepted, so each candidate is deleted
-     * through {@see State::deleteOrphan}, which re-checks under the row lock that nothing reconnected
-     * onto it: a socket that increments the row mid-sweep moves its `$updatedAt` past `$since` and is
-     * left alone. Real orphans go through the normal offline path, so usage is corrected and
-     * subscribers on other workers get the delete. CE only -- a Cloud host is shared across tenants
-     * on sharded databases, where a hostname sweep does not apply (appwrite/appwrite#14343).
+     * every presenceLogs row for this hostname created before boot is such an orphan; a connection
+     * that upserts while the sweep runs is created after `$since` and is left alone. Each orphan
+     * goes through the normal offline path, so usage is corrected and subscribers on other workers
+     * get the delete. CE only -- a Cloud host is shared across tenants on sharded databases, where
+     * a hostname sweep does not apply (appwrite/appwrite#14343).
      */
     if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
         go(function () use ($container): void {
@@ -410,7 +408,7 @@ $server->onStart(function () use ($stats, $containerId, &$statsDocument, $contai
                     while (true) {
                         $orphans = $database->getAuthorization()->skip(fn () => $database->find('presenceLogs', [
                             Query::equal('hostname', [$hostname]),
-                            Query::lessThan('$updatedAt', $since),
+                            Query::lessThan('$createdAt', $since),
                             Query::limit(100),
                         ]));
                         if (empty($orphans)) {
@@ -420,16 +418,13 @@ $server->onStart(function () use ($stats, $containerId, &$statsDocument, $contai
                         $removed = 0;
                         foreach ($orphans as $orphan) {
                             try {
-                                $deleted = $presences->deleteOrphan($database, $orphan->getId(), $since);
+                                $database->getAuthorization()->skip(fn () => $database->deleteDocument('presenceLogs', $orphan->getId()));
                             } catch (Throwable) {
                                 continue; // leave it for the next pass rather than abort the sweep
                             }
-                            if ($deleted === null) {
-                                continue; // reconnected since boot -- it holds a live connection now
-                            }
                             $removed++;
                             try {
-                                $presences->triggerPresenceDeleted($database, $project, (string) $deleted->getAttribute('userId'), $deleted, $publisherForUsage, getQueueForEvents(), getQueueForRealtime());
+                                $presences->triggerPresenceDeleted($database, $project, (string) $orphan->getAttribute('userId'), $orphan, $publisherForUsage, getQueueForEvents(), getQueueForRealtime());
                             } catch (Throwable) {
                                 // Row is already gone; the offline side effects are best-effort.
                             }
