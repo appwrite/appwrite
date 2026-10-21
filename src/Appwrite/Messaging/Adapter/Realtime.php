@@ -259,15 +259,15 @@ class Realtime extends MessagingAdapter
      *
      * @param string $projectId
      * @param string $presenceId
-     * @return int Number of connections whose presences map was updated.
+     * @return array<string, int> userId => holders removed, so the caller can balance the counter.
      */
-    public function removePresenceFromConnections(string $projectId, string $presenceId): int
+    public function removePresenceFromConnections(string $projectId, string $presenceId): array
     {
         if ($projectId === '' || $presenceId === '') {
-            return 0;
+            return [];
         }
 
-        $removed = 0;
+        $removed = [];
         foreach ($this->connections as $connectionId => $connection) {
             if (($connection['projectId'] ?? null) !== $projectId) {
                 continue;
@@ -276,7 +276,11 @@ class Realtime extends MessagingAdapter
                 continue;
             }
             unset($this->connections[$connectionId]['presences'][$presenceId]);
-            $removed++;
+
+            $userId = (string) ($connection['userId'] ?? '');
+            if ($userId !== '') {
+                $removed[$userId] = ($removed[$userId] ?? 0) + 1;
+            }
         }
 
         return $removed;
