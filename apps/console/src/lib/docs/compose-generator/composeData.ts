@@ -2262,7 +2262,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
     # One image carrying every orchestrator control plane. Appwrite drives the
     # jobs plane today; the per-plane images exist for Kubernetes, where each
     # scales, fails and gets RBAC on its own.
-    image: ghcr.io/open-runtimes/orchestrator/orchestrator:2.2.2
+    image: ghcr.io/open-runtimes/orchestrator/orchestrator:2.2.4
     restart: unless-stopped
     user: root
     networks:
