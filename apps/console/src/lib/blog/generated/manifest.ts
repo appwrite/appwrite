@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-verification-and-recovery-codes",
+    "href": "/blog/post/announcing-verification-and-recovery-codes",
+    "title": "Announcing 6-digit codes for email verification and password recovery",
+    "description": "Appwrite Auth can email a 6-digit code for email verification and password recovery, so mobile and desktop apps can handle both without a redirect page or a deep link.",
+    "date": "2026-10-21",
+    "lastUpdated": "2026-10-21",
+    "timeToRead": 4,
+    "author": "atharva",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-verification-and-recovery-codes/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-appwrite-databases-hackathon",
     "href": "/blog/post/announcing-appwrite-databases-hackathon",
     "title": "Announcing the Appwrite Databases Hackathon",
@@ -70,20 +84,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "announcements",
     "featured": false,
     "cover": "/images/blog/announcing-appwrite-helm-chart/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "announcing-verification-and-recovery-codes",
-    "href": "/blog/post/announcing-verification-and-recovery-codes",
-    "title": "Announcing 6-digit codes for email verification and password recovery",
-    "description": "Appwrite Auth can email a 6-digit code for email verification and password recovery, so mobile and desktop apps can handle both without a redirect page or a deep link.",
-    "date": "2026-10-15",
-    "lastUpdated": "2026-10-15",
-    "timeToRead": 4,
-    "author": "atharva",
-    "category": "announcements",
-    "featured": false,
-    "cover": "/images/blog/announcing-verification-and-recovery-codes/cover.avif",
     "hasCover": true
   },
   {
