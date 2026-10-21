@@ -102,11 +102,6 @@ use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionInvalidation\
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionLimit\Update as UpdateSessionLimitPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\UserLimit\Update as UpdateUserLimitPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\XList as ListPolicies;
-use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Create as CreateProfile;
-use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Delete as DeleteProfile;
-use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Get as GetProfile;
-use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Update as UpdateProfile;
-use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\XList as ListProfiles;
 use Appwrite\Platform\Modules\Project\Http\Project\Protocols\Update as UpdateProjectProtocol;
 use Appwrite\Platform\Modules\Project\Http\Project\Services\Update as UpdateProjectService;
 use Appwrite\Platform\Modules\Project\Http\Project\SMTP\Tests\Create as CreateSMTPTest;
@@ -119,6 +114,11 @@ use Appwrite\Platform\Modules\Project\Http\Project\Variables\Delete as DeleteVar
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\Get as GetVariable;
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\Update as UpdateVariable;
 use Appwrite\Platform\Modules\Project\Http\Project\Variables\XList as ListVariables;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Create as CreateProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Delete as DeleteProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Get as GetProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\Update as UpdateProfile;
+use Appwrite\Platform\Modules\Project\Http\Project\Videos\Profiles\XList as ListProfiles;
 use Utopia\Platform\Service;
 
 class Http extends Service
