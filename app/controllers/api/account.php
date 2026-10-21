@@ -1453,8 +1453,8 @@ Http::get('/v1/account/sessions/oauth2/:provider')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.', enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified', 'mock-no-email']))
-    ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
-    ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
+    ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'], skipValidation: true)
+    ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'], skipValidation: true)
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->param('state', '', new Text(256, 0, \array_map(\chr(...), \range(0x20, 0x7E))), 'An opaque value your app generates and keeps, for example in a cookie. It is returned unchanged as the `state` query parameter on the success and failure URLs, so your app can check that the sign-in it receives is one it started. Printable ASCII only (RFC 6749 Appendix A.5). Max length: 256 chars.', true)
     ->inject('request')
@@ -1462,7 +1462,33 @@ Http::get('/v1/account/sessions/oauth2/:provider')
     ->inject('project')
     ->inject('platform')
     ->inject('clientForOAuth2')
-    ->action(function (string $provider, string $success, string $failure, array $scopes, string $state, Request $request, Response $response, Document $project, array $platform, Client $clientForOAuth2) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('redirectValidator')
+    ->inject('dbForPlatform')
+    ->inject('authorization')
+    ->action(function (string $provider, mixed $success, mixed $failure, array $scopes, string $state, Request $request, Response $response, Document $project, array $platform, Client $clientForOAuth2, Redirect $redirectValidator, Database $dbForPlatform, Authorization $authorization) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+        // Checked here rather than on the params so the project's own domains pass, as in the
+        // callback: a request from a server has no Origin for the redirect validator to allow them by
+        $redirects = \array_intersect_key(['success' => $success, 'failure' => $failure], $request->getParams());
+        $domains = \array_filter(\array_map(fn ($url) => \is_string($url) ? \parse_url($url, PHP_URL_HOST) : null, $redirects), fn ($domain) => \is_string($domain) && $domain !== '');
+
+        if (!empty($domains)) {
+            $rules = $authorization->skip(fn () => $dbForPlatform->find('rules', [
+                Query::equal('domain', \array_values(\array_unique($domains))),
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::limit(2),
+            ]));
+
+            foreach ($rules as $rule) {
+                $redirectValidator->setAllowedHostnames([...$redirectValidator->getAllowedHostnames(), $rule->getAttribute('domain', '')]);
+            }
+        }
+
+        foreach ($redirects as $key => $url) {
+            if (!$redirectValidator->isValid($url)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `' . $key . '` param: ' . $redirectValidator->getDescription());
+            }
+        }
+
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -2413,8 +2439,8 @@ Http::get('/v1/account/tokens/oauth2/:provider')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.', enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified', 'mock-no-email']))
-    ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
-    ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
+    ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'], skipValidation: true)
+    ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'], skipValidation: true)
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->param('state', '', new Text(256, 0, \array_map(\chr(...), \range(0x20, 0x7E))), 'An opaque value your app generates and keeps, for example in a cookie. It is returned unchanged as the `state` query parameter on the success and failure URLs, so your app can check that the sign-in it receives is one it started. Printable ASCII only (RFC 6749 Appendix A.5). Max length: 256 chars.', true)
     ->inject('request')
@@ -2422,7 +2448,33 @@ Http::get('/v1/account/tokens/oauth2/:provider')
     ->inject('project')
     ->inject('platform')
     ->inject('clientForOAuth2')
-    ->action(function (string $provider, string $success, string $failure, array $scopes, string $state, Request $request, Response $response, Document $project, array $platform, Client $clientForOAuth2) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('redirectValidator')
+    ->inject('dbForPlatform')
+    ->inject('authorization')
+    ->action(function (string $provider, mixed $success, mixed $failure, array $scopes, string $state, Request $request, Response $response, Document $project, array $platform, Client $clientForOAuth2, Redirect $redirectValidator, Database $dbForPlatform, Authorization $authorization) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+        // Checked here rather than on the params so the project's own domains pass, as in the
+        // callback: a request from a server has no Origin for the redirect validator to allow them by
+        $redirects = \array_intersect_key(['success' => $success, 'failure' => $failure], $request->getParams());
+        $domains = \array_filter(\array_map(fn ($url) => \is_string($url) ? \parse_url($url, PHP_URL_HOST) : null, $redirects), fn ($domain) => \is_string($domain) && $domain !== '');
+
+        if (!empty($domains)) {
+            $rules = $authorization->skip(fn () => $dbForPlatform->find('rules', [
+                Query::equal('domain', \array_values(\array_unique($domains))),
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::limit(2),
+            ]));
+
+            foreach ($rules as $rule) {
+                $redirectValidator->setAllowedHostnames([...$redirectValidator->getAllowedHostnames(), $rule->getAttribute('domain', '')]);
+            }
+        }
+
+        foreach ($redirects as $key => $url) {
+            if (!$redirectValidator->isValid($url)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `' . $key . '` param: ' . $redirectValidator->getDescription());
+            }
+        }
+
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
