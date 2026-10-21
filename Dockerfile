@@ -1,5 +1,9 @@
 FROM composer:2 AS composer
 
+# Remove the compromised eMudhra trust anchors before downloading dependencies.
+RUN apk add --upgrade --no-cache 'ca-certificates>=20261020-r0' 'ca-certificates-bundle>=20261020-r0' && \
+    update-ca-certificates
+
 ARG TESTING=false
 ENV TESTING=$TESTING
 
@@ -14,6 +18,10 @@ RUN composer config source-fallback true && \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
 FROM appwrite/base:1.4.3 AS base
+
+# Refresh both the trust anchors and the prebuilt bundle used by TLS clients.
+RUN apk add --upgrade --no-cache 'ca-certificates>=20261020-r0' 'ca-certificates-bundle>=20261020-r0' && \
+    update-ca-certificates
 
 LABEL maintainer="team@appwrite.io"
 
