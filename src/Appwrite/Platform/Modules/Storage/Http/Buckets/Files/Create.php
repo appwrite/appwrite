@@ -283,6 +283,19 @@ class Create extends Action
 
         $lockKey = 'storage:file:' . $project->getId() . ':' . $bucket->getId() . ':' . $fileId;
 
+        // A native pending document must not appear between S3's lookup and
+        // publication. File locks guard native IDs; this lock also guards the
+        // shared folder/name namespace used by S3.
+        $createFile = function (Document $document) use ($locks, $project, $bucket, $dbForProject): Document {
+            $key = $document->getAttribute('folder', '') . $document->getAttribute('name');
+            return $locks(
+                's3:object:' . $project->getId() . ':' . $bucket->getId() . ':' . \hash('sha256', $key),
+                self::LOCK_TTL,
+                fn (): Document => $dbForProject->createDocument('bucket_' . $bucket->getSequence(), $document),
+                timeout: 120.0
+            );
+        };
+
         $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
         $completed = false;
         // True when prepareUpload created the pending document in this request.
@@ -306,7 +319,7 @@ class Create extends Action
             return $merged;
         };
 
-        $prepareUpload = function () use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $folder, &$path, $permissions, $response, &$completed, $user): void {
+        $prepareUpload = function () use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $createFile, $fileId, $fileName, $fileSize, &$metadata, $folder, &$path, $permissions, $response, &$completed, $user): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             if (!$file->isEmpty()) {
                 $chunks = $file->getAttribute('chunksTotal', 1);
@@ -366,7 +379,7 @@ class Create extends Action
                     ]);
 
                     try {
-                        $dbForProject->createDocument('bucket_' . $bucket->getSequence(), $doc);
+                        $createFile($doc);
                         $createdInRequest = true;
                     } catch (DuplicateException) {
                         throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
@@ -377,7 +390,7 @@ class Create extends Action
             }
         };
 
-        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $exiftool, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, &$path, $permissions, $queueForEvents, $response, $user): void {
+        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $createFile, $exiftool, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, &$path, $permissions, $queueForEvents, $response, $user): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             $uploaded = 0;
 
@@ -562,7 +575,7 @@ class Create extends Action
                     ]);
 
                     try {
-                        $file = $dbForProject->createDocument('bucket_' . $bucket->getSequence(), $doc);
+                        $file = $createFile($doc);
                     } catch (DuplicateException) {
                         throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
                     } catch (NotFoundException) {

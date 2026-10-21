@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Lock\Tests\E2E;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Redis;
 use Utopia\Lock\Distributed;
@@ -80,6 +81,68 @@ final class DistributedTest extends TestCase
             $this->assertSame(0, $this->redis->exists($this->key));
             $this->assertSame(0, $this->redis->exists($this->key . ':nested'));
         }
+    }
+
+    public function testTransientReleaseFailureDoesNotLeaveALease(): void
+    {
+        $state = new class () {
+            public int $commands = 0;
+        };
+        $lock = new Distributed(function (\Closure $operation) use ($state): mixed {
+            if (++$state->commands === 2) {
+                throw new \RedisException('Temporary connection failure');
+            }
+            return $operation($this->redis);
+        }, $this->key, 30);
+        $this->assertSame('committed', $lock->withLock(fn (): string => 'committed'));
+        $this->assertSame(0, $this->redis->exists($this->key));
+        $this->assertNull($lock->token());
+        $next = new Distributed($this->redis, $this->key, 30);
+        $this->assertTrue($next->tryAcquire());
+        $next->release();
+    }
+
+    #[DataProvider('callbackFailures')]
+    public function testReleaseOutagePreservesTheOperationOutcome(bool $callbackFails): void
+    {
+        $state = new class () {
+            public bool $outage = false;
+        };
+        $releaseError = new \RedisException('Connection unavailable');
+        $operationError = new Contention('Operation lost its lease');
+        $lock = new Distributed(function (\Closure $operation) use ($state, $releaseError): mixed {
+            if ($state->outage) {
+                throw $releaseError;
+            }
+            return $operation($this->redis);
+        }, $this->key, 30);
+        $caught = null;
+        try {
+            $lock->withLock(function () use ($state, $callbackFails, $operationError): string {
+                $state->outage = true;
+                if ($callbackFails) {
+                    throw $operationError;
+                }
+                return 'committed';
+            });
+        } catch (\Throwable $error) {
+            $caught = $error;
+        } finally {
+            // Redis still owns the lease. Keep its token so cleanup can retry
+            // after connectivity recovers instead of abandoning it until TTL.
+            $this->assertNotNull($lock->token());
+            $this->assertSame($lock->token(), $this->redis->get($this->key));
+            $state->outage = false;
+            $lock->release();
+            $this->assertSame(0, $this->redis->exists($this->key));
+        }
+        $this->assertSame($callbackFails ? $operationError : $releaseError, $caught);
+    }
+
+    /** @return array<string, array{bool}> */
+    public static function callbackFailures(): array
+    {
+        return ['failed operation' => [true], 'successful operation' => [false]];
     }
 
     public function testAcquireAndRelease(): void

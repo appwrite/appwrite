@@ -115,7 +115,14 @@ final class Distributed implements Lock
             return;
         }
 
-        $this->runScript(self::RELEASE_SCRIPT, [$this->key, $this->token]);
+        // Releasing is token-guarded and idempotent, including when the first
+        // command reached Redis but its response was lost. A provider can borrow
+        // a fresh connection on the second attempt.
+        try {
+            $this->runScript(self::RELEASE_SCRIPT, [$this->key, $this->token]);
+        } catch (\Throwable) {
+            $this->runScript(self::RELEASE_SCRIPT, [$this->key, $this->token]);
+        }
         $this->token = null;
     }
 
@@ -126,10 +133,22 @@ final class Distributed implements Lock
             throw new Contention("Failed to acquire distributed lock: {$this->key}");
         }
 
+        $failed = false;
         try {
             return $callback();
+        } catch (\Throwable $error) {
+            $failed = true;
+            throw $error;
         } finally {
-            $this->release();
+            try {
+                $this->release();
+            } catch (\Throwable $error) {
+                // A cleanup outage must not replace the operation's error. Keep
+                // the token for an explicit cleanup retry once Redis recovers.
+                if (!$failed) {
+                    throw $error;
+                }
+            }
         }
     }
 

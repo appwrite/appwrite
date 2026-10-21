@@ -1041,7 +1041,10 @@ abstract class Base extends Action
 
                 return [$file, $existing === null ? 'create' : 'update'];
             } catch (\Throwable $error) {
-                if ($cleanup) {
+                // A rolling older native writer can still bypass the shared
+                // publication lock. Retain this upload's finalized staging path
+                // on contention so its cached receipts remain retryable.
+                if ($cleanup && !($error instanceof Contention)) {
                     $this->discard($deviceForFiles, $path);
                 }
                 throw $error;
