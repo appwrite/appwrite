@@ -8,6 +8,7 @@ use Throwable;
 use Utopia\Console\Console;
 use Utopia\Database\Attribute;
 use Utopia\Database\Attribute\Update as AttributeUpdate;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -21,6 +22,9 @@ class V25 extends Migration
      */
     public function execute(): void
     {
+        Console::info('Adding the collection metadata schema');
+        $this->addColumnPermissionsToMetadata();
+
         Console::info('Migrating collections');
         $this->migrateCollections();
 
@@ -238,10 +242,15 @@ class V25 extends Migration
 
                         foreach ($this->documentsIterator($id) as $database) {
                             $databaseTable = 'database_' . $database->getSequence();
-                            try {
-                                $this->createAttributeFromCollection($this->dbForProject, $databaseTable, 'description', 'collections');
-                            } catch (Throwable $th) {
-                                Console::warning("Failed to create attribute \"description\" in collection {$databaseTable}: {$th->getMessage()}");
+                            // Every product keeps its collection definitions here, and all of them
+                            // declare these two identically, so the shared definition is read once
+                            // from the databases config whatever the database's type.
+                            foreach (['description', 'columnPermissions'] as $attribute) {
+                                try {
+                                    $this->createAttributeFromCollection($this->dbForProject, $databaseTable, $attribute, 'collections');
+                                } catch (Throwable $th) {
+                                    Console::warning("Failed to create attribute \"{$attribute}\" in collection {$databaseTable}: {$th->getMessage()}");
+                                }
                             }
                             $this->dbForProject->purgeCachedCollection($databaseTable);
                         }
@@ -572,6 +581,36 @@ class V25 extends Migration
      * A resource created after the migration is a reused public ID, not the
      * generation the historical migration operated on.
      */
+    /**
+     * Add "columnPermissions" to the collection metadata.
+     *
+     * The library declares this column on its metadata collection in code, so a fresh install
+     * has it and an upgraded one does not -- and neither attribute method will add it there:
+     * createAttribute() sees the declaration and calls it a duplicate, updateAttribute() refuses
+     * the metadata collection outright. Both guards live on the Database, so the adapter below
+     * it still creates the column, in the type and dialect that engine would have used.
+     *
+     * Going through the project's own adapter also keeps the write on the project's connection,
+     * which a shared PDO would not on an install whose projects are spread across hosts.
+     *
+     * It runs before the collections are migrated because those writes store a collection
+     * definition, which now carries this column.
+     *
+     * Nothing is backfilled. The library reads a missing value as "no column-scoped grants" and
+     * answers with the row's own permissions, which is what an upgraded collection should have.
+     */
+    protected function addColumnPermissionsToMetadata(): void
+    {
+        try {
+            $this->dbForProject->getAdapter()->createAttribute(
+                Database::METADATA,
+                Attribute::string(key: Collection::COLUMN_PERMISSIONS, size: 1000000, default: [], filters: ['json'])
+            );
+        } catch (Throwable $th) {
+            Console::warning("Failed to create attribute \"columnPermissions\" in the collection metadata: {$th->getMessage()}");
+        }
+    }
+
     protected function predatesMigration(Document $resource, Document $migration): bool
     {
         $resourceCreatedAt = \strtotime($resource->getCreatedAt() ?? '');

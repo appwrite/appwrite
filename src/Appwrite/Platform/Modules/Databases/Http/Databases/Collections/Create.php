@@ -13,6 +13,7 @@ use Appwrite\Utopia\Database\Attribute as AttributeDefinition;
 use Appwrite\Utopia\Database\Validator\Attributes as AttributesValidator;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Indexes as IndexesValidator;
+use Appwrite\Utopia\Database\Validator\RoutePermissions;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Attribute;
 use Utopia\Database\Capability;
@@ -84,7 +85,7 @@ class Create extends Action
             ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
             ->param('collectionId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
-            ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('permissions', null, new Nullable(new RoutePermissions(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
             ->param('attributes', [], new ArrayList(new JSONObject(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attribute definitions to create. Each attribute should contain: key (string), type (string: string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, point, linestring, polygon, email, url, ip, enum), size (integer, required for string and varchar types), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options.', true)
@@ -111,6 +112,15 @@ class Create extends Action
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions) ?? [];
 
+        // A permission may name one of the table's columns, and the two stores below want it
+        // in different forms. The row's own permissions decide who may see the table in a
+        // listing, which is a question about the role alone: the read gate matches the stored
+        // string, so a column left in there would hide the table from the role it was granted
+        // to -- and the library refuses a row permission naming a column outright. The
+        // verbatim list is kept beside it as the one to report and to replay onto the table.
+        $columnPermissions = Permission::hasColumns($permissions) ? $permissions : [];
+        $rowPermissions = Permission::withoutColumns($permissions);
+
         // Resolve the data-plane database BEFORE writing the metadata row. For a
         // dedicated product database this throws while provisioning (no DSN yet);
         // writing the row first would leave an orphaned collection with no backing
@@ -125,7 +135,8 @@ class Create extends Action
                 '$id' => $collectionId,
                 'databaseInternalId' => $database->getSequence(),
                 'databaseId' => $databaseId,
-                '$permissions' => $permissions,
+                '$permissions' => $rowPermissions,
+                'columnPermissions' => $columnPermissions,
                 'documentSecurity' => $documentSecurity,
                 'enabled' => $enabled,
                 'name' => $name,
@@ -208,14 +219,20 @@ class Create extends Action
             }
         }
 
+        $create = fn () => $dbForDatabases->createCollection(Collection::create(
+            id: $collectionKey,
+            attributes: $collectionAttributes,
+            indexes: $collectionIndexes,
+            permissions: $permissions,
+            documentSecurity: $documentSecurity,
+        ));
+
         try {
-            $dbForDatabases->createCollection(Collection::create(
-                id: $collectionKey,
-                attributes: $collectionAttributes,
-                indexes: $collectionIndexes,
-                permissions: $permissions,
-                documentSecurity: $documentSecurity,
-            ));
+            // Scoped only when one of them names a column, so a route that does not offer the
+            // feature keeps the library's refusal as its backstop.
+            $columnPermissions === []
+                ? $create()
+                : $dbForDatabases->withColumnPermissions($create);
         } catch (DuplicateException) {
             $dbForProject->deleteDocument($databaseKey, $collection->getId());
             throw new Exception($this->getDuplicateException(), params: [$collectionId]);
