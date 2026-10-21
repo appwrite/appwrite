@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-dodo-payments-templates",
+    "href": "/blog/post/announcing-dodo-payments-templates",
+    "title": "Introducing Dodo Payments templates for Appwrite",
+    "description": "Sell one-time products and subscriptions with Dodo Payments and Appwrite Functions. Two new templates store paid orders and grant subscriber access for you.",
+    "date": "2026-10-22",
+    "lastUpdated": "2026-10-22",
+    "timeToRead": 4,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-dodo-payments-templates/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-appwrite-databases-hackathon",
     "href": "/blog/post/announcing-appwrite-databases-hackathon",
     "title": "Announcing the Appwrite Databases Hackathon",
