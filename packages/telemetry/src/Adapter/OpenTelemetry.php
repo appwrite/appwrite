@@ -24,6 +24,8 @@ use OpenTelemetry\SDK\Metrics\MetricReaderInterface;
 use OpenTelemetry\SDK\Resource\ResourceInfo;
 use OpenTelemetry\SDK\Sdk;
 use OpenTelemetry\SemConv\ResourceAttributes;
+use Swoole\Coroutine;
+use Swoole\Coroutine\Channel;
 use Utopia\Telemetry\Adapter;
 use Utopia\Telemetry\Adapter\OpenTelemetry\MetricExporter as NonEmptyMetricExporter;
 use Utopia\Telemetry\Counter;
@@ -43,6 +45,8 @@ class OpenTelemetry implements Adapter
     private MetricReaderInterface $reader;
 
     private MeterInterface $meter;
+
+    private ?Channel $collecting = null;
 
     /**
      * @var array<class-string, array<string, Counter|UpDownCounter|Histogram|Gauge|ObservableGauge>>
@@ -304,10 +308,25 @@ class OpenTelemetry implements Adapter
     }
 
     /**
-     * Collect and export metrics
+     * Collect and export metrics. Under Swoole, overlapping calls (a timer tick still exporting when
+     * shutdown flushes) run one at a time: the exporter's HTTP client cannot be used from two
+     * coroutines at once, and Swoole aborts the process when it is.
      */
     public function collect(): bool
     {
-        return $this->reader->collect();
+        if (!\extension_loaded('swoole') || Coroutine::getCid() < 0) {
+            return $this->reader->collect();
+        }
+
+        $this->collecting ??= new Channel(1);
+        if (!$this->collecting->push(true)) {
+            return false;
+        }
+
+        try {
+            return $this->reader->collect();
+        } finally {
+            $this->collecting->pop();
+        }
     }
 }
