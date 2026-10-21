@@ -501,6 +501,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
+      - _APP_MAINTENANCE_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
@@ -647,6 +648,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
+      - _APP_MAINTENANCE_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_LOGGING_FORMAT
       # Combined mode runs functions/executions/messages timers + enqueue coroutines
@@ -717,6 +719,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
+      - _APP_MAINTENANCE_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
@@ -877,6 +880,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
+      - _APP_MAINTENANCE_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
@@ -1023,6 +1027,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
+      - _APP_MAINTENANCE_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_LOGGING_FORMAT
       # Combined mode runs functions/executions/messages timers + enqueue coroutines
@@ -1079,6 +1084,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
+      - _APP_MAINTENANCE_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_LOGGING_FORMAT
       # Combined mode runs functions/executions/messages timers + enqueue coroutines
@@ -1149,6 +1155,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
+      - _APP_MAINTENANCE_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
@@ -2759,6 +2766,7 @@ _APP_POOL_SIZE_EXECUTIONS=2
 _APP_MAINTENANCE_RETENTION_USAGE_TTL=180
 _APP_STATS_USAGE_QUEUE_NAME=v1-stats-usage
 _APP_STATS_RESOURCES_QUEUE_NAME=v1-stats-resources
+_APP_MAINTENANCE_QUEUE_NAME=v1-maintenance
 _APP_STATS_RESOURCES_INTERVAL=3600
 _APP_INTERVAL_CLEANUP_STALE_EXECUTIONS=300
 _APP_INTERVAL_DOMAIN_VERIFICATION=120
