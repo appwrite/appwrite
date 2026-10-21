@@ -127,4 +127,6 @@
 
 - `tablesdb.*.update`
 - This event triggers when a database is updated.
-  Returns [Database Object](/docs/references/cloud/models/database){% /table %}
+  Returns [Database Object](/docs/references/cloud/models/database)
+
+{% /table %}

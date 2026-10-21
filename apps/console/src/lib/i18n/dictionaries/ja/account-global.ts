@@ -1356,6 +1356,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Your avatar goes back to the picture from your connected sign-in provider, Gravatar, or your initials. You can upload a new photo at any time.':
     'アバターは連携したサインインプロバイダーの画像、Gravatar、またはイニシャルに戻ります。新しい写真はいつでもアップロードできます。',
   // Console passkeys: sign-in and account management
+  'Sign in with a passkey': 'パスキーでサインイン',
   'Failed to sign in with a passkey': 'パスキーでのサインインに失敗しました',
   'Passkeys are not set up for this domain.':
     'このドメインではパスキーが設定されていません。',

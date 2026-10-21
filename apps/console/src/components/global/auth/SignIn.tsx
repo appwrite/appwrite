@@ -6,7 +6,7 @@ import * as z from 'zod'
 import { useEffect, useState, type ReactNode } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { AppwriteException, ID } from '@appwrite.io/console'
-import { Bug, Eye, EyeOff } from 'lucide-react'
+import { Bug, Eye, EyeOff, Fingerprint } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -48,6 +48,27 @@ function GoogleIcon({ className }: { className?: string }) {
     >
       <path d="M21.35 11.1h-9.17v2.96h5.27c-.23 1.24-1.4 3.64-5.27 3.64-3.17 0-5.76-2.62-5.76-5.85s2.59-5.85 5.76-5.85c1.8 0 3.01.77 3.7 1.43l2.52-2.43C16.18 3.55 14.23 2.7 12.18 2.7 6.99 2.7 2.78 6.92 2.78 12.15s4.21 9.45 9.4 9.45c5.43 0 9.02-3.81 9.02-9.18 0-.62-.07-1.07-.15-1.32z" />
     </svg>
+  )
+}
+
+function Divider({ children }: { children: ReactNode }) {
+  return (
+    <div className="relative">
+      <div className="absolute inset-0 flex items-center">
+        <span className="w-full border-t" />
+      </div>
+      <div className="relative flex justify-center text-xs uppercase">
+        <span className="bg-card px-2 text-muted-foreground">{children}</span>
+      </div>
+    </div>
+  )
+}
+
+function LastUsedBadge({ children }: { children: ReactNode }) {
+  return (
+    <span className="absolute -top-2 start-3 bg-foreground text-background text-[10px] font-medium px-1.5 py-0.5 rounded border border-border z-10">
+      {children}
+    </span>
   )
 }
 
@@ -241,6 +262,8 @@ interface SignInProps {
   oauthLoading?: OAuthLoginMethod | null
   /** Lets the browser offer passkeys in the email field's autofill; runs on focus to restart the request. */
   onPasskeyAutofill?: () => void
+  /** Shows a "Sign in with a passkey" button that opens the browser's passkey prompt. */
+  onPasskeySignIn?: () => void
   redirect?: string // Optional redirect URL to preserve when switching between sign-in/sign-up
   /** Debug preview routes: cross-links stay on /debug/*-preview; demo user is fill-only. */
   preview?: boolean
@@ -253,6 +276,7 @@ export function SignIn({
   isLoading,
   oauthLoading,
   onPasskeyAutofill,
+  onPasskeySignIn,
   redirect,
   preview = false,
 }: SignInProps) {
@@ -323,6 +347,7 @@ export function SignIn({
   }
 
   const formBusy = isLoading || isCreatingDemo
+  const showPasskeyButton = mode === 'sign-in' && !!onPasskeySignIn
 
   const handleCreateDemoUser = async () => {
     if (preview) {
@@ -472,16 +497,31 @@ export function SignIn({
                 })}
               </div>
 
+              <Divider>
+                {showPasskeyButton ? t('Or') : t('Or continue with')}
+              </Divider>
+            </>
+          )}
+
+          {showPasskeyButton && (
+            <>
               <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">
-                    {t('Or continue with')}
-                  </span>
-                </div>
+                {lastLoginMethod === 'passkey' && (
+                  <LastUsedBadge>{t('Last used')}</LastUsedBadge>
+                )}
+                <Button
+                  variant="outline"
+                  type="button"
+                  className="h-9 w-full"
+                  onClick={onPasskeySignIn}
+                  disabled={!!oauthLoading || formBusy}
+                >
+                  <Fingerprint className="size-4" />
+                  {t('Sign in with a passkey')}
+                </Button>
               </div>
+
+              <Divider>{t('Or continue with')}</Divider>
             </>
           )}
 
@@ -581,10 +621,8 @@ export function SignIn({
           <div className="relative">
             {mode === 'sign-in' &&
               (lastLoginMethod === 'email' ||
-                lastLoginMethod === 'passkey') && (
-                <span className="absolute -top-2 start-3 bg-foreground text-background text-[10px] font-medium px-1.5 py-0.5 rounded border border-border z-10">
-                  {t('Last used')}
-                </span>
+                (lastLoginMethod === 'passkey' && !showPasskeyButton)) && (
+                <LastUsedBadge>{t('Last used')}</LastUsedBadge>
               )}
             <Button
               type="submit"

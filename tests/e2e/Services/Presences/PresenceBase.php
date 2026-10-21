@@ -3,10 +3,10 @@
 namespace Tests\E2E\Services\Presences;
 
 use Tests\E2E\Client;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 
 trait PresenceBase
 {
@@ -62,7 +62,7 @@ trait PresenceBase
 
         $response = $this->client->call(
             Client::METHOD_PUT,
-            '/presences/' . ID::unique(),
+            '/presences/' . Id::unique(),
             [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $projectId,
@@ -132,7 +132,7 @@ trait PresenceBase
 
             $upsert = $this->client->call(
                 Client::METHOD_PUT,
-                '/presences/' . ID::unique(),
+                '/presences/' . Id::unique(),
                 \array_merge([
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id'],
@@ -211,7 +211,7 @@ trait PresenceBase
 
         $upsert = $this->client->call(
             Client::METHOD_PUT,
-            '/presences/' . ID::unique(),
+            '/presences/' . Id::unique(),
             $headers,
             $payload
         );
@@ -235,7 +235,7 @@ trait PresenceBase
         if ($this->getSide() === 'client' || $this->getSide() === 'console') {
             $upsert = $this->client->call(
                 Client::METHOD_PUT,
-                '/presences/' . ID::unique(),
+                '/presences/' . Id::unique(),
                 \array_merge([
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id'],
@@ -284,7 +284,7 @@ trait PresenceBase
                 // The console project has no API keys; seed via the other user's own session.
                 $this->client->call(
                     Client::METHOD_PUT,
-                    '/presences/' . ID::unique(),
+                    '/presences/' . Id::unique(),
                     [
                         'content-type' => 'application/json',
                         'x-appwrite-project' => $projectId,
@@ -383,7 +383,7 @@ trait PresenceBase
         // Create a presence for user1 using a presence-scoped API key so we can set ACLs.
         $presenceAllow = $this->client->call(
             Client::METHOD_PUT,
-            '/presences/' . ID::unique(),
+            '/presences/' . Id::unique(),
             \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $projectId,
@@ -442,7 +442,7 @@ trait PresenceBase
         // Create another presence for user1 without granting any special permissions to user2.
         $presenceDeny = $this->client->call(
             Client::METHOD_PUT,
-            '/presences/' . ID::unique(),
+            '/presences/' . Id::unique(),
             \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $projectId,
@@ -503,7 +503,7 @@ trait PresenceBase
         if ($this->getSide() === 'client' || $this->getSide() === 'console') {
             $upsert = $this->client->call(
                 Client::METHOD_PUT,
-                '/presences/' . ID::unique(),
+                '/presences/' . Id::unique(),
                 \array_merge([
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id'],
@@ -592,7 +592,7 @@ trait PresenceBase
 
             $upsert = $this->client->call(
                 Client::METHOD_PUT,
-                '/presences/' . ID::unique(),
+                '/presences/' . Id::unique(),
                 $headers,
                 ['status' => 'online', 'metadata' => ['source' => 'setup']]
             );
@@ -644,7 +644,7 @@ trait PresenceBase
 
         $create = $this->client->call(
             Client::METHOD_PUT,
-            '/presences/' . ID::unique(),
+            '/presences/' . Id::unique(),
             \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $projectId,
@@ -734,7 +734,7 @@ trait PresenceBase
         if ($this->getSide() === 'client' || $this->getSide() === 'console') {
             $upsert = $this->client->call(
                 Client::METHOD_PUT,
-                '/presences/' . ID::unique(),
+                '/presences/' . Id::unique(),
                 \array_merge([
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id'],
@@ -786,6 +786,39 @@ trait PresenceBase
         $this->assertEquals(204, $delete['headers']['status-code']);
     }
 
+    public function testUpsertPresenceWithReadPermissions(): void
+    {
+        // A client sharing its presence with read roles alone must still heartbeat, update and delete it.
+        if ($this->getSide() !== 'client') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $payload = [
+            'status' => 'online',
+            'permissions' => [Permission::read(Role::users())],
+        ];
+
+        $upsert = $this->client->call(Client::METHOD_PUT, '/presences/' . ID::unique(), $headers, $payload);
+        $this->assertEquals(200, $upsert['headers']['status-code']);
+        $presenceId = $upsert['body']['$id'];
+
+        $heartbeat = $this->client->call(Client::METHOD_PUT, '/presences/' . $presenceId, $headers, $payload);
+        $this->assertEquals(200, $heartbeat['headers']['status-code']);
+
+        $update = $this->client->call(Client::METHOD_PATCH, '/presences/' . $presenceId, $headers, [
+            'status' => 'away',
+        ]);
+        $this->assertEquals(200, $update['headers']['status-code']);
+
+        $delete = $this->client->call(Client::METHOD_DELETE, '/presences/' . $presenceId, $headers);
+        $this->assertEquals(204, $delete['headers']['status-code']);
+    }
+
     public function testUpdatePresencePurgeListCache(): void
     {
         if ($this->getProject()['$id'] === 'console') {
@@ -799,7 +832,7 @@ trait PresenceBase
         if ($this->getSide() === 'client') {
             $upsert = $this->client->call(
                 Client::METHOD_PUT,
-                '/presences/' . ID::unique(),
+                '/presences/' . Id::unique(),
                 \array_merge([
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id'],
@@ -876,7 +909,7 @@ trait PresenceBase
         if ($this->getSide() === 'client') {
             $upsert = $this->client->call(
                 Client::METHOD_PUT,
-                '/presences/' . ID::unique(),
+                '/presences/' . Id::unique(),
                 \array_merge([
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id'],
@@ -952,7 +985,7 @@ trait PresenceBase
         if ($this->getSide() === 'client') {
             $upsert = $this->client->call(
                 Client::METHOD_PUT,
-                '/presences/' . ID::unique(),
+                '/presences/' . Id::unique(),
                 \array_merge([
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id'],
@@ -1013,7 +1046,7 @@ trait PresenceBase
         if ($this->getSide() === 'client' || $this->getSide() === 'console') {
             $response = $this->client->call(
                 Client::METHOD_PATCH,
-                '/presences/' . ID::unique(),
+                '/presences/' . Id::unique(),
                 \array_merge([
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id'],
@@ -1037,7 +1070,7 @@ trait PresenceBase
 
         $response = $this->client->call(
             Client::METHOD_PATCH,
-            '/presences/' . ID::unique(),
+            '/presences/' . Id::unique(),
             \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -1068,7 +1101,7 @@ trait PresenceBase
         }
 
         for ($attempt = 0; $attempt < 20; $attempt++) {
-            $presence = $this->client->call(Client::METHOD_PUT, '/presences/' . ID::unique(), $headers, $payload + [
+            $presence = $this->client->call(Client::METHOD_PUT, '/presences/' . Id::unique(), $headers, $payload + [
                 'status' => 'online',
             ]);
             $this->assertEquals(200, $presence['headers']['status-code']);
@@ -1109,13 +1142,13 @@ trait PresenceBase
 
         $response = $this->client->call(
             Client::METHOD_PUT,
-            '/presences/' . ID::unique(),
+            '/presences/' . Id::unique(),
             \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()),
             [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'status' => 'online',
             ]
         );
@@ -1133,7 +1166,7 @@ trait PresenceBase
 
         $response = $this->client->call(
             Client::METHOD_PUT,
-            '/presences/' . ID::unique(),
+            '/presences/' . Id::unique(),
             \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -1163,7 +1196,7 @@ trait PresenceBase
 
         $firstUpsert = $this->client->call(
             Client::METHOD_PUT,
-            '/presences/' . ID::unique(),
+            '/presences/' . Id::unique(),
             $headers,
             [
                 'userId' => $userId,
@@ -1175,7 +1208,7 @@ trait PresenceBase
 
         $secondUpsert = $this->client->call(
             Client::METHOD_PUT,
-            '/presences/' . ID::unique(),
+            '/presences/' . Id::unique(),
             $headers,
             [
                 'userId' => $userId,
@@ -1248,7 +1281,7 @@ trait PresenceBase
             'cookie' => 'a_session_' . $projectId . '=' . $user2['session'],
         ];
 
-        $sharedPresenceId = ID::unique();
+        $sharedPresenceId = Id::unique();
 
         $victim = $this->client->call(
             Client::METHOD_PUT,

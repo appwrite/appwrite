@@ -93,7 +93,7 @@ class SMTP extends EmailAdapter
             [$client, $reused] = $this->open();
         } catch (SmtpException $exception) {
             foreach ($recipients as $email) {
-                $response->addResult($email, $exception->getMessage(), $this->permanent($exception));
+                $response->addResult($email, $exception->getMessage(), $this->permanent($exception), $this->code($exception));
             }
 
             return $response->toArray();
@@ -115,14 +115,14 @@ class SMTP extends EmailAdapter
             }
 
             foreach ($result->rejected as $email => $reply) {
-                $response->addResult($email, (string) $reply, $reply->outcome === Outcome::Permanent);
+                $response->addResult($email, (string) $reply, $reply->outcome === Outcome::Permanent, $reply->code);
             }
         } catch (TransactionException $exception) {
             // Every recipient refused: each answers for itself. Otherwise the
             // refusal was the message's own (MAIL FROM, DATA) and holds for all.
             foreach ($recipients as $email) {
                 $reply = $exception->rejected[$email] ?? $exception->reply;
-                $response->addResult($email, (string) $reply, $reply->outcome === Outcome::Permanent);
+                $response->addResult($email, (string) $reply, $reply->outcome === Outcome::Permanent, $reply->code);
             }
 
             // A 421 during RCPT ends the session with the transaction.
@@ -147,7 +147,7 @@ class SMTP extends EmailAdapter
             $stale = $retry && $reused;
         } catch (SmtpException $exception) {
             foreach ($recipients as $email) {
-                $response->addResult($email, $exception->getMessage(), $this->permanent($exception));
+                $response->addResult($email, $exception->getMessage(), $this->permanent($exception), $this->code($exception));
             }
 
             $keep = false;
@@ -223,6 +223,7 @@ class SMTP extends EmailAdapter
 
         $failures = [];
         $permanent = true;
+        $code = 0;
 
         foreach ($this->hosts() as [$host, $port, $encryption]) {
             $client = new Client(
@@ -242,6 +243,7 @@ class SMTP extends EmailAdapter
                 // One host that may answer differently later is reason enough
                 // to try the whole list again.
                 $permanent = $permanent && $this->permanent($exception);
+                $code = $code ?: $this->code($exception);
 
                 continue;
             }
@@ -249,7 +251,7 @@ class SMTP extends EmailAdapter
             return $client;
         }
 
-        throw new NoHostAnswered('No SMTP host answered: ' . implode('; ', $failures), $failures !== [] && $permanent);
+        throw new NoHostAnswered('No SMTP host answered: ' . implode('; ', $failures), $failures !== [] && $permanent, $code);
     }
 
     /**
@@ -274,6 +276,21 @@ class SMTP extends EmailAdapter
             $exception instanceof CapabilityException => true,
             $exception instanceof AuthenticationException => $previous instanceof TransactionException && $previous->isPermanent(),
             default => false,
+        };
+    }
+
+    /**
+     * The reply code the server refused with, or 0 when no reply stands behind the failure.
+     */
+    private function code(SmtpException $exception): int
+    {
+        $previous = $exception->getPrevious();
+
+        return match (true) {
+            $exception instanceof TransactionException => $exception->reply->code,
+            $exception instanceof NoHostAnswered => $exception->getCode(),
+            $exception instanceof AuthenticationException && $previous instanceof TransactionException => $previous->reply->code,
+            default => 0,
         };
     }
 

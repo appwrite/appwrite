@@ -265,7 +265,7 @@ class Jobs extends Action
         $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
 
         if (($update['status'] ?? '') === 'building' && $deployment->getAttribute('status') === 'building') {
-            $this->gitAction('processing', $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
+            GitAction::report('processing', $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
         }
 
         return $deployment;
@@ -783,7 +783,7 @@ class Jobs extends Action
 
         $status = $deployment->getAttribute('status');
         if (\in_array($status, ['ready', 'failed'], true) && ! $resource->isEmpty()) {
-            $this->gitAction($status, $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
+            GitAction::report($status, $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
         }
 
         return $deployment;
@@ -838,40 +838,6 @@ class Jobs extends Action
     }
 
     /**
-     * Report a build state to the VCS provider for a VCS deployment
-     * (best-effort; no-op for non-VCS builds).
-     */
-    protected function gitAction(string $status, Document $deployment, Document $project, Database $dbForProject, Database $dbForPlatform, VcsFactory $vcsFactory, array $platform): void
-    {
-        if ($deployment->getAttribute('providerCommitHash', '') === '' && $deployment->getAttribute('providerCommentId', '') === '') {
-            return;
-        }
-
-        try {
-            $resource = $dbForProject->getDocument($deployment->getAttribute('resourceType', 'functions'), $deployment->getAttribute('resourceId'));
-            $installation = $dbForPlatform->getDocument('installations', $resource->getAttribute('installationId', ''));
-            if ($resource->isEmpty() || $installation->getAttribute('providerInstallationId', '') === '') {
-                return;
-            }
-
-            GitAction::run(
-                $status,
-                $vcsFactory->fromInstallation($installation),
-                $deployment->getAttribute('providerCommitHash', ''),
-                $deployment->getAttribute('providerRepositoryOwner', ''),
-                $deployment->getAttribute('providerRepositoryName', ''),
-                $project,
-                $resource,
-                $deployment,
-                $dbForPlatform,
-                $platform,
-            );
-        } catch (\Throwable) {
-            // Best-effort — never fails the build.
-        }
-    }
-
-    /**
      * Point the resource at this deployment (auto-activate). Mirrors the
      * essential activation from the Builds worker.
      */
@@ -883,20 +849,20 @@ class Jobs extends Action
         $isBranchBuild = $branch !== '' && ! empty($deployment->getAttribute('installationId'));
         $branches = $isBranchBuild ? ['', $branch] : [''];
 
-        $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $bus) {
-            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-                'deploymentId' => $deployment->getId(),
-                'deploymentInternalId' => $deployment->getSequence(),
-            ]));
-            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
-        }, [
+        foreach ($dbForPlatform->cursor('rules', [
             Query::equal('projectInternalId', [$project->getSequence()]),
             Query::equal('type', ['deployment']),
             Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
             Query::equal('deploymentResourceType', [$resource->getCollection() === 'sites' ? 'site' : 'function']),
             Query::equal('trigger', ['manual']),
             Query::equal('deploymentVcsProviderBranch', $branches),
-        ]);
+        ], batchSize: 25) as $rule) {
+            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getSequence(),
+            ]));
+            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+        }
 
         $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document([
             'live' => true,
@@ -918,20 +884,20 @@ class Jobs extends Action
             return;
         }
 
-        $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $bus) {
-            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-                'deploymentId' => $deployment->getId(),
-                'deploymentInternalId' => $deployment->getSequence(),
-            ]));
-            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
-        }, [
+        foreach ($dbForPlatform->cursor('rules', [
             Query::equal('projectInternalId', [$project->getSequence()]),
             Query::equal('type', ['deployment']),
             Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
             Query::equal('deploymentResourceType', ['function']),
             Query::equal('trigger', ['manual']),
             Query::equal('deploymentVcsProviderBranch', [$branch]),
-        ]);
+        ], batchSize: 25) as $rule) {
+            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getSequence(),
+            ]));
+            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+        }
     }
 
     /**

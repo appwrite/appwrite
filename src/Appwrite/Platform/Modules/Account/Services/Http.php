@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Services;
 
+use Appwrite\Platform\Modules\Account\Http\Account\Memberships\XList as ListMemberships;
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\Authenticators\Create as CreateAuthenticator;
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\Authenticators\Delete as DeleteAuthenticator;
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\Authenticators\Update as UpdateAuthenticator;
@@ -46,6 +47,7 @@ class Http extends Service
             ->addAction(GetPasskey::getName(), new GetPasskey())
             ->addAction(DeletePasskey::getName(), new DeletePasskey())
             ->addAction(UpdatePasskey::getName(), new UpdatePasskey())
+            ->addAction(ListMemberships::getName(), new ListMemberships())
             ->addAction(CreatePasskeyToken::getName(), new CreatePasskeyToken())
             ->addAction(UpdatePasskeyToken::getName(), new UpdatePasskeyToken());
     }

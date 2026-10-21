@@ -7,7 +7,7 @@ $authorization->disable();
 $dbForProject->getAuthorization()->disable();
 
 // ruleid: php.appwrite.global-authorization-disable
-$authorization->setDefaultStatus(false);
+$authorization->setStatus(false);
 
 // ruleid: php.appwrite.global-authorization-disable
 Authorization::disable();
@@ -16,7 +16,7 @@ Authorization::disable();
 $authorization->reset();
 
 // ok: php.appwrite.global-authorization-disable
-$authorization->setDefaultStatus(true);
+$authorization->setStatus(true);
 
 // ok: php.appwrite.global-authorization-disable
 $file = ($isAPIKey || $isPrivilegedUser)

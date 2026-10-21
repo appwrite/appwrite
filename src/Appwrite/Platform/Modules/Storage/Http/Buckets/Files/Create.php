@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files;
 use Appwrite\ClamAV\Network;
 use Appwrite\ClamAV\ScanResult;
 use Appwrite\Event\Event;
+use Appwrite\Exiftool\Client as ExiftoolClient;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\SDK\AuthType;
@@ -21,13 +22,15 @@ use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\PermissionType;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Permissions;
@@ -61,6 +64,17 @@ class Create extends Action
      * Not part of the public file model.
      */
     private const UPLOADER_ID = 'uploaderId';
+
+    private const METADATA_MIME_TYPES = [
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'image/heic',
+        'image/heif',
+        'image/avif',
+        'image/gif',
+        'image/tiff',
+    ];
 
     public static function getName()
     {
@@ -101,7 +115,7 @@ class Create extends Action
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
             ->param('fileId', '', new CustomId(), 'File ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
             ->param('file', [], new File(), 'Binary file. Appwrite SDKs provide helpers to handle file input. [Learn about file input](https://appwrite.io/docs/products/storage/upload-download#input-file).', skipValidation: true)
-            ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [PermissionType::Read, PermissionType::Update, PermissionType::Delete, PermissionType::Write])), 'An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('folder', '', new Folder(), 'Virtual folder to place the file in, for example "photos/2026". Nest folders with `/`. Defaults to the bucket root.', true)
             ->inject('request')
             ->inject('response')
@@ -113,6 +127,7 @@ class Create extends Action
             ->inject('deviceForLocal')
             ->inject('authorization')
             ->inject('locks')
+            ->inject('exiftool')
             ->callback($this->action(...));
     }
 
@@ -131,7 +146,8 @@ class Create extends Action
         Device $deviceForFiles,
         Device $deviceForLocal,
         Authorization $authorization,
-        callable $locks
+        callable $locks,
+        ExiftoolClient $exiftool
     ) {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -142,14 +158,14 @@ class Create extends Action
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        if (!$authorization->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
+        if (!$authorization->isValid(new Input(PermissionType::Create, $bucket->getPermissionsByType(PermissionType::Create)))) {
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
         $allowedPermissions = [
-            Database::PERMISSION_READ,
-            Database::PERMISSION_UPDATE,
-            Database::PERMISSION_DELETE,
+            PermissionType::Read,
+            PermissionType::Update,
+            PermissionType::Delete,
         ];
 
         // Map aggregate permissions to into the set of individual permissions they represent.
@@ -160,7 +176,7 @@ class Create extends Action
             $permissions = [];
             if (!empty($user->getId()) && !$isPrivilegedUser) {
                 foreach ($allowedPermissions as $permission) {
-                    $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                    $permissions[] = (new Permission($permission->value, 'user', $user->getId()))->toString();
                 }
             }
         }
@@ -168,10 +184,10 @@ class Create extends Action
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = $authorization->getRoles();
         if (!$isAPIKey && !$isPrivilegedUser) {
-            foreach (\Utopia\Database\Database::PERMISSIONS as $type) {
+            foreach ([PermissionType::Read, PermissionType::Create, PermissionType::Update, PermissionType::Delete] as $type) {
                 foreach ($permissions as $permission) {
                     $permission = Permission::parse($permission);
-                    if ($permission->getPermission() != $type) {
+                    if ($permission->getPermission() != $type->value) {
                         continue;
                     }
                     $role = (new Role(
@@ -208,7 +224,7 @@ class Create extends Action
         $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
         $contentRange = $request->getHeaderLine('content-range');
-        $fileId = $fileId === 'unique()' ? ID::unique() : $fileId;
+        $fileId = $fileId === 'unique()' ? Id::unique() : $fileId;
         $folder = Folder::normalize($folder);
         $chunk = 1;
         $chunks = 1;
@@ -296,6 +312,11 @@ class Create extends Action
 
                 $this->assertResumeAllowed($bucket, $file, $authorization, $user);
 
+                // The chunk count and size were fixed by the first chunk.
+                if ((int) $file->getAttribute('sizeOriginal', 0) !== $fileSize) {
+                    throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
+                }
+
                 if ($uploaded === $chunks) {
                     $response
                         ->setStatusCode(Response::STATUS_CODE_OK)
@@ -312,7 +333,7 @@ class Create extends Action
 
                 if (!empty($contentRange)) {
                     $doc = new Document([
-                        '$id' => ID::custom($fileId),
+                        '$id' => Id::custom($fileId),
                         '$permissions' => $permissions,
                         'bucketId' => $bucket->getId(),
                         'bucketInternalId' => $bucket->getSequence(),
@@ -343,7 +364,7 @@ class Create extends Action
             }
         };
 
-        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response, $user): void {
+        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $exiftool, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response, $user): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             $uploaded = 0;
 
@@ -384,6 +405,17 @@ class Create extends Action
             if ($chunksUploaded === $chunks && $uploaded < $chunks) {
                 $deviceForFiles->finalize($path, $chunks, $metadata);
 
+                // A chunk can carry more or fewer bytes than its range announces.
+                if (!empty($contentRange) && $deviceForFiles->getFileSize($path) !== $fileSize) {
+                    $removed = $deviceForFiles->delete($path);
+
+                    if ($removed && !$file->isEmpty() && !$authorization->skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId))) {
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove file from DB');
+                    }
+
+                    throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
+                }
+
                 if (System::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && $deviceForFiles->getType() === DeviceType::Local) {
                     $antivirus = new Network(
                         System::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
@@ -423,6 +455,11 @@ class Create extends Action
 
                 if (\in_array($mimeType, $formats['ambiguous'], true)) {
                     $mimeType = $formats['extensions'][\strtolower(\pathinfo($fileName, PATHINFO_EXTENSION))] ?? $mimeType;
+                }
+
+                // Strip before hashing so the signature and sizes describe the file we store.
+                if ($bucket->getAttribute('stripMetadata', false) && $fileSize <= APP_STORAGE_READ_BUFFER && \in_array($mimeType, self::METADATA_MIME_TYPES, true)) {
+                    $fileSize = $this->stripMetadata($exiftool, $deviceForFiles, $path, $mimeType) ?? $fileSize;
                 }
 
                 $fileHash = $deviceForFiles->getFileHash($path); // Get file hash before compression and encryption
@@ -522,6 +559,7 @@ class Create extends Action
                     $file = $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, new Document([
                         'signature' => $fileHash,
                         'mimeType' => $mimeType,
+                        'sizeOriginal' => $fileSize,
                         'sizeActual' => $sizeActual,
                         'algorithm' => $algorithm,
                         'openSSLVersion' => $openSSLVersion,
@@ -620,6 +658,29 @@ class Create extends Action
     }
 
     /**
+     * Returns the stripped size, or null when the file is kept as uploaded.
+     */
+    private function stripMetadata(ExiftoolClient $exiftool, Device $deviceForFiles, string $path, string $mimeType): ?int
+    {
+        try {
+            $stripped = $exiftool->strip($deviceForFiles->read($path));
+
+            if (!$deviceForFiles->write($path, new Stream($stripped), $mimeType)) {
+                Console::warning("Image metadata was not removed from {$path}: the stripped file could not be saved.");
+                return null;
+            }
+
+            // Later size checks stat this path again.
+            \clearstatcache(true, $path);
+
+            return \strlen($stripped);
+        } catch (\Throwable $th) {
+            Console::warning("Image metadata was not removed from {$path}: {$th->getMessage()}");
+            return null;
+        }
+    }
+
+    /**
      * Chunked resume loads the file with authorization skipped, because the
      * user who started the upload may not hold update permission yet.
      * Continue only when the caller may update the file (bucket update, or
@@ -627,12 +688,12 @@ class Create extends Action
      */
     private function assertResumeAllowed(Document $bucket, Document $file, Authorization $authorization, User $user): void
     {
-        if ($authorization->isValid(new Input(Database::PERMISSION_UPDATE, $bucket->getUpdate()))) {
+        if ($authorization->isValid(new Input(PermissionType::Update, $bucket->getPermissionsByType(PermissionType::Update)))) {
             return;
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        if ($fileSecurity && $authorization->isValid(new Input(Database::PERMISSION_UPDATE, $file->getUpdate()))) {
+        if ($fileSecurity && $authorization->isValid(new Input(PermissionType::Update, $file->getPermissionsByType(PermissionType::Update)))) {
             return;
         }
 

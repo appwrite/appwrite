@@ -108,7 +108,12 @@ async function mockAccountApi(
         recoveryCode: false,
       })
     }
-    if (apiPath === '/account/prefs') return json(200, {})
+    // GET returns the prefs, PATCH the updated user.
+    if (apiPath === '/account/prefs') {
+      return request.method() === 'PATCH'
+        ? json(200, { ...ACCOUNT, prefs: request.postDataJSON().prefs })
+        : json(200, {})
+    }
     if (apiPath === '/account/sessions') {
       return json(200, { total: 0, sessions: [] })
     }

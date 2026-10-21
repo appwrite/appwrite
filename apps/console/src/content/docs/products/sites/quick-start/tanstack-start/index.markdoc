@@ -14,6 +14,8 @@ Open your terminal, and run the following command.
 npm create @tanstack/start@latest
 ```
 
+When the CLI asks for a deployment adapter, select **Nitro (agnostic)** or **None**. Appwrite Sites runs both. The adapter sets the output directory you confirm in step 3.
+
 Push this project to a [GitHub repository](https://github.com/new).
 {% /section %}
 
@@ -37,10 +39,10 @@ Connect your GitHub account and select the repository you intend to deploy (or a
 
 1. Select the **production branch** and **root directory** from your repo.
 2. Verify that the **correct framework** is selected. In case an incorrect framework is visible, pick **TanStack Start** from the drop-down list. 
-3. Confirm the **install command**, **build command**, and **output directory** in the build settings. The default build settings for TanStack Start are:
+3. Confirm the **install command**, **build command**, and **output directory** in the build settings. The build settings for TanStack Start are:
     - **Install command:** `npm install`
     - **Build command:** `npm run build`
-    - **Output directory:** `./dist` (if you're using Nitro v2 or v3, this should be `./.output`)
+    - **Output directory:** `./.output` if `vite.config.ts` uses the Nitro plugin from `nitro/vite`. Without a deployment adapter, TanStack Start builds to `./dist`.
 4. Add any **environment variables** required by the site. This is not necessary if you're deploying the starter app.
 
 Click on the **Deploy** button.

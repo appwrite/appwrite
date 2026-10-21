@@ -17,7 +17,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
@@ -66,7 +66,7 @@ class Create extends Base
                     )
                 ],
             ))
-            ->param('siteId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+            ->param('siteId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Site ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Site name. Max length: 128 chars.')
             ->param('framework', '', new WhiteList(\array_keys(Config::getParam('frameworks')), true), 'Sites framework.', enum: new Enum(name: 'Framework'))
             ->param('enabled', true, new Boolean(), 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true)
@@ -101,6 +101,7 @@ class Create extends Base
             ), 'Runtime specification for the SSR executions.', true, ['plan'], example: 's-1vcpu-512mb')
             ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
             ->param('scopes', [], new ArrayList(new WhiteList(\array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE), 'List of scopes allowed for API key auto-generated for every site build and SSR execution. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
+            ->param('description', '', new Text(1024, 0), 'Optional description for the site.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -136,6 +137,7 @@ class Create extends Base
         string $runtimeSpecification,
         int $deploymentRetention,
         array $scopes,
+        string $description,
         Response $response,
         Database $dbForProject,
         Document $project,
@@ -159,7 +161,7 @@ class Create extends Base
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Runtime "' . $buildRuntime . '" is not supported');
         }
 
-        $siteId = ($siteId == 'unique()') ? ID::unique() : $siteId;
+        $siteId = ($siteId == 'unique()') ? Id::unique() : $siteId;
 
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
@@ -181,6 +183,7 @@ class Create extends Base
             'live' => true,
             'logging' => $logging,
             'name' => $name,
+            'description' => $description,
             'framework' => $framework,
             'deploymentRetention' => $deploymentRetention,
             'deploymentInternalId' => '',
@@ -190,7 +193,7 @@ class Create extends Base
             'buildCommand' => $buildCommand,
             'startCommand' => $startCommand,
             'outputDirectory' => $outputDirectory,
-            'search' => implode(' ', [$siteId, $name, $framework]),
+            'search' => implode(' ', [$siteId, $name, $description, $framework]),
             'fallbackFile' => $fallbackFile,
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getSequence(),
@@ -218,7 +221,7 @@ class Create extends Base
         if (!empty($providerRepositoryId)) {
             $teamId = $project->getAttribute('teamId', '');
             $repository = new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 '$permissions' => $this->getPermissions($teamId, $project->getId()),
                 'installationId' => $installation->getId(),
                 'installationInternalId' => $installation->getSequence(),
