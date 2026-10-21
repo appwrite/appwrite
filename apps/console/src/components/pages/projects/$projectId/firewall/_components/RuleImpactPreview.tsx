@@ -23,9 +23,10 @@ import {
   useProject,
 } from '@/lib/react-query/hooks'
 import { UsageBreakdownCard } from '../../usage/_components/UsageMetricCard'
-import type {
-  FirewallConditionDraft,
-  FirewallResourceType,
+import {
+  isConditionDraftComplete,
+  type FirewallConditionDraft,
+  type FirewallResourceType,
 } from '@/lib/firewall/conditions'
 import {
   exceedsFirewallUsageConditionLimit,
@@ -200,9 +201,7 @@ export function RuleImpactPreview({
       : undefined
   const activity = previewUnavailable ? undefined : impact?.activity
 
-  const filledConditions = conditions.filter(
-    (c) => c.value.trim().length > 0,
-  ).length
+  const filledConditions = conditions.filter(isConditionDraftComplete).length
   const showSubtleLoading =
     !previewUnavailable && !isError && isFetching && !isLoading
   const hideImpactValues = previewUnavailable || !impact
