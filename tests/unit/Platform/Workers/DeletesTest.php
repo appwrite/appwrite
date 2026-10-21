@@ -230,6 +230,7 @@ final class DeletesTest extends TestCase
             deviceForFunctions: $this->createStub(Device::class),
             deviceForSites: $this->createStub(Device::class),
             deviceForBuilds: $this->createStub(Device::class),
+            deviceForVideos: $this->createStub(Device::class),
             telemetry: new NoTelemetry(),
             certificates: $this->createStub(Certificates::class),
             executor: $this->createStub(Executor::class),
