@@ -1,0 +1,165 @@
+---
+layout: post
+title: "Deploy a Postgres API with Drizzle on Appwrite Functions"
+description: The new Postgres with Drizzle function template serves a typed REST API from Appwrite Postgres, with Drizzle Kit migrations you run from your machine.
+date: 2026-10-21
+cover: /images/blog/announcing-postgres-drizzle-template/cover.avif
+timeToRead: 5
+author: atharva
+category: announcements
+featured: false
+faqs:
+  - question: "What is the Postgres with Drizzle template?"
+    answer: "It is an Appwrite Functions template, written in TypeScript, that serves a todo REST API from an Appwrite Postgres database through Drizzle ORM. It includes the Drizzle schema, the first SQL migration, input validation, and a database client that works through the connection pooler. Create it in the Appwrite Console under **Functions** > **Templates**."
+  - question: "Does the function create its database tables?"
+    answer: "No. The function never changes the schema, because two instances starting at the same time could race to run the same migration. Apply the migrations in the `drizzle` directory from your machine with `npm run db:migrate`, against the direct port `5432`, before the first request."
+  - question: "Which connection string should the function use?"
+    answer: "Use the pooled connection string on port `6432`, which the **Credentials** dialog of your database gives you by default. The pooler lets many short-lived function instances share a small pool of database connections. Run migrations against the direct port `5432` instead."
+  - question: "How do I change the schema?"
+    answer: "Edit `src/schema.ts`, run `npm run db:generate` to write a new SQL migration into `drizzle/`, and apply it with `npm run db:migrate`. Then push the change to the repository connected to your function, and Appwrite builds and activates a new deployment."
+  - question: "Is the todo API protected?"
+    answer: "No. The template doesn't check who is calling, and its domain only accepts requests while anyone can execute the function. Anyone with the domain can read and change todos. Before you store real data, add your own authentication check, or turn off public access and call the function through the Functions API as a signed-in user."
+---
+
+[Appwrite Postgres](/docs/products/databases/postgresql) is a standard PostgreSQL database, so any Postgres driver or ORM can connect to it. Calling it from a serverless function adds three problems: reusing a connection across executions, staying under the database's connection limit when many instances start at once, and keeping schema changes out of the request path.
+
+The new **Postgres with Drizzle** function template handles all three. It is a TypeScript function that serves a todo REST API from your database through [Drizzle ORM](https://orm.drizzle.team/), a TypeScript ORM where you define tables in code and get typed query results from those definitions. You'll find it in the Console under **Functions** > **Templates**.
+
+# What the template includes {% #template %}
+
+The function serves five routes on its domain:
+
+| Route | Action |
+| --- | --- |
+| `GET /` | List all todos, ordered by ID |
+| `POST /` | Create a todo from `{ "title": "..." }` |
+| `GET /:id` | Get one todo |
+| `PATCH /:id` | Update `title`, `completed`, or both |
+| `DELETE /:id` | Delete a todo |
+
+- **A schema in TypeScript.** `src/schema.ts` defines the `todos` table, and Drizzle infers the type of every query result from it.
+- **Migrations as SQL files.** `drizzle/0000_create_todos.sql` creates the table. Drizzle Kit, Drizzle's command-line tool, writes a new migration file each time the schema changes and applies pending ones to the database.
+- **Validation with JSON errors.** Titles are trimmed and must be 1 to 255 characters, and `completed` must be a boolean, or the function returns `400`. An ID that isn't a positive integer within the range of a Postgres `integer`, or that matches no todo, returns `404`. Every error response carries an `error` message.
+- **One variable.** `DATABASE_URL`, your database's connection string, is the only configuration.
+
+The database client in `src/db.ts` is the part worth copying into your own functions:
+
+```ts
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+
+// Kept between executions so warm starts reuse the connection
+let db: ReturnType<typeof drizzle> | undefined;
+
+export function getDb() {
+  if (!db) {
+    // Some transaction-mode poolers don't support prepared statements
+    db = drizzle(
+      postgres(process.env.DATABASE_URL, { max: 1, prepare: false })
+    );
+  }
+  return db;
+}
+```
+
+A warm start is an execution served by an instance that is already running, so it reuses the module-level `db` and its connection instead of connecting again. Each instance opens at most one connection (`max: 1`). `prepare: false` turns off prepared statements, because the [connection pooler](/docs/products/databases/postgresql/connection-pooling) runs in transaction mode by default: consecutive queries can land on different database connections, and a statement prepared on one doesn't exist on the next.
+
+# Deploy the template {% #deploy %}
+
+You need an Appwrite Postgres database. If you don't have one yet, follow the [PostgreSQL quick start](/docs/products/databases/postgresql/quick-start) to create one.
+
+Open the database, click **Credentials**, and copy the connection string from the **DSN** tab. It points at the pooler on port `6432`, which lets many short-lived function instances share a small pool of database connections. This is the string the function uses.
+
+In **Functions** > **Templates**, search for **Postgres with Drizzle** and create a function from it:
+
+1. Select a Node runtime.
+2. Paste the connection string into `DATABASE_URL`.
+3. Select **Connect your repository**, then **Create new repository**. Appwrite copies the template into it, and you'll run migrations and push schema changes from that repository.
+4. Click **Create and deploy**.
+
+## Apply the first migration {% #migrate %}
+
+The function doesn't create its tables. If it migrated on startup, two instances starting at the same time could race to run the same `CREATE TABLE`. Instead, you apply migrations from your machine. Clone the new repository, then run:
+
+```sh
+npm install
+DATABASE_URL="<DIRECT_CONNECTION_STRING>" npm run db:migrate
+```
+
+For `<DIRECT_CONNECTION_STRING>`, use the same connection string with the port changed from `6432` to `5432`. Migrations need this direct endpoint, because schema changes expect a single database session for the whole run, which transaction mode doesn't guarantee. `db:migrate` runs `drizzle-kit migrate`, which creates the `todos` table and records each applied migration in the `drizzle.__drizzle_migrations` table, so running it again skips them.
+
+## Call the API {% #call %}
+
+Create a todo through your function's domain:
+
+```sh
+curl -X POST https://<YOUR_FUNCTION_DOMAIN>/ \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Write the docs"}'
+```
+
+The function responds with `201` and the new row. Drizzle maps the `created_at` column to the `createdAt` field from the schema:
+
+```json
+{
+  "ok": true,
+  "todo": {
+    "id": 1,
+    "title": "Write the docs",
+    "completed": false,
+    "createdAt": "2026-10-21T04:49:57.975Z"
+  }
+}
+```
+
+To mark it done, send `PATCH /1` with `{"completed": true}`. `GET /` lists every todo.
+
+# Change the schema {% #schema %}
+
+To give todos a due date, import `date` from `drizzle-orm/pg-core` in `src/schema.ts` and add a column:
+
+```ts
+export const todos = pgTable('todos', {
+  id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+  title: varchar('title', { length: 255 }).notNull(),
+  completed: boolean('completed').notNull().default(false),
+  dueDate: date('due_date'),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+```
+
+Generate a migration from the change, then apply it with the direct connection string:
+
+```sh
+npm run db:generate -- --name=add_due_date
+DATABASE_URL="<DIRECT_CONNECTION_STRING>" npm run db:migrate
+```
+
+Drizzle Kit compares the schema with its last snapshot in `drizzle/meta` and writes `drizzle/0001_add_due_date.sql`:
+
+```sql
+ALTER TABLE "todos" ADD COLUMN "due_date" date;
+```
+
+Commit `src/schema.ts` and the `drizzle` directory, then push. Appwrite builds and activates a new deployment from the push. Apply the migration before you push, so no deployment queries a column that doesn't exist yet. To try a migration on a copy of your data first, run it against a [database branch](/docs/products/databases/postgresql/branches).
+
+Once the new deployment is active, the `GET` routes return `dueDate`, because they select whole rows. Existing todos have `null`. To accept the field in `POST` and `PATCH`, add it to the handlers in `src/main.ts`.
+
+# Before you store real data {% #production %}
+
+The template is a starting point. Change two things before it holds data you care about:
+
+- **Add authentication.** A function's domain only accepts requests while anyone can execute the function, so the template is created that way, and it doesn't check who is calling. Anyone with the domain can read, change, and delete todos. Add your own check in `src/main.ts`, or open the function's **Security** tab, change **Permissions** so only signed-in users can execute it, and call it through the [Functions API](/docs/products/functions/execute). The function then receives the caller's user ID in the `x-appwrite-user-id` header, which you can store with each todo.
+- **Use a narrower database role.** The connection string from **Credentials** signs in as `admin`, which owns the database. Create a [role](/docs/products/databases/postgresql/connections#roles) that can only read and write the tables the function uses, put its connection string in `DATABASE_URL`, and keep `admin` for migrations.
+
+# Start building {% #start %}
+
+The Postgres with Drizzle template is available now on [Appwrite Cloud](https://cloud.appwrite.io). Open your project, go to **Functions** > **Templates**, and search for **Postgres with Drizzle**.
+
+- [Template source on GitHub](https://github.com/appwrite/templates/tree/main/node-typescript/postgres-with-drizzle)
+- [Use Drizzle ORM with Appwrite Postgres](/blog/post/drizzle-orm-appwrite-postgres)
+- [Drizzle integration guide](/docs/products/databases/postgresql/integrations/drizzle)
+- [Connect Drizzle to Appwrite Postgres in the Drizzle docs](https://orm.drizzle.team/docs/connect-appwrite-postgres)
+- [Connection pooling](/docs/products/databases/postgresql/connection-pooling)

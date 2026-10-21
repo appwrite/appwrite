@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-postgres-drizzle-template",
+    "href": "/blog/post/announcing-postgres-drizzle-template",
+    "title": "Deploy a Postgres API with Drizzle on Appwrite Functions",
+    "description": "The new Postgres with Drizzle function template serves a typed REST API from Appwrite Postgres, with Drizzle Kit migrations you run from your machine.",
+    "date": "2026-10-21",
+    "lastUpdated": "2026-10-21",
+    "timeToRead": 5,
+    "author": "atharva",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-postgres-drizzle-template/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-appwrite-databases-hackathon",
     "href": "/blog/post/announcing-appwrite-databases-hackathon",
     "title": "Announcing the Appwrite Databases Hackathon",

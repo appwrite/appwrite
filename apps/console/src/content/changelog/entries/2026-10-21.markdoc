@@ -1,0 +1,20 @@
+---
+layout: changelog
+title: "New function template: Postgres with Drizzle"
+date: 2026-10-21
+cover: /images/blog/announcing-postgres-drizzle-template/cover.avif
+description: "The Postgres with Drizzle function template serves a todo REST API from Appwrite Postgres through Drizzle ORM, with SQL migrations you apply from your machine."
+tags: functions, databases
+---
+
+The new **Postgres with Drizzle** [function template](/docs/products/functions/templates) serves a todo REST API from an [Appwrite Postgres](/docs/products/databases/postgresql) database through [Drizzle ORM](https://orm.drizzle.team/). It is written in TypeScript, keeps the schema in `src/schema.ts` and its SQL migrations in `drizzle/`, and reuses one connection across warm executions through the connection pooler.
+
+Create it in the Console under **Functions** > **Templates** and set `DATABASE_URL` to your database's connection string. The function never changes the schema, so apply the migrations from your machine against the direct port `5432` before the first request:
+
+```bash
+DATABASE_URL="postgresql://..." npm run db:migrate
+```
+
+{% arrow_link href="/blog/post/announcing-postgres-drizzle-template" %}
+Read the announcement
+{% /arrow_link %}
