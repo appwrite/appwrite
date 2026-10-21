@@ -15,6 +15,7 @@
 ### Miscellaneous
 
 * Retain Console 8.7.37 for compatibility with the 1.9 server APIs.
+* Invalidate cached avatar and preview responses after the SVG sanitizer update.
 * Update release metadata and installation examples for 1.9.8.
 
 # Version 1.9.7
