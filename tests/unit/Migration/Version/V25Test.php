@@ -172,6 +172,51 @@ final class V25Test extends TestCase
         }
     }
 
+    public function testCreatesVideoCollectionsForProjectFromPreviousRelease(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // These collections did not exist on 2.5.0. Seed its schema before running the upgrade.
+        $added = ['videos', 'videosTimelines', 'videosRenditions', 'videosRenditionsSegments', 'videosProfiles', 'videosCaptions', 'videosCaptionsSegments'];
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach ($collections as $id => $collection) {
+            if (\in_array($id, $added, true) || ($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($collection['attributes']),
+                indexes: \array_values($collection['indexes']),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $authorization->skip(fn () => $database->createDocument('videos', new Document([
+            '$id' => 'uploaded-video',
+            'bucketId' => 'bucket',
+            'fileId' => 'file',
+            'name' => 'Preserved upload',
+        ])));
+        $migration->execute();
+
+        $video = $authorization->skip(fn () => $database->getDocument('videos', 'uploaded-video'));
+        $this->assertSame('Preserved upload', $video->getAttribute('name'));
+        $this->assertSame('file', $video->getAttribute('fileId'));
+        foreach ($added as $collection) {
+            $rows = $authorization->skip(fn () => $database->find($collection));
+            $this->assertCount($collection === 'videos' ? 1 : 0, $rows);
+        }
+    }
+
     public function testCreatesPresenceLogsWithConnectionsForLegacyProject(): void
     {
         $authorization = new Authorization();

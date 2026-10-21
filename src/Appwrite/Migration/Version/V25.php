@@ -429,6 +429,17 @@ class V25 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'videos':
+                case 'videosTimelines':
+                case 'videosRenditions':
+                case 'videosRenditionsSegments':
+                case 'videosProfiles':
+                case 'videosCaptions':
+                case 'videosCaptionsSegments':
+                    // New in 2.6.0. The document pass visits these collections even when video APIs are disabled.
+                    $this->createCollection($id);
+                    break;
+
                 case 'pushLedger':
                     // Added in 2.3.0 for every project; an install upgraded from 2.2.0
                     // has no table yet, and migrating its documents fails without one.
