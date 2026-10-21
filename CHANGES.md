@@ -14,7 +14,7 @@
 
 ### Miscellaneous
 
-* Update the self-hosted Console from 8.7.37 to [8.9.2](https://github.com/appwrite/console/releases/tag/8.9.2).
+* Retain Console 8.7.37 for compatibility with the 1.9 server APIs.
 * Update release metadata and installation examples for 1.9.8.
 
 # Version 1.9.7
