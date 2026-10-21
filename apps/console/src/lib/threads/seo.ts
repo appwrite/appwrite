@@ -1,10 +1,21 @@
 import { MARKETING_SITE_ORIGIN } from '@/lib/marketing/urls'
 import { getSeoSiteOrigin } from '@/lib/marketing/site-origin'
 import { buildOgImageUrl, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from '@/lib/seo/og-image'
+import {
+  DISCORD_EMBED_ACCENT_COLOR,
+  escapeDiscordMarkdown,
+  getDiscordLinkButton,
+  getDiscordTimestamp,
+  truncateDiscordText,
+  type DiscordContainer,
+  type DiscordTextDisplay,
+} from '@/lib/seo/discord-embed'
 import { sanitizeJsonLdText } from '@/lib/seo/json-ld'
 import type { DiscordAuthor, DiscordMessage, DiscordThread } from './types'
 import {
   getAuthorDescription,
+  getDiscordThreadUrl,
+  isThreadResolved,
   sanitizeThreadContent,
 } from './content'
 import { THREADS_DEFAULT_DESCRIPTION } from './constants'
@@ -404,5 +415,62 @@ export function getThreadsBreadcrumbSchema(
       name: schemaText(item.name, 'Threads'),
       item: getThreadsCanonicalUrl(item.path),
     })),
+  }
+}
+
+function pluralize(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? '' : 's'}`
+}
+
+/** Discord link preview for a thread page: question, summary, activity, and links back. */
+export function getThreadDiscordEmbed(options: {
+  canonicalUrl: string
+  thread: DiscordThread
+}): DiscordContainer {
+  const { canonicalUrl, thread } = options
+  const author = thread.author?.trim() ?? ''
+  const lastActivity = thread.last_activity
+    ? getDiscordTimestamp(thread.last_activity, 'R')
+    : undefined
+  const details = [
+    author ? `Asked by ${escapeDiscordMarkdown(author)}` : undefined,
+    isThreadResolved(thread) ? '✅ Resolved' : undefined,
+    // The stored count, as thread cards show it: the loaded messages stop at one page.
+    thread.message_count ? pluralize(thread.message_count, 'message') : undefined,
+    thread.participant_count ? pluralize(thread.participant_count, 'participant') : undefined,
+    lastActivity ? `Last active ${lastActivity}` : undefined,
+  ].filter(Boolean)
+
+  const text: DiscordTextDisplay = {
+    type: 10,
+    content: [
+      `### ${escapeDiscordMarkdown(truncateDiscordText(thread.title, 120))}`,
+      escapeDiscordMarkdown(getThreadMetaDescription(thread)),
+      `-# ${details.join(' · ')}`,
+    ].join('\n'),
+  }
+  const avatar = thread.author_avatar?.trim()
+
+  return {
+    type: 17,
+    accent_color: DISCORD_EMBED_ACCENT_COLOR,
+    components: [
+      avatar?.startsWith('https://')
+        ? {
+            type: 9,
+            components: [text],
+            accessory: { type: 11, media: { url: avatar } },
+          }
+        : text,
+      {
+        type: 1,
+        components: [
+          getDiscordLinkButton('Read thread', canonicalUrl),
+          ...(thread.discord_id?.trim()
+            ? [getDiscordLinkButton('Open in Discord', getDiscordThreadUrl(thread.discord_id))]
+            : []),
+        ],
+      },
+    ],
   }
 }
