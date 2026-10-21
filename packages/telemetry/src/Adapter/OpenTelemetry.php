@@ -24,8 +24,8 @@ use OpenTelemetry\SDK\Metrics\MetricReaderInterface;
 use OpenTelemetry\SDK\Resource\ResourceInfo;
 use OpenTelemetry\SDK\Sdk;
 use OpenTelemetry\SemConv\ResourceAttributes;
-use Swoole\Coroutine;
-use Swoole\Coroutine\Channel;
+use Utopia\Lock\Exception\Contention;
+use Utopia\Lock\Mutex;
 use Utopia\Telemetry\Adapter;
 use Utopia\Telemetry\Adapter\OpenTelemetry\MetricExporter as NonEmptyMetricExporter;
 use Utopia\Telemetry\Counter;
@@ -46,7 +46,7 @@ class OpenTelemetry implements Adapter
 
     private MeterInterface $meter;
 
-    private ?Channel $collecting = null;
+    private Mutex $collecting;
 
     /**
      * @var array<class-string, array<string, Counter|UpDownCounter|Histogram|Gauge|ObservableGauge>>
@@ -74,6 +74,7 @@ class OpenTelemetry implements Adapter
                 ->create($endpoint, ContentTypes::PROTOBUF);
         }
 
+        $this->collecting = new Mutex();
         $exporter = $this->createExporter($this->transport);
 
         $attributes = Attributes::create([
@@ -314,19 +315,11 @@ class OpenTelemetry implements Adapter
      */
     public function collect(): bool
     {
-        if (!\extension_loaded('swoole') || Coroutine::getCid() < 0) {
-            return $this->reader->collect();
-        }
-
-        $this->collecting ??= new Channel(1);
-        if (!$this->collecting->push(true)) {
-            return false;
-        }
-
         try {
-            return $this->reader->collect();
-        } finally {
-            $this->collecting->pop();
+            return $this->collecting->withLock($this->reader->collect(...));
+        } catch (Contention) {
+            // The waiting coroutine was cancelled, so nothing was exported.
+            return false;
         }
     }
 }
