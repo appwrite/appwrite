@@ -233,6 +233,7 @@ final class DeletesTest extends TestCase
             executor: $this->createStub(Executor::class),
             executionRetention: DateTime::format(new \DateTime('-14 days')),
             executionsRetentionCount: 0,
+            deploymentRetention: new Retention(),
             publisherForDeletes: $this->createStub(DeletePublisher::class),
             publisherForUsage: $this->createStub(UsagePublisher::class),
             bus: new Bus(),
