@@ -1,3 +1,8 @@
+import {
+  CONSOLE_ACCOUNT_CHANGE_EVENT,
+  getConsoleAccountSync,
+} from '@/lib/console-account-cache'
+import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
 import { getDebugEndpointBaseUrl } from '@/lib/debug-endpoint'
 import { getRuntimeConfig } from '@/lib/runtime-config'
 import { resolveAppwriteEndpointFallback } from '@/lib/runtime-config-shared'
@@ -263,6 +268,31 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       functionEmailDomains: false,
     },
   },
+}
+
+/**
+ * Flags switched on by default for Cloud accounts carrying a label, keyed by
+ * label. Labels are set server-side on the console user (`users.labels`);
+ * debug overrides still win. Example: `{ beta: ['analytics', 'functionEmail'] }`.
+ */
+export const LABEL_FEATURES: Record<
+  string,
+  readonly (keyof ConsoleProfileFeatures)[]
+> = {}
+
+/** Flags switched on by the given account labels. */
+export function getLabelFeatures(
+  labels: readonly string[],
+  labelFeatures = LABEL_FEATURES,
+): Partial<ConsoleProfileFeatures> {
+  const features: Partial<ConsoleProfileFeatures> = {}
+  for (const label of labels) {
+    if (!Object.hasOwn(labelFeatures, label)) continue
+    for (const key of labelFeatures[label]) {
+      features[key] = true
+    }
+  }
+  return features
 }
 
 const VALID_PROFILE_IDS: ConsoleProfileId[] = ['cloud', 'self-hosted']
@@ -615,6 +645,21 @@ function applyEnvFeatureOverrides(
   return next
 }
 
+function getAccountLabels(): string[] {
+  // SSR has no signed-in account.
+  if (typeof window === 'undefined') return []
+  return getConsoleAccountSync(getConsoleAccountQueryRevision())?.labels ?? []
+}
+
+/** Switch on {@link LABEL_FEATURES} for the signed-in account (Cloud only). */
+function applyLabelFeatures(
+  profileId: ConsoleProfileId,
+  features: ConsoleProfileFeatures,
+): ConsoleProfileFeatures {
+  if (profileId !== 'cloud') return features
+  return { ...features, ...getLabelFeatures(getAccountLabels()) }
+}
+
 /** Profile from env (and backend vars), without debug localStorage overrides. Matches SSR. */
 export function getActiveProfileWithoutDebugOverride(): ConsoleProfile {
   const profileId = getProfileFromEnv()
@@ -633,10 +678,17 @@ export function getActiveProfile(): ConsoleProfile {
   const profileId = stored?.id ?? getProfileFromEnv()
   const canonical = CONSOLE_PROFILES[profileId]
   if (!stored) {
-    return getActiveProfileWithoutDebugOverride()
+    const profile = getActiveProfileWithoutDebugOverride()
+    return {
+      ...profile,
+      features: applyLabelFeatures(profile.id, profile.features),
+    }
   }
   const mergedFeatures = applyCloudOnlyFeatureGates(profileId, {
-    ...applyEnvFeatureOverrides(profileId, canonical.features),
+    ...applyLabelFeatures(
+      profileId,
+      applyEnvFeatureOverrides(profileId, canonical.features),
+    ),
     ...stored.features,
   } as ConsoleProfileFeatures)
   return { ...stored, features: mergedFeatures }
@@ -649,13 +701,19 @@ export function getActiveProfileFeatures(): ConsoleProfileFeatures {
   return getActiveProfile().features
 }
 
-/** Feature defaults for a profile id (cloud-only gates + env overrides) - what a debug reset restores. */
+/** Feature defaults for a profile id (cloud-only gates + env overrides + account labels) - what a debug reset restores. */
 export function getCanonicalProfileFeatures(
   profileId: ConsoleProfileId,
 ): ConsoleProfileFeatures {
-  return applyEnvFeatureOverrides(
+  return applyLabelFeatures(
     profileId,
-    applyCloudOnlyFeatureGates(profileId, CONSOLE_PROFILES[profileId].features),
+    applyEnvFeatureOverrides(
+      profileId,
+      applyCloudOnlyFeatureGates(
+        profileId,
+        CONSOLE_PROFILES[profileId].features,
+      ),
+    ),
   )
 }
 
@@ -747,6 +805,28 @@ export function resetDebugProfileFeatureOverride<
   window.dispatchEvent(new CustomEvent(CONSOLE_PROFILE_CHANGE_EVENT))
 }
 
+/** Label-switched flags last seen by {@link watchLabelFeatures}; null until it starts. */
+let labelFeaturesKey: string | null = null
+
+function getLabelFeaturesKey(): string {
+  return Object.keys(getLabelFeatures(getAccountLabels())).sort().join(',')
+}
+
+/**
+ * Notify profile subscribers when the signed-in account's label flags change.
+ * The account is rewritten on every prefs save, so other writes are ignored.
+ */
+function watchLabelFeatures() {
+  if (labelFeaturesKey !== null) return
+  labelFeaturesKey = getLabelFeaturesKey()
+  window.addEventListener(CONSOLE_ACCOUNT_CHANGE_EVENT, () => {
+    const next = getLabelFeaturesKey()
+    if (next === labelFeaturesKey) return
+    labelFeaturesKey = next
+    window.dispatchEvent(new CustomEvent(CONSOLE_PROFILE_CHANGE_EVENT))
+  })
+}
+
 /**
  * Subscribe to profile changes (e.g. when debug override changes).
  */
@@ -754,6 +834,8 @@ export function subscribeToProfileChange(
   callback: (profileId: ConsoleProfileId) => void,
 ) {
   if (typeof window === 'undefined') return () => undefined
+
+  watchLabelFeatures()
 
   const handler = () => callback(getActiveProfileId())
   const storageHandler = (e: StorageEvent) => {
