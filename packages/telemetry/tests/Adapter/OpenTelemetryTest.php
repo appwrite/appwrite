@@ -11,6 +11,7 @@ use OpenTelemetry\SDK\Common\Future\CancellationInterface;
 use OpenTelemetry\SDK\Common\Future\CompletedFuture;
 use OpenTelemetry\SDK\Common\Future\FutureInterface;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use Swoole\Coroutine;
 use Utopia\Telemetry\Adapter\OpenTelemetry;
@@ -79,6 +80,7 @@ final class OpenTelemetryTest extends TestCase
     }
 
     #[RequiresPhpExtension('swoole')]
+    #[RunInSeparateProcess]
     public function testOverlappingCollectsExportOneAtATime(): void
     {
         $transport = new class () implements TransportInterface {
