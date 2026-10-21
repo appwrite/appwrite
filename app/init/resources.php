@@ -14,6 +14,7 @@ use Appwrite\Event\Publisher\Execution as ExecutionPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Jobs as JobsPublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
+use Appwrite\Event\Publisher\Maintenance as MaintenancePublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
@@ -311,6 +312,11 @@ $container->set('publisherForDatabase', fn (Publisher $publisher) => new Databas
 $container->set('publisherForDeletes', fn (Publisher $publisher) => new DeletePublisher(
     $publisher,
     new Queue(System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForMaintenance', fn (Publisher $publisher) => new MaintenancePublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_MAINTENANCE_QUEUE_NAME', Event::MAINTENANCE_QUEUE_NAME))
 ), ['publisher']);
 
 $container->set('publisherForMails', fn (Publisher $publisher) => new MailPublisher(

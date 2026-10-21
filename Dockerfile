@@ -81,6 +81,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/schedule-functions && \
     chmod +x /usr/local/bin/schedule-executions && \
     chmod +x /usr/local/bin/schedule-messages && \
+    chmod +x /usr/local/bin/schedule-maintenance && \
     chmod +x /usr/local/bin/sdks && \
     chmod +x /usr/local/bin/specs && \
     chmod +x /usr/local/bin/ssl && \
@@ -104,6 +105,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-executions && \
     chmod +x /usr/local/bin/worker-functions && \
     chmod +x /usr/local/bin/worker-mails && \
+    chmod +x /usr/local/bin/worker-maintenance && \
     chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-notifications && \
     chmod +x /usr/local/bin/worker-migrations && \

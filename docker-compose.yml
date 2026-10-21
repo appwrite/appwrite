@@ -482,10 +482,11 @@ services:
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
+      - _APP_MAINTENANCE_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
-      # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases stays at 1.
-      - _APP_WORKER_MAX_COROUTINES=78
+      # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
+      - _APP_WORKER_MAX_COROUTINES=79
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_EMAIL_SECURITY
@@ -642,6 +643,7 @@ services:
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
+      - _APP_MAINTENANCE_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_LOGGING_FORMAT
       # Combined mode runs functions/executions/messages timers + enqueue coroutines
@@ -668,6 +670,7 @@ services:
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
       - _APP_FUNCTIONS_SCHEDULE_SPREAD
+      - _APP_MAINTENANCE_INACTIVE_INTERVAL
 
   appwrite-worker-stats-usage:
     profiles:
@@ -692,6 +695,67 @@ services:
       service: appwrite-task-scheduler
     entrypoint: stats-resources
     container_name: appwrite-task-stats-resources
+
+  appwrite-task-scheduler-maintenance:
+    profiles:
+      - separate
+    extends:
+      service: appwrite-task-scheduler
+    entrypoint: schedule-maintenance
+    container_name: appwrite-task-scheduler-maintenance
+
+  appwrite-worker-maintenance:
+    profiles:
+      - separate
+    entrypoint: worker-maintenance
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    container_name: appwrite-worker-maintenance
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - ${_APP_DB_HOST:-postgresql}
+    environment:
+      - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      # One slot at a time: each job re-checks the deletes backlog before every block.
+      - _APP_WORKER_MAX_COROUTINES=1
+      - _APP_WORKER_PER_CORE
+      - _APP_OPENSSL_KEY_V1
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_DB_ADAPTER_VECTORSDB
+      - _APP_DB_HOST_VECTORSDB
+      - _APP_DB_PORT_VECTORSDB
+      - _APP_DB_SCHEMA_VECTORSDB
+      - _APP_DB_USER_VECTORSDB
+      - _APP_DB_PASS_VECTORSDB
+      - _APP_DB_ADAPTER_DOCUMENTSDB
+      - _APP_DB_HOST_DOCUMENTSDB
+      - _APP_DB_PORT_DOCUMENTSDB
+      - _APP_DB_SCHEMA_DOCUMENTSDB
+      - _APP_DB_USER_DOCUMENTSDB
+      - _APP_DB_PASS_DOCUMENTSDB
+      - _APP_CONNECTIONS_DATABASE_DOCUMENTSDB
+      - _APP_CONNECTIONS_DATABASE_VECTORSDB
+      - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
+      - _APP_DATABASE_SHARED_TABLES
+      - _APP_MAINTENANCE_QUEUE_NAME
 
   appwrite-worker-webhooks:
     profiles:
