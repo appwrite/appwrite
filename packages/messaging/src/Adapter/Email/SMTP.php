@@ -16,7 +16,6 @@ use Utopia\SMTP\Exception\ConnectionException;
 use Utopia\SMTP\Exception\ProtocolException;
 use Utopia\SMTP\Exception\SmtpException;
 use Utopia\SMTP\Exception\TransactionException;
-use Utopia\SMTP\Exception\UnconfirmedException;
 use Utopia\SMTP\Message as SmtpMessage;
 use Utopia\SMTP\Outcome;
 use Utopia\SMTP\Timeouts;
@@ -130,27 +129,15 @@ class SMTP extends EmailAdapter
             // server has closed it, which is before the message is submitted.
             $keep = $keep && is_finite($client->idle());
             $stale = $retry && $reused && $exception->reply->code === 421;
-        } catch (UnconfirmedException $exception) {
-            foreach ($recipients as $email) {
-                $response->addResult($email, $exception->getMessage());
-            }
-
-            // The dot was written and the reply never arrived. The server may
-            // already have the message, so it is not sent again.
-            $keep = false;
-        } catch (ConnectionException|ProtocolException $exception) {
-            foreach ($recipients as $email) {
-                $response->addResult($email, $exception->getMessage());
-            }
-
-            $keep = false;
-            $stale = $retry && $reused;
         } catch (SmtpException $exception) {
             foreach ($recipients as $email) {
                 $response->addResult($email, $exception->getMessage(), $this->permanent($exception), $this->code($exception));
             }
 
             $keep = false;
+            // A kept socket that died before the dot. An UnconfirmedException
+            // means the dot was written and the server may have the message.
+            $stale = $retry && $reused && ($exception instanceof ConnectionException || $exception instanceof ProtocolException);
         } finally {
             if (!$keep) {
                 $this->drop($client);
