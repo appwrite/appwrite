@@ -106,31 +106,39 @@ class Update extends Action
             throw new Exception(Exception::PROJECT_TRANSFER_SAME_TEAM);
         }
 
-        // Consume the transfer before moving the project, so only one of two concurrent claims can win
-        if (!$authorization->skip(fn () => $dbForPlatform->deleteDocument('transfers', $transfer->getId()))) {
-            throw new Exception(Exception::PROJECT_TRANSFER_NOT_FOUND);
-        }
-
         $auditContext->project = $project;
 
         $permissions = $this->getPermissions($team->getId(), $project->getId());
 
-        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-            'teamId' => $team->getId(),
-            'teamInternalId' => $team->getSequence(),
-            '$permissions' => $permissions,
-        ])));
+        // All or nothing: a failed claim leaves the project where it was and the transfer usable
+        $project = $authorization->skip(fn () => $dbForPlatform->withTransaction(function () use ($dbForPlatform, $transfer, $project, $team, $permissions) {
+            // Locked, so a concurrent claim waits here and then finds the transfer gone
+            $locked = $dbForPlatform->getDocument('transfers', $transfer->getId(), forUpdate: true);
+            if ($locked->isEmpty()) {
+                throw new Exception(Exception::PROJECT_TRANSFER_NOT_FOUND);
+            }
+            $dbForPlatform->deleteDocument('transfers', $locked->getId());
+
+            $project = $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                'teamId' => $team->getId(),
+                'teamInternalId' => $team->getSequence(),
+                '$permissions' => $permissions,
+            ]));
+
+            foreach (['installations', 'repositories', 'vcsComments'] as $collection) {
+                $this->updatePermissions($collection, $project, $permissions, $dbForPlatform);
+            }
+
+            // Other links for this project were issued by the previous owner, so they stop working
+            $dbForPlatform->deleteDocuments('transfers', [
+                Query::equal('resourceType', ['projects']),
+                Query::equal('resourceInternalId', [$project->getSequence()]),
+            ]);
+
+            return $project;
+        }));
+
         $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
-
-        foreach (['installations', 'repositories', 'vcsComments'] as $collection) {
-            $this->updatePermissions($collection, $project, $permissions, $dbForPlatform, $authorization);
-        }
-
-        // Other links for this project were issued by the previous owner, so they stop working
-        $authorization->skip(fn () => $dbForPlatform->deleteDocuments('transfers', [
-            Query::equal('resourceType', ['projects']),
-            Query::equal('resourceInternalId', [$project->getSequence()]),
-        ]));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }
@@ -142,7 +150,7 @@ class Update extends Action
      *
      * @param array<string> $permissions
      */
-    private function updatePermissions(string $collection, Document $project, array $permissions, Database $dbForPlatform, Authorization $authorization): void
+    private function updatePermissions(string $collection, Document $project, array $permissions, Database $dbForPlatform): void
     {
         $limit = 100;
         $cursor = null;
@@ -156,10 +164,10 @@ class Update extends Action
                 $queries[] = Query::cursorAfter($cursor);
             }
 
-            $documents = $authorization->skip(fn () => $dbForPlatform->find($collection, $queries));
+            $documents = $dbForPlatform->find($collection, $queries);
 
             foreach ($documents as $document) {
-                $authorization->skip(fn () => $dbForPlatform->updateDocument($collection, $document->getId(), new Document(['$permissions' => $permissions])));
+                $dbForPlatform->updateDocument($collection, $document->getId(), new Document(['$permissions' => $permissions]));
             }
 
             $cursor = \end($documents) ?: null;
