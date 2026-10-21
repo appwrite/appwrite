@@ -20,6 +20,7 @@ import {
   isDynamicKeyAttribute,
   isNoValueOperator,
   isOperatorAllowedForAttribute,
+  isAttributeAvailable,
   isSecondsAttribute,
   isTextMatchOperator,
   type FirewallConditionAttribute,
@@ -643,7 +644,16 @@ export function ConditionsBuilder({
                         />
                       )}
 
-                      {isSecondsAttribute(condition.attribute) ? (
+                      {!isAttributeAvailable(
+                        condition.attribute,
+                        resourceType,
+                      ) ? (
+                        <p className="text-[12px] text-destructive">
+                          {t(
+                            'Sites requests have no user session. Remove this condition or pick another.',
+                          )}
+                        </p>
+                      ) : isSecondsAttribute(condition.attribute) ? (
                         <p className="text-[12px] text-muted-foreground">
                           {resourceType === 'api'
                             ? t(

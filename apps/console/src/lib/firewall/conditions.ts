@@ -486,11 +486,19 @@ export function isConditionDraftComplete(
   return draft.value.trim().length > 0
 }
 
-/** True when every condition would serialize (nothing gets silently dropped). */
+/**
+ * True when every condition would serialize (nothing gets silently dropped)
+ * and applies to the rule's resource type.
+ */
 export function areFirewallConditionsComplete(
   drafts: FirewallConditionDraft[],
+  resourceType: FirewallResourceType,
 ): boolean {
-  return drafts.every(isConditionDraftComplete)
+  return drafts.every(
+    (draft) =>
+      isConditionDraftComplete(draft) &&
+      isAttributeAvailable(draft.attribute, resourceType),
+  )
 }
 
 /** Attributes whose values are uppercase geo codes (US, EU, ...). */
