@@ -1,0 +1,166 @@
+---
+layout: post
+title: "Introducing Dodo Payments templates for Appwrite"
+description: Sell one-time products and subscriptions with Dodo Payments and Appwrite Functions. Two new templates store paid orders and grant subscriber access for you.
+date: 2026-10-21
+cover: /images/blog/announcing-dodo-payments-templates/cover.avif
+timeToRead: 7
+author: aditya-oberai
+category: announcements
+featured: false
+faqs:
+  - question: "What are the Dodo Payments templates for Appwrite Functions?"
+    answer: "They are two [function templates](/docs/products/functions/templates) that connect Dodo Payments to an Appwrite project. **Payments with Dodo Payments** sells a one-time product and stores each paid order as a row in an Appwrite table. **Subscriptions with Dodo Payments** sells a recurring plan and adds a `subscriber` label to the user while the subscription is active. Find both in the Appwrite Console under **Functions** > **Templates** by searching for Dodo."
+  - question: "What is the difference between the Payments and Subscriptions with Dodo Payments templates?"
+    answer: "The payments template handles the `payment.succeeded` webhook and writes an order row that only the buyer can read, which fits courses, e-books, lifetime licenses, and credit packs. The subscriptions template handles every `subscription.*` webhook and adds or removes the `subscriber` [label](/docs/products/auth/labels) based on the subscription's current status, which fits SaaS plans and memberships."
+  - question: "How do I connect a Dodo Payments webhook to an Appwrite Function?"
+    answer: "Pick your function's domain in the template's create form, then add an endpoint in the Dodo Payments dashboard under **Developer** > **Webhooks** with the URL `https://<FUNCTION_DOMAIN>/webhook`. Select `payment.succeeded` for the payments template or the `subscription` events for the subscriptions template, and copy the endpoint's signing secret into the `DODO_PAYMENTS_WEBHOOK_KEY` variable."
+  - question: "Which API key permissions do the Dodo Payments templates need?"
+    answer: "Both templates need **Checkout Sessions** write access to create checkouts. The payments template also needs **Payments** read access, and the subscriptions template needs **Subscriptions** read access, because each one looks up the payment or subscription in Dodo Payments instead of trusting the webhook payload. You don't need an Appwrite API key: the function uses an [ephemeral API key](/docs/products/functions/develop#ephemeral-api-key) scoped by the template."
+  - question: "How do I restrict content to paying subscribers in Appwrite?"
+    answer: "Grant access to `Role.label('subscriber')` in the [permissions](/docs/advanced/security/permissions) of the rows, files, or tables you want to protect. The subscriptions template adds the `subscriber` label while a subscription is `active` or `past_due` and removes it when the subscription is cancelled, paused, on hold, expired, failed, or pending, so access follows the subscription automatically."
+  - question: "Can I test the Dodo Payments templates without real charges?"
+    answer: "Yes. Keep the Dodo Payments dashboard in test mode, leave `DODO_PAYMENTS_ENVIRONMENT` at its default of `test_mode`, and pay on the template's demo page with the [Dodo Payments test card](https://docs.dodopayments.com/miscellaneous/testing-process) `4242 4242 4242 4242`. Test mode and live mode have separate API keys, products, and webhooks, so you create new ones before going live."
+---
+
+Adding payments to an app sounds like a checkout button. In practice, it is a checkout page, a webhook endpoint, signature verification, a way to tie each payment back to a user, a database write that has to survive retries and duplicate events, and access rules that follow the payment. Then there is tax: once you sell to customers in other countries, VAT, GST, and sales tax become your problem, not your payment processor's.
+
+Today, we are announcing two new Appwrite Function templates built with **Dodo Payments**: **Payments with Dodo Payments** for one-time purchases and **Subscriptions with Dodo Payments** for recurring plans. Each one deploys a working checkout, verified webhooks, and a demo page in a few minutes. You'll find both in the Appwrite Console under **Functions** > **Templates**.
+
+# What is Dodo Payments
+
+[Dodo Payments](https://dodopayments.com) is a **Merchant of Record** for SaaS, AI, and digital products. A Merchant of Record is the legal seller of your product. Instead of you selling to each customer and handling their local tax rules, Dodo Payments sells to them in 220+ countries, then calculates and remits the tax on each sale. Fraud screening and chargebacks are handled on their side too, and you receive payouts.
+
+For developers, the parts that matter most are:
+
+- **Hosted checkout**: a checkout session API that returns a URL, with 40+ payment methods including cards, wallets, bank debits, and buy now, pay later options.
+- **Local currencies**: Adaptive Currency shows prices in 80+ local currencies at checkout.
+- **Billing models**: one-time payments, subscriptions, and usage-based, credit-based, and seat-based billing, with add-ons.
+- **Standard Webhooks**: every event is signed following the [Standard Webhooks](https://www.standardwebhooks.com/) specification, so verification works the same way in any language.
+- **Test mode**: separate API keys, products, and webhooks for building without moving real money.
+
+![Dodo Payments checkout](/images/blog/announcing-dodo-payments-templates/checkout.avif)
+
+A Merchant of Record is not the only way to accept payments. With a payment processor like Stripe, you stay the seller and keep more control over pricing and checkout, but you remain responsible for registering, collecting, and remitting tax, even when tooling helps calculate it. Appwrite already has [Stripe](/integrations/stripe-payments) and [Lemon Squeezy](/integrations/lemon-squeezy-payments) templates, and Dodo Payments joins them as another option. If you sell globally as a small team and would rather not register for tax in every market you reach, a Merchant of Record removes that work entirely.
+
+# How Dodo Payments fits with Appwrite
+
+Dodo Payments and Appwrite own different halves of a paid product. Dodo Payments owns the money: checkout, tax, payment methods, renewals, refunds, and disputes. Appwrite owns everything the payment unlocks: the user, their data, and what they are allowed to access.
+
+The templates connect the two:
+
+- **Each payment maps to an Appwrite user.** When a signed-in user starts a checkout, the function stores their Appwrite user ID in the checkout session's metadata, and Dodo Payments carries it through to the payment and subscription.
+- **Results land where your permissions already live.** A paid order becomes a row with a read permission for the buyer. An active subscription becomes a `subscriber` [label](/docs/products/auth/labels) on the user, which you can reference in any permission.
+- **The webhook endpoint is the function itself.** Every function gets an HTTPS [domain](/docs/products/functions/domains), so there is no server to run and no separate webhook service to deploy.
+- **No Appwrite API key to manage.** The function authenticates with an [ephemeral API key](/docs/products/functions/develop#ephemeral-api-key) that Appwrite generates for each execution, limited to the scopes the template needs.
+
+Both templates also follow the same safety rules. They verify the Standard Webhooks signature on every request, then look the payment or subscription up in Dodo Payments instead of trusting the webhook payload. They add a `/success` route that Dodo Payments sends the user back to after checkout, which repeats the same check, so the user gets access even if the webhook is slow.
+
+# Payments with Dodo Payments
+
+The **Payments with Dodo Payments** template sells a single one-time product. It fits anything a customer buys once: a course, an e-book, a lifetime license, or a pack of credits.
+
+The function exposes four routes:
+
+- `GET /` serves a demo page where a user can register, start a checkout, and see their paid orders.
+- `POST /checkout` creates a Dodo Payments checkout session for the product in `DODO_PAYMENTS_PRODUCT_ID` and redirects to it.
+- `GET /success` verifies the payment when the user returns from checkout, then redirects them to your success URL.
+- `POST /webhook` handles the `payment.succeeded` event.
+
+When a payment succeeds, the function creates the `orders` database and table if they don't exist yet, then stores a row for the order. The row ID is the Dodo Payments payment ID, so a repeated delivery of the same webhook can't store the order twice. Only the user who paid can read the row.
+
+![Payments with Dodo Payments demo](/images/blog/announcing-dodo-payments-templates/demo-payments.avif)
+
+To start a checkout from your own app, call the function's `/checkout` route as the signed-in user. Appwrite passes the caller's ID to the function in the `x-appwrite-user-id` header, and the function responds with a redirect to the checkout:
+
+```js
+import { Client, Functions, ExecutionMethod } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const functions = new Functions(client);
+
+const execution = await functions.createExecution({
+    functionId: '<FUNCTION_ID>',
+    body: JSON.stringify({
+        successUrl: 'https://example.com/thanks',
+        failureUrl: 'https://example.com/pricing',
+        verifyUrl: 'https://<FUNCTION_DOMAIN>/success',
+    }),
+    async: false,
+    xpath: '/checkout',
+    method: ExecutionMethod.POST,
+    headers: { 'Content-Type': 'application/json' },
+});
+
+const redirect = execution.responseHeaders.find((header) => header.name === 'location');
+window.location.href = redirect.value;
+```
+
+Your app can then list the user's orders from the table with the client SDK, and the row permissions make sure each user only sees their own.
+
+# Subscriptions with Dodo Payments
+
+The **Subscriptions with Dodo Payments** template sells a recurring plan and turns the subscription's status into access. It fits SaaS plans, memberships, and anything else billed on a schedule.
+
+It works like the payments template, with a `POST /subscribe` route in place of `/checkout`, and it handles every `subscription.*` webhook. While the subscription gives access, the user has the `subscriber` label. When it stops, the label is removed:
+
+| Subscription status | Effect |
+| --- | --- |
+| `active`, `past_due` | Adds the `subscriber` label |
+| `on_hold`, `paused`, `cancelled`, `expired`, `failed`, `pending` | Removes the `subscriber` label |
+
+`past_due` is the grace period while Dodo Payments retries a failed renewal, so a customer whose card was declined keeps access until the subscription moves to `on_hold` or `cancelled`.
+
+Subscription webhooks can arrive late, twice, or out of order. The function doesn't act on the event type. Each webhook looks up the subscription's current status in Dodo Payments and applies it, so a delayed `subscription.active` event can't give access back after a cancellation. After each label update, the function checks the status once more and applies it again if it changed in the meantime.
+
+![User with the subscriber label](/images/blog/announcing-dodo-payments-templates/user-labels.avif)
+
+The label is what your app builds on. Grant access to `Role.label('subscriber')` on the rows, files, or tables that only paying users should see:
+
+```js
+import { Client, TablesDB, ID, Permission, Role } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const tablesDB = new TablesDB(client);
+
+await tablesDB.createRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: 'lessons',
+    rowId: ID.unique(),
+    data: { title: 'Advanced lesson' },
+    permissions: [Permission.read(Role.label('subscriber'))],
+});
+```
+
+Appwrite enforces that permission on every request, so a user loses access to the lesson as soon as the function removes the label. There's no separate subscription check to write in your app.
+
+# Set up the Dodo Payments templates
+
+Both templates follow the same setup. The [Payments with Dodo Payments](/integrations/dodo-payments-payments) and [Subscriptions with Dodo Payments](/integrations/dodo-payments-subscriptions) integration guides walk through every step with screenshots, but the short version is:
+
+1. In the Dodo Payments dashboard, stay in test mode and create a product: **One time** for the payments template or **Subscription** for the subscriptions template. Copy its product ID.
+2. Under **Developer** > **API Keys**, create a key with **Checkout Sessions** write access, plus **Payments** read access for the payments template or **Subscriptions** read access for the subscriptions template.
+3. In the Appwrite Console, open **Functions** > **Templates**, search for **Dodo**, and create a function from the template you need.
+4. In the create form's **Domain** section, choose the function's subdomain. In the Dodo Payments dashboard, add a webhook endpoint at `https://<FUNCTION_DOMAIN>/webhook` subscribed to `payment.succeeded`, or to the `subscription` events, and copy its signing secret.
+5. Fill in `DODO_PAYMENTS_API_KEY`, `DODO_PAYMENTS_WEBHOOK_KEY`, and `DODO_PAYMENTS_PRODUCT_ID`, then click **Create and deploy**.
+6. Add the function domain as a web app under **Apps**, open it in your browser, and pay with the test card `4242 4242 4242 4242`.
+
+![Dodo Payments templates in the Appwrite Console](/images/blog/announcing-dodo-payments-templates/template.avif)
+
+A few things change before you charge real customers. Create a live API key, product, and webhook in Dodo Payments and set `DODO_PAYMENTS_ENVIRONMENT` to `live_mode`. The checkout routes accept success, failure, and verify URLs from the caller, so check them against your own domains to keep the function from redirecting people to other sites. Replace the demo's [anonymous sessions](/docs/products/auth/anonymous) with the sign-in method your app uses, and mark the API key and signing secret as [secret variables](/docs/products/functions/environment-variables#secret-variables).
+
+# Start selling with Dodo Payments and Appwrite
+
+The Dodo Payments templates are available now on [Appwrite Cloud](/sign-in), and they ship to self-hosted Appwrite in an upcoming release. Pick the payments template if customers pay once, or the subscriptions template if they pay on a schedule. Either way, Dodo Payments handles checkout and tax, and your app reads the result from data and permissions it already uses.
+
+- [Payments with Dodo Payments integration guide](/integrations/dodo-payments-payments)
+- [Subscriptions with Dodo Payments integration guide](/integrations/dodo-payments-subscriptions)
+- [Appwrite Functions templates](/docs/products/functions/templates)
+- [Labels in Appwrite Auth](/docs/products/auth/labels)

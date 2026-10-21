@@ -1,0 +1,145 @@
+---
+layout: integration
+title: Subscriptions with Dodo Payments
+description: Connect Dodo Payments to Appwrite to sell recurring plans and grant subscribers extra permissions with user labels that follow the subscription's status.
+date: 2026-10-21
+featured: false
+isPartner: true
+isNew: true
+cover: /images/integrations/dodo-payments-subscriptions/cover.avif
+category: payments
+product:
+    avatar: '/images/integrations/avatars/dodo-payments.avif'
+    vendor: Dodo Payments
+    description: 'Dodo Payments is a Merchant of Record for SaaS, AI, and digital products that handles payments, tax, and billing in 220+ countries.'
+platform:
+    - 'Self-hosted'
+    - 'Cloud'
+images:
+    - /images/integrations/dodo-payments-subscriptions/cover.avif
+    - /images/integrations/dodo-payments-subscriptions/products.avif
+    - /images/integrations/dodo-payments-subscriptions/api-key.avif
+    - /images/integrations/dodo-payments-subscriptions/template.avif
+    - /images/integrations/dodo-payments-subscriptions/domain.avif
+    - /images/integrations/dodo-payments-subscriptions/webhook.avif
+    - /images/integrations/dodo-payments-subscriptions/variables.avif
+    - /images/integrations/dodo-payments-subscriptions/web-platform.avif
+    - /images/integrations/dodo-payments-subscriptions/checkout.avif
+    - /images/integrations/dodo-payments-subscriptions/demo.avif
+    - /images/integrations/dodo-payments-subscriptions/user.avif
+---
+
+Dodo Payments is a Merchant of Record for SaaS, AI, and digital products. It sells your product to customers in 220+ countries as the legal seller, so payment processing, sales tax and VAT, fraud screening, and chargebacks are handled for you. Its billing covers subscriptions with renewals, plan changes, and recovery of failed payments, on top of one-time and usage-based billing.
+
+# How does the integration work?
+
+You can use a pre-built Appwrite Function template to sell a recurring plan with Dodo Payments, such as a SaaS plan or a membership. The function creates a Dodo Payments checkout session for the signed-in Appwrite user. While the subscription gives access, the function adds a `subscriber` label to the user, which you can use in permissions to unlock paid features. When the subscription stops, the label is removed.
+
+The function verifies every webhook signature and looks the subscription up in Dodo Payments before changing the label, so a late or repeated webhook can't leave access out of date. It also ships a demo page so you can test the full flow before writing any code.
+
+# How to implement
+
+To implement the Dodo Payments subscriptions integration, there are several steps you must complete:
+
+## Step 1: Set up Dodo Payments
+
+First, [sign up for Dodo Payments](https://app.dodopayments.com/signup) and keep the dashboard in **Test Mode** while you build. Test mode and live mode have separate API keys, products, and webhooks.
+
+Head to **Products** in the sidebar and click **Add Product**. Choose **Subscription** as the pricing type, fill in the name, price, and billing period, and copy the **Product Id** from the product list.
+
+![Dodo Payments products](/images/integrations/dodo-payments-subscriptions/products.avif)
+
+Next, head to **Developer** > **API Keys** and click **Create New Key**. Give the key a name and grant **Checkout Sessions** write access and **Subscriptions** read access. Click **Create Key** and copy the key. Dodo Payments shows it only once.
+
+![Create a Dodo Payments API key](/images/integrations/dodo-payments-subscriptions/api-key.avif)
+
+## Step 2: Create the Appwrite Function
+
+For this step, you must [create an account on Appwrite Cloud](/sign-in) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. The Dodo Payments templates are available on Appwrite Cloud today and ship to self-hosted Appwrite in an upcoming release. If you self-host Appwrite, there are [additional setup steps](/docs/advanced/self-hosting/configuration/functions) to use Appwrite Function templates.
+
+Head over to the Appwrite Console, navigate to the **Functions** page, click the **Templates** tab, and search for the **Subscriptions with Dodo Payments** function template. Click **Create from template**.
+
+![Subscriptions with Dodo Payments template](/images/integrations/dodo-payments-subscriptions/template.avif)
+
+In the **Domain** section, choose the subdomain your function will run on. Copy the full URL, for example `https://<FUNCTION_DOMAIN>.fra.appwrite.run`. You need it for the webhook in the next step, so keep this page open.
+
+![Function domain](/images/integrations/dodo-payments-subscriptions/domain.avif)
+
+## Step 3: Add the webhook endpoint
+
+In a new tab, go to **Developer** > **Webhooks** in the Dodo Payments dashboard and click **Add endpoint**. Set the **Endpoint URL** to your function domain followed by `/webhook`:
+
+```text
+https://<FUNCTION_DOMAIN>.fra.appwrite.run/webhook
+```
+
+Under **Subscribed events**, select the whole `subscription` group. An endpoint with no events selected receives every event type, so always pick the events.
+
+![Add a Dodo Payments webhook endpoint](/images/integrations/dodo-payments-subscriptions/webhook.avif)
+
+Click **Create endpoint**. On the endpoint's page, reveal the **Signing secret** and copy it. The function uses it to verify that webhooks come from Dodo Payments.
+
+## Step 4: Configure the variables and deploy
+
+Back in the Appwrite Console, fill in the **Template variables**:
+
+| Variable | Value |
+| --- | --- |
+| `DODO_PAYMENTS_API_KEY` | The API key from step 1 |
+| `DODO_PAYMENTS_WEBHOOK_KEY` | The signing secret from step 3 |
+| `DODO_PAYMENTS_PRODUCT_ID` | The product ID from step 1 |
+| `DODO_PAYMENTS_ENVIRONMENT` | Optional. `test_mode` (default) or `live_mode` |
+
+![Template variables](/images/integrations/dodo-payments-subscriptions/variables.avif)
+
+Choose **Connect your repository** to clone the template into a new Git repository you can edit later, or **Connect later** to deploy it right away. Then click **Create and deploy**.
+
+You don't need to create an Appwrite API key. The function talks to Appwrite with an [ephemeral API key](/docs/products/functions/develop#ephemeral-api-key) limited to the scopes the template asks for: `users.read` and `users.write`.
+
+## Step 5: Test the function
+
+The demo page runs on your function domain and calls Appwrite from the browser, so Appwrite needs to accept requests from that hostname. Open **Apps** in the project sidebar and click **Add app**. Choose **Web**, then **No framework**, and enter your function domain as the **Hostname**.
+
+![Register the function domain as a web app](/images/integrations/dodo-payments-subscriptions/web-platform.avif)
+
+Then, open your function domain in a browser to load the demo page. Click **Register as anonymous**, then **Subscribe with Dodo Payments**. The function creates a checkout session and redirects you to the Dodo Payments checkout. Pay with the [Dodo Payments test card](https://docs.dodopayments.com/miscellaneous/testing-process) `4242 4242 4242 4242`, any future expiry date, and any CVC.
+
+![Dodo Payments subscription checkout](/images/integrations/dodo-payments-subscriptions/checkout.avif)
+
+Once Dodo Payments sends you back, the demo page shows that you are subscribed.
+
+![Subscriptions demo](/images/integrations/dodo-payments-subscriptions/demo.avif)
+
+Additionally, your user on Appwrite now has the `subscriber` label, which you can verify by visiting the **Auth** page in your Appwrite project and opening the user.
+
+![Appwrite user with the subscriber label](/images/integrations/dodo-payments-subscriptions/user.avif)
+
+# How access follows the subscription
+
+The function adds or removes the label based on the subscription's current status in Dodo Payments, whatever the event type:
+
+| Subscription status | Effect |
+| --- | --- |
+| `active`, `past_due` | Adds the `subscriber` label |
+| `on_hold`, `paused`, `cancelled`, `expired`, `failed`, `pending` | Removes the `subscriber` label |
+
+`past_due` is the grace period while Dodo Payments retries a failed renewal, so the customer keeps access until the subscription moves to `on_hold` or `cancelled`. To restrict a resource to paying users, grant access to `Role.label('subscriber')` in its [permissions](/docs/advanced/security/permissions). Appwrite checks the label on every request, so there's no separate subscription check to write in your app.
+
+# Before you go live
+
+The demo flow is built for testing. Before you charge real customers:
+
+- Create a live API key, product, and webhook endpoint in **Live Mode**, update the variables, and set `DODO_PAYMENTS_ENVIRONMENT` to `live_mode`.
+- Check `successUrl`, `failureUrl`, and `verifyUrl` against your own domains in `POST /subscribe`, so the function can't be used to redirect people to other sites.
+- Replace the demo's anonymous sessions with the sign-in method your app uses.
+- Mark the API key and signing secret as [secret variables](/docs/products/functions/environment-variables#secret-variables) so nobody can read them back from the Console.
+
+# Read more about Dodo Payments subscriptions and Appwrite Functions
+
+If you would like to learn more about Dodo Payments subscriptions and Appwrite Functions, we have some resources that you should visit:
+
+- [Read the announcement of the Dodo Payments templates](/blog/post/announcing-dodo-payments-templates)
+- [Sell one-time products with the Payments with Dodo Payments integration](/integrations/dodo-payments-payments)
+- [Read the Dodo Payments subscription integration guide](https://docs.dodopayments.com/developer-resources/subscription-integration-guide)
+- [Learn how labels grant permissions in Appwrite Auth](/docs/products/auth/labels)
+- [Subscriptions with Dodo Payments template source](https://github.com/appwrite/templates/tree/main/node/subscriptions-with-dodo-payments)
