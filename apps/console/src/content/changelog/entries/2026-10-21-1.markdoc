@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: "Inactive deployments on Appwrite Cloud will be kept for 30 days by default"
+date: 2026-10-21
+cover: /images/blog/default-deployment-retention/cover.avif
+description: "From November 5, 2026, Appwrite Cloud deletes inactive Functions and Sites deployments after 30 days by default, freeing project storage. Active deployments are never deleted."
+tags: functions, sites, storage
+---
+
+From **November 5, 2026**, Appwrite Cloud deletes inactive [Functions](/docs/products/functions/deployments#deployment-retention) and [Sites](/docs/products/sites/deployments#deployment-retention) deployments after **30 days** by default, which frees the project storage they use. Many Free projects reach their storage limit because of inactive deployments. The active deployment and any deployment a custom domain points to are never deleted.
+
+Functions and sites set to **Keep deployments forever** move to the 30-day default. To keep deployments for longer, set a retention window under **Settings** > **Build** > **Retention** before November 5. The Free and Education plans allow up to **90 days** and keep the **100** newest inactive deployments per function or site. The Start and Pro plans allow up to **3 years**. Self-hosted Appwrite is unchanged.
+
+{% arrow_link href="/blog/post/default-deployment-retention" %}
+Read the announcement
+{% /arrow_link %}
