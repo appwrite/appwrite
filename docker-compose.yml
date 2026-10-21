@@ -708,6 +708,7 @@ services:
     profiles:
       - separate
     entrypoint: worker-maintenance
+    restart: unless-stopped
     logging:
       driver: json-file
       options:

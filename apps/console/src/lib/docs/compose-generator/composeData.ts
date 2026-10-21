@@ -1117,6 +1117,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
     name: 'appwrite-worker-maintenance',
     block: `  appwrite-worker-maintenance:
     entrypoint: worker-maintenance
+    restart: unless-stopped
     logging:
       driver: json-file
       options:
