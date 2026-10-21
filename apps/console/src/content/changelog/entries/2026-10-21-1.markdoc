@@ -1,0 +1,18 @@
+---
+layout: changelog
+title: Appwrite 2.5.1 security patch for self-hosted deployments
+date: 2026-10-21
+cover: /images/changelog/2026-10-13.avif
+tags: security, infrastructure, console
+---
+
+Appwrite 2.5.1 refreshes the outbound TLS trust store after the eMudhra certificate compromise. Upgrade your self-hosted instance to apply the fix.
+
+This patch includes:
+
+- Refresh outbound TLS trust so Appwrite rejects the compromised eMudhra certificate chains. TLS verification remains enabled.
+- Update the self-hosted Console from 1.2.74 to 1.2.97.
+
+{% arrow_link href="https://github.com/appwrite/appwrite/releases/tag/2.5.1" %}
+View the release notes on GitHub
+{% /arrow_link %}
