@@ -13,7 +13,6 @@ product:
     vendor: Dodo Payments
     description: 'Dodo Payments is a Merchant of Record for SaaS, AI, and digital products that handles payments, tax, and billing in 220+ countries.'
 platform:
-    - 'Self-hosted'
     - 'Cloud'
 images:
     - /images/integrations/dodo-payments-subscriptions/cover.avif
