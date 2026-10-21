@@ -1,6 +1,6 @@
 import type { VideoTimelineCue } from '@/lib/react-query/hooks/videos'
 
-/** Returns the sprite cue that covers `time` (seconds), if any. */
+/** Returns the thumbnail cue that covers `time` (seconds), if any. */
 export function findTimelineCueAtTime(
   cues: VideoTimelineCue[],
   time: number,
