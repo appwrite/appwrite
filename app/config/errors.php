@@ -1196,6 +1196,31 @@ return [
         'description' => 'Project with the requested ID could not be found. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
         'code' => 404,
     ],
+    Exception::PROJECT_TRANSFER_NOT_FOUND => [
+        'name' => Exception::PROJECT_TRANSFER_NOT_FOUND,
+        'description' => 'Project transfer with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::PROJECT_TRANSFER_INVALID_SECRET => [
+        'name' => Exception::PROJECT_TRANSFER_INVALID_SECRET,
+        'description' => 'The project transfer secret is invalid. Please ask the project owner for a new transfer link.',
+        'code' => 401,
+    ],
+    Exception::PROJECT_TRANSFER_EXPIRED => [
+        'name' => Exception::PROJECT_TRANSFER_EXPIRED,
+        'description' => 'The project transfer has expired. Please ask the project owner for a new transfer link.',
+        'code' => 410,
+    ],
+    Exception::PROJECT_TRANSFER_TEAM_MISMATCH => [
+        'name' => Exception::PROJECT_TRANSFER_TEAM_MISMATCH,
+        'description' => 'The project transfer can only be claimed by a different organization.',
+        'code' => 403,
+    ],
+    Exception::PROJECT_TRANSFER_SAME_TEAM => [
+        'name' => Exception::PROJECT_TRANSFER_SAME_TEAM,
+        'description' => 'The project already belongs to this organization.',
+        'code' => 400,
+    ],
     Exception::PROJECT_ALREADY_EXISTS => [
         'name' => Exception::PROJECT_ALREADY_EXISTS,
         'description' => 'Project with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',

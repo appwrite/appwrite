@@ -412,6 +412,12 @@ class V25 extends Migration
                     }
                     break;
 
+                case 'transfers':
+                    if ($collectionType === 'console') {
+                        $this->createCollection($id);
+                    }
+                    break;
+
                 case 'presenceLogs':
                     // Added in 1.9.5 and created only by V24, which an install that ran
                     // the 1.9.6 migration or upgraded straight from 1.8.x never ran.

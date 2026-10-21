@@ -868,6 +868,17 @@ class Deletes extends Action
             Console::error('Failed to delete keys: ' . $th->getMessage());
         }
 
+        // Delete Transfers
+        try {
+            $this->deleteByGroup('transfers', [
+                Query::equal('resourceType', ['projects']),
+                Query::equal('resourceInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete transfers: ' . $th->getMessage());
+        }
+
         // Delete Webhooks
         try {
             $this->deleteByGroup('webhooks', [

@@ -136,6 +136,30 @@ $platformCollections = [
         ],
     ],
 
+    'transfers' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('transfers'),
+        'name' => 'transfers',
+        'attributes' => [
+            Attribute::string(key: 'resourceType', required: true),
+            Attribute::string(key: 'resourceId', required: true),
+            Attribute::string(key: 'resourceInternalId', required: true),
+            // Organization that owns the resource when the transfer is created
+            Attribute::string(key: 'teamId', required: true),
+            Attribute::string(key: 'teamInternalId', required: true),
+            // Only this organization may claim the resource; empty allows any
+            Attribute::string(key: 'targetTeamId', default: ''),
+            Attribute::string(key: 'targetTeamInternalId', default: ''),
+            Attribute::string(key: 'secret', size: 256, required: true),
+            Attribute::datetime(key: 'expire', required: true),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_resource', attributes: ['resourceType', 'resourceInternalId']),
+            Index::key(key: '_key_team', attributes: ['teamInternalId']),
+            Index::key(key: '_key_expire', attributes: ['expire']),
+        ],
+    ],
+
     'webhooks' => [
         '$collection' => Id::custom(Database::METADATA),
         '$id' => Id::custom('webhooks'),

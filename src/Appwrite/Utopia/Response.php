@@ -261,6 +261,8 @@ class Response extends SwooleResponse
     public const MODEL_KEY = 'key';
     public const MODEL_KEY_LIST = 'keyList';
     public const MODEL_EPHEMERAL_KEY = 'ephemeralKey';
+    public const MODEL_PROJECT_TRANSFER = 'projectTransfer';
+    public const MODEL_PROJECT_TRANSFER_LIST = 'projectTransferList';
     public const MODEL_MOCK_NUMBER = 'mockNumber';
     public const MODEL_MOCK_NUMBER_LIST = 'mockNumberList';
     public const MODEL_POLICY_LIST = 'policyList';
