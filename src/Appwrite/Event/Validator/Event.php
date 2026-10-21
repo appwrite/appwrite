@@ -92,12 +92,9 @@ class Event extends Validator
             return false;
         }
 
-        if ($subSubType) {
-            if ($action && !\array_key_exists($action, $events[$type][$subType][$subSubType])) {
-                return false;
-            }
-        } elseif ($subType) {
-            if ($action && !\array_key_exists($action, $events[$type][$subType])) {
+        if ($subType) {
+            $actions = $subSubType ? $events[$type][$subType][$subSubType] : $events[$type][$subType];
+            if ($action && !\array_key_exists($action, $actions)) {
                 return false;
             }
             if (!($subResource) || !\array_key_exists($subType, $events[$type])) {

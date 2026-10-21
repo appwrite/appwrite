@@ -156,5 +156,7 @@ final class EventValidatorTest extends TestCase
         $this->assertFalse($this->object->isValid('teams.*.memberships.*.update.unknown'));
         $this->assertFalse($this->object->isValid('tablesdb.*.tables.*.upsert'));
         $this->assertFalse($this->object->isValid('tablesdb.*.tables.*.rows.*.unknown'));
+        $this->assertFalse($this->object->isValid('tablesdb.*.tables..rows.*.create'));
+        $this->assertFalse($this->object->isValid('tablesdb.*.tables..rows.*.upsert'));
     }
 }
