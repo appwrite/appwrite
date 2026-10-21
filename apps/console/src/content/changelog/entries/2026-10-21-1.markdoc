@@ -1,0 +1,23 @@
+---
+layout: changelog
+title: "Verify emails and reset passwords with a 6-digit code"
+date: 2026-10-21
+cover: /images/blog/announcing-verification-and-recovery-codes/cover.avif
+tags: auth
+---
+
+Appwrite Auth can now email a 6-digit code instead of a link for email verification and password recovery. Your users enter the code in your app, so mobile and desktop apps can handle both flows without a redirect page or a deep link.
+
+Each code lasts 15 minutes and works once. You can also add a security phrase that shows up in both the email and your app, so your users know the email came from their own request. Codes work on Appwrite Cloud and in self-hosted Appwrite 2.3 and later, with the Web, Flutter, Apple, Android, and React Native SDKs.
+
+{% arrow_link href="/blog/post/announcing-verification-and-recovery-codes" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/auth/verify-user#verify-with-code" %}
+Verify an email with a code
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/auth/email-password#recover-with-code" %}
+Recover a password with a code
+{% /arrow_link %}
