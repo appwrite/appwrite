@@ -13,6 +13,7 @@ use Utopia\Cache\Cache;
 use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
@@ -181,6 +182,37 @@ final class StateTest extends TestCase
 
         $live = $this->database->findOne(State::COLLECTION_ID, [Query::equal('userId', ['user-1'])]);
         $this->assertSame(1, $live->getAttribute('connections'));
+    }
+
+    public function testDeleteOrphanRemovesRowNotTouchedSinceBoot(): void
+    {
+        $id = $this->hold('user-1', 'online')['presence']->getId();
+
+        // Cutoff after the row's last write: a genuine orphan from a dead instance.
+        $deleted = (new State())->deleteOrphan($this->database, $id, DateTime::addSeconds(new \DateTime(), 60));
+
+        $this->assertNotNull($deleted);
+        $this->assertSame($id, $deleted->getId());
+        $this->assertTrue($this->database->getDocument(State::COLLECTION_ID, $id)->isEmpty());
+    }
+
+    public function testDeleteOrphanPreservesRowReconnectedAfterBoot(): void
+    {
+        $id = $this->hold('user-1', 'online')['presence']->getId();
+
+        // Cutoff before the row's last write: a socket incremented it after boot, so the
+        // row holds a live connection and must survive the sweep.
+        $deleted = (new State())->deleteOrphan($this->database, $id, DateTime::addSeconds(new \DateTime(), -60));
+
+        $this->assertNull($deleted);
+        $live = $this->database->getDocument(State::COLLECTION_ID, $id);
+        $this->assertFalse($live->isEmpty());
+        $this->assertSame(1, $live->getAttribute('connections'));
+    }
+
+    public function testDeleteOrphanReturnsNullWhenRowGone(): void
+    {
+        $this->assertNull((new State())->deleteOrphan($this->database, 'missing', DateTime::addSeconds(new \DateTime(), 60)));
     }
 
     public function testSetPermissionsDefaultsForUser(): void

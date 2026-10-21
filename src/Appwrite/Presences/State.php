@@ -274,8 +274,11 @@ class State
             }
 
             // A reconnect incremented this row after boot (the upsert moves $updatedAt but not
-            // $createdAt): it holds a live connection now, so it is no longer an orphan.
-            if ($current->getUpdatedAt() >= $since) {
+            // $createdAt): it holds a live connection now, so it is no longer an orphan. Compare as
+            // instants -- $updatedAt is read back in ISO form while $since is in DB format, so a raw
+            // string comparison is unreliable.
+            $updatedAt = $current->getUpdatedAt();
+            if ($updatedAt !== null && new \DateTime($updatedAt) >= new \DateTime($since)) {
                 return null;
             }
 
