@@ -290,6 +290,17 @@ if (!function_exists('triggerStats')) {
     }
 }
 
+if (!function_exists('realtimeWorkerExit')) {
+    /**
+     * Runs once as a worker exits, after it starts closing its connections. Their
+     * onClose callbacks can still run afterwards, so an override must keep working
+     * for them; a buffered publisher, for one, should publish directly once stopped.
+     */
+    function realtimeWorkerExit(int $workerId): void
+    {
+    }
+}
+
 if (!function_exists('checkForProjectUsage')) {
     function checkForProjectUsage(Document $project): void
     {
@@ -896,6 +907,12 @@ $adapter->onWorkerExit(function (int $workerId) use ($server, $realtime, &$exitS
         } catch (\Throwable $th) {
             Console::error('Realtime onWorkerExit close error: ' . $th->getMessage());
         }
+    }
+
+    try {
+        realtimeWorkerExit($workerId);
+    } catch (\Throwable $th) {
+        Console::error('Realtime worker exit hook error: ' . $th->getMessage());
     }
 });
 
