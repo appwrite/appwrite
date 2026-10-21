@@ -343,7 +343,7 @@ $server->error(function (Throwable $error): void {
     $span->finish(error: $error);
 });
 
-$server->onStart(function () use ($stats, $containerId, &$statsDocument) {
+$server->onStart(function () use ($stats, $containerId, &$statsDocument, $container) {
     sleep(5); // wait for the initial database schema to be ready
     Console::success('Server started successfully');
 
@@ -374,6 +374,93 @@ $server->onStart(function () use ($stats, $containerId, &$statsDocument) {
             }
         } while (true);
     });
+
+    /**
+     * Reconcile presences orphaned by a previous instance on this host. A hard crash
+     * (SIGKILL/OOM) fires no onClose, so this host's rows linger until expiry. On a clean boot
+     * every presenceLogs row for this hostname created before boot is such an orphan; a connection
+     * that upserts while the sweep runs is created after `$since` and is left alone. Each orphan
+     * goes through the normal offline path, so usage is corrected and subscribers on other workers
+     * get the delete. CE only -- a Cloud host is shared across tenants on sharded databases, where
+     * a hostname sweep does not apply (appwrite/appwrite#14343).
+     */
+    if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
+        go(function () use ($container): void {
+            $hostname = \gethostname();
+            if ($hostname === false) {
+                return;
+            }
+
+            $since = DateTime::now();
+
+            Span::init('realtime.start.presenceReconcile');
+            try {
+                $dbForPlatform = getConsoleDB();
+                $presences = new PresenceState();
+                /** @var UsagePublisher $publisherForUsage */
+                $publisherForUsage = $container->get('publisherForUsage');
+
+                $reconcile = function (Database $database, Document $project) use ($hostname, $since, $presences, $publisherForUsage): void {
+                    if ($database->findCollection('presenceLogs') === null) {
+                        return;
+                    }
+
+                    while (true) {
+                        $orphans = $database->getAuthorization()->skip(fn () => $database->find('presenceLogs', [
+                            Query::equal('hostname', [$hostname]),
+                            Query::lessThan('$createdAt', $since),
+                            Query::limit(100),
+                        ]));
+                        if (empty($orphans)) {
+                            break;
+                        }
+
+                        $removed = 0;
+                        foreach ($orphans as $orphan) {
+                            try {
+                                $database->getAuthorization()->skip(fn () => $database->deleteDocument('presenceLogs', $orphan->getId()));
+                            } catch (Throwable) {
+                                continue; // leave it for the next pass rather than abort the sweep
+                            }
+                            $removed++;
+                            try {
+                                $presences->triggerPresenceDeleted($database, $project, (string) $orphan->getAttribute('userId'), $orphan, $publisherForUsage, getQueueForEvents(), getQueueForRealtime());
+                            } catch (Throwable) {
+                                // Row is already gone; the offline side effects are best-effort.
+                            }
+                        }
+
+                        if ($removed === 0) {
+                            break; // nothing deletable this pass -- stop rather than re-scan forever
+                        }
+                    }
+                };
+
+                // Console carries its own presenceLogs; user projects each have their own.
+                $reconcile($dbForPlatform, new Document(['$id' => 'console']));
+
+                $last = null;
+                while (true) {
+                    $queries = [Query::limit(100), Query::orderAsc('$sequence')];
+                    if ($last !== null) {
+                        $queries[] = Query::cursorAfter($last);
+                    }
+                    $projects = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->find('projects', $queries));
+                    foreach ($projects as $project) {
+                        $reconcile(getProjectDB($project), $project);
+                    }
+                    if (\count($projects) < 100) {
+                        break;
+                    }
+                    $last = \end($projects);
+                }
+            } catch (Throwable $th) {
+                Span::current()?->setError($th);
+            } finally {
+                Span::current()?->finish();
+            }
+        });
+    }
 
     /**
      * Save current connections to the Database every 5 seconds.
