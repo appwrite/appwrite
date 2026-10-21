@@ -1231,6 +1231,65 @@ trait TransactionPermissionsBase
         }
     }
 
+    public function testStagingAManyToOneLinkNeedsOnlyReadOnTheLinkedRecord(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $parentId = $this->createStagingContainer([Permission::read(Role::any()), Permission::create(Role::users())]);
+        $readOnlyId = $this->createStagingContainer([Permission::read(Role::any())]);
+
+        $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $parentId, 'relationship'), $this->getStagingKeyHeaders(), [
+            $this->getRelatedIdParam() => $readOnlyId,
+            'type' => 'manyToOne',
+            'key' => 'readOnly',
+        ]);
+        $this->assertSame(202, $relationship['headers']['status-code']);
+        $this->waitForAttribute($this->getPermissionsDatabase(), $parentId, 'readOnly');
+
+        $readOnlyRecord = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $readOnlyId), $this->getStagingKeyHeaders(), [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['title' => 'Linked'],
+        ]);
+        $this->assertSame(201, $readOnlyRecord['headers']['status-code']);
+        $readOnlyRecordId = $readOnlyRecord['body']['$id'];
+
+        $transactionId = $this->createStagingTransaction();
+        $parentRecordIds = ['operations' => Id::unique(), 'record' => Id::unique()];
+
+        $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $this->getStagingUserHeaders(), [
+            'operations' => [[
+                'action' => 'create',
+                'databaseId' => $this->getPermissionsDatabase(),
+                $this->getContainerIdParam() => $parentId,
+                $this->getRecordIdParam() => $parentRecordIds['operations'],
+                'data' => ['title' => 'Parent', 'readOnly' => $readOnlyRecordId],
+            ]],
+        ]);
+        $this->assertSame(201, $staged['headers']['status-code'], 'The operations route refused a many-to-one link to a readable record');
+
+        $staged = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $parentId), $this->getStagingUserHeaders(), [
+            $this->getRecordIdParam() => $parentRecordIds['record'],
+            'data' => ['title' => 'Parent', 'readOnly' => $readOnlyRecordId],
+            'transactionId' => $transactionId,
+        ]);
+        $this->assertSame(201, $staged['headers']['status-code'], 'The record route refused a many-to-one link to a readable record');
+        $this->assertSame(2, $this->getStagedOperations($transactionId));
+
+        $commit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $this->getStagingUserHeaders(), ['commit' => true]);
+        $this->assertSame(200, $commit['headers']['status-code']);
+
+        foreach ($parentRecordIds as $route => $parentRecordId) {
+            $parent = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($this->getPermissionsDatabase(), $parentId, $parentRecordId), $this->getStagingKeyHeaders(), [
+                'queries' => [Query::select(['*', 'readOnly.*'])->toString()],
+            ]);
+            $this->assertSame(200, $parent['headers']['status-code'], "The {$route} route's parent was not committed");
+            $this->assertSame($readOnlyRecordId, $parent['body']['readOnly']['$id']);
+        }
+    }
+
     /**
      * @param array<string> $permissions
      */
