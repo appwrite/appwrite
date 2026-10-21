@@ -139,13 +139,23 @@ class Create extends Base
             }
 
             $etag = \md5($body);
+            $checksum = \hash('sha256', $body);
+            $size = \strlen($body);
             $lockKey = $this->multipartLockKey($project, $uploadId);
-            $locks($lockKey . ':part:' . $partNumber, 600, function (Distributed $partLock) use ($locks, $lockKey, $cache, $project, $deviceForFiles, $bucket, $uploadId, $bucketId, $key, $partNumber, $body, $etag): void {
-                $upload = $locks($lockKey, 600, function () use ($cache, $project, $deviceForFiles, $bucket, $uploadId, $bucketId, $key, $partNumber, $body, $etag): ?array {
+            $locks($lockKey . ':part:' . $partNumber, 600, function (Distributed $partLock) use ($locks, $lockKey, $cache, $project, $deviceForFiles, $bucket, $uploadId, $bucketId, $key, $partNumber, $body, $etag, $checksum, $size): void {
+                $upload = $locks($lockKey, 600, function () use ($cache, $project, $deviceForFiles, $bucket, $uploadId, $bucketId, $key, $partNumber, $body, $etag, $checksum, $size): ?array {
                     $upload = $this->multipartUploadForBucket($cache, $project, $uploadId, $bucketId, $key);
+                    $this->validateMultipartPart($bucket, $upload, $partNumber, $size, $checksum);
                     if (empty($upload['metadata']['device']['uploadId'])) {
                         // Local chunks share a directory: keep transfer and abort serialized.
-                        $upload = $this->uploadMultipartPart($cache, $project, $deviceForFiles, $bucket, $upload, $partNumber, $body, $etag);
+                        $receipt = $this->uploadMultipartPart($deviceForFiles, $upload, $partNumber, $body, $etag, $checksum);
+                        // A part that expired during transfer must not revive the upload.
+                        $this->multipartUploadForBucket($cache, $project, $uploadId, $bucketId, $key);
+                        $upload['parts'][$partNumber] = ['etag' => $receipt['etag'], 'checksum' => $receipt['checksum'], 'size' => $receipt['size']];
+                        $upload['metadata']['device']['parts'][$partNumber] = $receipt['device'];
+                        $upload['metadata']['device']['chunks'] = \count($upload['metadata']['device']['parts']);
+                        // Gateway parts are fragments, even when completion selects one.
+                        $upload['metadata']['device']['whole'] = false;
                         $this->saveMultipartUpload($cache, $project, $upload);
                         return null;
                     }
@@ -156,18 +166,20 @@ class Create extends Base
                     if (!$partLock->refresh()) {
                         throw new Contention('Part lease lost before transfer');
                     }
-                    $transferred = $this->uploadMultipartPart($cache, $project, $deviceForFiles, $bucket, $upload, $partNumber, $body, $etag);
+                    $receipt = $this->uploadMultipartPart($deviceForFiles, $upload, $partNumber, $body, $etag, $checksum);
                     if (!$partLock->isHeld()) {
                         throw new Contention('Part lease lost after transfer');
                     }
-                    $locks($lockKey, 600, function () use ($cache, $project, $uploadId, $bucketId, $key, $partNumber, $transferred, $partLock): void {
+                    $locks($lockKey, 600, function () use ($cache, $project, $uploadId, $bucketId, $key, $partNumber, $receipt, $partLock, $bucket): void {
                         if (!$partLock->refresh()) {
                             throw new Contention('Part lease lost before recording completion');
                         }
                         // Abort removes the state. Never recreate it from the transfer's snapshot.
                         $current = $this->multipartUploadForBucket($cache, $project, $uploadId, $bucketId, $key);
-                        $current['parts'][$partNumber] = $transferred['parts'][$partNumber];
-                        $current['metadata']['device']['parts'][$partNumber] = $transferred['metadata']['device']['parts'][$partNumber];
+                        // Concurrent parts may have consumed the remaining bucket limit.
+                        $this->validateMultipartPart($bucket, $current, $partNumber, $receipt['size'], $receipt['checksum']);
+                        $current['parts'][$partNumber] = ['etag' => $receipt['etag'], 'checksum' => $receipt['checksum'], 'size' => $receipt['size']];
+                        $current['metadata']['device']['parts'][$partNumber] = $receipt['device'];
                         $current['metadata']['device']['chunks'] = \count($current['metadata']['device']['parts']);
                         $this->saveMultipartUpload($cache, $project, $current);
                     }, timeout: 120.0);

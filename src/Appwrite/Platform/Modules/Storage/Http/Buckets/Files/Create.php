@@ -680,7 +680,10 @@ class Create extends Action
                 }, timeout: 120.0);
 
                 if ($parallel) {
-                    if ($partLock !== null && !$partLock->refresh()) {
+                    if ($partLock === null) {
+                        throw new LockContention('Parallel upload requires a part lease');
+                    }
+                    if (!$partLock->refresh()) {
                         throw new LockContention('Part lease lost before transfer');
                     }
                     // Transfer only: upload() would complete against a stale parts map.
@@ -693,12 +696,12 @@ class Create extends Action
                     );
                     // Only this request's receipt may be merged; an older snapshot
                     // must not replace a newer ETag for another part.
-                    if ($partLock !== null && !$partLock->isHeld()) {
+                    if (!$partLock->isHeld()) {
                         throw new LockContention('Part lease lost after transfer');
                     }
                     $metadata['parts'] = [$chunk => $metadata['parts'][$chunk]];
                     $locks($lockKey, self::LOCK_TTL, function () use ($finalizeUpload, &$metadata, $partLock): void {
-                        if ($partLock !== null && !$partLock->refresh()) {
+                        if (!$partLock->refresh()) {
                             throw new LockContention('Part lease lost before completion');
                         }
                         // Re-read and merge acknowledged parts while locked. Completion

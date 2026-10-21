@@ -391,6 +391,38 @@ final class S3CustomServerTest extends Scope
     }
 
     #[Group('s3')]
+    public function testParallelMultipartPartsRespectLimit(): void
+    {
+        $bucketId = $this->setupBucket(['maximumFileSize' => 1024]);
+        $key = Id::unique() . '.bin';
+        $uploadId = $this->createMultipartUpload($bucketId, $key);
+        $body = \str_repeat('a', 600);
+        $path = '/' . $bucketId . '/' . $key;
+
+        try {
+            /**
+             * Test for FAILURE - each part fits, but both exceed the bucket limit.
+             */
+            $responses = $this->client->callConcurrently([
+                $this->signedRequest(Client::METHOD_PUT, $path, ['uploadId' => $uploadId, 'partNumber' => '1'], $body),
+                $this->signedRequest(Client::METHOD_PUT, $path, ['uploadId' => $uploadId, 'partNumber' => '2'], $body),
+            ], decode: false);
+            $statuses = \array_column(\array_column($responses, 'headers'), 'status-code');
+            \sort($statuses);
+            $this->assertSame([200, 400], $statuses);
+
+            $parts = $this->call(Client::METHOD_GET, $path, ['uploadId' => $uploadId]);
+            $this->assertSame(200, $parts['headers']['status-code']);
+            $xml = \simplexml_load_string($parts['body']);
+            $this->assertCount(1, $xml->Part);
+            $this->assertSame(600, (int) $xml->Part->Size);
+            $this->assertSame('"' . \md5($body) . '"', (string) $xml->Part->ETag);
+        } finally {
+            $this->call(Client::METHOD_DELETE, $path, ['uploadId' => $uploadId]);
+        }
+    }
+
+    #[Group('s3')]
     public function testParallelMultipartPartsPreserveOverwrite(): void
     {
         $bucketId = $this->setupBucket();

@@ -35,8 +35,8 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
 use Utopia\Storage\DeviceType;
-use Utopia\System\System;
 use Utopia\Storage\Exception\NotFoundException as StorageNotFoundException;
+use Utopia\System\System;
 
 abstract class Base extends Action
 {
@@ -276,29 +276,32 @@ abstract class Base extends Action
         $cache->save($this->multipartStateKey($project, (string) $upload['uploadId']), \json_encode($upload, JSON_THROW_ON_ERROR));
     }
 
-    protected function uploadMultipartPart(Cache $cache, Document $project, Device $deviceForFiles, Document $bucket, array $upload, int $partNumber, string $body, string $etag): array
+    protected function validateMultipartPart(Document $bucket, array $upload, int $partNumber, int $size, string $checksum): void
     {
         if ($partNumber < 1 || $partNumber > self::MULTIPART_MAX_PARTS) {
             throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, 'Part number must be an integer between 1 and ' . self::MULTIPART_MAX_PARTS . '.');
         }
 
-        // Devices keep the first bytes staged for a part number, so a retry must resend the same content.
-        $checksum = \hash('sha256', $body);
+        // A retry may acknowledge only the same bytes as the recorded part.
         $staged = $upload['parts'][(string) $partNumber] ?? null;
         if ($staged !== null && ($staged['checksum'] ?? null) !== $checksum) {
             throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, 'Part ' . $partNumber . ' was already uploaded with different content. Start a new multipart upload to change it.');
         }
 
-        $size = \strlen($body);
         foreach (($upload['parts'] ?? []) as $number => $part) {
             if ((int) $number !== $partNumber) {
                 $size += (int) ($part['size'] ?? 0);
             }
         }
         $this->validateFileConstraints($bucket, (string) ($upload['name'] ?? $upload['key'] ?? ''), $size);
+    }
 
-        $metadata = $upload['metadata'] ?? [];
-        $deviceMetadata = $metadata['device'] ?? [];
+    /**
+     * @return array{etag: string, checksum: string, size: int, device: bool|string}
+     */
+    protected function uploadMultipartPart(Device $deviceForFiles, array $upload, int $partNumber, string $body, string $etag, string $checksum): array
+    {
+        $deviceMetadata = $upload['metadata']['device'] ?? [];
         try {
             $deviceForFiles->uploadChunk(
                 new Stream($body),
@@ -311,15 +314,7 @@ abstract class Base extends Action
             throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, 'Multipart upload not found.');
         }
 
-        // Expiry may have aborted the staging while this part was written.
-        if (!\is_string($cache->load($this->multipartStateKey($project, (string) $upload['uploadId']), self::MULTIPART_TTL))) {
-            throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, 'Multipart upload not found.');
-        }
-
-        $metadata['device'] = $deviceMetadata;
-        $upload['metadata'] = $metadata;
-        $upload['parts'][(string) $partNumber] = ['etag' => $etag, 'checksum' => $checksum, 'size' => \strlen($body)];
-        return $upload;
+        return ['etag' => $etag, 'checksum' => $checksum, 'size' => \strlen($body), 'device' => $deviceMetadata['parts'][$partNumber]];
     }
 
     protected function unsupportedSubresource(Request $request): bool
