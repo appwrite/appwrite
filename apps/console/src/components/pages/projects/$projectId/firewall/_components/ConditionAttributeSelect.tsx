@@ -26,7 +26,9 @@ import {
   SearchCode,
   Send,
   Server,
+  ShieldCheck,
   Tags,
+  Timer,
   UserRound,
   Wifi,
 } from 'lucide-react'
@@ -84,6 +86,8 @@ export const ATTRIBUTE_ICONS: Record<FirewallConditionAttribute, LucideIcon> = {
   os: Monitor,
   browser: AppWindow,
   userAgent: UserRound,
+  sessionAge: Timer,
+  mfaAge: ShieldCheck,
 }
 
 interface ConditionAttributeSelectProps {

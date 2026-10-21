@@ -14,10 +14,12 @@ import { Plus, Trash2, Route } from 'lucide-react'
 import {
   FIREWALL_HTTP_METHODS,
   createEmptyConditionDraft,
+  defaultOperatorForAttribute,
   getOperatorsForAttribute,
   isDynamicKeyAttribute,
   isNoValueOperator,
   isOperatorAllowedForAttribute,
+  isSecondsAttribute,
   isTextMatchOperator,
   type FirewallConditionAttribute,
   type FirewallConditionDraft,
@@ -350,6 +352,27 @@ function ConditionValueInput({
         />
       )
 
+    case 'sessionAge':
+    case 'mfaAge':
+      return (
+        <div className="relative">
+          <Input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            step={1}
+            value={value}
+            disabled={disabled}
+            placeholder={t('e.g. 300')}
+            className="h-9 w-full pr-16 font-mono text-[13px]"
+            onChange={(e) => onChange(e.target.value)}
+          />
+          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[13px] text-muted-foreground">
+            {t('seconds')}
+          </span>
+        </div>
+      )
+
     case 'headers':
     case 'query':
       return (
@@ -389,8 +412,7 @@ export function ConditionsBuilder({
   className,
 }: ConditionsBuilderProps) {
   const t = useT()
-  const showThen =
-    action != null && (onActionChange != null || actionReadOnly)
+  const showThen = action != null && (onActionChange != null || actionReadOnly)
   const pathPlaceholder = PATH_PLACEHOLDERS[resourceType] ?? 'e.g. /v1/account'
 
   // Premium geo attributes (city / state) are only selectable when the project
@@ -428,7 +450,7 @@ export function ConditionsBuilder({
           condition.operator,
         )
           ? condition.operator
-          : ('equal' as FirewallConditionOperator)
+          : defaultOperatorForAttribute(attribute)
         return {
           ...condition,
           attribute,
@@ -477,8 +499,7 @@ export function ConditionsBuilder({
             <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-border" />
           </div>
           {conditions.map((condition, index) => {
-            const AttributeIcon =
-              ATTRIBUTE_ICONS[condition.attribute] ?? Route
+            const AttributeIcon = ATTRIBUTE_ICONS[condition.attribute] ?? Route
             const operators = getOperatorsForAttribute(condition.attribute)
             return (
               <div key={condition.id} className="contents">
@@ -559,6 +580,18 @@ export function ConditionsBuilder({
                           }
                         />
                       )}
+
+                      {isSecondsAttribute(condition.attribute) ? (
+                        <p className="text-[12px] text-muted-foreground">
+                          {resourceType === 'api'
+                            ? t(
+                                'Empty for guests and API keys. Add an "Is empty" condition in a separate rule to block them too.',
+                              )
+                            : t(
+                                'Read from the user JWT (x-appwrite-user-jwt) on the request. Empty when the request has none.',
+                              )}
+                        </p>
+                      ) : null}
                     </div>
 
                     <Button
