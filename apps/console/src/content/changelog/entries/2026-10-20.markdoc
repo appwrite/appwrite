@@ -2,6 +2,7 @@
 layout: changelog
 title: "Strip metadata from images uploaded to Storage"
 date: 2026-10-20
+cover: /images/changelog/2026-10-20.avif
 description: "Storage buckets can now remove location, device, and capture time metadata from uploaded images. Built by community contributor jaysomani."
 tags: storage, security
 ---
