@@ -54,7 +54,7 @@ class Func extends Resource
      */
     public static function fromArray(array $array): self
     {
-        return new self(
+        return (new self(
             $array['id'],
             $array['name'],
             $array['runtime'],
@@ -72,7 +72,7 @@ class Func extends Resource
             $array['buildSpecification'] ?? $array['specification'] ?? '',
             $array['interval'] ?? 0,
             $array['deploymentRetention'] ?? 0
-        );
+        ))->setDescription(\is_string($array['description'] ?? null) ? $array['description'] : '');
     }
 
     /**
@@ -81,6 +81,7 @@ class Func extends Resource
     public function jsonSerialize(): array
     {
         return [
+            'description' => $this->description,
             'id' => $this->id,
             'name' => $this->name,
             'execute' => $this->execute,
