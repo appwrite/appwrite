@@ -352,8 +352,9 @@ class Create extends Action
             if ($file->isEmpty()) {
                 // A deleted upload can still have a part in flight. Give its replacement
                 // a different object path as well as a different backend upload ID.
+                // Keep the extension last so previews retain their default format.
                 if ($chunks > 1 && $deviceForFiles->getType() !== DeviceType::Local) {
-                    $path .= '.' . Id::unique();
+                    $path = \dirname($path) . DIRECTORY_SEPARATOR . $fileId . '.' . Id::unique() . '.' . \pathinfo($fileName, PATHINFO_EXTENSION);
                 }
                 $deviceForFiles->prepare($path, $metadata['content_type'] ?? '', $chunks, $metadata);
 

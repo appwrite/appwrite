@@ -58,6 +58,67 @@ final class StorageCustomServerTest extends Scope
         return self::$cachedBucket[$cacheKey];
     }
 
+    #[Group('s3')]
+    public function testGetMultipartFilePreviewPreservesTransparency(): void
+    {
+        $bucketId = $this->setupBucket()['bucketId'];
+        $fileId = Id::unique();
+        $headers = array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $path = '/storage/buckets/' . $bucketId . '/files';
+
+        // Keep the PNG valid and transparent, but uncompressed so it needs two parts.
+        $image = new \Imagick();
+        $image->newImage(1300, 1300, 'rgba(255, 0, 0, 0.5)', 'png');
+        $image->setImageDepth(8);
+        $image->setOption('png:color-type', '6');
+        $image->setOption('png:compression-level', '0');
+        $source = $image->getImageBlob();
+        $image->clear();
+        $chunkSize = 5 * 1024 * 1024;
+        $size = \strlen($source);
+        $this->assertGreaterThan($chunkSize, $size);
+
+        try {
+            /**
+             * Test for SUCCESS
+             */
+            foreach (\str_split($source, $chunkSize) as $index => $part) {
+                $start = $index * $chunkSize;
+                $upload = $this->client->call(Client::METHOD_POST, $path, array_merge($headers, [
+                    'content-type' => 'multipart/form-data',
+                    'content-range' => 'bytes ' . $start . '-' . ($start + \strlen($part) - 1) . '/' . $size,
+                ]), [
+                    'fileId' => $fileId,
+                    'file' => new CURLFile('data://text/plain;base64,' . \base64_encode($part), 'image/png', 'transparent.png'),
+                ]);
+                $this->assertEquals(201, $upload['headers']['status-code']);
+                $this->assertEquals($index + 1, $upload['body']['chunksUploaded']);
+            }
+
+            // Omit output: the original extension must still determine the format.
+            $preview = $this->client->call(Client::METHOD_GET, $path . '/' . $fileId . '/preview', $headers, [
+                'width' => 16,
+                'height' => 16,
+            ]);
+            $this->assertEquals(200, $preview['headers']['status-code']);
+            $this->assertEquals('image/png', $preview['headers']['content-type']);
+
+            $result = new \Imagick();
+            $result->readImageBlob($preview['body']);
+            $this->assertSame('PNG', $result->getImageFormat());
+            $this->assertSame(16, $result->getImageWidth());
+            $this->assertSame(16, $result->getImageHeight());
+            $alpha = $result->getImagePixelColor(0, 0)->getColor(1)['a'];
+            $this->assertGreaterThan(0, $alpha);
+            $this->assertLessThan(1, $alpha);
+            $result->clear();
+        } finally {
+            $this->client->call(Client::METHOD_DELETE, $path . '/' . $fileId, $headers);
+        }
+    }
+
     public function testGetFilePreviewWithAutomaticGravity(): void
     {
         $bucketId = $this->setupBucket()['bucketId'];
