@@ -223,7 +223,7 @@ abstract class Base extends Action
      * One set shared by create and update: the pre-merge controller validated
      * create against 32-5000/6-3000 and update against 64-4000/100-2000, so a
      * profile could be created with values its own update endpoint rejected.
-     * The range spans the seeded presets (360p at 890/64 up to 1080p at
+     * The range covers common ladder bitrates (360p at 890/64 up to 1080p at
      * 4800/128) with headroom for 8K.
      */
     public const MIN_VIDEO_BITRATE = 32;

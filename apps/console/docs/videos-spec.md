@@ -30,7 +30,7 @@ erDiagram
 
 1. Upload a video or audio file to a Storage bucket.
 2. `create` a Video from `bucketId` + `fileId`. Only the document is stored; nothing is downloaded or probed yet.
-3. Use the default profiles seeded into every new project, or `createVideoProfile` per encoding target.
+3. `createVideoProfile` for each encoding target. New projects start with no profiles.
 4. `createRendition` per profile and output. Follow `status` and `progress`. Each job downloads its own copy of the source, probes metadata and extracts embedded subtitles if that has not happened yet, and deletes the copy when it ends.
 5. Optionally `createTimeline` for scrubbing thumbnails (same per-job download) and `createSubtitle` for authored tracks.
 6. Hand the master manifest URL (`getHlsManifest`, `getDashManifest`, `getCmaf*Manifest`) to a player.
@@ -81,7 +81,7 @@ Videos have no status. The Console derives one from the renditions (`getVideoEnc
 
 ## 2. Profile
 
-A reusable encoding target. Renditions are encoded against a profile. New projects are seeded with a default ladder (`app/config/videos-profiles.php` on the server).
+A reusable encoding target. Renditions are encoded against a profile. New projects start with no profiles; create them with `createVideoProfile`.
 
 ### Model: `Models.VideoProfile`
 
@@ -90,7 +90,7 @@ A reusable encoding target. Renditions are encoded against a profile. New projec
 | `$id` | string | Profile ID |
 | `$createdAt` / `$updatedAt` | string | ISO 8601 |
 | `name` | string | Profile name |
-| `codec` | string | Encode codec (`h264`, `hevc`, `vp9`). Default `h264`. Seeded presets set this explicitly |
+| `codec` | string | Encode codec (`h264`, `hevc`, `vp9`). Default `h264` |
 | `videoBitRate` | number | Target video bitrate, **kbps** |
 | `audioBitRate` | number | Target audio bitrate, **kbps** |
 | `width` / `height` | number | Target dimensions, pixels |

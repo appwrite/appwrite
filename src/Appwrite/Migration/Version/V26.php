@@ -3,7 +3,6 @@
 namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
-use Appwrite\Video\Profiles;
 use Exception;
 use Throwable;
 use Utopia\Console;
@@ -39,9 +38,6 @@ class V26 extends Migration
 
         Console::info('Migrating video collections');
         $this->createVideoCollections();
-
-        Console::info('Seeding default video encode profiles');
-        Profiles::seed($this->dbForProject);
     }
 
     /**

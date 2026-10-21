@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Videos;
 
 use Tests\E2E\Client;
-use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Scopes\VideoCustom;
@@ -26,7 +25,6 @@ use WebSocket\TimeoutException;
  */
 final class VideosCustomClientTest extends Scope
 {
-    use ProjectCustom;
     // Only the websocket helpers are wanted here; the trait's generic
     // connection tests belong to the Realtime suite, so demote them below
     // public and PHPUnit will not run them in this class.
@@ -465,9 +463,9 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(401, $create['headers']['status-code']);
         $this->assertEquals('general_unauthorized_scope', $create['body']['type']);
 
-        $seeded = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', $this->serverHeaders(), $payload);
-        $this->assertEquals(201, $seeded['headers']['status-code']);
-        $profileId = $seeded['body']['$id'];
+        $created = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', $this->serverHeaders(), $payload);
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $profileId = $created['body']['$id'];
 
         $update = $this->client->call(Client::METHOD_PATCH, '/project/videos/profiles/' . $profileId, $this->sessionHeaders(), $payload);
         $this->assertEquals(401, $update['headers']['status-code']);
@@ -815,7 +813,7 @@ final class VideosCustomClientTest extends Scope
                 break;
             }
         }
-        $this->assertNotNull($profile, 'Seeded 360p profile missing');
+        $this->assertNotNull($profile, '360p profile missing');
 
         $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->serverHeaders(), [
             'profileId' => $profile['$id'],
@@ -1118,7 +1116,7 @@ final class VideosCustomClientTest extends Scope
                 break;
             }
         }
-        $this->assertNotNull($profile, 'Seeded 360p profile missing');
+        $this->assertNotNull($profile, '360p profile missing');
 
         $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->serverHeaders(), [
             'profileId' => $profile['$id'],

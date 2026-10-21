@@ -18,7 +18,65 @@ use Utopia\Database\Role;
  */
 trait VideoCustom
 {
-    use ProjectCustom;
+    use ProjectCustom {
+        createNewProject as createProject;
+    }
+
+    /**
+     * Encoding ladder created after each video test project, in height order.
+     *
+     * @var list<array{name: string, codec: string, videoBitRate: int, audioBitRate: int, width: int, height: int}>
+     */
+    private const PROFILES = [
+        [
+            'name' => '360p',
+            'codec' => 'h264',
+            'videoBitRate' => 890,
+            'audioBitRate' => 64,
+            'width' => 640,
+            'height' => 360,
+        ],
+        [
+            'name' => '480p',
+            'codec' => 'h264',
+            'videoBitRate' => 2100,
+            'audioBitRate' => 64,
+            'width' => 854,
+            'height' => 480,
+        ],
+        [
+            'name' => '576p',
+            'codec' => 'h264',
+            'videoBitRate' => 2538,
+            'audioBitRate' => 128,
+            'width' => 1024,
+            'height' => 576,
+        ],
+        [
+            'name' => '720p',
+            'codec' => 'h264',
+            'videoBitRate' => 3551,
+            'audioBitRate' => 128,
+            'width' => 1280,
+            'height' => 720,
+        ],
+        [
+            'name' => '1080p',
+            'codec' => 'h264',
+            'videoBitRate' => 4800,
+            'audioBitRate' => 128,
+            'width' => 1920,
+            'height' => 1080,
+        ],
+        [
+            'name' => '2160p',
+            'codec' => 'h264',
+            'videoBitRate' => 16000,
+            'audioBitRate' => 128,
+            'width' => 3840,
+            'height' => 2160,
+        ],
+    ];
 
     protected static array $videoBucket = [];
     protected static array $videoFile = [];
@@ -33,6 +91,28 @@ trait VideoCustom
     protected static array $shortSilenceFile = [];
     protected static array $invalidVideoFile = [];
     protected static array $brokenCaptionFile = [];
+
+    /**
+     * Creates a project and its encoding ladder. Renditions need a profile, so
+     * the presets are posted one by one after the project exists.
+     *
+     * @return array<string, mixed>
+     */
+    protected function createNewProject(): array
+    {
+        $project = $this->createProject();
+
+        foreach (self::PROFILES as $profile) {
+            $response = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $project['$id'],
+                'x-appwrite-key' => $project['apiKey'],
+            ], $profile);
+            $this->assertEquals(201, $response['headers']['status-code'], 'Failed to create profile ' . $profile['name']);
+        }
+
+        return $project;
+    }
 
     /**
      * Bucket holding the source media, readable by anyone so the client-side
@@ -586,7 +666,7 @@ trait VideoCustom
     }
 
     /**
-     * Queues a rendition on the seeded 360p profile.
+     * Queues a rendition on the 360p profile created with the project.
      */
     public function createRendition(string $videoId, string $output): string
     {
@@ -605,7 +685,7 @@ trait VideoCustom
                 break;
             }
         }
-        $this->assertNotNull($profileId, 'Seeded 360p profile missing');
+        $this->assertNotNull($profileId, '360p profile missing');
 
         $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $headers, [
             'profileId' => $profileId,

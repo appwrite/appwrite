@@ -449,10 +449,9 @@ final class MigrationVersionsTest extends TestCase
 
     /**
      * An install upgraded past Videos has none of the seven collections. V26
-     * creates them and seeds the default encode ladder. A second run must not
-     * insert another ladder.
+     * creates them. A second run must not fail.
      */
-    public function testV26CreatesVideoCollectionsAndSeedsProfilesIdempotently(): void
+    public function testV26CreatesVideoCollectionsIdempotently(): void
     {
         require_once __DIR__ . '/../../../app/init.php';
 
@@ -495,15 +494,6 @@ final class MigrationVersionsTest extends TestCase
                 "Expected collection \"{$collectionId}\" to exist"
             );
         }
-
-        $profiles = $authorization->skip(fn () => $database->find('videosProfiles', [
-            Query::limit(100),
-        ]));
-        $this->assertCount(6, $profiles);
-
-        $names = \array_map(fn (Document $profile) => $profile->getAttribute('name'), $profiles);
-        \sort($names);
-        $this->assertSame(['1080p', '2160p', '360p', '480p', '576p', '720p'], $names);
 
         foreach (['videosRenditions', 'videosCaptions', 'videosTimelines'] as $collectionId) {
             $attributeIds = [];
@@ -569,10 +559,9 @@ final class MigrationVersionsTest extends TestCase
 
     /**
      * On a shared-tables host the physical table and its _metadata row belong
-     * to no tenant. Each project still gets its own encode ladder because
-     * unique indexes lead with _tenant.
+     * to no tenant, so a second project's migration finds the collections already.
      */
-    public function testV26SharedTablesCreateGlobalCollectionsAndPerTenantProfiles(): void
+    public function testV26SharedTablesCreateGlobalCollections(): void
     {
         require_once __DIR__ . '/../../../app/init.php';
 
@@ -606,11 +595,6 @@ final class MigrationVersionsTest extends TestCase
         $this->assertFalse($metadata->isEmpty());
         $this->assertNull($metadata->getTenant());
 
-        $profilesA = $authorization->skip(fn () => $database->find('videosProfiles', [
-            Query::limit(100),
-        ]));
-        $this->assertCount(6, $profilesA);
-
         $migrationB = new V26();
         $database->setTenant('tenant-b');
         $migrationB->setProject(
@@ -627,19 +611,11 @@ final class MigrationVersionsTest extends TestCase
             \ob_end_clean();
         }
 
-        $profilesB = $authorization->skip(fn () => $database->find('videosProfiles', [
-            Query::limit(100),
-        ]));
-        $this->assertCount(6, $profilesB);
-
-        $database->setTenant('tenant-a');
-        $profilesAAgain = $authorization->skip(fn () => $database->find('videosProfiles', [
-            Query::limit(100),
-        ]));
-        $this->assertCount(6, $profilesAAgain);
-
-        $idsA = \array_map(fn (Document $profile) => $profile->getId(), $profilesAAgain);
-        $idsB = \array_map(fn (Document $profile) => $profile->getId(), $profilesB);
-        $this->assertSame([], \array_intersect($idsA, $idsB));
+        foreach (['videos', 'videosProfiles', 'videosCaptions'] as $collectionId) {
+            $this->assertFalse(
+                $database->getCollection($collectionId)->isEmpty(),
+                "Expected collection \"{$collectionId}\" to exist for tenant-b"
+            );
+        }
     }
 }

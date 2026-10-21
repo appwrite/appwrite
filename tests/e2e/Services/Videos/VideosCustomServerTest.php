@@ -8,7 +8,6 @@ use Appwrite\Platform\Modules\Videos\Base;
 use PHPUnit\Framework\Attributes\Group;
 use Swoole\Coroutine;
 use Tests\E2E\Client;
-use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Scopes\VideoCustom;
@@ -24,7 +23,6 @@ use function Swoole\Coroutine\run;
 
 final class VideosCustomServerTest extends Scope
 {
-    use ProjectCustom;
     use SideServer;
     use VideoCustom;
 
@@ -39,10 +37,10 @@ final class VideosCustomServerTest extends Scope
     // ---------------------------------------------------------------- profiles
 
     /**
-     * Every new project is seeded with the encoding ladder from
-     * `app/config/videos-profiles.php`, otherwise no rendition can be requested.
+     * VideoCustom creates the encoding ladder after each project, otherwise no
+     * rendition can be requested.
      */
-    public function testListSeededProfiles(): void
+    public function testListProfiles(): void
     {
         $response = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers());
 
@@ -78,7 +76,7 @@ final class VideosCustomServerTest extends Scope
     {
         $response = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', $this->headers(), [
             'name' => 'e2e-480p',
-            // Distinct from the seeded 480p rung so the unique geometry+codec index passes.
+            // Distinct from the 480p rung so the unique geometry+codec index passes.
             'videoBitRate' => 2101,
             'audioBitRate' => 64,
             'width' => 854,
@@ -209,7 +207,7 @@ final class VideosCustomServerTest extends Scope
 
     /**
      * Full-text search is Query.search('search', term) inside queries. The term
-     * filters the seeded ladder and custom profiles; other attributes are rejected.
+     * filters the project ladder and custom profiles; other attributes are rejected.
      */
     public function testListProfilesBySearch(): void
     {
@@ -791,7 +789,7 @@ final class VideosCustomServerTest extends Scope
                 break;
             }
         }
-        $this->assertNotNull($profile, 'Seeded 360p profile missing');
+        $this->assertNotNull($profile, '360p profile missing');
 
         $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
             'profileId' => $profile['$id'],
@@ -825,7 +823,7 @@ final class VideosCustomServerTest extends Scope
         $videoId = $create['body']['$id'];
         $this->assertSame(0, (int) ($create['body']['duration'] ?? 0));
 
-        $profile = $this->seededProfile('360p');
+        $profile = $this->profile('360p');
         $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
             'profileId' => $profile['$id'],
             'output' => 'hls',
@@ -854,7 +852,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertLessThan(3000, (int) $video['duration']);
         $this->assertSame('pcm_s16le', $video['audioCodec']);
 
-        $profile = $this->seededProfile('360p');
+        $profile = $this->profile('360p');
         $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $video['$id'] . '/renditions', $this->headers(), [
             'profileId' => $profile['$id'],
             'output' => 'hls',
@@ -880,7 +878,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(201, $video['headers']['status-code']);
         $videoId = $video['body']['$id'];
 
-        $profile = $this->seededProfile('360p');
+        $profile = $this->profile('360p');
         $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
             'profileId' => $profile['$id'],
             'output' => 'hls',
@@ -936,7 +934,7 @@ final class VideosCustomServerTest extends Scope
         $ready = $this->createReadyVideo();
         $videoId = $ready['$id'];
 
-        $profile = $this->seededProfile('360p');
+        $profile = $this->profile('360p');
 
         $first = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
             'profileId' => $profile['$id'],
@@ -996,7 +994,7 @@ final class VideosCustomServerTest extends Scope
         $projectId = $this->getProject()['$id'];
 
         $stale = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
-            'profileId' => $this->seededProfile('360p')['$id'],
+            'profileId' => $this->profile('360p')['$id'],
             'output' => 'hls',
         ]);
         $this->assertEquals(202, $stale['headers']['status-code']);
@@ -1005,7 +1003,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('ready', $staleBody['status']);
 
         $fresh = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
-            'profileId' => $this->seededProfile('480p')['$id'],
+            'profileId' => $this->profile('480p')['$id'],
             'output' => 'hls',
         ]);
         $this->assertEquals(202, $fresh['headers']['status-code']);
@@ -1014,7 +1012,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('ready', $freshBody['status']);
 
         $readyRendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
-            'profileId' => $this->seededProfile('720p')['$id'],
+            'profileId' => $this->profile('720p')['$id'],
             'output' => 'hls',
         ]);
         $this->assertEquals(202, $readyRendition['headers']['status-code']);
@@ -1293,7 +1291,7 @@ final class VideosCustomServerTest extends Scope
     {
         $ready = $this->createReadyVideo();
         $videoId = $ready['$id'];
-        $profile = $this->seededProfile('360p');
+        $profile = $this->profile('360p');
 
         $first = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
             'profileId' => $profile['$id'],
@@ -1403,8 +1401,8 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(201, $create['headers']['status-code']);
         $videoId = $create['body']['$id'];
 
-        $firstProfile = $this->seededProfile('360p');
-        $secondProfile = $this->seededProfile('480p');
+        $firstProfile = $this->profile('360p');
+        $secondProfile = $this->profile('480p');
 
         $first = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
             'profileId' => $firstProfile['$id'],
@@ -1516,7 +1514,7 @@ final class VideosCustomServerTest extends Scope
         $videoId = $create['body']['$id'];
 
         $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
-            'profileId' => $this->seededProfile('360p')['$id'],
+            'profileId' => $this->profile('360p')['$id'],
             'output' => 'hls',
         ]);
         $this->assertEquals(202, $rendition['headers']['status-code']);
@@ -1549,8 +1547,8 @@ final class VideosCustomServerTest extends Scope
         $videoId = $this->createReadyVideo($this->getLargeVideoFile())['$id'];
         $renditionId = $this->createReadyRendition($videoId, 'hls');
 
-        $profile360 = $this->seededProfile('360p');
-        $profile720 = $this->seededProfile('720p');
+        $profile360 = $this->profile('360p');
+        $profile720 = $this->profile('720p');
 
         // Second HLS rung so the master is a real ABR ladder (hls.js / Safari
         // enumerate every STREAM-INF).
@@ -2022,7 +2020,7 @@ final class VideosCustomServerTest extends Scope
         // 480p, so this parked row does not occupy the 360p HLS slot the
         // ready rendition below needs. Park before the worker can settle it.
         $aborted = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
-            'profileId' => $this->seededProfile('480p')['$id'],
+            'profileId' => $this->profile('480p')['$id'],
             'output' => 'hls',
         ]);
         $this->assertEquals(202, $aborted['headers']['status-code']);
@@ -2388,7 +2386,7 @@ final class VideosCustomServerTest extends Scope
                 break;
             }
         }
-        $this->assertNotNull($profile, 'Seeded 360p profile missing');
+        $this->assertNotNull($profile, '360p profile missing');
 
         $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
             'profileId' => $profile['$id'],
@@ -2774,7 +2772,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertNotNull($embedded);
         $captionId = $embedded['$id'];
 
-        $profile = $this->seededProfile('360p');
+        $profile = $this->profile('360p');
         $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
             'profileId' => $profile['$id'],
             'output' => 'hls',
@@ -2842,7 +2840,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertGreaterThan(0, (int) $video['duration']);
         $this->assertNotSame('', \trim((string) ($video['audioCodec'] ?? '')));
 
-        $profile = $this->seededProfile('360p');
+        $profile = $this->profile('360p');
         $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $video['$id'] . '/renditions', $this->headers(), [
             'profileId' => $profile['$id'],
             'output' => 'hls',
@@ -2916,7 +2914,7 @@ final class VideosCustomServerTest extends Scope
     public function testDeleteVideoBlockedWhileRenditionInProgress(): void
     {
         $projectId = $this->getProject()['$id'];
-        $profileId = $this->seededProfile('360p')['$id'];
+        $profileId = $this->profile('360p')['$id'];
 
         $ready = $this->createReadyVideo();
         $videoId = $ready['$id'];
@@ -2990,7 +2988,7 @@ final class VideosCustomServerTest extends Scope
     public function testDeleteRenditionBlockedWhileInProgress(): void
     {
         $projectId = $this->getProject()['$id'];
-        $profileId = $this->seededProfile('360p')['$id'];
+        $profileId = $this->profile('360p')['$id'];
 
         $ready = $this->createReadyVideo();
         $videoId = $ready['$id'];
@@ -3641,7 +3639,7 @@ final class VideosCustomServerTest extends Scope
     /**
      * @return array<string, mixed>
      */
-    private function seededProfile(string $name): array
+    private function profile(string $name): array
     {
         $profiles = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers());
         foreach ($profiles['body']['profiles'] ?? [] as $candidate) {
@@ -3650,7 +3648,7 @@ final class VideosCustomServerTest extends Scope
             }
         }
 
-        $this->fail('Seeded ' . $name . ' profile missing');
+        $this->fail('Profile ' . $name . ' missing');
     }
 
     /**
