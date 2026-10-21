@@ -1164,7 +1164,7 @@ trait TransactionPermissionsBase
         foreach (['readOnly' => $readOnlyId, 'updatable' => $updatableId] as $key => $relatedId) {
             $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $parentId, 'relationship'), $this->getStagingKeyHeaders(), [
                 $this->getRelatedIdParam() => $relatedId,
-                'type' => 'manyToOne',
+                'type' => 'manyToMany',
                 'key' => $key,
             ]);
             $this->assertSame(202, $relationship['headers']['status-code']);
@@ -1190,12 +1190,12 @@ trait TransactionPermissionsBase
                 'databaseId' => $this->getPermissionsDatabase(),
                 $this->getContainerIdParam() => $parentId,
                 $this->getRecordIdParam() => $parentRecordId,
-                'data' => ['title' => 'Parent', $key => $recordId],
+                'data' => ['title' => 'Parent', $key => [$recordId]],
             ]],
         ]);
         $stageRecord = fn (string $parentRecordId, string $key, string $recordId) => $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $parentId), $this->getStagingUserHeaders(), [
             $this->getRecordIdParam() => $parentRecordId,
-            'data' => ['title' => 'Parent', $key => $recordId],
+            'data' => ['title' => 'Parent', $key => [$recordId]],
             'transactionId' => $transactionId,
         ]);
 
@@ -1227,7 +1227,7 @@ trait TransactionPermissionsBase
                 'queries' => [Query::select(['*', 'updatable.*'])->toString()],
             ]);
             $this->assertSame(200, $parent['headers']['status-code']);
-            $this->assertSame($updatableRecordId, $parent['body']['updatable']['$id']);
+            $this->assertSame($updatableRecordId, $parent['body']['updatable'][0]['$id']);
         }
     }
 
