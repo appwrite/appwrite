@@ -2,7 +2,7 @@
 layout: integration
 title: Payments with Dodo Payments
 description: Connect Dodo Payments to Appwrite to sell one-time products, store paid orders in Appwrite Databases, and hand checkout and global tax to a Merchant of Record.
-date: 2026-10-21
+date: 2026-10-22
 featured: false
 isPartner: true
 isNew: true
@@ -116,6 +116,53 @@ After the payment, Dodo Payments sends you back to the demo page, which lists th
 You can visit the **Databases** page in your Appwrite project, open the `orders` database, and open the `orders` table to find the row. The row ID is the Dodo Payments payment ID, so a repeated webhook can't store the same order twice. Only the user who paid can read it.
 
 ![Paid orders in Appwrite Databases](/images/integrations/dodo-payments-payments/database.avif)
+
+# How the function works
+
+The function exposes four routes on its domain:
+
+| Route | Purpose |
+| --- | --- |
+| `GET /` | Serves the demo page, where a user can register, start a checkout, and see their paid orders |
+| `POST /checkout` | Creates a checkout session for the product in `DODO_PAYMENTS_PRODUCT_ID` and redirects to it |
+| `GET /success` | Verifies the payment when the user returns from checkout, then redirects them to your success URL |
+| `POST /webhook` | Handles the `payment.succeeded` event |
+
+When a signed-in user starts a checkout, the function stores their Appwrite user ID in the checkout session's metadata, and Dodo Payments carries it through to the payment. That is how each order is tied back to the user who paid.
+
+Dodo Payments signs every webhook following the [Standard Webhooks](https://www.standardwebhooks.com/) specification. The function verifies the signature on every request, then looks the payment up in Dodo Payments instead of trusting the webhook payload. The `/success` route repeats the same check when Dodo Payments sends the user back after checkout, so the user gets access even if the webhook is slow.
+
+# Start a checkout from your app
+
+To start a checkout from your own app, call the function's `/checkout` route as the signed-in user. Appwrite passes the caller's ID to the function in the `x-appwrite-user-id` header, and the function responds with a redirect to the checkout:
+
+```js
+import { Client, Functions, ExecutionMethod } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const functions = new Functions(client);
+
+const execution = await functions.createExecution({
+    functionId: '<FUNCTION_ID>',
+    body: JSON.stringify({
+        successUrl: 'https://example.com/thanks',
+        failureUrl: 'https://example.com/pricing',
+        verifyUrl: 'https://<FUNCTION_DOMAIN>/success',
+    }),
+    async: false,
+    xpath: '/checkout',
+    method: ExecutionMethod.POST,
+    headers: { 'Content-Type': 'application/json' },
+});
+
+const redirect = execution.responseHeaders.find((header) => header.name === 'location');
+window.location.href = redirect.value;
+```
+
+Your app can then list the user's orders from the `orders` table with the client SDK, and the row permissions make sure each user only sees their own.
 
 # Before you go live
 

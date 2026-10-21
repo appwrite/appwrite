@@ -2,7 +2,7 @@
 layout: integration
 title: Subscriptions with Dodo Payments
 description: Connect Dodo Payments to Appwrite to sell recurring plans and grant subscribers extra permissions with user labels that follow the subscription's status.
-date: 2026-10-21
+date: 2026-10-22
 featured: false
 isPartner: true
 isNew: true
@@ -113,6 +113,23 @@ Additionally, your user on Appwrite now has the `subscriber` label, which you ca
 
 ![Appwrite user with the subscriber label](/images/integrations/dodo-payments-subscriptions/user.avif)
 
+# How the function works
+
+The function exposes four routes on its domain:
+
+| Route | Purpose |
+| --- | --- |
+| `GET /` | Serves the demo page, where a user can register, subscribe, and see whether they are subscribed |
+| `POST /subscribe` | Creates a checkout session for the product in `DODO_PAYMENTS_PRODUCT_ID` and redirects to it |
+| `GET /success` | Verifies the subscription when the user returns from checkout, then redirects them to your success URL |
+| `POST /webhook` | Handles every `subscription.*` event |
+
+To start a subscription from your own app, call `/subscribe` as the signed-in user, the same way the [Payments with Dodo Payments](/integrations/dodo-payments-payments) integration calls `/checkout`.
+
+When a signed-in user starts a checkout, the function stores their Appwrite user ID in the checkout session's metadata, and Dodo Payments carries it through to the subscription. That is how each subscription is tied back to the user who pays for it.
+
+Dodo Payments signs every webhook following the [Standard Webhooks](https://www.standardwebhooks.com/) specification. The function verifies the signature on every request, then looks the subscription up in Dodo Payments instead of trusting the webhook payload. The `/success` route repeats the same check when Dodo Payments sends the user back after checkout, so the user gets access even if the webhook is slow.
+
 # How access follows the subscription
 
 The function adds or removes the label based on the subscription's current status in Dodo Payments, whatever the event type:
@@ -122,7 +139,34 @@ The function adds or removes the label based on the subscription's current statu
 | `active`, `past_due` | Adds the `subscriber` label |
 | `on_hold`, `paused`, `cancelled`, `expired`, `failed`, `pending` | Removes the `subscriber` label |
 
-`past_due` is the grace period while Dodo Payments retries a failed renewal, so the customer keeps access until the subscription moves to `on_hold` or `cancelled`. To restrict a resource to paying users, grant access to `Role.label('subscriber')` in its [permissions](/docs/advanced/security/permissions). Appwrite checks the label on every request, so there's no separate subscription check to write in your app.
+`past_due` is the grace period while Dodo Payments retries a failed renewal, so a customer whose card was declined keeps access until the subscription moves to `on_hold` or `cancelled`.
+
+Subscription webhooks can arrive late, twice, or out of order, which is why the function doesn't act on the event type. Each webhook looks up the subscription's current status in Dodo Payments and applies it, so a delayed `subscription.active` event can't give access back after a cancellation. After each label update, the function checks the status once more and applies it again if it changed in the meantime.
+
+# Restrict content to subscribers
+
+The label is what your app builds on. Grant access to `Role.label('subscriber')` in the [permissions](/docs/advanced/security/permissions) of the rows, files, or tables that only paying users should see. For example, with a Server SDK:
+
+```js
+import { Client, TablesDB, ID, Permission, Role } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const tablesDB = new TablesDB(client);
+
+await tablesDB.createRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: 'lessons',
+    rowId: ID.unique(),
+    data: { title: 'Advanced lesson' },
+    permissions: [Permission.read(Role.label('subscriber'))],
+});
+```
+
+Appwrite enforces that permission on every request, so a user loses access to the lesson as soon as the function removes the label. There's no separate subscription check to write in your app.
 
 # Before you go live
 
