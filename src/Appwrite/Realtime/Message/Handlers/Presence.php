@@ -10,6 +10,7 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Presences\State as PresenceState;
 use Appwrite\Realtime\Message\Dispatcher;
 use Appwrite\Utopia\Database\Documents\User;
+use Swoole\Coroutine\Channel;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -71,94 +72,115 @@ class Presence extends Action
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User must be authorized');
         }
 
-        $user = new User($database->getDocument('users', $userId)->getArrayCopy());
-        if ($user->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND, params: [$userId]);
+        // Serialize presence writes on this socket. Swoole runs each message in its own coroutine and
+        // does not serialize them per connection, so two overlapping presence messages would both read
+        // no hold and both increment the row's connections count, while onClose releases once -- leaking
+        // the socket online. A per-connection lock makes the second write see the first's hold and
+        // refresh (persisting its status/metadata and emitting its event) instead of recounting. Created
+        // before the first I/O yield, while the connection is known to exist, so it never resurrects an
+        // entry onClose removed.
+        $lock = $realtime->connections[$connectionId]['presenceLock'] ?? null;
+        if (!$lock instanceof Channel) {
+            $lock = new Channel(1);
+            $lock->push(true);
+            $realtime->connections[$connectionId]['presenceLock'] = $lock;
         }
-
-        $presenceData = [
-            'userInternalId' => $user->getSequence(),
-            'userId' => $user->getId(),
-            'source' => 'realtime',
-            'status' => $status,
-            'expiresAt' => DateTime::format((new \DateTime())->modify('+30 days')),
-            'hostname' => \gethostname() ?: null,
-        ];
-        if ($metadata !== null) {
-            $presenceData['metadata'] = $metadata;
-        }
-
-        $presenceDocument = new Document($presenceData);
-        $presenceState->setPermissions($presenceDocument, $permissions, $user, $authorization);
-        if ($presenceId !== 'unique()') {
-            $presenceDocument->setAttribute('$id', $presenceId);
-        }
-
-        $projectId = $project->getId();
-
-        // This socket's hold. A completed hold carries the row's sequence; matching it means a status
-        // refresh, not a new count (sequence, not id, so a same-id delete-and-recreate recounts). A
-        // `presenceClaim` is the transient marker a sibling message stakes before its write yields:
-        // Swoole coroutines switch only on I/O, so two overlapping presence messages on this socket
-        // would otherwise both read no hold and both count, while onClose releases once -- leaking the
-        // socket online. The claim lets the second one refresh instead of counting the socket twice.
-        $hold = $realtime->connections[$connectionId]['presence'] ?? null;
-        $holdsUser = \is_array($hold) && ($hold['userId'] ?? null) === $userId;
-
-        if (!$holdsUser && ($realtime->connections[$connectionId]['presenceClaim'] ?? null) === $userId) {
-            // A sibling presence write on this socket is already establishing the hold; acknowledge
-            // the submitted presence without a second counting write.
-            foreach (['$collection', '$tenant', 'hostname', 'permissionsHash', 'userInternalId', 'connections'] as $attribute) {
-                $presenceDocument->removeAttribute($attribute);
-            }
-
-            return [
-                'type' => 'response',
-                'data' => [
-                    'to' => 'presence',
-                    'presence' => $presenceDocument->getArrayCopy(),
-                ],
-            ];
-        }
-
-        $sequence = $holdsUser ? ($hold['sequence'] ?? null) : null;
-
-        // Stake the claim before the write yields so a concurrent message on this socket sees it.
-        if (!$holdsUser) {
-            $realtime->connections[$connectionId]['presenceClaim'] = $userId;
-        }
+        $lock->pop();
 
         try {
-            $write = $presenceState->upsertForUserWithConnections($database, $presenceDocument, $userId, $sequence);
-        } catch (\Throwable $th) {
-            // The claim never became a real hold; drop it so the socket can count on a retry.
-            if (!$holdsUser) {
-                unset($realtime->connections[$connectionId]['presenceClaim']);
+            $user = new User($database->getDocument('users', $userId)->getArrayCopy());
+            if ($user->isEmpty()) {
+                throw new Exception(Exception::USER_NOT_FOUND, params: [$userId]);
             }
-            throw $th;
-        }
-        $presence = $write['presence'];
-        $created = $write['created'];
-        $counted = $write['counted'];
 
-        // Socket closed mid-write: onClose ran before this hold was stashed, so undo any count we
-        // added, and if that deleted the row announce offline instead of the online upsert below.
-        if (!isset($realtime->connections[$connectionId])) {
-            $deleted = $counted
-                ? $presenceState->releaseConnectionForUser($database, $userId, (string) $presence->getSequence())
+            $presenceData = [
+                'userInternalId' => $user->getSequence(),
+                'userId' => $user->getId(),
+                'source' => 'realtime',
+                'status' => $status,
+                'expiresAt' => DateTime::format((new \DateTime())->modify('+30 days')),
+                'hostname' => \gethostname() ?: null,
+            ];
+            if ($metadata !== null) {
+                $presenceData['metadata'] = $metadata;
+            }
+
+            $presenceDocument = new Document($presenceData);
+            $presenceState->setPermissions($presenceDocument, $permissions, $user, $authorization);
+            if ($presenceId !== 'unique()') {
+                $presenceDocument->setAttribute('$id', $presenceId);
+            }
+
+            $projectId = $project->getId();
+
+            // Row this socket already counts against; matching its sequence means a status refresh,
+            // not a new hold. Sequence (not id) so a same-id delete-and-recreate is seen as new. Under
+            // the lock, a second message on this socket reads the first's stash and takes this path.
+            $stash = $realtime->connections[$connectionId]['presence'] ?? null;
+            $sequence = (\is_array($stash) && ($stash['userId'] ?? null) === $userId)
+                ? ($stash['sequence'] ?? null)
                 : null;
 
-            if ($deleted !== null) {
-                // created-then-deleted nets zero usage; otherwise undo the creator's +1.
-                $presenceState->triggerPresenceDeleted($database, $project, $userId, $deleted, $publisherForUsage, $queueForEvents, $queueForRealtime, triggerUsage: !$created);
-            } elseif ($created) {
-                // Created row survives under another socket's hold: count the online transition here.
+            $write = $presenceState->upsertForUserWithConnections($database, $presenceDocument, $userId, $sequence);
+            $presence = $write['presence'];
+            $created = $write['created'];
+            $counted = $write['counted'];
+
+            // Socket closed mid-write: onClose ran before this hold was stashed, so undo any count we
+            // added, and if that deleted the row announce offline instead of the online upsert below.
+            if (!isset($realtime->connections[$connectionId])) {
+                $deleted = $counted
+                    ? $presenceState->releaseConnectionForUser($database, $userId, (string) $presence->getSequence())
+                    : null;
+
+                if ($deleted !== null) {
+                    // created-then-deleted nets zero usage; otherwise undo the creator's +1.
+                    $presenceState->triggerPresenceDeleted($database, $project, $userId, $deleted, $publisherForUsage, $queueForEvents, $queueForRealtime, triggerUsage: !$created);
+                } elseif ($created) {
+                    // Created row survives under another socket's hold: count the online transition here.
+                    $presenceState->triggerUsage($publisherForUsage, $project, 1);
+                }
+
+                foreach (['$collection', '$tenant', 'hostname', 'permissionsHash', 'userInternalId', 'connections'] as $attribute) {
+                    $presence->removeAttribute($attribute);
+                }
+
+                return [
+                    'type' => 'response',
+                    'data' => [
+                        'to' => 'presence',
+                        'presence' => $presence->getArrayCopy(),
+                    ],
+                ];
+            }
+
+            // Stash so onClose releases this exact hold; a later message refreshes without recounting.
+            $realtime->connections[$connectionId]['presence'] = [
+                'projectId' => $projectId,
+                'userId' => $userId,
+                'sequence' => (string) $presence->getSequence(),
+            ];
+
+            // Usage +1 only on actual creation (user came online), not on an increment.
+            if ($created) {
                 $presenceState->triggerUsage($publisherForUsage, $project, 1);
             }
 
-            foreach (['$collection', '$tenant', 'hostname', 'permissionsHash', 'userInternalId', 'connections'] as $attribute) {
-                $presence->removeAttribute($attribute);
-            }
+            $presence->removeAttribute('$collection');
+            $presence->removeAttribute('$tenant');
+            $presence->removeAttribute('hostname');
+            $presence->removeAttribute('permissionsHash');
+            $presence->removeAttribute('userInternalId');
+            $presence->removeAttribute('connections');
+
+            $presenceState->triggerEvent(
+                $queueForEvents,
+                $queueForRealtime,
+                $project,
+                $user,
+                'presences.[presenceId].upsert',
+                $presence,
+            );
 
             return [
                 'type' => 'response',
@@ -167,44 +189,8 @@ class Presence extends Action
                     'presence' => $presence->getArrayCopy(),
                 ],
             ];
+        } finally {
+            $lock->push(true);
         }
-
-        // Stash so onClose releases this exact hold; a later message refreshes without recounting.
-        // Promote the transient claim to the real hold.
-        $realtime->connections[$connectionId]['presence'] = [
-            'projectId' => $projectId,
-            'userId' => $userId,
-            'sequence' => (string) $presence->getSequence(),
-        ];
-        unset($realtime->connections[$connectionId]['presenceClaim']);
-
-        // Usage +1 only on actual creation (user came online), not on an increment.
-        if ($created) {
-            $presenceState->triggerUsage($publisherForUsage, $project, 1);
-        }
-
-        $presence->removeAttribute('$collection');
-        $presence->removeAttribute('$tenant');
-        $presence->removeAttribute('hostname');
-        $presence->removeAttribute('permissionsHash');
-        $presence->removeAttribute('userInternalId');
-        $presence->removeAttribute('connections');
-
-        $presenceState->triggerEvent(
-            $queueForEvents,
-            $queueForRealtime,
-            $project,
-            $user,
-            'presences.[presenceId].upsert',
-            $presence,
-        );
-
-        return [
-            'type' => 'response',
-            'data' => [
-                'to' => 'presence',
-                'presence' => $presence->getArrayCopy(),
-            ],
-        ];
     }
 }
