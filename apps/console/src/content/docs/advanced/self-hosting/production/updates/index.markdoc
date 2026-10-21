@@ -50,7 +50,7 @@ docker compose exec appwrite migrate
 
 Run the migration even when upgrading from 2.5.0. The updated V25 migration adds the resource-description and bucket `stripMetadata` fields and repairs presence-log schema. Reusing the class name does not mean there are no schema changes.
 
-The installer supplies the ExifTool service for image metadata stripping. Custom deployments must set `_APP_EXIFTOOL_HOST` to a reachable ExifTool service before enabling the bucket setting; an empty host stores images without stripping. Existing files are not rewritten.
+The installer supplies the ExifTool service for image metadata stripping. Custom deployments must set `_APP_EXIFTOOL_HOST` to a reachable ExifTool service before enabling the bucket setting. If the host is empty, the service is unreachable, or stripping returns an error, Appwrite stores the original upload with its metadata intact, even when stripping is enabled. Monitor the ExifTool service before relying on this setting to remove private metadata. Existing files are not rewritten.
 
 For custom S3-compatible endpoints, `_APP_STORAGE_S3_PATH_STYLE` can force path-style requests (`enabled`) or bucket-addressing endpoints (`disabled`); an empty value infers the style. For a custom domain/CNAME pointing directly at a bucket, set it to `disabled`.
 
