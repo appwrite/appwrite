@@ -273,12 +273,15 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
 /**
  * Flags switched on by default for Cloud accounts carrying a label, keyed by
  * label. Labels are set server-side on the console user (`users.labels`);
- * debug overrides still win. Example: `{ beta: ['analytics', 'functionEmail'] }`.
+ * debug overrides still win.
  */
 export const LABEL_FEATURES: Record<
   string,
   readonly (keyof ConsoleProfileFeatures)[]
-> = {}
+> = {
+  // QA: features that are off until launch.
+  quality: ['analytics', 'functionEmail', 'functionEmailDomains'],
+}
 
 /** Flags switched on by the given account labels. */
 export function getLabelFeatures(
