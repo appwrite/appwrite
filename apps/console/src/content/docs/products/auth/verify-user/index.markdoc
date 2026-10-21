@@ -172,9 +172,9 @@ val response = account.updateVerification(
 ```
 {% /multicode %}
 
-## Verify with a code {% #verify-with-code %}
+## Verify with a code sent through email {% #verify-with-code %}
 
-To verify a user's email with a code, first make sure the user is logged in. Then send the verification email. Appwrite emails the user a 6-digit code that is valid for 15 minutes. Keep the `userId` from the returned token, because you need it to confirm the code.
+To verify a user's email with a code, first make sure the user is logged in. Then call `createEmailVerificationOTP`, and Appwrite emails the user a 6-digit code that is valid for 15 minutes. Keep the `userId` from the returned token, because you need it to confirm the code.
 
 {% multicode %}
 ```client-web

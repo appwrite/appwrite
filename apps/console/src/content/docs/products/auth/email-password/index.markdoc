@@ -162,7 +162,7 @@ promise.then(function (response) {
 
 ## Recover with a code {% #recover-with-code %}
 
-To recover a password with a code, send a recovery email to the user's address. Appwrite emails the user a 6-digit code that is valid for 15 minutes. Keep the `userId` from the returned token, because you need it to confirm the code.
+To recover a password with a code, call `createRecoveryOTP` with the user's email address, and Appwrite emails them a 6-digit code that is valid for 15 minutes. Keep the `userId` from the returned token, because you need it to confirm the code.
 
 {% multicode %}
 ```client-web
