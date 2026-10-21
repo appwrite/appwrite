@@ -110,7 +110,7 @@ class Schedule extends Action
         $this->loop(ScheduleFunctions::getName(), fn () => (new ScheduleFunctions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
         $this->loop(ScheduleExecutions::getName(), fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry));
         $this->loop(ScheduleMessages::getName(), fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks));
-        $this->loop(ScheduleMaintenance::getName(), fn () => (new ScheduleMaintenance())->run($cycle, $publisherForMaintenance, $pools, $telemetry));
+        $this->loop(ScheduleMaintenance::getName(), fn () => (new ScheduleMaintenance())->run(ScheduleMaintenance::loop($cycle, $publisherForMaintenance, $telemetry), $pools));
 
         if ($publisherForStatsResources !== null && $usageConnection !== null) {
             $this->loop(StatsResources::getName(), fn () => (new StatsResources())->action($dbForPlatform, $publisherForStatsResources, $usageConnection, $telemetry));
