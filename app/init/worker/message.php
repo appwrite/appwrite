@@ -2,6 +2,7 @@
 
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Deployment\Deployments;
+use Appwrite\Deployment\Retention;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\ProjectContext;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -206,4 +207,6 @@ return function (Container $container): void {
 
         return (int) ($plan['executionsRetentionCount'] ?? 100);
     }, ['project', 'plan']);
+
+    $container->set('deploymentRetention', fn (): Retention => new Retention(), []);
 };

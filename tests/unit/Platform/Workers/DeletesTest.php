@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Platform\Workers;
 
+use Appwrite\Deployment\Retention;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
@@ -91,6 +92,7 @@ final class DeletesTest extends TestCase
                     executor: $this->createStub(Executor::class),
                     executionRetention: '',
                     executionsRetentionCount: 0,
+                    deploymentRetention: new Retention(),
                     publisherForDeletes: $this->createStub(DeletePublisher::class),
                     publisherForUsage: $this->createStub(UsagePublisher::class),
                     bus: new Bus(),
@@ -155,6 +157,7 @@ final class DeletesTest extends TestCase
                 executor: $this->createStub(Executor::class),
                 executionRetention: '',
                 executionsRetentionCount: 0,
+                deploymentRetention: new Retention(),
                 publisherForDeletes: $this->createStub(DeletePublisher::class),
                 publisherForUsage: $this->createStub(UsagePublisher::class),
                 bus: new Bus(),
