@@ -1,21 +1,18 @@
 ---
 layout: changelog
-title: "New function template: Postgres with Drizzle"
+title: "Strip metadata from images uploaded to Storage"
 date: 2026-10-21
-cover: /images/blog/announcing-postgres-drizzle-template/cover.avif
-description: "The Postgres with Drizzle function template serves a todo REST API from Appwrite Postgres through Drizzle ORM, with SQL migrations you apply from your machine."
-tags: functions, databases
+cover: /images/changelog/2026-10-21.avif
+description: "Storage buckets can now remove location, device, and capture time metadata from uploaded images. Built by community contributor jaysomani."
+tags: storage, security
 ---
 
-The new **Postgres with Drizzle** [function template](/docs/products/functions/templates) serves a todo REST API from an [Appwrite Postgres](/docs/products/databases/postgresql) database through [Drizzle ORM](https://orm.drizzle.team/). It is written in TypeScript, keeps the schema in `src/schema.ts` and its SQL migrations in `drizzle/`, and reuses one connection across warm executions through the connection pooler.
+Photos can reveal where they were taken, which device took them, and when. Storage buckets can now remove that metadata from images as they are uploaded. Turn it on under your bucket's **Settings** > **Image metadata**, or set `stripMetadata` to `true` when you create or update a bucket. Stripping is off by default.
 
-Create it in the Console under **Functions** > **Templates**, connect a new repository, and set `DATABASE_URL` to the pooled connection string from your database's **Credentials**. The function never changes the schema, so before the first request, clone the repository and apply the migrations from your machine against the direct port `5432`:
+Stripping works on JPEG, PNG, WebP, GIF, TIFF, HEIC, HEIF, and AVIF images. It keeps the color profile and orientation and doesn't re-encode the pixels, so a stripped image looks the same as the original. Images larger than 20MB are stored as uploaded, and the setting applies only to files uploaded after you turn it on. A bucket with stripping turned on can't be used through the [S3-compatible API](/docs/products/storage/s3).
 
-```bash
-npm install
-DATABASE_URL="postgresql://...:5432/..." npm run db:migrate
-```
+Image metadata stripping is live on Appwrite Cloud and ships to self-hosted Appwrite in the next release. Community contributor [jaysomani](https://github.com/jaysomani) built it in [#14351](https://github.com/appwrite/appwrite/pull/14351). Thank you!
 
-{% arrow_link href="/blog/post/announcing-postgres-drizzle-template" %}
-Read the announcement
+{% arrow_link href="/docs/products/storage/buckets#image-metadata" %}
+Learn more about image metadata
 {% /arrow_link %}
