@@ -254,6 +254,40 @@ class State
     }
 
     /**
+     * Delete a presence row orphaned by a dead instance, but only if it has not gained a live hold
+     * since `$since`. The boot sweep scans by host and runs asynchronously, so a socket can reconnect
+     * and increment the very same row while the sweep is mid-flight -- an in-place upsert that keeps
+     * the row's `$createdAt` but moves its `$updatedAt` past `$since`. Re-reading under the row lock
+     * the increment also takes, and bailing when `$updatedAt` is at or after `$since`, keeps that
+     * reconnected row from being deleted out from under its live connection. Returns the deleted row
+     * so the caller can emit the offline side effects, or null when nothing was deleted (already
+     * gone, or reused since boot).
+     */
+    public function deleteOrphan(Database $dbForProject, string $presenceId, string $since): ?Document
+    {
+        return $dbForProject->withTransaction(function () use ($dbForProject, $presenceId, $since): ?Document {
+            $current = $dbForProject->getAuthorization()->skip(
+                fn () => $dbForProject->getDocument(self::COLLECTION_ID, $presenceId, forUpdate: true)
+            );
+            if ($current->isEmpty()) {
+                return null;
+            }
+
+            // A reconnect incremented this row after boot (the upsert moves $updatedAt but not
+            // $createdAt): it holds a live connection now, so it is no longer an orphan.
+            if ($current->getUpdatedAt() >= $since) {
+                return null;
+            }
+
+            $dbForProject->getAuthorization()->skip(
+                fn () => $dbForProject->deleteDocument(self::COLLECTION_ID, $current->getId())
+            );
+
+            return $current;
+        });
+    }
+
+    /**
      * After {@see releaseConnectionForUser} deletes a user's row, trigger the offline side
      * effects: purge the list cache, decrement usage (when counted) and emit the delete event.
      * `$deleted` is the document that release returned.
