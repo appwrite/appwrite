@@ -350,7 +350,8 @@ class Deletes extends Action
             case DELETE_TYPE_MAINTENANCE:
                 // The project was deleted after the job was queued; getProjectDB() would hand back the platform database.
                 if ($project->isEmpty()) {
-                    Console::warning('Skipping maintenance for project ' . ($deleteMessage->project?->getId() ?? '') . ', which no longer exists');
+                    // The injected project is empty here, so name the one the message was queued for.
+                    Span::add('project.id', $deleteMessage->project?->getId() ?? '');
                     Span::add('maintenance.skipped', 'deleted');
                     break;
                 }
