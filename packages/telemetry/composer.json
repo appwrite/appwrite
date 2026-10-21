@@ -24,7 +24,7 @@
         "test:e2e": "phpunit --configuration phpunit.xml --testsuite e2e"
     },
     "require": {
-        "php": ">=8.0",
+        "php": ">=8.3",
         "nyholm/psr7": "1.*",
         "open-telemetry/exporter-otlp": "1.*",
         "open-telemetry/sdk": "1.*",

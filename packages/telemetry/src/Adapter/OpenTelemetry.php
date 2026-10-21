@@ -44,9 +44,9 @@ class OpenTelemetry implements Adapter
 {
     private MetricReaderInterface $reader;
 
-    private MeterInterface $meter;
+    private readonly MeterInterface $meter;
 
-    private Mutex $collecting;
+    private ?Mutex $collecting = null;
 
     /**
      * @var array<class-string, array<string, Counter|UpDownCounter|Histogram|Gauge|ObservableGauge>>
@@ -74,7 +74,6 @@ class OpenTelemetry implements Adapter
                 ->create($endpoint, ContentTypes::PROTOBUF);
         }
 
-        $this->collecting = new Mutex();
         $exporter = $this->createExporter($this->transport);
 
         $attributes = Attributes::create([
@@ -150,7 +149,7 @@ class OpenTelemetry implements Adapter
                 /**
                  * @param \Closure(): CounterInterface $create
                  */
-                public function __construct(private \Closure $create)
+                public function __construct(private readonly \Closure $create)
                 {
                 }
 
@@ -182,7 +181,7 @@ class OpenTelemetry implements Adapter
                 /**
                  * @param \Closure(): HistogramInterface $create
                  */
-                public function __construct(private \Closure $create)
+                public function __construct(private readonly \Closure $create)
                 {
                 }
 
@@ -214,7 +213,7 @@ class OpenTelemetry implements Adapter
                 /**
                  * @param \Closure(): GaugeInterface $create
                  */
-                public function __construct(private \Closure $create)
+                public function __construct(private readonly \Closure $create)
                 {
                 }
 
@@ -246,7 +245,7 @@ class OpenTelemetry implements Adapter
                 /**
                  * @param \Closure(): UpDownCounterInterface $create
                  */
-                public function __construct(private \Closure $create)
+                public function __construct(private readonly \Closure $create)
                 {
                 }
 
@@ -281,7 +280,7 @@ class OpenTelemetry implements Adapter
                 /**
                  * @param \Closure(): ObservableGaugeInterface $create
                  */
-                public function __construct(private \Closure $create)
+                public function __construct(private readonly \Closure $create)
                 {
                 }
 
@@ -315,6 +314,12 @@ class OpenTelemetry implements Adapter
      */
     public function collect(): bool
     {
+        if (!\extension_loaded('swoole')) {
+            return $this->reader->collect();
+        }
+
+        $this->collecting ??= new Mutex();
+
         try {
             return $this->collecting->withLock($this->reader->collect(...));
         } catch (Contention) {
