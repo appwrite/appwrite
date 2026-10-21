@@ -62,8 +62,9 @@ final class CycleTest extends TestCase
 
         /** @var list<float|int> $lags */
         $lags = \get_object_vars($telemetry->gauges['schedule.lag'])['values'];
-        $this->assertGreaterThan(3500, \count($lags));
         $this->assertLessThanOrEqual(1.0, \max($lags));
+        // Reported every second, so a series alerting on it never goes missing between slots.
+        $this->assertGreaterThan(3500, \count($lags));
 
         /** @var list<float|int> $delays */
         $delays = \get_object_vars($telemetry->histograms['schedule.dispatch.delay'])['values'];
