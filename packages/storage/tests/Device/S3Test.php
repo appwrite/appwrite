@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Storage\Tests\Device;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
@@ -20,10 +21,15 @@ use Utopia\Psr7\Request;
 use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
 use Utopia\Psr7\Uri;
+use Utopia\Storage\Device\AWS;
+use Utopia\Storage\Device\Backblaze;
+use Utopia\Storage\Device\DOSpaces;
+use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\S3\Response as S3Response;
 use Utopia\Storage\Device\S3\RetryStrategy;
+use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Exception\NotFoundException;
 use Utopia\Storage\Exception\PreconditionFailedException;
 use Utopia\Storage\Exception\RemoteException;
@@ -330,6 +336,27 @@ final class S3Test extends TestCase
         );
     }
 
+    private function objectListing(string ...$keys): Response
+    {
+        $body = '<ListBucketResult><KeyCount>' . \count($keys) . '</KeyCount><IsTruncated>false</IsTruncated>';
+        foreach ($keys as $key) {
+            $body .= '<Contents><Key>' . htmlspecialchars($key, ENT_XML1) . '</Key><Size>1</Size></Contents>';
+        }
+        $body .= '</ListBucketResult>';
+
+        return $this->xml($body);
+    }
+
+    /**
+     * @return array<int|string, mixed>
+     */
+    private function queryOf(RequestInterface $request): array
+    {
+        parse_str($request->getUri()->getQuery(), $parameters);
+
+        return $parameters;
+    }
+
     private function slowDown(): Response
     {
         $body = '<?xml version="1.0" encoding="UTF-8"?><Error><Code>SlowDown</Code><Message>Please reduce your request rate.</Message></Error>';
@@ -527,7 +554,7 @@ final class S3Test extends TestCase
             root: '/root',
             accessKey: 'test-key',
             secretKey: 'test-secret',
-            host: 'https://s3.example.com',
+            host: 'https://my-bucket.s3.example.com',
             region: 'us-east-1',
             bucket: 'my-bucket',
         );
@@ -588,7 +615,7 @@ final class S3Test extends TestCase
             root: '/root',
             accessKey: 'test-key',
             secretKey: 'test-secret',
-            host: 'https://s3.example.com',
+            host: 'https://my-bucket.s3.example.com',
             region: 'us-east-1',
             client: new Retry($client, new RetryStrategy(delay: 0.0)),
             bucket: 'my-bucket',
@@ -706,6 +733,142 @@ final class S3Test extends TestCase
         $this->assertSame('root/a.txt', $list->files[0]->path);
         $this->assertSame(11, $list->files[0]->size);
         $this->assertNull($list->cursor);
+    }
+
+    public function testRecursiveDeleteFollowsTheContinuationToken(): void
+    {
+        $page = '<ListBucketResult><KeyCount>1</KeyCount><IsTruncated>true</IsTruncated><NextContinuationToken>page-2</NextContinuationToken>'
+            . '<Contents><Key>root/a/1.txt</Key><Size>1</Size></Contents></ListBucketResult>';
+        $client = new ScriptedClient([
+            new Response(204),
+            $this->xml($page),
+            new Response(200),
+            $this->objectListing('root/a/2.txt'),
+            new Response(200),
+        ]);
+
+        $this->assertTrue($this->device($client)->delete('/root/a', true));
+
+        $this->assertCount(5, $client->requests);
+        [, $first, $firstBatch, $second, $secondBatch] = $client->requests;
+        $this->assertSame('GET', $first->getMethod());
+        $this->assertArrayNotHasKey('continuation-token', $this->queryOf($first));
+        $this->assertSame('GET', $second->getMethod());
+        $this->assertSame('page-2', $this->queryOf($second)['continuation-token'] ?? null);
+        $this->assertSame('root/a/', $this->queryOf($second)['prefix'] ?? null);
+
+        foreach ([[$firstBatch, ['root/a/1.txt']], [$secondBatch, ['root/a/2.txt']]] as [$batch, $expected]) {
+            $this->assertSame('POST', $batch->getMethod());
+            $xml = simplexml_load_string((string) $batch->getBody());
+            $this->assertNotFalse($xml);
+            $keys = [];
+            foreach ($xml->Object as $object) {
+                $keys[] = (string) $object->Key;
+            }
+            $this->assertSame($expected, $keys, 'each batch deletes the keys of its own page');
+        }
+    }
+
+    public function testAnEmptyTruncatedPageDoesNotEndTheDelete(): void
+    {
+        // S3 may answer a page with no keys and still hand back a token for the next one.
+        $empty = '<ListBucketResult><KeyCount>0</KeyCount><IsTruncated>true</IsTruncated><NextContinuationToken>page-2</NextContinuationToken></ListBucketResult>';
+        $client = new ScriptedClient([
+            $this->xml($empty),
+            $this->objectListing('root/a/1.txt'),
+            new Response(200),
+        ]);
+
+        $this->assertTrue($this->device($client)->deletePath('a'));
+
+        $this->assertCount(3, $client->requests);
+        [, $second, $batch] = $client->requests;
+        $this->assertSame('GET', $second->getMethod());
+        $this->assertSame('page-2', $this->queryOf($second)['continuation-token'] ?? null);
+        $this->assertSame('POST', $batch->getMethod());
+        $xml = simplexml_load_string((string) $batch->getBody());
+        $this->assertNotFalse($xml);
+        $this->assertSame('root/a/1.txt', (string) $xml->Object->Key);
+    }
+
+    /**
+     * @return \Iterator<string, array{list<string>, string}>
+     */
+    public static function unfollowableListings(): \Iterator
+    {
+        // A 200 that is not a ListObjectsV2 result, such as a bucket listing from a misrouted request.
+        yield 'not a ListObjectsV2 result' => [
+            ['<ListAllMyBucketsResult><Owner><ID>owner</ID></Owner><Buckets></Buckets></ListAllMyBucketsResult>'],
+            'Unexpected S3 list response for prefix root/a/',
+        ];
+        // A ListObjects V1 answer carries NextMarker, never NextContinuationToken.
+        yield 'truncated without a continuation token' => [
+            ['<ListBucketResult><IsTruncated>true</IsTruncated><NextMarker>root/a/1.txt</NextMarker></ListBucketResult>'],
+            'Truncated S3 list response without a continuation token for prefix root/a/',
+        ];
+        yield 'the same continuation token twice' => [
+            array_fill(0, 2, '<ListBucketResult><KeyCount>0</KeyCount><IsTruncated>true</IsTruncated><NextContinuationToken>page-2</NextContinuationToken></ListBucketResult>'),
+            'S3 list response repeated the continuation token for prefix root/a/',
+        ];
+    }
+
+    /**
+     * @param  list<string>  $pages
+     */
+    #[DataProvider('unfollowableListings')]
+    public function testAListingThatCannotBeFollowedIsAnError(array $pages, string $message): void
+    {
+        $client = new ScriptedClient(array_map($this->xml(...), $pages));
+
+        try {
+            $this->device($client)->deletePath('a');
+            self::fail('A listing that cannot be followed must not report the directory as deleted');
+        } catch (RemoteException $error) {
+            $this->assertSame($message, $error->getMessage());
+        }
+
+        $this->assertSame(array_fill(0, \count($pages), 'GET'), array_map(fn (RequestInterface $request): string => $request->getMethod(), $client->requests), 'nothing is deleted');
+    }
+
+    /**
+     * @return \Iterator<string, array{string, string, ?string}>
+     */
+    public static function failedBatchDeletes(): \Iterator
+    {
+        yield 'two keys' => [
+            '<DeleteResult><Error><Key>root/a/1.txt</Key><Code>AccessDenied</Code><Message>Access Denied</Message></Error>'
+            . '<Error><Key>root/a/2.txt</Key><Code>InternalError</Code><Message>Internal Error</Message></Error></DeleteResult>',
+            'Failed to delete 2 objects under root/a/: root/a/1.txt (AccessDenied: Access Denied), root/a/2.txt (InternalError: Internal Error)',
+            'AccessDenied',
+        ];
+        yield 'an entry without a key' => [
+            '<DeleteResult><Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error></DeleteResult>',
+            'Failed to delete 1 objects under root/a/: ? (AccessDenied: Access Denied)',
+            'AccessDenied',
+        ];
+        yield 'an error without entries' => ['<DeleteResult><Error/></DeleteResult>', 'Failed to delete 2 objects under root/a/', null];
+        yield 'the whole batch' => ['<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>', 'Failed to delete 2 objects under root/a/', 'AccessDenied'];
+    }
+
+    #[DataProvider('failedBatchDeletes')]
+    public function testKeysTheServiceFailedToDeleteAreAnError(string $body, string $message, ?string $code): void
+    {
+        $client = new ScriptedClient([
+            $this->xml('<ListBucketResult><KeyCount>2</KeyCount><IsTruncated>true</IsTruncated><NextContinuationToken>page-2</NextContinuationToken>'
+                . '<Contents><Key>root/a/1.txt</Key><Size>1</Size></Contents><Contents><Key>root/a/2.txt</Key><Size>1</Size></Contents></ListBucketResult>'),
+            $this->xml($body),
+            $this->objectListing(),
+        ]);
+
+        try {
+            $this->device($client)->deletePath('a');
+            self::fail('Keys the service could not delete must not be reported as deleted');
+        } catch (RemoteException $error) {
+            $this->assertSame($message, $error->getMessage());
+            $this->assertSame($code, $error->errorCode);
+        }
+
+        $this->assertCount(2, $client->requests, 'no further page is listed once a batch failed');
     }
 
     public function testFinalizeCompletesOverAnExistingObject(): void
@@ -970,5 +1133,157 @@ final class S3Test extends TestCase
 
         $this->expectException(\InvalidArgumentException::class);
         $this->device($client)->listUploads('/root/', 10, 'next-token');
+    }
+
+    private function xml(string $body): Response
+    {
+        return new Response(200, body: new Stream('<?xml version="1.0" encoding="UTF-8"?>' . $body))->withHeader('content-type', 'application/xml');
+    }
+
+    /**
+     * @return iterable<string, array{\Closure(ScriptedClient): S3, string}>
+     */
+    public static function virtualHostedSubclasses(): iterable
+    {
+        yield 'AWS' => [static fn (ScriptedClient $client): S3 => new AWS('/root', 'key', 'secret', 'my-bucket', AWS::US_EAST_1, client: $client), 'my-bucket.s3.us-east-1.amazonaws.com'];
+        yield 'AWS China' => [static fn (ScriptedClient $client): S3 => new AWS('/root', 'key', 'secret', 'my-bucket', AWS::CN_NORTH_1, client: $client), 'my-bucket.s3.cn-north-1.amazonaws.cn'];
+        yield 'DOSpaces' => [static fn (ScriptedClient $client): S3 => new DOSpaces('/root', 'key', 'secret', 'my-bucket', DOSpaces::NYC3, client: $client), 'my-bucket.nyc3.digitaloceanspaces.com'];
+        yield 'Backblaze' => [static fn (ScriptedClient $client): S3 => new Backblaze('/root', 'key', 'secret', 'my-bucket', Backblaze::US_WEST_004, client: $client), 'my-bucket.s3.us-west-004.backblazeb2.com'];
+        yield 'Linode' => [static fn (ScriptedClient $client): S3 => new Linode('/root', 'key', 'secret', 'my-bucket', Linode::EU_CENTRAL_1, client: $client), 'my-bucket.eu-central-1.linodeobjects.com'];
+        yield 'Wasabi' => [static fn (ScriptedClient $client): S3 => new Wasabi('/root', 'key', 'secret', 'my-bucket', Wasabi::EU_CENTRAL_1, client: $client), 'my-bucket.s3.eu-central-1.wasabisys.com'];
+    }
+
+    /**
+     * @param  \Closure(ScriptedClient): S3  $build
+     */
+    #[DataProvider('virtualHostedSubclasses')]
+    public function testVirtualHostedSubclassesKeepTheirRequestUris(\Closure $build, string $host): void
+    {
+        $client = new ScriptedClient([
+            new Response(200)->withHeader('etag', '"abc"'),
+            $this->xml('<ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>'),
+            $this->xml('<ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>root/x/a</Key></Contents></ListBucketResult>'),
+            new Response(200),
+            new Response(200)->withHeader('content-length', '1'),
+            $this->xml('<CopyObjectResult><ETag>"abc"</ETag></CopyObjectResult>'),
+        ]);
+        $device = $build($client);
+
+        $device->write('/root/a', new Stream('a'));
+        $this->assertSame([], $device->listFiles('/root/')->files);
+        $this->assertTrue($device->deletePath('x'));
+        $this->assertTrue($device->copy('/root/a', '/root/b'));
+
+        $requests = array_map(static fn (RequestInterface $request): string => $request->getMethod() . ' ' . $request->getUri()->getPath(), $client->requests);
+        $this->assertSame(['PUT /root/a', 'GET /', 'GET /', 'POST /', 'HEAD /root/a', 'PUT /root/b'], $requests);
+        foreach ($client->requests as $request) {
+            $this->assertSame($host, $request->getUri()->getHost());
+        }
+
+        parse_str($client->requests[1]->getUri()->getQuery(), $query);
+        $this->assertSame('root/', $query['prefix'] ?? null);
+        parse_str($client->requests[2]->getUri()->getQuery(), $query);
+        $this->assertSame('root/x/', $query['prefix'] ?? null);
+        $this->assertSame('delete=', $client->requests[3]->getUri()->getQuery());
+        $this->assertStringContainsString('<Key>root/x/a</Key>', (string) $client->requests[3]->getBody());
+        $this->assertSame('/my-bucket/root/a', $client->requests[5]->getHeaderLine('x-amz-copy-source'));
+    }
+
+    /**
+     * @return iterable<string, array{string, string, bool|null, string, string}>
+     */
+    public static function endpoints(): iterable
+    {
+        yield 'AWS-style bucket subdomain' => ['https://my-bucket.s3.us-east-1.amazonaws.com', 'my-bucket', null, '/', 'my-bucket/root/x'];
+        yield 'dotted bucket subdomain' => ['https://my.dotted.bucket.s3.example.com', 'my.dotted.bucket', null, '/', 'my.dotted.bucket/root/x'];
+        yield 'uppercase bucket subdomain' => ['https://MY-BUCKET.S3.EXAMPLE.COM', 'my-bucket', null, '/', 'my-bucket/root/x'];
+        yield 'host named after the bucket' => ['https://assets.example.com', 'assets.example.com', null, '/', 'assets.example.com/root/x'];
+        yield 'single-label host named like the bucket' => ['http://minio:9000', 'minio', null, '/minio', 'root/x'];
+        yield 'service host with a port' => ['http://storage.internal:9000', 'files', null, '/files', 'root/x'];
+        yield 'scheme-less service host' => ['storage.example.com', 'files', null, '/files', 'root/x'];
+        yield 'service host behind a base path' => ['https://storage.example.com/s3/', 'files', null, '/s3/files', 'root/x'];
+        yield 'base path ending in the bucket' => ['https://storage.example.com/s3/files/', 'files', null, '/s3/files/', 'files/root/x'];
+        yield 'endpoint path naming a mixed-case bucket' => ['http://minio:9000/MyBucket/', 'MyBucket', null, '/MyBucket/', 'MyBucket/root/x'];
+        yield 'endpoint path differing from the bucket in case' => ['http://minio:9000/mybucket/', 'MyBucket', null, '/mybucket/MyBucket', 'root/x'];
+        yield 'explicitly bucket-addressed' => ['https://storage.example.com', 'files', false, '/', 'files/root/x'];
+        yield 'explicitly path-style' => ['https://b.example.com', 'b', true, '/b', 'root/x'];
+    }
+
+    #[DataProvider('endpoints')]
+    public function testAddressingFollowsTheEndpoint(string $host, string $bucket, ?bool $pathStyle, string $uri, string $prefix): void
+    {
+        $client = new ScriptedClient([$this->xml('<ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>')]);
+        $options = ['client' => $client, 'bucket' => $bucket] + ($pathStyle === null ? [] : ['pathStyle' => $pathStyle]);
+        $device = new S3("{$bucket}/root", 'key', 'secret', $host, 'us-east-1', ...$options);
+
+        $device->listFiles("{$bucket}/root/x");
+
+        $this->assertCount(1, $client->requests);
+        $this->assertSame($uri, $client->requests[0]->getUri()->getPath());
+        parse_str($client->requests[0]->getUri()->getQuery(), $query);
+        $this->assertSame($prefix, $query['prefix'] ?? null);
+    }
+
+    /**
+     * @return iterable<string, array{bool, string, string}>
+     */
+    public static function repeatedSlashes(): iterable
+    {
+        yield 'virtual-hosted' => [false, '/', 'files/root/x/'];
+        yield 'path-style' => [true, '/files', 'root/x/'];
+    }
+
+    #[DataProvider('repeatedSlashes')]
+    public function testBucketRequestsCollapseRepeatedSlashes(bool $pathStyle, string $uri, string $prefix): void
+    {
+        $client = new ScriptedClient([$this->xml('<ListBucketResult><IsTruncated>false</IsTruncated></ListBucketResult>')]);
+        $device = new S3('files/root', 'key', 'secret', 'https://storage.example.com', 'us-east-1', client: $client, bucket: 'files', pathStyle: $pathStyle);
+
+        $device->listFiles('//files//root///x//');
+
+        $this->assertCount(1, $client->requests);
+        $this->assertSame($uri, $client->requests[0]->getUri()->getPath());
+        parse_str($client->requests[0]->getUri()->getQuery(), $query);
+        $this->assertSame($prefix, $query['prefix'] ?? null);
+    }
+
+    /**
+     * @return iterable<string, array{string|null, bool|null}>
+     */
+    public static function unaddressable(): iterable
+    {
+        yield 'path-style without a bucket' => [null, true];
+        yield 'path-style with an empty bucket' => ['', true];
+        yield 'bucket holding a slash' => ['my/bucket', null];
+    }
+
+    /**
+     * The refusal is the outcome: a device that cannot address its bucket is never built, so there is no state to inspect.
+     */
+    #[DataProvider('unaddressable')]
+    public function testAddressingRefusesWhatItCannotAddress(?string $bucket, ?bool $pathStyle): void
+    {
+        $options = ['bucket' => $bucket] + ($pathStyle === null ? [] : ['pathStyle' => $pathStyle]);
+
+        $this->expectException(\InvalidArgumentException::class);
+        new S3('root', 'key', 'secret', 'https://storage.example.com', 'us-east-1', ...$options);
+    }
+
+    public function testDeletePathReportsObjectsTheServiceKept(): void
+    {
+        $client = new ScriptedClient([
+            $this->xml('<ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>root/x/a</Key></Contents><Contents><Key>root/x/b</Key></Contents></ListBucketResult>'),
+            $this->xml('<DeleteResult><Error><Key>root/x/b</Key><Code>AccessDenied</Code><Message>Access Denied</Message></Error></DeleteResult>'),
+        ]);
+
+        try {
+            $this->device($client)->deletePath('x');
+            self::fail('A partial delete must not report success');
+        } catch (RemoteException $e) {
+            $this->assertSame('AccessDenied', $e->errorCode);
+            $this->assertStringContainsString('root/x/b', $e->getMessage());
+        }
+
+        $this->assertCount(2, $client->requests);
     }
 }
