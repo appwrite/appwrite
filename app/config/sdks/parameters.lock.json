@@ -3055,7 +3055,7 @@
             "number",
             "otp"
         ],
-        "project.createProfile": [
+        "project.createVideoProfile": [
             "name",
             "videoBitRate",
             "audioBitRate",
@@ -3093,7 +3093,7 @@
         "project.deletePlatform": [
             "platformId"
         ],
-        "project.deleteProfile": [
+        "project.deleteVideoProfile": [
             "profileId"
         ],
         "project.deleteVariable": [
@@ -3119,7 +3119,7 @@
         "project.getPolicy": [
             "policyId"
         ],
-        "project.getProfile": [
+        "project.getVideoProfile": [
             "profileId"
         ],
         "project.getVariable": [
@@ -3149,7 +3149,7 @@
             "queries",
             "total"
         ],
-        "project.listProfiles": [
+        "project.listVideoProfiles": [
             "queries",
             "codec"
         ],
@@ -3532,7 +3532,7 @@
             "number",
             "symbols"
         ],
-        "project.updateProfile": [
+        "project.updateVideoProfile": [
             "profileId",
             "name",
             "videoBitRate",
@@ -7147,7 +7147,7 @@
             "number",
             "otp"
         ],
-        "project.createProfile": [
+        "project.createVideoProfile": [
             "name",
             "videoBitRate",
             "audioBitRate",
@@ -7185,7 +7185,7 @@
         "project.deletePlatform": [
             "platformId"
         ],
-        "project.deleteProfile": [
+        "project.deleteVideoProfile": [
             "profileId"
         ],
         "project.deleteVariable": [
@@ -7211,7 +7211,7 @@
         "project.getPolicy": [
             "policyId"
         ],
-        "project.getProfile": [
+        "project.getVideoProfile": [
             "profileId"
         ],
         "project.getVariable": [
@@ -7241,7 +7241,7 @@
             "queries",
             "total"
         ],
-        "project.listProfiles": [
+        "project.listVideoProfiles": [
             "queries",
             "codec"
         ],
@@ -7624,7 +7624,7 @@
             "number",
             "symbols"
         ],
-        "project.updateProfile": [
+        "project.updateVideoProfile": [
             "profileId",
             "name",
             "videoBitRate",

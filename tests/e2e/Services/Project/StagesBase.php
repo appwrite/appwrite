@@ -203,7 +203,7 @@ trait StagesBase
         $project = $this->getProject(fresh: true);
         $projectId = $project['$id'];
 
-        $this->assertSame('pending', $this->getStage($projectId, 'project.createProfile')['status']);
+        $this->assertSame('pending', $this->getStage($projectId, 'project.createVideoProfile')['status']);
 
         $response = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', [
             'content-type' => 'application/json',
@@ -218,7 +218,7 @@ trait StagesBase
         ]);
         $this->assertSame(201, $response['headers']['status-code']);
 
-        $stage = $this->awaitStage($projectId, 'project.createProfile', ONBOARDING_STATUS_COMPLETED);
+        $stage = $this->awaitStage($projectId, 'project.createVideoProfile', ONBOARDING_STATUS_COMPLETED);
         $this->assertSame(ACTOR_TYPE_KEY_PROJECT, $stage['actorType']);
         $this->assertSame('pending', $this->getStage($projectId, 'videos.create')['status']);
     }

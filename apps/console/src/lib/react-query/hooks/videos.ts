@@ -168,10 +168,26 @@ export async function fetchVideoSubtitles(
   return await sdk.forProject(projectId).videos.listSubtitles({ videoId })
 }
 
+/** Project video profiles API (pinned SDK still targets `/videos/profiles`). */
+function projectVideoProfilesUrl(projectId: string, profileId?: string): URL {
+  const client = sdk.forProject(projectId).client
+  const path =
+    profileId === undefined
+      ? '/project/videos/profiles'
+      : `/project/videos/profiles/${encodeURIComponent(profileId)}`
+  return new URL(`${client.config.endpoint}${path}`)
+}
+
 export async function fetchVideoProfiles(
   projectId: string,
 ): Promise<Models.VideoProfileList> {
-  return await projectVideoProfiles(projectId).listVideoProfiles()
+  const res = (await sdk.forProject(projectId).client.call(
+    'get',
+    projectVideoProfilesUrl(projectId),
+    {},
+    {},
+  )) as Models.VideoProfileList
+  return { ...res, profiles: res.profiles ?? [] }
 }
 
 export type VideoCodecOption = {
@@ -682,22 +698,6 @@ export type VideoProfileInput = {
   audioBitRate: number
 }
 
-/** Project video-profile methods (SDK preview; cast until package ships them). */
-type ProjectVideoProfiles = {
-  listVideoProfiles: () => Promise<Models.VideoProfileList>
-  createVideoProfile: (
-    payload: VideoProfileInput,
-  ) => Promise<Models.VideoProfile>
-  updateVideoProfile: (
-    payload: VideoProfileInput & { profileId: string },
-  ) => Promise<Models.VideoProfile>
-  deleteVideoProfile: (payload: { profileId: string }) => Promise<unknown>
-}
-
-function projectVideoProfiles(projectId: string): ProjectVideoProfiles {
-  return sdk.forProject(projectId).project as unknown as ProjectVideoProfiles
-}
-
 /** True when probe metadata includes an audio stream (after prepare / encode probe). */
 export function videoSourceHasAudio(
   video: Pick<Models.Video, 'audioCodec' | 'duration' | 'status'> | null | undefined,
@@ -711,11 +711,21 @@ export function useSaveVideoProfile(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (input: VideoProfileInput & { profileId?: string }) => {
-      const project = projectVideoProfiles(projectId!)
       const { profileId, ...payload } = input
+      const client = sdk.forProject(projectId!).client
       return profileId
-        ? project.updateVideoProfile({ profileId, ...payload })
-        : project.createVideoProfile(payload)
+        ? (client.call(
+            'patch',
+            projectVideoProfilesUrl(projectId!, profileId),
+            { 'content-type': 'application/json' },
+            payload,
+          ) as Promise<Models.VideoProfile>)
+        : (client.call(
+            'post',
+            projectVideoProfilesUrl(projectId!),
+            { 'content-type': 'application/json' },
+            payload,
+          ) as Promise<Models.VideoProfile>)
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
@@ -729,7 +739,12 @@ export function useDeleteVideoProfile(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (profileId: string) =>
-      projectVideoProfiles(projectId!).deleteVideoProfile({ profileId }),
+      sdk.forProject(projectId!).client.call(
+        'delete',
+        projectVideoProfilesUrl(projectId!, profileId),
+        { 'content-type': 'application/json' },
+        {},
+      ),
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: videoKeys.profiles(projectId),

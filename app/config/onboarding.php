@@ -85,7 +85,7 @@ return [
 
     // Videos
     'videos.create' => true,
-    'project.createProfile' => true,
+    'project.createVideoProfile' => true,
     'videos.createRendition' => true,
     'videos.createCaption' => true,
     'videos.getTimelines' => true,
