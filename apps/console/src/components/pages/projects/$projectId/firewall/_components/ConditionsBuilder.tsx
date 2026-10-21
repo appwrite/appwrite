@@ -1,7 +1,8 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { NumberInput } from '@/components/ui/number-input'
 import {
   Select,
   SelectContent,
@@ -44,6 +45,12 @@ import {
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
+import {
+  createTimeUnitPair,
+  fromSeconds,
+  toSeconds,
+  type TimeUnit,
+} from '@/lib/utils/time-unit-converter'
 import type { ReactNode } from 'react'
 import {
   ATTRIBUTE_ICONS,
@@ -107,6 +114,69 @@ function RailLabel({ children }: { children: ReactNode }) {
     <span className="relative z-10 bg-card px-1.5 text-[13px] font-semibold leading-none text-foreground">
       {children}
     </span>
+  )
+}
+
+const DURATION_UNITS: TimeUnit[] = ['seconds', 'minutes', 'hours', 'days']
+
+const DURATION_UNIT_LABELS: Record<string, string> = {
+  seconds: 'Seconds',
+  minutes: 'Minutes',
+  hours: 'Hours',
+  days: 'Days',
+}
+
+/** Prefilled when switching to session / MFA age: shows as 5 minutes. */
+const DEFAULT_DURATION_SECONDS = '300'
+
+/**
+ * Duration input for session / MFA age. The draft value stays in seconds; the
+ * unit starts at the one with the smallest whole value (300 → 5 minutes).
+ */
+function ConditionDurationInput({
+  value,
+  disabled,
+  onChange,
+}: {
+  value: string
+  disabled?: boolean
+  onChange: (value: string) => void
+}) {
+  const t = useT()
+  const seconds = Number(value) || 0
+  const [unit, setUnit] = useState<TimeUnit>(
+    () => createTimeUnitPair(seconds, { units: DURATION_UNITS }).unit,
+  )
+  const amount = fromSeconds(seconds, unit)
+
+  return (
+    <div className="flex w-full gap-2">
+      <NumberInput
+        value={Math.round(amount * 100) / 100}
+        min={0}
+        disabled={disabled}
+        className="h-9 min-w-0 flex-1 font-mono text-[13px] tabular-nums"
+        onValueChange={(next) =>
+          onChange(String(Math.round(toSeconds(next, unit))))
+        }
+      />
+      <Select
+        value={unit}
+        disabled={disabled}
+        onValueChange={(next) => setUnit(next as TimeUnit)}
+      >
+        <SelectTrigger className="h-9 w-[9.5rem] shrink-0 text-[13px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {DURATION_UNITS.map((option) => (
+            <SelectItem key={option} value={option}>
+              {t(DURATION_UNIT_LABELS[option])}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   )
 }
 
@@ -355,22 +425,11 @@ function ConditionValueInput({
     case 'sessionAge':
     case 'mfaAge':
       return (
-        <div className="relative">
-          <Input
-            type="number"
-            inputMode="numeric"
-            min={0}
-            step={1}
-            value={value}
-            disabled={disabled}
-            placeholder={t('e.g. 300')}
-            className="h-9 w-full pr-16 font-mono text-[13px]"
-            onChange={(e) => onChange(e.target.value)}
-          />
-          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[13px] text-muted-foreground">
-            {t('seconds')}
-          </span>
-        </div>
+        <ConditionDurationInput
+          value={value}
+          disabled={disabled}
+          onChange={onChange}
+        />
       )
 
     case 'headers':
@@ -456,7 +515,7 @@ export function ConditionsBuilder({
           attribute,
           operator: nextOperator,
           // Clear value/key when switching attribute; method/country need discrete picks.
-          value: '',
+          value: isSecondsAttribute(attribute) ? DEFAULT_DURATION_SECONDS : '',
           key: '',
         }
       }),
