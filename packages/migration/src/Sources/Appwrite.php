@@ -1231,6 +1231,7 @@ class Appwrite extends Source
             $response = $this->reader->listDatabases($queries);
 
             foreach ($response as $database) {
+                $database = $database instanceof UtopiaDocument ? $database->getArrayCopy() : $database;
                 $originalType = $database['type'] ?? Resource::TYPE_DATABASE_LEGACY;
 
                 $databaseFamilyType = $originalType;
@@ -1304,6 +1305,7 @@ class Appwrite extends Source
 
                 $response = $this->reader->listTables($database, $queries);
                 foreach ($response as $table) {
+                    $table = $table instanceof UtopiaDocument ? $table->getArrayCopy() : $table;
                     $rowSecurity = $table['rowSecurity'] ?? $table['documentSecurity'] ?? false;
                     $newTable = self::getEntity($databaseName, [
                         'id' => $table['$id'],
@@ -1423,6 +1425,7 @@ class Appwrite extends Source
                 $response = $this->reader->listIndexes($table, $queries);
 
                 foreach ($response as $index) {
+                    $index = $index instanceof UtopiaDocument ? $index->getArrayCopy() : $index;
                     $indexes[] = (new Index(
                         $index['$id'],
                         $index['key'],

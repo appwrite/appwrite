@@ -207,7 +207,7 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ], $body);
 
-        $this->assertEquals(202, $migration['headers']['status-code']);
+        $this->assertEquals(202, $migration['headers']['status-code'], $migration['body']['message'] ?? '');
         $this->assertNotEmpty($migration['body']);
         $this->assertNotEmpty($migration['body']['$id']);
 
