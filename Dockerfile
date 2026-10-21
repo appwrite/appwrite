@@ -1,5 +1,9 @@
 FROM composer:2 AS composer
 
+# Distrust the compromised eMudhra chains before downloading dependencies.
+RUN apk add --no-cache 'ca-certificates>=20261020-r0' 'ca-certificates-bundle>=20261020-r0' && \
+    update-ca-certificates
+
 ARG TESTING=false
 ENV TESTING=$TESTING
 
@@ -12,7 +16,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:2.1.0 AS base
+FROM appwrite/base:2.2.5 AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -81,6 +85,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/schedule-functions && \
     chmod +x /usr/local/bin/schedule-executions && \
     chmod +x /usr/local/bin/schedule-messages && \
+    chmod +x /usr/local/bin/schedule-maintenance && \
     chmod +x /usr/local/bin/sdks && \
     chmod +x /usr/local/bin/specs && \
     chmod +x /usr/local/bin/ssl && \
@@ -104,6 +109,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-executions && \
     chmod +x /usr/local/bin/worker-functions && \
     chmod +x /usr/local/bin/worker-mails && \
+    chmod +x /usr/local/bin/worker-maintenance && \
     chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-notifications && \
     chmod +x /usr/local/bin/worker-migrations && \
@@ -124,7 +130,7 @@ EXPOSE 80
 
 CMD [ "php", "app/http.php" ]
 
-FROM appwrite/base:2.1.0-xdebug AS xdebug
+FROM appwrite/base:2.2.5-xdebug AS xdebug
 
 FROM base AS development
 
@@ -134,7 +140,7 @@ RUN printf 'opcache.validate_timestamps=1\nopcache.revalidate_freq=0\n' > /usr/l
 COPY ./docs /usr/src/code/docs
 COPY ./dev /usr/src/code/dev
 
-# appwrite/base:2.1.0 ships without XDebug, so it cannot reach production or
+# appwrite/base:2.2.5 ships without XDebug, so it cannot reach production or
 # Cloud. The -xdebug tag is the same build with the extension; mounting it
 # rather than copying keeps xdebug.so out of every layer unless DEBUG asked
 # for it, and guarantees an ABI match because both tags are one base build.

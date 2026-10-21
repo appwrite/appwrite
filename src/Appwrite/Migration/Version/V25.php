@@ -10,6 +10,7 @@ use Utopia\Database\Attribute;
 use Utopia\Database\Attribute\Update as AttributeUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Migration\Resource;
 use Utopia\Query\Schema\ColumnType;
@@ -413,8 +414,21 @@ class V25 extends Migration
                     break;
 
                 case 'presenceLogs':
-                    // Added in 1.9.5 and created only by V24, which an install that ran
-                    // the 1.9.6 migration or upgraded straight from 1.8.x never ran.
+                    // Added in 1.9.5 and created only by V24, which an install that ran the 1.9.6
+                    // migration or upgraded straight from 1.8.x never ran. createCollection() is a
+                    // no-op when it already exists and creates it with connections when it doesn't;
+                    // the attribute-add then covers installs that have it from V24 without the column.
+                    // A Duplicate means createCollection already made the row with connections; any
+                    // other failure propagates so the version is not recorded with a missing attribute.
+                    $this->createCollection($id);
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'connections');
+                    } catch (Duplicate) {
+                        // createCollection already made the row with connections; nothing to add.
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'pushLedger':
                     // Added in 2.3.0 for every project; an install upgraded from 2.2.0
                     // has no table yet, and migrating its documents fails without one.
@@ -426,6 +440,11 @@ class V25 extends Migration
                         $this->createAttributeFromCollection($this->dbForProject, $id, 'description');
                     } catch (Throwable $th) {
                         Console::warning("Failed to create attribute \"description\" in collection {$id}: {$th->getMessage()}");
+                    }
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'stripMetadata');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"stripMetadata\" in collection {$id}: {$th->getMessage()}");
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;

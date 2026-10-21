@@ -14,9 +14,11 @@ final class Build extends Base
         public readonly string $type,
         public readonly ?Document $template = null,
         public readonly array $platform = [],
+        public readonly ?int $timeout = null,
     ) {
     }
 
+    #[\Override]
     public function toArray(): array
     {
         $platform = !empty($this->platform) ? $this->platform : Config::getParam('platform', []);
@@ -28,9 +30,11 @@ final class Build extends Base
             'type' => $this->type,
             'template' => $this->template?->getArrayCopy(),
             'platform' => $platform,
+            'timeout' => $this->timeout,
         ];
     }
 
+    #[\Override]
     public static function fromArray(array $data): static
     {
         return new self(
@@ -40,6 +44,7 @@ final class Build extends Base
             type: $data['type'] ?? '',
             template: !empty($data['template']) ? new Document($data['template']) : null,
             platform: $data['platform'] ?? [],
+            timeout: isset($data['timeout']) ? (int) $data['timeout'] : null,
         );
     }
 }

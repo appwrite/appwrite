@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\VCSGitea;
 
 use Appwrite\Tests\Async\Exceptions\Critical;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
@@ -157,6 +160,118 @@ final class VCSGiteaConsoleClientTest extends Scope
         }, 30000, 1000);
     }
 
+    /**
+     * A custom domain pinned to a branch serves that branch's newest build, which need
+     * not be the active deployment. Retention deletes non-active deployments past the
+     * window, and deleting one deletes the rules pointing at it, so it used to take the
+     * user's domain down with the build.
+     */
+    public function testDeploymentRetentionKeepsTheBuildBehindABranchDomain(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $installationId = $this->createInstallationHelper()['$id'];
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
+            'name' => 'retention-' . \uniqid(),
+            'auto_init' => true,
+            'default_branch' => 'main',
+            'private' => false,
+        ]);
+        $this->assertEquals(201, $repository['headers']['status-code'], \json_encode($repository['body']));
+        $repositoryName = $repository['body']['name'];
+
+        $workdir = \sys_get_temp_dir() . '/vcs-gitea-' . \uniqid();
+        $endpoint = System::getEnv('_APP_VCS_GITEA_ENDPOINT', 'http://gitea:3000');
+        $remote = \str_replace('://', '://' . self::GITEA_USERNAME . ':' . self::GITEA_PASSWORD . '@', $endpoint)
+            . '/' . self::GITEA_USERNAME . '/' . $repositoryName . '.git';
+        $this->gitHelper("git clone {$remote} {$workdir}", \sys_get_temp_dir());
+        $this->writeFunctionHelper($workdir, 'retention');
+        $this->gitHelper('git add index.js && git commit -m "Add function"', $workdir);
+        $this->gitHelper('git push origin main', $workdir);
+        $this->gitHelper('git push origin main:feature', $workdir);
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
+            'functionId' => Id::unique(),
+            'name' => 'Gitea retention',
+            'execute' => [Role::any()->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+            'installationId' => $installationId,
+            'providerRepositoryId' => (string) $repository['body']['id'],
+            'providerBranch' => 'main',
+            'deploymentRetention' => 1,
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code'], \json_encode($function['body']));
+        $functionId = $function['body']['$id'];
+
+        $deploy = function (string $branch, bool $activate) use ($functionId, $headers): string {
+            $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/vcs', $headers, [
+                'type' => 'branch',
+                'reference' => $branch,
+                'activate' => $activate,
+            ]);
+            $this->assertEquals(202, $deployment['headers']['status-code'], \json_encode($deployment['body']));
+            $this->waitForDeploymentReadyHelper($functionId, $deployment['body']['$id']);
+
+            return $deployment['body']['$id'];
+        };
+
+        $activeId = $deploy('main', true);
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/function', $headers, [
+            'domain' => \uniqid() . '-gitea-retention.custom.localhost',
+            'functionId' => $functionId,
+            'branch' => 'main',
+        ]);
+        $this->assertEquals(201, $rule['headers']['status-code'], \json_encode($rule['body']));
+        $ruleId = $rule['body']['$id'];
+
+        // A build of the pinned branch that is never activated moves the domain off the active deployment.
+        $pinnedId = $deploy('main', false);
+        $this->assertEventually(function () use ($ruleId, $headers, $pinnedId) {
+            $rule = $this->client->call(Client::METHOD_GET, '/proxy/rules/' . $ruleId, $headers);
+            $this->assertEquals($pinnedId, $rule['body']['deploymentId'], \json_encode($rule['body']));
+        }, 30000, 1000);
+        $staleId = $deploy('feature', false);
+
+        foreach ([$pinnedId, $staleId] as $deploymentId) {
+            $stdout = '';
+            $stderr = '';
+            $timeTravel = (new Command('docker'))
+                ->argument('exec')
+                ->argument('appwrite')
+                ->argument('task-time-travel')
+                ->argument('--projectId=' . $projectId)
+                ->argument('--resourceType=deployment')
+                ->argument('--resourceId=' . $deploymentId)
+                ->argument('--createdAt=2020-01-01T00:00:00Z');
+            $code = Console::execute($timeTravel, '', $stdout, $stderr);
+            $this->assertSame(0, $code, "Time-travel command failed with code $code: $stderr ($stdout)");
+        }
+
+        $stdout = '';
+        $stderr = '';
+        $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
+        $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
+
+        // The unprotected old build going away shows retention ran for this function.
+        $this->assertEventually(function () use ($functionId, $staleId) {
+            $this->assertNotContains($staleId, $this->listDeploymentIdsHelper($functionId));
+        }, 60000, 1000);
+
+        $deployments = $this->listDeploymentIdsHelper($functionId);
+        $this->assertContains($activeId, $deployments, 'the active deployment is kept');
+        $this->assertContains($pinnedId, $deployments, 'the build behind the custom domain is kept');
+
+        $rule = $this->client->call(Client::METHOD_GET, '/proxy/rules/' . $ruleId, $headers);
+        $this->assertEquals(200, $rule['headers']['status-code'], 'the custom domain survives retention');
+        $this->assertEquals($pinnedId, $rule['body']['deploymentId']);
+    }
+
     public function testCreateDuplicateDeploymentWithRootDirectory(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -224,6 +339,81 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->waitForDeploymentReadyHelper($functionId, $duplicate['body']['$id']);
 
         $this->assertEventually(fn () => $this->assertExecutionOutputHelper($functionId, 'web:functions/web'), 30000, 1000);
+    }
+
+    /**
+     * A tag template builds on a branch clone, which already has the branch
+     * checked out; a branch template resolves the head commit and builds on a
+     * detached commit clone.
+     *
+     * @return \Iterator<string, array{string, (string | null)}>
+     */
+    public static function templateReferences(): \Iterator
+    {
+        yield 'branch clone' => ['tag', null];
+        yield 'commit clone' => ['branch', 'main'];
+    }
+
+    #[DataProvider('templateReferences')]
+    public function testCreateTemplateDeploymentIntoRepository(string $type, ?string $reference): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+        $installationId = $this->createInstallationHelper()['$id'];
+
+        $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
+            'name' => 'function-' . \uniqid(),
+            'auto_init' => true,
+            'default_branch' => 'main',
+            'private' => false,
+        ]);
+        $this->assertEquals(201, $repository['headers']['status-code'], \json_encode($repository['body']));
+        $repositoryName = $repository['body']['name'];
+
+        $template = $this->client->call(Client::METHOD_GET, '/functions/templates/starter', $headers);
+        $this->assertEquals(200, $template['headers']['status-code'], \json_encode($template['body']));
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
+            'functionId' => Id::unique(),
+            'name' => 'Gitea template',
+            'execute' => [Role::any()->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'src/main.js',
+            'commands' => 'npm install',
+            'timeout' => 15,
+            'installationId' => $installationId,
+            'providerRepositoryId' => (string) $repository['body']['id'],
+            'providerBranch' => 'main',
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code'], \json_encode($function['body']));
+        $functionId = $function['body']['$id'];
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments/template', $headers, [
+            'repository' => $template['body']['providerRepositoryId'],
+            'owner' => $template['body']['providerOwner'],
+            'rootDirectory' => 'node/starter',
+            'type' => $type,
+            'reference' => $reference ?? $template['body']['providerVersion'],
+            'activate' => true,
+        ]);
+        $this->assertEquals(202, $deployment['headers']['status-code'], \json_encode($deployment['body']));
+        $deploymentId = $deployment['body']['$id'];
+
+        $this->waitForDeploymentReadyHelper($functionId, $deploymentId);
+
+        $branch = $this->giteaApiHelper(Client::METHOD_GET, '/api/v1/repos/' . self::GITEA_USERNAME . '/' . $repositoryName . '/branches/main');
+        $this->assertEquals(200, $branch['headers']['status-code'], \json_encode($branch['body']));
+        $this->assertStringStartsWith('Create Gitea template function', $branch['body']['commit']['message']);
+
+        $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, $headers);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertSame($branch['body']['commit']['id'], $deployment['body']['providerCommitHash']);
+
+        $file = $this->giteaApiHelper(Client::METHOD_GET, '/api/v1/repos/' . self::GITEA_USERNAME . '/' . $repositoryName . '/contents/src/main.js?ref=main');
+        $this->assertEquals(200, $file['headers']['status-code'], \json_encode($file['body']));
     }
 
     public function testDetectionReadsVariablesFromDotenv(): void

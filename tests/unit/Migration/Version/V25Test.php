@@ -172,6 +172,82 @@ final class V25Test extends TestCase
         }
     }
 
+    public function testCreatesPresenceLogsWithConnectionsForLegacyProject(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // A legacy project that never ran V24 has no presenceLogs collection at all.
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach ($collections as $id => $collection) {
+            if ($id === 'presenceLogs' || ($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($collection['attributes']),
+                indexes: \array_values($collection['indexes']),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $migration->execute();
+
+        $this->assertInstanceOf(Collection::class, $database->findCollection('presenceLogs'));
+        $attributes = \array_map(
+            fn (Document $attribute) => $attribute->getId(),
+            $database->getCollection('presenceLogs')->getAttribute('attributes', [])
+        );
+        $this->assertContains('connections', $attributes);
+    }
+
+    public function testAddsConnectionsToExistingPresenceLogs(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // A project created before this change has presenceLogs but no connections column.
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach ($collections as $id => $collection) {
+            if (($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $attributes = $id === 'presenceLogs'
+                ? \array_filter($collection['attributes'], static fn (Attribute $attribute): bool => $attribute->key !== 'connections')
+                : $collection['attributes'];
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($attributes),
+                indexes: \array_values($collection['indexes']),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $migration->execute();
+
+        $attributes = \array_map(
+            fn (Document $attribute) => $attribute->getId(),
+            $database->getCollection('presenceLogs')->getAttribute('attributes', [])
+        );
+        $this->assertContains('connections', $attributes);
+    }
+
     public function testRejectsResourcesCreatedAfterMigration(): void
     {
         $migration = new class () extends V25 {

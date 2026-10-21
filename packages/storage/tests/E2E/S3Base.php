@@ -46,6 +46,11 @@ abstract class S3Base extends TestCase
     abstract protected function getAdapterType(): DeviceType;
 
     /**
+     * The same bucket and credentials as $this->object, under another root.
+     */
+    abstract protected function withRoot(string $root): S3;
+
+    /**
      * @var S3
      */
     protected $object;
@@ -247,6 +252,134 @@ abstract class S3Base extends TestCase
         $this->assertEquals(true, $this->object->deletePath('bucket'));
         $this->assertEquals(false, $this->object->exists($path));
         $this->assertEquals(false, $this->object->exists($path2));
+    }
+
+    public function testDeleteRecursive(): void
+    {
+        $root = 'rec-' . bin2hex(random_bytes(4));
+        $nested = ["{$root}/a/1.txt", "{$root}/a/b/2.txt", "{$root}/a/b/c/3.txt"];
+        $siblings = ["{$root}/a-b/4.txt", "{$root}/ab/5.txt"];
+
+        try {
+            foreach (["{$root}/a", "{$root}/a/"] as $target) {
+                foreach ([...$nested, ...$siblings] as $file) {
+                    $this->object->write($this->object->getPath($file), new Stream($file), 'text/plain');
+                }
+
+                $this->assertTrue($this->object->delete($this->object->getPath($target), true));
+
+                foreach ($nested as $file) {
+                    $this->assertFalse($this->object->exists($this->object->getPath($file)), "{$file} survived delete('{$target}', true)");
+                }
+                foreach ($siblings as $file) {
+                    $this->assertTrue($this->object->exists($this->object->getPath($file)), "{$file} is outside {$target} and must survive");
+                }
+            }
+        } finally {
+            foreach ([...$nested, ...$siblings] as $file) {
+                $this->object->delete($this->object->getPath($file));
+            }
+        }
+    }
+
+    public function testRecursiveDeleteRefusesAnEmptyPrefix(): void
+    {
+        $sentinel = $this->object->getPath('rec-' . bin2hex(random_bytes(4)) . '/sentinel.txt');
+        $bucket = $this->withRoot('');
+
+        try {
+            $this->object->write($sentinel, new Stream('sentinel'), 'text/plain');
+
+            $attempts = [
+                'delete(\'\')' => fn (): bool => $this->object->delete(''),
+                'delete(\'/\')' => fn (): bool => $this->object->delete('/'),
+                'delete(\'\', true)' => fn (): bool => $this->object->delete('', true),
+                'delete(\'/\', true)' => fn (): bool => $this->object->delete('/', true),
+                'delete(\'a/..\')' => fn (): bool => $this->object->delete('a/..'),
+                'deletePath(\'\') under an empty root' => fn (): bool => $bucket->deletePath(''),
+                'deletePath(\'\')' => fn (): bool => $this->object->deletePath(''),
+                'deletePath(\'/\')' => fn (): bool => $this->object->deletePath('/'),
+                'deletePath(\'.\')' => fn (): bool => $this->object->deletePath('.'),
+                'deletePath(\'x/..\')' => fn (): bool => $this->object->deletePath('x/..'),
+            ];
+            foreach ($attempts as $call => $attempt) {
+                try {
+                    $attempt();
+                    self::fail("{$call} must refuse to delete the whole bucket or root");
+                } catch (\InvalidArgumentException) {
+                }
+            }
+
+            $this->assertTrue($this->object->exists($sentinel));
+            foreach (['kitten-1.jpg', 'kitten-2.jpg', 'kitten-1.png', 'kitten-2.png'] as $kitten) {
+                $this->assertTrue($this->object->exists($this->object->getPath("testing/{$kitten}")));
+            }
+        } finally {
+            $this->object->delete($sentinel);
+        }
+    }
+
+    public function testRecursiveDeleteStaysInsideTheRoot(): void
+    {
+        $suffix = bin2hex(random_bytes(4));
+        $root = trim($this->object->getAbsolutePath($this->object->getRoot()), '/');
+        $parent = \dirname('/' . $root);
+        $name = basename($root);
+        $outside = '/' . trim($this->object->getAbsolutePath($this->object->getPath("../outside-{$suffix}")), '/') . '/sentinel.txt';
+        // Shares the root's name as a prefix, so it proves root-x/ is not treated as inside root/.
+        $prefixed = rtrim($parent, '/') . "/{$name}-{$suffix}/sentinel.txt";
+        $sentinels = [$outside, $prefixed];
+
+        try {
+            foreach ($sentinels as $sentinel) {
+                $this->object->write($sentinel, new Stream('sentinel'), 'text/plain');
+            }
+
+            $attempts = [
+                "delete('../outside-{$suffix}', true)" => fn (): bool => $this->object->delete($this->object->getPath("../outside-{$suffix}"), true),
+                "delete('../{$name}-{$suffix}', true)" => fn (): bool => $this->object->delete($this->object->getPath("../{$name}-{$suffix}"), true),
+                "deletePath('../outside-{$suffix}')" => fn (): bool => $this->object->deletePath("../outside-{$suffix}"),
+                "deletePath('../{$name}-{$suffix}')" => fn (): bool => $this->object->deletePath("../{$name}-{$suffix}"),
+            ];
+            foreach ($attempts as $call => $attempt) {
+                try {
+                    $attempt();
+                    $refused = false;
+                } catch (\InvalidArgumentException) {
+                    $refused = true;
+                }
+
+                foreach ($sentinels as $sentinel) {
+                    $this->assertTrue($this->object->exists($sentinel), "{$sentinel} is outside the root and must survive {$call}");
+                }
+                $this->assertTrue($refused, "{$call} must refuse to delete outside the root");
+            }
+        } finally {
+            foreach ($sentinels as $sentinel) {
+                $this->object->delete($sentinel);
+            }
+        }
+    }
+
+    public function testRecursiveDeleteEscapesKeys(): void
+    {
+        $root = 'rec-' . bin2hex(random_bytes(4));
+        $recursive = $this->object->getPath("{$root}/a/x&y.txt");
+        $path = $this->object->getPath("{$root}/b/x&y.txt");
+
+        try {
+            $this->object->write($recursive, new Stream('a'), 'text/plain');
+            $this->object->write($path, new Stream('b'), 'text/plain');
+
+            $this->assertTrue($this->object->delete($this->object->getPath("{$root}/a"), true));
+            $this->assertTrue($this->object->deletePath("{$root}/b"));
+
+            $this->assertFalse($this->object->exists($recursive));
+            $this->assertFalse($this->object->exists($path));
+        } finally {
+            $this->object->delete($recursive);
+            $this->object->delete($path);
+        }
     }
 
     public function testFileSize(): void
