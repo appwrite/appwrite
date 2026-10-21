@@ -147,12 +147,14 @@ function ConditionDurationInput({
   const [unit, setUnit] = useState<TimeUnit>(
     () => createTimeUnitPair(seconds, { units: DURATION_UNITS }).unit,
   )
-  const amount = fromSeconds(seconds, unit)
+  // Six decimals keep one-second resolution in every unit (a day's error
+  // stays under 0.05s), so the shown value always maps back to the stored one.
+  const amount = Number(fromSeconds(seconds, unit).toFixed(6))
 
   return (
     <div className="flex w-full gap-2">
       <NumberInput
-        value={Math.round(amount * 100) / 100}
+        value={amount}
         min={0}
         disabled={disabled}
         className="h-9 min-w-0 flex-1 font-mono text-[13px] tabular-nums"
