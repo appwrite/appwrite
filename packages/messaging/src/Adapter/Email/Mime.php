@@ -136,8 +136,10 @@ final class Mime
     private static function render(Node $node): string
     {
         if ($node instanceof Text) {
-            // Source whitespace means nothing in HTML; collapse it the way a browser would.
-            $data = strtr($node->data, "\t\n\r\f", '    ');
+            // Source whitespace means nothing in HTML; collapse it the way a browser
+            // would. Preview padding is invisible characters and no-break spaces.
+            $data = str_replace(["\u{200B}", "\u{200C}", "\u{200D}", "\u{200E}", "\u{200F}", "\u{FEFF}"], '', $node->data);
+            $data = str_replace(["\u{00A0}", "\t", "\n", "\r", "\f"], ' ', $data);
             $words = implode(' ', array_filter(explode(' ', $data), static fn (string $word): bool => $word !== ''));
 
             if ($words === '') {
@@ -154,11 +156,6 @@ final class Mime
         $name = $node instanceof Element ? strtolower($node->localName) : '';
 
         if (\in_array($name, ['head', 'style', 'script', 'title', 'template'], true)) {
-            return '';
-        }
-
-        // A preheader is shown in the inbox list, not in the message.
-        if ($node instanceof Element && str_contains(str_replace(' ', '', strtolower($node->getAttribute('style') ?? '')), 'display:none')) {
             return '';
         }
 
