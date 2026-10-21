@@ -1,23 +1,18 @@
 ---
 layout: changelog
-title: Announcing Appwrite 2.6 for self-hosted deployments
+title: Security updates for self-hosted Appwrite
 date: 2026-10-21
-cover: /images/changelog/2026-10-21.avif
-tags: security, storage, databases, auth, console, infrastructure
+cover: /images/changelog/2026-10-08-1.avif
+tags: security, infrastructure
 ---
 
-Appwrite 2.6 is now available for self-hosting.
+Appwrite 2.6.0 and 1.9.8 include security updates for self-hosted deployments.
 
-This release includes:
+Both releases update outbound HTTPS certificate trust to reject the compromised eMudhra certificate chains described in [Cloudflare's disclosure](https://blog.cloudflare.com/emudhra-certificate-compromise/). TLS verification remains enabled.
 
-- Remove location, device, and capture-time metadata from new image uploads using the bucket's **Image metadata** setting. Color profiles and orientation are preserved; stripping is off by default, applies within the read-buffer size limit, and is unavailable through the S3-compatible API (#14351).
-- Use resource descriptions through the API for databases, tables/collections, columns/attributes, indexes, buckets, functions, sites, variables, topics, and keys (#14471, #14595). This is an API addition; the pinned Console does not provide editors for every description field.
-- Configure periodic password changes from the Console's Auth policies page, and use custom password deny lists through the project policy API (#14602, #14499).
-- Refresh outbound TLS trust to reject the compromised eMudhra certificate chains; both the runtime base and independent Composer stage carry the fix (#14719).
-- Upgrade to self-hosted Console 1.2.97, including the bucket metadata setting, password-rotation policy card, time-of-day selection in date ranges, and one-minute chart intervals for short windows.
+- **2.x installations:** upgrade to [Appwrite 2.6.0](https://github.com/appwrite/appwrite/releases/tag/2.6.0) using the [latest upgrade instructions](/docs/advanced/self-hosting/production/updates#upgrading-to-latest).
+- **1.9 installations:** upgrade to [Appwrite 1.9.8](https://github.com/appwrite/appwrite/releases/tag/1.9.8) using the [1.9 upgrade instructions](/docs/advanced/self-hosting/production/updates#upgrading-1-9). This patch also updates the SVG sanitizer to 1.1.1 and refreshes cached avatar and preview responses.
 
-Back up your instance and follow the [upgrade instructions](/docs/advanced/self-hosting/production/updates#upgrading-to-latest). Run the migration after upgrading from 2.5.0: this release adds schema fields.
+Back up your instance before upgrading and run the migration afterward. Appwrite 2.6.0 includes schema updates; 1.9.8 introduces no schema changes. Endpoints still presenting a compromised certificate chain must replace their certificates before Appwrite can connect to them.
 
-{% arrow_link href="https://github.com/appwrite/appwrite/releases/tag/2.6.0" %}
-View the release notes on GitHub
-{% /arrow_link %}
+The linked GitHub release notes include the complete changes bundled with each version.
