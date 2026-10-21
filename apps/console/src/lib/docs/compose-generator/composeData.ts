@@ -9,6 +9,8 @@ export const TOPOLOGY_SERVICES = {
     'appwrite-worker-stats-usage',
     'appwrite-worker-stats-resources',
     'appwrite-task-stats-resources',
+    'appwrite-task-scheduler-maintenance',
+    'appwrite-worker-maintenance',
     'appwrite-worker-webhooks',
     'appwrite-worker-deletes',
     'appwrite-worker-databases',
@@ -90,10 +92,12 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
         max-file: "5"
         max-size: 10m
     image: appwrite/appwrite:2.5.0
+    # The marker is APP_READINESS_MARKER, written by app/http.php once the core schema exists.
     healthcheck:
       test:
         - CMD-SHELL
-        - 'curl -fsS -o /dev/null -H "Host: $\${_APP_DOMAIN:-localhost}" http://localhost/v1/health/version'
+        - 'test -f /tmp/.appwrite-ready && curl -fsS -o /dev/null -H "Host: $\${_APP_DOMAIN:-localhost}"
+          http://localhost/v1/health/version'
       interval: 5s
       timeout: 5s
       retries: 12
@@ -127,6 +131,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - \${_APP_DB_HOST:-postgresql}
       - appwrite-geo
       - appwrite-autogravity
+      - appwrite-exiftool
     environment:
       - _APP_DNS_EXTERNAL
       - _APP_ALLOWED_INTERNAL_ADDRESSES
@@ -202,6 +207,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_STORAGE_LIMIT
       - _APP_STORAGE_PREVIEW_LIMIT
       - _APP_AUTOGRAVITY_HOST
+      - _APP_EXIFTOOL_HOST
       - _APP_STORAGE_ANTIVIRUS
       - _APP_STORAGE_ANTIVIRUS_HOST
       - _APP_STORAGE_ANTIVIRUS_PORT
@@ -495,10 +501,11 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
+      - _APP_MAINTENANCE_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
-      # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases stays at 1.
-      - _APP_WORKER_MAX_COROUTINES=78
+      # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
+      - _APP_WORKER_MAX_COROUTINES=80
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_EMAIL_SECURITY
@@ -641,6 +648,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
+      - _APP_MAINTENANCE_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_LOGGING_FORMAT
       # Combined mode runs functions/executions/messages timers + enqueue coroutines
@@ -666,7 +674,8 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
-      - _APP_FUNCTIONS_SCHEDULE_SPREAD`,
+      - _APP_FUNCTIONS_SCHEDULE_SPREAD
+      - _APP_MAINTENANCE_INACTIVE_INTERVAL`,
   },
   {
     name: 'appwrite-worker-stats-usage',
@@ -710,10 +719,11 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
+      - _APP_MAINTENANCE_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
-      # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases stays at 1.
-      - _APP_WORKER_MAX_COROUTINES=78
+      # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
+      - _APP_WORKER_MAX_COROUTINES=80
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_EMAIL_SECURITY
@@ -870,10 +880,11 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
+      - _APP_MAINTENANCE_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
-      # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases stays at 1.
-      - _APP_WORKER_MAX_COROUTINES=78
+      # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
+      - _APP_WORKER_MAX_COROUTINES=80
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_EMAIL_SECURITY
@@ -1016,6 +1027,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
+      - _APP_MAINTENANCE_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_LOGGING_FORMAT
       # Combined mode runs functions/executions/messages timers + enqueue coroutines
@@ -1041,7 +1053,104 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
-      - _APP_FUNCTIONS_SCHEDULE_SPREAD`,
+      - _APP_FUNCTIONS_SCHEDULE_SPREAD
+      - _APP_MAINTENANCE_INACTIVE_INTERVAL`,
+  },
+  {
+    name: 'appwrite-task-scheduler-maintenance',
+    block: `  appwrite-task-scheduler-maintenance:
+    entrypoint: schedule-maintenance
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    container_name: appwrite-task-scheduler-maintenance
+    image: appwrite/appwrite:2.5.0
+    networks:
+      - appwrite
+    depends_on:
+      - \${_APP_DB_HOST:-postgresql}
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_USAGE_STATS
+      - _APP_USAGE_PASS
+      - _APP_CONNECTIONS_DB_USAGE
+      - _APP_POOL_SIZE_USAGE
+      - _APP_CONNECTIONS_DB_EXECUTIONS
+      - _APP_POOL_SIZE_EXECUTIONS
+      - _APP_MAINTENANCE_RETENTION_USAGE_TTL
+      - _APP_STATS_USAGE_QUEUE_NAME
+      - _APP_STATS_RESOURCES_QUEUE_NAME
+      - _APP_MAINTENANCE_QUEUE_NAME
+      - _APP_STATS_RESOURCES_INTERVAL
+      - _APP_LOGGING_FORMAT
+      # Combined mode runs functions/executions/messages timers + enqueue coroutines
+      # against shared console/cache pools; floor must cover concurrent ticks.
+      - _APP_WORKER_MAX_COROUTINES=8
+      - _APP_WORKER_PER_CORE
+      - _APP_OPENSSL_KEY_V1
+      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_DOMAIN
+      - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_SCHEMA
+      - _APP_DOMAIN_FUNCTIONS
+      - _APP_DOMAIN_SITES
+      - _APP_MIGRATION_HOST
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_DATABASE_SHARED_TABLES
+      - _APP_FUNCTIONS_SCHEDULE_SPREAD
+      - _APP_MAINTENANCE_INACTIVE_INTERVAL`,
+  },
+  {
+    name: 'appwrite-worker-maintenance',
+    block: `  appwrite-worker-maintenance:
+    entrypoint: worker-maintenance
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    container_name: appwrite-worker-maintenance
+    image: appwrite/appwrite:2.5.0
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - \${_APP_DB_HOST:-postgresql}
+    environment:
+      - _APP_ENV
+      - _APP_WORKERS_NUM=1
+      # One slot at a time: each job re-checks the deletes backlog before every block.
+      - _APP_WORKER_MAX_COROUTINES=1
+      - _APP_WORKER_PER_CORE
+      - _APP_OPENSSL_KEY_V1
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
+      - _APP_DATABASE_SHARED_TABLES
+      - _APP_MAINTENANCE_QUEUE_NAME`,
   },
   {
     name: 'appwrite-worker-webhooks',
@@ -2034,6 +2143,15 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - appwrite`,
   },
   {
+    name: 'appwrite-exiftool',
+    block: `  appwrite-exiftool:
+    container_name: appwrite-exiftool
+    image: ghcr.io/appwrite/exiftool:0.1.0
+    restart: unless-stopped
+    networks:
+      - appwrite`,
+  },
+  {
     name: 'clickhouse',
     block: `  clickhouse:
     image: clickhouse/clickhouse-server:26.4.3-alpine
@@ -2441,6 +2559,7 @@ _APP_STORAGE_DEVICE=Local
 _APP_STORAGE_LIMIT=30000000
 _APP_STORAGE_PREVIEW_LIMIT=20000000
 _APP_AUTOGRAVITY_HOST=http://appwrite-autogravity:8080
+_APP_EXIFTOOL_HOST=http://appwrite-exiftool:8080
 _APP_STORAGE_ANTIVIRUS=disabled
 _APP_STORAGE_ANTIVIRUS_HOST=clamav
 _APP_STORAGE_ANTIVIRUS_PORT=3310
@@ -2508,6 +2627,7 @@ _APP_BROWSER_HOST=http://appwrite-browser:3000/v1
 _APP_DOCKER_HUB_USERNAME=
 _APP_DOCKER_HUB_PASSWORD=
 _APP_MAINTENANCE_INTERVAL=86400
+_APP_MAINTENANCE_INACTIVE_INTERVAL=604800
 _APP_MAINTENANCE_START_TIME=12:00
 _APP_MAINTENANCE_RETENTION_ABUSE=86400
 _APP_MAINTENANCE_RETENTION_AUDIT=1209600
@@ -2524,6 +2644,7 @@ _APP_POOL_SIZE_EXECUTIONS=2
 _APP_MAINTENANCE_RETENTION_USAGE_TTL=180
 _APP_STATS_USAGE_QUEUE_NAME=v1-stats-usage
 _APP_STATS_RESOURCES_QUEUE_NAME=v1-stats-resources
+_APP_MAINTENANCE_QUEUE_NAME=v1-maintenance
 _APP_STATS_RESOURCES_INTERVAL=3600
 _APP_INTERVAL_CLEANUP_STALE_EXECUTIONS=300
 _APP_INTERVAL_DOMAIN_VERIFICATION=120

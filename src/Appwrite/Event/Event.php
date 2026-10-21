@@ -16,6 +16,8 @@ class Event
 
     public const DELETE_QUEUE_NAME = 'v1-deletes';
 
+    public const MAINTENANCE_QUEUE_NAME = 'v1-maintenance';
+
     public const AUDITS_QUEUE_NAME = 'v1-audits';
 
     public const MAILS_QUEUE_NAME = 'v1-mails';

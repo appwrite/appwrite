@@ -368,6 +368,14 @@ class Deletes extends Action
                 $this->deleteOldCSVExports($dbForPlatform, $deviceForFiles);
                 break;
             case DELETE_TYPE_MAINTENANCE:
+                // The project was deleted after the job was queued; getProjectDB() would hand back the platform database.
+                if ($project->isEmpty()) {
+                    // The injected project is empty here, so name the one the message was queued for.
+                    Span::add('project.id', $deleteMessage->project?->getId() ?? '');
+                    Span::add('maintenance.skipped', 'deleted');
+                    break;
+                }
+
                 $this->deleteExpiredTargets($project, $getProjectDB);
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention, $executionsRetentionCount, $executionStore);
                 $this->deleteExpiredSessions($project, $getProjectDB);

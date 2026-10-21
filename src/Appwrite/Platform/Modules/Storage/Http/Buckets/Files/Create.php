@@ -404,9 +404,11 @@ class Create extends Action
 
             if ($chunksUploaded === $chunks && $uploaded < $chunks) {
                 $deviceForFiles->finalize($path, $chunks, $metadata);
+                // Reuse one metadata snapshot instead of separate backend HEADs.
+                $info = $deviceForFiles->getFileInfo($path);
 
                 // A chunk can carry more or fewer bytes than its range announces.
-                if (!empty($contentRange) && $deviceForFiles->getFileSize($path) !== $fileSize) {
+                if (!empty($contentRange) && $info->size !== $fileSize) {
                     $removed = $deviceForFiles->delete($path);
 
                     if ($removed && !$file->isEmpty() && !$authorization->skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getSequence(), $fileId))) {
@@ -450,7 +452,7 @@ class Create extends Action
                     }
                 }
 
-                $mimeType = $deviceForFiles->getFileMimeType($path); // Get mime-type before compression and encryption
+                $mimeType = $info->mimeType ?? $deviceForFiles->getFileMimeType($path);
                 $formats = Config::getParam('storage-formats');
 
                 if (\in_array($mimeType, $formats['ambiguous'], true)) {
@@ -460,9 +462,10 @@ class Create extends Action
                 // Strip before hashing so the signature and sizes describe the file we store.
                 if ($bucket->getAttribute('stripMetadata', false) && $fileSize <= APP_STORAGE_READ_BUFFER && \in_array($mimeType, self::METADATA_MIME_TYPES, true)) {
                     $fileSize = $this->stripMetadata($exiftool, $deviceForFiles, $path, $mimeType) ?? $fileSize;
+                    $info = $deviceForFiles->getFileInfo($path);
                 }
 
-                $fileHash = $deviceForFiles->getFileHash($path); // Get file hash before compression and encryption
+                $fileHash = $info->etag ?? $deviceForFiles->getFileHash($path); // Before compression and encryption.
                 $data = '';
                 $iv = '';
                 $tag = null;
@@ -502,7 +505,7 @@ class Create extends Action
                     }
                 }
 
-                $sizeActual = $deviceForFiles->getFileSize($path);
+                $sizeActual = !empty($data) ? \strlen($data) : $info->size;
 
                 $openSSLVersion = null;
                 $openSSLCipher = null;

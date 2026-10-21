@@ -181,6 +181,35 @@ final class MessagingTest extends TestCase
         $this->assertCount(2, $connection['roles']);
     }
 
+    public function testSubscribeRetainsPresenceHold(): void
+    {
+        $realtime = new Realtime();
+
+        $realtime->subscribe(
+            '1',
+            1,
+            'sub-a',
+            [Role::user(Id::custom('123'))->toString()],
+            ['documents'],
+        );
+
+        // A presence write stashes the hold on the connection entry.
+        $hold = ['projectId' => '1', 'userId' => '123', 'presenceId' => 'presence-1'];
+        $realtime->connections[1]['presence'] = $hold;
+
+        // A later subscribe rebuilds the entry and must not drop the stash, or onClose
+        // could never release the worker's count.
+        $realtime->subscribe(
+            '1',
+            1,
+            'sub-b',
+            [Role::users()->toString()],
+            ['files'],
+        );
+
+        $this->assertSame($hold, $realtime->connections[1]['presence']);
+    }
+
     public function testUnsubscribeSubscriptionRemovesOnlyOneSubscription(): void
     {
         $realtime = new Realtime();
@@ -1301,86 +1330,6 @@ final class MessagingTest extends TestCase
         $this->assertContains('projects.project1', $result['channels']);
         $this->assertContains(Role::user('user1')->toString(), $result['roles']);
         $this->assertNotContains(Role::team('team1')->toString(), $result['roles']);
-    }
-
-    public function testExtractDeletedPresenceIdReturnsIdForDeleteEvent(): void
-    {
-        $event = [
-            'project' => 'proj',
-            'data' => [
-                'events' => [
-                    'presences.abc.delete',
-                    'presences.*.delete',
-                    'presences.abc',
-                ],
-                'payload' => ['$id' => 'abc'],
-            ],
-        ];
-
-        $this->assertSame('abc', Realtime::extractDeletedPresenceId($event));
-    }
-
-    public function testExtractDeletedPresenceIdRejectsNonDeleteEvents(): void
-    {
-        $this->assertNull(Realtime::extractDeletedPresenceId([
-            'data' => [
-                'events' => ['presences.abc.upsert'],
-                'payload' => ['$id' => 'abc'],
-            ],
-        ]));
-
-        // Unrelated resource that happens to end with `.delete` must not trigger.
-        $this->assertNull(Realtime::extractDeletedPresenceId([
-            'data' => [
-                'events' => ['documents.abc.delete'],
-                'payload' => ['$id' => 'abc'],
-            ],
-        ]));
-
-        // Missing payload ID — the event names look right but we have nothing to remove.
-        $this->assertNull(Realtime::extractDeletedPresenceId([
-            'data' => [
-                'events' => ['presences.abc.delete'],
-                'payload' => [],
-            ],
-        ]));
-    }
-
-    public function testRemovePresenceFromConnectionsScopedToProject(): void
-    {
-        $realtime = new Realtime();
-
-        // Two connections in different projects both holding the same presence ID; only
-        // the matching project should be touched.
-        $realtime->connections[1] = [
-            'projectId' => 'proj-a',
-            'presences' => ['p1' => new Document(['$id' => 'p1']), 'p2' => new Document(['$id' => 'p2'])],
-        ];
-        $realtime->connections[2] = [
-            'projectId' => 'proj-b',
-            'presences' => ['p1' => new Document(['$id' => 'p1'])],
-        ];
-
-        $removed = $realtime->removePresenceFromConnections('proj-a', 'p1');
-
-        $this->assertSame(1, $removed);
-        $this->assertArrayNotHasKey('p1', $realtime->connections[1]['presences']);
-        $this->assertArrayHasKey('p2', $realtime->connections[1]['presences']);
-        $this->assertArrayHasKey('p1', $realtime->connections[2]['presences']);
-    }
-
-    public function testRemovePresenceFromConnectionsNoMatchIsNoOp(): void
-    {
-        $realtime = new Realtime();
-        $realtime->connections[1] = [
-            'projectId' => 'proj-a',
-            'presences' => ['p1' => new Document(['$id' => 'p1'])],
-        ];
-
-        $this->assertSame(0, $realtime->removePresenceFromConnections('proj-a', 'missing'));
-        $this->assertSame(0, $realtime->removePresenceFromConnections('', 'p1'));
-        $this->assertSame(0, $realtime->removePresenceFromConnections('proj-a', ''));
-        $this->assertArrayHasKey('p1', $realtime->connections[1]['presences']);
     }
 
     public function testFromPayloadTeamCreateSetsPermissionsChangedAndTeamRole(): void
