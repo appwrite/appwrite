@@ -33,6 +33,9 @@ class Router
     /**
      * Contains the positions of all params in the paths of all registered Routes.
      *
+     * Kept in descending order, so when several templates match a path, match() picks
+     * the one with a static segment at the leftmost position where they differ.
+     *
      * @var array<int>
      */
     protected static array $params = [];
@@ -246,6 +249,7 @@ class Router
                 $params[ltrim($part, ':')] = $key;
                 if (!\in_array($key, self::$params)) {
                     self::$params[] = $key;
+                    \rsort(self::$params);
                 }
             } else {
                 $prepare .= $part;

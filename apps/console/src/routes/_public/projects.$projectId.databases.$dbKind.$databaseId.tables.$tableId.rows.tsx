@@ -1,0 +1,301 @@
+import { type DatabaseRouteKind } from '@/lib/database-routes'
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { Workspace } from '@/components/pages/projects/$projectId/databases/View'
+import {
+  tablesQueryOptions,
+  databaseQueryOptions,
+  tableColumnsQueryOptions,
+  tableIndexesQueryOptions,
+  tableRowsQueryOptions,
+  getRelationshipColumnKeys,
+  getProjectTable,
+  tableQueryOptions,
+  projectQueryOptions,
+  organizationPlanQueryOptions,
+} from '@/lib/react-query/hooks'
+import { getConsoleAccountFromCache } from '@/lib/react-query/hooks/auth'
+import { parseTablesDbRowsListColumnsFromPrefs } from '@/lib/user-prefs-keys'
+import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import {
+  listSearchSchema,
+  parseListSearch,
+} from '@/lib/table-filters'
+import { pageTitle } from '@/lib/utils/page-title'
+import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
+import { throwRedirectCollectionsDbFromTablesChild, throwRedirectPostgresDbKind, throwRedirectMysqlDbKind } from '@/lib/database-route-redirects'
+
+const TABLES_PER_PAGE = 100
+const DEFAULT_PAGE = 1
+
+export const Route = createFileRoute(
+  '/_public/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/rows',
+)({
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(
+          (
+            loaderData as
+              | {
+                  database?: { name?: string }
+                  table?: { name?: string }
+                }
+              | undefined
+          )?.table?.name ??
+            (loaderData as { database?: { name?: string } } | undefined)
+              ?.database?.name ??
+            'Database',
+          'Databases',
+        ),
+      },
+    ],
+  }),
+  // No pendingComponent: keep the previous page visible until the loader's
+  // prefetch is done, then transition with data already in cache. See
+  // AGENTS.md → "Loading & Navigation" / "List & tab pages: never use pendingComponent".
+  validateSearch: listSearchSchema,
+  loader: async ({ params, context, search: routeSearch }) => {
+    if (typeof window === 'undefined') return
+
+    const { projectId, dbKind, databaseId, tableId } = params
+    const { queryClient } = context
+
+    if (!projectId || !databaseId) return
+
+        throwRedirectPostgresDbKind(dbKind, { projectId, databaseId, tableId })
+    throwRedirectMysqlDbKind(dbKind, { projectId, databaseId, tableId })
+
+    throwRedirectCollectionsDbFromTablesChild(dbKind, 'dataGrid', {
+      projectId,
+      dbKind,
+      databaseId,
+      tableId,
+    })
+
+    // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
+    const projectData = await queryClient.ensureQueryData(
+      projectQueryOptions(projectId),
+    )
+
+    // Fetch tables list (needed for redirect logic) - blocks navigation
+    const tablesPromise = queryClient.ensureQueryData(
+      tablesQueryOptions(
+        projectId,
+        databaseId,
+        dbKind as DatabaseRouteKind,
+        0,
+        TABLES_PER_PAGE,
+        undefined,
+      ),
+    )
+
+    // If tableId is '-', fetch first table and redirect to it if one exists
+    if (tableId === '-') {
+      // Same ordering as table workspace sidebar first page (useProjectTables)
+      const tablesData = await queryClient.ensureQueryData(
+        tablesQueryOptions(
+          projectId,
+          databaseId,
+          dbKind as DatabaseRouteKind,
+          0,
+          ROWS_DEFAULT_PAGE_SIZE,
+          undefined,
+          'asc',
+          '$createdAt',
+        ),
+      )
+      const firstTable = (tablesData.tables || [])[0] as
+        | { $id?: string }
+        | undefined
+
+      if (firstTable?.$id) {
+        throw redirect({
+          to: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/rows',
+          params: { projectId, dbKind, databaseId, tableId: firstTable.$id },
+          replace: true,
+        })
+      }
+      // No tables: stay on tables/-/rows and render Workspace with database-level content
+      await queryClient.ensureQueryData(
+        databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind),
+      )
+      const database = queryClient.getQueryData<{ name?: string }>(
+        databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind).queryKey,
+      )
+      return { database, table: undefined }
+    }
+
+    if (tableId) {
+      // Same columns query the Spreadsheet reads, so the loader and the View
+      // build the same rows query key (a mismatch means a second listRows on mount).
+      const columnsPromise = queryClient.ensureQueryData(
+        tableColumnsQueryOptions(
+          projectId,
+          databaseId,
+          dbKind as DatabaseRouteKind,
+          tableId,
+        ),
+      )
+
+      const tablesData = await tablesPromise
+
+      // The list only holds the first page of tables, so a table past it is
+      // looked up by id. Only a 404 means it is gone: redirecting on any other
+      // failure would open the oldest table instead.
+      let tableExists = tablesData.tables.some((table) => table.$id === tableId)
+      if (!tableExists) {
+        try {
+          // fetchQuery keeps the query's gcTime (setQueryData would use the
+          // client's 0 and drop it before the page mounts); staleTime 0 so a
+          // table deleted earlier in the session is not served from cache.
+          await queryClient.fetchQuery({
+            ...tableQueryOptions(
+              projectId,
+              databaseId,
+              dbKind as DatabaseRouteKind,
+              tableId,
+            ),
+            queryFn: () =>
+              getProjectTable(
+                projectId,
+                databaseId,
+                dbKind as DatabaseRouteKind,
+                tableId,
+              ),
+            staleTime: 0,
+          })
+          tableExists = true
+        } catch (error) {
+          if (!isHttpNotFoundError(error)) throw error
+        }
+      }
+      if (!tableExists) {
+        throw redirect({
+          to: '/projects/$projectId/databases/$dbKind/$databaseId/tables/$tableId/rows',
+          params: { projectId, dbKind, databaseId, tableId: '-' },
+          replace: true,
+        })
+      }
+      const { search, page, limit, filterQueries, sort } = parseListSearch(
+        routeSearch,
+        {
+          page: DEFAULT_PAGE,
+          limit: ROWS_DEFAULT_PAGE_SIZE,
+        },
+      )
+      // Must match Workspace / RowsSpreadsheet URL sort defaults so the loader
+      // and View share one query key (avoids a duplicate listRows).
+      const sortBy = sort?.sortBy ?? '$createdAt'
+      const sortOrder = sort?.sortOrder ?? 'desc'
+
+      const acct = getConsoleAccountFromCache(queryClient)
+      const listSelectAttrKeys =
+        acct?.prefs && databaseId && tableId
+          ? parseTablesDbRowsListColumnsFromPrefs(
+              acct.prefs as Record<string, unknown>,
+              databaseId,
+              tableId,
+            )
+          : null
+
+      const relationshipKeys = getRelationshipColumnKeys(
+        (await columnsPromise).columns,
+      )
+
+      await Promise.all([
+        tablesPromise,
+
+        queryClient
+          .ensureQueryData(
+            tableRowsQueryOptions(
+              projectId,
+              databaseId,
+              tableId,
+              dbKind as DatabaseRouteKind,
+              page - 1,
+              limit,
+              search ?? undefined,
+              sortOrder,
+              sortBy,
+              filterQueries,
+              listSelectAttrKeys,
+              relationshipKeys,
+            ),
+          )
+          .catch(() => {
+            // Keep the error in the React Query cache so Spreadsheet can render
+            // it (e.g. HTTP 408). Do not fail the route loader / blank the UI.
+          }),
+
+        // Database details - blocks navigation until ready
+        queryClient.ensureQueryData(
+          databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind),
+        ),
+
+        // Columns - blocks navigation until ready
+        queryClient.ensureQueryData(
+          tableColumnsQueryOptions(
+            projectId,
+            databaseId,
+            dbKind as DatabaseRouteKind,
+            tableId,
+          ),
+        ),
+
+        // Table details - blocks navigation until ready
+        queryClient.ensureQueryData(
+          tableQueryOptions(
+            projectId,
+            databaseId,
+            dbKind as DatabaseRouteKind,
+            tableId,
+          ),
+        ),
+
+        // Organization plan - CRITICAL for limit checking
+        projectData?.teamId
+          ? queryClient.ensureQueryData(
+              organizationPlanQueryOptions(projectData.teamId),
+            )
+          : Promise.resolve(),
+
+        // Prefetch indexes (optional data, not critical for rows tab) - doesn't block
+        queryClient
+          .prefetchQuery(
+            tableIndexesQueryOptions(
+              projectId,
+              databaseId,
+              dbKind as DatabaseRouteKind,
+              tableId,
+            ),
+          )
+          .catch(() => {
+            // Don't block on optional data errors
+          }),
+      ])
+      const database = queryClient.getQueryData<{ name?: string }>(
+        databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind).queryKey,
+      )
+      const table = queryClient.getQueryData<{ name?: string }>(
+        tableQueryOptions(
+          projectId,
+          databaseId,
+          dbKind as DatabaseRouteKind,
+          tableId,
+        ).queryKey,
+      )
+      return { database, table }
+    } else {
+      await tablesPromise
+    }
+  },
+  component: RowsPage,
+})
+
+function RowsPage() {
+  const { databaseId, tableId } = Route.useParams()
+
+  return (
+    <Workspace databaseId={databaseId} tableId={tableId} activeTab="rows" />
+  )
+}

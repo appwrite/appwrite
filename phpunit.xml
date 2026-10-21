@@ -28,6 +28,7 @@
         <testsuite name="e2e">
             <file>./tests/e2e/Client.php</file>
             <directory>./tests/e2e/General</directory>
+            <directory>./tests/e2e/Security</directory>
             <directory>./tests/e2e/Scopes</directory>
             <directory>./tests/e2e/Services/Teams</directory>
             <directory>./tests/e2e/Services/Realtime</directory>

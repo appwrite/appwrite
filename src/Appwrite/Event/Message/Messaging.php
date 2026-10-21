@@ -9,7 +9,6 @@ final class Messaging extends Base
     public function __construct(
         public readonly string $type,
         public readonly Document $project,
-        public readonly ?Document $user = null,
         public readonly ?string $messageId = null,
         public readonly ?Document $message = null,
         public readonly ?array $recipients = null,
@@ -21,8 +20,7 @@ final class Messaging extends Base
     {
         return [
             'type' => $this->type,
-            'project' => $this->project->getArrayCopy(),
-            'user' => $this->user?->getArrayCopy(),
+            'project' => ProjectContext::fromDocument($this->project)->toArray(),
             'messageId' => $this->messageId,
             'message' => $this->message?->getArrayCopy(),
             'recipients' => $this->recipients,
@@ -35,7 +33,6 @@ final class Messaging extends Base
         return new self(
             type: $data['type'] ?? '',
             project: new Document($data['project'] ?? []),
-            user: !empty($data['user']) ? new Document($data['user']) : null,
             messageId: $data['messageId'] ?? null,
             message: !empty($data['message']) ? new Document($data['message']) : null,
             recipients: $data['recipients'] ?? null,

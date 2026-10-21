@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class PoliciesMembershipPrivacyIntegrationTest extends Scope
 {
@@ -52,7 +52,7 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
         $password = 'password1234';
 
         $user1 = $this->client->call(Client::METHOD_POST, '/users', $serverHeaders, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $user1Email,
             'password' => $password,
             'name' => $user1Name,
@@ -70,7 +70,7 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
         $user2Phone = '+12025550102';
 
         $user2 = $this->client->call(Client::METHOD_POST, '/users', $serverHeaders, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $user2Email,
             'password' => $password,
             'name' => $user2Name,
@@ -85,7 +85,7 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
 
         // Step 3: Create team and add both users as members
         $team = $this->client->call(Client::METHOD_POST, '/teams', $serverHeaders, [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Privacy Team',
             'roles' => ['member'],
         ]);
@@ -364,7 +364,7 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
     private function createTeamWithMember(string $projectId, array $serverHeaders): array
     {
         $team = $this->client->call(Client::METHOD_POST, '/teams', $serverHeaders, [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Access Team',
             'roles' => ['member'],
         ]);
@@ -394,7 +394,7 @@ final class PoliciesMembershipPrivacyIntegrationTest extends Scope
         $password = 'password1234';
 
         $user = $this->client->call(Client::METHOD_POST, '/users', $serverHeaders, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,

@@ -2,8 +2,11 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\SMTP\Breaker;
+use Appwrite\SMTP\Refusal;
 use Appwrite\Template\Template;
 use Exception;
+use Utopia\Console\Console;
 use Utopia\Database\Document;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\SMTP;
@@ -141,6 +144,23 @@ class Mails extends Action
         // render() will return the subject in <p> tags, so use strip_tags() to remove them
         $subject = \strip_tags($subjectTemplate->render());
 
+        $breaker = null;
+        if ($type === 'smtp') {
+            Span::add('mail.smtp_host', $smtp['host']);
+
+            // A host that registers no shared cache sends without the breaker.
+            $breaker = $register->has('cache') ? new Breaker($register->get('cache'), $project->getId(), $smtp['host']) : null;
+
+            if ($breaker?->isOpen() === true) {
+                Span::add('mail.status', 'skipped');
+                Span::add('mail.breaker', 'open');
+
+                Console::warning('Mail skipped, project SMTP breaker open: project=' . $project->getId() . ' host=' . $smtp['host']);
+
+                return;
+            }
+        }
+
         // A pooled adapter belongs to this send alone; a project's own SMTP is
         // dialled for it and closed after.
         $adapter = empty($smtp) ? null : new SMTP(
@@ -218,11 +238,6 @@ class Mails extends Action
             };
 
             $result = $adapter instanceof EmailAdapter ? $send($adapter) : $register->get('smtp')->use($send);
-
-            if (($result['deliveredTo'] ?? 0) === 0) {
-                $error = $result['results'][0]['error'] ?? ($result['error'] ?? 'Unknown error');
-                throw new Exception($error);
-            }
         } catch (InvalidArgumentException $error) {
             // The address or name can never be delivered, so a retry cannot help.
             Span::add('mail.status', 'skipped');
@@ -232,13 +247,60 @@ class Mails extends Action
             return;
         } catch (\Throwable $error) {
             Span::add('mail.status', 'failure');
+            Span::add('mail.error.message', $error->getMessage());
 
-            if ($type === 'smtp') {
-                throw new Exception('Error sending mail: ' . $error->getMessage(), 401);
+            // The adapter reports a refusal in its result, classified below. What
+            // it throws instead is nothing the server said, so nothing says the
+            // next attempt fails the same way. Only NATS reports the last attempt.
+            if ($type === 'smtp' && $message->isLastAttempt()) {
+                $this->abandon($project, $smtp['host'], $error->getMessage());
+
+                return;
             }
-            throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
+
+            throw new Exception('Error sending mail: ' . $error->getMessage(), $type === 'smtp' ? 401 : 500);
+        }
+
+        if (($result['deliveredTo'] ?? 0) === 0) {
+            $failure = $result['results'][0] ?? [];
+
+            if (Refusal::isFinal($type === 'smtp', $failure)) {
+                $code = (int) ($failure['code'] ?? 0);
+                $tripped = $breaker?->record($code) === true;
+
+                Span::add('mail.status', 'refused');
+                Span::add('mail.refused', $code);
+                if ($tripped) {
+                    Span::add('mail.breaker', 'tripped');
+                }
+
+                Console::warning('Mail refused by project SMTP: project=' . $project->getId() . ' host=' . $smtp['host'] . ' code=' . $code . ($tripped ? ' breaker=tripped' : ''));
+
+                return;
+            }
+
+            Span::add('mail.status', 'failure');
+
+            $reason = $failure['error'] ?? ($result['error'] ?? 'Unknown error');
+            if ($type === 'smtp' && $message->isLastAttempt()) {
+                $this->abandon($project, $smtp['host'], $reason);
+
+                return;
+            }
+
+            throw new Exception('Error sending mail: ' . $reason, $type === 'smtp' ? 401 : 500);
         }
 
         Span::add('mail.status', 'success');
+    }
+
+    /**
+     * The project's own SMTP failed the last attempt; acknowledge instead of dead-lettering.
+     */
+    private function abandon(Document $project, string $host, string $reason): void
+    {
+        Span::add('mail.status', 'abandoned');
+
+        Console::warning('Mail abandoned after the last attempt on project SMTP: project=' . $project->getId() . ' host=' . $host . ' reason=' . $reason);
     }
 }

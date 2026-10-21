@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response;
 
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 
 abstract class Model
@@ -53,6 +54,72 @@ abstract class Model
     public function filter(Document $document): Document
     {
         return $document;
+    }
+
+    /**
+     * Whether a document of a union rule is rendered with this model.
+     * A model without conditions never matches.
+     */
+    public function matches(Document $document): bool
+    {
+        if ($this->conditions === []) {
+            return false;
+        }
+
+        foreach ($this->conditions as $attribute => $expected) {
+            $actual = $document->getAttribute($attribute);
+            if ($actual instanceof \BackedEnum) {
+                $actual = $actual->value;
+            }
+
+            $matched = \is_array($expected) ? \in_array($actual, $expected) : $actual === $expected;
+            if (!$matched) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Shape a document as this model for an event payload published outside a response,
+     * such as from a worker: the model filter, only the model's keys, and datetimes in
+     * the same ISO 8601 format the response renders.
+     *
+     * @return array<string, mixed>
+     */
+    public function payload(Document $document): array
+    {
+        $rules = $this->getRules();
+        $payload = $this->filter(new Document($document->getArrayCopy()))
+            ->only(\array_keys($rules));
+
+        foreach ($rules as $key => $rule) {
+            if ($rule['type'] !== self::TYPE_DATETIME || !\array_key_exists($key, $payload)) {
+                continue;
+            }
+
+            $payload[$key] = $rule['array'] && \is_array($payload[$key])
+                ? \array_map(self::formatDatetime(...), $payload[$key])
+                : self::formatDatetime($payload[$key]);
+        }
+
+        return $payload;
+    }
+
+    /**
+     * Datetimes created in memory (never read back through the database `datetime` filter)
+     * are in the database format `Y-m-d H:i:s.v`. Normalise them to the documented
+     * ISO 8601 format with timezone. Values already carrying the `T` separator and
+     * empty values are returned unchanged.
+     */
+    public static function formatDatetime(mixed $value): mixed
+    {
+        if (!\is_string($value) || $value === '' || ($value[10] ?? '') !== ' ') {
+            return $value;
+        }
+
+        return DateTime::formatTz($value);
     }
 
     /**
@@ -109,7 +176,8 @@ abstract class Model
         $list = [];
 
         foreach ($this->rules as $key => $rule) {
-            if ($rule['required'] ?? false) {
+            // A hidden rule is left out of the schema, so it cannot be required by it either.
+            if (($rule['required'] ?? false) && !($rule['hidden'] ?? false)) {
                 $list[] = $key;
             }
         }

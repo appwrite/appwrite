@@ -2,8 +2,8 @@
 
 namespace Utopia\Abuse\Tests\E2E\SlidingWindow;
 
-use Utopia\Abuse\Adapters\SlidingWindow;
-use Utopia\Abuse\Adapters\SlidingWindow\RedisCluster as AdapterRedisCluster;
+use Utopia\Abuse\Adapter\SlidingWindow;
+use Utopia\Abuse\Adapter\SlidingWindow\RedisCluster as AdapterRedisCluster;
 use Utopia\Abuse\Tests\E2E\Services;
 
 class RedisClusterTest extends Base
@@ -13,6 +13,7 @@ class RedisClusterTest extends Base
     /**
      * @throws \Exception
      */
+    #[\Override]
     public static function setUpBeforeClass(): void
     {
         if (isset(self::$redis)) {
@@ -27,11 +28,13 @@ class RedisClusterTest extends Base
         return new \RedisCluster(null, Services::CLUSTER_SEEDS);
     }
 
+    #[\Override]
     public function getAdapter(string $key, int $limit, int $windowSize, int $ttl): SlidingWindow
     {
         return new AdapterRedisCluster($key, $limit, $windowSize, $ttl, self::$redis);
     }
 
+    #[\Override]
     public static function tearDownAfterClass(): void
     {
         if (isset(self::$redis)) {

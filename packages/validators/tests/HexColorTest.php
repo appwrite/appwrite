@@ -24,6 +24,6 @@ final class HexColorTest extends TestCase
         $this->assertFalse($hexColor->isValid('ffff'));
         $this->assertFalse($hexColor->isArray());
 
-        $this->assertSame(\Utopia\Validator::TYPE_STRING, $hexColor->getType());
+        $this->assertSame(\Utopia\Validator\Validator::TYPE_STRING, $hexColor->getType());
     }
 }

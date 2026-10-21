@@ -3,17 +3,10 @@
 namespace Utopia\Abuse\Tests\E2E\TokenBucket;
 
 use PHPUnit\Framework\TestCase;
-use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TokenBucket;
+use Utopia\Abuse\Adapter\TokenBucket;
 
 abstract class Base extends TestCase
 {
-    /**
-     * @param  string  $key
-     * @param  int  $tokens
-     * @param  float  $refillRate
-     * @return TokenBucket
-     */
     abstract public function getAdapter(string $key, int $tokens, float $refillRate): TokenBucket;
 
     /**
@@ -22,10 +15,9 @@ abstract class Base extends TestCase
     public function testStaticKey(): void
     {
         $adapter = $this->getAdapter('tb-static-key', 2, 0.001);
-        $abuse = new Abuse($adapter);
-        $this->assertSame(false, $abuse->check());
-        $this->assertSame(false, $abuse->check());
-        $this->assertSame(true, $abuse->check());
+        $this->assertSame(false, $adapter->check()->limited);
+        $this->assertSame(false, $adapter->check()->limited);
+        $this->assertSame(true, $adapter->check()->limited);
     }
 
     /**
@@ -33,12 +25,11 @@ abstract class Base extends TestCase
      */
     public function testDynamicKey(): void
     {
-        $adapter = $this->getAdapter('tb-dynamic-key-{{ip}}', 2, 0.001);
-        $adapter->setParam('{{ip}}', '0.0.0.10');
-        $abuse = new Abuse($adapter);
-        $this->assertSame(false, $abuse->check());
-        $this->assertSame(false, $abuse->check());
-        $this->assertSame(true, $abuse->check());
+        $adapter = $this->getAdapter('tb-dynamic-key-{{ip}}', 2, 0.001)
+            ->withParams(['{{ip}}' => '0.0.0.10']);
+        $this->assertSame(false, $adapter->check()->limited);
+        $this->assertSame(false, $adapter->check()->limited);
+        $this->assertSame(true, $adapter->check()->limited);
     }
 
     /**
@@ -46,13 +37,11 @@ abstract class Base extends TestCase
      */
     public function testDynamicKeyWith2Params(): void
     {
-        $adapter = $this->getAdapter('tb-two-params-{{ip}}-{{email}}', 2, 0.001);
-        $adapter->setParam('{{ip}}', '0.0.0.10');
-        $adapter->setParam('{{email}}', 'test@test.com');
-        $abuse = new Abuse($adapter);
-        $this->assertSame(false, $abuse->check());
-        $this->assertSame(false, $abuse->check());
-        $this->assertSame(true, $abuse->check());
+        $adapter = $this->getAdapter('tb-two-params-{{ip}}-{{email}}', 2, 0.001)
+            ->withParams(['{{ip}}' => '0.0.0.10', '{{email}}' => 'test@test.com']);
+        $this->assertSame(false, $adapter->check()->limited);
+        $this->assertSame(false, $adapter->check()->limited);
+        $this->assertSame(true, $adapter->check()->limited);
     }
 
     /**
@@ -60,13 +49,12 @@ abstract class Base extends TestCase
      */
     public function testBurst(): void
     {
-        $adapter = $this->getAdapter('tb-burst-{{ip}}', 10, 0.001);
-        $adapter->setParam('{{ip}}', '0.0.0.11');
-        $abuse = new Abuse($adapter);
+        $adapter = $this->getAdapter('tb-burst-{{ip}}', 10, 0.001)
+            ->withParams(['{{ip}}' => '0.0.0.11']);
         for ($i = 0; $i < 10; $i++) {
-            $this->assertSame(false, $abuse->check());
+            $this->assertSame(false, $adapter->check()->limited);
         }
-        $this->assertSame(true, $abuse->check());
+        $this->assertSame(true, $adapter->check()->limited);
     }
 
     /**
@@ -74,42 +62,80 @@ abstract class Base extends TestCase
      */
     public function testRemaining(): void
     {
-        $adapter = $this->getAdapter('tb-remaining-{{ip}}', 3, 0.001);
-        $adapter->setParam('{{ip}}', '0.0.0.12');
-        $abuse = new Abuse($adapter);
+        $adapter = $this->getAdapter('tb-remaining-{{ip}}', 3, 0.001)
+            ->withParams(['{{ip}}' => '0.0.0.12']);
+        $adapter->reset();
 
-        $this->assertSame(2, $adapter->remaining()); // full bucket: limit - (0 + 1)
-        $this->assertSame(false, $abuse->check());   // 1 consumed
-        $this->assertSame(1, $adapter->remaining());
-        $this->assertSame(false, $abuse->check());   // 2 consumed
-        $this->assertSame(0, $adapter->remaining());
+        $this->assertSame(2, $adapter->peek()->remaining);
+        $this->assertSame(2, $adapter->peek()->remaining);
+        $this->assertSame(2, $adapter->check()->remaining);
+        $this->assertSame(1, $adapter->check()->remaining);
+        $this->assertSame(0, $adapter->check()->remaining);
+
+        $result = $adapter->check();
+        $this->assertSame(true, $result->limited);
+        $this->assertSame(3, $result->limit);
+        $this->assertSame(0, $result->remaining);
     }
 
     /**
-     * Test that tokens refill over time
+     * Test that the same instance is allowed again once its bucket refills
      */
     public function testRefill(): void
     {
-        // 1 token/sec, capacity 1: consume it, then a refill lets one more through
-        $adapter = $this->getAdapter('tb-refill-{{ip}}', 1, 1.0);
-        $adapter->setParam('{{ip}}', '0.0.0.13');
-        $abuse = new Abuse($adapter);
+        $adapter = $this->getAdapter('tb-refill-{{ip}}', 1, 1.0)
+            ->withParams(['{{ip}}' => '0.0.0.13']);
+        $adapter->reset();
 
-        $this->assertSame(false, $abuse->check()); // consume the only token
-        $this->assertSame(true, $abuse->check());  // empty, throttled
+        $now = $this->freshSecond();
+        $first = $adapter->check();
+        $this->assertSame(false, $first->limited);
+        $this->assertSame(true, $adapter->check()->limited);
 
-        sleep(2); // refill ~2 tokens (capped at capacity 1)
+        $this->waitUntil($now + 2);
 
-        $this->assertSame(false, $abuse->check()); // refilled, allowed again
+        $second = $adapter->check();
+        $this->assertSame(false, $second->limited);
+        $this->assertGreaterThan($first->reset, $second->reset);
     }
 
     /**
-     * Verify that time() returns the current time as an int
+     * Test that reset reports when the bucket is full again
      */
-    public function testTimeFormat(): void
+    public function testResetTime(): void
     {
-        $adapter = $this->getAdapter('tb-time', 1, 1.0);
-        $this->assertSame(true, \is_int($adapter->time()));
+        $tokens = 2;
+        $refillRate = 1.0;
+        $adapter = $this->getAdapter('tb-reset-time', $tokens, $refillRate);
+        $adapter->reset();
+
+        $before = \time();
+        $result = $adapter->check();
+        $after = \time();
+
+        $this->assertGreaterThanOrEqual($before, $result->reset);
+        $this->assertLessThanOrEqual($after + (int) \ceil($tokens / $refillRate) + 1, $result->reset);
+    }
+
+    /**
+     * Test that clones from withParams count independently and leave the original untouched
+     */
+    public function testParamReuse(): void
+    {
+        $base = $this->getAdapter('tb-reuse-{ip}', 1, 0.001);
+        $a = $base->withParams(['{ip}' => 'a']);
+        $key = $a->key();
+        $b = $a->withParams(['{ip}' => 'b']);
+        $a->reset();
+        $b->reset();
+
+        $this->assertSame($key, $a->key());
+        $this->assertNotSame($a->key(), $b->key());
+
+        $this->assertSame(false, $a->check()->limited);
+        $this->assertSame(true, $a->check()->limited);
+        $this->assertSame(false, $b->check()->limited);
+        $this->assertSame(true, $b->check()->limited);
     }
 
     /**
@@ -117,24 +143,20 @@ abstract class Base extends TestCase
      */
     public function testReset(): void
     {
-        $adapter = $this->getAdapter('tb-reset-test-{{ip}}', 5, 0.001);
-        $adapter->setParam('{{ip}}', '192.168.1.1');
-        $abuse = new Abuse($adapter);
+        $adapter = $this->getAdapter('tb-reset-test-{{ip}}', 5, 0.001)
+            ->withParams(['{{ip}}' => '192.168.1.1']);
 
-        // 5 OK, 6th limited
         for ($i = 0; $i < 5; $i++) {
-            $this->assertSame(false, $abuse->check());
+            $this->assertSame(false, $adapter->check()->limited);
         }
-        $this->assertSame(true, $abuse->check());
+        $this->assertSame(true, $adapter->check()->limited);
 
-        // Reset refills the bucket
-        $abuse->reset();
+        $adapter->reset();
 
-        // 5 more OK, then limited again
         for ($i = 0; $i < 5; $i++) {
-            $this->assertSame(false, $abuse->check());
+            $this->assertSame(false, $adapter->check()->limited);
         }
-        $this->assertSame(true, $abuse->check());
+        $this->assertSame(true, $adapter->check()->limited);
     }
 
     /**
@@ -152,9 +174,25 @@ abstract class Base extends TestCase
     public function testUnlimited(): void
     {
         $adapter = $this->getAdapter('tb-unlimited', 0, 1.0);
-        $abuse = new Abuse($adapter);
         for ($i = 0; $i < 20; $i++) {
-            $this->assertSame(false, $abuse->check());
+            $this->assertSame(false, $adapter->check()->limited);
+        }
+    }
+
+    private function freshSecond(): int
+    {
+        $start = \time();
+        while (($now = \time()) === $start) {
+            \usleep(1000);
+        }
+
+        return $now;
+    }
+
+    private function waitUntil(int $timestamp): void
+    {
+        while (\time() < $timestamp) {
+            \usleep(10000);
         }
     }
 }

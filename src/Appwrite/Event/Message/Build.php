@@ -14,6 +14,7 @@ final class Build extends Base
         public readonly string $type,
         public readonly ?Document $template = null,
         public readonly array $platform = [],
+        public readonly ?int $timeout = null,
     ) {
     }
 
@@ -22,12 +23,13 @@ final class Build extends Base
         $platform = !empty($this->platform) ? $this->platform : Config::getParam('platform', []);
 
         return [
-            'project' => $this->project->getArrayCopy(),
+            'project' => ProjectContext::fromDocument($this->project)->toArray(),
             'resource' => $this->resource->getArrayCopy(),
             'deployment' => $this->deployment->getArrayCopy(),
             'type' => $this->type,
             'template' => $this->template?->getArrayCopy(),
             'platform' => $platform,
+            'timeout' => $this->timeout,
         ];
     }
 
@@ -40,6 +42,7 @@ final class Build extends Base
             type: $data['type'] ?? '',
             template: !empty($data['template']) ? new Document($data['template']) : null,
             platform: $data['platform'] ?? [],
+            timeout: isset($data['timeout']) ? (int) $data['timeout'] : null,
         );
     }
 }

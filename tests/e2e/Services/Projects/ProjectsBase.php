@@ -3,8 +3,8 @@
 namespace Tests\E2E\Services\Projects;
 
 use Tests\E2E\Client;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Role;
 use Utopia\System\System;
 
 trait ProjectsBase
@@ -26,7 +26,7 @@ trait ProjectsBase
             return self::$cachedProjectData;
         }
 
-        $teamId = ID::unique();
+        $teamId = Id::unique();
         $team = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -42,7 +42,7 @@ trait ProjectsBase
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
-                'projectId' => ID::unique(),
+                'projectId' => Id::unique(),
                 'name' => 'Project Test',
                 'teamId' => $team['body']['$id'] ?? $teamId,
                 'region' => System::getEnv('_APP_REGION', 'default')
@@ -350,7 +350,7 @@ trait ProjectsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Project Test',
         ]);
         $this->assertEquals($this->getProject()['$id'] === 'console' ? 200 : 201, $team['headers']['status-code']);
@@ -360,7 +360,7 @@ trait ProjectsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Project Test',
             'teamId' => $team['body']['$id'],
             'region' => System::getEnv('_APP_REGION', 'default')
@@ -417,7 +417,7 @@ trait ProjectsBase
     protected function setupProject(mixed $params, ?string $teamId = null, bool $newTeam = true): string
     {
         if ($newTeam) {
-            $generatedTeamId = $teamId ?? ID::unique();
+            $generatedTeamId = $teamId ?? Id::unique();
             $team = $this->createTeamFixture(array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],

@@ -1,0 +1,25 @@
+rules:
+  - id: php.appwrite.insecure-cookie-flags
+    message: >
+      Response::addCookie() with httponly set to false, or native
+      setcookie(). Session and token cookies must stay httponly so scripts
+      cannot read them, and must go through the Response so Swoole sends
+      them on the right connection.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/**"
+        - "**/app/controllers/**"
+        - "**/app/init/**"
+    pattern-either:
+      - pattern: $RESPONSE->addCookie($NAME, $VALUE, $EXPIRE, $PATH, $DOMAIN, $SECURE, false, ...)
+      - pattern: "$RESPONSE->addCookie(..., httponly: false, ...)"
+      - pattern: "$RESPONSE->addCookie(..., httpOnly: false, ...)"
+      - pattern: setcookie(...)
+      - pattern: \setcookie(...)
+      - pattern: setrawcookie(...)
+      - pattern: \setrawcookie(...)

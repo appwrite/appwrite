@@ -1,0 +1,31 @@
+rules:
+  - id: php.appwrite.client-ip-header
+    message: >
+      Do not read proxy-forwarded client headers (X-Forwarded-For,
+      X-Real-IP, X-Client-IP, Forwarded, CF-Connecting-IP, True-Client-IP,
+      X-Cluster-Client-IP, Fastly-Client-IP, X-Forwarded-Host /
+      X-Forwarded-Proto) directly. Any client can send them. Use
+      Request::getIP() (trusted headers via _APP_TRUSTED_HEADERS) and
+      Request::getHostname() / getProtocol().
+    languages: [php]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/**"
+        - "**/app/controllers/**"
+        - "**/app/init/**"
+    patterns:
+      - pattern-either:
+          - pattern: $REQ->getHeader($HEADER, ...)
+          - pattern: $REQ->getHeaderLine($HEADER, ...)
+          - pattern: $REQ->hasHeader($HEADER)
+          - pattern: $REQ->getHeaders()[$HEADER]
+          - pattern: $REQ->getServer($HEADER, ...)
+          - pattern: $REQ->header[$HEADER]
+          - pattern: $REQ->server[$HEADER]
+      - metavariable-regex:
+          metavariable: $HEADER
+          regex: (?i)^['"](?:x-forwarded-(?:for|host|proto|port|server)|x-real-ip|x-client-ip|x-cluster-client-ip|x-originating-ip|x-remote-(?:ip|addr)|forwarded(?:-for)?|cf-connecting-ip|true-client-ip|fastly-client-ip|http_x_forwarded_(?:for|host|proto)|http_x_real_ip|http_client_ip|http_forwarded)['"]$

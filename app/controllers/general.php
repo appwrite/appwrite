@@ -52,6 +52,7 @@ use Appwrite\Utopia\Response\Filters\V25 as ResponseV25;
 use Appwrite\Utopia\Response\Filters\V26 as ResponseV26;
 use Appwrite\Utopia\Response\Filters\V27 as ResponseV27;
 use Appwrite\Utopia\Response\Filters\V28 as ResponseV28;
+use Appwrite\Utopia\Response\Filters\V29 as ResponseV29;
 use Appwrite\Utopia\View;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
@@ -59,12 +60,12 @@ use Swoole\Http\Request as SwooleRequest;
 use Swoole\Table;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
@@ -74,8 +75,8 @@ use Utopia\Locale\Locale;
 use Utopia\Platform\Service;
 use Utopia\Span\Span;
 use Utopia\System\System;
-use Utopia\Validator;
 use Utopia\Validator\Text;
+use Utopia\Validator\Validator;
 
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
@@ -270,7 +271,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
                 $sessionExists = false;
                 $jwtSessionId = $payload['sessionId'] ?? '';
-                if (!empty($jwtSessionId) && !empty($user->find('$id', $jwtSessionId, 'sessions'))) {
+                if (!empty($jwtSessionId) && \array_any($user->getAttribute('sessions', []), static fn (Document $session): bool => $session->getId() === $jwtSessionId)) {
                     $sessionExists = true;
                 }
 
@@ -278,10 +279,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
                 if (!$project->isEmpty() && !$user->isEmpty()) {
                     $teamId = $project->getAttribute('teamId', '');
-                    $membership = $user->find('teamId', $teamId, 'memberships');
-                    if (!empty($membership)) {
-                        $membershipExists = true;
-                    }
+                    $membershipExists = \array_any($user->getAttribute('memberships', []), static fn (Document $membership): bool => $membership->getAttribute('teamId') === $teamId);
                 }
 
                 if ($userExists && $sessionExists && $membershipExists) {
@@ -383,7 +381,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             }
         }
 
-        $executionId = ID::unique();
+        $executionId = Id::unique();
 
         $headers = \array_merge([], $requestHeaders);
         $headers['x-appwrite-execution-id'] = $executionId;
@@ -998,6 +996,9 @@ Http::init()
          */
         $responseFormat = $request->getHeaderLine('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
+            if (version_compare($responseFormat, '2.4.0', '<')) {
+                $response->addFilter(new ResponseV29());
+            }
             if (version_compare($responseFormat, '2.3.0', '<')) {
                 $response->addFilter(new ResponseV28());
             }
@@ -1179,7 +1180,7 @@ Http::init()
                    }
                }
 
-               $ruleId = $isMd5 ? md5($domain->get()) : ID::unique();
+               $ruleId = $isMd5 ? md5($domain->get()) : Id::unique();
                $document = new Document([
                    '$id' => $ruleId,
                    'domain' => $domain->get(),
@@ -1297,6 +1298,9 @@ Http::error()
                 break;
             case Utopia\Database\Exception\Timeout::class:
                 $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
+                break;
+            case Utopia\Database\Exception\Structure::class:
+                $error = new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, $message, previous: $error);
                 break;
         }
 

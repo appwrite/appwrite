@@ -1,0 +1,61 @@
+---
+layout: article
+title: Architecture
+description: Understand how partner platforms connect to Appwrite with OAuth connect, Partners keys, and project API keys.
+---
+
+Partner platforms sit above Appwrite organizations and projects. Your backend creates the organization-level resources, then uses project credentials to manage each customer's Appwrite backend.
+
+# High-level flow {% #high-level-flow %}
+
+1. **Your platform** authenticates with Appwrite using an OAuth token (user-linked) or a Partners key (platform-owned).
+2. **Console APIs** manage the organization, its members, and the projects inside it.
+3. **Project APIs** manage databases, storage, functions, auth users, and other resources inside each project.
+4. **Your product UI** exposes a subset of these capabilities to your customers.
+
+# OAuth connect architecture {% #oauth-connect-architecture %}
+
+With OAuth connect, a user signs in to Appwrite and grants your OAuth app permission to act on their organizations:
+
+- Your platform stores refresh tokens on the server
+- Console API calls use the user's delegated access
+- Scopes limit which organizations your app can access and which operations it can perform
+- Users can revoke the grant from Appwrite at any time
+
+This model fits products where customers bring their own Appwrite organization or want explicit consent before you manage their infrastructure.
+
+Learn more in [OAuth connect](/docs/partners/oauth-connect).
+
+# Partners key architecture {% #partners-key-architecture %}
+
+With a Partners key, your platform acts as a trusted backend inside your own Appwrite organization:
+
+- You create a project per customer and provision the resources it needs
+- A Partners key authenticates Console API calls against one organization
+- You map customers in your database to Appwrite project IDs
+- Your backend calls Appwrite APIs on behalf of your product's UI
+
+This model fits multi-tenant platforms that provision isolated Appwrite projects per customer.
+
+Learn more in [Partners keys](/docs/partners/org-api-keys).
+
+# Two credentials, two boundaries {% #two-credentials-two-boundaries %}
+
+Partner platforms hold two kinds of credential, and each one reaches a different layer.
+
+| Credential | Client setup | Reaches |
+| ---------- | ------------ | ------- |
+| Partners key | `setOrganization('<ORGANIZATION_ID>')` and `setKey()` | The organization, its members, and each project's existence, name, and region |
+| Project API key | `setProject('<PROJECT_ID>')` and `setKey()` | Databases, storage, functions, users, messaging, and proxy rules in one project |
+
+A Partners key carries no project, so it never sends a project ID. It creates and deletes projects but cannot see inside them. Use it for provisioning, then switch to a project API key for the resources the customer works with every day.
+
+# Security considerations {% #security-considerations %}
+
+Both credentials belong on your server and nowhere else. [Keep the key safe](/docs/partners/org-api-keys#keep-the-key-safe) covers scoping, storage, and rotation.
+
+# Next steps {% #next-steps %}
+
+{% arrow_link href="/docs/partners/project/create" %}
+Create a project
+{% /arrow_link %}

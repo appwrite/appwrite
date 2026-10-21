@@ -9,7 +9,7 @@ use Appwrite\Platform\Appwrite;
 use Appwrite\Workers\Jobs;
 use Swoole\Runtime;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Service;

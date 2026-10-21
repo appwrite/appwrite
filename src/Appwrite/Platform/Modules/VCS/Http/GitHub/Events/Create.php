@@ -10,7 +10,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -129,7 +129,15 @@ class Create extends Action
                 $projectId = $installation->getAttribute('projectId', '');
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
-                if (!$project->isEmpty() && $this->isProjectInCurrentRegion($project)) {
+                // Every region gets the delivery, and the installation and repository
+                // rows are shared, so each region removes only its own projects'
+                // ones - or a region that runs later would find nothing to unlink
+                // its resources from. A deleted project's rows go wherever this runs.
+                if (!$project->isEmpty() && !$this->isProjectInCurrentRegion($project)) {
+                    continue;
+                }
+
+                if (!$project->isEmpty()) {
                     $dbForProject = $getProjectDB($project);
 
                     foreach (['functions', 'sites'] as $collection) {
@@ -235,15 +243,25 @@ class Create extends Action
         Span::add('vcs.github.event.branch', $providerBranch);
         Span::add('vcs.github.event.installation.id', $providerInstallationId);
 
-        $vcs = $vcsFactory->fromInstallation(new Document([
-            'provider' => 'github',
-            'providerInstallationId' => $providerInstallationId,
-        ]));
-
         // Find associated repositories
         $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
             Query::equal('providerRepositoryId', [$providerRepositoryId]),
             Query::limit(100),
+        ]));
+
+        // Only the region hosting a linked project acts on the event, so every other region skips building the adapter.
+        $isLinked = \array_any($repositories, function (Document $repository) use ($dbForPlatform, $authorization) {
+            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $repository->getAttribute('projectId', '')));
+
+            return !$project->isEmpty() && $this->isProjectInCurrentRegion($project);
+        });
+        if (!$isLinked) {
+            return;
+        }
+
+        $vcs = $vcsFactory->fromInstallation(new Document([
+            'provider' => 'github',
+            'providerInstallationId' => $providerInstallationId,
         ]));
 
         // Create new deployment only on push (not committed by us) and not when branch is deleted
@@ -289,6 +307,21 @@ class Create extends Action
                 return;
             }
 
+            $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
+                Query::equal('providerRepositoryId', [$providerRepositoryId]),
+                Query::orderDesc('$createdAt')
+            ]));
+
+            // Only the region hosting a linked project acts on the event, so every other region skips the GitHub calls below.
+            $isLinked = \array_any($repositories, function (Document $repository) use ($dbForPlatform, $authorization) {
+                $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $repository->getAttribute('projectId', '')));
+
+                return !$project->isEmpty() && $this->isProjectInCurrentRegion($project);
+            });
+            if (!$isLinked) {
+                return;
+            }
+
             $vcs = $vcsFactory->fromInstallation(new Document([
                 'provider' => 'github',
                 'providerInstallationId' => $providerInstallationId,
@@ -303,17 +336,18 @@ class Create extends Action
             $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
             $providerCommitMessage = $commitDetails["commitMessage"] ?? '';
 
-            $prFiles = $vcs->getPullRequestFiles($providerRepositoryOwner, $providerRepositoryName, $providerPullRequestId);
+            try {
+                $prFiles = $vcs->getPullRequestFiles($providerRepositoryOwner, $providerRepositoryName, $providerPullRequestId);
+            } catch (\Throwable $e) {
+                // Without affected files, path triggers can't filter, so resources are listed on the pull request whatever paths they watch.
+                Console::warning("Failed to fetch files of pull request '{$providerPullRequestId}': " . $e->getMessage());
+                $prFiles = [];
+            }
             $providerAffectedFiles = [
                 ...array_column($prFiles, 'filename'),
                 // Only renamed files include previous_filename; skip missing values from other file changes.
                 ...array_filter(array_column($prFiles, 'previous_filename'))
             ];
-
-            $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
-                Query::equal('providerRepositoryId', [$providerRepositoryId]),
-                Query::orderDesc('$createdAt')
-            ]));
 
             $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, $external, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory);
         } elseif ($action == "closed") {

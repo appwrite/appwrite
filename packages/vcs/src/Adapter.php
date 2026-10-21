@@ -6,7 +6,7 @@ use Exception;
 use Psr\Http\Client\ClientExceptionInterface;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Command;
+use Utopia\Console\Command;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\Psr7\Stream\Factory as StreamFactory;
 
@@ -308,6 +308,19 @@ abstract class Adapter
      * state can be one of: error, failure, pending, success
      */
     abstract public function updateCommitStatus(string $repositoryName, string $SHA, string $owner, string $state, string $description = '', string $target_url = '', string $context = ''): void;
+
+    /**
+     * Reports a build check on a commit
+     * state can be one of: queued, pending, success, failure, error, cancelled
+     *
+     * A provider with plain commit statuses carries the title as the status
+     * description and drops the summary; queued is pending there. A provider
+     * with check runs overrides this to carry the summary and a conclusion.
+     */
+    public function updateCheck(string $owner, string $repositoryName, string $SHA, string $state, string $name, string $title, string $summary = '', string $detailsUrl = ''): void
+    {
+        $this->updateCommitStatus($repositoryName, $SHA, $owner, $state === 'queued' ? 'pending' : $state, $title, $detailsUrl, $name);
+    }
 
     /**
      * Creates a check run for a commit.

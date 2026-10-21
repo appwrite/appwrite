@@ -14,6 +14,7 @@ use Utopia\Cache\Feature\Batchable;
 use Utopia\Cache\Feature\Telemetry as TelemetryFeature;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
+use Utopia\Telemetry\Counter;
 use Utopia\Telemetry\UpDownCounter;
 
 /**
@@ -48,6 +49,8 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
     private Telemetry $telemetry;
 
     private ?UpDownCounter $pendingDepth = null;
+
+    private ?Counter $writeFailures = null;
 
     /**
      * @param  float  $timeout connect timeout in seconds
@@ -120,6 +123,7 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
     {
         $this->telemetry = $telemetry;
         $this->pendingDepth = null;
+        $this->writeFailures = null;
     }
 
     private function getPendingDepth(): UpDownCounter
@@ -128,6 +132,23 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
             'cache.redis_multiplexing.pending.depth',
             description: 'Pending response channels awaiting RESP frames on the multiplexed connection.',
         );
+    }
+
+    private function getWriteFailures(): Counter
+    {
+        return $this->writeFailures ??= $this->telemetry->createCounter(
+            'cache.redis_multiplexing.write.failures',
+            description: 'Writes reported as false, by operation and the error that failed them.',
+        );
+    }
+
+    #[\Override]
+    protected function recordWriteFailure(string $operation, Throwable $error): void
+    {
+        $this->getWriteFailures()->add(1, [
+            'operation' => $operation,
+            'error' => new \ReflectionClass($error)->getShortName(),
+        ]);
     }
 
     /**
@@ -233,7 +254,9 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
             }
 
             return $data;
-        } catch (Throwable) {
+        } catch (Throwable $error) {
+            $this->recordWriteFailure('save', $error);
+
             return false;
         }
     }
@@ -269,7 +292,9 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
             }
 
             return $data;
-        } catch (Throwable) {
+        } catch (Throwable $error) {
+            $this->recordWriteFailure('saveMany', $error);
+
             return false;
         }
     }

@@ -15,7 +15,7 @@ final class Execution extends Base
     public function toArray(): array
     {
         return [
-            'project' => $this->project->getArrayCopy(),
+            'project' => ProjectContext::fromDocument($this->project)->toArray(),
             'execution' => $this->execution->getArrayCopy(),
         ];
     }

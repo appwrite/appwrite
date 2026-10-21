@@ -109,10 +109,7 @@ class Update extends Action
             throw new Exception(Exception::USER_AUTHENTICATOR_ALREADY_VERIFIED);
         }
 
-        $success = (match ($type) {
-            Type::TOTP => Challenge\TOTP::verify($user, $otp),
-            default => false
-        });
+        $success = Challenge\TOTP::verify($user, $otp);
 
         if (!$success) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
