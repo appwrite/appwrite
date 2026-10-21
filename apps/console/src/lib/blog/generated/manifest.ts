@@ -76,7 +76,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "slug": "announcing-verification-and-recovery-codes",
     "href": "/blog/post/announcing-verification-and-recovery-codes",
     "title": "Announcing 6-digit codes for email verification and password recovery",
-    "description": "Appwrite Auth can email a 6-digit code to verify an email address or reset a forgotten password, so mobile and desktop apps finish both flows without a redirect page or a deep link.",
+    "description": "Appwrite Auth can email a 6-digit code for email verification and password recovery, so mobile and desktop apps can handle both without a redirect page or a deep link.",
     "date": "2026-10-15",
     "lastUpdated": "2026-10-15",
     "timeToRead": 4,
