@@ -17,7 +17,7 @@ RUN composer config source-fallback true && \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:1.4.3 AS base
+FROM appwrite/base:1.4.5 AS base
 
 # Refresh both the trust anchors and the prebuilt bundle used by TLS clients.
 RUN apk add --upgrade --no-cache 'ca-certificates>=20261020-r0' 'ca-certificates-bundle>=20261020-r0' && \

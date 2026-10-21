@@ -1,3 +1,21 @@
+# Version 1.9.9
+
+## What's Changed
+
+### Notable changes
+
+* Precautionary update to PHP 8.5.12. Appwrite is not affected by [CVE-2026-109618](https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w) or [CVE-2026-109619](https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp) ("PHP2Shell"), because it serves requests through Swoole rather than PHP's web SAPIs (mod_php, PHP-FPM, CGI). This release keeps the runtime on the patched version anyway.
+* Upgrading from 1.9.8 reuses migration V25 and introduces no schema changes.
+
+### Fixes
+
+* Update the base image to `appwrite/base:1.4.5`, which ships PHP 8.5.12 ([appwrite/docker-base#126](https://github.com/appwrite/docker-base/pull/126)) and the hardened ImageMagick policy from 1.4.4.
+
+### Miscellaneous
+
+* Retain Console 8.7.37 for compatibility with the 1.9 server APIs.
+* Update release metadata and installation examples for 1.9.9.
+
 # Version 1.9.8
 
 ## What's Changed
