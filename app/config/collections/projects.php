@@ -404,6 +404,7 @@ return [
             Index::key(key: '_key_transaction', attributes: ['transactionInternalId']),
         ],
     ],
+
     'videos' => [
         '$collection' => Id::custom(Database::METADATA),
         '$id' => Id::custom('videos'),
