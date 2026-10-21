@@ -8,6 +8,105 @@ Apple Push Notification service (APNs) lets you send push notifications to Apple
 APNs is a best-effort service, and will attempt to deliver you messages to your device when it's online and available again.
 APNs will save the last message for 30 days or less and attempt delivery as soon as it's online.
 
+# One-click setup with the CLI {% #one-click-setup %}
+
+The [Appwrite CLI](/docs/tooling/command-line/installation) sets up APNs for an iOS app in one command, from version 28.5.0. Run it from your app's project folder:
+
+```bash
+appwrite init apns
+```
+
+The command reads the bundle ID and team ID from your Xcode project (or `app.json` for Expo), and the key ID from the `AuthKey_<KEYID>.p8` file name. It then:
+
+- Creates or updates two APNs providers, **production** and **sandbox**, and enables them.
+- Adds the `aps-environment` entitlement and the `remote-notification` background mode to your Xcode target.
+- Adds an Apple platform for the bundle ID to your project if it has none. Without one, Appwrite rejects your app's requests, device registration included.
+- Checks with Apple that the bundle ID is registered as an App ID with Push Notifications turned on. APNs rejects pushes for any other bundle ID with `TopicDisallowed`. The CLI asks before it signs in to Apple or changes anything.
+
+Running the command again updates the existing providers instead of creating duplicates. Pass `--force` to replace the key on providers that are already set up.
+
+## Use a key you already have {% #existing-key %}
+
+```bash
+appwrite init apns --key-path ~/keys/AuthKey_Q4GAU66T2N.p8 --team-id ABCDE12345
+```
+
+## Create the key with your Apple ID {% #create-key %}
+
+With `--create-key`, the CLI signs in with your Apple ID (password and two-factor code) and creates the APNs key for you, so you don't need to visit the Apple Developer portal. This option is experimental.
+
+```bash
+appwrite init apns --create-key
+```
+
+The sign-in is saved in `~/.appwrite/apns/<setup>/` with `0600` permissions, so later runs skip the password and two-factor code until Apple expires the session. Pass `--reset` to sign in again. When no key is found and `--create-key` isn't passed, the CLI offers the same option next to creating the key in the browser or picking a file.
+
+The CLI can talk to Apple in three interchangeable ways: `appwrite` (the default), `expo` (`@expo/apple-utils`) or `fastlane` (spaceship). Pick one with `--provider` or the `APPWRITE_APNS_SETUP` environment variable. If one stops working, switch to another.
+
+```bash
+appwrite init apns --create-key --provider fastlane
+```
+
+## Options {% #cli-options %}
+
+{% table %}
+* Flag
+* Description
+* When omitted
+---
+* `--bundle-id <id>`
+* iOS bundle ID.
+* `PRODUCT_BUNDLE_IDENTIFIER` of the app target, or Expo `ios.bundleIdentifier`. With several apps, a picker. With none, asked.
+---
+* `--team-id <id>`
+* 10-character Apple Developer team ID.
+* The target's `DEVELOPMENT_TEAM`, Expo `ios.appleTeamId`, or the team on an existing provider. With `--create-key`, picked during the Apple sign-in.
+---
+* `--key-path <file>`
+* An existing APNs auth key (`.p8`).
+* A valid `.p8` in the project folder. Otherwise asked.
+---
+* `--key-id <id>`
+* 10-character key ID.
+* From the `AuthKey_<KEYID>.p8` file name, otherwise asked. A created key uses Apple's ID.
+---
+* `--create-key`
+* Create the key by signing in with your Apple ID.
+* Offered when no key is found.
+---
+* `--provider <setup>`
+* `appwrite`, `expo` or `fastlane`.
+* `APPWRITE_APNS_SETUP`, then `appwrite`.
+---
+* `--environment <env>`
+* `production`, `sandbox` or `all`.
+* `all`
+---
+* `--reset`
+* Sign in to Apple again instead of reusing the saved sign-in. Implies `--create-key`.
+* The saved sign-in is reused.
+---
+* `--register-app-id`
+* Register the App ID and turn on Push Notifications without asking. Fails if that can't be done.
+* Checked on every run, and asked before any change.
+---
+* `--force`
+* Replace the key on providers that are already set up.
+* A rerun only checks the App ID.
+{% /table %}
+
+`--create-key` and `--reset` can't be combined with `--key-path` or `--key-id`.
+
+## Run in CI {% #ci %}
+
+`APPWRITE_APPLE_ID` and `APPWRITE_APPLE_PASSWORD` answer the Apple ID and password prompts, and the CLI never prints their values. The two-factor code always needs a terminal, so in CI pass `--key-path` instead. The App ID check then reports that it was skipped and why, and only fails the command when `--register-app-id` is passed.
+
+## What the CLI leaves to you {% #after-cli %}
+
+To deliver messages while the app is in the background or swiped away, add a Notification Service Extension whose class extends `AppwriteNotificationService`, and put the app and the extension in one App Group, named by `AppwritePushAppGroup` in both `Info.plist` files. The CLI prints this as a hint when it finishes.
+
+To set up APNs from the Console instead, follow the steps below.
+
 {% section #add-provider step=1 title="Add provider" %}
 
 To add APNs as a provider, navigate to **Messaging** > **Providers** > {% icon icon="plus" size="m" /%} **Create provider** > **Push notification**.
