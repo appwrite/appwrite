@@ -522,6 +522,7 @@ return [
         'attributes' => [
             Attribute::id(key: 'userInternalId', required: true),
             Attribute::string(key: 'userId'),
+            Attribute::integer(key: 'connections', default: 0, signed: false),
             Attribute::datetime(key: 'expiresAt'),
             Attribute::string(key: 'status'),
             Attribute::string(key: 'source', required: true),

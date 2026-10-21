@@ -596,6 +596,59 @@ final class StorageCustomServerTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
     }
 
+    public function testDeleteBucketKeepsBucketsSharingItsPrefix(): void
+    {
+        $headers = array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $deletedId = Id::unique();
+        $keptId = $deletedId . '2';
+        $files = [];
+
+        foreach ([$deletedId, $keptId] as $bucketId) {
+            $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+                'content-type' => 'application/json',
+            ], $headers), [
+                'bucketId' => $bucketId,
+                'name' => 'Prefix ' . $bucketId,
+                'fileSecurity' => false,
+            ]);
+            $this->assertSame(201, $bucket['headers']['status-code']);
+
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+                'content-type' => 'multipart/form-data',
+            ], $headers), [
+                'fileId' => Id::unique(),
+                'file' => new CURLFile('data://text/plain;base64,' . \base64_encode('in ' . $bucketId), 'text/plain', 'file.txt'),
+            ]);
+            $this->assertSame(201, $file['headers']['status-code']);
+
+            $files[$bucketId] = $file['body']['$id'];
+        }
+
+        $uploads = getDevice(APP_STORAGE_UPLOADS . '/app-' . $this->getProject()['$id']);
+        $stored = fn (string $bucketId): array => $uploads->listFiles($uploads->getRoot() . '/' . $bucketId . '/', 10)->files;
+
+        $this->assertNotEmpty($stored($deletedId), 'The file is not visible under ' . $uploads->getRoot() . '/' . $deletedId);
+        $this->assertNotEmpty($stored($keptId), 'The file is not visible under ' . $uploads->getRoot() . '/' . $keptId);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $deletedId, array_merge([
+            'content-type' => 'application/json',
+        ], $headers));
+        $this->assertSame(204, $response['headers']['status-code']);
+
+        $this->assertEventually(function () use ($stored, $deletedId): void {
+            $this->assertSame([], $stored($deletedId));
+        }, 60000, 500);
+
+        $this->assertNotEmpty($stored($keptId), 'Deleting bucket ' . $deletedId . ' also deleted the files of bucket ' . $keptId);
+
+        $download = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $keptId . '/files/' . $files[$keptId] . '/download', $headers);
+        $this->assertSame(200, $download['headers']['status-code']);
+        $this->assertSame('in ' . $keptId, $download['body']);
+    }
+
     /**
      * Regression for chunked uploads under the antivirus size limit.
      *

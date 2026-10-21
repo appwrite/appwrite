@@ -404,4 +404,185 @@ return [
             Index::key(key: '_key_transaction', attributes: ['transactionInternalId']),
         ],
     ],
+
+    'videos' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('videos'),
+        'name' => 'Videos',
+        'attributes' => [
+            Attribute::string(key: 'bucketId'),
+            Attribute::string(key: 'bucketInternalId'),
+            Attribute::string(key: 'fileId'),
+            Attribute::string(key: 'fileInternalId'),
+            Attribute::string(key: 'name', size: 2048),
+            Attribute::integer(key: 'size', width: IntegerWidth::Bits64, signed: false),
+            Attribute::boolean(key: 'captionsExtracted', default: false),
+            // Timeline job state: pending, started, ready, skipped (no video
+            // track) or error, with the user-facing reason on error.
+            Attribute::string(key: 'timelineStatus'),
+            Attribute::string(key: 'timelineError', size: 2048),
+            Attribute::string(key: 'format'),
+            Attribute::integer(key: 'duration', width: IntegerWidth::Bits64, signed: false),
+            Attribute::integer(key: 'width', signed: false),
+            Attribute::integer(key: 'height', signed: false),
+            Attribute::string(key: 'aspectRatio'),
+            Attribute::string(key: 'videoCodec'),
+            Attribute::string(key: 'videoFormat'),
+            Attribute::string(key: 'videoFormatProfile'),
+            Attribute::integer(key: 'videoBitRate', width: IntegerWidth::Bits64, signed: false),
+            Attribute::string(key: 'videoFrameRateMode'),
+            Attribute::string(key: 'videoFrameRate'),
+            Attribute::string(key: 'audioCodec'),
+            Attribute::string(key: 'audioFormat'),
+            Attribute::integer(key: 'audioBitRate', width: IntegerWidth::Bits64, signed: false),
+            Attribute::string(key: 'audioSampleRate'),
+            Attribute::string(key: 'search', size: 16384),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_bucket_file', attributes: ['bucketId', 'fileId']),
+            Index::fulltext(key: '_key_search', attributes: ['search']),
+        ],
+    ],
+
+    'videosTimelines' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('videosTimelines'),
+        'name' => 'Videos Timelines',
+        'attributes' => [
+            Attribute::string(key: 'videoId', required: true),
+            Attribute::string(key: 'videoInternalId', required: true),
+            Attribute::string(key: 'name'),
+            Attribute::string(key: 'path', size: 2048),
+            Attribute::integer(key: 'size', width: IntegerWidth::Bits64, signed: false, default: 0),
+        ],
+        'indexes' => [
+            Index::unique(key: '_key_video_name', attributes: ['videoId', 'name']),
+            Index::key(key: '_key_videoInternalId', attributes: ['videoInternalId']),
+        ],
+    ],
+
+    'videosRenditions' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('videosRenditions'),
+        'name' => 'Videos Renditions',
+        'attributes' => [
+            Attribute::string(key: 'videoId', required: true),
+            Attribute::string(key: 'videoInternalId', required: true),
+            Attribute::string(key: 'profileId'),
+            Attribute::string(key: 'profileInternalId'),
+            Attribute::string(key: 'name'),
+            Attribute::datetime(key: 'startedAt'),
+            Attribute::datetime(key: 'endedAt'),
+            Attribute::string(key: 'path', size: 2048),
+            Attribute::string(key: 'targetDuration'),
+            Attribute::integer(key: 'width', signed: false),
+            Attribute::integer(key: 'height', signed: false),
+            Attribute::integer(key: 'videoBitRate', width: IntegerWidth::Bits64, signed: false),
+            Attribute::integer(key: 'audioBitRate', width: IntegerWidth::Bits64, signed: false),
+            // Holds the parsed HLS stream list or the full DASH MPD, so this needs
+            // room well beyond the 4096 the original schema allowed.
+            Attribute::string(key: 'metadata', size: 65535, filters: [Filter::Json]),
+            Attribute::string(key: 'status'),
+            // User-facing reason when status is error or aborted; internal
+            // detail stays on the worker span.
+            Attribute::string(key: 'error', size: 2048),
+            Attribute::string(key: 'progress'),
+            Attribute::string(key: 'output', required: true),
+            // Snapshot of the profile codec at create time so playback does
+            // not follow a later profile edit.
+            Attribute::string(key: 'codec'),
+            // Bytes of this rendition on the videos device. StatsResources
+            // sums it into the videos.storage gauge.
+            Attribute::integer(key: 'size', width: IntegerWidth::Bits64, signed: false, default: 0),
+        ],
+        'indexes' => [
+            Index::unique(key: '_key_video_output_profile', attributes: ['videoId', 'output', 'profileId']),
+            Index::key(key: '_key_videoInternalId', attributes: ['videoInternalId']),
+            Index::key(key: '_key_status', attributes: ['status']),
+            Index::key(key: '_key_status_updatedAt', attributes: ['status', '$updatedAt']),
+        ],
+    ],
+
+    'videosRenditionsSegments' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('videosRenditionsSegments'),
+        'name' => 'Videos Renditions Segments',
+        'attributes' => [
+            Attribute::string(key: 'renditionId', required: true),
+            Attribute::string(key: 'renditionInternalId', required: true),
+            Attribute::string(key: 'fileName', required: true),
+            Attribute::string(key: 'path', size: 2048, required: true),
+            Attribute::string(key: 'duration'),
+            Attribute::integer(key: 'streamId', signed: false, default: 0),
+            Attribute::integer(key: 'isInit', signed: false, default: 0),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_renditionId', attributes: ['renditionId']),
+            Index::key(key: '_key_renditionInternalId_stream', attributes: ['renditionInternalId', 'streamId']),
+        ],
+    ],
+
+    'videosProfiles' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('videosProfiles'),
+        'name' => 'Videos Profiles',
+        'attributes' => [
+            Attribute::string(key: 'name', size: 128),
+            Attribute::integer(key: 'videoBitRate', width: IntegerWidth::Bits64, signed: false),
+            Attribute::integer(key: 'audioBitRate', width: IntegerWidth::Bits64, signed: false),
+            Attribute::integer(key: 'width', signed: false),
+            Attribute::integer(key: 'height', signed: false),
+            Attribute::string(key: 'codec'),
+            Attribute::string(key: 'search', size: 16384),
+        ],
+        'indexes' => [
+            Index::unique(key: '_key_profile', attributes: ['width', 'height', 'videoBitRate', 'audioBitRate', 'codec']),
+            Index::fulltext(key: '_key_search', attributes: ['search']),
+        ],
+    ],
+
+    'videosCaptions' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('videosCaptions'),
+        'name' => 'Videos Captions',
+        'attributes' => [
+            Attribute::string(key: 'videoId', required: true),
+            Attribute::string(key: 'videoInternalId', required: true),
+            Attribute::string(key: 'bucketId'),
+            Attribute::string(key: 'bucketInternalId'),
+            Attribute::string(key: 'fileId'),
+            Attribute::string(key: 'fileInternalId'),
+            Attribute::string(key: 'path', size: 2048),
+            Attribute::string(key: 'name', size: 128),
+            Attribute::string(key: 'code'),
+            Attribute::boolean(key: 'default', default: false),
+            Attribute::string(key: 'targetDuration'),
+            Attribute::string(key: 'status'),
+            Attribute::string(key: 'error', size: 2048),
+            Attribute::integer(key: 'size', width: IntegerWidth::Bits64, signed: false, default: 0),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_videoId', attributes: ['videoId']),
+            Index::key(key: '_key_videoInternalId', attributes: ['videoInternalId']),
+            Index::key(key: '_key_status', attributes: ['status']),
+            Index::key(key: '_key_status_updatedAt', attributes: ['status', '$updatedAt']),
+        ],
+    ],
+
+    'videosCaptionsSegments' => [
+        '$collection' => Id::custom(Database::METADATA),
+        '$id' => Id::custom('videosCaptionsSegments'),
+        'name' => 'Videos Captions Segments',
+        'attributes' => [
+            Attribute::string(key: 'captionId', required: true),
+            Attribute::string(key: 'captionInternalId', required: true),
+            Attribute::string(key: 'fileName', required: true),
+            Attribute::string(key: 'path', size: 2048, required: true),
+            Attribute::string(key: 'duration'),
+        ],
+        'indexes' => [
+            Index::key(key: '_key_captionId', attributes: ['captionId']),
+            Index::key(key: '_key_captionInternalId', attributes: ['captionInternalId']),
+        ],
+    ],
 ];

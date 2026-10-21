@@ -1164,9 +1164,6 @@
   "src/lib/docs/route-meta.ts": {
     "TS2741: Property 'readingTimeMinutes' is missing in type '{ slug: string; title: string; description: string; layout: string; }' but required in type 'DocsPageMeta'.": 1
   },
-  "src/lib/domains/search.ts": {
-    "TS6133: 'useRef' is declared but its value is never read.": 1
-  },
   "src/lib/firewall/rule-presets.ts": {
     "TS2339: Property 'id' does not exist on type 'CountryPresetDef | PremiumDenyPresetDef'.": 1,
     "TS2353: Object literal may only specify known properties, and 'id' does not exist in type 'CountryPresetDef'.": 4
