@@ -8,6 +8,7 @@ use Appwrite\Event\Realtime as QueueRealtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Presences\State as PresenceState;
+use Appwrite\Presences\Store as PresenceStore;
 use Appwrite\Realtime\Message\Dispatcher;
 use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Database\Database;
@@ -31,11 +32,13 @@ class Presence extends Action
             ->param('presenceId', 'unique()', new Text(36), 'Presence document ID', true)
             ->param('metadata', null, new JSONObject(), 'Optional metadata payload', true, [], true)
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [PermissionType::Read, PermissionType::Update, PermissionType::Delete, PermissionType::Write]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('connectionId', '', new Text(256), 'Client connection ID that holds this presence; the SDK sets it per connection.', true)
             ->inject('connectionId')
             ->inject('realtime')
             ->inject('database')
             ->inject('authorization')
             ->inject('presenceState')
+            ->inject('presenceStore')
             ->inject('project')
             ->inject('publisherForUsage')
             ->inject('queueForEvents')
@@ -52,11 +55,13 @@ class Presence extends Action
         string $presenceId,
         mixed $metadata,
         ?array $permissions,
-        int $connectionId,
+        string $connectionId,
+        int $socketId,
         Realtime $realtime,
         Database $database,
         Authorization $authorization,
         PresenceState $presenceState,
+        PresenceStore $presenceStore,
         ?Document $project,
         UsagePublisher $publisherForUsage,
         QueueEvent $queueForEvents,
@@ -66,7 +71,7 @@ class Presence extends Action
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Presence requires a project context.');
         }
 
-        $userId = $realtime->connections[$connectionId]['userId'] ?? '';
+        $userId = $realtime->connections[$socketId]['userId'] ?? '';
         if (empty($userId)) {
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User must be authorized');
         }
@@ -81,7 +86,7 @@ class Presence extends Action
             'userId' => $user->getId(),
             'source' => 'realtime',
             'status' => $status,
-            'expiresAt' => DateTime::format((new \DateTime())->modify('+30 days')),
+            'expiresAt' => DateTime::format((new \DateTime())->modify('+15 minutes')),
             'hostname' => \gethostname() ?: null,
         ];
         if ($metadata !== null) {
@@ -107,7 +112,28 @@ class Presence extends Action
         $presence->removeAttribute('permissionsHash');
         $presence->removeAttribute('userInternalId');
 
-        $realtime->connections[$connectionId]['presences'][$presence->getId()] = true;
+        // The SDK sends a connection id per connection; fall back to a node-unique id so two
+        // nodes' matching socket fds cannot collide into one holder.
+        $holderId = $connectionId !== '' ? $connectionId : (\gethostname() ?: 'node') . ':' . $socketId;
+
+        // If this connection already held under a different id (a second presence with another
+        // id), release the old hold so it does not leak until the keep-alive lapses.
+        $existing = $realtime->connections[$socketId]['presence'] ?? null;
+        if ($existing !== null && ($existing['connectionId'] ?? '') !== $holderId) {
+            $presenceStore->release((string) $existing['projectId'], (string) $existing['userId'], (string) $existing['connectionId']);
+        }
+
+        $presenceStore->hold($project->getId(), $userId, $holderId, [
+            'status' => $status,
+            'metadata' => $metadata,
+        ]);
+
+        // Stash the holder on the connection so onClose can release exactly this hold.
+        $realtime->connections[$socketId]['presence'] = [
+            'connectionId' => $holderId,
+            'projectId' => $project->getId(),
+            'userId' => $userId,
+        ];
 
         $presenceState->triggerEvent(
             $queueForEvents,

@@ -6,6 +6,7 @@ use Appwrite\Auth\Key;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\Presences\Store as PresenceStore;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Utopia\Auth\Hashes\Sha;
@@ -113,6 +114,10 @@ return function (Container $container): void {
 
     $container->set('authorization', function () {
         return new Authorization();
+    }, []);
+
+    $container->set('presenceStore', function (): PresenceStore {
+        return new PresenceStore(getCache());
     }, []);
 
     $container->set('project', function (Request $request, Document $console, Authorization $authorization) use ($getProjectId, $getDbForPlatform) {
