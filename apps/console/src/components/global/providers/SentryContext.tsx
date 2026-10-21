@@ -1,5 +1,4 @@
 import { useEffect } from 'react'
-import * as Sentry from '@sentry/tanstackstart-react'
 import { useLocation } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
@@ -7,6 +6,7 @@ import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useProject } from '@/lib/react-query/hooks'
 import { organizationPlanQueryOptions } from '@/lib/react-query/hooks/organizations'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { isMarketingPage } from '@/lib/marketing/is-marketing-page'
 import {
   captureExceptionWithContext,
   isSentryReportingEnabled,
@@ -78,89 +78,109 @@ export function SentryContextProvider({
     enabled: !!currentOrgId && typeof window !== 'undefined' && features.billing,
   })
 
+  const skipMarketing = isMarketingPage({ pathname: location.pathname })
+
   // Set user context when authenticated (no PII - only IDs and status flags)
   useEffect(() => {
-    if (!isSentryEnabled()) return
-    if (isAuthenticated && accountUser) {
-      // Only set user ID - no email or name to protect privacy
-      Sentry.setUser({
-        id: accountUser.$id,
-      })
+    if (!isSentryEnabled() || skipMarketing) return
+    let cancelled = false
+    void import('@/lib/sentry/init-client').then(({ withSentryClient }) => {
+      if (cancelled) return
+      withSentryClient((Sentry) => {
+        if (isAuthenticated && accountUser) {
+          // Only set user ID - no email or name to protect privacy
+          Sentry.setUser({
+            id: accountUser.$id,
+          })
 
-      // Set additional user context (no PII)
-      Sentry.setContext('user_details', {
-        userId: accountUser.$id,
-        status: accountUser.status,
-        emailVerification: accountUser.emailVerification,
-        phoneVerification: accountUser.phoneVerification,
-        mfaEnabled: accountUser.mfa,
-        // Current organization from prefs
-        preferredOrgId: accountUser.prefs?.organization,
+          // Set additional user context (no PII)
+          Sentry.setContext('user_details', {
+            userId: accountUser.$id,
+            status: accountUser.status,
+            emailVerification: accountUser.emailVerification,
+            phoneVerification: accountUser.phoneVerification,
+            mfaEnabled: accountUser.mfa,
+            preferredOrgId: accountUser.prefs?.organization,
+          })
+          return
+        }
+        Sentry.setUser(null)
+        Sentry.setContext('user_details', null)
       })
-    } else {
-      // Clear user context when logged out
-      Sentry.setUser(null)
-      Sentry.setContext('user_details', null)
+    })
+    return () => {
+      cancelled = true
     }
-  }, [isAuthenticated, accountUser])
+  }, [isAuthenticated, accountUser, skipMarketing])
 
   // Set navigation context based on current route
   useEffect(() => {
-    if (!isSentryEnabled()) return
-    const projectId = extractProjectId(location.pathname)
+    if (!isSentryEnabled() || skipMarketing) return
+    const routeProjectId = extractProjectId(location.pathname)
     const orgId = extractOrgId(location.pathname)
     const service = extractCurrentService(location.pathname)
+    const preferredOrgId = accountUser?.prefs?.organization
+    let cancelled = false
+    void import('@/lib/sentry/init-client').then(({ withSentryClient }) => {
+      if (cancelled) return
+      withSentryClient((Sentry) => {
+        Sentry.setContext('navigation', {
+          pathname: location.pathname,
+          projectId: routeProjectId,
+          orgId,
+          service,
+          fullUrl: location.href,
+        })
 
-    // Set route context
-    Sentry.setContext('navigation', {
-      pathname: location.pathname,
-      projectId,
-      orgId,
-      service,
-      fullUrl: location.href,
+        if (routeProjectId) {
+          Sentry.setTag('project_id', routeProjectId)
+        } else {
+          Sentry.setTag('project_id', undefined)
+        }
+
+        if (orgId) {
+          Sentry.setTag('org_id', orgId)
+        } else if (preferredOrgId) {
+          Sentry.setTag('org_id', preferredOrgId as string)
+        } else {
+          Sentry.setTag('org_id', undefined)
+        }
+
+        if (service) {
+          Sentry.setTag('service', service)
+        } else {
+          Sentry.setTag('service', undefined)
+        }
+      })
     })
-
-    // Set tags for easy filtering in Sentry
-    if (projectId) {
-      Sentry.setTag('project_id', projectId)
-    } else {
-      Sentry.setTag('project_id', undefined)
+    return () => {
+      cancelled = true
     }
-
-    if (orgId) {
-      Sentry.setTag('org_id', orgId)
-    } else {
-      // Try to get org from user prefs if not in URL
-      if (accountUser?.prefs?.organization) {
-        Sentry.setTag('org_id', accountUser.prefs.organization as string)
-      } else {
-        Sentry.setTag('org_id', undefined)
-      }
-    }
-
-    if (service) {
-      Sentry.setTag('service', service)
-    } else {
-      Sentry.setTag('service', undefined)
-    }
-  }, [location.pathname, location.href, accountUser])
+  }, [location.pathname, location.href, accountUser, skipMarketing])
 
   // Set organization plan context
   useEffect(() => {
-    if (!isSentryEnabled()) return
-    if (orgPlan) {
-      Sentry.setContext('organization_plan', {
-        planId: orgPlan.$id,
-        planName: orgPlan.name,
+    if (!isSentryEnabled() || skipMarketing) return
+    let cancelled = false
+    void import('@/lib/sentry/init-client').then(({ withSentryClient }) => {
+      if (cancelled) return
+      withSentryClient((Sentry) => {
+        if (orgPlan) {
+          Sentry.setContext('organization_plan', {
+            planId: orgPlan.$id,
+            planName: orgPlan.name,
+          })
+          Sentry.setTag('billing_plan', orgPlan.name)
+          return
+        }
+        Sentry.setContext('organization_plan', null)
+        Sentry.setTag('billing_plan', undefined)
       })
-
-      // Add plan as a tag for easy filtering
-      Sentry.setTag('billing_plan', orgPlan.name)
-    } else {
-      Sentry.setContext('organization_plan', null)
-      Sentry.setTag('billing_plan', undefined)
+    })
+    return () => {
+      cancelled = true
     }
-  }, [orgPlan])
+  }, [orgPlan, skipMarketing])
 
   return <>{children}</>
 }

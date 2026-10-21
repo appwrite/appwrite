@@ -84,6 +84,7 @@ services:
       - ${_APP_DB_HOST:-postgresql}
       - appwrite-geo
       - appwrite-autogravity
+      - appwrite-exiftool
     environment:
       - _APP_DNS_EXTERNAL
       - _APP_ALLOWED_INTERNAL_ADDRESSES
@@ -173,6 +174,7 @@ services:
       - _APP_STORAGE_LIMIT
       - _APP_STORAGE_PREVIEW_LIMIT
       - _APP_AUTOGRAVITY_HOST
+      - _APP_EXIFTOOL_HOST
       - _APP_STORAGE_ANTIVIRUS
       - _APP_STORAGE_ANTIVIRUS_HOST
       - _APP_STORAGE_ANTIVIRUS_PORT
@@ -182,6 +184,7 @@ services:
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -250,6 +253,10 @@ services:
       - _APP_VCS_BITBUCKET_WEBHOOK_SECRET
       - _APP_VCS_ORIGIN_CLIENT_ID
       - _APP_VCS_ORIGIN_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_PLUGIN
+      - _APP_VCS_ENTIRE_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_ISSUER
+      - _APP_VCS_ENTIRE_ENDPOINT
       - _APP_VCS_WEBHOOK_URL
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
@@ -281,6 +288,7 @@ services:
       - appwrite
     environment:
       - VITE_CONSOLE_PROFILE=self-hosted
+      - VITE_APPWRITE_VERSION=${_APP_VERSION:-}
       - APPWRITE_ENDPOINT_SAME_ORIGIN=true
     labels:
       - traefik.enable=true
@@ -530,6 +538,7 @@ services:
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -575,6 +584,10 @@ services:
       - _APP_VCS_BITBUCKET_WEBHOOK_SECRET
       - _APP_VCS_ORIGIN_CLIENT_ID
       - _APP_VCS_ORIGIN_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_PLUGIN
+      - _APP_VCS_ENTIRE_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_ISSUER
+      - _APP_VCS_ENTIRE_ENDPOINT
       - _APP_VCS_WEBHOOK_URL
       - _APP_BUILDS_VOLUME
       - _APP_JOBS_HOST
@@ -787,6 +800,7 @@ services:
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -922,6 +936,10 @@ services:
       - _APP_VCS_BITBUCKET_WEBHOOK_SECRET
       - _APP_VCS_ORIGIN_CLIENT_ID
       - _APP_VCS_ORIGIN_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_PLUGIN
+      - _APP_VCS_ENTIRE_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_ISSUER
+      - _APP_VCS_ENTIRE_ENDPOINT
       - _APP_VCS_WEBHOOK_URL
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
@@ -943,6 +961,7 @@ services:
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -1000,6 +1019,7 @@ services:
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -1087,6 +1107,7 @@ services:
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -1377,6 +1398,7 @@ services:
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -1685,6 +1707,13 @@ services:
     networks:
       - appwrite
 
+  appwrite-exiftool:
+    container_name: appwrite-exiftool
+    image: ghcr.io/appwrite/exiftool:0.1.0
+    restart: unless-stopped
+    networks:
+      - appwrite
+
   clickhouse:
     image: clickhouse/clickhouse-server:26.4.3-alpine
     restart: unless-stopped
@@ -1788,7 +1817,7 @@ services:
     # One image carrying every orchestrator control plane. Appwrite drives the
     # jobs plane today; the per-plane images exist for Kubernetes, where each
     # scales, fails and gets RBAC on its own.
-    image: ghcr.io/open-runtimes/orchestrator/orchestrator:2.2.2
+    image: ghcr.io/open-runtimes/orchestrator/orchestrator:2.2.4
     restart: unless-stopped
     user: root
     networks:

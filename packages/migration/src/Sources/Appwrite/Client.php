@@ -6,6 +6,7 @@ use Appwrite\Client as Base;
 use Override;
 use Utopia\Client\Adapter\Curl\Client as Curl;
 use Utopia\Client\Client as HttpClient;
+use Utopia\Client\Destinations;
 use Utopia\Migration\Sources\Appwrite\Client\RedirectRefusal;
 
 class Client extends Base
@@ -16,6 +17,8 @@ class Client extends Base
      * @var (\Closure(string): array<string>)|null
      */
     private ?\Closure $resolver = null;
+
+    private ?Destinations $destinations = null;
 
     /**
      * The resolver receives the endpoint URL and returns the CURLOPT_RESOLVE
@@ -28,6 +31,17 @@ class Client extends Base
     public function setResolver(?\Closure $resolver): static
     {
         $this->resolver = $resolver;
+        $this->resetHttpClient();
+
+        return $this;
+    }
+
+    /**
+     * Confines the client's connections to these destinations, every redirect hop included.
+     */
+    public function setDestinations(Destinations $destinations): static
+    {
+        $this->destinations = $destinations;
         $this->resetHttpClient();
 
         return $this;
@@ -51,6 +65,10 @@ class Client extends Base
         $adapter = (new Curl(options: $options))->withConnectionReuse();
 
         $client = new HttpClient($followRedirects ? new RedirectRefusal($adapter) : $adapter);
+
+        if ($this->destinations !== null) {
+            $client = $client->withDestinations($this->destinations);
+        }
 
         if ($this->selfSigned) {
             $client = $client->withSslVerification(false);

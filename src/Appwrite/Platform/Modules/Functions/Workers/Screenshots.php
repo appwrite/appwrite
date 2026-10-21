@@ -8,9 +8,11 @@ use Appwrite\Event\Realtime;
 use Appwrite\Permission;
 use Appwrite\Role;
 use Appwrite\Screenshots\Client;
+use Appwrite\Screenshots\Exception as ScreenshotsException;
 use Exception;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Id;
@@ -18,6 +20,7 @@ use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Psr7\Stream;
 use Utopia\Queue\Message;
+use Utopia\Queue\PermanentFailure;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\System\System;
@@ -75,8 +78,12 @@ class Screenshots extends Action
         Span::add('deployment.id', $deploymentId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
+        // Deleted since the build queued the capture: there is nothing left to
+        // capture or to attach the screenshots to, on this attempt or any other.
         if ($deployment->isEmpty()) {
-            throw new \Exception('Deployment not found');
+            $this->abandon($project, $deploymentId, 'Deployment not found');
+
+            return;
         }
 
         $siteId = $deployment->getAttribute('resourceId');
@@ -84,7 +91,9 @@ class Screenshots extends Action
         $site = $dbForProject->getDocument('sites', $siteId);
 
         if ($site->isEmpty()) {
-            throw new \Exception('Site not found');
+            $this->abandon($project, $deploymentId, 'Site not found');
+
+            return;
         }
 
         Span::add('site.framework', $site->getAttribute('framework', ''));
@@ -109,13 +118,13 @@ class Screenshots extends Action
             ]);
 
             if ($rule->isEmpty()) {
-                throw new \Exception("Rule for deployment not found");
+                throw new PermanentFailure('Rule for deployment not found');
             }
 
             $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
 
             if ($bucket->isEmpty()) {
-                throw new \Exception('Bucket not found');
+                throw new PermanentFailure('Bucket not found');
             }
 
             $routerHost = System::getEnv('_APP_WORKER_SCREENSHOTS_ROUTER', '');
@@ -216,6 +225,12 @@ class Screenshots extends Action
             // Apply screenshot properties
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $updates);
 
+            // Deleted while the pages were captured: the update found no row,
+            // and the site must not take an empty preview from it.
+            if ($deployment->isEmpty()) {
+                throw new PermanentFailure('Deployment deleted during capture');
+            }
+
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
@@ -230,10 +245,26 @@ class Screenshots extends Action
 
             $this->recordTelemetry($counter, 'failure');
 
+            // Best-effort: a permanent failure, or the last attempt (NATS only), is acknowledged, not dead-lettered.
+            $unroutable = $th instanceof ScreenshotsException && \str_contains($th->getMessage(), 'is not publicly routable');
+            if ($th instanceof PermanentFailure || $unroutable || $message->isLastAttempt()) {
+                $this->abandon($project, $deployment->getId(), $th->getMessage());
+
+                return;
+            }
+
             throw $th;
         }
 
         $this->recordTelemetry($counter, 'success');
+    }
+
+    protected function abandon(Document $project, string $deploymentId, string $reason): void
+    {
+        Span::add('screenshot.status', 'failed');
+        Span::add('screenshot.reason', $reason);
+
+        Console::warning('Screenshot abandoned: project=' . $project->getId() . ' deployment=' . $deploymentId . ' reason=' . $reason);
     }
 
     protected function recordTelemetry(Counter $counter, string $result): void
@@ -251,6 +282,11 @@ class Screenshots extends Action
     protected function appendToLogs(Database $dbForProject, string $deploymentId, Realtime $queueForRealtime, string $logs)
     {
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+        // A deployment deleted mid-capture has no logs left to append to.
+        if ($deployment->isEmpty()) {
+            return;
+        }
 
         $buildLogs = $deployment->getAttribute('buildLogs', '');
         $buildLogs .= $logs;

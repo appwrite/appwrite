@@ -211,6 +211,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -279,6 +280,10 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_VCS_BITBUCKET_WEBHOOK_SECRET
       - _APP_VCS_ORIGIN_CLIENT_ID
       - _APP_VCS_ORIGIN_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_PLUGIN
+      - _APP_VCS_ENTIRE_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_ISSUER
+      - _APP_VCS_ENTIRE_ENDPOINT
       - _APP_VCS_WEBHOOK_URL
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
@@ -311,6 +316,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - appwrite
     environment:
       - VITE_CONSOLE_PROFILE=self-hosted
+      - VITE_APPWRITE_VERSION=2.5.0
       - APPWRITE_ENDPOINT_SAME_ORIGIN=true
     labels:
       - traefik.enable=true
@@ -531,6 +537,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -576,6 +583,10 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_VCS_BITBUCKET_WEBHOOK_SECRET
       - _APP_VCS_ORIGIN_CLIENT_ID
       - _APP_VCS_ORIGIN_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_PLUGIN
+      - _APP_VCS_ENTIRE_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_ISSUER
+      - _APP_VCS_ENTIRE_ENDPOINT
       - _APP_VCS_WEBHOOK_URL
       - _APP_BUILDS_VOLUME
       - _APP_JOBS_HOST
@@ -741,6 +752,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -786,6 +798,10 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_VCS_BITBUCKET_WEBHOOK_SECRET
       - _APP_VCS_ORIGIN_CLIENT_ID
       - _APP_VCS_ORIGIN_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_PLUGIN
+      - _APP_VCS_ENTIRE_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_ISSUER
+      - _APP_VCS_ENTIRE_ENDPOINT
       - _APP_VCS_WEBHOOK_URL
       - _APP_BUILDS_VOLUME
       - _APP_JOBS_HOST
@@ -896,6 +912,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -941,6 +958,10 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_VCS_BITBUCKET_WEBHOOK_SECRET
       - _APP_VCS_ORIGIN_CLIENT_ID
       - _APP_VCS_ORIGIN_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_PLUGIN
+      - _APP_VCS_ENTIRE_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_ISSUER
+      - _APP_VCS_ENTIRE_ENDPOINT
       - _APP_VCS_WEBHOOK_URL
       - _APP_BUILDS_VOLUME
       - _APP_JOBS_HOST
@@ -1116,6 +1137,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -1237,6 +1259,10 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_VCS_BITBUCKET_WEBHOOK_SECRET
       - _APP_VCS_ORIGIN_CLIENT_ID
       - _APP_VCS_ORIGIN_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_PLUGIN
+      - _APP_VCS_ENTIRE_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_ISSUER
+      - _APP_VCS_ENTIRE_ENDPOINT
       - _APP_VCS_WEBHOOK_URL
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
@@ -1258,6 +1284,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -1315,6 +1342,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -1402,6 +1430,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -1695,6 +1724,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -2114,7 +2144,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
     # One image carrying every orchestrator control plane. Appwrite drives the
     # jobs plane today; the per-plane images exist for Kubernetes, where each
     # scales, fails and gets RBAC on its own.
-    image: ghcr.io/open-runtimes/orchestrator/orchestrator:2.2.2
+    image: ghcr.io/open-runtimes/orchestrator/orchestrator:2.2.4
     restart: unless-stopped
     user: root
     networks:
@@ -2419,6 +2449,7 @@ _APP_STORAGE_S3_SECRET=
 _APP_STORAGE_S3_REGION=us-east-1
 _APP_STORAGE_S3_BUCKET=
 _APP_STORAGE_S3_ENDPOINT=
+_APP_STORAGE_S3_PATH_STYLE=
 _APP_STORAGE_DO_SPACES_ACCESS_KEY=
 _APP_STORAGE_DO_SPACES_SECRET=
 _APP_STORAGE_DO_SPACES_REGION=us-east-1
@@ -2529,6 +2560,10 @@ _APP_VCS_BITBUCKET_CLIENT_SECRET=
 _APP_VCS_BITBUCKET_WEBHOOK_SECRET=
 _APP_VCS_ORIGIN_CLIENT_ID=
 _APP_VCS_ORIGIN_PRIVATE_KEY=
+_APP_VCS_ENTIRE_PLUGIN=
+_APP_VCS_ENTIRE_PRIVATE_KEY=
+_APP_VCS_ENTIRE_ISSUER=
+_APP_VCS_ENTIRE_ENDPOINT=
 _APP_VCS_WEBHOOK_URL=http://appwrite/v1
 _APP_WEBHOOK_MAX_FAILED_ATTEMPTS=10
 `

@@ -21,6 +21,7 @@ use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Execution\Store as ExecutionStore;
+use Appwrite\Exiftool\Client as ExiftoolClient;
 use Appwrite\Geo\Client as GeoClient;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Messaging\Provider as MessagingProvider;
@@ -161,6 +162,17 @@ $container->set('autogravity', function (Cache $cache) {
 
     return new AutogravityDetector($client === null ? null : new AutogravityClient($client), $cache);
 }, ['cache']);
+
+$container->set('exiftool', function () {
+    $host = System::getEnv('_APP_EXIFTOOL_HOST', '');
+    $client = $host === ''
+        ? null
+        : (new Client(new SwooleClientAdapter()))
+            ->withBaseUri($host)
+            ->withTimeout(30);
+
+    return new ExiftoolClient($client);
+}, []);
 
 $container->set('telemetry', fn () => new NoTelemetry(), []);
 
@@ -417,8 +429,23 @@ function getDevice(string $root, string $connection = ''): Device
             $endpoint = System::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
             if (! empty($endpoint)) {
                 $bucketRoot = (! empty($bucket) ? "{$bucket}/" : '') . \ltrim($root, '/');
+                // A configured bucket may carry a key prefix (`bucket/prefix`); the bucket is its first segment.
+                $bucketName = \explode('/', \trim($bucket, '/'))[0];
 
-                return new S3($bucketRoot, $accessKey, $accessSecret, $endpoint, $region);
+                return new S3(
+                    $bucketRoot,
+                    $accessKey,
+                    $accessSecret,
+                    $endpoint,
+                    $region,
+                    bucket: $bucketName !== '' ? $bucketName : null,
+                    // Unset lets the device infer it from the endpoint and bucket.
+                    pathStyle: match (System::getEnv('_APP_STORAGE_S3_PATH_STYLE', '')) {
+                        'enabled' => true,
+                        'disabled' => false,
+                        default => null,
+                    },
+                );
             }
 
             return new AWS($root, $accessKey, $accessSecret, $bucket, $region);

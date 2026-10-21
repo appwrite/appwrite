@@ -11,17 +11,20 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Event;
 use Utopia\Database\Hook\Queries;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use WeakMap;
 
 /**
- * Points each join at the table of the collection it names, refusing unknown collections and, unless the caller is privileged, disabled ones.
+ * Points each join at the table of the collection whose public ID it names in the current database. Unless the caller
+ * is privileged, a collection it may not join is refused exactly as one that does not exist.
  */
 final class Joins implements Queries
 {
-    /** @var array<string, string> */
-    private array $tables = [];
+    /** @var array<string, Document> */
+    private array $collections = [];
 
     /** @var WeakMap<Query, string> */
     private WeakMap $resolved;
@@ -59,54 +62,33 @@ final class Joins implements Queries
 
     private function table(string $joined): string
     {
-        if (isset($this->tables[$joined])) {
-            return $this->tables[$joined];
-        }
+        $related = $this->collections[$joined] ??= $this->authorization->skip(
+            fn (): Document => $this->dbForProject->getDocument($this->registry(), $joined)
+        );
 
-        $related = $this->lookup($joined);
-        if ($related->isEmpty() || (!$related->getAttribute('enabled', true) && !$this->isPrivileged())) {
+        if (!$this->isJoinable($related)) {
             throw new Exception(($this->notFound)(), params: [$joined]);
         }
 
-        return $this->tables[$joined] = $this->prefix() . $related->getSequence();
+        return $this->registry() . '_collection_' . $related->getSequence();
     }
 
-    private function lookup(string $joined): Document
+    private function isJoinable(Document $related): bool
     {
-        $registry = $this->registry();
-
-        $related = $this->authorization->skip(
-            fn (): Document => $this->dbForProject->getDocument($registry, $joined)
-        );
-        if (!$related->isEmpty()) {
-            return $related;
+        if ($related->isEmpty()) {
+            return false;
         }
 
-        $sequence = $this->sequence($joined);
-        if ($sequence === null) {
-            return new Document();
+        if ($this->isPrivileged()) {
+            return true;
         }
 
-        $found = $this->authorization->skip(
-            fn (): array => $this->dbForProject->find($registry, [
-                Query::equal('$sequence', [$sequence]),
-                Query::limit(1),
-            ])
-        );
-
-        return $found[0] ?? new Document();
-    }
-
-    private function sequence(string $table): ?string
-    {
-        $prefix = $this->prefix();
-        if (!\str_starts_with($table, $prefix)) {
-            return null;
+        if (!$related->getAttribute('enabled', true)) {
+            return false;
         }
 
-        $sequence = \substr($table, \strlen($prefix));
-
-        return \ctype_digit($sequence) ? $sequence : null;
+        return $related->getAttribute('documentSecurity', false)
+            || $this->authorization->isValid(new Input(PermissionType::Read, $related->getPermissionsByType(PermissionType::Read)));
     }
 
     private function isPrivileged(): bool
@@ -119,10 +101,5 @@ final class Joins implements Queries
     private function registry(): string
     {
         return 'database_' . $this->database->getSequence();
-    }
-
-    private function prefix(): string
-    {
-        return $this->registry() . '_collection_';
     }
 }

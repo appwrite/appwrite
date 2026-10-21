@@ -35,6 +35,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
@@ -429,7 +430,9 @@ class Create extends Action
         } catch (UniqueException $e) {
             throw new Exception($this->getUniqueConstraintException(), previous: $e);
         } catch (DuplicateException $e) {
-            throw new Exception($this->getDuplicateException(), previous: $e, params: [$documentId]);
+            throw $isBulk
+                ? $this->getBatchDuplicateException($dbForDatabases, $collectionTableId, $documents, $e)
+                : new Exception($this->getDuplicateException(), previous: $e, params: [$documentId]);
         } catch (NotFoundException $e) {
             if ($authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId))->isEmpty()) {
                 throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
@@ -482,14 +485,23 @@ class Create extends Action
             return;
         }
 
-        $queueForEvents
-            ->setParam('documentId', $created[0]->getId())
-            ->setParam('rowId', $created[0]->getId())
-            ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].create');
-
         $response->dynamic(
             $created[0],
             $this->getResponseModel()
         );
+
+        $relationships = \array_map(
+            fn ($document) => $document->getAttribute('key'),
+            \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === ColumnType::Relationship->value
+            )
+        );
+
+        $queueForEvents
+            ->setParam('documentId', $created[0]->getId())
+            ->setParam('rowId', $created[0]->getId())
+            ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].create')
+            ->setPayload($response->getPayload(), sensitive: $relationships);
     }
 }

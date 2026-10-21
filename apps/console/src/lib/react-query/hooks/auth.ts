@@ -305,6 +305,9 @@ export function consoleAccountQueryOptions(options?: { revision?: number }) {
     staleTime: CONSOLE_ACCOUNT_STALE_TIME_MS,
     gcTime: CONSOLE_ACCOUNT_GC_TIME_MS,
     retry: false,
+    // A guest 401 has no data, so each newly mounted `useAuth()` would refetch
+    // it and flip `isLoading`, unmounting and remounting itself in a loop.
+    retryOnMount: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
@@ -876,6 +879,38 @@ export function useUpdatePasswordPwnedPolicy(
         sessions: policy.sessions,
         users: policy.users,
       })
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
+/**
+ * Hook to update the password rotation policy.
+ *
+ * `enabled` refuses an email/password sign-in once the password is older than
+ * `maxAge` seconds. Leaving `maxAge` out keeps the stored one.
+ *
+ * @param projectId - The project ID
+ */
+export function useUpdatePasswordRotationPolicy(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (policy: { enabled: boolean; maxAge?: number }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+
+      return await sdk
+        .forProject(projectId)
+        .project.updatePasswordRotationPolicy({
+          enabled: policy.enabled,
+          maxAge: policy.maxAge,
+        })
     },
     onSuccess: () => {
       invalidateProjectAuthQueries(queryClient, projectId)
