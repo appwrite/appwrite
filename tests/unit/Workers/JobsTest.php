@@ -10,8 +10,7 @@ use Utopia\Config\Config;
 
 /**
  * Proves job resolution for combined and dedicated worker modes keeps the
- * databases and maintenance queues at coroutines=1 — parallel schema jobs risk
- * deadlocks, and parallel maintenance jobs pile onto the same deletes backlog.
+ * databases queue at coroutines=1 — parallel schema jobs risk deadlocks.
  */
 final class JobsTest extends TestCase
 {
@@ -46,17 +45,6 @@ final class JobsTest extends TestCase
 
         $this->assertCount(1, $jobs);
         $this->assertSame(1, $jobs['databases']['coroutines']);
-    }
-
-    public function testDedicatedMaintenanceIgnoresGlobalOverride(): void
-    {
-        $jobs = Jobs::resolve(
-            ['maintenance'],
-            $this->config,
-            $this->env(['_APP_WORKER_MAX_COROUTINES' => '79']),
-        );
-
-        $this->assertSame(['maintenance' => ['queue' => 'v1-maintenance', 'coroutines' => 1]], $jobs);
     }
 
     public function testDedicatedNonDatabasesAllowsGlobalOverride(): void

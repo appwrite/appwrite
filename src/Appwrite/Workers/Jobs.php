@@ -8,18 +8,12 @@ namespace Appwrite\Workers;
  * Resolves per-queue worker jobs for {@see app/worker.php}.
  *
  * Combined mode (`all` / many queues) keeps each queue's configured
- * `coroutines`. Dedicated mode still allows `_APP_WORKER_MAX_COROUTINES` to
- * override, except for the queues in PINNED.
+ * `coroutines` so `databases` stays at 1. Dedicated mode still allows
+ * `_APP_WORKER_MAX_COROUTINES` to override — except for `databases`, where
+ * parallelism risks adapter deadlocks on schema mutations.
  */
 final class Jobs
 {
-    /**
-     * Queues that keep their configured coroutines in a dedicated container:
-     * parallel `databases` jobs risk adapter deadlocks on schema mutations, and
-     * parallel `maintenance` jobs would only add to the same deletes backlog.
-     */
-    private const array PINNED = ['databases', 'maintenance'];
-
     /**
      * @param list<string> $workers Worker action names already selected to run
      * @param array<string, array{queue: string, queueEnv?: string, coroutines?: int}> $config
@@ -44,9 +38,10 @@ final class Jobs
 
             $coroutines = max(1, (int) ($spec['coroutines'] ?? 1));
 
-            // Combined: never apply the global override, so every queue keeps its
-            // own cap. Dedicated: the override applies unless the queue is pinned.
-            if ($single && !\in_array($name, self::PINNED, true)) {
+            // Combined: never apply the global override — databases must stay at 1
+            // while other queues keep their own caps. Dedicated: override is allowed
+            // for every queue except databases.
+            if ($single && $name !== 'databases') {
                 $override = $env('_APP_WORKER_MAX_COROUTINES');
                 if ($override !== false && $override !== null && $override !== '') {
                     $coroutines = max(1, (int) $override);
