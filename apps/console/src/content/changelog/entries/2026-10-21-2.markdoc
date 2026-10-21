@@ -1,0 +1,19 @@
+---
+layout: changelog
+title: Appwrite 1.9.8 security patch for self-hosted deployments
+date: 2026-10-21
+cover: /images/changelog/2026-10-08-1.avif
+tags: security, infrastructure, console
+---
+
+Appwrite 1.9.8 is a security patch for self-hosted instances staying on the 1.9 line.
+
+- Refresh outbound TLS trust so Appwrite rejects the compromised eMudhra certificate chains.
+- Update the SVG sanitizer to 1.1.1 to address its reported security advisories.
+- Invalidate cached avatar and preview responses after updating the sanitizer.
+
+The patch reuses migration V25 and introduces no schema changes. Back up your instance and follow the [1.9 upgrade instructions](/docs/advanced/self-hosting/production/updates#upgrading-1-9).
+
+{% arrow_link href="https://github.com/appwrite/appwrite/releases/tag/1.9.8" %}
+View the release notes on GitHub
+{% /arrow_link %}
