@@ -1217,8 +1217,10 @@ trait TransactionPermissionsBase
             'transactionId' => $transactionId,
         ]);
 
-        $readable = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($this->getPermissionsDatabase(), $readOnlyId, $readOnlyRecordId), $this->getStagingUserHeaders());
-        $this->assertSame(200, $readable['headers']['status-code'], 'The caller cannot read the read-only record, so a refusal would not be about update');
+        if ($requiresUpdate) {
+            $readable = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($this->getPermissionsDatabase(), $deniedId, $deniedRecordId), $this->getStagingUserHeaders());
+            $this->assertSame(200, $readable['headers']['status-code'], 'The caller cannot read the denied record, so a refusal would not be about update');
+        }
 
         /**
          * Test for FAILURE
