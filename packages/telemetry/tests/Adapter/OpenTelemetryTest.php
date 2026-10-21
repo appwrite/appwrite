@@ -206,7 +206,7 @@ final class OpenTelemetryTest extends TestCase
             $payloads[] = $payload;
         };
 
-        return new class ($capture) implements TransportInterface {
+        return new readonly class ($capture) implements TransportInterface {
             public function __construct(private \Closure $capture)
             {
             }
