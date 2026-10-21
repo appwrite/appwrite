@@ -135,6 +135,10 @@
             "queries",
             "total"
         ],
+        "account.listMemberships": [
+            "queries",
+            "total"
+        ],
         "account.listMFAFactors": [],
         "account.listMfaFactors": [],
         "account.listPasskeys": [
@@ -3371,13 +3375,15 @@
             "rpId"
         ],
         "project.updatePasswordDictionaryPolicy": [
-            "enabled"
+            "enabled",
+            "denyList"
         ],
         "project.updatePasswordHistoryPolicy": [
             "total"
         ],
         "project.updatePasswordPersonalDataPolicy": [
-            "enabled"
+            "enabled",
+            "denyList"
         ],
         "project.updatePasswordPwnedPolicy": [
             "enabled",
@@ -3701,7 +3707,8 @@
             "encryption",
             "antivirus",
             "transformations",
-            "description"
+            "description",
+            "stripMetadata"
         ],
         "storage.createFile": [
             "bucketId",
@@ -3773,7 +3780,8 @@
             "encryption",
             "antivirus",
             "transformations",
-            "description"
+            "description",
+            "stripMetadata"
         ],
         "storage.updateFile": [
             "bucketId",
@@ -4696,6 +4704,10 @@
             "success",
             "failure"
         ],
+        "vcs.createEntireInstallation": [
+            "success",
+            "failure"
+        ],
         "vcs.createGitHubInstallation": [
             "success",
             "failure"
@@ -5111,6 +5123,10 @@
             "sessionId"
         ],
         "account.listIdentities": [
+            "queries",
+            "total"
+        ],
+        "account.listMemberships": [
             "queries",
             "total"
         ],
@@ -7312,13 +7328,15 @@
             "rpId"
         ],
         "project.updatePasswordDictionaryPolicy": [
-            "enabled"
+            "enabled",
+            "denyList"
         ],
         "project.updatePasswordHistoryPolicy": [
             "total"
         ],
         "project.updatePasswordPersonalDataPolicy": [
-            "enabled"
+            "enabled",
+            "denyList"
         ],
         "project.updatePasswordPwnedPolicy": [
             "enabled",
@@ -7602,7 +7620,8 @@
             "encryption",
             "antivirus",
             "transformations",
-            "description"
+            "description",
+            "stripMetadata"
         ],
         "storage.createFile": [
             "bucketId",
@@ -7674,7 +7693,8 @@
             "encryption",
             "antivirus",
             "transformations",
-            "description"
+            "description",
+            "stripMetadata"
         ],
         "storage.updateFile": [
             "bucketId",

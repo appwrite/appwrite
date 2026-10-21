@@ -129,7 +129,7 @@ import {
 } from '@/lib/specifications'
 import { sdk } from '@/lib/appwrite/sdk'
 import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
-import { getVcsProvider } from '@/lib/vcs/providers'
+import { getVcsProvider, isEntireRepositoryUrl } from '@/lib/vcs/providers'
 import { DeploymentDownloadType, type Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { Route } from '@/routes/_public/projects.$projectId.functions.$functionId.index'
@@ -176,6 +176,10 @@ function detectVcsProvider(
       const { label, Icon } = getVcsProvider('origin')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
+    if (isEntireRepositoryUrl(url)) {
+      const { label, Icon } = getVcsProvider('entire')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
+    }
   }
 
   // Check for vcsProvider field (if available)
@@ -195,6 +199,10 @@ function detectVcsProvider(
     }
     if (provider === 'origin') {
       const { label, Icon } = getVcsProvider('origin')
+      return { name: label, icon: <Icon className="h-4 w-4" /> }
+    }
+    if (provider === 'entire') {
+      const { label, Icon } = getVcsProvider('entire')
       return { name: label, icon: <Icon className="h-4 w-4" /> }
     }
   }
