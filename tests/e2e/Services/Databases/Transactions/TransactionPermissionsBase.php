@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Databases\Transactions;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SchemaPolling;
 use Tests\E2E\Traits\DatabasesUrlHelpers;
@@ -1150,7 +1151,19 @@ trait TransactionPermissionsBase
         $this->assertSame(1, $this->getStagedOperations($transactionId));
     }
 
-    public function testStagingALinkByIdNeedsUpdateOnTheLinkedRecord(): void
+    /**
+     * @return array<string, array{string, bool}>
+     */
+    public static function stagedRelationshipPermissions(): array
+    {
+        return [
+            'many-to-one links need read' => ['manyToOne', false],
+            'many-to-many links need update' => ['manyToMany', true],
+        ];
+    }
+
+    #[DataProvider('stagedRelationshipPermissions')]
+    public function testStagingALinkByIdChecksRelatedRecordPermissions(string $type, bool $requiresUpdate): void
     {
         if (!$this->getSupportForRelationships()) {
             $this->expectNotToPerformAssertions();
@@ -1158,13 +1171,17 @@ trait TransactionPermissionsBase
         }
 
         $parentId = $this->createStagingContainer([Permission::read(Role::any()), Permission::create(Role::users()), Permission::update(Role::users())]);
-        $readOnlyId = $this->createStagingContainer([Permission::read(Role::any())]);
-        $updatableId = $this->createStagingContainer([Permission::read(Role::any()), Permission::update(Role::users())]);
+        $deniedId = $this->createStagingContainer($requiresUpdate ? [Permission::read(Role::any())] : []);
+        $allowedId = $this->createStagingContainer($requiresUpdate
+            ? [Permission::read(Role::any()), Permission::update(Role::users())]
+            : [Permission::read(Role::any())]);
 
-        foreach (['readOnly' => $readOnlyId, 'updatable' => $updatableId] as $key => $relatedId) {
+        foreach (['denied' => $deniedId, 'allowed' => $allowedId] as $key => $relatedId) {
             $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $parentId, 'relationship'), $this->getStagingKeyHeaders(), [
                 $this->getRelatedIdParam() => $relatedId,
-                'type' => 'manyToOne',
+                'type' => $type,
+                'twoWay' => true,
+                'twoWayKey' => 'parents',
                 'key' => $key,
             ]);
             $this->assertSame(202, $relationship['headers']['status-code']);
@@ -1180,22 +1197,23 @@ trait TransactionPermissionsBase
 
             return $record['body']['$id'];
         };
-        $readOnlyRecordId = $createLinked($readOnlyId);
-        $updatableRecordId = $createLinked($updatableId);
+        $deniedRecordId = $createLinked($deniedId);
+        $allowedRecordId = $createLinked($allowedId);
+        $link = fn (string $recordId): string|array => $type === 'manyToOne' ? $recordId : [$recordId];
 
         $transactionId = $this->createStagingTransaction();
-        $stageOperation = fn (string $parentRecordId, string $key, string $recordId) => $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $this->getStagingUserHeaders(), [
+        $stageOperation = fn (string $parentRecordId, string $key, string|array $related) => $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $this->getStagingUserHeaders(), [
             'operations' => [[
                 'action' => 'create',
                 'databaseId' => $this->getPermissionsDatabase(),
                 $this->getContainerIdParam() => $parentId,
                 $this->getRecordIdParam() => $parentRecordId,
-                'data' => ['title' => 'Parent', $key => $recordId],
+                'data' => ['title' => 'Parent', $key => $related],
             ]],
         ]);
-        $stageRecord = fn (string $parentRecordId, string $key, string $recordId) => $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $parentId), $this->getStagingUserHeaders(), [
+        $stageRecord = fn (string $parentRecordId, string $key, string|array $related) => $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $parentId), $this->getStagingUserHeaders(), [
             $this->getRecordIdParam() => $parentRecordId,
-            'data' => ['title' => 'Parent', $key => $recordId],
+            'data' => ['title' => 'Parent', $key => $related],
             'transactionId' => $transactionId,
         ]);
 
@@ -1203,8 +1221,8 @@ trait TransactionPermissionsBase
          * Test for FAILURE
          */
         foreach (['operations' => $stageOperation, 'record' => $stageRecord] as $route => $stage) {
-            $staged = $stage(Id::unique(), 'readOnly', $readOnlyRecordId);
-            $this->assertSame(401, $staged['headers']['status-code'], "The {$route} route staged a link to a record the caller can only read");
+            $staged = $stage(Id::unique(), 'denied', $link($deniedRecordId));
+            $this->assertSame(401, $staged['headers']['status-code'], "The {$route} route staged a link without the required related-record permission");
             $this->assertSame('user_unauthorized', $staged['body']['type']);
         }
         $this->assertSame(0, $this->getStagedOperations($transactionId));
@@ -1213,21 +1231,32 @@ trait TransactionPermissionsBase
          * Test for SUCCESS
          */
         $parentRecordIds = [Id::unique(), Id::unique()];
-        $staged = $stageOperation($parentRecordIds[0], 'updatable', $updatableRecordId);
+        $staged = $stageOperation($parentRecordIds[0], 'allowed', $link($allowedRecordId));
         $this->assertSame(201, $staged['headers']['status-code']);
-        $staged = $stageRecord($parentRecordIds[1], 'updatable', $updatableRecordId);
+        $staged = $stageRecord($parentRecordIds[1], 'allowed', $link($allowedRecordId));
         $this->assertSame(201, $staged['headers']['status-code']);
         $this->assertSame(2, $this->getStagedOperations($transactionId));
+
+        if (!$requiresUpdate) {
+            foreach (['operations' => $stageOperation, 'record' => $stageRecord] as $route => $stage) {
+                $staged = $stage(Id::unique(), 'allowed', ['$id' => $allowedRecordId, 'title' => 'Changed']);
+                $this->assertSame(401, $staged['headers']['status-code'], "The {$route} route staged an update to a read-only related record");
+                $this->assertSame('user_unauthorized', $staged['body']['type']);
+            }
+            $this->assertSame(2, $this->getStagedOperations($transactionId));
+        }
 
         $commit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $this->getStagingUserHeaders(), ['commit' => true]);
         $this->assertSame(200, $commit['headers']['status-code']);
 
         foreach ($parentRecordIds as $parentRecordId) {
             $parent = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($this->getPermissionsDatabase(), $parentId, $parentRecordId), $this->getStagingKeyHeaders(), [
-                'queries' => [Query::select(['*', 'updatable.*'])->toString()],
+                'queries' => [Query::select(['*', 'allowed.*'])->toString()],
             ]);
             $this->assertSame(200, $parent['headers']['status-code']);
-            $this->assertSame($updatableRecordId, $parent['body']['updatable']['$id']);
+            $related = $type === 'manyToOne' ? $parent['body']['allowed'] : $parent['body']['allowed'][0];
+            $this->assertSame($allowedRecordId, $related['$id']);
+            $this->assertSame('Linked', $related['title']);
         }
     }
 
