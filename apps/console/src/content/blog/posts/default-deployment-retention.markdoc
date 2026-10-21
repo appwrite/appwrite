@@ -14,7 +14,7 @@ faqs:
   - question: "Will Appwrite delete my active deployment?"
     answer: "No. Retention only deletes inactive deployments. Appwrite always keeps the active deployment of a function or site, however old it is, and any deployment that a custom domain points to."
   - question: "How long can I keep deployments on each Appwrite Cloud plan?"
-    answer: "Every plan keeps inactive deployments for 30 days by default. The Free and Education plans let you set up to 90 days and keep the 100 newest inactive deployments per function or site. The Start and Pro plans let you set up to 3 years, with no limit on how many. Enterprise plans start from the Pro values, and the Appwrite team can set a custom policy."
+    answer: "Every plan keeps inactive deployments for 30 days by default. The Free and Education plans let you set up to 90 days and keep up to the 100 newest inactive deployments per function or site. The Start and Pro plans let you set up to 3 years, with no limit on how many. Enterprise plans start from the Pro values, and the Appwrite team can set a custom policy."
   - question: "What happens to functions and sites that keep deployments forever?"
     answer: "On November 5, they move to the plan default of 30 days. From then on, a retention of `0`, which the Console shows as **Keep deployments forever**, applies the plan default. To keep deployments for longer, set a retention window up to your plan's maximum before November 5."
   - question: "How does Appwrite count a deployment's age for retention?"
@@ -25,15 +25,15 @@ faqs:
 
 From **November 5, 2026**, Appwrite Cloud deletes inactive Functions and Sites deployments after **30 days** by default, which frees the project storage they use. The active deployment of every function and site is never deleted, and you can keep inactive deployments for longer by setting your own [retention window](/docs/products/functions/deployments#deployment-retention).
 
-Appwrite creates a new deployment for your function or site every time you push to Git or redeploy. Each deployment keeps its source code and build output in your project, but only one of them is active at a time. Inactive deployments still count toward your plan's storage, and many Free projects reach their **2GB** storage limit because of them. With a 30-day default, that storage holds the files and data your app uses.
+Appwrite creates a new deployment for your function or site every time you push to Git or redeploy. Each deployment keeps its source code and build output in your project, but only one of them is active at a time. Inactive deployments still count toward your plan's storage, and many Free organizations reach their **2GB** storage limit because of them. With a 30-day default, that storage holds the files and data your app uses.
 
 # Deployment retention on each plan
 
-Each plan has a default retention, which applies to every function and site that doesn't set its own, and a maximum retention you can choose. On the Free and Education plans, each function or site also keeps its **100** newest inactive deployments.
+Each plan has a default retention, which applies to every function and site that doesn't set its own, and a maximum retention you can choose. On the Free and Education plans, each function or site also keeps up to its **100** newest inactive deployments.
 
 | Plan | Default retention | Longest retention you can set | Inactive deployments kept per function or site |
 | --- | --- | --- | --- |
-| Free and Education | 30 days | 90 days | 100 newest |
+| Free and Education | 30 days | 90 days | Up to 100 newest |
 | Start and Pro | 30 days | 3 years (1,095 days) | No limit |
 
 Enterprise plans start from the Pro values. If your organization needs a longer retention window or a custom policy, [contact the Appwrite team](/sales).
@@ -62,9 +62,9 @@ A deployment's age counts from the day it was created, not from the day it stopp
 
 To keep inactive deployments for longer than 30 days, set a retention window before November 5. In the Appwrite Console, open your function or site and go to **Settings** > **Build** > **Retention**. Turn off **Keep deployments forever**, choose a **Retention period** up to your plan's maximum, and click **Update**.
 
-You can also set `deploymentRetention` to a number of days with a Server SDK. Update calls replace every setting you leave out, so pass `deploymentRetention` on each update, or the function or site returns to the 30-day default. From November 5, Appwrite rejects a value above your plan's maximum with a `deployment_retention_exceeded` error.
+You can also set `deploymentRetention` to a number of days with a Server SDK. Update calls set `deploymentRetention` back to `0` when you leave it out. Pass it on each update, or the function or site returns to the 30-day default. To use the full 3 years on the Start or Pro plans, set `deploymentRetention` to `1095`. From November 5, Appwrite rejects a value above your plan's maximum with a `deployment_retention_exceeded` error.
 
-To keep a copy of a deployment beyond your plan's window, download it before Appwrite deletes it. On the **Deployments** tab of your function or site, open the deployment's menu and choose **Download** > **Source code** or **Build output**.
+To keep a copy of a deployment beyond its retention window, download it before Appwrite deletes it. On the **Deployments** tab of your function or site, open the deployment's menu and choose **Download** > **Source code** or **Build output**.
 
 If 30 days of deployment history covers your rollbacks, you don't need to do anything. On November 5, Appwrite starts deleting inactive deployments past the 30-day window, and the storage they use is freed in your project.
 
