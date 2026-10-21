@@ -1,3 +1,22 @@
+# Version 1.9.8
+
+## What's Changed
+
+### Notable changes
+
+* Security patch for the eMudhra certificate compromise. Upgrade to refresh the outbound TLS trust store.
+* Upgrading from 1.9.7 reuses migration V25 and introduces no schema changes.
+
+### Fixes
+
+* Require patched CA packages in the runtime and Composer build stages to reject compromised eMudhra certificate chains in [#14718](https://github.com/appwrite/appwrite/pull/14718).
+* Update the SVG sanitizer to 1.1.1 to address its reported security advisories in [#14718](https://github.com/appwrite/appwrite/pull/14718).
+
+### Miscellaneous
+
+* Update the self-hosted Console from 8.7.37 to [8.9.2](https://github.com/appwrite/console/releases/tag/8.9.2).
+* Update release metadata and installation examples for 1.9.8.
+
 # Version 1.9.7
 
 ## What's Changed
