@@ -348,6 +348,14 @@ export function isSecondsAttribute(
   return SECONDS_ATTRIBUTES.has(attribute)
 }
 
+/** Sites requests carry no user session, so session and MFA age never apply. */
+export function isAttributeAvailable(
+  attribute: FirewallConditionAttribute,
+  resourceType: FirewallResourceType,
+): boolean {
+  return !(resourceType === 'sites' && SECONDS_ATTRIBUTES.has(attribute))
+}
+
 /** Non-negative whole number of seconds, or null. */
 function parseSeconds(value: string): number | null {
   const trimmed = value.trim()

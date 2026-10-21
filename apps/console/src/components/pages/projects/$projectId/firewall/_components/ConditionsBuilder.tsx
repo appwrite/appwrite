@@ -573,6 +573,7 @@ export function ConditionsBuilder({
                       <div className="flex min-w-0 items-center gap-2">
                         <ConditionAttributeSelect
                           value={condition.attribute}
+                          resourceType={resourceType}
                           disabled={disabled}
                           premiumGeoEnabled={premiumGeoEnabled}
                           onValueChange={(attribute) =>
