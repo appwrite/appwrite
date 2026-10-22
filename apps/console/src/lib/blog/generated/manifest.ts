@@ -17,6 +17,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "default-deployment-retention",
+    "href": "/blog/post/default-deployment-retention",
+    "title": "Old deployments will no longer fill up your Appwrite Cloud storage",
+    "description": "From November 5, 2026, inactive deployments on Appwrite Cloud are cleaned up after 30 days by default, so they stop counting toward your storage. Your active deployment always stays.",
+    "date": "2026-10-22",
+    "lastUpdated": "2026-10-22",
+    "timeToRead": 3,
+    "author": "atharva",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/default-deployment-retention/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-appwrite-databases-hackathon",
     "href": "/blog/post/announcing-appwrite-databases-hackathon",
     "title": "Announcing the Appwrite Databases Hackathon",
