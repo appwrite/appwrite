@@ -353,6 +353,28 @@ class JSONTest extends TestCase
         }
     }
 
+    public function testJSONExportFailureLeavesNoFile(): void
+    {
+        $tempDir = sys_get_temp_dir() . '/json_test_' . uniqid();
+        mkdir($tempDir, 0755, true);
+
+        $jsonDestination = $this->createDestination($tempDir);
+
+        $database = new Database('test_db');
+        $table = new Table($database, 'test_table', 'test_table_id');
+
+        $this->runExport([new Row('row1', $table, ['name' => 'John Doe'])], $jsonDestination);
+        $this->assertFileExists($tempDir . '/test_db_test_table_id.json');
+
+        $jsonDestination->error();
+
+        $this->assertFileDoesNotExist($tempDir . '/test_db_test_table_id.json');
+
+        if (is_dir($tempDir)) {
+            $this->recursiveDelete($tempDir);
+        }
+    }
+
     private function createDestination(string $tempDir): DestinationJSON
     {
         return new DestinationJSON(
