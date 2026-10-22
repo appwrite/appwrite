@@ -21,6 +21,13 @@
   the reply-to address of scheduled emails, the Android channel of scheduled pushes, the password-pwned,
   password-rotation and passkey policies, and project environments as the new `project-environment` resource.
 
+### Fixed
+
+- A downloaded file whose mime type is `application/json` is no longer JSON-decoded on the way in. Since 3.1.0 the
+  chunk reached `File::setData()` as an array and the file stayed `pending`. `Target::call()` takes `decode: false`
+  for a response that is the file itself. Every source's file download passes it, and so do the deployment
+  downloads, which Appwrite serves as gzip or octet-stream and were never hit.
+
 ## 3.1.2
 
 3.1.2 reverses the 3.0.0 notes below on `Aborted`, `markAborted()` and finalizing with `success()`.

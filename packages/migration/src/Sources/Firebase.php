@@ -108,11 +108,14 @@ class Firebase extends Source
         }
     }
 
-    protected function call(string $method, string $path = '', array $headers = [], array $params = [], array &$responseHeaders = []): array|string
+    /**
+     * @return ($decode is false ? string : array<mixed>|string)
+     */
+    protected function call(string $method, string $path = '', array $headers = [], array $params = [], array &$responseHeaders = [], bool $decode = true): array|string
     {
         $this->authenticate();
 
-        return parent::call($method, $path, $headers, $params, $responseHeaders);
+        return parent::call($method, $path, $headers, $params, $responseHeaders, $decode);
     }
 
     /**
@@ -782,7 +785,7 @@ class Firebase extends Source
         while (true) {
             $result = $this->call('GET', $endpoint, [
                 'Range' => 'bytes='.$start.'-'.$end,
-            ]);
+            ], decode: false);
 
             if (empty($result)) {
                 break;

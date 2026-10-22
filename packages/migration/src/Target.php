@@ -146,10 +146,13 @@ abstract class Target
     /**
      * Make an API call
      *
+     * A JSON response is decoded unless $decode is false. Pass false for a download:
+     * the body is the file, whatever its own mime type says.
+     *
      * @param  array<string, string>  $headers
      * @param  array<string, mixed>  $params
      * @param  array<string, string>  $responseHeaders
-     * @return array<mixed>|string
+     * @return ($decode is false ? string : array<mixed>|string)
      *
      * @throws \Exception
      */
@@ -158,7 +161,8 @@ abstract class Target
         string $path = '',
         array $headers = [],
         array $params = [],
-        array &$responseHeaders = []
+        array &$responseHeaders = [],
+        bool $decode = true
     ): array|string {
         $headers = \array_merge($this->headers, $headers);
         $contentType = $headers['Content-Type'] ?? '';
@@ -194,7 +198,10 @@ abstract class Target
         $responseBody = (string) $response->getBody();
         $responseStatus = $response->getStatusCode();
 
-        if (\str_starts_with(\strtolower($response->getHeaderLine('Content-Type')), ContentType::JSON)) {
+        $isJSON = \str_starts_with(\strtolower($response->getHeaderLine('Content-Type')), ContentType::JSON);
+
+        // Errors are decoded either way: callers json_decode the exception message (Firebase does).
+        if ($isJSON && ($decode || $responseStatus >= 400)) {
             $responseBody = \json_decode($responseBody, true);
         }
 
