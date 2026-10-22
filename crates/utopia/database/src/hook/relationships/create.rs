@@ -90,9 +90,11 @@ pub(super) fn attributes_differ(a: &Document, b: &Document) -> bool {
     !Value::Array(a.attributes()).loose_eq(&Value::Array(b.attributes()))
 }
 
-/// Whether relating a document by id writes anything; otherwise it only
-/// reads the related document (`writesById()`).
-fn writes_by_id(kind: RelationshipType, two_way: bool, side: RelationshipSide) -> bool {
+/// Whether linking a related document writes it, or a junction row for it
+/// (`writesRelated()`). Otherwise the link is only the key on the document
+/// being written, so linking reads the related document and needs only read
+/// permission on it.
+pub(super) fn writes_related(kind: RelationshipType, two_way: bool, side: RelationshipSide) -> bool {
     match kind {
         RelationshipType::OneToOne => two_way,
         RelationshipType::OneToMany => side == RelationshipSide::Parent,
@@ -653,7 +655,7 @@ impl Relationships {
 
         if related.is_empty() {
             self.refuse_unreadable(db, related_collection, relation.id(), PermissionType::Update).await?;
-        } else if !linked {
+        } else if !linked && writes_related(relation_of.kind, relation_of.two_way, relation_of.side) {
             self.authorize_link(db, related_collection, &related)?;
         }
 
@@ -736,7 +738,7 @@ impl Relationships {
         // document this write creates.
         let creating = prepared.is_some_and(|p| lock(p).is_preparing(related_collection.id(), relation_id))
             || self.is_relating(related_collection.id(), relation_id);
-        if creating && (self.check_exist.get() || !writes_by_id(kind, two_way, side)) {
+        if creating && (self.check_exist.get() || !writes_related(kind, two_way, side)) {
             return Ok(());
         }
 
@@ -758,7 +760,7 @@ impl Relationships {
             if self.check_exist.get() {
                 return Ok(());
             }
-        } else {
+        } else if writes_related(kind, two_way, side) {
             self.authorize_link(db, related_collection, &related)?;
         }
 

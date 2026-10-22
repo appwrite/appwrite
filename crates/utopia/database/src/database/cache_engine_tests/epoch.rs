@@ -137,8 +137,7 @@ fn an_activation_failure_after_commit_leaves_the_epoch_blocked() {
         let database = with_cache(&cache, None, None).await;
         create_hook(&database).await;
         *fails.activations.lock().unwrap() = Some("#epoch".into());
-        let error = rename(&database, "webhooks", "hook", "updated").await.unwrap_err();
-        assert!(error.message().contains("activate document cache epoch"), "{}", error.message());
+        rename(&database, "webhooks", "hook", "updated").await.unwrap();
         assert_eq!(name(&database, "webhooks", "hook").await, Value::from("updated"));
         change(&database, "webhooks", "hook").await;
         assert_eq!(name(&database, "webhooks", "hook").await, Value::from("changed"), "it stays uncached");
@@ -162,15 +161,14 @@ fn an_activation_failure_does_not_strand_other_collection_epochs() {
             .unwrap();
         assert_eq!(name(&database, "logs", "log").await, Value::from("original"));
         *fails.activations.lock().unwrap() = Some("collection:webhooks#epoch".into());
-        let error = database
+        database
             .with_transaction(|| async {
                 rename(&database, "webhooks", "hook", "updated").await?;
                 rename(&database, "logs", "log", "updated").await?;
                 Ok(())
             })
             .await
-            .unwrap_err();
-        assert!(error.message().contains("activate document cache epoch"), "{}", error.message());
+            .unwrap();
         assert_eq!(name(&database, "webhooks", "hook").await, Value::from("updated"));
         change(&database, "webhooks", "hook").await;
         assert_eq!(name(&database, "webhooks", "hook").await, Value::from("changed"));
@@ -229,7 +227,7 @@ fn a_cache_flush_after_activation_reads_generations_does_not_fail_the_committed_
 }
 
 #[test]
-fn an_activation_purge_failure_still_propagates() {
+fn a_lost_finish_after_commit_does_not_fail_the_write() {
     run(|| async {
         let cache = flush_during_activation();
         let database = with_cache(&cache, None, None).await;
@@ -239,8 +237,7 @@ fn an_activation_purge_failure_still_propagates() {
             .unwrap();
         cache.flush_now();
         cache.on_purge(|key, _| key.ends_with("#finished").then_some(Ok(false)));
-        let error = rename(&database, "webhooks", "hook", "updated").await.unwrap_err();
-        assert!(error.message().contains("finish document cache invalidation"), "{}", error.message());
+        rename(&database, "webhooks", "hook", "updated").await.unwrap();
         assert_eq!(name(&database, "webhooks", "hook").await, Value::from("updated"));
     });
 }
@@ -329,7 +326,7 @@ fn overlapping_writes_succeed_on_a_cache_without_fields() {
 }
 
 #[test]
-fn activation_rejects_a_corrupted_owner_registration() {
+fn a_corrupted_owner_registration_does_not_fail_the_committed_write() {
     run(|| async {
         let cache = Leasable::new();
         let database = with_cache(&cache, None, None).await;
@@ -338,8 +335,7 @@ fn activation_rejects_a_corrupted_owner_registration() {
             .await
             .unwrap();
         cache.corrupt_field_writes(true);
-        let error = rename(&database, "webhooks", "hook", "updated").await.unwrap_err();
-        assert!(error.message().contains("Invalid document cache owner"), "{}", error.message());
+        rename(&database, "webhooks", "hook", "updated").await.unwrap();
         cache.corrupt_field_writes(false);
         assert_eq!(name(&database, "webhooks", "hook").await, Value::from("updated"));
         change(&database, "webhooks", "hook").await;
@@ -348,7 +344,7 @@ fn activation_rejects_a_corrupted_owner_registration() {
 }
 
 #[test]
-fn activation_propagates_an_owner_release_failure() {
+fn an_owner_release_failure_does_not_fail_the_committed_write() {
     run(|| async {
         let cache = Leasable::new();
         let database = with_cache(&cache, None, None).await;
@@ -357,8 +353,7 @@ fn activation_propagates_an_owner_release_failure() {
             .await
             .unwrap();
         cache.fail_field_purges();
-        let error = rename(&database, "webhooks", "hook", "updated").await.unwrap_err();
-        assert!(error.message().contains("Failed to release document cache owner"), "{}", error.message());
+        rename(&database, "webhooks", "hook", "updated").await.unwrap();
         assert_eq!(name(&database, "webhooks", "hook").await, Value::from("updated"));
         change(&database, "webhooks", "hook").await;
         assert_eq!(name(&database, "webhooks", "hook").await, Value::from("changed"));
@@ -371,8 +366,7 @@ fn a_lost_activation_does_not_keep_the_collection_uncached() {
         let (cache, fails) = fail_epochs();
         let (database, adapter) = counted(&cache).await;
         *fails.activations.lock().unwrap() = Some("#epoch".into());
-        let error = rename(&database, "webhooks", "hook", "updated").await.unwrap_err();
-        assert!(error.message().contains("activate document cache epoch"), "{}", error.message());
+        rename(&database, "webhooks", "hook", "updated").await.unwrap();
         assert_eq!(name(&database, "webhooks", "hook").await, Value::from("updated"));
         change(&database, "webhooks", "hook").await;
         assert_eq!(name(&database, "webhooks", "hook").await, Value::from("changed"));
@@ -386,13 +380,22 @@ fn a_lost_activation_does_not_keep_the_collection_uncached() {
     });
 }
 
-/// `AbandoningCache`: refuses the next release of an owner registration.
+/// `AbandoningCache`: refuses the next release of an owner registration,
+/// and every later release of that registration, as the release is retried.
 fn abandoning() -> (Arc<Leasable>, Arc<AtomicBool>) {
     let cache = Leasable::new();
     let abandoning = Arc::new(AtomicBool::new(false));
     let flag = abandoning.clone();
+    let abandoned = Arc::new(Mutex::new(String::new()));
     cache.on_purge(move |key, hash| {
-        (!hash.is_empty() && key.ends_with("#owners") && flag.swap(false, Ordering::SeqCst)).then_some(Ok(false))
+        if hash.is_empty() || !key.ends_with("#owners") {
+            return None;
+        }
+        let mut abandoned = abandoned.lock().unwrap();
+        if flag.swap(false, Ordering::SeqCst) {
+            *abandoned = hash.to_owned();
+        }
+        (*abandoned == hash).then_some(Ok(false))
     });
     (cache, abandoning)
 }
@@ -403,8 +406,7 @@ fn a_write_after_an_abandoned_write_reenables_the_collection() {
         let (cache, abandon) = abandoning();
         let (database, adapter) = counted(&cache).await;
         abandon.store(true, Ordering::SeqCst);
-        let error = rename(&database, "webhooks", "hook", "abandoned").await.unwrap_err();
-        assert!(error.message().contains("release document cache owner"), "{}", error.message());
+        rename(&database, "webhooks", "hook", "abandoned").await.unwrap();
         rename(&database, "webhooks", "hook", "second").await.unwrap();
         assert_eq!(name(&database, "webhooks", "hook").await, Value::from("second"));
         change(&database, "webhooks", "hook").await;
