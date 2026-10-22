@@ -185,7 +185,7 @@ class Update extends Action
                 }
 
                 $sequence = $user->getSequence();
-                if ($sequence !== '' && $sequence !== null) {
+                if ($oldEmail !== $email && $sequence !== '' && $sequence !== null) {
                     $dbForProject->deleteDocuments('tokens', [
                         Query::equal('userInternalId', [$sequence]),
                         Query::equal('type', [

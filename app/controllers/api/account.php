@@ -3899,7 +3899,7 @@ Http::patch('/v1/account/email')
                 }
 
                 $sequence = $user->getSequence();
-                if ($sequence !== '' && $sequence !== null) {
+                if ($oldEmail !== $email && $sequence !== '' && $sequence !== null) {
                     $authorization->skip(fn () => $dbForProject->deleteDocuments('tokens', [
                         Query::equal('userInternalId', [$sequence]),
                         Query::equal('type', [
