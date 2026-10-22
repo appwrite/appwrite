@@ -123,7 +123,7 @@ export type BillingPlanRecord = {
   name?: string
   order?: number
   price?: number
-  eligibleCountries?: string[]
+  eligibleCountries?: string[] | null
 }
 
 export type ResolveOrganizationPlanLabelInput = {

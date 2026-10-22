@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDomainPrices } from '@/lib/react-query/hooks/domains'
-import { DOMAIN_SEARCH_TLDS } from '@/lib/domains/tlds'
+import { getDomainSearchTlds } from '@/lib/domains/tlds'
 
 export type DomainSuggestion = {
   full: string
@@ -91,42 +91,45 @@ export function buildDomainSuggestions({
 }): DomainSuggestion[] {
   if (!baseName || !showSuggestions) return []
 
-  const hasExactMatch = DOMAIN_SEARCH_TLDS.some(
+  const tlds = getDomainSearchTlds(baseName, normalizedSearch)
+  const hasExactMatch = tlds.some(
     (tld) => `${baseName}.${tld}` === normalizedSearch,
   )
 
-  return DOMAIN_SEARCH_TLDS.map((tld) => {
-    const full = `${baseName}.${tld}`
-    const apiData = apiDataByDomain.get(full)
-    const isExactMatch = full === normalizedSearch
-    const isPreferredCom =
-      tld === 'com' && normalizedSearch === baseName && !hasExactMatch
+  return tlds
+    .map((tld) => {
+      const full = `${baseName}.${tld}`
+      const apiData = apiDataByDomain.get(full)
+      const isExactMatch = full === normalizedSearch
+      const isPreferredCom =
+        tld === 'com' && normalizedSearch === baseName && !hasExactMatch
 
-    return {
-      full,
-      tld,
-      priceLoaded: apiData != null,
-      price: apiData?.price ?? undefined,
-      periodYears: apiData?.periodYears ?? 1,
-      renewalPrice: apiData?.renewalPrice,
-      renewalPeriodYears: apiData?.renewalPeriodYears,
-      taken: apiData ? !apiData.available : undefined,
-      premium: apiData?.premium,
-      isPerfectMatch: isExactMatch || isPreferredCom,
-    }
-  }).sort((a, b) => {
-    const aExact = a.full === normalizedSearch ? 1 : 0
-    const bExact = b.full === normalizedSearch ? 1 : 0
-    if (aExact !== bExact) return bExact - aExact
+      return {
+        full,
+        tld,
+        priceLoaded: apiData != null,
+        price: apiData?.price ?? undefined,
+        periodYears: apiData?.periodYears ?? 1,
+        renewalPrice: apiData?.renewalPrice,
+        renewalPeriodYears: apiData?.renewalPeriodYears,
+        taken: apiData ? !apiData.available : undefined,
+        premium: apiData?.premium,
+        isPerfectMatch: isExactMatch || isPreferredCom,
+      }
+    })
+    .sort((a, b) => {
+      const aExact = a.full === normalizedSearch ? 1 : 0
+      const bExact = b.full === normalizedSearch ? 1 : 0
+      if (aExact !== bExact) return bExact - aExact
 
-    const aRank = tldRank(a.tld, typedTld)
-    const bRank = tldRank(b.tld, typedTld)
-    if (aRank !== bRank) return aRank - bRank
+      const aRank = tldRank(a.tld, typedTld)
+      const bRank = tldRank(b.tld, typedTld)
+      if (aRank !== bRank) return aRank - bRank
 
-    const aCom = a.tld === 'com' ? 1 : 0
-    const bCom = b.tld === 'com' ? 1 : 0
-    return bCom - aCom
-  })
+      const aCom = a.tld === 'com' ? 1 : 0
+      const bCom = b.tld === 'com' ? 1 : 0
+      return bCom - aCom
+    })
 }
 
 export function useDomainSearch(
@@ -162,14 +165,12 @@ export function useDomainSearch(
     [normalizedSearch],
   )
 
-  const priorityTlds = useMemo(
-    () =>
-      DOMAIN_SEARCH_TLDS.some((tld) => tld === typedTld) &&
-      normalizedSearch === `${baseName}.${typedTld}`
-        ? [typedTld]
-        : ['com', 'dev', 'app', 'io'],
-    [baseName, normalizedSearch, typedTld],
-  )
+  const priorityTlds = useMemo(() => {
+    const exactTld = getDomainSearchTlds(baseName, normalizedSearch).find(
+      (tld) => normalizedSearch === `${baseName}.${tld}`,
+    )
+    return exactTld ? [exactTld] : ['com', 'dev', 'app', 'io']
+  }, [baseName, normalizedSearch])
 
   const showSuggestions =
     baseName.length >= 2 ||
@@ -186,10 +187,7 @@ export function useDomainSearch(
     }).map((suggestion) => suggestion.tld)
   }, [baseName, normalizedSearch, typedTld, showSuggestions])
 
-  const priorityTldSet = useMemo(
-    () => new Set(priorityTlds),
-    [priorityTlds],
-  )
+  const priorityTldSet = useMemo(() => new Set(priorityTlds), [priorityTlds])
 
   const mergeRequestedThroughIndex = useCallback(
     (throughIndex: number) => {

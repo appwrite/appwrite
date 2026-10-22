@@ -14,6 +14,7 @@ use Appwrite\Event\Publisher\Execution as ExecutionPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Jobs as JobsPublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
+use Appwrite\Event\Publisher\Maintenance as MaintenancePublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
@@ -21,6 +22,7 @@ use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Execution\Store as ExecutionStore;
+use Appwrite\Exiftool\Client as ExiftoolClient;
 use Appwrite\Geo\Client as GeoClient;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Messaging\Provider as MessagingProvider;
@@ -162,6 +164,17 @@ $container->set('autogravity', function (Cache $cache) {
     return new AutogravityDetector($client === null ? null : new AutogravityClient($client), $cache);
 }, ['cache']);
 
+$container->set('exiftool', function () {
+    $host = System::getEnv('_APP_EXIFTOOL_HOST', '');
+    $client = $host === ''
+        ? null
+        : (new Client(new SwooleClientAdapter()))
+            ->withBaseUri($host)
+            ->withTimeout(30);
+
+    return new ExiftoolClient($client);
+}, []);
+
 $container->set('telemetry', fn () => new NoTelemetry(), []);
 
 /**
@@ -299,6 +312,11 @@ $container->set('publisherForDatabase', fn (Publisher $publisher) => new Databas
 $container->set('publisherForDeletes', fn (Publisher $publisher) => new DeletePublisher(
     $publisher,
     new Queue(System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForMaintenance', fn (Publisher $publisher) => new MaintenancePublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_MAINTENANCE_QUEUE_NAME', Event::MAINTENANCE_QUEUE_NAME))
 ), ['publisher']);
 
 $container->set('publisherForMails', fn (Publisher $publisher) => new MailPublisher(

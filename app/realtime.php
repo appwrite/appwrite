@@ -290,6 +290,17 @@ if (!function_exists('triggerStats')) {
     }
 }
 
+if (!function_exists('realtimeWorkerExit')) {
+    /**
+     * Runs once as a worker exits, after it starts closing its connections. Their
+     * onClose callbacks can still run afterwards, so an override must keep working
+     * for them; a buffered publisher, for one, should publish directly once stopped.
+     */
+    function realtimeWorkerExit(int $workerId): void
+    {
+    }
+}
+
 if (!function_exists('checkForProjectUsage')) {
     function checkForProjectUsage(Document $project): void
     {
@@ -664,7 +675,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             $authorization = $realtime->connections[$connection]['authorization'] ?? null;
                             $impersonatedUserId = $realtime->connections[$connection]['impersonatedUserId'] ?? null;
                             $impersonator = $realtime->connections[$connection]['impersonator'] ?? null;
-                            $presences = $realtime->connections[$connection]['presences'] ?? [];
+                            $presence = $realtime->connections[$connection]['presence'] ?? null;
                             $jwtExpire = $realtime->connections[$connection]['jwtExpire'] ?? null;
                             // Re-read, as extending the session moves it. An impersonated
                             // connection has no sessionId; its impersonator's events refresh it.
@@ -710,9 +721,12 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                                 $realtime->connections[$connection]['sessionId'] = $sessionId;
                                 $realtime->connections[$connection]['expire'] = $expire;
                                 $realtime->connections[$connection]['jwtExpire'] = $jwtExpire;
-                                // Owned presences must survive too, or closing the socket later
-                                // would leave their rows behind until they expire.
-                                $realtime->connections[$connection]['presences'] = $presences;
+                                // The presence hold must survive too, or closing the socket later
+                                // cannot release this worker's count (the holder index is not
+                                // cleared by unsubscribe, only the connection entry is).
+                                if ($presence !== null) {
+                                    $realtime->connections[$connection]['presence'] = $presence;
+                                }
                             }
 
                             $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connection));
@@ -727,16 +741,6 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             $eventTailRegistry->revalidateConnection($connection, $roles);
                         }
                     }
-                }
-
-                // Strip deleted presences from in-memory connection state so onClose doesn't
-                // re-fire delete events for rows already removed via HTTP DELETE.
-                $deletedPresenceId = Realtime::extractDeletedPresenceId($event);
-                if ($deletedPresenceId !== null) {
-                    $realtime->removePresenceFromConnections(
-                        (string) ($event['project'] ?? ''),
-                        $deletedPresenceId,
-                    );
                 }
 
                 $receivers = $realtime->getSubscribers($event);
@@ -896,6 +900,12 @@ $adapter->onWorkerExit(function (int $workerId) use ($server, $realtime, &$exitS
         } catch (\Throwable $th) {
             Console::error('Realtime onWorkerExit close error: ' . $th->getMessage());
         }
+    }
+
+    try {
+        realtimeWorkerExit($workerId);
+    } catch (\Throwable $th) {
+        Console::error('Realtime worker exit hook error: ' . $th->getMessage());
     }
 });
 
@@ -1447,97 +1457,42 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                 $register->get('telemetry.workerSubscriptionCounter')->add(-$subscriptionsBeforeClose, $register->get('telemetry.workerAttributes'));
             }
 
-            /** @var array<string, true> $presencesById set of presence ids owned by this connection */
-            $presencesById = $realtime->connections[$connection]['presences'] ?? [];
+            $hold = $realtime->connections[$connection]['presence'] ?? null;
+            if ($hold !== null) {
+                $holdProjectId = (string) ($hold['projectId'] ?? '');
+                $holdUserId = (string) ($hold['userId'] ?? '');
+                $holdSequence = (string) ($hold['sequence'] ?? '');
 
-            if (
-                !empty($presencesById)
-                && !empty($projectId)
-                && $projectId !== 'console'
-            ) {
-                go(function () use ($presencesById, $projectId, $userId, $container, $presenceState): void {
-                    // Fresh span: the parent realtime.close span finishes before this coroutine
-                    Span::init('realtime.close.presenceCleanup');
-                    Span::add('project.id', $projectId);
-                    Span::add('realtime.presence_count', \count($presencesById));
-                    Span::add('user.id', $userId ?? null);
+                // This socket gives up its hold; the row is deleted and offline announced at zero.
+                if ($holdProjectId !== '' && $holdProjectId !== 'console' && $holdUserId !== '') {
+                    go(function () use ($holdProjectId, $holdUserId, $holdSequence, $container, $presenceState): void {
+                        Span::init('realtime.close.presenceCleanup');
+                        Span::add('project.id', $holdProjectId);
+                        Span::add('user.id', $holdUserId);
 
-                    try {
-                        $dbForPlatform = getConsoleDB();
-                        $project = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
-
-                        if ($project->isEmpty()) {
-                            return;
-                        }
-
-                        $presenceIds = \array_map(strval(...), \array_keys($presencesById));
-                        $dbForProject = getProjectDB($project);
-
-                        $user = new User([]);
-                        if (!empty($userId)) {
-                            try {
-                                $fetched = $dbForProject->getAuthorization()->skip(
-                                    fn () => $dbForProject->getDocument('users', $userId)
-                                );
-                                if (!$fetched->isEmpty()) {
-                                    $user = new User($fetched->getArrayCopy());
-                                }
-                            } catch (Throwable) {
-                                // Fall back to empty User if lookup fails.
-                            }
-                        }
-
-                        /** @var UsagePublisher $publisherForUsage */
-                        $publisherForUsage = $container->get('publisherForUsage');
-
-                        /** @var array<string, Document> $deletedPresences */
-                        $deletedPresences = [];
                         try {
-                            $deletionCount = $dbForProject->getAuthorization()->skip(
-                                function () use ($dbForProject, $presenceIds, &$deletedPresences): int {
-                                    return $dbForProject->deleteDocuments(
-                                        'presenceLogs',
-                                        [Query::equal('$id', $presenceIds)],
-                                        onNext: function (Document $deleted) use (&$deletedPresences): void {
-                                            $deletedPresences[$deleted->getId()] = $deleted;
-                                        },
-                                    );
-                                }
-                            );
-                            $presenceState->triggerUsage($publisherForUsage, $project, -$deletionCount);
+                            $dbForPlatform = getConsoleDB();
+                            $project = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('projects', $holdProjectId));
+                            if ($project->isEmpty()) {
+                                return;
+                            }
+
+                            $dbForProject = getProjectDB($project);
+                            $deleted = $presenceState->releaseConnectionForUser($dbForProject, $holdUserId, $holdSequence);
+                            if ($deleted === null) {
+                                return;
+                            }
+
+                            /** @var UsagePublisher $publisherForUsage */
+                            $publisherForUsage = $container->get('publisherForUsage');
+                            $presenceState->triggerPresenceDeleted($dbForProject, $project, $holdUserId, $deleted, $publisherForUsage, getQueueForEvents(), getQueueForRealtime());
                         } catch (Throwable $th) {
                             Span::current()?->setError($th);
-                            Span::add('presence.delete_count', \count($presenceIds));
-                            Span::add('presence.delete_ids', \implode(',', \array_slice($presenceIds, 0, 10)));
+                        } finally {
+                            Span::current()?->finish();
                         }
-
-                        $queueForEvents = getQueueForEvents();
-                        $queueForRealtime = getQueueForRealtime();
-                        foreach ($deletedPresences as $presence) {
-                            $presence->removeAttribute('$collection');
-                            $presence->removeAttribute('$tenant');
-                            $presence->removeAttribute('hostname');
-                            $presence->removeAttribute('permissionsHash');
-                            $presence->removeAttribute('userInternalId');
-                            try {
-                                $presenceState->triggerEvent(
-                                    $queueForEvents,
-                                    $queueForRealtime,
-                                    $project,
-                                    $user,
-                                    'presences.[presenceId].delete',
-                                    $presence,
-                                );
-                            } catch (Throwable) {
-                                // Swallow errors to avoid breaking disconnect cleanup
-                            }
-                        }
-                    } catch (Throwable $th) {
-                        Span::current()?->setError($th);
-                    } finally {
-                        Span::current()?->finish();
-                    }
-                });
+                    });
+                }
             }
 
             if (!empty($projectId)) {

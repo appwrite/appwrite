@@ -305,6 +305,9 @@ export function consoleAccountQueryOptions(options?: { revision?: number }) {
     staleTime: CONSOLE_ACCOUNT_STALE_TIME_MS,
     gcTime: CONSOLE_ACCOUNT_GC_TIME_MS,
     retry: false,
+    // A guest 401 has no data, so each newly mounted `useAuth()` would refetch
+    // it and flip `isLoading`, unmounting and remounting itself in a loop.
+    retryOnMount: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
