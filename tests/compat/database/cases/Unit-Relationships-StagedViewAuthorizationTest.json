@@ -22420,9 +22420,43 @@
           },
           "bind": "s93995",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "parent",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": []
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -28347,9 +28381,52 @@
           },
           "bind": "s94127",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "parent",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "$id": "stored",
+                                  "$collection": "related",
+                                  "name": "Stored",
+                                  "$permissions": []
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -36306,9 +36383,52 @@
           },
           "bind": "s94303",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "parent",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "$id": "stored",
+                                  "$collection": "related",
+                                  "name": "Stored",
+                                  "$permissions": []
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -61709,9 +61829,43 @@
           },
           "bind": "s94867",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "parent",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": []
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -67666,9 +67820,52 @@
           },
           "bind": "s94999",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "parent",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "$id": "stored",
+                                  "$collection": "related",
+                                  "name": "Stored",
+                                  "$permissions": []
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -75664,9 +75861,52 @@
           },
           "bind": "s95175",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "parent",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "$id": "stored",
+                                  "$collection": "related",
+                                  "name": "Stored",
+                                  "$permissions": []
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -120857,9 +121097,43 @@
           },
           "bind": "s96175",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "parent",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": []
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -126820,9 +127094,52 @@
           },
           "bind": "s96307",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "parent",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "$id": "stored",
+                                  "$collection": "related",
+                                  "name": "Stored",
+                                  "$permissions": []
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -134827,9 +135144,52 @@
           },
           "bind": "s96483",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "parent",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "$id": "stored",
+                                  "$collection": "related",
+                                  "name": "Stored",
+                                  "$permissions": []
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -160386,9 +160746,43 @@
           },
           "bind": "s97047",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "parent",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": []
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -166379,9 +166773,52 @@
           },
           "bind": "s97179",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "parent",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "$id": "stored",
+                                  "$collection": "related",
+                                  "name": "Stored",
+                                  "$permissions": []
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -174425,9 +174862,52 @@
           },
           "bind": "s97355",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "parent",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "$id": "stored",
+                                  "$collection": "related",
+                                  "name": "Stored",
+                                  "$permissions": []
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -404005,9 +404485,34 @@
           },
           "bind": "s100788",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": []
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -410281,9 +410786,43 @@
           },
           "bind": "s100914",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "$id": "stored",
+                                  "$collection": "related",
+                                  "name": "Stored",
+                                  "$permissions": []
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -418696,9 +419235,43 @@
           },
           "bind": "s101082",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "$id": "stored",
+                                  "$collection": "related",
+                                  "name": "Stored",
+                                  "$permissions": []
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -445852,9 +446425,34 @@
           },
           "bind": "s101628",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": []
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -452146,9 +452744,43 @@
           },
           "bind": "s101754",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "$id": "stored",
+                                  "$collection": "related",
+                                  "name": "Stored",
+                                  "$permissions": []
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -460584,9 +461216,43 @@
           },
           "bind": "s101922",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "$id": "stored",
+                                  "$collection": "related",
+                                  "name": "Stored",
+                                  "$permissions": []
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -508779,9 +509445,34 @@
           },
           "bind": "s102888",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": []
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -515091,9 +515782,43 @@
           },
           "bind": "s103014",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "$id": "stored",
+                                  "$collection": "related",
+                                  "name": "Stored",
+                                  "$permissions": []
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -523554,9 +524279,43 @@
           },
           "bind": "s103182",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "$id": "stored",
+                                  "$collection": "related",
+                                  "name": "Stored",
+                                  "$permissions": []
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -550866,9 +551625,34 @@
           },
           "bind": "s103728",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": []
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -557196,9 +557980,43 @@
           },
           "bind": "s103854",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "$id": "stored",
+                                  "$collection": "related",
+                                  "name": "Stored",
+                                  "$permissions": []
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
@@ -565682,9 +566500,43 @@
           },
           "bind": "s104022",
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "related": "stored"
+                      }
+                    },
+                    {
+                      "result": null,
+                      "calls": {
+                        "resolve": [
+                          {
+                            "args": [
+                              "related",
+                              "stored"
+                            ],
+                            "steps": [
+                              {
+                                "$document": {
+                                  "$id": "stored",
+                                  "$collection": "related",
+                                  "name": "Stored",
+                                  "$permissions": []
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           }
         },
