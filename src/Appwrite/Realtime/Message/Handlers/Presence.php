@@ -103,7 +103,7 @@ class Presence extends Action
         // otherwise both read no hold and both count, while onClose releases once (the socket stays
         // online after it disconnects). The user fetch above and the events below stay outside the
         // lock. A negative timeout waits indefinitely, so the write always runs.
-        $result = $presenceLock->withLock($connectionId, function () use ($realtime, $connectionId, $userId, $projectId, $database, $presenceState, $presenceDocument): array {
+        $result = $presenceLock->get($connectionId)->withLock(function () use ($realtime, $connectionId, $userId, $projectId, $database, $presenceState, $presenceDocument): array {
             // Row this socket already counts against; matching its sequence means a status refresh,
             // not a new hold. Sequence (not id) so a same-id delete-and-recreate is seen as new.
             $stash = $realtime->connections[$connectionId]['presence'] ?? null;

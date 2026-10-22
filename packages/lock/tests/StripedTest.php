@@ -23,7 +23,7 @@ final class StripedTest extends TestCase
         run(function () use ($striped, &$concurrent, &$max, &$count): void {
             for ($i = 0; $i < 8; $i++) {
                 Coroutine::create(function () use ($striped, &$concurrent, &$max, &$count): void {
-                    $striped->withLock('same-key', function () use (&$concurrent, &$max, &$count): void {
+                    $striped->get('same-key')->withLock(function () use (&$concurrent, &$max, &$count): void {
                         $concurrent++;
                         $max = max($max, $concurrent);
                         System::sleep(0.01);
@@ -48,7 +48,7 @@ final class StripedTest extends TestCase
         run(function () use ($striped, &$concurrent, &$max): void {
             for ($key = 0; $key < 4; $key++) {
                 Coroutine::create(function () use ($striped, $key, &$concurrent, &$max): void {
-                    $striped->withLock($key, function () use (&$concurrent, &$max): void {
+                    $striped->get($key)->withLock(function () use (&$concurrent, &$max): void {
                         $concurrent++;
                         $max = max($max, $concurrent);
                         System::sleep(0.02);
@@ -71,7 +71,7 @@ final class StripedTest extends TestCase
         run(function () use ($striped, &$concurrent, &$max): void {
             foreach (['a', 'b', 'c'] as $key) {
                 Coroutine::create(function () use ($striped, $key, &$concurrent, &$max): void {
-                    $striped->withLock($key, function () use (&$concurrent, &$max): void {
+                    $striped->get($key)->withLock(function () use (&$concurrent, &$max): void {
                         $concurrent++;
                         $max = max($max, $concurrent);
                         System::sleep(0.01);

@@ -86,7 +86,7 @@ run(function () use ($mutex): void {
 
 ### Striped
 
-Locks by key against a fixed pool of mutexes, so the number of lock objects stays constant no matter how many distinct keys you lock. Keys that hash to the same stripe serialise.
+A pool of mutexes keyed by hash: `get($key)` returns a `Lock` you drive through the normal interface, while the number of lock objects stays constant no matter how many distinct keys you lock. Keys that hash to the same stripe serialise.
 
 ```php
 <?php
@@ -96,7 +96,7 @@ use Utopia\Lock\Striped;
 $locks = new Striped(); // 256 stripes by default
 
 // Negative timeout waits indefinitely; 0.0 does not wait; a positive value is seconds.
-$locks->withLock($connectionId, function (): void {
+$locks->get($connectionId)->withLock(function (): void {
     // only one holder per key (and per colliding stripe) at a time
 }, timeout: -1.0);
 ```

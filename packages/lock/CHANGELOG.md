@@ -4,7 +4,7 @@
 
 ### Added
 
-- `Utopia\Lock\Striped` — a fixed pool of `Mutex` locks keyed by hash, so the number of lock objects stays constant regardless of how many distinct keys are locked. Keys that hash to the same stripe serialise.
+- `Utopia\Lock\Striped` — a fixed pool of `Lock`s; `get($key)` returns the `Lock` for a key, so the number of lock objects stays constant regardless of how many distinct keys are locked. Keys that hash to the same stripe serialise.
 
 ## 0.2.0 — 2026-04-24
 
