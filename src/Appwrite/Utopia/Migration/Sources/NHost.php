@@ -2,8 +2,10 @@
 
 namespace Appwrite\Utopia\Migration\Sources;
 
+use Appwrite\Network\Validator\Label;
 use PDO;
 use Utopia\Migration\Sources\NHost as Base;
+use Utopia\Validator\Identifier;
 
 /**
  * NHost source whose Postgres connection goes to an address checked beforehand. The hostname
@@ -40,8 +42,13 @@ class NHost extends Base
     public function getDatabase(): PDO
     {
         if ($this->connection === null) {
+            // Migrations stored before these were validated may hold DSN separators
+            if (!(new Label())->isValid($this->subdomain) || !(new Label())->isValid($this->region) || !(new Identifier(63))->isValid($this->databaseName)) {
+                throw new \Exception('Invalid NHost subdomain, region or database name.');
+            }
+
             try {
-                $this->connection = new PDO('pgsql:host=' . self::databaseHost($this->subdomain, $this->region) . ';hostaddr=' . $this->address . ';port=' . $this->port . ';dbname=' . $this->databaseName, $this->username, $this->password);
+                $this->connection = new PDO('pgsql:dbname=' . $this->databaseName . ';port=' . $this->port . ';host=' . self::databaseHost($this->subdomain, $this->region) . ';hostaddr=' . $this->address, $this->username, $this->password);
             } catch (\PDOException $e) {
                 throw new \Exception('Failed to connect to database: ' . $e->getMessage(), self::statusCodeFromThrowable($e), $e);
             }

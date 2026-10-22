@@ -24,4 +24,13 @@ final class NHostTest extends TestCase
 
         $nhost->getDatabase();
     }
+
+    public function testDatabaseRefusesNameWithSeparators(): void
+    {
+        $nhost = new NHost('abc', 'invalid', 'secret', 'db;hostaddr=127.0.0.2', 'user', 'password', '1', '127.0.0.1');
+
+        $this->expectExceptionMessage('Invalid NHost subdomain, region or database name.');
+
+        $nhost->getDatabase();
+    }
 }
