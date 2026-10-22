@@ -221,6 +221,8 @@ trait StagesBase
             'scopes' => ['users.read'],
         ]);
         $this->assertSame(201, $key['headers']['status-code']);
+        $this->assertSame('Onboarding', $key['body']['name']);
+        $this->assertSame(['users.read'], $key['body']['scopes']);
 
         $this->awaitStage($projectId, 'organization.createProjectKey', ONBOARDING_STATUS_COMPLETED);
     }
