@@ -3496,12 +3496,21 @@ Http::post('/v1/account/tokens/phone')
 
         $authorization->addRole(Role::user($user->getId())->toString());
 
-        $token = $dbForProject->createDocument('tokens', $token
-            ->setAttribute('$permissions', [
-                Permission::read(Role::user($user->getId())),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ]));
+        $token->setAttribute('$permissions', [
+            Permission::read(Role::user($user->getId())),
+            Permission::update(Role::user($user->getId())),
+            Permission::delete(Role::user($user->getId())),
+        ]);
+
+        // Lock the user like the phone update does, so a token is never issued for a number that just changed
+        $token = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $user, $phone, $token) {
+            $current = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
+            if ($current->getAttribute('phone') !== $phone) {
+                throw new Exception(Exception::USER_PHONE_NOT_FOUND);
+            }
+
+            return $dbForProject->createDocument('tokens', $token);
+        });
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
@@ -5490,12 +5499,21 @@ Http::post('/v1/account/verifications/phone')
 
         $authorization->addRole(Role::user($user->getId())->toString());
 
-        $verification = $dbForProject->createDocument('tokens', $verification
-            ->setAttribute('$permissions', [
-                Permission::read(Role::user($user->getId())),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ]));
+        $verification->setAttribute('$permissions', [
+            Permission::read(Role::user($user->getId())),
+            Permission::update(Role::user($user->getId())),
+            Permission::delete(Role::user($user->getId())),
+        ]);
+
+        // Lock the user like the phone update does, so a token is never issued for a number that just changed
+        $verification = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $user, $phone, $verification) {
+            $current = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
+            if ($current->getAttribute('phone') !== $phone) {
+                throw new Exception(Exception::USER_PHONE_NOT_FOUND);
+            }
+
+            return $dbForProject->createDocument('tokens', $verification);
+        });
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
