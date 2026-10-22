@@ -1,7 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { isInitSurfaceEnabled } from '@/lib/init/init-surface'
 import { initTicketStorageFileExists } from '@/lib/init/init-ticket-share'
-import { getInitTicketStorageFileViewUrl } from '@/lib/init/init-ticket-storage-config'
+import {
+  getInitTicketStorageFileViewUrl,
+  isInitTicketId,
+} from '@/lib/init/init-ticket-storage-config'
 
 export const Route = createFileRoute('/_api/init/$ticketId/og.png')({
   server: {
@@ -12,7 +15,7 @@ export const Route = createFileRoute('/_api/init/$ticketId/og.png')({
         }
 
         const ticketId = params.ticketId.trim()
-        if (!ticketId) {
+        if (!isInitTicketId(ticketId)) {
           return new Response('Not found', { status: 404 })
         }
 

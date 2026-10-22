@@ -48,8 +48,31 @@ export function isInitTicketStorageConfigured(): boolean {
   return Boolean(endpoint && projectId && bucketId)
 }
 
+const INIT_TICKET_ID_MAX_LENGTH = 36
+
+/** An Appwrite file id: letters, digits, `.`, `-` and `_`, starting with a letter or digit. */
+export function isInitTicketId(value: string): boolean {
+  if (!value || value.length > INIT_TICKET_ID_MAX_LENGTH) return false
+  for (let index = 0; index < value.length; index++) {
+    const character = value[index] as string
+    const isAlphanumeric =
+      (character >= 'a' && character <= 'z') ||
+      (character >= 'A' && character <= 'Z') ||
+      (character >= '0' && character <= '9')
+    if (isAlphanumeric) continue
+    if (index === 0 || !['.', '-', '_'].includes(character)) return false
+  }
+  return true
+}
+
+export function getInitTicketStorageFileUrl(fileId: string): string {
+  const { endpoint, projectId, bucketId } = getInitTicketStorageConfig()
+  const params = new URLSearchParams({ project: projectId })
+  return `${endpoint}/storage/buckets/${encodeURIComponent(bucketId)}/files/${encodeURIComponent(fileId)}?${params.toString()}`
+}
+
 export function getInitTicketStorageFileViewUrl(fileId: string): string {
   const { endpoint, projectId, bucketId } = getInitTicketStorageConfig()
   const params = new URLSearchParams({ project: projectId })
-  return `${endpoint}/storage/buckets/${bucketId}/files/${fileId}/view?${params.toString()}`
+  return `${endpoint}/storage/buckets/${encodeURIComponent(bucketId)}/files/${encodeURIComponent(fileId)}/view?${params.toString()}`
 }

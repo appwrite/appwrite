@@ -7,8 +7,9 @@ import {
   INIT_TICKET_SHARE_SEO_TITLE,
 } from '@/lib/init/init-seo'
 import {
-  getInitTicketStorageConfig,
+  getInitTicketStorageFileUrl,
   getInitTicketStorageFileViewUrl,
+  isInitTicketId,
 } from '@/lib/init/init-ticket-storage-config'
 import { getRequestSiteOrigin, resolveSiteAssetUrl } from '@/lib/marketing/site-origin'
 import { getPageMetaTags } from '@/lib/seo/page-meta'
@@ -38,13 +39,11 @@ export function buildInitTicketShareUrl(
 }
 
 export async function initTicketStorageFileExists(fileId: string): Promise<boolean> {
-  const { endpoint, projectId, bucketId } = getInitTicketStorageConfig()
-  const params = new URLSearchParams({ project: projectId })
+  if (!isInitTicketId(fileId)) return false
   try {
-    const response = await fetch(
-      `${endpoint}/storage/buckets/${bucketId}/files/${fileId}?${params.toString()}`,
-      { method: 'GET' },
-    )
+    const response = await fetch(getInitTicketStorageFileUrl(fileId), {
+      method: 'GET',
+    })
     return response.ok
   } catch {
     return false
