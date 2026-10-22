@@ -116,6 +116,7 @@ import {
   SECURITY_TXT_WELL_KNOWN_PATH,
   wellKnownSecurityTxtResponse,
 } from './src/lib/seo/security-txt.ts'
+import { applyDocumentSecurityHeaders } from './src/lib/security-headers.ts'
 import { trackServerPageview } from './src/lib/server-analytics.ts'
 import {
   injectSsrVisitorCountryIntoHtml,
@@ -203,7 +204,7 @@ function htmlResponse(
   const canonicalRedirect = getCanonicalHostRedirectResponse(req)
   if (canonicalRedirect) return canonicalRedirect
 
-  const responseHeaders = new Headers(headers)
+  const responseHeaders = applyDocumentSecurityHeaders(new Headers(headers))
   // Runtime config injection changes the body length.
   responseHeaders.delete('content-length')
 
@@ -821,7 +822,9 @@ function internalServerErrorResponse(): Response {
 </html>`
   return new Response(body, {
     status: 500,
-    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    headers: applyDocumentSecurityHeaders(
+      new Headers({ 'Content-Type': 'text/html; charset=utf-8' }),
+    ),
   })
 }
 

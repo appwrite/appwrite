@@ -6,6 +6,7 @@ import { legacyRedirectsMiddleware } from '@/server/middleware/legacy-redirects'
 import { legacyConsolePathMiddleware } from '@/server/middleware/legacy-console-path'
 import { rootGuestRedirectMiddleware } from '@/server/middleware/root-guest-redirect'
 import { runtimeConfigMiddleware } from '@/server/middleware/runtime-config'
+import { securityHeadersMiddleware } from '@/server/middleware/security-headers'
 import { securityTxtMiddleware } from '@/server/middleware/security-txt'
 import { seoIndexingMiddleware } from '@/server/middleware/seo-indexing'
 import { serverFnGuardMiddleware } from '@/server/middleware/server-fn-guard'
@@ -26,6 +27,8 @@ export const startInstance = createStart(() => ({
     // Apex host before other gates so www/new never serve duplicate content.
     hostCanonicalMiddleware,
     seoIndexingMiddleware,
+    // Framing / MIME-sniffing / referrer headers on rendered HTML.
+    securityHeadersMiddleware,
     runtimeConfigMiddleware,
     legacyRedirectsMiddleware,
     legacyConsolePathMiddleware,
