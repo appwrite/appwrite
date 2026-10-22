@@ -231,10 +231,13 @@ return function (Container $container): void {
             }
         }
 
+        $sessionId = $user?->sessionVerify($store->getProperty('secret', ''), $proofForToken) ?? false;
+        // A session still owing a factor authenticates nobody, as over HTTP.
         if (
             !$user
             || $user->isEmpty()
-            || !$user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+            || !$sessionId
+            || !$user->sessionFactorsMet($sessionId)
         ) {
             $user = new User([]);
         }
@@ -276,7 +279,7 @@ return function (Container $container): void {
             }
 
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (!empty($jwtSessionId) && !$user->sessionActive($jwtSessionId)) {
+            if (!empty($jwtSessionId) && (!$user->sessionActive($jwtSessionId) || !$user->sessionFactorsMet($jwtSessionId))) {
                 $user = new User([]);
             }
         }
@@ -310,6 +313,11 @@ return function (Container $container): void {
                     $user = $accountKeyUser;
                 }
             }
+        }
+
+        // A blocked user is refused over HTTP, so here it connects as a guest.
+        if ($user->getAttribute('status') === false) {
+            $user = new User([]);
         }
 
         $dbForPlatform->setMetadata('user', $user->getId());

@@ -1,7 +1,6 @@
 <?php
 
 use Appwrite\Auth\Key;
-use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Bus\Events\RequestCompleted;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event;
@@ -559,12 +558,7 @@ Http::init()
         // Step 12: Validate MFA requirements
         // $session belongs to $user, who stays the impersonator while impersonating, so the
         // impersonator's MFA applies and the target's is never asked of them.
-        $mfaEnabled = $user->getAttribute('mfa', false);
-        $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
-        $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
-        $hasVerifiedAuthenticator = TOTP::getAuthenticatorFromUser($user)?->getAttribute('verified') ?? false;
-        $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
-        $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
+        $minimumFactors = $user->getMinimumFactors();
 
         // Step 13: Handle Multi-Factor Authentication
         if (! in_array('mfa', $route->getGroups())) {
