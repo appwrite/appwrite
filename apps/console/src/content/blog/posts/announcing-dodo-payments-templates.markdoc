@@ -33,7 +33,7 @@ Its hosted checkout supports 40+ payment methods, including cards, wallets, and 
 
 ![Dodo Payments checkout](/images/blog/announcing-dodo-payments-templates/checkout.avif)
 
-A Merchant of Record is not the only way to accept payments. With a payment processor like Stripe, you stay the seller and keep more control over pricing and checkout, but you remain responsible for registering, collecting, and remitting tax. Appwrite already has [Stripe](/integrations/stripe-payments) and [Lemon Squeezy](/integrations/lemon-squeezy-payments) templates, and Dodo Payments joins them as another option. If you sell globally as a small team and would rather not register for tax in every market you reach, a Merchant of Record removes that work entirely.
+A Merchant of Record is not the only way to accept payments. With a payment processor, you stay the seller and keep more control over pricing and checkout, but you remain responsible for registering, collecting, and remitting tax. If you sell globally as a small team and would rather not register for tax in every market you reach, a Merchant of Record removes that work entirely.
 
 # How Dodo Payments fits with Appwrite
 
