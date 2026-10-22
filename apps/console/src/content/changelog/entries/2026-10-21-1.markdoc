@@ -1,15 +1,15 @@
 ---
 layout: changelog
-title: "Inactive deployments on Appwrite Cloud will be kept for 30 days by default"
+title: "Old deployments will no longer fill up your Appwrite Cloud storage"
 date: 2026-10-21
 cover: /images/blog/default-deployment-retention/cover.avif
-description: "From November 5, 2026, Appwrite Cloud deletes inactive Functions and Sites deployments after 30 days by default, freeing project storage. Active deployments are never deleted."
+description: "From November 5, 2026, inactive deployments on Appwrite Cloud are cleaned up after 30 days by default, which frees up storage on every plan."
 tags: functions, sites, storage
 ---
 
-From **November 5, 2026**, Appwrite Cloud deletes inactive [Functions](/docs/products/functions/deployments#deployment-retention) and [Sites](/docs/products/sites/deployments#deployment-retention) deployments after **30 days** by default, which frees the project storage they use. Many Free organizations reach their storage limit because of inactive deployments. The active deployment and any deployment a custom domain points to are never deleted.
+Every deployment of a function or site counts toward your storage, even after a newer one replaces it. From **November 5, 2026**, inactive deployments on Appwrite Cloud are cleaned up automatically once they're more than **30 days** old, and the space goes back to your files and databases. On the Free plan, that can free up a big part of your 2GB of storage. Your active deployment and any deployment a custom domain points to always stay.
 
-Functions and sites set to **Keep deployments forever** move to the 30-day default. To keep deployments for longer, set a retention window under **Settings** > **Build** > **Retention** before November 5. The Free and Education plans allow up to **90 days** and keep up to the **100** newest inactive deployments per function or site. The Start and Pro plans allow up to **3 years**. Self-hosted Appwrite is unchanged.
+**Keep deployments forever**, today's default, switches to 30 days on November 5. To keep more history, set a retention period in your function or site's **Settings** > **Build** > **Retention** before then: up to **90 days** and the **100** newest inactive deployments on the Free and Education plans, or up to **3 years** on the Start and Pro plans. Self-hosted Appwrite is unchanged.
 
 {% arrow_link href="/blog/post/default-deployment-retention" %}
 Read the announcement
