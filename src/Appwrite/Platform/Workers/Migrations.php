@@ -639,13 +639,17 @@ class Migrations extends Action
                 return;
             }
 
+            $destinationType = $migration->getAttribute('destination');
+            $export = $destinationType === DestinationCSV::getName() || $destinationType === DestinationJSON::getName();
+
+            // An export destination succeeds once its file row exists, inside handleDataExportComplete().
+            if (!$export) {
+                $destination->success();
+            }
             $source->success();
 
-            $destinationType = $migration->getAttribute('destination');
-            if ($destinationType === DestinationCSV::getName() || $destinationType === DestinationJSON::getName()) {
+            if ($export) {
                 $this->handleDataExportComplete($project, $migration, $destination, $publisherForMails, $queueForRealtime, $platform, $authorization);
-            } else {
-                $destination->success();
             }
 
             $migration->setAttribute('status', 'completed');
