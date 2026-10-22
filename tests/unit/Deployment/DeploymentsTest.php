@@ -267,6 +267,16 @@ final class DeploymentsTest extends TestCase
             $volume === false ? \putenv('_APP_BUILDS_VOLUME') : \putenv('_APP_BUILDS_VOLUME=' . $volume);
         }
     }
+
+    public function testIdKeepsHyphenFreePairs(): void
+    {
+        $this->assertSame('6a1b2c3d-6e4f5a6b-build', Deployments::id('6a1b2c3d', '6e4f5a6b'));
+    }
+
+    public function testIdSeparatesHyphenatedPairs(): void
+    {
+        $this->assertNotSame(Deployments::id('my-app', 'deployment'), Deployments::id('my', 'app-deployment'));
+    }
 }
 
 final readonly class ExposedDeployments extends Deployments
