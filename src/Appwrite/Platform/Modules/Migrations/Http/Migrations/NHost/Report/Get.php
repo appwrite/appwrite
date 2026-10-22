@@ -10,10 +10,10 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Validator\PasswordFormat;
+use Appwrite\Utopia\Migration\Sources\NHost;
 use Appwrite\Utopia\Response;
 use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Database\Document;
-use Utopia\Migration\Sources\NHost;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\ArrayList;
@@ -79,15 +79,19 @@ class Get extends Action
         PublicHostname $publicHostname,
         PublicInternet $publicInternet
     ): void {
-        // The source hostnames are built from the subdomain and region; refuse any that resolve to a private or reserved address
-        foreach (["{$subdomain}.db.{$region}.nhost.run", "{$subdomain}.storage.{$region}.nhost.run"] as $host) {
-            if (!$publicHostname->isValid($host)) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $publicHostname->getDescription());
-            }
+        // The source hostnames are built from the subdomain and region; refuse any that resolve to a private or reserved
+        // address, and connect Postgres to the address just checked, so DNS cannot answer differently
+        if (!$publicHostname->isValid(NHost::storageHost($subdomain, $region))) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $publicHostname->getDescription());
+        }
+        try {
+            $databaseAddress = $publicHostname->address(NHost::databaseHost($subdomain, $region));
+        } catch (\InvalidArgumentException $exception) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $exception->getMessage());
         }
 
         try {
-            $nhost = (new NHost($subdomain, $region, $adminSecret, $database, $username, $password, (string) $port))
+            $nhost = (new NHost($subdomain, $region, $adminSecret, $database, $username, $password, (string) $port, $databaseAddress))
                 ->setDestinations($publicInternet);
             $report = $nhost->report($resources);
         } catch (\Throwable $e) {

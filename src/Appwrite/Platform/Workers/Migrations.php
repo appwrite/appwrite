@@ -15,6 +15,7 @@ use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Services\TablesDB;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
+use Appwrite\Utopia\Migration\Sources\NHost;
 use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
@@ -44,7 +45,6 @@ use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
 use Utopia\Migration\Sources\CSV;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\JSON;
-use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Target;
 use Utopia\Migration\Transfer;
@@ -296,6 +296,8 @@ class Migrations extends Action
                 $credentials['username'],
                 $credentials['password'],
                 $credentials['port'],
+                // Connect Postgres to the address just checked, so DNS cannot answer differently (SSRF)
+                $this->publicHostname->address(NHost::databaseHost($credentials['subdomain'], $credentials['region'])),
             ),
             SourceAppwrite::getName() => new SourceAppwrite(
                 $credentials['projectId'],

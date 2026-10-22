@@ -13,12 +13,12 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Validator\PasswordFormat;
+use Appwrite\Utopia\Migration\Sources\NHost;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Id;
 use Utopia\Migration\Sources\Appwrite as AppwriteSource;
-use Utopia\Migration\Sources\NHost;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\ArrayList;
@@ -95,7 +95,7 @@ class Create extends Action
         PublicHostname $publicHostname
     ): void {
         // The source hostnames are built from the subdomain and region; refuse any that resolve to a private or reserved address
-        foreach (["{$subdomain}.db.{$region}.nhost.run", "{$subdomain}.storage.{$region}.nhost.run"] as $host) {
+        foreach ([NHost::databaseHost($subdomain, $region), NHost::storageHost($subdomain, $region)] as $host) {
             if (!$publicHostname->isValid($host)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $publicHostname->getDescription());
             }
