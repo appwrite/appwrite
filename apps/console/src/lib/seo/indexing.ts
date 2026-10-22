@@ -65,16 +65,18 @@ export function shouldRedirectToCanonicalHost(host: string): boolean {
 
 /**
  * Build a permanent redirect URL to `targetHost` with the same path and query.
+ * The path is set on a URL that already has the host, so a path that starts
+ * with `//` stays a path on `targetHost`.
  */
 export function getCanonicalHostRedirectUrl(
   requestUrl: string,
   targetHost: string = CANONICAL_HOST,
 ): string {
   const incoming = new URL(requestUrl)
-  return new URL(
-    `${incoming.pathname}${incoming.search}`,
-    `https://${targetHost}`,
-  ).toString()
+  const target = new URL(`https://${targetHost}`)
+  target.pathname = incoming.pathname
+  target.search = incoming.search
+  return target.toString()
 }
 
 /** 301 to the mapped host, or null when this request should be served as-is. */
