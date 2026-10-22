@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Sites;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Retry;
@@ -2778,6 +2779,79 @@ final class SitesCustomServerTest extends Scope
         $function = $this->getSite($siteId);
 
         $this->assertEquals(404, $function['headers']['status-code']);
+    }
+
+    public function testDeleteSiteBuildCache(): void
+    {
+        $siteId = $this->setupBuildCacheSite();
+        $builds = getDevice(APP_STORAGE_BUILDS . '/app-' . $this->getProject()['$id']);
+        $cache = $this->buildCache($siteId, 'node-22');
+        $this->assertTrue($builds->exists($cache), 'The build left no cache to clean up');
+
+        $response = $this->deleteSite($siteId);
+        $this->assertSame(204, $response['headers']['status-code']);
+
+        $this->assertEventually(function () use ($builds, $cache): void {
+            \clearstatcache();
+            $this->assertFalse($builds->exists($cache), 'Deleting the site left its build cache behind');
+        }, 60000, 500);
+    }
+
+    public function testUpdateSiteRuntimeBuildCache(): void
+    {
+        $siteId = $this->setupBuildCacheSite();
+        $builds = getDevice(APP_STORAGE_BUILDS . '/app-' . $this->getProject()['$id']);
+        $cache = $this->buildCache($siteId, 'node-22');
+        $this->assertTrue($builds->exists($cache), 'The build left no cache to clean up');
+
+        // Builds key a new cache for the new runtime, so nothing would read or delete the old one
+        $response = $this->updateSite([
+            '$id' => $siteId,
+            'name' => 'Test Build Cache Site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'fallbackFile' => '',
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        \clearstatcache();
+        $this->assertFalse($builds->exists($cache), 'Changing the build runtime left the previous build cache behind');
+
+        $this->cleanupSite($siteId);
+    }
+
+    private function setupBuildCacheSite(): string
+    {
+        $siteId = $this->setupSite([
+            'siteId' => Id::unique(),
+            'name' => 'Test Build Cache Site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+        ]);
+        $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => 'true',
+        ]);
+
+        return $siteId;
+    }
+
+    /**
+     * Where builds of this site on this runtime keep their package-manager cache.
+     */
+    private function buildCache(string $siteId, string $buildRuntime): string
+    {
+        return Deployments::resourceCachePath($this->getProject()['$id'], new Document([
+            '$id' => $siteId,
+            '$collection' => 'sites',
+            'buildRuntime' => $buildRuntime,
+        ]));
     }
 
     public function testDeleteSiteRulesCleanup(): void
