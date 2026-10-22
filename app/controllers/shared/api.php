@@ -611,7 +611,7 @@ Http::init()
                     '{ip}' => (string) $request->getIP(),
                     '{url}' => $request->getHostname() . $route->getPath(),
                     '{method}' => (string) $request->getMethod(),
-                    '{chunkId}' => (string) $request->getContentRangeChunk(),
+                    '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
                 ];
 
                 foreach ($request->getParams() as $key => $value) {
@@ -995,7 +995,7 @@ Http::shutdown()
                 '{ip}' => (string) $request->getIP(),
                 '{url}' => $request->getHostname() . $route->getPath(),
                 '{method}' => (string) $request->getMethod(),
-                '{chunkId}' => (string) $request->getContentRangeChunk(),
+                '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
             ];
 
             foreach ($request->getParams() as $key => $value) {

@@ -273,7 +273,7 @@ final class RequestTest extends TestCase
         $request = new Request($swoole);
 
         $this->assertSame($start, $request->getContentRangeStart());
-        $this->assertSame($chunk, $request->getContentRangeChunk());
+        $this->assertSame($chunk, $request->getContentRangeChunk(5242880));
     }
 
     /**
@@ -283,7 +283,8 @@ final class RequestTest extends TestCase
     {
         yield 'first chunk' => ['bytes 0-5242879/12582912', 0, 0];
         yield 'second chunk' => ['bytes 5242880-10485759/12582912', 5242880, 1];
-        yield 'single byte' => ['bytes 7-7/8', 7, 7];
+        yield 'last chunk shorter than the rest' => ['bytes 10485760-12582911/12582912', 10485760, 2];
+        yield 'short range inside a chunk' => ['bytes 5242881-5242881/12582912', 5242881, 1];
         yield 'end equal to size' => ['bytes 0-10/10', 0, 0];
         yield 'bounds at the integer limit' => ['bytes 9223372036854775807-9223372036854775807/9223372036854775807', null, 0];
         yield 'bounds past the integer limit' => ['bytes 0-99999999999999999999/99999999999999999999', null, 0];

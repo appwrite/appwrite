@@ -254,18 +254,17 @@ class Request extends UtopiaRequest
     }
 
     /**
-     * Index of the uploaded chunk, counted in chunks the length of this range. 0 without a valid range.
+     * Index of the chunk this range starts in, for chunks of the given size. 0 without a valid range.
      */
-    public function getContentRangeChunk(): int
+    public function getContentRangeChunk(int $size): int
     {
         $start = $this->getContentRangeStart();
-        $end = $this->getContentRangeEnd();
 
-        if ($start === null || $end === null) {
+        if ($start === null) {
             return 0;
         }
 
-        return \intdiv($start, $end - $start + 1);
+        return \intdiv($start, $size);
     }
 
     /**
