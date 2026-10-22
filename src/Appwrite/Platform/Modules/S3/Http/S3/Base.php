@@ -194,10 +194,10 @@ abstract class Base extends Action
         return 's3.multipart.index.' . $project->getId() . '.' . $bucket->getId();
     }
 
-    protected function createMultipartUpload(Database $dbForProject, Cache $cache, Document $project, Device $deviceForFiles, Document $bucket, string $key, string $uploadId, string $contentType, array $metadata): array
+    protected function createMultipartUpload(callable $locks, Database $dbForProject, Cache $cache, Document $project, Device $deviceForFiles, Document $bucket, string $key, string $uploadId, string $contentType, array $metadata): array
     {
         // Listing aborts the bucket's expired staging before more is created.
-        $this->getMultipartUploads($cache, $dbForProject, $project, $deviceForFiles, $bucket);
+        $this->getMultipartUploads($locks, $cache, $dbForProject, $project, $deviceForFiles, $bucket);
         $existing = $this->findObject($dbForProject, $bucket, $key);
         $object = $existing === null ? $this->objectPath($key) : [
             'folder' => $existing->getAttribute('folder', ''),
@@ -847,17 +847,14 @@ abstract class Base extends Action
     {
         $collection = 'bucket_' . $bucket->getSequence();
         $object = $this->objectPath($key);
-        $files = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->find($collection, [
+        // Storage allows duplicate names; like listings, a key resolves to its oldest file.
+        $file = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->findOne($collection, [
             Query::equal('folder', [$object['folder']]),
             Query::equal('name', [$object['name']]),
-            Query::limit(2),
+            Query::orderAsc('$sequence'),
         ]));
 
-        if (\count($files) > 1) {
-            throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, "Multiple files match S3 object key '{$key}'.");
-        }
-
-        return $files[0] ?? null;
+        return $file->isEmpty() ? null : $file;
     }
 
     /**
@@ -898,13 +895,13 @@ abstract class Base extends Action
     /**
      * @return array<int, array{key: string, uploadId: string, initiated: string}>
      */
-    protected function getMultipartUploads(Cache $cache, Database $dbForProject, Document $project, Device $deviceForFiles, Document $bucket): array
+    protected function getMultipartUploads(callable $locks, Cache $cache, Database $dbForProject, Document $project, Device $deviceForFiles, Document $bucket): array
     {
         $uploads = [];
         foreach ($cache->list($this->multipartIndexKey($project, $bucket)) as $uploadId) {
             $state = $cache->load($this->multipartStateKey($project, $uploadId), self::MULTIPART_TTL);
             if (!\is_string($state)) {
-                $this->expireMultipartUpload($cache, $dbForProject, $project, $deviceForFiles, $bucket, $uploadId);
+                $this->expireMultipartUpload($locks, $cache, $dbForProject, $project, $deviceForFiles, $bucket, $uploadId);
                 continue;
             }
             $upload = \json_decode($state, true, flags: JSON_THROW_ON_ERROR);
@@ -1022,23 +1019,42 @@ abstract class Base extends Action
         $this->purgeMultipartUpload($cache, $project, $bucket, $upload);
     }
 
-    protected function expireMultipartUpload(Cache $cache, Database $dbForProject, Document $project, Device $deviceForFiles, Document $bucket, string $uploadId): void
+    protected function expireMultipartUpload(callable $locks, Cache $cache, Database $dbForProject, Document $project, Device $deviceForFiles, Document $bucket, string $uploadId): void
     {
         $state = $cache->load($this->multipartStateKey($project, $uploadId), self::MULTIPART_RETENTION);
         $upload = \is_string($state) ? \json_decode($state, true) : null;
-        $path = \is_array($upload) ? (string) ($upload['path'] ?? '') : '';
-        if ($path !== '') {
-            try {
-                $committed = $this->findObject($dbForProject, $bucket, (string) ($upload['requestedKey'] ?? $upload['key'] ?? ''));
-                if ($committed?->getAttribute('path', '') !== $path) {
-                    $deviceForFiles->abort($path, (string) ($upload['metadata']['device']['uploadId'] ?? ''));
-                }
-            } catch (\Throwable $error) {
-                Console::warning('Failed to abort expired S3 multipart upload ' . $uploadId . ': ' . $error->getMessage());
-            }
+        if (!\is_array($upload) || (string) ($upload['path'] ?? '') === '') {
+            $this->purgeMultipartUpload($cache, $project, $bucket, ['uploadId' => $uploadId]);
+            return;
         }
 
-        $this->purgeMultipartUpload($cache, $project, $bucket, ['uploadId' => $uploadId]);
+        $key = (string) ($upload['requestedKey'] ?? $upload['key'] ?? '');
+        try {
+            // Serialized with completion, which commits the staging path under this lock.
+            $locks($this->objectLockKey($project, $bucket, $key), 600, function () use ($cache, $dbForProject, $project, $deviceForFiles, $bucket, $upload, $uploadId): void {
+                if (\is_string($cache->load($this->multipartStateKey($project, $uploadId), self::MULTIPART_TTL))) {
+                    return;
+                }
+
+                $path = (string) $upload['path'];
+                $committed = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->findOne('bucket_' . $bucket->getSequence(), [
+                    Query::equal('folder', [(string) ($upload['folder'] ?? '')]),
+                    Query::equal('name', [(string) ($upload['name'] ?? '')]),
+                    Query::equal('path', [$path]),
+                ]));
+                if ($committed->isEmpty()) {
+                    try {
+                        $deviceForFiles->abort($path, (string) ($upload['metadata']['device']['uploadId'] ?? ''));
+                    } catch (\Throwable $error) {
+                        Console::warning('Failed to abort expired S3 multipart upload ' . $uploadId . ': ' . $error->getMessage());
+                    }
+                }
+
+                $this->purgeMultipartUpload($cache, $project, $bucket, ['uploadId' => $uploadId]);
+            });
+        } catch (Contention) {
+            // The key is busy; the next listing retries.
+        }
     }
 
     protected function purgeMultipartUpload(Cache $cache, Document $project, Document $bucket, array $upload): void

@@ -77,7 +77,7 @@ class Get extends Base
                 return;
             }
             if ($this->hasQuery($request, 'uploads')) {
-                $this->sendXml($response, S3Xml::listMultipartUploads($bucketId, $this->getMultipartUploads($cache, $dbForProject, $project, $deviceForFiles, $bucket)));
+                $this->sendXml($response, S3Xml::listMultipartUploads($bucketId, $this->getMultipartUploads($locks, $cache, $dbForProject, $project, $deviceForFiles, $bucket)));
                 return;
             }
 

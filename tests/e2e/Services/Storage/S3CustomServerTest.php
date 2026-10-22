@@ -277,6 +277,13 @@ final class S3CustomServerTest extends Scope
             \sort($expected);
             $this->assertSame($expected, $keys);
         }
+
+        $object = $this->call(Client::METHOD_GET, '/' . $bucketId . '/' . $name);
+        $this->assertSame(200, $object['headers']['status-code']);
+        $this->assertSame(\file_get_contents(\realpath(__DIR__ . '/../../../resources/logo.png')), $object['body']);
+
+        $head = $this->call(Client::METHOD_HEAD, '/' . $bucketId . '/' . $name);
+        $this->assertSame(200, $head['headers']['status-code']);
     }
 
     public function testWriteAntivirusBucket(): void

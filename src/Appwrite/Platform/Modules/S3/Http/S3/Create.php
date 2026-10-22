@@ -102,7 +102,7 @@ class Create extends Base
             $bucket = $this->bucket($dbForProject, $bucketId);
             $this->validateAntivirus($bucket, $deviceForFiles);
             $uploadId = \bin2hex(\random_bytes(16));
-            $this->createMultipartUpload($dbForProject, $cache, $project, $deviceForFiles, $bucket, $key, $uploadId, $request->getHeaderLine('content-type', 'application/octet-stream'), $this->requestObjectMetadata($request));
+            $this->createMultipartUpload($locks, $dbForProject, $cache, $project, $deviceForFiles, $bucket, $key, $uploadId, $request->getHeaderLine('content-type', 'application/octet-stream'), $this->requestObjectMetadata($request));
             $this->sendXml($response, S3Xml::initiateMultipart($bucketId, $key, $uploadId));
             return;
         }
