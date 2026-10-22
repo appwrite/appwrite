@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\SMTP\Breaker;
 use Appwrite\SMTP\Refusal;
 use Appwrite\Template\Template;
@@ -43,6 +44,7 @@ class Mails extends Action
             ->inject('project')
             ->inject('register')
             ->inject('telemetry')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
@@ -59,10 +61,11 @@ class Mails extends Action
      * @param Document $project
      * @param Registry $register
      * @param Telemetry $telemetry
+     * @param PublicHostname $publicHostname
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Registry $register, Telemetry $telemetry): void
+    public function action(Message $message, Document $project, Registry $register, Telemetry $telemetry, PublicHostname $publicHostname): void
     {
         $payload = $message->getPayload();
 
@@ -174,6 +177,7 @@ class Mails extends Action
             timeout: 10,
             keepAlive: false,
             timelimit: 30,
+            resolve: $publicHostname->address(...),
         );
 
         // Resolve from/replyTo using fallback hierarchy: Custom options > SMTP config > Defaults
