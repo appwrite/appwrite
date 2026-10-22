@@ -49,9 +49,11 @@ final class ProjectsCustomClientTest extends Scope
 
         $response = $this->client->call(Client::METHOD_GET, '/organization/projects/' . $projectId, $headers);
         $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertSame('user_unauthorized', $response['body']['type']);
 
         $response = $this->client->call(Client::METHOD_GET, '/organization/projects/' . $projectId . '/keys', $headers);
         $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertSame('user_unauthorized', $response['body']['type']);
 
         $response = $this->client->call(Client::METHOD_POST, '/organization/projects/' . $projectId . '/keys', $headers, [
             'keyId' => Id::unique(),
@@ -59,6 +61,7 @@ final class ProjectsCustomClientTest extends Scope
             'scopes' => ['users.read'],
         ]);
         $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertSame('user_unauthorized', $response['body']['type']);
 
         /**
          * Test for SUCCESS
