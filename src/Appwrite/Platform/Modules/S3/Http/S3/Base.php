@@ -265,8 +265,10 @@ abstract class Base extends Action
         }
 
         // Devices keep the first bytes staged for a part number, so a retry must resend the same content.
-        $staged = $upload['parts'][(string) $partNumber]['etag'] ?? null;
-        if ($staged !== null && $staged !== $etag) {
+        $checksum = \hash('sha256', $body);
+        $staged = $upload['parts'][(string) $partNumber] ?? null;
+        $changed = isset($staged['checksum']) ? $staged['checksum'] !== $checksum : ($staged['etag'] ?? $etag) !== $etag;
+        if ($changed) {
             throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, 'Part ' . $partNumber . ' was already uploaded with different content. Start a new multipart upload to change it.');
         }
 
@@ -290,9 +292,14 @@ abstract class Base extends Action
             $deviceMetadata
         );
 
+        // Expiry may have aborted the staging while this part was written.
+        if (!\is_string($cache->load($this->multipartStateKey($project, (string) $upload['uploadId']), self::MULTIPART_TTL))) {
+            throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, 'Multipart upload not found.');
+        }
+
         $metadata['device'] = $deviceMetadata;
         $upload['metadata'] = $metadata;
-        $upload['parts'][(string) $partNumber] = ['etag' => $etag, 'size' => \strlen($body)];
+        $upload['parts'][(string) $partNumber] = ['etag' => $etag, 'checksum' => $checksum, 'size' => \strlen($body)];
         $this->saveMultipartUpload($cache, $project, $upload);
 
         return $upload;
