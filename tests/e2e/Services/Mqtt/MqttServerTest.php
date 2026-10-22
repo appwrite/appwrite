@@ -538,6 +538,74 @@ final class MqttServerTest extends Scope
         }
     }
 
+    public function testIdTokenSignInReplacingSessionDisconnects(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId] = $this->createUser();
+        $session = $this->createSession($userId);
+        $console = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ];
+
+        $provider = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', $console, [
+            'provider' => 'mock',
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertSame(200, $provider['headers']['status-code']);
+        $native = $this->client->call(Client::METHOD_PATCH, '/mock/tests/general/oauth2/native', $console, [
+            'projectId' => $projectId,
+            'provider' => 'mock',
+            'enabled' => true,
+            'clientIds' => [],
+        ]);
+        $this->assertSame(204, $native['headers']['status-code']);
+
+        $token = $this->client->call(Client::METHOD_GET, '/mock/tests/general/oauth2/id-token', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'claims' => \json_encode([
+                'iss' => 'https://localhost/v1/mock',
+                'aud' => '1',
+                'iat' => \time(),
+                'exp' => \time() + 3600,
+                'sub' => 'mqtt-' . $userId,
+                'email' => 'mqtt-idtoken-' . $userId . '@appwrite.io',
+                'email_verified' => true,
+            ]),
+            'header' => '',
+        ]);
+        $this->assertSame(200, $token['headers']['status-code']);
+
+        $subscriber = $this->subscribeToUserTopic($projectId, $userId, $session, 'e2e-revoke-id-token-', 'appwrite-session');
+
+        try {
+            // Signing in while logged in links the provider and replaces the current session.
+            $signIn = $this->client->call(Client::METHOD_POST, '/account/sessions/id-token', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => 'a_session_' . $projectId . '=' . $session,
+            ], [
+                'provider' => 'mock',
+                'idToken' => $token['body']['token'],
+            ]);
+            $this->assertSame(201, $signIn['headers']['status-code']);
+            $this->assertSame($userId, $signIn['body']['userId']);
+
+            // Test for SUCCESS: the connection on the replaced session is ended.
+            $this->assertSame(Disconnect::NOT_AUTHORIZED, $subscriber->awaitDisconnect(self::REVOKE_TIMEOUT), 'the broker did not disconnect a session replaced by sign-in');
+        } finally {
+            $subscriber->disconnect();
+        }
+    }
+
     public function testAccountLogoutOpenConnectionIsDisconnected(): void
     {
         $projectId = $this->getProject()['$id'];
