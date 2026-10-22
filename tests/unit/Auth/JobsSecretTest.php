@@ -31,7 +31,7 @@ final class JobsSecretTest extends TestCase
     public function testVerifyRejectsInsecureSecret(?string $secret): void
     {
         $body = '{"id":"job-1"}';
-        $key = $secret === null || $secret === '' ? 'unused' : $secret;
+        $key = $secret ?? '';
         $signature = 'sha256=' . \hash_hmac('sha256', $body, $key);
 
         $this->assertFalse(JobsSecret::verify($body, $signature, $secret));
