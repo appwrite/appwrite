@@ -1747,7 +1747,8 @@ fn parse_email(ctx: &Context, provider_email: &str, verified: bool) -> Result<(S
         provider_email.to_owned()
     };
     let mut emails: Vec<String> = Vec::new();
-    for e in [&email, &provider_email.to_owned(), &canonical] {
+    // The provider's own address only, never a cross-domain canonical form.
+    for e in [&email, &provider_email.to_owned(), &provider_email.to_lowercase()] {
         if !e.is_empty() && e != "0" && !emails.contains(e) {
             emails.push(e.clone());
         }
@@ -1877,6 +1878,10 @@ async fn resolve_user(
                     return fail(ctx, Error::new(ErrorType::GeneralBadRequest));
                 }
                 let mut found = User::from(&found);
+                // The verified owner of the address claims an unverified account: nobody else keeps access.
+                if found.email_verification != Some(true) {
+                    db.authorization().skip(base::profile::revoke_credentials(&db, &mut found)).await?;
+                }
                 let domain = |e: &str| utopia_emails::Email::new(e).map(|p| p.domain().to_owned()).unwrap_or_default();
                 if domain(found.email.as_deref().unwrap_or("")) == domain(provider_email) {
                     found.email_verification = Some(true);
@@ -2237,83 +2242,13 @@ async fn verify_id_token(
     Ok(claims)
 }
 
-/// The email policies as the ID token flow checks them: in CE only on the
-/// console (its plan check has no empty-plan default).
+/// The email policies of the ID token flow: none for a token without an
+/// address.
 fn id_token_email_policy(ctx: &Context, meta: &Metadata, email: &str, canonicalized: bool) -> Result<()> {
     if email.is_empty() {
         return Ok(());
     }
-    let gate = |flag: &str| {
-        ctx.project.is_console()
-            || ctx
-                .state
-                .hooks
-                .plan(&ctx.project)
-                .is_some_and(|p| p.get(flag).is_some_and(utopia_validators::php::truthy))
-    };
-    let auths = &ctx.project;
-    if gate("supportsDisposableEmailValidation")
-        && auths.auth_bool("disposableEmails", false)
-        && meta.is_disposable == Some(true)
-    {
-        return Err(Error::new(ErrorType::UserEmailDisposable));
-    }
-    if gate("supportsCanonicalEmailValidation")
-        && auths.auth_bool("canonicalEmails", false)
-        && meta.is_canonical == Some(false)
-        && !canonicalized
-    {
-        return Err(Error::new(ErrorType::UserEmailNotCanonical));
-    }
-    if gate("supportsFreeEmailValidation") && auths.auth_bool("freeEmails", false) && meta.is_free == Some(true) {
-        return Err(Error::new(ErrorType::UserEmailFree));
-    }
-    if gate("supportsCorporateEmailValidation")
-        && auths.auth_bool("corporateEmails", false)
-        && meta.is_corporate != Some(true)
-    {
-        return Err(Error::new(ErrorType::UserEmailNotCorporate));
-    }
-    Ok(())
-}
-
-/// `parseEmail()` of the ID token flow (its canonical gate has no
-/// empty-plan default either).
-fn id_token_email(
-    ctx: &Context,
-    provider_email: &str,
-    verified: bool,
-) -> Result<(String, Vec<String>, Metadata, bool)> {
-    let parsed = utopia_emails::Email::new(provider_email).map_err(|_| Error::new(ErrorType::GeneralInvalidEmail))?;
-    let canonical = parsed.canonical().map_err(|_| Error::new(ErrorType::GeneralInvalidEmail))?;
-    let gate = ctx.project.is_console()
-        || ctx
-            .state
-            .hooks
-            .plan(&ctx.project)
-            .is_some_and(|p| p.get("supportsCanonicalEmailValidation").is_some_and(utopia_validators::php::truthy));
-    let canonicalize = gate && ctx.project.auth_bool("canonicalEmails", false) && verified;
-    let email = if canonicalize {
-        let local = canonical.split('@').next().unwrap_or("");
-        let domain = provider_email.to_lowercase().split_once('@').map(|(_, d)| d.to_owned()).unwrap_or_default();
-        format!("{local}@{domain}")
-    } else {
-        provider_email.to_owned()
-    };
-    let mut emails: Vec<String> = Vec::new();
-    for e in [&email, &provider_email.to_owned(), &canonical] {
-        if !e.is_empty() && e != "0" && !emails.contains(e) {
-            emails.push(e.clone());
-        }
-    }
-    let meta = Metadata {
-        is_canonical: Some(email.to_lowercase() == canonical),
-        canonical: Some(canonical),
-        is_corporate: Some(parsed.is_corporate()),
-        is_disposable: Some(parsed.is_disposable()),
-        is_free: Some(parsed.is_free()),
-    };
-    Ok((email, emails, meta, canonicalize))
+    base::check_email_policy(ctx, meta, canonicalized)
 }
 
 /// `POST /v1/account/sessions/id-token`.
@@ -2446,7 +2381,7 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
         let mut meta = Metadata::default();
         let mut canonicalize = false;
         if user.is_none() && !provider_email.is_empty() {
-            (email, emails, meta, canonicalize) = id_token_email(ctx, &provider_email, is_verified)?;
+            (email, emails, meta, canonicalize) = parse_email(ctx, &provider_email, is_verified)?;
         }
         if user.is_none() && !email.is_empty() {
             let found = db
@@ -2457,6 +2392,10 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
                     return Err(Error::new(ErrorType::GeneralBadRequest));
                 }
                 let mut found = User::from(&found);
+                // The verified owner of the address claims an unverified account: nobody else keeps access.
+                if found.email_verification != Some(true) {
+                    db.authorization().skip(base::profile::revoke_credentials(&db, &mut found)).await?;
+                }
                 let domain = |e: &str| utopia_emails::Email::new(e).map(|p| p.domain().to_owned()).unwrap_or_default();
                 if domain(found.email.as_deref().unwrap_or("")) == domain(&provider_email) {
                     found.email_verification = Some(true);
@@ -2519,7 +2458,7 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
         return Err(Error::new(ErrorType::UserBlocked));
     }
     if user.email.as_deref().is_none_or(|e| e.is_empty() || e == "0") && !provider_email.is_empty() {
-        let (email, emails, meta, canonicalize) = id_token_email(ctx, &provider_email, is_verified)?;
+        let (email, emails, meta, canonicalize) = parse_email(ctx, &provider_email, is_verified)?;
         let others = db
             .find(
                 "users",

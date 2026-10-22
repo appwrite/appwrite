@@ -7,7 +7,7 @@ use utopia_emails::EmailValidator;
 use utopia_http::Response;
 use utopia_validators::{AllOf, Boolean, Text, Validator, php};
 
-use appwrite_core::database::documents::{self, Token, User};
+use appwrite_core::database::documents::{self, Attributes, Token, User};
 use appwrite_core::datetime;
 use appwrite_core::platform::{Context, Route};
 use appwrite_core::response::TokenModel;
@@ -115,14 +115,28 @@ async fn recovery(ctx: &mut Context, email: &str, kind: i64, secret: String, exp
         Some(p) => (p.id.clone(), documents::internal_id(p.sequence)),
         None => (unique(), Value::from(unique().as_str())),
     };
-    let token = base::new_token(ctx, &user_id, internal_id, kind, &secret, expire)?;
-    let token = base::create_token(ctx, &user_id, token).await?;
+    let mut token = base::new_token(ctx, &user_id, internal_id, kind, &secret, expire)?;
+    token.set("$permissions", base::owner_permissions(&user_id))?;
+    let authorization = db.authorization();
+    // The token is stored only while the user (its row locked) is still
+    // active with that address; otherwise it binds no one, and nothing is
+    // delivered.
+    let (profile, token) = match profile {
+        Some(p) => {
+            let allows =
+                |current: &Document| current.boolean("status") != Some(false) && base::has_email(current, email);
+            match base::create_bound_token(&db, &p.id, token.clone(), allows).await? {
+                Some(created) => (Some(p), created),
+                None => (None, base::create_unbound_token(&db, token, false).await?),
+            }
+        }
+        None => (None, authorization.skip(db.create_document("tokens", token)).await?),
+    };
     match &profile {
         Some(p) => {
             db.purge_cached_document("users", &p.id).await?;
         }
         None => {
-            let authorization = db.authorization();
             authorization.skip(db.delete_document("tokens", token.id())).await?;
         }
     }
