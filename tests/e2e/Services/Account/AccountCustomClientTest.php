@@ -151,6 +151,35 @@ final class AccountCustomClientTest extends Scope
         $this->fail('TOTP did not rotate within the expected time window.');
     }
 
+    private function extractEmailCode(string $text): string
+    {
+        $marker = 'Use OTP ';
+        $offset = strpos($text, $marker);
+        if ($offset !== false) {
+            $code = substr($text, $offset + strlen($marker), 6);
+            if (strlen($code) === 6 && ctype_digit($code)) {
+                return $code;
+            }
+        }
+
+        $length = strlen($text);
+        for ($i = 0; $i <= $length - 6; $i++) {
+            $candidate = substr($text, $i, 6);
+            if (!ctype_digit($candidate)) {
+                continue;
+            }
+            if ($i > 0 && ctype_digit($text[$i - 1])) {
+                continue;
+            }
+            if ($i + 6 < $length && ctype_digit($text[$i + 6])) {
+                continue;
+            }
+            return $candidate;
+        }
+
+        return '';
+    }
+
     /**
      * Helper to set up a basic account
      */
@@ -1617,19 +1646,24 @@ final class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $projectId . '=' . $cookie,
         ]);
 
+        $projectName = $this->getProject()['name'];
+
         $verification = $this->client->call(Client::METHOD_POST, '/account/verification', $sessionHeaders, [
             'url' => 'http://localhost/verification',
         ]);
         $this->assertEquals(201, $verification['headers']['status-code']);
-        $verificationMail = $this->getLastEmailByAddress($email);
+        $verificationMail = $this->getLastEmailByAddress($email, function ($mail) use ($projectName) {
+            $this->assertSame('Account Verification for ' . $projectName, (string) $mail['subject']);
+        });
         $verificationSecret = $this->extractQueryParamsFromEmailLink($verificationMail['html'])['secret'] ?? '';
         $this->assertNotEmpty($verificationSecret);
 
         $verificationOtp = $this->client->call(Client::METHOD_POST, '/account/verifications/email/otp', $sessionHeaders);
         $this->assertEquals(201, $verificationOtp['headers']['status-code']);
-        $verificationOtpMail = $this->getLastEmailByAddress($email);
-        preg_match_all("/\b\d{6}\b/", $verificationOtpMail['text'], $verificationOtpMatches);
-        $verificationOtpSecret = $verificationOtpMatches[0][0] ?? '';
+        $verificationOtpMail = $this->getLastEmailByAddress($email, function ($mail) use ($projectName) {
+            $this->assertSame('Verify your email for ' . $projectName, (string) $mail['subject']);
+        });
+        $verificationOtpSecret = $this->extractEmailCode((string) $verificationOtpMail['text']);
         $this->assertNotEmpty($verificationOtpSecret);
 
         $magicUrl = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', $headers, [
@@ -1637,7 +1671,9 @@ final class AccountCustomClientTest extends Scope
             'email' => $email,
         ]);
         $this->assertEquals(201, $magicUrl['headers']['status-code']);
-        $magicMail = $this->getLastEmailByAddress($email);
+        $magicMail = $this->getLastEmailByAddress($email, function ($mail) use ($projectName) {
+            $this->assertSame($projectName . ' Login', (string) $mail['subject']);
+        });
         $magicSecret = substr($magicMail['text'], strpos($magicMail['text'], '&secret=', 0) + 8, 64);
         $this->assertNotEmpty($magicSecret);
 
@@ -1646,18 +1682,20 @@ final class AccountCustomClientTest extends Scope
             'email' => $email,
         ]);
         $this->assertEquals(201, $emailOtp['headers']['status-code']);
-        $emailOtpMail = $this->getLastEmailByAddress($email);
-        preg_match_all("/\b\d{6}\b/", $emailOtpMail['text'], $emailOtpMatches);
-        $emailOtpSecret = $emailOtpMatches[0][0] ?? '';
+        $emailOtpMail = $this->getLastEmailByAddress($email, function ($mail) use ($projectName) {
+            $this->assertSame('OTP for ' . $projectName . ' Login', (string) $mail['subject']);
+        });
+        $emailOtpSecret = $this->extractEmailCode((string) $emailOtpMail['text']);
         $this->assertNotEmpty($emailOtpSecret);
 
         $recoveryOtp = $this->client->call(Client::METHOD_POST, '/account/recovery/otp', $headers, [
             'email' => $email,
         ]);
         $this->assertEquals(201, $recoveryOtp['headers']['status-code']);
-        $recoveryOtpMail = $this->getLastEmailByAddress($email);
-        preg_match_all("/\b\d{6}\b/", $recoveryOtpMail['text'], $recoveryOtpMatches);
-        $recoveryOtpSecret = $recoveryOtpMatches[0][0] ?? '';
+        $recoveryOtpMail = $this->getLastEmailByAddress($email, function ($mail) use ($projectName) {
+            $this->assertSame('Password Reset for ' . $projectName, (string) $mail['subject']);
+        });
+        $recoveryOtpSecret = $this->extractEmailCode((string) $recoveryOtpMail['text']);
         $this->assertNotEmpty($recoveryOtpSecret);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/account/email', $sessionHeaders, [
