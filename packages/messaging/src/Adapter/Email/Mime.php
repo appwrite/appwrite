@@ -121,7 +121,7 @@ final class Mime
         $document = HTMLDocument::createFromString($email->getContent(), LIBXML_NOERROR);
 
         $text = '';
-        foreach (explode("\n", self::render($document->body ?? $document)) as $line) {
+        foreach (explode("\n", self::render($document->body)) as $line) {
             $line = trim($line, ' ');
 
             // Blocks end a line; a blank one between them keeps paragraphs apart.
@@ -152,10 +152,6 @@ final class Mime
             $words = implode(' ', array_filter(explode(' ', $data), static fn (string $word): bool => $word !== ''));
 
             return (str_starts_with($data, ' ') ? ' ' : '') . $words . (str_ends_with($data, ' ') ? ' ' : '');
-        }
-
-        if (! $node instanceof Element && $node->childNodes->length === 0) {
-            return '';
         }
 
         $name = $node instanceof Element ? strtolower($node->localName) : '';
