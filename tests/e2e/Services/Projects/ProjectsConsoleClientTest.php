@@ -400,6 +400,96 @@ final class ProjectsConsoleClientTest extends Scope
     }
 
     #[Group('projectsCRUD')]
+    public function testTransferProjectTeamRequiresOwnership(): void
+    {
+        $sourceTeamId = Id::unique();
+        $projectId = $this->setupProject([
+            'projectId' => Id::unique(),
+            'name' => 'Transfer Source Project',
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ], $sourceTeamId);
+
+        $foreignTeam = $this->createTeamFixture(array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => Id::unique(),
+            'name' => 'Foreign Team',
+        ]);
+        $this->assertSame(200, $foreignTeam['headers']['status-code']);
+        $foreignTeamId = $foreignTeam['body']['$id'];
+
+        $email = 'transfer-' . Id::unique() . '@localhost.test';
+        ['membershipId' => $membershipId] = $this->setupUserMembership([
+            'teamId' => $sourceTeamId,
+            'email' => $email,
+            'name' => 'Transfer User',
+            'roles' => ['owner'],
+        ]);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session['cookies']['a_session_' . $this->getProject()['$id']],
+        ];
+
+        $ownTeam = $this->createTeamFixture($headers, [
+            'teamId' => Id::unique(),
+            'name' => 'Own Team',
+        ]);
+        $this->assertSame(200, $ownTeam['headers']['status-code']);
+        $ownTeamId = $ownTeam['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/team', $headers, [
+            'teamId' => $foreignTeamId,
+        ]);
+        $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertSame(Exception::USER_UNAUTHORIZED, $response['body']['type']);
+
+        foreach ([['developer'], ['project-' . $projectId . '-developer'], ['project-' . $projectId . '-owner']] as $roles) {
+            $this->updateMembershipRole($sourceTeamId, $membershipId, $roles);
+
+            $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/team', $headers, [
+                'teamId' => $ownTeamId,
+            ]);
+            $this->assertSame(401, $response['headers']['status-code'], 'Roles: ' . \implode(',', $roles));
+            $this->assertSame(Exception::USER_UNAUTHORIZED, $response['body']['type']);
+        }
+
+        $project = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertSame(200, $project['headers']['status-code']);
+        $this->assertSame($sourceTeamId, $project['body']['teamId']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $this->updateMembershipRole($sourceTeamId, $membershipId, ['owner']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/team', $headers, [
+            'teamId' => $ownTeamId,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame($ownTeamId, $response['body']['teamId']);
+    }
+
+    #[Group('projectsCRUD')]
     public function testListProject(): void
     {
         $data = $this->setupProjectData();
