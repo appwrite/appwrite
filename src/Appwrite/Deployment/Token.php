@@ -17,20 +17,23 @@ final class Token
 {
     public const TYPE_SOURCE = 'source';
 
-    public static function sign(string $deploymentId, string $type, int $ttl): string
+    public static function sign(string $deploymentId, string $type, int $ttl, string $projectId): string
     {
         return (new JWT(self::key(), 'HS256', $ttl))->encode([
             'deploymentId' => $deploymentId,
             'type' => $type,
+            // A deployment id is chosen by the uploader, so two projects can
+            // share one; the project keeps the token to the deployment it names
+            'projectId' => $projectId,
         ]);
     }
 
     /**
-     * Verify a token against the expected deployment id and artifact type.
-     * Returns true only when the signature, expiry, deployment id and type
-     * all match.
+     * Verify a token against the expected deployment id, artifact type and
+     * project. Returns true only when the signature, expiry, deployment id,
+     * type and project all match.
      */
-    public static function verify(string $token, string $deploymentId, string $type): bool
+    public static function verify(string $token, string $deploymentId, string $type, string $projectId): bool
     {
         if ($token === '') {
             return false;
@@ -43,7 +46,8 @@ final class Token
         }
 
         return ($payload['deploymentId'] ?? '') === $deploymentId
-            && ($payload['type'] ?? '') === $type;
+            && ($payload['type'] ?? '') === $type
+            && ($payload['projectId'] ?? '') === $projectId;
     }
 
     private static function key(): string

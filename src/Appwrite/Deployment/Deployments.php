@@ -562,7 +562,7 @@ readonly class Deployments
             $sourceUrl = "{$base}/download?" . \http_build_query([
                 'type' => Token::TYPE_SOURCE,
                 'project' => $projectId,
-                'token' => Token::sign($deploymentId, Token::TYPE_SOURCE, $ttl),
+                'token' => Token::sign($deploymentId, Token::TYPE_SOURCE, $ttl, $projectId),
             ]);
             $sourceArtifacts = [
                 new DownloadArtifact(id: 'source', in: $sourceUrl, out: 'source.tar.gz'),

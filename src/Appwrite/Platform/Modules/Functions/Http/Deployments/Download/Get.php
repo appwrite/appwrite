@@ -13,6 +13,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
@@ -74,6 +75,7 @@ class Get extends Action
             ->inject('deviceForBuilds')
             ->inject('user')
             ->inject('authorization')
+            ->inject('project')
             ->callback($this->action(...));
     }
 
@@ -89,12 +91,13 @@ class Get extends Action
         Device $deviceForBuilds,
         User $user,
         Authorization $authorization,
+        Document $project,
     ) {
         // Access is granted either to a privileged caller (console/CLI via
         // session or API key) or to a valid presigned token bound to this
         // deployment + artifact type (used by the jobs-service).
         $isPrivileged = $user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles());
-        if (! $isPrivileged && ! Token::verify($token, $deploymentId, $type)) {
+        if (! $isPrivileged && ! Token::verify($token, $deploymentId, $type, $project->getId())) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
