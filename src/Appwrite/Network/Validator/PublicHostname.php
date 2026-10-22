@@ -2,6 +2,7 @@
 
 namespace Appwrite\Network\Validator;
 
+use Appwrite\Network\HostnameNotResolved;
 use InvalidArgumentException;
 use Utopia\Client\Destinations;
 use Utopia\DNS\Lookup;
@@ -68,7 +69,8 @@ class PublicHostname extends Validator
      * only, since the connection could land on any of them. Connect to the returned
      * address, not the host, so DNS cannot answer differently at connect time.
      *
-     * @throws InvalidArgumentException When the host does not resolve or resolves to an address the destination does not allow
+     * @throws HostnameNotResolved When the host gave no address
+     * @throws InvalidArgumentException When the host resolves to an address the destination does not allow
      */
     public function address(string $host): string
     {
@@ -81,7 +83,7 @@ class PublicHostname extends Validator
         $addresses = \filter_var($host, FILTER_VALIDATE_IP) !== false ? [$host] : $this->lookup->addresses($host);
 
         if ($addresses === []) {
-            throw new InvalidArgumentException("Hostname {$host} does not resolve.");
+            throw new HostnameNotResolved("Hostname {$host} does not resolve.");
         }
 
         foreach ($addresses as $address) {
@@ -93,5 +95,25 @@ class PublicHostname extends Validator
         }
 
         return $addresses[0];
+    }
+
+    /**
+     * address() as the rule a mail adapter dials by. The adapter reads an
+     * InvalidArgumentException as a refusal that no retry changes, and anything else as
+     * an answer it could not get now. A host that gave no address is the second kind: a
+     * DNS server that failed a moment ago would otherwise make mail permanently
+     * undeliverable.
+     *
+     * @return \Closure(string): string
+     */
+    public function resolver(): \Closure
+    {
+        return function (string $host): string {
+            try {
+                return $this->address($host);
+            } catch (HostnameNotResolved $exception) {
+                throw new \RuntimeException($exception->getMessage(), previous: $exception);
+            }
+        };
     }
 }

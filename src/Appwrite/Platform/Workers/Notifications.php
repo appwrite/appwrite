@@ -299,7 +299,7 @@ class Notifications extends Action
             timeout: 10,
             keepAlive: false,
             timelimit: 30,
-            resolve: $publicHostname->address(...),
+            resolve: $publicHostname->resolver(),
         );
 
         $defaultFromEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);

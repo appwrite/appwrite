@@ -37,7 +37,7 @@ use Utopia\Telemetry\Adapter as Telemetry;
 class Provider
 {
     /**
-     * @param (\Closure(string): string)|null $resolve Maps an SMTP host to the address it may be dialled on, or throws to refuse it. Provider documents hold hosts a project chose, so a worker passes the check; without one a host is dialled as given.
+     * @param (\Closure(string): string)|null $resolve Maps an SMTP host to the address it may be dialled on. It throws \InvalidArgumentException to refuse the host for good, or \RuntimeException when it cannot answer now. Provider documents hold hosts a project chose, so a worker passes the check; without one a host is dialled as given.
      */
     public function __construct(
         private readonly Telemetry $telemetry,

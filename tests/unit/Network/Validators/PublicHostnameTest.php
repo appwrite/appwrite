@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Network\Validators;
 
+use Appwrite\Network\HostnameNotResolved;
 use Appwrite\Network\Validator\PublicHostname;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Network\FixedLookup;
@@ -65,6 +66,69 @@ final class PublicHostnameTest extends TestCase
         $this->assertRefused($this->validator(), '169.254.169.254', 'Address 169.254.169.254 is in a private or reserved range');
         $this->assertRefused($this->validator(), 'nowhere.example.com', 'does not resolve');
         $this->assertRefused($this->validator(), ' ', 'Hostname is empty');
+    }
+
+    public function testAHostThatGaveNoAddressIsToldApartFromOneThatWasRefused(): void
+    {
+        $hostname = $this->validator();
+
+        try {
+            $hostname->address('nowhere.example.com');
+            $this->fail('Expected a host with no address to be refused.');
+        } catch (HostnameNotResolved $exception) {
+            // Still a refusal for a check that only wants to refuse the host
+            $this->assertInstanceOf(\InvalidArgumentException::class, $exception);
+        }
+
+        foreach (['rebind.example.com', '169.254.169.254'] as $host) {
+            try {
+                $hostname->address($host);
+                $this->fail("Expected {$host} to be refused.");
+            } catch (HostnameNotResolved) {
+                $this->fail("{$host} resolved to an address that is not allowed, which is not a lookup that failed.");
+            } catch (\InvalidArgumentException) {
+                $this->addToAssertionCount(1);
+            }
+        }
+    }
+
+    public function testResolverAnswersWithTheAddressAnAdapterMayDial(): void
+    {
+        $this->assertSame('93.184.215.14', $this->validator()->resolver()('example.com'));
+    }
+
+    public function testResolverRefusesWhatMayNeverBeDialledForGood(): void
+    {
+        $resolve = $this->validator()->resolver();
+
+        foreach (['rebind.example.com', '169.254.169.254', ' '] as $host) {
+            $caught = null;
+
+            try {
+                $resolve($host);
+            } catch (\Throwable $exception) {
+                $caught = $exception;
+            }
+
+            // A refusal for good, not the RuntimeException of an answer that may differ next time
+            $this->assertInstanceOf(\InvalidArgumentException::class, $caught, $host);
+        }
+    }
+
+    public function testResolverDoesNotCallAFailedLookupAFinalRefusal(): void
+    {
+        $caught = null;
+
+        try {
+            $this->validator()->resolver()('nowhere.example.com');
+        } catch (\Throwable $exception) {
+            $caught = $exception;
+        }
+
+        // A RuntimeException, so not the InvalidArgumentException of a refusal for good
+        $this->assertInstanceOf(\RuntimeException::class, $caught);
+        $this->assertStringContainsString('does not resolve', $caught->getMessage());
+        $this->assertInstanceOf(HostnameNotResolved::class, $caught->getPrevious());
     }
 
     public function testAllowedInternalRangesAdmitTheirAddressesOnly(): void

@@ -119,7 +119,7 @@ class Messaging extends Action
     ): void {
         $this->telemetry = $telemetry;
         $this->pools = $pools;
-        $this->provider = new Provider($telemetry, $publicHostname->address(...));
+        $this->provider = new Provider($telemetry, $publicHostname->resolver());
         $payload = $message->getPayload();
 
         if (empty($payload)) {

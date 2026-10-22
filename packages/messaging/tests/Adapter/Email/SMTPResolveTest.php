@@ -76,6 +76,46 @@ final class SMTPResolveTest extends TestCase
         $this->assertTrue($result['results'][0]['permanent']);
     }
 
+    public function testAResolverThatCannotAnswerLeavesTheSendWorthRepeating(): void
+    {
+        // A DNS server that failed a moment ago says nothing about the host
+        $result = $this->send('smtp.example.com', function (string $host): string {
+            throw new \RuntimeException("Hostname {$host} does not resolve.");
+        });
+
+        $this->assertSame(0, $result['deliveredTo']);
+        $this->assertSame('failure', $result['results'][0]['status']);
+        $this->assertStringContainsString('smtp.example.com:25 (Hostname smtp.example.com does not resolve.)', (string) $result['results'][0]['error']);
+        $this->assertFalse($result['results'][0]['permanent']);
+    }
+
+    public function testOneHostThatMayAnswerNextTimeKeepsTheSendWorthRepeating(): void
+    {
+        $result = $this->send('internal.example.com;smtp.example.com', fn (string $host): string => match ($host) {
+            'internal.example.com' => throw new \InvalidArgumentException("Refused {$host}."),
+            default => throw new \RuntimeException("Hostname {$host} does not resolve."),
+        });
+
+        $this->assertStringContainsString('Refused internal.example.com.', (string) $result['results'][0]['error']);
+        $this->assertFalse($result['results'][0]['permanent']);
+    }
+
+    public function testAHostThatCouldNotBeResolvedDoesNotStopTheNextOne(): void
+    {
+        $server = new ScriptedSmtpServer(self::delivery());
+
+        $result = $this->send(
+            "flaky.example.com:{$server->port};smtp.example.com:{$server->port}",
+            fn (string $host): string => match ($host) {
+                'smtp.example.com' => '127.0.0.1',
+                default => throw new \RuntimeException("Hostname {$host} does not resolve."),
+            },
+        );
+
+        $this->assertSame(1, $result['deliveredTo']);
+        $this->assertSame('success', $result['results'][0]['status']);
+    }
+
     public function testAnAddressLiteralIsCheckedLikeAName(): void
     {
         $asked = [];

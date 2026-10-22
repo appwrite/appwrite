@@ -39,7 +39,7 @@ class SMTP extends EmailAdapter
      * @param int $timelimit SMTP command timelimit in seconds.
      * @param int $pingThreshold Seconds a kept session may sit idle before it is probed ahead of the next message. Keep it under the server's idle timeout: a session the server closed inside the threshold fails its send without a retry. 0 probes before every reuse.
      * @param int $restartThreshold Messages a kept session carries before it is replaced. 0 disables.
-     * @param (\Closure(string): string)|null $resolve Maps each host to the address to dial, or throws \InvalidArgumentException to refuse it. The host stays the name the certificate must match. Without it the host is dialled as given.
+     * @param (\Closure(string): string)|null $resolve Maps each host to the address to dial. It throws \InvalidArgumentException to refuse a host for good, or \RuntimeException when it cannot answer now, which leaves the send worth repeating. The host stays the name the certificate must match. Without it the host is dialled as given.
      */
     public function __construct(
         private readonly string $host,
@@ -193,6 +193,13 @@ class SMTP extends EmailAdapter
                     // Refused for good: nothing here would change the answer, so
                     // it leaves the failure permanent unless another host differs.
                     $failures[] = "{$host}:{$port} ({$exception->getMessage()})";
+
+                    continue;
+                } catch (\RuntimeException $exception) {
+                    // No answer to refuse or allow it yet, such as a DNS server that
+                    // failed a moment ago: the next attempt may get one.
+                    $failures[] = "{$host}:{$port} ({$exception->getMessage()})";
+                    $permanent = false;
 
                     continue;
                 }

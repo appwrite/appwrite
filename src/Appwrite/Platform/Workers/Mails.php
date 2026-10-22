@@ -177,7 +177,7 @@ class Mails extends Action
             timeout: 10,
             keepAlive: false,
             timelimit: 30,
-            resolve: $publicHostname->address(...),
+            resolve: $publicHostname->resolver(),
         );
 
         // Resolve from/replyTo using fallback hierarchy: Custom options > SMTP config > Defaults
