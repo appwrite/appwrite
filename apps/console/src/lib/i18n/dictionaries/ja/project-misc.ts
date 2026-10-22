@@ -3531,4 +3531,39 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Ship your apps to every store': 'アプリをすべてのストアに配信',
   'Build Android, iOS, and Windows releases from one place and submit them to Google Play, the App Store, and the Microsoft Store.':
     'Android、iOS、Windows のリリースを 1 か所でビルドし、Google Play、App Store、Microsoft Store に提出できます。',
+  'Create a link to move this project to another organization. Whoever opens the link can claim the project for an organization they manage, even if they are not a member of yours. Each link works once.':
+    'このプロジェクトを別の組織に移動するためのリンクを作成します。リンクを開いたユーザーは、あなたの組織のメンバーでなくても、自分が管理する組織にプロジェクトを受け取れます。各リンクは 1 回だけ使用できます。',
+  'Active links': '有効なリンク',
+  'Failed to load transfer links': '転送リンクの読み込みに失敗しました',
+  'No active transfer links': '有効な転送リンクはありません',
+  'Only organization': '限定先の組織',
+  'Any organization': '任意の組織',
+  'Create transfer link': '転送リンクを作成',
+  'Share this link with the person who should receive the project.':
+    'プロジェクトを受け取る相手にこのリンクを共有してください。',
+  'Choose how long the link works and, optionally, which organization can claim the project.':
+    'リンクの有効期間と、必要に応じてプロジェクトを受け取れる組織を選択します。',
+  'Transfer link': '転送リンク',
+  'Copy the link now. It is only shown once, and anyone with it can claim the project.':
+    '今すぐリンクをコピーしてください。リンクは 1 回だけ表示され、リンクを持つ人は誰でもプロジェクトを受け取れます。',
+  'Expires in': '有効期間',
+  'Organization ID (optional)': '組織 ID (任意)',
+  'Only this organization will be able to claim the project.':
+    'この組織だけがプロジェクトを受け取れます。',
+  'Failed to create transfer link': '転送リンクの作成に失敗しました',
+  'Transfer link has been deleted': '転送リンクを削除しました',
+  'Failed to delete transfer link': '転送リンクの削除に失敗しました',
+  'has been transferred to your organization': 'をあなたの組織に転送しました',
+  'You have been invited to move this project into one of your organizations.':
+    'このプロジェクトをあなたの組織のいずれかに移動するよう招待されています。',
+  'Claim a project that was shared with you.':
+    '共有されたプロジェクトを受け取ります。',
+  'This transfer link is incomplete. Ask the project owner to share it again.':
+    'この転送リンクは不完全です。プロジェクトの所有者にもう一度共有するよう依頼してください。',
+  'You need an organization to claim this project. Create one, then open the link again.':
+    'このプロジェクトを受け取るには組織が必要です。組織を作成してから、もう一度リンクを開いてください。',
+  'Link expires': 'リンクの有効期限',
+  'This transfer link is no longer valid.': 'この転送リンクは無効になりました。',
+  'The project already belongs to this organization. Select a different one.':
+    'プロジェクトはすでにこの組織に属しています。別の組織を選択してください。',
 }
