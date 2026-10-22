@@ -8,6 +8,7 @@ use Appwrite\Models\Project as GeneratedProject;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Project as ProjectModel;
 use Exception;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
 use Swoole\Http\Response as SwooleResponse;
@@ -252,5 +253,25 @@ final class ResponseTest extends TestCase
         $this->assertTrue($payload['inner']['state']);
         $this->assertTrue($payload['afterInner']);
         $this->assertFalse($isShowingSensitive->getValue($this->response));
+    }
+
+    /**
+     * @return \Iterator<string, array{string, string}>
+     */
+    public static function dispositionNames(): \Iterator
+    {
+        yield 'plain' => ['logo.png', 'attachment; filename="logo.png"; filename*=UTF-8\'\'logo.png'];
+        yield 'quotes and separators' => ['a"b\\c;d.txt', 'attachment; filename="abcd.txt"; filename*=UTF-8\'\'a%22b%5Cc%3Bd.txt'];
+        yield 'control characters' => ["a\r\nb\tc.html", 'attachment; filename="abc.html"; filename*=UTF-8\'\'a%0D%0Ab%09c.html'];
+        yield 'unicode' => ['café.txt', 'attachment; filename="caf_.txt"; filename*=UTF-8\'\'caf%C3%A9.txt'];
+        yield 'empty' => ['', 'attachment; filename="download"; filename*=UTF-8\'\'download'];
+    }
+
+    #[DataProvider('dispositionNames')]
+    public function testSetContentDisposition(string $name, string $expected): void
+    {
+        $this->response->setContentDisposition(Response::DISPOSITION_ATTACHMENT, $name);
+
+        $this->assertSame([$expected], $this->response->getHeaders()['content-disposition']);
     }
 }

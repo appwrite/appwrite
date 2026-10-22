@@ -87,7 +87,9 @@ class Get extends Action
         }
 
         $isInternal = $decoded['internal'] ?? false;
-        $disposition = $decoded['disposition'] ?? 'inline';
+        $disposition = ($decoded['disposition'] ?? '') === Response::DISPOSITION_ATTACHMENT
+            ? Response::DISPOSITION_ATTACHMENT
+            : Response::DISPOSITION_INLINE;
         $dbForProject = $isInternal ? $dbForPlatform : $dbForProject;
 
         $isAPIKey = $user->isKey($authorization->getRoles());
@@ -117,6 +119,10 @@ class Get extends Action
             $contentType = $file->getAttribute('mimeType');
         }
 
+        if ($contentType === 'image/svg+xml') {
+            $disposition = Response::DISPOSITION_ATTACHMENT;
+        }
+
         $size = $file->getAttribute('sizeOriginal', 0);
 
         $rangeHeader = $request->getHeaderLine('range');
@@ -142,9 +148,9 @@ class Get extends Action
 
         $response
             ->setContentType($contentType)
-            ->addHeader('Content-Security-Policy', 'script-src none;')
+            ->addHeader('Content-Security-Policy', "script-src 'none';")
             ->addHeader('X-Content-Type-Options', 'nosniff')
-            ->addHeader('Content-Disposition', $disposition . '; filename="' . $file->getAttribute('name', '') . '"')
+            ->setContentDisposition($disposition, (string) $file->getAttribute('name', ''))
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage());
 
