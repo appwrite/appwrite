@@ -312,13 +312,15 @@ Http::init()
             $scopes = ['teams.read', 'projects.read'];
             foreach ($adminRoles as $adminRole) {
                 $isTeamWideRole = ! str_starts_with($adminRole, 'project-');
-                $isProjectSpecificRole = $projectId !== 'console' && str_starts_with($adminRole, 'project-' . $projectId);
+
+                // project-<projectId>-<role>: the whole ID, not one that merely
+                // starts this one's (project-abc-owner is not a role on "ab")
+                $projectRolePrefix = 'project-' . $projectId . '-';
+                $projectRole = str_starts_with($adminRole, $projectRolePrefix) ? substr($adminRole, \strlen($projectRolePrefix)) : '';
+                $isProjectSpecificRole = $projectId !== 'console' && $projectRole !== '' && ! str_contains($projectRole, '-');
 
                 if ($isTeamWideRole || $isProjectSpecificRole) {
-                    $role = match (str_starts_with($adminRole, 'project-')) {
-                        true => substr($adminRole, strrpos($adminRole, '-') + 1),
-                        false => $adminRole,
-                    };
+                    $role = $isTeamWideRole ? $adminRole : $projectRole;
                     $roleScopes = $roles[$role]['scopes'] ?? [];
                     $scopes = \array_merge($scopes, $roleScopes);
                     $authorization->addRole($role);
