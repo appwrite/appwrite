@@ -93,8 +93,6 @@ class Update extends Action
             }
         }
 
-        $oldEmail = $user->getAttribute('email');
-
         $emailMetadata = [
             'emailCanonical' => null,
             'emailIsCanonical' => null,
@@ -143,11 +141,13 @@ class Update extends Action
         ;
 
         try {
-            $user = $dbForProject->withTransaction(function () use ($dbForProject, $user, $oldEmail, $email) {
+            $user = $dbForProject->withTransaction(function () use ($dbForProject, $user, $email) {
                 $current = $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
                 if ($current->isEmpty()) {
                     throw new Exception(Exception::USER_NOT_FOUND);
                 }
+
+                $lockedEmail = $current->getAttribute('email');
 
                 $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
                     'email' => $user->getAttribute('email'),
@@ -158,7 +158,7 @@ class Update extends Action
                     'emailIsDisposable' => $user->getAttribute('emailIsDisposable'),
                     'emailIsFree' => $user->getAttribute('emailIsFree'),
                 ]));
-                $oldTarget = \array_find($user->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('identifier') === $oldEmail);
+                $oldTarget = \array_find($user->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('identifier') === $lockedEmail);
 
                 if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
                     if (\strlen($email) !== 0) {
@@ -185,7 +185,7 @@ class Update extends Action
                 }
 
                 $sequence = $user->getSequence();
-                if ($oldEmail !== $email && $sequence !== '' && $sequence !== null) {
+                if ($lockedEmail !== $email && $sequence !== '' && $sequence !== null) {
                     $dbForProject->deleteDocuments('tokens', [
                         Query::equal('userInternalId', [$sequence]),
                         Query::equal('type', [

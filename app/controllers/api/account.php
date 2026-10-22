@@ -3802,8 +3802,6 @@ Http::patch('/v1/account/email')
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
 
-        $oldEmail = $user->getAttribute('email');
-
         $email = \strtolower($email);
 
         // Makes sure this email is not already used in another identity
@@ -3885,21 +3883,23 @@ Http::patch('/v1/account/email')
         }
 
         try {
-            $user = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $user, $oldEmail, $email) {
+            $user = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $user, $email) {
                 $current = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
                 if ($current->isEmpty()) {
                     throw new Exception(Exception::USER_NOT_FOUND);
                 }
 
+                $lockedEmail = $current->getAttribute('email');
+
                 $user = $dbForProject->updateDocument('users', $user->getId(), $user);
-                $oldTarget = \array_find($user->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('identifier') === $oldEmail);
+                $oldTarget = \array_find($user->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('identifier') === $lockedEmail);
 
                 if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
                     $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email)));
                 }
 
                 $sequence = $user->getSequence();
-                if ($oldEmail !== $email && $sequence !== '' && $sequence !== null) {
+                if ($lockedEmail !== $email && $sequence !== '' && $sequence !== null) {
                     $authorization->skip(fn () => $dbForProject->deleteDocuments('tokens', [
                         Query::equal('userInternalId', [$sequence]),
                         Query::equal('type', [
