@@ -1316,6 +1316,50 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertSame(404, $frames[0]['data']['code']);
     }
 
+    public function testAdminModeRequiresConsoleOrigin(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $hostname = 'realtime-admin-' . \uniqid() . '.example.com';
+
+        $platform = $this->client->call(Client::METHOD_POST, '/project/platforms/web', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'platformId' => Id::unique(),
+            'name' => $hostname,
+            'hostname' => $hostname,
+        ]);
+        $this->assertSame(201, $platform['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $client = $this->getAdminWebsocket($projectId, $this->getRoot()['session']);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+        $client->close();
+
+        $client = $this->getWebsocket(['documents'], [
+            'origin' => 'http://' . $hostname,
+        ], $projectId);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+        $client->close();
+
+        /**
+         * Test for FAILURE
+         */
+        $frames = $this->receiveUntilClosed($this->getWebsocket(['documents'], [
+            'origin' => 'http://' . $hostname,
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-mode' => 'admin',
+        ], $projectId));
+        $this->assertSame('error', $frames[0]['type']);
+        $this->assertSame(1008, $frames[0]['data']['code']);
+        $this->assertStringStartsWith('Invalid Origin', $frames[0]['data']['message']);
+    }
+
     private function getAdminWebsocket(string $projectId, string $session, array $channels = ['documents']): WebSocketClient
     {
         return $this->getWebsocket($channels, [

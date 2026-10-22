@@ -131,7 +131,7 @@ return function (Container $container): void {
         return $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
     }, ['request', 'console', 'authorization']);
 
-    $container->set('originValidator', function (array $platform, Request $request, Document $project, Authorization $authorization) use ($findRule) {
+    $container->set('originValidator', function (array $platform, Request $request, Document $project, Authorization $authorization, string $mode) use ($findRule) {
         $allowedHostnames = [...($platform['hostnames'] ?? [])];
 
         /* Add the console host, the console web app can live apart from the API host */
@@ -143,12 +143,15 @@ return function (Container $container): void {
         $consoleHostnames = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''))));
         $allowedHostnames = [...$allowedHostnames, ...$consoleHostnames];
 
-        if (!$project->isEmpty() && $project->getId() !== 'console') {
+        /* Admin mode carries the console session, so only console hosts may use it */
+        if (!$project->isEmpty() && $project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
             $allowedHostnames = [...$allowedHostnames, ...Platform::getHostnames($project->getAttribute('platforms', []))];
         }
 
         $rule = $findRule($request, $project, $authorization);
-        if (!$rule->isEmpty() && !empty($rule->getAttribute('domain', ''))) {
+        $trustedProjects = \array_filter(\explode(',', System::getEnv('_APP_CONSOLE_TRUSTED_PROJECTS', '')));
+        $ruleAllowed = $mode !== APP_MODE_ADMIN || \in_array($rule->getAttribute('projectId', ''), $trustedProjects, true);
+        if (!$rule->isEmpty() && !empty($rule->getAttribute('domain', '')) && $ruleAllowed) {
             $allowedHostnames[] = $rule->getAttribute('domain', '');
         }
 
@@ -161,14 +164,14 @@ return function (Container $container): void {
         }
 
         $allowedSchemes = [...($platform['schemas'] ?? [])];
-        if (!$project->isEmpty() && $project->getId() !== 'console') {
+        if (!$project->isEmpty() && $project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
             $allowedSchemes[] = 'exp';
             $allowedSchemes[] = 'appwrite-callback-' . $project->getId();
             $allowedSchemes = [...$allowedSchemes, ...Platform::getSchemes($project->getAttribute('platforms', []))];
         }
 
         return new Origin(\array_unique($allowedHostnames), \array_unique($allowedSchemes));
-    }, ['platform', 'request', 'project', 'authorization']);
+    }, ['platform', 'request', 'project', 'authorization', 'mode']);
 
     $container->set('proofForToken', function (): Token {
         $proofForToken = new Token();
