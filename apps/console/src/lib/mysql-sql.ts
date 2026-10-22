@@ -10,8 +10,19 @@ const MYSQL_TABLES_SYSTEM_SCHEMA_FILTER = `
 
 export const MYSQL_SIDEBAR_LIST_PAGE_SIZE = 50
 
+/** Characters MySQL treats specially inside a quoted string under the default `sql_mode`. */
+const MYSQL_STRING_ESCAPES: Record<string, string> = {
+  '\\': '\\\\',
+  "'": "''",
+  '\0': '\\0',
+}
+
 export function quoteMysqlStringLiteral(value: string): string {
-  return `'${value.replace(/'/g, "''")}'`
+  let escaped = ''
+  for (const character of value) {
+    escaped += MYSQL_STRING_ESCAPES[character] ?? character
+  }
+  return `'${escaped}'`
 }
 
 /** Strip leading line and block comments for statement classification. */

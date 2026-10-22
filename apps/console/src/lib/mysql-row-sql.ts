@@ -166,7 +166,7 @@ export function buildMysqlUpdateRowSql(
 
   const whereClause = buildMysqlRowWhereClause(identity)
   return prefixMysqlSqlComment(
-    `UPDATE ${qualified}\nSET ${assignments.join(', ')}\nWHERE ${whereClause}`,
+    `UPDATE ${qualified}\nSET ${assignments.join(', ')}\nWHERE ${whereClause}\nLIMIT 1`,
     'Update table row',
   )
 }
@@ -259,7 +259,7 @@ export function buildMysqlDeleteRowSql(
   const qualified = qualifiedTable(schema, table)
   const whereClause = buildMysqlRowWhereClause(identity)
   return prefixMysqlSqlComment(
-    `DELETE FROM ${qualified}\nWHERE ${whereClause}`,
+    `DELETE FROM ${qualified}\nWHERE ${whereClause}\nLIMIT 1`,
     'Delete table row',
   )
 }
