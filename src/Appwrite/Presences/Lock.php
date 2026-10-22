@@ -2,7 +2,7 @@
 
 namespace Appwrite\Presences;
 
-use Utopia\Lock\Lock;
+use Utopia\Lock\Lock as UtopiaLock;
 use Utopia\Lock\Mutex;
 
 /**
@@ -10,11 +10,11 @@ use Utopia\Lock\Mutex;
  * objects stays constant no matter how many keys are in play; keys that hash to the same stripe
  * serialise. Used to serialise a socket's presence writes without one lock object per connection.
  */
-final class Locks
+final class Lock
 {
     private const DEFAULT_STRIPES = 256;
 
-    /** @var array<int, Lock> */
+    /** @var array<int, UtopiaLock> */
     private array $stripes = [];
 
     private int $size;
@@ -28,7 +28,7 @@ final class Locks
         }
     }
 
-    public function get(int|string $key): Lock
+    public function get(int|string $key): UtopiaLock
     {
         $hash = \is_int($key) ? $key : \crc32($key);
 

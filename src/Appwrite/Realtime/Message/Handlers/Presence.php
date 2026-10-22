@@ -7,7 +7,7 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime as QueueRealtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Presences\Locks as PresenceLocks;
+use Appwrite\Presences\Lock as PresenceLock;
 use Appwrite\Presences\State as PresenceState;
 use Appwrite\Realtime\Message\Dispatcher;
 use Appwrite\Utopia\Database\Documents\User;
@@ -59,7 +59,7 @@ class Presence extends Action
         Database $database,
         Authorization $authorization,
         PresenceState $presenceState,
-        PresenceLocks $presenceLock,
+        PresenceLock $presenceLock,
         ?Document $project,
         UsagePublisher $publisherForUsage,
         QueueEvent $queueForEvents,
