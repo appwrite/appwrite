@@ -10,6 +10,7 @@ use OpenRuntimes\Orchestrator\Model\Volume;
 use PHPUnit\Framework\TestCase;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
+use Utopia\Storage\Device\Local;
 
 final class DeploymentsTest extends TestCase
 {
@@ -176,24 +177,25 @@ final class DeploymentsTest extends TestCase
         $this->assertSame('v2', $payload['environment']['MY_VAR']);
     }
 
-    public function testLocalBuildMountsOnlyTheProjectDirectory(): void
+    public function testLocalBuildMountsOnlyItsOutputAndCache(): void
     {
         $payload = $this->withLocalBuilds(fn () => $this->buildPayload([]));
 
-        $this->assertCount(1, $payload['volumes']);
-        $this->assertInstanceOf(Volume::class, $payload['volumes'][0]);
+        $this->assertCount(2, $payload['volumes']);
+        [$output, $cache] = $payload['volumes'];
+        $this->assertInstanceOf(Volume::class, $output);
+        $this->assertInstanceOf(Volume::class, $cache);
 
-        $volume = $payload['volumes'][0];
         $projectRoot = APP_STORAGE_BUILDS . '/app-project1';
 
-        $this->assertSame('appwrite-builds', $volume->source);
-        $this->assertSame($projectRoot, $volume->path);
-        $this->assertSame('app-project1', $volume->subPath);
-        $this->assertNotSame(APP_STORAGE_BUILDS, $volume->path);
+        $this->assertSame('appwrite-builds', $output->source);
+        $this->assertSame(Deployments::outputDirectory('project1', 'deployment1'), $output->path);
+        $this->assertSame('app-project1/deployment1', $output->subPath);
+        $this->assertSame('app-project1/deployment1', $output->toArray()['subPath']);
 
-        $serialized = $volume->toArray();
-        $this->assertSame('app-project1', $serialized['subPath']);
-        $this->assertSame($projectRoot, $serialized['path']);
+        $this->assertSame('appwrite-builds', $cache->source);
+        $this->assertSame($projectRoot . '/cache', $cache->path);
+        $this->assertSame('app-project1/cache', $cache->subPath);
 
         $this->assertSame(
             Deployments::outputDirectory('project1', 'deployment1'),
@@ -210,38 +212,69 @@ final class DeploymentsTest extends TestCase
             Deployments::cachePath('project1', Deployments::cacheKey('project1', 'function1', $image)),
             $payload['environment']['OPEN_RUNTIMES_BUILD_CACHE_ARTIFACT']
         );
-        $this->assertStringStartsWith($projectRoot . '/', $payload['environment']['OPEN_RUNTIMES_BUILD_CACHE_ARTIFACT']);
+        $this->assertStringStartsWith($cache->path . '/', $payload['environment']['OPEN_RUNTIMES_BUILD_CACHE_ARTIFACT']);
     }
 
-    public function testLocalBuildMountCannotReachSiblingProject(): void
+    public function testLocalBuildMountCannotReachSiblingDeployment(): void
     {
         [$first, $second] = $this->withLocalBuilds(fn () => [
             $this->buildPayload([], 'project1'),
             $this->buildPayload([], 'project2'),
         ]);
 
-        $firstVolume = $first['volumes'][0];
-        $secondVolume = $second['volumes'][0];
-        $sibling = APP_STORAGE_BUILDS . '/app-project2';
-
-        // The previous Local strategy mounted APP_STORAGE_BUILDS, so every
-        // sibling app-{projectId} path was inside the worker. Isolation is
-        // the mount itself: a sibling must not sit under the attached path.
-        $this->assertFalse(\str_starts_with($sibling, \rtrim($firstVolume->path, '/') . '/'));
-        $this->assertSame('app-project1', $firstVolume->subPath);
-        $this->assertSame('app-project2', $secondVolume->subPath);
-        $this->assertNotSame($firstVolume->path, $secondVolume->path);
-        $this->assertStringNotContainsString('project2', (string) $firstVolume->path);
-        $this->assertStringNotContainsString('project2', $firstVolume->subPath);
-        $this->assertSame(
-            Deployments::outputDirectory('project2', 'deployment1'),
-            $second['environment']['OPEN_RUNTIMES_BUILD_OUTPUT_DIR']
-        );
-        $this->assertStringStartsWith($secondVolume->path . '/', $second['environment']['OPEN_RUNTIMES_BUILD_OUTPUT_DIR']);
-        $this->assertSame(
+        $siblings = [
+            Deployments::buildPath('project1', 'deployment2'),
             Deployments::buildPath('project2', 'deployment1'),
-            Deployments::outputDirectory('project2', 'deployment1') . '/' . Deployments::artifact()
-        );
+        ];
+
+        foreach ($first['volumes'] as $volume) {
+            foreach ($siblings as $sibling) {
+                $this->assertFalse(\str_starts_with($sibling, \rtrim($volume->path, '/') . '/'));
+            }
+            $this->assertStringStartsWith('app-project1/', $volume->subPath);
+        }
+
+        foreach ($second['volumes'] as $volume) {
+            $this->assertStringStartsWith('app-project2/', $volume->subPath);
+        }
+        $this->assertStringStartsWith($second['volumes'][0]->path . '/', Deployments::buildPath('project2', 'deployment1'));
+    }
+
+    public function testArtifactMustBeRegularFileInsideDevice(): void
+    {
+        $base = \realpath(\sys_get_temp_dir()) . '/artifact-' . \bin2hex(\random_bytes(6));
+        $root = $base . '/app-project1';
+        \mkdir($root . '/deployment1', 0o777, true);
+        \mkdir($base . '/outside');
+        \file_put_contents($root . '/deployment1/code.tar.gz', 'artifact');
+        \file_put_contents($base . '/outside/secret', 'secret');
+        \symlink($base . '/outside/secret', $root . '/deployment1/link.tar.gz');
+        \symlink($base . '/outside', $root . '/linked');
+        \file_put_contents($base . '/sibling.tar.gz', 'sibling');
+        $device = new Local($root);
+
+        try {
+            $this->assertTrue(Deployments::isArtifact($device, $root . '/deployment1/code.tar.gz'));
+
+            $this->assertFalse(Deployments::isArtifact($device, ''));
+            $this->assertFalse(Deployments::isArtifact($device, $root . '/deployment1/missing.tar.gz'));
+            $this->assertFalse(Deployments::isArtifact($device, $root . '/deployment1'));
+            $this->assertFalse(Deployments::isArtifact($device, $root . '/deployment1/link.tar.gz'));
+            $this->assertFalse(Deployments::isArtifact($device, $root . '/linked/secret'));
+            $this->assertFalse(Deployments::isArtifact($device, $root . '/deployment1/../../outside/secret'));
+            $this->assertFalse(Deployments::isArtifact($device, $base . '/sibling.tar.gz'));
+            $this->assertFalse(Deployments::isArtifact($device, $base . '/outside/secret'));
+        } finally {
+            \unlink($root . '/deployment1/link.tar.gz');
+            \unlink($root . '/linked');
+            \unlink($root . '/deployment1/code.tar.gz');
+            \unlink($base . '/outside/secret');
+            \unlink($base . '/sibling.tar.gz');
+            \rmdir($root . '/deployment1');
+            \rmdir($root);
+            \rmdir($base . '/outside');
+            \rmdir($base);
+        }
     }
 
     /**
@@ -266,6 +299,16 @@ final class DeploymentsTest extends TestCase
             $connection === false ? \putenv('_APP_CONNECTIONS_STORAGE') : \putenv('_APP_CONNECTIONS_STORAGE=' . $connection);
             $volume === false ? \putenv('_APP_BUILDS_VOLUME') : \putenv('_APP_BUILDS_VOLUME=' . $volume);
         }
+    }
+
+    public function testIdKeepsHyphenFreePairs(): void
+    {
+        $this->assertSame('6a1b2c3d-6e4f5a6b-build', Deployments::id('6a1b2c3d', '6e4f5a6b'));
+    }
+
+    public function testIdSeparatesHyphenatedPairs(): void
+    {
+        $this->assertNotSame(Deployments::id('my-app', 'deployment'), Deployments::id('my', 'app-deployment'));
     }
 }
 
