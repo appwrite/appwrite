@@ -260,6 +260,13 @@ class Deletes extends Action
 
         switch (\strval($type)) {
             case DELETE_TYPE_DOCUMENT:
+                // The project was deleted after the job was queued, and its own deletion removes this document's data.
+                if ($project->isEmpty() && !\in_array($document->getCollection(), [DELETE_TYPE_PROJECTS, DELETE_TYPE_RULES], true)) {
+                    Span::add('project.id', $deleteMessage->project?->getId() ?? '');
+                    Span::add('document.skipped', 'deleted');
+                    break;
+                }
+
                 switch ($document->getCollection()) {
                     case DELETE_TYPE_PROJECTS:
                         $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $telemetry, $certificates, $document, $bus, $executionStore);
