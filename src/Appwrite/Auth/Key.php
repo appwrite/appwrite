@@ -183,6 +183,12 @@ class Key
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
+                // Keys issued before the sequence claim carry none; they expire within a day.
+                $projectSequence = $payload['projectSequence'] ?? null;
+                if (!$projectCheckDisabled && $projectSequence !== null && (string) $projectSequence !== (string) $project->getSequence()) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
+                }
+
                 return new Key(
                     $projectId,
                     '',
