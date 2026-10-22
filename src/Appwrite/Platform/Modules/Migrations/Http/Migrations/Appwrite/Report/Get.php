@@ -9,6 +9,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Database\Document;
 use Utopia\Migration\Sources\Appwrite as AppwriteSource;
 use Utopia\Platform\Enum;
@@ -55,6 +56,7 @@ class Get extends Action
             ->inject('response')
             ->inject('getDatabasesDB')
             ->inject('publicHostname')
+            ->inject('publicInternet')
             ->callback($this->action(...));
     }
 
@@ -65,7 +67,8 @@ class Get extends Action
         string $key,
         Response $response,
         callable $getDatabasesDB,
-        PublicHostname $publicHostname
+        PublicHostname $publicHostname,
+        PublicInternet $publicInternet
     ): void {
         // Block a source endpoint that resolves to a private or reserved
         // address to prevent SSRF into the internal network.
@@ -75,7 +78,9 @@ class Get extends Action
         }
 
         try {
-            $appwrite = new AppwriteSource($projectID, $endpoint, $key, $getDatabasesDB);
+            // Check every connection on the address it reaches, so DNS cannot answer differently after the check above
+            $appwrite = (new AppwriteSource($projectID, $endpoint, $key, $getDatabasesDB))
+                ->setDestinations($publicInternet);
             $report = $appwrite->report($resources);
         } catch (\Throwable $e) {
             throw new Exception(

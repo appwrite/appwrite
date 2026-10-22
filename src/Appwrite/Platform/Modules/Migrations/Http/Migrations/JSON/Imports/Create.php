@@ -111,7 +111,9 @@ class Create extends Action
         }
 
         $file = $authorization->skip(fn () => $internalFile ? $dbForPlatform->getDocument('bucket_' . $bucket->getSequence(), $fileId) : $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
-        if ($file->isEmpty()) {
+        // An internal file is an export, readable only by the project that created it
+        $owner = $file->getAttribute('metadata', [])['projectInternalId'] ?? null;
+        if ($file->isEmpty() || ($internalFile && $owner !== $project->getSequence())) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 

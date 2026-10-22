@@ -15,6 +15,7 @@ use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Services\TablesDB;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
+use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
@@ -64,6 +65,7 @@ class Migrations extends Action
     protected ?Device $deviceForFiles;
     protected ?Document $project;
     protected ?PublicHostname $publicHostname = null;
+    protected ?PublicInternet $publicInternet = null;
 
     protected ?Document $sourceProject = null;
 
@@ -110,6 +112,7 @@ class Migrations extends Action
             ->inject('plan')
             ->inject('authorization')
             ->inject('publicHostname')
+            ->inject('publicInternet')
             ->callback($this->action(...));
     }
 
@@ -132,6 +135,7 @@ class Migrations extends Action
         array $plan,
         Authorization $authorization,
         PublicHostname $publicHostname,
+        PublicInternet $publicInternet,
     ): void {
         $migrationMessage = Migration::fromArray($message->getPayload());
         $this->getDatabasesDB = $getDatabasesDB;
@@ -159,6 +163,7 @@ class Migrations extends Action
         $this->dbForPlatform = $dbForPlatform;
         $this->project = $project;
         $this->publicHostname = $publicHostname;
+        $this->publicInternet = $publicInternet;
 
         $platform = $migrationMessage->platform ?: Config::getParam('platform', []);
 
@@ -177,6 +182,7 @@ class Migrations extends Action
             $this->dbForPlatform = null;
             $this->project = null;
             $this->publicHostname = null;
+            $this->publicInternet = null;
             $this->deviceForMigrations = null;
             $this->deviceForFiles = null;
             $this->plan = [];
@@ -317,6 +323,11 @@ class Migrations extends Action
             ),
             default => throw new Exception(Exception::MIGRATION_SOURCE_TYPE_INVALID),
         };
+
+        // Check each connection to a user-chosen host on the address it reaches; a local Appwrite source talks to this cluster's own host
+        if ($useAppwriteApiSource || \in_array($source, [Supabase::getName(), NHost::getName()], true)) {
+            $migrationSource->setDestinations($this->publicInternet);
+        }
 
         $resources = $migration->getAttribute('resources', []);
         $this->sourceReport = $migrationSource->report($resources);
@@ -902,7 +913,8 @@ class Migrations extends Action
             'openSSLTag' => null,
             'openSSLIV' => null,
             'search' => \implode(' ', [$fileId, $filename]),
-            'metadata' => ['content_type' => $mime]
+            // Imports read internal files only from the project that exported them
+            'metadata' => ['content_type' => $mime, 'projectInternalId' => $project->getSequence()],
         ]));
 
         Console::info("Created file document in bucket: $fileId");

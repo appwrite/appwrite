@@ -683,6 +683,8 @@ class OpenAPI3 extends Format
                     case \Utopia\Database\Validator\Key::class:
                     case \Appwrite\Utopia\Database\Validator\ProjectId::class:
                     case \Appwrite\Platform\Modules\Compute\Validator\VariableKey::class:
+                    case \Appwrite\Network\Validator\Label::class:
+                    case \Utopia\Validator\Identifier::class:
                     case \Utopia\Validator\Text::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';

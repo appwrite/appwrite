@@ -20,6 +20,7 @@ use Utopia\Database\RelationshipType;
 use Utopia\Database\Role;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
+use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Query\Schema\IndexType;
 use Utopia\System\System;
@@ -331,6 +332,51 @@ trait MigrationsBase
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertStringContainsString('169.254.169.254', $response['body']['message']);
+
+        $this->assertSame($before, $countMigrations());
+    }
+
+    /**
+     * NHost hostnames and the database DSN are built from the subdomain, region and database
+     * name, so each must be a plain DNS label or identifier.
+     */
+    public function testNHostMigrationRejectsMalformedSource(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+        $countMigrations = fn (): int => $this->client->call(Client::METHOD_GET, '/migrations', $headers)['body']['total'];
+        $before = $countMigrations();
+
+        $valid = [
+            'resources' => NHost::getSupportedResources(),
+            'subdomain' => 'abcdefghijklmnop',
+            'region' => 'eu-central-1',
+            'adminSecret' => 'any',
+            'database' => 'abcdefghijklmnop',
+            'username' => 'postgres',
+            'password' => 'any',
+        ];
+
+        $malformed = [
+            ['subdomain' => '169.254.169.254:80/#'],
+            ['subdomain' => 'abc.internal'],
+            ['region' => 'eu;host=169.254.169.254'],
+            ['database' => 'db;host=169.254.169.254'],
+            ['database' => 'db host'],
+        ];
+
+        foreach ($malformed as $params) {
+            $response = $this->client->call(Client::METHOD_POST, '/migrations/nhost', $headers, \array_merge($valid, $params));
+            $this->assertSame(400, $response['headers']['status-code'], \json_encode($params));
+            $this->assertSame('general_argument_invalid', $response['body']['type'], \json_encode($params));
+
+            $response = $this->client->call(Client::METHOD_GET, '/migrations/nhost/report', $headers, \array_merge($valid, $params));
+            $this->assertSame(400, $response['headers']['status-code'], \json_encode($params));
+            $this->assertSame('general_argument_invalid', $response['body']['type'], \json_encode($params));
+        }
 
         $this->assertSame($before, $countMigrations());
     }
@@ -5077,6 +5123,50 @@ trait MigrationsBase
         $this->assertStringContainsString('varchar', $csvData, 'CSV should contain the varchar column header');
         $this->assertStringContainsString('bigint', $csvData, 'CSV should contain the bigint column header');
         $this->assertStringContainsString('2147483649', $csvData, 'CSV should contain bigint test data');
+
+        $segments = \explode('/', $components['path']);
+        $fileId = $segments[\array_search('files', $segments, true) + 1];
+
+        // The export file can be imported back into the project that created it
+        $import = $this->client->call(Client::METHOD_POST, '/migrations/csv/imports', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => 'default',
+            'fileId' => $fileId,
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
+            'internalFile' => true,
+            'onDuplicate' => 'skip',
+        ]);
+        $this->assertSame(202, $import['headers']['status-code']);
+        $importId = $import['body']['$id'];
+
+        $this->assertEventually(function () use ($importId) {
+            $response = $this->client->call(Client::METHOD_GET, '/migrations/' . $importId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            $this->assertSame('completed', $response['body']['status']);
+        }, 30_000, 500);
+
+        // But not by another project
+        $import = $this->client->call(Client::METHOD_POST, '/migrations/csv/imports', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ], [
+            'bucketId' => 'default',
+            'fileId' => $fileId,
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
+            'internalFile' => true,
+        ]);
+        $this->assertSame(404, $import['headers']['status-code']);
+        $this->assertSame('storage_file_not_found', $import['body']['type']);
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [

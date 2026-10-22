@@ -115,18 +115,19 @@ $container->set('clientForAvatars', fn () => new Client(new CurlAdapter(), new P
     )
 )), []);
 
+// Where a connection to a user-chosen host may land, for clients that check each address they reach.
+$container->set('publicInternet', fn () => new PublicInternet(...\array_map(
+    fn (string $range) => new IPRange($range),
+    \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
+)), []);
+
 // Checked before connecting, for hosts a request accepts. Resolves through _APP_DNS_EXTERNAL,
 // falling back to _APP_DNS, never the container's own resolver.
-$container->set('publicHostname', function () {
+$container->set('publicHostname', function (PublicInternet $publicInternet) {
     $servers = \array_values(\array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_DNS_EXTERNAL', System::getEnv('_APP_DNS', '8.8.8.8'))))));
 
-    $publicInternet = new PublicInternet(...\array_map(
-        fn (string $range) => new IPRange($range),
-        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
-    ));
-
     return new PublicHostname($publicInternet, new Recursive($servers));
-}, []);
+}, ['publicInternet']);
 
 $container->set('publicURL', fn (PublicHostname $publicHostname) => new PublicURL($publicHostname), ['publicHostname']);
 
