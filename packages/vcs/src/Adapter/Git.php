@@ -164,6 +164,11 @@ abstract class Git extends Adapter
      */
     public function generatePushCommand(string $owner, string $repositoryName, string $directory, string $branch): Command
     {
+        // A leading dash would reach git as an option instead of a ref
+        if (str_starts_with($branch, '-')) {
+            throw new InvalidArgumentException("Invalid branch: {$branch}");
+        }
+
         return $this->git($directory)->argument('push')->argument('origin')->argument($branch);
     }
 

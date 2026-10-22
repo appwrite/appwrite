@@ -512,6 +512,10 @@ final class EntireTest extends TestCase
 
         // Without a token, a push is a plain push
         $this->assertSame("'git' '-C' '/tmp/clone' 'push' 'origin' 'main'", $this->adapter->generatePushCommand('acme', 'api', '/tmp/clone', 'main')->toString());
+
+        // A branch that reads as a git option is refused before it reaches the shell
+        $this->expectException(\InvalidArgumentException::class);
+        $this->adapter->generatePushCommand('acme', 'api', '/tmp/clone', '--upload-pack=id');
     }
 
     public function testCheckRunsStates(): void
