@@ -189,7 +189,7 @@ final class FunctionsCustomClientTest extends Scope
             $this->assertSame('completed', $execution['body']['status']);
             $logs = (string) $execution['body']['logs'];
             $marker = 'client-ip-is-';
-            $this->assertNotFalse(\strpos($logs, $marker));
+            $this->assertStringContainsString($marker, $logs);
             $line = \explode("\n", \substr($logs, \strpos($logs, $marker) + \strlen($marker)), 2)[0];
             $this->assertNotSame('', $line);
         }, 60000, 500);
