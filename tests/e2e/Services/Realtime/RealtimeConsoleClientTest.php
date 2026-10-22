@@ -15,6 +15,7 @@ use Utopia\Database\Role;
 use Utopia\System\System;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
+use WebSocket\TimeoutException;
 
 final class RealtimeConsoleClientTest extends Scope
 {
@@ -1268,9 +1269,34 @@ final class RealtimeConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $client = $this->getAdminWebsocket($projectId, $this->getRoot()['session']);
+        $client = $this->getAdminWebsocket($projectId, $this->getRoot()['session'], ['account']);
         $response = \json_decode($client->receive(), true);
         $this->assertSame('connected', $response['type']);
+
+        // A project user sharing the console user's ID is a different identity.
+        $rootId = $this->getRoot()['$id'];
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-mode' => 'admin',
+        ], [
+            'userId' => $rootId,
+            'email' => \uniqid('collision-', true) . '@localhost.test',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+
+        while (true) {
+            try {
+                $frame = \json_decode($client->receive(), true);
+            } catch (TimeoutException) {
+                break;
+            }
+
+            $this->assertNotContains('users.' . $rootId . '.create', $frame['data']['events'] ?? [], 'An admin connection received a project user\'s account event.');
+        }
         $client->close();
 
         $client = $this->getAdminWebsocket($otherProjectId, $member['session']);
@@ -1290,9 +1316,9 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertSame(404, $frames[0]['data']['code']);
     }
 
-    private function getAdminWebsocket(string $projectId, string $session): WebSocketClient
+    private function getAdminWebsocket(string $projectId, string $session, array $channels = ['documents']): WebSocketClient
     {
-        return $this->getWebsocket(['documents'], [
+        return $this->getWebsocket($channels, [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_console=' . $session,
             'x-appwrite-mode' => 'admin',
