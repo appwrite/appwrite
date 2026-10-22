@@ -185,15 +185,16 @@ final class RevokeTest extends TestCase
         $this->assertSame([], $this->network->sent);
     }
 
-    public function testRepeatedConnectMovesConnectionInIndex(): void
+    public function testRepeatedConnectClosesConnection(): void
     {
-        $this->connect(1, 'previous');
-        $this->connect(1, 'current', self::OTHER_PROJECT);
+        $this->assertSame(Connack::SUCCESS, $this->connect(1, 'previous'));
+        $this->assertSame(Connack::UNSPECIFIED_ERROR, $this->connect(1, 'current', self::OTHER_PROJECT));
         $this->accounts->blocked['previous'] = true;
         $this->accounts->blocked['current'] = true;
 
-        $this->assertSame(0, $this->handler->revoke(self::PROJECT, 'previous'));
-        $this->assertSame(1, $this->handler->revoke(self::OTHER_PROJECT, 'current'));
+        $this->assertSame(0, $this->handler->revoke(self::PROJECT, 'previous'), 'the refused connection must leave the index');
+        $this->assertSame(0, $this->handler->revoke(self::OTHER_PROJECT, 'current'), 'a refused CONNECT must not index the new identity');
+        $this->assertSame(0, $this->accounts->authorizations, 'no indexed connection should remain to check');
     }
 
     public function testRevokeDuringConnectRefusesBlockedUser(): void
