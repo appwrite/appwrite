@@ -178,6 +178,13 @@ final class FunctionsCustomClientTest extends Scope
         $this->assertEquals(202, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
 
+        $asyncId = $execution['body']['$id'];
+        $this->assertEventually(function () use ($functionId, $asyncId) {
+            $execution = $this->getExecution($functionId, $asyncId);
+            $output = $this->executionOutput($execution);
+            $this->assertNotEmpty($output['APPWRITE_FUNCTION_CLIENT_IP']);
+        });
+
         return [
             'functionId' => $functionId
         ];
