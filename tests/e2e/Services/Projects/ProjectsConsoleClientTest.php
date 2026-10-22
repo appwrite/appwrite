@@ -6816,7 +6816,7 @@ final class ProjectsConsoleClientTest extends Scope
             $this->assertSame(401, $keys['headers']['status-code']);
 
             $project = $this->client->call(Client::METHOD_GET, '/organization/projects/' . $projectIdB, $headers);
-            $this->assertNotSame(200, $project['headers']['status-code']);
+            $this->assertContains($project['headers']['status-code'], [401, 404]);
 
             $project = $this->client->call(Client::METHOD_PATCH, '/organization/projects/' . $projectIdB, $headers, [
                 'name' => 'Renamed',
