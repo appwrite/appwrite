@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Project;
 
 use PHPUnit\Framework\Attributes\Before;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Utopia\Database\Id;
 
@@ -970,8 +971,21 @@ trait SMTPBase
         $this->updateSMTP(enabled: false);
     }
 
-    public function testUpdateSMTPServerChangeRequiresPassword(): void
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function passwordProvider(): iterable
     {
+        yield 'ordinary password' => ['password'];
+        yield 'zero password' => ['0'];
+    }
+
+    #[DataProvider('passwordProvider')]
+    public function testUpdateSMTPServerChangeRequiresPassword(string $password): void
+    {
+        $response = $this->updateSMTP(password: $password, enabled: false);
+        $this->assertSame(200, $response['headers']['status-code']);
+
         /**
          * Test for FAILURE
          */

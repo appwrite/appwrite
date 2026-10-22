@@ -106,7 +106,7 @@ class Update extends Action
         $serverChanged = (!\is_null($host) && $host !== ($smtp['host'] ?? ''))
             || (!\is_null($port) && $port !== (int) ($smtp['port'] ?? 0))
             || (!\is_null($secure) && $secure !== ($smtp['secure'] ?? ''));
-        if ($serverChanged && \is_null($password) && !empty($smtp['password'] ?? '')) {
+        if ($serverChanged && \is_null($password) && ($smtp['password'] ?? '') !== '') {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Param "password" is required when changing host, port or secure.');
         }
 
