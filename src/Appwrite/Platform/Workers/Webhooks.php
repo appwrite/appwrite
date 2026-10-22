@@ -136,7 +136,7 @@ class Webhooks extends Action
      * @param array $plan
      * @param Client $clientForWebhooks
      * @param string $deliveryId Identifies this event to this webhook; the same on every attempt
-     * @return string|null The error log if the delivery failed, otherwise null
+     * @return string|null Why the delivery failed, without its URL or response body, otherwise null
      */
     private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan, Client $clientForWebhooks, string $deliveryId): ?string
     {
@@ -244,7 +244,9 @@ class Webhooks extends Action
 
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
-            $error = $logs;
+            // The full log stays on the webhook for its owner. The error is logged by the worker, so it
+            // leaves out the URL, which can carry credentials, and the body the receiver sent back
+            $error = 'Webhook ' . $webhook->getId() . ': ' . (!empty($clientError) ? $clientError : 'status code ' . $statusCode);
             $usage = (new UsageContext())
                 ->setResource('webhook')
                 ->setResourceInternalId((string) $webhook->getSequence())
