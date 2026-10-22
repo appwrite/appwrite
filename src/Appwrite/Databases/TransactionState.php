@@ -97,15 +97,10 @@ class TransactionState
                 // Merge with committed version
                 $committedDoc = $dbForDatabases->getDocument($collectionId, $documentId, $queries);
                 if (!$committedDoc->isEmpty()) {
-                    foreach ($docState['document']->getAttributes() as $key => $value) {
-                        if ($key !== '$id') {
-                            $committedDoc->setAttribute($key, $value);
-                        }
-                    }
                     // Reapply projection in case transaction added new fields
-                    return $this->applyProjection($committedDoc, $queries);
+                    return $this->applyProjection($this->merge($committedDoc, $docState), $queries);
                 } elseif ($docState['action'] === 'upsert') {
-                    return $this->applyProjection($docState['document'], $queries);
+                    return $this->applyProjection($this->increment($docState['document'], $docState), $queries);
                 }
             }
         }
@@ -193,13 +188,36 @@ class TransactionState
             return $row;
         }
 
+        return $this->applyProjection($this->merge($row, $docState), $queries);
+    }
+
+    /**
+     * A stored row as the staged writes leave it: their values laid over its own, then the increments staged
+     * without a staged value to build on added to the value it holds.
+     *
+     * @param array<string, mixed> $docState
+     */
+    private function merge(Document $row, array $docState): Document
+    {
         foreach ($docState['document']->getAttributes() as $key => $value) {
             if ($key !== '$id') {
                 $row->setAttribute($key, $value);
             }
         }
 
-        return $this->applyProjection($row, $queries);
+        return $this->increment($row, $docState);
+    }
+
+    /**
+     * @param array<string, mixed> $docState
+     */
+    private function increment(Document $document, array $docState): Document
+    {
+        foreach ($docState['increments'] ?? [] as $attribute => $delta) {
+            $document->setAttribute($attribute, ($document->getAttribute($attribute) ?? 0) + $delta);
+        }
+
+        return $document;
     }
 
     /**
@@ -394,19 +412,15 @@ class TransactionState
             }
 
             if ($row === null || $docState['action'] === 'create') {
-                $document = new Document($changes->getArrayCopy());
+                $document = $this->increment(new Document($changes->getArrayCopy()), $docState);
                 $document->setAttribute('$id', $id);
                 $pending[$id] = \count($pending);
             } else {
-                $document = clone $row;
-                foreach ($changes->getAttributes() as $key => $value) {
-                    if ($key !== '$id') {
-                        $document->setAttribute($key, $value);
-                    }
-                }
+                $document = $this->merge(clone $row, $docState);
             }
 
-            $touched = \array_intersect(\array_keys($changes->getAttributes()), $filterAttributes) !== [];
+            $changed = [...\array_keys($changes->getAttributes()), ...\array_keys($docState['increments'] ?? [])];
+            $touched = \array_intersect($changed, $filterAttributes) !== [];
             $documents[$id] = $document;
             $matches[$id] = isset($pending[$id]) || $touched
                 ? $this->documentMatchesFilters($document, $filters)
@@ -699,15 +713,10 @@ class TransactionState
 
             $stored = $this->authorization->skip(fn (): Document => $this->dbForDatabases($database)->getDocument($collection, $id));
             if ($stored->isEmpty()) {
-                return new Document($staged['document']->getArrayCopy());
-            }
-            foreach ($staged['document']->getAttributes() as $key => $value) {
-                if ($key !== '$id') {
-                    $stored->setAttribute($key, $value);
-                }
+                return $this->increment(new Document($staged['document']->getArrayCopy()), $staged);
             }
 
-            return $stored;
+            return $this->merge($stored, $staged);
         };
     }
 
@@ -760,7 +769,21 @@ class TransactionState
     }
 
     /**
-     * The state staged operations leave, keyed by collection and document ID.
+     * The attribute an increment or decrement changes: TablesDB stages it as `column` and the legacy API as
+     * `attribute`, and a transaction can be committed through either.
+     *
+     * @param array<string, mixed> $data
+     */
+    public static function attributeOf(array $data, string $key = 'attribute'): string
+    {
+        $fallback = $key === 'attribute' ? 'column' : 'attribute';
+
+        return (string) ($data[$key] ?? $data[$fallback] ?? '');
+    }
+
+    /**
+     * The state staged operations leave, keyed by collection and document ID. An increment or decrement of a value
+     * the transaction has not staged is kept apart, in `increments`, as a change to add to the stored value.
      *
      * @param iterable<Document|array<string, mixed>> $operations
      * @return array<string, array<string, array<string, mixed>>>
@@ -802,6 +825,7 @@ class TransactionState
                         foreach ($data as $key => $value) {
                             if ($key !== '$id') {
                                 $existingDocument->setAttribute($key, $value);
+                                unset($state[$collectionId][$documentId]['increments'][$key]);
                             }
                         }
                         // Only set action to 'update' if it's not already 'create' or 'upsert'
@@ -839,29 +863,25 @@ class TransactionState
 
                 case 'increment':
                 case 'decrement':
-                    $attribute = $data['attribute'] ?? null;
-                    $value = $data['value'] ?? 1;
-
-                    if ($attribute) {
-                        if (isset($state[$collectionId][$documentId])) {
-                            $existingDocument = $state[$collectionId][$documentId]['document'];
-                            $currentValue = $existingDocument->getAttribute($attribute, 0);
-                            $newValue = $action === 'increment' ? $currentValue + $value : $currentValue - $value;
-                            $existingDocument->setAttribute($attribute, $newValue);
-
-                            $currentAction = $state[$collectionId][$documentId]['action'];
-                            if ($currentAction !== 'create' && $currentAction !== 'upsert') {
-                                $state[$collectionId][$documentId]['action'] = 'update';
-                            }
-                        } else {
-                            $newValue = $action === 'increment' ? $value : -$value;
-                            $state[$collectionId][$documentId] = [
-                                'action' => 'update',
-                                'document' => new Document([$attribute => $newValue]),
-                                'exists' => true
-                            ];
-                        }
+                    $attribute = self::attributeOf($data);
+                    $entry = $state[$collectionId][$documentId] ?? [
+                        'action' => 'update',
+                        'document' => new Document(),
+                        'exists' => true
+                    ];
+                    if ($attribute === '' || !$entry['exists']) {
+                        break;
                     }
+
+                    $value = $data['value'] ?? 1;
+                    $delta = $action === 'increment' ? $value : -$value;
+                    $document = $entry['document'];
+                    if ($entry['action'] === 'create' || $document->offsetExists($attribute)) {
+                        $document->setAttribute($attribute, ($document->getAttribute($attribute) ?? 0) + $delta);
+                    } else {
+                        $entry['increments'][$attribute] = ($entry['increments'][$attribute] ?? 0) + $delta;
+                    }
+                    $state[$collectionId][$documentId] = $entry;
                     break;
 
                 case 'bulkCreate':
@@ -899,6 +919,7 @@ class TransactionState
                                 foreach ($updateData as $key => $value) {
                                     if ($key !== '$id') {
                                         $document->setAttribute($key, $value);
+                                        unset($state[$collectionId][$docId]['increments'][$key]);
                                     }
                                 }
 
@@ -927,6 +948,7 @@ class TransactionState
                                 $existingDocument = $state[$collectionId][$docId]['document'];
                                 foreach ($doc as $key => $value) {
                                     $existingDocument->setAttribute($key, $value);
+                                    unset($state[$collectionId][$docId]['increments'][$key]);
                                 }
                             } else {
                                 $state[$collectionId][$docId] = [
