@@ -267,8 +267,7 @@ abstract class Base extends Action
         // Devices keep the first bytes staged for a part number, so a retry must resend the same content.
         $checksum = \hash('sha256', $body);
         $staged = $upload['parts'][(string) $partNumber] ?? null;
-        $changed = isset($staged['checksum']) ? $staged['checksum'] !== $checksum : ($staged['etag'] ?? $etag) !== $etag;
-        if ($changed) {
+        if ($staged !== null && ($staged['checksum'] ?? null) !== $checksum) {
             throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, 'Part ' . $partNumber . ' was already uploaded with different content. Start a new multipart upload to change it.');
         }
 
