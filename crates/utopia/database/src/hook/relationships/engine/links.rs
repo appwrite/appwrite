@@ -112,8 +112,12 @@ fn scenarios() -> Vec<Scenario> {
 fn each_case(mut test: impl FnMut(bool, &str, &Scenario, bool, Option<&'static str>)) {
     for transaction in [true, false] {
         for kind in TYPES {
+            // A link by ID that is only the key on the parent (a one-way
+            // one-to-one or a many-to-one) needs read, not update (8.3.14).
+            let key_side = matches!(kind, "oneToOne one-way" | "manyToOne");
             for scenario in scenarios() {
-                test(transaction, kind, &scenario, true, scenario.by_id);
+                let by_id = if key_side && scenario.by_id == Some(NO_UPDATE) { None } else { scenario.by_id };
+                test(transaction, kind, &scenario, true, by_id);
                 test(transaction, kind, &scenario, false, scenario.as_document);
             }
         }

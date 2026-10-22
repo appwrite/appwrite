@@ -140,7 +140,7 @@ impl Sql {
             if int_bools && !is_spatial {
                 value = int_bool(value);
             }
-            row.set(k, value);
+            row.set(key(&self.filter(name)), value);
         }
         Ok(row)
     }
@@ -357,7 +357,7 @@ impl Sql {
         let mut builder = self.dialect_builder();
         SqlBuilder::into(&mut builder, &self.table_raw(name));
         for column in spatial {
-            insert_column_expression(&mut builder, column, &self.spatial_geometry_from_text("?", None));
+            insert_column_expression(&mut builder, &self.filter(column), &self.spatial_geometry_from_text("?", None));
         }
         let int_bools = self.supports(Capability::IntegerBooleans);
         for document in documents {

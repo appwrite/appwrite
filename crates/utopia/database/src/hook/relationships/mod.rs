@@ -427,8 +427,9 @@ impl Relationships {
         Ok(documents)
     }
 
-    /// Linking an existing document to another one needs update permission
-    /// on it, whichever relationship type holds the link (`authorizeLink()`).
+    /// Linking an existing document needs update permission on it when the
+    /// link writes it or a junction row for it; see `writes_related()`
+    /// (`authorizeLink()`).
     ///
     /// Fails ([`crate::Kind::Authorization`]) without it.
     fn authorize_link(&self, database: &Database, collection: &Collection, related: &Document) -> Result<()> {

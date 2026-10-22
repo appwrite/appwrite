@@ -1,6 +1,7 @@
 //! `authorize()`: checking, without writing, that the caller may relate the
 //! related documents a write carries.
 
+use super::create::writes_related;
 use super::update::apply_relationship_operator;
 use super::{Relationships, permission_input, relationships, to_document};
 use crate::collection::Collection;
@@ -117,6 +118,8 @@ impl Relationships {
                 }
 
                 let linked = related_ids(old.and_then(|o| o.get(key)));
+                let writes =
+                    attribute.side.is_none_or(|side| writes_related(relationship.kind, relationship.two_way, side));
                 let mut value = document.get(key).cloned().unwrap_or(Value::Null);
                 if let Value::Ext(Ext::Operator(operator)) = &value {
                     value = if operator.is_array_operation() {
@@ -129,7 +132,7 @@ impl Relationships {
                 for related in related_values(&value)? {
                     match related {
                         Related::Id(id) => {
-                            self.authorize_link_by_id(db, &related_collection, &id, &linked, resolve).await?;
+                            self.authorize_link_by_id(db, &related_collection, &id, &linked, writes, resolve).await?;
                         }
                         Related::Document(related) => {
                             self.authorize_related_document(
@@ -138,6 +141,7 @@ impl Relationships {
                                 &related_collection,
                                 &related,
                                 &linked,
+                                writes,
                                 write_stack,
                                 resolve,
                             )
@@ -150,13 +154,15 @@ impl Relationships {
         })
     }
 
-    /// `authorizeLinkById()`.
+    /// `authorizeLinkById()`; `writes` is whether the link writes the
+    /// related document or a junction row.
     async fn authorize_link_by_id(
         &self,
         db: &Database,
         related_collection: &Collection,
         id: &str,
         linked: &[String],
+        writes: bool,
         resolve: Option<&Resolve>,
     ) -> Result<()> {
         if linked.iter().any(|l| l == id) {
@@ -172,13 +178,14 @@ impl Relationships {
                 vec![Query::select([document::ID])],
             )
             .await?;
-        if stored.is_empty() {
+        if stored.is_empty() || !writes {
             return Ok(());
         }
         self.authorize_link(db, related_collection, &stored)
     }
 
-    /// `authorizeRelatedDocument()`.
+    /// `authorizeRelatedDocument()`; `writes` is whether the link writes the
+    /// related document or a junction row.
     #[allow(clippy::too_many_arguments)]
     async fn authorize_related_document(
         &self,
@@ -187,6 +194,7 @@ impl Relationships {
         related_collection: &Collection,
         related: &Document,
         linked: &[String],
+        writes: bool,
         write_stack: &[String],
         resolve: Option<&Resolve>,
     ) -> Result<()> {
@@ -211,7 +219,7 @@ impl Relationships {
         }
 
         let changes = related.keys().any(|k| !matches!(k, value::KeyRef::Str(s) if s == document::ID.as_bytes()));
-        if !linked.iter().any(|l| l == id) || changes {
+        if changes || (writes && !linked.iter().any(|l| l == id)) {
             self.authorize_link(db, related_collection, &stored)?;
         }
 

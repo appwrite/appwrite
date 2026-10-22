@@ -189,17 +189,20 @@ fn a_collection_definition_write_keeps_the_other_definitions_cached() {
     });
 }
 
-/// A cache whose purges fail while `refusing` is set, once.
+/// A cache whose purges fail while `refusing` is set.
 fn purge_refusing() -> (Arc<Leasable>, Arc<AtomicBool>) {
     let cache = Leasable::new();
     let refusing = Arc::new(AtomicBool::new(false));
     let flag = refusing.clone();
     cache.on_purge(move |_, _| {
-        flag.swap(false, Ordering::SeqCst).then(|| Err(utopia_cache::Error::Runtime(PURGE_FAILURE.into())))
+        flag.load(Ordering::SeqCst).then(|| Err(utopia_cache::Error::Runtime(PURGE_FAILURE.into())))
     });
     (cache, refusing)
 }
 
+/// A purge refused once is retried, so the cache refuses for as long as the
+/// write runs: an outage longer than the retries must still roll the write
+/// back.
 #[test]
 fn a_failed_purge_inside_the_transaction_rolls_the_write_back() {
     run(|| async {
@@ -212,6 +215,7 @@ fn a_failed_purge_inside_the_transaction_rolls_the_write_back() {
             .update_document("webhooks", "hook", doc(vec![("name", Value::from("renamed"))]))
             .await
             .unwrap_err();
+        refusing.store(false, Ordering::SeqCst);
         assert_eq!(error.message(), PURGE_FAILURE);
         assert_eq!(get(&database, "hook").await.get("name"), Some(&Value::from("hook")), "the write rolls back");
     });

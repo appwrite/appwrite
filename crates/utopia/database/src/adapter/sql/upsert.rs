@@ -195,6 +195,7 @@ impl Sql {
         operators: &Operators,
         defaults: &[(String, Value)],
         has_operators: bool,
+        filtered: bool,
     ) -> Result<(Vec<Array>, Vec<Value>)> {
         let mut all_columns = Array::new();
         let mut rows = Vec::with_capacity(changes.len());
@@ -242,7 +243,15 @@ impl Sql {
             {
                 put(&mut row, storage::SEQUENCE, sequence.clone());
             }
-            let row = self.decorate_row(row, document);
+            let mut row = self.decorate_row(row, document);
+            if filtered {
+                // `$row[$this->filter($column)] = $value` (SQL's batch, since 8.3.14).
+                let mut columns = Array::new();
+                for (key, value) in row.into_iter() {
+                    put(&mut columns, &self.filter(&key_string(&key)), value);
+                }
+                row = columns;
+            }
             for (key, _) in row.iter() {
                 all_columns.set(key.to_owned(), Value::Bool(true));
             }
@@ -286,7 +295,19 @@ impl Sql {
         }
         let mut builder = self.dialect_builder();
         SqlBuilder::into(&mut builder, &self.table_raw(name));
-        for column in spatial {
+        // The spatial columns and the operators' keyed by their filtered
+        // names, as the rows' columns are (8.3.14).
+        let spatial: Vec<String> = spatial.iter().map(|column| self.filter(column)).collect();
+        let mut filtered: Operators = Vec::with_capacity(operators.len());
+        for (key, operator) in operators {
+            let key = self.filter(key);
+            match filtered.iter_mut().find(|(k, _)| *k == key) {
+                Some(slot) => slot.1 = operator.clone(),
+                None => filtered.push((key, operator.clone())),
+            }
+        }
+        let operators = &filtered;
+        for column in &spatial {
             let expression = self.spatial_geometry_from_text("?", None);
             crate::each_builder!(&mut builder, b => {
                 b.insert_column_expression(column.as_str(), expression, utopia_query::Array::new());
@@ -296,7 +317,7 @@ impl Sql {
             builder.insert_as("target");
         }
 
-        let (rows, columns) = self.upsert_rows(changes, operators, defaults, has_operators)?;
+        let (rows, columns) = self.upsert_rows(changes, operators, defaults, has_operators, true)?;
         let integer_booleans = self.supports(Capability::IntegerBooleans);
         for values in &rows {
             let mut row = Array::new();
@@ -387,7 +408,7 @@ impl Sql {
         defaults: &[(String, Value)],
         has_operators: bool,
     ) -> Result<()> {
-        let (rows, columns) = self.upsert_rows(changes, operators, defaults, has_operators)?;
+        let (rows, columns) = self.upsert_rows(changes, operators, defaults, has_operators, false)?;
         let quoted: Vec<String> = columns.iter().map(|c| self.quote(&self.filter(&key_text(c)))).collect();
         let column_list = format!("({})", quoted.join(", "));
         let integer_booleans = self.supports(Capability::IntegerBooleans);

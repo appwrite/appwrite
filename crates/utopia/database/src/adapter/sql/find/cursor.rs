@@ -285,7 +285,7 @@ impl Sql {
                     None => continue,
                 }
             } else {
-                let value = comparable(&value, direction, 5819)?;
+                let value = comparable(&value, direction, 5825)?;
                 and.push(wrap(if direction == OrderDirection::Desc {
                     utopia_query::Query::less_than(internal, value)
                 } else {

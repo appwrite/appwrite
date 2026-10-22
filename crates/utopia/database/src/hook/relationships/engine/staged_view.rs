@@ -306,8 +306,12 @@ async fn stored_parent(db: &Database) -> Document {
 /// as a document.
 fn each_case(mut test: impl FnMut(&str, &Scenario, bool, Option<&'static str>)) {
     for kind in TYPES {
+        // A one-way one-to-one or many-to-one link by ID is only the key on
+        // the parent, so it needs read (8.3.14).
+        let key_side = matches!(kind, "oneToOne one-way" | "manyToOne");
         for scenario in scenarios() {
-            test(kind, &scenario, true, scenario.by_id);
+            let by_id = if key_side && scenario.by_id == Some(NO_UPDATE) { None } else { scenario.by_id };
+            test(kind, &scenario, true, by_id);
             test(kind, &scenario, false, scenario.as_document);
         }
     }
@@ -500,7 +504,16 @@ fn a_nested_document_is_judged_against_the_links_the_staged_writes_leave() {
                     Array::new(),
                 );
                 db.create_collection(toys.unwrap()).await.unwrap();
-                relate(&db, "related", Relationship::many_to_one("toys").key("toy").on_delete(OnDelete::SetNull)).await;
+                relate(
+                    &db,
+                    "related",
+                    Relationship::one_to_one("toys")
+                        .key("toy")
+                        .two_way(true)
+                        .two_way_key("owner")
+                        .on_delete(OnDelete::SetNull),
+                )
+                .await;
                 create(&db, "toys", doc(&[("$id", s("toy")), ("name", s("Toy"))])).await;
             })
             .await;
