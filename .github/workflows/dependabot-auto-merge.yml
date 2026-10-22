@@ -2,14 +2,15 @@ name: Dependabot auto-merge
 
 on: pull_request
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
 
 jobs:
   auto-merge:
     if: github.event.pull_request.user.login == 'dependabot[bot]'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Fetch Dependabot metadata
         id: metadata
@@ -17,8 +18,24 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+      # Auto-merge only waits for checks the base branch requires; with none, an approved PR would merge before CI.
+      - name: Check required status checks on the base branch
+        id: protection
+        run: |
+          classic=$(gh api "repos/$REPOSITORY/branches/$BASE" --jq '(.protection.required_status_checks.contexts // []) | length')
+          rules=$(gh api "repos/$REPOSITORY/rules/branches/$BASE" --jq '[.[] | select(.type == "required_status_checks")] | length')
+          if [ $((classic + rules)) -gt 0 ]; then
+            echo "required=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::$BASE has no required status checks, so auto-merge is not enabled."
+          fi
+        env:
+          REPOSITORY: ${{ github.repository }}
+          BASE: ${{ github.event.pull_request.base.ref }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Enable auto-merge for patch and minor updates
-        if: steps.metadata.outputs.update-type == 'version-update:semver-patch' || steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        if: steps.protection.outputs.required == 'true' && (steps.metadata.outputs.update-type == 'version-update:semver-patch' || steps.metadata.outputs.update-type == 'version-update:semver-minor')
         run: gh pr merge --auto --merge "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
