@@ -1955,6 +1955,9 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                         $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     }
                     $user->setAttributes($userWithEmail->getArrayCopy());
+                    if (!$user->getAttribute('emailVerification', false)) {
+                        $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user));
+                    }
                     // The provider verified this address, or its canonical form on the same domain
                     if ((new Email($user->getAttribute('email')))->getDomain() === (new Email($providerEmail))->getDomain()) {
                         $user->setAttribute('emailVerification', true);

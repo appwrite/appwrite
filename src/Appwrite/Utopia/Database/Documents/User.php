@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Database\Documents;
 
+use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Proof;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Database\Database;
@@ -216,5 +217,54 @@ class User extends Document
         $dbForProject->deleteDocuments('challenges', [
             Query::equal('userInternalId', [$sequence]),
         ]);
+    }
+
+    /**
+     * Revoke every way into the account other than its email address: password,
+     * sessions, tokens, MFA factors, passkeys, identities, phone and push targets.
+     *
+     * Used when the verified owner of the email claims an account that was
+     * registered with it but never verified, so nobody else keeps access.
+     * Mutates `$user` in place; the caller persists it.
+     */
+    public static function revokeCredentials(Database $dbForProject, Document $user): void
+    {
+        self::invalidateAuthentication($dbForProject, $user);
+
+        $sequence = $user->getSequence();
+        if ($sequence !== '' && $sequence !== null) {
+            foreach (['tokens', 'authenticators', 'identities'] as $collection) {
+                $dbForProject->deleteDocuments($collection, [
+                    Query::equal('userInternalId', [$sequence]),
+                ]);
+            }
+
+            $dbForProject->deleteDocuments('targets', [
+                Query::equal('userInternalId', [$sequence]),
+                Query::notEqual('providerType', MESSAGE_TYPE_EMAIL),
+            ]);
+        }
+
+        $hash = new Argon2();
+
+        $user
+            ->setAttribute('password', null)
+            ->setAttribute('hash', $hash->getName())
+            ->setAttribute('hashOptions', $hash->getOptions())
+            ->setAttribute('passwordHistory', [])
+            ->setAttribute('passwordUpdate', null)
+            ->setAttribute('passwordPwned', null)
+            ->setAttribute('phone', null)
+            ->setAttribute('phoneVerification', false)
+            ->setAttribute('mfa', false)
+            ->setAttribute('mfaRecoveryCodes', [])
+            ->setAttribute('sessions', [])
+            ->setAttribute('tokens', [])
+            ->setAttribute('challenges', [])
+            ->setAttribute('authenticators', [])
+            ->setAttribute('targets', \array_values(\array_filter(
+                $user->getAttribute('targets', []),
+                static fn (mixed $target): bool => $target instanceof Document && $target->getAttribute('providerType') === MESSAGE_TYPE_EMAIL,
+            )));
     }
 }
