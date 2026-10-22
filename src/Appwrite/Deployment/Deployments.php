@@ -7,6 +7,7 @@ use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Validator\VariableKey;
+use Appwrite\Vcs\Validator\Directory;
 use OpenRuntimes\Orchestrator\Enum\ArchiveCompression;
 use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use OpenRuntimes\Orchestrator\Enum\ReadFormat;
@@ -237,6 +238,21 @@ readonly class Deployments
         string $ref,
         string $rootDirectory = '',
     ): Document {
+        // Values stored before root directories were validated may still leave the repository
+        if (!(new Directory(\PHP_INT_MAX))->isValid($rootDirectory)) {
+            $message = 'Root directory must stay inside the repository.';
+            $this->dbForProject->updateDocuments('deployments', new Document([
+                'status' => 'failed',
+                'buildLogs' => "\n{$message}\n",
+                'buildEndedAt' => DateTime::now(),
+            ]), [
+                Query::equal('$id', [$deployment->getId()]),
+                Query::notEqual('status', 'canceled'),
+            ]);
+
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $message);
+        }
+
         $deployment->setAttribute('providerRootDirectory', $rootDirectory);
 
         if ($vcs->supportsRepositoryArchives()) {

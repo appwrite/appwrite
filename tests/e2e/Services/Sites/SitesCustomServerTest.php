@@ -3070,7 +3070,6 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
-    #[Retry(count: 3)]
     public function testRootDirectoryMustStayInsideRepository(): void
     {
         /**
@@ -3129,6 +3128,7 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    #[Retry(count: 3)]
     public function testSiteTemplate(): void
     {
         $template = $this->getTemplate('playground-for-astro');

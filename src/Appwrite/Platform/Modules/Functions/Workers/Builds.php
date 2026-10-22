@@ -320,12 +320,12 @@ class Builds extends Action
             // VCS and VCS+Temaplte
             $tmpDirectory = '/tmp/builds/' . $deploymentId . '/code';
             $rootDirectory = $resource->getAttribute('providerRootDirectory', '');
-            $rootDirectory = \rtrim($rootDirectory, '/');
-            $rootDirectory = \ltrim($rootDirectory, '.');
-            $rootDirectory = \ltrim($rootDirectory, '/');
             if (!(new Directory(\PHP_INT_MAX))->isValid($rootDirectory)) {
                 throw new BuildException('Root directory must stay inside the repository.');
             }
+            $rootDirectory = \rtrim($rootDirectory, '/');
+            $rootDirectory = \ltrim($rootDirectory, '.');
+            $rootDirectory = \ltrim($rootDirectory, '/');
 
             $owner = $providerAdapter->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
             $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
@@ -384,12 +384,12 @@ class Builds extends Action
             $templateReferenceValue = $template->getAttribute('referenceValue', '');
 
             $templateRootDirectory = $template->getAttribute('rootDirectory', '');
-            $templateRootDirectory = \rtrim($templateRootDirectory, '/');
-            $templateRootDirectory = \ltrim($templateRootDirectory, '.');
-            $templateRootDirectory = \ltrim($templateRootDirectory, '/');
             if (!(new Directory(\PHP_INT_MAX))->isValid($templateRootDirectory)) {
                 throw new BuildException('Template root directory must stay inside the template repository.');
             }
+            $templateRootDirectory = \rtrim($templateRootDirectory, '/');
+            $templateRootDirectory = \ltrim($templateRootDirectory, '.');
+            $templateRootDirectory = \ltrim($templateRootDirectory, '/');
 
             if (! empty($templateRepositoryName) && ! empty($templateOwnerName) && ! empty($templateReferenceType) && ! empty($templateReferenceValue)) {
                 // Clone template repo
