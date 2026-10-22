@@ -2,7 +2,7 @@
 layout: post
 title: "Old deployments will no longer fill up your Appwrite Cloud storage"
 description: From November 5, 2026, inactive deployments on Appwrite Cloud are cleaned up after 30 days by default, so they stop counting toward your storage. Your active deployment always stays.
-date: 2026-10-21
+date: 2026-10-22
 cover: /images/blog/default-deployment-retention/cover.avif
 timeToRead: 3
 author: atharva
