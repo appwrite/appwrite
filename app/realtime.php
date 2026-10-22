@@ -42,9 +42,11 @@ use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Timeout as TimeoutException;
 use Utopia\Database\Id;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\DI\Container;
 use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
@@ -964,6 +966,44 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         }
         $logUser = $user;
 
+        // As over HTTP, admin mode needs project access and grants admin roles, never console identity roles.
+        $adminRoles = null;
+        if ($connectionContainer->get('mode') === APP_MODE_ADMIN && $project->getId() !== 'console' && !$targetUser->isEmpty()) {
+            $membershipRoles = [];
+            foreach ($targetUser->getAttribute('memberships', []) as $membership) {
+                if ($membership->getAttribute('confirm', false) === true && $membership->getAttribute('teamId') === $project->getAttribute('teamId')) {
+                    $membershipRoles = $membership->getAttribute('roles', []);
+                    break;
+                }
+            }
+
+            if (empty($membershipRoles)) {
+                throw new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
+            }
+
+            $projectAuthorization = new Authorization();
+            foreach ($targetUser->getRoles($projectAuthorization) as $role) {
+                $projectAuthorization->addRole($role);
+            }
+            if (!$projectAuthorization->isValid(new Input(PermissionType::Read, $project->getPermissionsByType(PermissionType::Read)))) {
+                throw new AppwriteException(AppwriteException::PROJECT_NOT_FOUND);
+            }
+
+            $adminRoles = [];
+            foreach ($membershipRoles as $membershipRole) {
+                if (!\str_starts_with($membershipRole, 'project-')) {
+                    $adminRoles[] = $membershipRole;
+                } elseif (\substr($membershipRole, 0, (int) \strrpos($membershipRole, '-')) === 'project-' . $project->getId()) {
+                    $adminRoles[] = \substr($membershipRole, \strrpos($membershipRole, '-') + 1);
+                }
+            }
+            $adminRoles = \array_values(\array_unique($adminRoles));
+
+            foreach ($adminRoles as $role) {
+                $authorization->addRole($role);
+            }
+        }
+
         $apis = $project->getAttribute('apis', []);
         // Websocket is what to check, but realtime is checked too for backwards compatibility
         $websocketEnabled = $apis['websocket'] ?? $apis['realtime'] ?? true;
@@ -1010,7 +1050,9 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $originValidator->getDescription());
         }
 
-        $roles = $targetUser->getRoles($authorization);
+        $roles = $adminRoles ?? $targetUser->getRoles($authorization);
+        // A console user is no user of this project.
+        $subscriberId = $adminRoles === null ? $targetUser->getId() : '';
 
         // The session this connection was opened with. An impersonated connection runs
         // on the impersonator's session, which is not one of the target user's, so it
@@ -1024,7 +1066,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         // Impersonated or not, the connection lasts only as long as the session it runs on.
         $expire = $session !== null ? $user->getSessionExpiry($session->getId()) : null;
 
-        $channels = Realtime::convertChannels($request->getQuery('channels', []), $targetUser->getId());
+        $channels = Realtime::convertChannels($request->getQuery('channels', []), $subscriberId);
         $channelCount = \count($channels);
 
         $updateStats = static function (string $projectId, ?string $teamId) use ($register, $stats): void {
@@ -1066,7 +1108,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             $server->send([$connection], $connectedPayloadJson);
             $outboundBytes += \strlen($connectedPayloadJson);
 
-            $realtime->subscribe($project->getId(), $connection, '', $roles, [], [], $targetUser->getId());
+            $realtime->subscribe($project->getId(), $connection, '', $roles, [], [], $subscriberId);
             $realtime->connections[$connection]['authorization'] = $authorization;
             $realtime->connections[$connection]['impersonatedUserId'] = $impersonatorUser->isEmpty() ? null : $targetUser->getId();
             $realtime->connections[$connection]['sessionId'] = $sessionId;
@@ -1128,7 +1170,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
                 $roles,
                 $subscription['channels'],
                 $subscription['queries'],
-                $targetUser->getId()
+                $subscriberId
             );
         }
 

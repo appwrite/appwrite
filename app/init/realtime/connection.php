@@ -115,6 +115,10 @@ return function (Container $container): void {
         return new Authorization();
     }, []);
 
+    $container->set('mode', function (Request $request, Document $project) use ($getMode): string {
+        return $getMode($request, $project);
+    }, ['request', 'project']);
+
     $container->set('project', function (Request $request, Document $console, Authorization $authorization) use ($getProjectId, $getDbForPlatform) {
         $projectId = $getProjectId($request);
 
