@@ -180,10 +180,19 @@ final class FunctionsCustomClientTest extends Scope
 
         $asyncId = $execution['body']['$id'];
         $this->assertEventually(function () use ($functionId, $asyncId) {
-            $execution = $this->getExecution($functionId, $asyncId);
-            $output = $this->executionOutput($execution);
-            $this->assertNotEmpty($output['APPWRITE_FUNCTION_CLIENT_IP']);
-        });
+            $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $asyncId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertSame(200, $execution['headers']['status-code']);
+            $this->assertSame('completed', $execution['body']['status']);
+            $logs = (string) $execution['body']['logs'];
+            $marker = 'client-ip-is-';
+            $this->assertNotFalse(\strpos($logs, $marker));
+            $line = \explode("\n", \substr($logs, \strpos($logs, $marker) + \strlen($marker)), 2)[0];
+            $this->assertNotSame('', $line);
+        }, 60000, 500);
 
         return [
             'functionId' => $functionId
