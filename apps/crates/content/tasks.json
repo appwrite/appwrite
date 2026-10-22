@@ -1,13 +1,13 @@
 {
-  "updated": "2026-10-22T20:17:00Z",
+  "updated": "2026-10-22T21:00:00Z",
   "tasks": [
     {
-      "id": "messaging-html-text",
-      "title": "messaging: main's HTML-to-text and public SMTP hosts",
+      "id": "core-keys",
+      "title": "Core: main's API key checks and the Users email update",
       "area": "Database 8",
-      "status": "done",
-      "updated": "2026-10-22T20:20:00Z",
-      "note": "Catch-up I. The plain-text part is read off the parsed document as PHP's Dom\\HTMLDocument builds it (html5ever with scripting off; the declared <meta> charset applied as lexbor does), and SMTP takes per-host addresses. messaging: run 312/312, API 100%, PHP tests 20/20, fuzz 0 differences on seeds 12388 and 4242."
+      "status": "progress",
+      "updated": "2026-10-22T21:00:00Z",
+      "note": "Catch-up M, 2-hour box. Main changed key handling (Auth/Key.php): account keys can no longer create users, and unknown, other-project and missing-project keys answer differently. Rust still accepts them, which also shifted every later target id in the Users lanes. Users' email update gains the same lock as Account's."
     },
     {
       "id": "crate-layout",
@@ -112,6 +112,22 @@
       "status": "todo",
       "note": "On a quiet machine; the last container runs were taken under load.",
       "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "account-email-lock",
+      "title": "Account: main's locked email tokens and OAuth matching",
+      "area": "Database 8",
+      "status": "done",
+      "updated": "2026-10-22T21:00:00Z",
+      "note": "Catch-up J, 90 minutes of a 2-hour box. Magic URL, email OTP, verification and recovery re-check the user under a row lock before storing a token; PATCH /account/email clears email tokens when the address changes; queued events carry the caller, not the recipient (PHP's payload user is [] for guests and keys); OAuth2 and ID-token sign-in match the provider's address and revoke an unverified account's credentials when it is claimed. Account parity 1,142 of 1,146; the other four are session-limit order and one state-dependent field."
+    },
+    {
+      "id": "messaging-html-text",
+      "title": "messaging: main's HTML-to-text and public SMTP hosts",
+      "area": "Database 8",
+      "status": "done",
+      "updated": "2026-10-22T20:20:00Z",
+      "note": "Catch-up I. The plain-text part is read off the parsed document as PHP's Dom\\HTMLDocument builds it (html5ever with scripting off; the declared <meta> charset applied as lexbor does), and SMTP takes per-host addresses. messaging: run 312/312, API 100%, PHP tests 20/20, fuzz 0 differences on seeds 12388 and 4242."
     },
     {
       "id": "php-8512",
