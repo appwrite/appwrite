@@ -171,6 +171,7 @@ class Update extends Base
             if (!empty($storedRaw)) {
                 $existing = \json_decode($storedRaw, true) ?: [];
             }
+            $this->requireSecretOnEndpointChange($secret, $existing, ['endpoint' => $endpoint]);
             $encodedSecret = \json_encode([
                 'clientSecret' => $secret ?? ($existing['clientSecret'] ?? ''),
                 'endpoint' => $endpoint ?? ($existing['endpoint'] ?? ''),

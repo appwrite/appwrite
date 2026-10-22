@@ -628,6 +628,7 @@ class Builds extends Action
 
             $apiKey = $jwtObj->encode([
                 'projectId' => $project->getId(),
+                'projectSequence' => $project->getSequence(),
                 'scopes' => $resource->getAttribute('scopes', []),
             ]);
 

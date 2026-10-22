@@ -171,6 +171,11 @@ class Update extends Base
             $existing = \json_decode($storedRaw, true) ?: [];
         }
 
+        $this->requireSecretOnEndpointChange($clientSecret, $existing, [
+            'oktaDomain' => $domain,
+            'authorizationServerId' => $authorizationServerId,
+        ]);
+
         $encodedSecret = null;
         if (!\is_null($clientSecret) || !\is_null($domain) || !\is_null($authorizationServerId)) {
             $encodedSecret = \json_encode([

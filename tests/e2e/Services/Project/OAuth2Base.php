@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Project;
 
 use PHPUnit\Framework\Attributes\Before;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Utopia\Database\Query;
 
@@ -23,6 +24,10 @@ trait OAuth2Base
             'okta' => ['clientId' => '', 'clientSecret' => '', 'domain' => '', 'authorizationServerId' => '', 'enabled' => false],
             'google' => ['clientId' => '', 'clientSecret' => '', 'prompt' => ['consent'], 'enabled' => false],
             'dropbox' => ['appKey' => '', 'appSecret' => '', 'enabled' => false],
+            'gitlab' => ['applicationId' => '', 'secret' => '', 'endpoint' => '', 'enabled' => false],
+            'authentik' => ['clientId' => '', 'clientSecret' => '', 'endpoint' => '', 'enabled' => false],
+            'fusionauth' => ['clientId' => '', 'clientSecret' => '', 'endpoint' => '', 'enabled' => false],
+            'keycloak' => ['clientId' => '', 'clientSecret' => '', 'endpoint' => '', 'realmName' => '', 'enabled' => false],
         ];
 
         foreach ($providers as $provider => $payload) {
@@ -277,6 +282,56 @@ trait OAuth2Base
 
         $this->assertSame(400, $response['headers']['status-code']);
         $this->assertSame('general_argument_invalid', $response['body']['type']);
+    }
+
+    /**
+     * @return iterable<string, array{string, string, string, array<string, string>, array<string, string>}>
+     */
+    public static function endpointChangeProvider(): iterable
+    {
+        yield 'oidc wellKnownURL' => ['oidc', 'clientId', 'clientSecret', ['wellKnownURL' => 'https://idp.example/.well-known/openid-configuration'], ['wellKnownURL' => 'https://other.example/.well-known/openid-configuration']];
+        yield 'oidc tokenURL' => ['oidc', 'clientId', 'clientSecret', ['wellKnownURL' => 'https://idp.example/.well-known/openid-configuration'], ['tokenURL' => 'https://other.example/oauth2/token']];
+        yield 'okta domain' => ['okta', 'clientId', 'clientSecret', ['domain' => 'trial-6400025.okta.com'], ['domain' => 'other-6400025.okta.com']];
+        yield 'okta authorizationServerId' => ['okta', 'clientId', 'clientSecret', ['domain' => 'trial-6400025.okta.com', 'authorizationServerId' => 'aus000000000000000h7z'], ['authorizationServerId' => 'aus000000000000000x9y']];
+        yield 'auth0 endpoint' => ['auth0', 'clientId', 'clientSecret', ['endpoint' => 'example.us.auth0.com'], ['endpoint' => 'other.us.auth0.com']];
+        yield 'gitlab endpoint' => ['gitlab', 'applicationId', 'secret', ['endpoint' => 'https://gitlab.example.com'], ['endpoint' => 'https://other.example.com']];
+        yield 'authentik endpoint' => ['authentik', 'clientId', 'clientSecret', ['endpoint' => 'example.authentik.com'], ['endpoint' => 'other.authentik.com']];
+        yield 'fusionauth endpoint' => ['fusionauth', 'clientId', 'clientSecret', ['endpoint' => 'example.fusionauth.io'], ['endpoint' => 'other.fusionauth.io']];
+        yield 'keycloak endpoint' => ['keycloak', 'clientId', 'clientSecret', ['endpoint' => 'keycloak.example.com', 'realmName' => 'appwrite-realm'], ['endpoint' => 'keycloak.other.com']];
+        yield 'keycloak realmName' => ['keycloak', 'clientId', 'clientSecret', ['endpoint' => 'keycloak.example.com', 'realmName' => 'appwrite-realm'], ['realmName' => 'other-realm']];
+    }
+
+    #[DataProvider('endpointChangeProvider')]
+    public function testUpdateOAuth2EndpointChangeRequiresSecret(string $provider, string $idParam, string $secretParam, array $seed, array $change): void
+    {
+        $response = $this->updateOAuth2($provider, [
+            $idParam => $provider . '-client',
+            $secretParam => $provider . '-secret',
+            'enabled' => false,
+            ...$seed,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->updateOAuth2($provider, $change);
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->updateOAuth2($provider, $seed);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $response = $this->updateOAuth2($provider, [
+            $secretParam => $provider . '-rotated',
+            ...$change,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(\array_values($change)[0], $response['body'][\array_key_first($change)]);
+        $this->assertSame('', $response['body'][$secretParam]);
     }
 
     public function testUpdateOAuth2OktaRoundTrip(): void
