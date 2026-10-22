@@ -379,11 +379,14 @@ class Create extends Action
                     throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
                 }
             } else {
-                $membership = $dbForProject->updateDocument('memberships', $membership->getId(), new Document([
+                $update = [
                     'secret' => $secretHash,
                     'invited' => $invitedTime,
-                    'channel' => $channel,
-                ]));
+                ];
+                if ($channel !== '') {
+                    $update['channel'] = $channel;
+                }
+                $membership = $dbForProject->updateDocument('memberships', $membership->getId(), new Document($update));
             }
         } else {
             throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
