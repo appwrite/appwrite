@@ -307,14 +307,22 @@ class Update extends Action
                 throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
             }
 
+            $pushData['image'] = [
+                'bucketId' => $bucket->getId(),
+                'fileId' => $file->getId(),
+            ];
+        }
+
+        if (!empty($pushData['image'])) {
+            // Reissue on every update so the token tracks the current delivery time.
             $scheduleTime = $scheduledAt ?? $currentScheduledAt;
             $delivery = \is_null($scheduleTime) ? \time() : (new \DateTime($scheduleTime))->getTimestamp();
 
             $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', APP_PUSH_IMAGE_TOKEN_DURATION, 0);
 
             $jwt = $encoder->encode([
-                'bucketId' => $bucket->getId(),
-                'fileId' => $file->getId(),
+                'bucketId' => $pushData['image']['bucketId'],
+                'fileId' => $pushData['image']['fileId'],
                 'projectId' => $project->getId(),
                 'exp' => $delivery + APP_PUSH_IMAGE_TOKEN_DURATION,
             ]);
@@ -322,11 +330,7 @@ class Update extends Action
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
             $endpoint = "$protocol://{$platform['apiHostname']}/v1";
 
-            $pushData['image'] = [
-                'bucketId' => $bucket->getId(),
-                'fileId' => $file->getId(),
-                'url' => "{$endpoint}/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}",
-            ];
+            $pushData['image']['url'] = "{$endpoint}/storage/buckets/{$pushData['image']['bucketId']}/files/{$pushData['image']['fileId']}/push?project={$project->getId()}&jwt={$jwt}";
         }
 
         $message->setAttribute('data', $pushData);
