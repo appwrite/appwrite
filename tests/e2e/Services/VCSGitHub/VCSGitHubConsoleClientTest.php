@@ -875,6 +875,57 @@ final class VCSGitHubConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
     }
+    
+    public function testUpdateFunctionPreservesOmittedSettings(): void
+{
+    $data = $this->setupFunctionUsingVCS();
+
+    // Update only a few fields while omitting execute/events/etc.
+    $function = $this->client->call(
+        Client::METHOD_PUT,
+        '/functions/' . $data['functionId'],
+        array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()),
+        [
+            'name' => 'Updated Function',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+        ]
+    );
+
+    $this->assertEquals(200, $function['headers']['status-code']);
+
+    // These values were created in setupFunctionUsingVCS()
+    $this->assertEquals(
+        [Role::user($this->getUser()['$id'])->toString()],
+        $function['body']['execute']
+    );
+
+    $this->assertEquals(
+        [
+            'users.*.create',
+            'users.*.delete',
+        ],
+        $function['body']['events']
+    );
+
+    $this->assertEquals(
+        '0 0 1 1 *',
+        $function['body']['schedule']
+    );
+
+    $this->assertEquals(
+        10,
+        $function['body']['timeout']
+    );
+
+    $this->assertEquals(
+        'Updated Function',
+        $function['body']['name']
+    );
+}
 
     public function testCrossProjectInstallationRejected(): void
     {
