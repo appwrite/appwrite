@@ -183,30 +183,6 @@ final class StateTest extends TestCase
         $this->assertSame(1, $live->getAttribute('connections'));
     }
 
-    public function testFollowerRefreshesWithoutCounting(): void
-    {
-        $this->hold('user-1', 'online'); // establisher creates the row with connections = 1
-
-        // A second message on the same socket while a sibling establishes the hold: refresh the data,
-        // never add a count. The row already exists, so no waiting.
-        $write = (new State())->upsertForUserWithConnections(
-            $this->database,
-            new Document([
-                'userInternalId' => self::USER_INTERNAL_ID,
-                'userId' => 'user-1',
-                'status' => 'away',
-            ]),
-            'user-1',
-            null,
-            follower: true,
-        );
-
-        $this->assertFalse($write['created']);
-        $this->assertFalse($write['counted']);
-        $this->assertSame(1, $write['presence']->getAttribute('connections'), 'follower must not change the count');
-        $this->assertSame('away', $write['presence']->getAttribute('status'), 'follower still persists its data');
-    }
-
     public function testSetPermissionsDefaultsForUser(): void
     {
         $userId = 'user123';

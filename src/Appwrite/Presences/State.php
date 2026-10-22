@@ -9,7 +9,6 @@ use Appwrite\Event\Realtime as QueueRealtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
-use Swoole\Coroutine;
 use Throwable;
 use Utopia\Database\Capability;
 use Utopia\Database\Database;
@@ -138,31 +137,10 @@ class State
         Document $presenceDocument,
         string $userId,
         ?string $sequence,
-        bool $follower = false,
     ): array {
         $created = false;
         $counted = false;
         try {
-            // A sibling message on the same socket is already establishing the hold, so this one must
-            // not add a second count. Refresh the row's data only; if the sibling's create has not
-            // committed yet, wait on the database for it rather than counting or creating a duplicate.
-            if ($follower) {
-                for ($attempt = 1; $attempt <= 20; $attempt++) {
-                    $existing = $dbForProject->getAuthorization()->skip(
-                        fn () => $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])])
-                    );
-                    if (!$existing->isEmpty()) {
-                        $presenceDocument->setAttribute('$id', $existing->getId());
-                        $presence = $dbForProject->updateDocument(self::COLLECTION_ID, $existing->getId(), $presenceDocument);
-
-                        return ['presence' => $presence, 'created' => false, 'counted' => false];
-                    }
-                    Coroutine::sleep(0.005);
-                }
-
-                throw new Exception(Exception::PRESENCE_NOT_FOUND, params: [$userId]);
-            }
-
             if ($sequence !== null) {
                 $existing = $dbForProject->getAuthorization()->skip(
                     fn () => $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])])
