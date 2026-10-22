@@ -1608,6 +1608,8 @@ class Deletes extends Action
                 } else {
                     Console::error('Failed to delete deployment screenshot: ' . $path);
                 }
+
+                $dbForPlatform->deleteDocument('bucket_' . $bucket->getSequence(), $id);
             } catch (\Throwable $th) {
                 Console::error('Failed to delete deployment screenshot: ' . $path);
                 Console::error('[Error] Type: ' . get_class($th));
