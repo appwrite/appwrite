@@ -178,39 +178,30 @@ class Create extends Action
                     throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid action: ' . $operation['action']);
                 }
 
-                // For individual operations, enforce permissions unless using API key/admin
-                if (!$isAPIKey && !$isPrivilegedUser) {
-                    $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
-                    $exists = $document !== null && !$document->isEmpty();
-
-                    if ($operation['action'] === 'delete') {
-                        $permissions = $collection->getPermissionsByType(PermissionType::Delete);
-                        if ($collection->getAttribute('documentSecurity', false) && $exists) {
-                            $permissions = [...$permissions, ...$document->getPermissionsByType(PermissionType::Delete)];
-                        }
-                        if (!$authorization->isValid(new Input(PermissionType::Delete, $permissions))) {
-                            throw new Exception(Exception::USER_UNAUTHORIZED);
-                        }
+                // Normalize supplied permissions for every caller: validate the shape and
+                // expand aggregates (write → update+delete) so the staged document carries the
+                // same permissions the direct document endpoints persist, whoever stages it.
+                // The commit handler writes staged data verbatim, so aggregates must be
+                // expanded here rather than relying on a later pass.
+                if (isset($operation['data']['$permissions'])) {
+                    $validator = new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [
+                        PermissionType::Read,
+                        PermissionType::Update,
+                        PermissionType::Delete,
+                        PermissionType::Write,
+                    ]);
+                    if (!$validator->isValid($operation['data']['$permissions'])) {
+                        throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
                     }
 
-                    // Users can only set permissions for roles they have
-                    if (isset($operation['data']['$permissions'])) {
-                        $validator = new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [
-                            PermissionType::Read,
-                            PermissionType::Update,
-                            PermissionType::Delete,
-                            PermissionType::Write,
-                        ]);
-                        if (!$validator->isValid($operation['data']['$permissions'])) {
-                            throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
-                        }
+                    $permissions = Permission::aggregate($operation['data']['$permissions'], [
+                        PermissionType::Read,
+                        PermissionType::Update,
+                        PermissionType::Delete,
+                    ]);
 
-                        // Expand aggregates such as write() so every granted role is checked
-                        $permissions = Permission::aggregate($operation['data']['$permissions'], [
-                            PermissionType::Read,
-                            PermissionType::Update,
-                            PermissionType::Delete,
-                        ]);
+                    // Non-privileged callers may only grant roles they hold.
+                    if (!$isAPIKey && !$isPrivilegedUser) {
                         $roles = $authorization->getRoles();
                         foreach ([PermissionType::Read, PermissionType::Create, PermissionType::Update, PermissionType::Delete] as $type) {
                             foreach ($permissions as $permission) {
@@ -228,7 +219,24 @@ class Create extends Action
                                 }
                             }
                         }
-                        $operation['data']['$permissions'] = $permissions;
+                    }
+
+                    $operation['data']['$permissions'] = $permissions;
+                }
+
+                // For individual operations, enforce permissions unless using API key/admin
+                if (!$isAPIKey && !$isPrivilegedUser) {
+                    $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+                    $exists = $document !== null && !$document->isEmpty();
+
+                    if ($operation['action'] === 'delete') {
+                        $permissions = $collection->getPermissionsByType(PermissionType::Delete);
+                        if ($collection->getAttribute('documentSecurity', false) && $exists) {
+                            $permissions = [...$permissions, ...$document->getPermissionsByType(PermissionType::Delete)];
+                        }
+                        if (!$authorization->isValid(new Input(PermissionType::Delete, $permissions))) {
+                            throw new Exception(Exception::USER_UNAUTHORIZED);
+                        }
                     }
 
                     if ($operation['action'] !== 'delete') {

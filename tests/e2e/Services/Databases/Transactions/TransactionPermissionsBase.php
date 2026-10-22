@@ -710,6 +710,75 @@ trait TransactionPermissionsBase
     }
 
     /**
+     * A privileged caller (API key) may stage aggregate permissions, but staging must still
+     * expand write() into update+delete so the committed document carries the same expanded
+     * permissions the direct document endpoints persist. The commit handler writes staged
+     * data verbatim, so the expansion has to happen at staging time for every caller.
+     */
+    public function testStagingExpandsAggregatePermissionsForPrivilegedCallers(): void
+    {
+        $keyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $keyHeaders, [
+            $this->getContainerIdParam() => 'permAggKey',
+            'name' => 'Permission Aggregate Key',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            $this->getSecurityParam() => true,
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collectionId, 'string'), $keyHeaders, [
+                'key' => 'title',
+                'size' => 255,
+                'required' => false,
+            ]);
+            $this->assertEquals(202, $attribute['headers']['status-code']);
+            $this->waitForAllAttributes($this->getPermissionsDatabase(), $collectionId);
+        }
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $keyHeaders);
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        $recordId = 'aggKey' . uniqid();
+        $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $keyHeaders, [
+            'operations' => [[
+                'action' => 'create',
+                'databaseId' => $this->getPermissionsDatabase(),
+                $this->getContainerIdParam() => $collectionId,
+                $this->getRecordIdParam() => $recordId,
+                'data' => [
+                    'title' => 'Aggregate key',
+                    '$permissions' => [Permission::write(Role::user('probeUser'))],
+                ],
+            ]]
+        ]);
+        $this->assertEquals(201, $staged['headers']['status-code']);
+
+        $commit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $keyHeaders, ['commit' => true]);
+        $this->assertEquals(200, $commit['headers']['status-code']);
+
+        $document = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, $recordId), $keyHeaders);
+        $this->assertEquals(200, $document['headers']['status-code']);
+
+        // write() must have been expanded to update + delete; the raw aggregate must not persist.
+        $this->assertContains(Permission::update(Role::user('probeUser')), $document['body']['$permissions']);
+        $this->assertContains(Permission::delete(Role::user('probeUser')), $document['body']['$permissions']);
+        $this->assertNotContains(Permission::write(Role::user('probeUser')), $document['body']['$permissions']);
+    }
+
+    /**
      * Test that staging cannot grant roles the user lacks on a related document
      */
     public function testCannotSetUnauthorizedRelatedPermissions(): void
