@@ -4705,4 +4705,106 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $session['headers']['status-code']);
         $this->assertEquals(\strtotime($expiryAfter), \strtotime($session['body']['expire']));
     }
+
+    /**
+     * Drive the mock provider from an Appwrite OAuth2 entry route back to the
+     * app's success URL. The headers (a session cookie) ride along on every
+     * hop, like a browser would send them. Returns the final redirect response.
+     */
+    private function followMockOAuth2Flow(string $path, array $headers = [], array $params = [
+        'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+        'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+    ]): array
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $response = $this->client->call(Client::METHOD_GET, $path, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $headers), $params, followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        // The cookies set when the flow started join the headers on the Appwrite hops,
+        // as a browser would send them; the provider never sees them.
+        $appwriteHeaders = $headers;
+        $appwriteHeaders['cookie'] = \trim(($headers['cookie'] ?? '') . '; ' . \implode('; ', \array_map(fn (string $name, string $value): string => $name . '=' . $value, \array_keys($response['cookies']), $response['cookies'])), '; ');
+
+        // Provider consent, Appwrite callback, Appwrite redirect: follow each
+        // Location as given rather than asserting the internal routes.
+        $oauthClient = new Client();
+        $oauthClient->setEndpoint('');
+
+        for ($hop = 0; $hop < 3; $hop++) {
+            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $hop === 0 ? $headers : $appwriteHeaders, followRedirects: false);
+            $this->assertEquals(301, $response['headers']['status-code']);
+        }
+
+        return $response;
+    }
+
+    public function testOAuthVerifiedEmailRevokesUnverifiedAccountCredentials(): void
+    {
+        // A fresh project keeps the fixed mock OAuth email away from parallel tests.
+        $projectId = $this->getProject(true)['$id'];
+        $sessionCookieKey = 'a_session_' . $projectId;
+        $email = 'useroauth@localhost.test';
+        $password = 'password';
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $existingUserId = $response['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $existingSession = $response['cookies'][$sessionCookieKey];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => 'mock',
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->followMockOAuth2Flow('/account/sessions/oauth2/mock', ['x-appwrite-project' => $projectId]);
+        $this->assertArrayHasKey($sessionCookieKey, $response['cookies']);
+        $session = $response['cookies'][$sessionCookieKey];
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => $sessionCookieKey . '=' . $session,
+        ]));
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertEquals($existingUserId, $account['body']['$id']);
+        $this->assertTrue($account['body']['emailVerification']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => $sessionCookieKey . '=' . $existingSession,
+        ]));
+        $this->assertEquals(401, $account['headers']['status-code']);
+
+        $login = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(401, $login['headers']['status-code']);
+    }
 }
