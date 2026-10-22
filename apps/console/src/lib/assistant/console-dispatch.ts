@@ -136,8 +136,10 @@ export function applyConsoleAction(
     }
     case 'navigate': {
       if (typeof action.path !== 'string' || !action.path.startsWith('/')) return
+      const path = normalizeConsolePath(action.path)
+      if (!path) return
       handlers.navigate({
-        path: normalizeConsolePath(action.path),
+        path,
         hash: action.hash,
         replace: action.replace,
       })

@@ -71,6 +71,7 @@ export function useConsoleProtocolHandlers(options?: {
       },
       navigate: ({ path, hash, replace }) => {
         const normalized = normalizeConsolePath(path)
+        if (!normalized) return
         let hashValue = hash?.trim() || undefined
         if (hashValue?.startsWith('#')) {
           hashValue = hashValue.slice(1)
