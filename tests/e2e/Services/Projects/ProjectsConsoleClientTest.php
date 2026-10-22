@@ -7168,8 +7168,8 @@ final class ProjectsConsoleClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) use ($userId) {
-            $this->assertStringContainsString($userId, (string) ($email['html'] ?? ''));
+        $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) {
+            $this->assertStringContainsString('INJECTED&lt;/h1&gt;', (string) ($email['html'] ?? ''));
         });
 
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
