@@ -39,7 +39,7 @@ return function (Container $container): void {
      * The user a credential authenticates, with the session it runs on, when the token itself
      * expires and when that session is next due to be checked, or [] when it authenticates nobody.
      *
-     * @return array{user?: User, sessionId?: string, expire?: ?int, recheckAt?: ?int}
+     * @return array{user?: User, sessionId?: string, expire?: ?int, sessionExpire?: ?int, recheckAt?: ?int}
      */
     $getUser = function (Document $project, string $authMethod, string $credential, Authorization $authorization) use ($container, $getRecheckAt): array {
         if ($project->isEmpty() || $credential === '') {
@@ -89,6 +89,7 @@ return function (Container $container): void {
                     'user' => $user,
                     'sessionId' => $sessionId,
                     'expire' => \is_int($payload['exp'] ?? null) ? $payload['exp'] : null,
+                    'sessionExpire' => $sessionId !== '' ? $user->getSessionExpiry($sessionId) : null,
                     'recheckAt' => $sessionId !== '' ? $getRecheckAt($user, $sessionId) : null,
                 ];
 
@@ -116,6 +117,7 @@ return function (Container $container): void {
                     'user' => $user,
                     'sessionId' => $sessionId,
                     'expire' => null,
+                    'sessionExpire' => $user->getSessionExpiry($sessionId),
                     'recheckAt' => $getRecheckAt($user, $sessionId),
                 ];
 
@@ -144,6 +146,7 @@ return function (Container $container): void {
                 'userId' => $authenticated['user']->getId(),
                 'sessionId' => $authenticated['sessionId'] ?? '',
                 'expire' => $authenticated['expire'] ?? null,
+                'sessionExpire' => $authenticated['sessionExpire'] ?? null,
                 'recheckAt' => $authenticated['recheckAt'] ?? null,
             ];
         };

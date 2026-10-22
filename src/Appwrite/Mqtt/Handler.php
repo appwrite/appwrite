@@ -548,7 +548,13 @@ class Handler implements MqttHandler
             return false;
         }
 
-        $connection->identity['recheckAt'] = $now + APP_MQTT_SESSION_RECHECK;
+        // Never past the expiry the session had at connect, which is checked on its own.
+        $recheckAt = $now + APP_MQTT_SESSION_RECHECK;
+        $sessionExpire = $connection->identity['sessionExpire'] ?? null;
+        if (\is_int($sessionExpire) && $sessionExpire >= $now) {
+            $recheckAt = \min($recheckAt, $sessionExpire);
+        }
+        $connection->identity['recheckAt'] = $recheckAt;
 
         return true;
     }

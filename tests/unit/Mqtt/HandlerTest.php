@@ -57,7 +57,7 @@ final class HandlerTest extends TestCase
         );
     }
 
-    /** @param array<string, int|string> $credential sessionId, and expire and recheckAt as unix timestamps */
+    /** @param array<string, int|string> $credential sessionId, and expire, sessionExpire and recheckAt as unix timestamps */
     private function subscribe(int $fd, string $userId, string $filter, array $credential = []): void
     {
         $properties = new Properties();
@@ -129,6 +129,18 @@ final class HandlerTest extends TestCase
         // Checked again only once the recheck interval passes.
         $this->assertSame(1, $this->handler->deliver($this->server, self::PROJECT, 'users/owner', '{}', Packet::QOS_1, 2));
         $this->assertSame(1, $this->accounts->authorizations);
+    }
+
+    public function testRecheckIsNotPostponedPastSessionExpiry(): void
+    {
+        $expire = \time() + 10;
+        $this->subscribe(1, 'owner', 'users/owner', ['sessionId' => 'session', 'sessionExpire' => $expire, 'recheckAt' => \time() - 1]);
+
+        $this->handler->deliver($this->server, self::PROJECT, 'users/owner', '{}', Packet::QOS_1, 1);
+
+        // Test for SUCCESS: the next check falls due at the session's expiry, not a full interval later.
+        $connection = \array_values($this->server->subscribers(self::PROJECT, 'users/owner'))[0][0];
+        $this->assertSame($expire, $connection->identity['recheckAt']);
     }
 
     public function testEndedSessionIsDisconnectedOnDelivery(): void
