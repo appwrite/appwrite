@@ -2906,6 +2906,83 @@ trait UsersBase
     }
 
     /**
+     * Test that the impersonator users.read grant never exposes password hashes
+     */
+    public function testImpersonatorUsersReadHidesPasswordHashes(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        $suffix = ID::unique();
+
+        $impersonator = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => ID::unique(),
+            'email' => 'hashes-impersonator-' . $suffix . '@appwrite.io',
+            'password' => 'password',
+            'name' => 'Hashes Impersonator',
+        ]);
+        $this->assertSame(201, $impersonator['headers']['status-code']);
+        $impersonatorId = $impersonator['body']['$id'];
+
+        $other = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => ID::unique(),
+            'email' => 'hashes-other-' . $suffix . '@appwrite.io',
+            'password' => 'password',
+            'name' => 'Hashes Other',
+        ]);
+        $this->assertSame(201, $other['headers']['status-code']);
+        $otherId = $other['body']['$id'];
+
+        $this->client->call(Client::METHOD_PATCH, '/users/' . $impersonatorId . '/impersonator', $headers, ['impersonator' => true]);
+
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $impersonatorId . '/sessions', $headers);
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        $sessionHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-session' => $session['body']['secret'],
+        ];
+        $impersonationHeaders = array_merge($sessionHeaders, [
+            'x-appwrite-impersonate-user-id' => $otherId,
+        ]);
+
+        /**
+         * Test for SUCCESS
+         */
+        $get = $this->client->call(Client::METHOD_GET, '/users/' . $otherId, $headers);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertNotEmpty($get['body']['password']);
+        $this->assertSame('argon2', $get['body']['hash']);
+        $this->assertNotEmpty($get['body']['hashOptions']);
+
+        /**
+         * Test for FAILURE
+         */
+        foreach ([$sessionHeaders, $impersonationHeaders] as $callerHeaders) {
+            $get = $this->client->call(Client::METHOD_GET, '/users/' . $otherId, $callerHeaders);
+            $this->assertSame(200, $get['headers']['status-code']);
+            $this->assertSame('', $get['body']['password']);
+            $this->assertSame('', $get['body']['hash']);
+            $this->assertEmpty($get['body']['hashOptions']);
+
+            $list = $this->client->call(Client::METHOD_GET, '/users', $callerHeaders, [
+                'queries' => [
+                    Query::equal('$id', [$otherId])->toString(),
+                ],
+            ]);
+            $this->assertSame(200, $list['headers']['status-code']);
+            $this->assertSame(1, $list['body']['total']);
+            $this->assertSame('', $list['body']['users'][0]['password']);
+            $this->assertSame('', $list['body']['users'][0]['hash']);
+            $this->assertEmpty($list['body']['users'][0]['hashOptions']);
+        }
+    }
+
+    /**
      * Test PATCH /users/:userId/impersonator for non-existent user returns 404
      */
     public function testUpdateUserImpersonatorNotFound(): void

@@ -4807,4 +4807,95 @@ final class AccountCustomClientTest extends Scope
         ]);
         $this->assertEquals(401, $login['headers']['status-code']);
     }
+
+    public function testImpersonationHidesProviderCredentials(): void
+    {
+        // A fresh project keeps the fixed mock OAuth email away from parallel tests.
+        $project = $this->getProject(true);
+        $projectId = $project['$id'];
+        $sessionCookieKey = 'a_session_' . $projectId;
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => 'mock',
+            'appId' => '1',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->followMockOAuth2Flow('/account/sessions/oauth2/mock', ['x-appwrite-project' => $projectId]);
+        $this->assertArrayHasKey($sessionCookieKey, $response['cookies']);
+        $targetCookie = $response['cookies'][$sessionCookieKey];
+
+        $ownHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $sessionCookieKey . '=' . $targetCookie,
+        ];
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', $ownHeaders);
+        $this->assertSame(200, $account['headers']['status-code']);
+        $targetId = $account['body']['$id'];
+
+        $impersonator = $this->client->call(Client::METHOD_POST, '/users', $serverHeaders, [
+            'userId' => ID::unique(),
+            'email' => 'impersonator.' . \uniqid('', true) . '@localhost.test',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $impersonator['headers']['status-code']);
+        $impersonatorId = $impersonator['body']['$id'];
+
+        $patch = $this->client->call(Client::METHOD_PATCH, '/users/' . $impersonatorId . '/impersonator', $serverHeaders, ['impersonator' => true]);
+        $this->assertSame(200, $patch['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $impersonatorId . '/sessions', $serverHeaders);
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        $impersonationHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-session' => $session['body']['secret'],
+            'x-appwrite-impersonate-user-id' => $targetId,
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        $identities = $this->client->call(Client::METHOD_GET, '/account/identities', $ownHeaders);
+        $this->assertSame(200, $identities['headers']['status-code']);
+        $this->assertSame('123456', $identities['body']['identities'][0]['providerAccessToken']);
+
+        $sessions = $this->client->call(Client::METHOD_GET, '/account/sessions', $ownHeaders);
+        $this->assertSame(200, $sessions['headers']['status-code']);
+        $this->assertSame('123456', $sessions['body']['sessions'][0]['providerAccessToken']);
+
+        /**
+         * Test for FAILURE
+         */
+        $identities = $this->client->call(Client::METHOD_GET, '/account/identities', $impersonationHeaders);
+        $this->assertSame(200, $identities['headers']['status-code']);
+        $this->assertSame(1, $identities['body']['total']);
+        $this->assertSame('', $identities['body']['identities'][0]['providerAccessToken']);
+        $this->assertSame('', $identities['body']['identities'][0]['providerRefreshToken']);
+
+        $sessions = $this->client->call(Client::METHOD_GET, '/account/sessions', $impersonationHeaders);
+        $this->assertSame(200, $sessions['headers']['status-code']);
+        $this->assertNotEmpty($sessions['body']['sessions']);
+        foreach ($sessions['body']['sessions'] as $listed) {
+            $this->assertSame($targetId, $listed['userId']);
+            $this->assertSame('', $listed['providerAccessToken']);
+            $this->assertSame('', $listed['providerRefreshToken']);
+        }
+    }
 }
