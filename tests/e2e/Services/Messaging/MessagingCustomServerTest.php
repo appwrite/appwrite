@@ -9,6 +9,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\DateTime;
 use Utopia\Database\Id;
 
 final class MessagingCustomServerTest extends Scope
@@ -83,5 +84,23 @@ final class MessagingCustomServerTest extends Scope
         ]);
         $this->assertSame(401, $response['headers']['status-code']);
         $this->assertSame('general_unauthorized_scope', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $draft['body']['$id'], $withoutFiles, [
+            'subject' => 'Changed',
+            'scheduledAt' => DateTime::addSeconds(new \DateTime(), 86400),
+        ]);
+        $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertSame('general_unauthorized_scope', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $draft['body']['$id'], $headers);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('draft', $response['body']['status']);
+        $this->assertSame('Attachment scope', $response['body']['data']['subject']);
+        $this->assertNull($response['body']['scheduledAt']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $draft['body']['$id'], $withoutFiles, [
+            'attachments' => [],
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
     }
 }

@@ -93,6 +93,12 @@ class Update extends Action
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
+        // Stored attachments are delivered too, so any update of an attached message needs files.read.
+        $hasAttachments = !empty($attachments ?? $message->getAttribute('data', [])['attachments'] ?? []);
+        if ($hasAttachments && !\in_array('files.read', $request->getScopes(), true)) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Attachments require the files.read scope.');
+        }
+
         if (!\is_null($draft) || !\is_null($scheduledAt)) {
             if ($draft) {
                 $status = MessageStatus::DRAFT;
@@ -201,10 +207,6 @@ class Update extends Action
         }
 
         if (!is_null($attachments)) {
-            if (!empty($attachments) && !\in_array('files.read', $request->getScopes(), true)) {
-                throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Attachments require the files.read scope.');
-            }
-
             foreach ($attachments as &$attachment) {
                 [$bucketId, $fileId] = CompoundUID::parse($attachment);
 
