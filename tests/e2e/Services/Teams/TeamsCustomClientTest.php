@@ -179,6 +179,7 @@ final class TeamsCustomClientTest extends Scope
         ]));
         $this->assertEquals(200, $account['headers']['status-code']);
         $this->assertFalse($account['body']['emailVerification']);
+        $this->assertFalse($account['body']['phoneVerification']);
     }
 
     public function testUpdateMembershipStatusAfterEmailChange(): void
