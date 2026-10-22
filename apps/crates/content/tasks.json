@@ -1,14 +1,6 @@
 {
-  "updated": "2026-10-19T21:18:00Z",
+  "updated": "2026-10-22T20:17:00Z",
   "tasks": [
-    {
-      "id": "php-8512",
-      "title": "php-std: PHP 8.5.12",
-      "area": "Database 8",
-      "status": "progress",
-      "updated": "2026-10-22T18:55:00Z",
-      "note": "Catch-up H, 2-hour box. Main moved to appwrite/base 2.2.7: PHP 8.5.12 and mongodb 2.5.5. CI shows datetime differences (a lone space now fails to parse, a tab interval throws, some input reads against the clock) and the agents case whose API key breaks the header."
-    },
     {
       "id": "messaging-html-text",
       "title": "messaging: main's HTML-to-text and public SMTP hosts",
@@ -120,6 +112,14 @@
       "status": "todo",
       "note": "On a quiet machine; the last container runs were taken under load.",
       "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "php-8512",
+      "title": "php-std: PHP 8.5.12",
+      "area": "Database 8",
+      "status": "done",
+      "updated": "2026-10-22T20:17:00Z",
+      "note": "Catch-up H, done in 80 minutes of a 2-hour box. timelib now trims with s <= e, so a whitespace-only string is \"Empty string\" (date_parse, new DateTime, modify, strtotime, intervals); parse errors and warnings stop at 1000 each; timezonedb 2026.5 drops LMT from CST6CDT, EST5EDT, MST7MDT and PST8PDT. The agents difference was not PHP: main's psr7 now rejects CR, LF and NUL in header values, which utopia-client now does too. php-std 1,622 cases and 1.38 million fuzz inputs, agents 269 cases, all 0 differences."
     },
     {
       "id": "db-ops-cases",
