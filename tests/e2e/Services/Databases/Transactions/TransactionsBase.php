@@ -2037,6 +2037,99 @@ trait TransactionsBase
         $this->assertArrayNotHasKey('$collection', $delivery['data']);
     }
 
+    public function testCommitDeleteEventPayloadUsesStoredRecord(): void
+    {
+        $databaseId = $this->getSharedDatabase();
+        $collectionId = $this->getSharedCollection();
+        $recordId = Id::unique();
+
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getRecordIdParam() => $recordId,
+            'data' => ['name' => 'Stored name'],
+            'permissions' => [Permission::read(Role::users())],
+        ]);
+
+        $this->assertEquals(201, $created['headers']['status-code']);
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         */
+        $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    'action' => 'delete',
+                    $this->getRecordIdParam() => $recordId,
+                    'data' => [
+                        'name' => 'Staged name',
+                        '$permissions' => [Permission::read(Role::any())],
+                    ],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(400, $staged['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    'action' => 'delete',
+                    $this->getRecordIdParam() => $recordId,
+                    'data' => [],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $staged['headers']['status-code']);
+
+        $committed = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'commit' => true
+        ]);
+
+        $this->assertEquals(200, $committed['headers']['status-code']);
+
+        $delivery = $this->getLastRequestForProject(
+            $this->getProject()['$id'],
+            probe: function (array $request) use ($recordId) {
+                $this->assertStringContainsString($recordId . '.delete', $request['headers']['X-Appwrite-Webhook-Events'] ?? '');
+            }
+        );
+
+        $this->assertEquals($recordId, $delivery['data']['$id']);
+        $this->assertEquals('Stored name', $delivery['data']['name']);
+        $this->assertEquals([Permission::read(Role::users())], $delivery['data']['$permissions']);
+    }
+
     /**
      * Test updateDocument with transactionId via normal route
      */
