@@ -3467,24 +3467,10 @@
             }
           },
           "expect": {
-            "protocol": "1.1",
-            "status": 200,
-            "reason": "OK",
-            "headers": [
-              [
-                "Content-Type",
-                [
-                  "application/json"
-                ]
-              ],
-              [
-                "Transfer-Encoding",
-                [
-                  "chunked"
-                ]
-              ]
-            ],
-            "body": "{\"method\":\"GET\",\"target\":\"/echo\",\"protocol\":\"HTTP/1.1\",\"headers\":[[\"Host\",\"a\"],[\"Accept\",\"*/*\"],[\"Accept-Encoding\",\"deflate, gzip, br, zstd\"]],\"body\":\"\"}"
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Header values must not contain CR, LF or NUL characters."
+            }
           }
         }
       ]
@@ -4620,24 +4606,10 @@
             }
           },
           "expect": {
-            "protocol": "1.1",
-            "status": 200,
-            "reason": "OK",
-            "headers": [
-              [
-                "Content-Type",
-                [
-                  "application/json"
-                ]
-              ],
-              [
-                "Transfer-Encoding",
-                [
-                  "chunked"
-                ]
-              ]
-            ],
-            "body": "{\"method\":\"GET\",\"target\":\"/echo\",\"protocol\":\"HTTP/1.1\",\"headers\":[[\"Host\",\"${http}\"],[\"Accept\",\"*/*\"],[\"Accept-Encoding\",\"deflate, gzip, br, zstd\"],[\"X-Tabs\",\"\\f\"],[\"X-Kept\",\"v\"]],\"body\":\"\"}"
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Header values must not contain CR, LF or NUL characters."
+            }
           }
         }
       ]
