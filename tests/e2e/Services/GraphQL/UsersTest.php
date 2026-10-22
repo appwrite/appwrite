@@ -632,5 +632,16 @@ final class UsersTest extends Scope
         $this->assertArrayHasKey('errors', $response['body']);
         $this->assertStringContainsString('Max query complexity', (string) $response['body']['errors'][0]['message']);
         $this->assertArrayNotHasKey('data', $response['body']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', $headers, [
+            'query' => $query,
+            'variables' => [
+                'first' => [Query::limit(PHP_INT_MAX)->toString()],
+                'second' => [Query::limit(10)->toString()],
+            ],
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertStringContainsString('Max query complexity', (string) $response['body']['errors'][0]['message']);
+        $this->assertArrayNotHasKey('data', $response['body']);
     }
 }
