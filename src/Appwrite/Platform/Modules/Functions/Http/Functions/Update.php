@@ -206,9 +206,10 @@ class Update extends Base
             $runtime = $function->getAttribute('runtime');
         }
 
-        // The runtimes the operator enabled bound an update as they do a create
+        // The runtimes the operator enabled bound a change of runtime as they do a
+        // create; a function already on a retired one keeps saving its settings
         $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
-        if (!empty($allowList) && !\in_array($runtime, $allowList)) {
+        if ($runtime !== $function->getAttribute('runtime') && !empty($allowList) && !\in_array($runtime, $allowList)) {
             throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $runtime . '" is not supported');
         }
 
