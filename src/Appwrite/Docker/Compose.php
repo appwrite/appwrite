@@ -61,4 +61,12 @@ class Compose
     {
         return (isset($this->compose['volumes'])) ? array_keys($this->compose['volumes']) : [];
     }
+
+    /**
+     * @return array<string, array<string, mixed>> top-level secrets by name
+     */
+    public function getSecrets(): array
+    {
+        return (isset($this->compose['secrets']) && \is_array($this->compose['secrets'])) ? $this->compose['secrets'] : [];
+    }
 }
