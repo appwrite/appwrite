@@ -11,6 +11,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CompoundUID;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -80,10 +81,11 @@ class Update extends Action
             ->inject('project')
             ->inject('publisherForMessaging')
             ->inject('response')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
-    public function action(string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, ?array $attachments, ?string $replyToEmail, ?string $replyToName, ?array $emails, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response)
+    public function action(string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, ?array $attachments, ?string $replyToEmail, ?string $replyToName, ?array $emails, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, Request $request)
     {
         $message = $dbForProject->getDocument('messages', $messageId);
 
@@ -199,6 +201,10 @@ class Update extends Action
         }
 
         if (!is_null($attachments)) {
+            if (!empty($attachments) && !\in_array('files.read', $request->getScopes(), true)) {
+                throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Attachments require the files.read scope.');
+            }
+
             foreach ($attachments as &$attachment) {
                 [$bucketId, $fileId] = CompoundUID::parse($attachment);
 
