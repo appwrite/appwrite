@@ -124,6 +124,12 @@ class Messaging extends Action
                 $this->sendInternalSMSMessage($message, $project, $recipients, $log);
                 break;
             case MESSAGE_SEND_TYPE_EXTERNAL:
+                // The project was deleted after the job was queued; dbForProject would be the platform database.
+                if ($project->isEmpty()) {
+                    Span::add('message.skipped', 'deleted');
+                    break;
+                }
+
                 $message = $dbForProject->getDocument('messages', $payload['messageId']);
 
                 $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $publisherForUsage);
