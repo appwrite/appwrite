@@ -248,6 +248,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         if ($isPreview && $requirePreview) {
             $cookie = $request->getCookie(COOKIE_NAME_PREVIEW, '');
             $authorized = false;
+            $user = new DBUser();
 
             // Security checks to mark authorized true. The cookie holds a
             // token /_appwrite/authorize issued for this host, never the
@@ -260,7 +261,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
                 // The session the token came from has to be live still; one
                 // that expired but is not purged yet does not count
-                $sessionExists = $userExists && $user->sessionActive($preview['sessionId']);
+                $sessionActive = $userExists && $user->sessionActive($preview['sessionId']);
 
                 $membershipExists = false;
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
@@ -274,7 +275,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                     );
                 }
 
-                if ($userExists && $sessionExists && $membershipExists) {
+                if ($userExists && $sessionActive && $membershipExists) {
                     $authorized = true;
                 }
             }
@@ -300,7 +301,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         // collapse to single-line strings for the function/site header map below.
         $requestHeaders = \array_map(
             static fn (array $values) => \implode(', ', $values),
-            $request->getHeaders()
+            $request->getHeadersWithoutCookies([COOKIE_NAME_PREVIEW, 'a_session_console', 'a_session_console_legacy'])
         );
 
         if ($resource->isEmpty() || !$resource->getAttribute('enabled')) {
@@ -376,9 +377,6 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $executionId = Id::unique();
 
         $headers = Headers::stripReserved($requestHeaders);
-        // The preview cookie authorizes the visitor to this host; the site
-        // being previewed has no business reading it
-        $headers = Headers::withoutCookie($headers, COOKIE_NAME_PREVIEW);
         $headers['x-appwrite-execution-id'] = $executionId;
         $headers['x-appwrite-user-id'] = '';
         $headers['x-appwrite-country-code'] = '';
@@ -1001,7 +999,7 @@ Http::init()
                 $response->addFilter(new ResponseV27());
             }
             if (version_compare($responseFormat, '1.9.5', '<')) {
-                $response->addFilter(new ResponseV26());
+                $response->addFilter(new ResponseV26($request));
             }
             if (version_compare($responseFormat, '1.9.4', '<')) {
                 $response->addFilter(new ResponseV25());

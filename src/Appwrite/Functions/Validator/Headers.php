@@ -126,40 +126,6 @@ class Headers extends Validator
     }
 
     /**
-     * Drop one cookie from the Cookie header, leaving the others as sent.
-     * The header goes with it when it held nothing else.
-     *
-     * @param array<array-key, mixed> $headers
-     * @return array<array-key, mixed>
-     */
-    public static function withoutCookie(array $headers, string $name): array
-    {
-        foreach ($headers as $key => $value) {
-            if (!\is_string($key) || \strtolower($key) !== 'cookie' || !\is_string($value)) {
-                continue;
-            }
-
-            $kept = [];
-            foreach (\explode(';', $value) as $cookie) {
-                $cookie = \trim($cookie);
-                if ($cookie === '' || \trim(\explode('=', $cookie, 2)[0]) === $name) {
-                    continue;
-                }
-
-                $kept[] = $cookie;
-            }
-
-            if ($kept === []) {
-                unset($headers[$key]);
-            } else {
-                $headers[$key] = \implode('; ', $kept);
-            }
-        }
-
-        return $headers;
-    }
-
-    /**
      * x-appwrite-* carries what Appwrite tells the function about the
      * request; x-open-runtimes-* is the executor's protocol with the runtime
      * (secret, timeout, logging, log id). Neither is the caller's to send.

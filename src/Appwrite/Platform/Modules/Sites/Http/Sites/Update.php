@@ -8,7 +8,6 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
-use Appwrite\Platform\Modules\Compute\Validator\RootDirectory;
 use Appwrite\Platform\Modules\Compute\Validator\Specification;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -16,6 +15,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
+use Appwrite\Vcs\Validator\Directory;
 use Executor\Executor;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
@@ -29,6 +29,7 @@ use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -91,7 +92,7 @@ class Update extends Base
             ->param('providerRepositoryId', '', new Nullable(new Text(128, 0)), 'Repository ID of the repo linked to the site.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
-            ->param('providerRootDirectory', '', new RootDirectory(), 'Path to site code in the linked repo.', true)
+            ->param('providerRootDirectory', '', new Directory(), 'Path to site code in the linked repo.', true)
             ->param('providerBranches', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
             ->param('providerPaths', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
             ->param('buildSpecification', null, fn (array $plan) => new Nullable(new Specification(
@@ -125,6 +126,7 @@ class Update extends Base
             ->inject('buildTimeout')
             ->inject('bus')
             ->inject('platform')
+            ->inject('deviceForBuilds')
             ->inject('scopes')
             ->callback($this->action(...));
     }
@@ -170,7 +172,8 @@ class Update extends Base
         int $buildTimeout,
         Bus $bus,
         array $platform,
-        Scopes $grantedScopes
+        ?Device $deviceForBuilds = null,
+        ?Scopes $grantedScopes = null,
     ) {
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
@@ -196,6 +199,9 @@ class Update extends Base
 
         // The site runs with its scopes through its ephemeral key, so a caller
         // may add only scopes it holds itself; ones the site already has stay
+        // An override that still calls this action positionally (cloud) sends no
+        // scopes resource; holding nothing, it refuses additions, not the update
+        $grantedScopes ??= new Scopes();
         $missing = $grantedScopes->missing(\array_values(\array_diff($scopes ?? [], $site->getAttribute('scopes', []))));
         if ($missing !== []) {
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Cannot grant scopes the caller does not hold: ' . \implode(', ', $missing));
@@ -346,6 +352,7 @@ class Update extends Base
             }
         }
 
+        $previous = $site;
         $site = $dbForProject->updateDocument('sites', $site->getId(), new Document(array_merge($site->getArrayCopy(), [
             'name' => $name,
             'description' => $description,
@@ -377,6 +384,8 @@ class Update extends Base
             'fallbackFile' => $fallbackFile,
             'scopes' => $scopes ?? $site->getAttribute('scopes', []),
         ])));
+
+        $this->deleteStaleBuildCache($deviceForBuilds, $project->getId(), $previous, $site);
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {

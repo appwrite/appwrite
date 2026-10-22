@@ -9,7 +9,6 @@ use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
-use Appwrite\Platform\Modules\Compute\Validator\RootDirectory;
 use Appwrite\Platform\Modules\Compute\Validator\Specification;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -18,6 +17,7 @@ use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
+use Appwrite\Vcs\Validator\Directory;
 use Executor\Executor;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -32,6 +32,7 @@ use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -93,7 +94,7 @@ class Update extends Base
             ->param('providerRepositoryId', null, new Nullable(new Text(128, 0)), 'Repository ID of the repo linked to the function', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
-            ->param('providerRootDirectory', '', new RootDirectory(), 'Path to function code in the linked repo.', true)
+            ->param('providerRootDirectory', '', new Directory(), 'Path to function code in the linked repo.', true)
             ->param('providerBranches', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
             ->param('providerPaths', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
             ->param('buildSpecification', null, fn (array $plan) => new Nullable(new Specification(
@@ -126,6 +127,7 @@ class Update extends Base
             ->inject('executor')
             ->inject('authorization')
             ->inject('platform')
+            ->inject('deviceForBuilds')
             ->inject('scopes')
             ->callback($this->action(...));
     }
@@ -169,7 +171,8 @@ class Update extends Base
         Executor $executor,
         Authorization $authorization,
         array $platform,
-        Scopes $grantedScopes
+        ?Device $deviceForBuilds = null,
+        ?Scopes $grantedScopes = null,
     ) {
         // TODO: If only branch changes, re-deploy
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -180,6 +183,9 @@ class Update extends Base
 
         // The function runs with its scopes through its ephemeral key, so a caller
         // may add only scopes it holds itself; ones the function already has stay
+        // An override that still calls this action positionally (cloud) sends no
+        // scopes resource; holding nothing, it refuses additions, not the update
+        $grantedScopes ??= new Scopes();
         $missing = $grantedScopes->missing(\array_values(\array_diff($scopes, $function->getAttribute('scopes', []))));
         if ($missing !== []) {
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Cannot grant scopes the caller does not hold: ' . \implode(', ', $missing));
@@ -346,6 +352,7 @@ class Update extends Base
             }
         }
 
+        $previous = $function;
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
             'name' => $name,
@@ -376,6 +383,8 @@ class Update extends Base
             'runtimeSpecification' => $runtimeSpecification,
             'search' => implode(' ', [$functionId, $name, $description, $runtime]),
         ])));
+
+        $this->deleteStaleBuildCache($deviceForBuilds, $project->getId(), $previous, $function);
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {

@@ -192,36 +192,6 @@ final class HeadersTest extends TestCase
         $this->assertFalse($this->object->isValid($headers));
     }
 
-    public function testWithoutCookie(): void
-    {
-        $headers = [
-            'Content-Type' => 'text/html',
-            'Cookie' => 'a_jwt_console=preview-token; theme=dark; a_session_console=abc',
-        ];
-
-        $this->assertSame([
-            'Content-Type' => 'text/html',
-            'Cookie' => 'theme=dark; a_session_console=abc',
-        ], Headers::withoutCookie($headers, 'a_jwt_console'));
-
-        // The header goes when the cookie was all it carried
-        $this->assertSame([
-            'Content-Type' => 'text/html',
-        ], Headers::withoutCookie([
-            'Content-Type' => 'text/html',
-            'cookie' => ' a_jwt_console=preview-token ',
-        ], 'a_jwt_console'));
-
-        // Other cookies, including ones whose name merely starts the same, stay
-        $this->assertSame([
-            'cookie' => 'a_jwt_console_theme=dark; x=1',
-        ], Headers::withoutCookie([
-            'cookie' => 'a_jwt_console_theme=dark; x=1',
-        ], 'a_jwt_console'));
-
-        $this->assertSame([], Headers::withoutCookie([], 'a_jwt_console'));
-    }
-
     public function testStripReserved(): void
     {
         $headers = [
