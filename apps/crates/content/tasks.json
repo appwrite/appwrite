@@ -2,6 +2,22 @@
   "updated": "2026-10-19T21:18:00Z",
   "tasks": [
     {
+      "id": "php-8512",
+      "title": "php-std: PHP 8.5.12",
+      "area": "Database 8",
+      "status": "progress",
+      "updated": "2026-10-22T18:55:00Z",
+      "note": "Catch-up H, 2-hour box. Main moved to appwrite/base 2.2.7: PHP 8.5.12 and mongodb 2.5.5. CI shows datetime differences (a lone space now fails to parse, a tab interval throws, some input reads against the clock) and the agents case whose API key breaks the header."
+    },
+    {
+      "id": "messaging-html-text",
+      "title": "messaging: main's HTML-to-text and public SMTP hosts",
+      "area": "Database 8",
+      "status": "progress",
+      "updated": "2026-10-22T18:55:00Z",
+      "note": "Catch-up I, 2-hour box. Eleven messaging commits on main: carriage returns from character references collapse in the plain-text part, the HTML-to-text conversion loses unreachable branches, and SMTP hosts must be public (SMTPAddressesTest)."
+    },
+    {
       "id": "crate-layout",
       "title": "One type per file, modules after PHP namespaces",
       "area": "Libraries",
