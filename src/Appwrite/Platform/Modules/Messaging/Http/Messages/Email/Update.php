@@ -11,6 +11,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CompoundUID;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -80,15 +81,22 @@ class Update extends Action
             ->inject('project')
             ->inject('publisherForMessaging')
             ->inject('response')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
-    public function action(string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, ?array $attachments, ?string $replyToEmail, ?string $replyToName, ?array $emails, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response)
+    public function action(string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, ?array $attachments, ?string $replyToEmail, ?string $replyToName, ?array $emails, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, Request $request)
     {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
+        }
+
+        // Stored attachments are delivered too, so any update of an attached message needs files.read.
+        $hasAttachments = !empty($attachments ?? $message->getAttribute('data', [])['attachments'] ?? []);
+        if ($hasAttachments && !\in_array('files.read', $request->getScopes(), true)) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Attachments require the files.read scope.');
         }
 
         if (!\is_null($draft) || !\is_null($scheduledAt)) {
