@@ -7,6 +7,13 @@
     ],
     "findings": [
         {
+            "rule": "guest-write-without-abuse-limit",
+            "severity": "WARNING",
+            "path": "app/controllers/api/account.php",
+            "line": 1575,
+            "text": "Http::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')"
+        },
+        {
             "rule": "secret-compare-timing",
             "severity": "WARNING",
             "path": "app/controllers/shared/api.php",
