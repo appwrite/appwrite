@@ -257,6 +257,14 @@ Http::init()
                 $authorization->addRole(Role::team($team->getId())->toString());
                 $authorization->addRole(Role::team($team->getId(), 'owner')->toString());
             } elseif ($apiKey->getType() === API_KEY_ACCOUNT) {
+                // Account keys act as the console user on the Console API only. On any other
+                // project they would inject the console user's roles (user:{id}, users,
+                // team:{orgId}) into that project's data plane, where caller-chosen console
+                // user and organization IDs can collide with the project's own users and teams.
+                if ($project->getId() !== 'console') {
+                    throw new Exception(Exception::USER_UNAUTHORIZED, 'Account API keys can only be used with the console project.');
+                }
+
                 $authorization->addRole(Role::user($user->getId())->toString());
                 $authorization->addRole(Role::users()->toString());
 
@@ -310,7 +318,11 @@ Http::init()
             $scopes = ['teams.read', 'projects.read'];
             foreach ($adminRoles as $adminRole) {
                 $isTeamWideRole = ! str_starts_with($adminRole, 'project-');
-                $isProjectSpecificRole = $projectId !== 'console' && str_starts_with($adminRole, 'project-' . $projectId);
+                // Role names carry no '-', so everything before the last '-' must be exactly
+                // 'project-{projectId}': a prefix match would leak a grant on project 'app2' to project 'app'.
+                $isProjectSpecificRole = $projectId !== 'console'
+                    && ! $isTeamWideRole
+                    && \substr($adminRole, 0, (int) \strrpos($adminRole, '-')) === 'project-' . $projectId;
 
                 if ($isTeamWideRole || $isProjectSpecificRole) {
                     $role = match (str_starts_with($adminRole, 'project-')) {
