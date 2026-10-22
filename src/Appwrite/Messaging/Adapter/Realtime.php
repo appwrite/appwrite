@@ -91,8 +91,6 @@ class Realtime extends MessagingAdapter
      *      'channels' -> [CHANNEL_NAME_X, CHANNEL_NAME_Y, CHANNEL_NAME_Z]
      *      'presence' -> ['projectId' => ..., 'userId' => ..., 'sequence' => ...] the row this
      *                    socket holds (by internal sequence), released on close; absent until a presence write
-     *      'presenceLock' -> Swoole\Coroutine\Channel used as a per-socket mutex so overlapping presence
-     *                    messages serialize; the second then sees the first's hold and refreshes instead of recounting
      */
     public array $connections = [];
 
@@ -199,7 +197,7 @@ class Realtime extends MessagingAdapter
 
         // Recorded once by the connection handler or a presence write; every later (re)subscribe
         // keeps it, so a `subscribe` message after a presence message never drops the hold stash.
-        foreach (['authorization', 'sessionId', 'impersonatedUserId', 'impersonator', 'expire', 'jwtExpire', 'presence', 'presenceLock'] as $key) {
+        foreach (['authorization', 'sessionId', 'impersonatedUserId', 'impersonator', 'expire', 'jwtExpire', 'presence'] as $key) {
             if (\array_key_exists($key, $existing)) {
                 $entry[$key] = $existing[$key];
             }

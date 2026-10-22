@@ -7,10 +7,10 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime as QueueRealtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Presences\Lock as PresenceLock;
 use Appwrite\Presences\State as PresenceState;
 use Appwrite\Realtime\Message\Dispatcher;
 use Appwrite\Utopia\Database\Documents\User;
-use Swoole\Coroutine\Channel;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -37,6 +37,7 @@ class Presence extends Action
             ->inject('database')
             ->inject('authorization')
             ->inject('presenceState')
+            ->inject('presenceLock')
             ->inject('project')
             ->inject('publisherForUsage')
             ->inject('queueForEvents')
@@ -58,6 +59,7 @@ class Presence extends Action
         Database $database,
         Authorization $authorization,
         PresenceState $presenceState,
+        PresenceLock $presenceLock,
         ?Document $project,
         UsagePublisher $publisherForUsage,
         QueueEvent $queueForEvents,
@@ -75,17 +77,9 @@ class Presence extends Action
         // Serialize presence writes on this socket. Swoole runs each message in its own coroutine and
         // does not serialize them per connection, so two overlapping presence messages would both read
         // no hold and both increment the row's connections count, while onClose releases once -- leaking
-        // the socket online. A per-connection lock makes the second write see the first's hold and
-        // refresh (persisting its status/metadata and emitting its event) instead of recounting. Created
-        // before the first I/O yield, while the connection is known to exist, so it never resurrects an
-        // entry onClose removed.
-        $lock = $realtime->connections[$connectionId]['presenceLock'] ?? null;
-        if (!$lock instanceof Channel) {
-            $lock = new Channel(1);
-            $lock->push(true);
-            $realtime->connections[$connectionId]['presenceLock'] = $lock;
-        }
-        $lock->pop();
+        // the socket online. The shared striped lock makes the second write wait, then see the first's
+        // hold and refresh (persisting its status/metadata and emitting its event) instead of recounting.
+        $presenceLock->acquire($connectionId);
 
         try {
             $user = new User($database->getDocument('users', $userId)->getArrayCopy());
@@ -190,7 +184,7 @@ class Presence extends Action
                 ],
             ];
         } finally {
-            $lock->push(true);
+            $presenceLock->release($connectionId);
         }
     }
 }

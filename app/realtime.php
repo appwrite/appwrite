@@ -9,6 +9,7 @@ use Appwrite\Event\Realtime as QueueRealtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Presences\Lock as PresenceLock;
 use Appwrite\Presences\State as PresenceState;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Realtime\EventTailRegistry;
@@ -298,6 +299,9 @@ if (!function_exists('checkForProjectUsage')) {
 
 $realtime = getRealtime();
 $presenceState = new PresenceState();
+// Shared across every connection in this worker: presence writes are serialized per socket through a
+// fixed pool of stripes, so memory stays constant rather than one lock per connection.
+$presenceLock = new PresenceLock();
 $eventTailRegistry = new EventTailRegistry(
     rate: (int) System::getEnv('_APP_REALTIME_TAIL_RATE', 50)
 );
@@ -1196,7 +1200,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     }
 });
 
-$server->onMessage(function (int $connection, string $message) use ($container, $server, $realtime, $containerId, $register, $presenceState, $messageDispatcher, $eventTailRegistry, $unauthorized, $unauthorizedPayloadJson) {
+$server->onMessage(function (int $connection, string $message) use ($container, $server, $realtime, $containerId, $register, $presenceState, $presenceLock, $messageDispatcher, $eventTailRegistry, $unauthorized, $unauthorizedPayloadJson) {
     $project = null;
     $authorization = null;
     $projectId = $realtime->connections[$connection]['projectId'] ?? null;
@@ -1326,6 +1330,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
         $messageContainer->set('register', fn () => $register);
         $messageContainer->set('response', fn () => $response);
         $messageContainer->set('presenceState', fn () => $presenceState);
+        $messageContainer->set('presenceLock', fn () => $presenceLock);
         $messageContainer->set('database', fn () => $database);
         $messageContainer->set('authorization', fn () => $authorization);
         $messageContainer->set('project', fn () => $project);
