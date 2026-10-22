@@ -33,7 +33,7 @@ To deploy from Entire, connect your Entire project to Appwrite from **Project se
 
 - **Production branch:** the deployment builds and activates.
 - **Any other branch:** the deployment builds but stays inactive. Sites get preview URLs for the branch and the commit.
-- **Every build:** Appwrite reports the result back to Entire as a check run on the commit.
+- **Every build:** unless Silent mode is on, Appwrite reports the result back to Entire as a check run on the commit.
 
 Under the hood, Appwrite installs as a plugin on your Entire project. Entire notifies Appwrite of each push, Appwrite fetches that commit through Entire's own Git tooling, builds it, and reports the outcome back.
 
@@ -245,6 +245,7 @@ Appwrite works out which files a push changed by comparing the push's previous a
 - **The repository isn't listed.** Add it to the installation as described above, then click **Refresh repositories** in the wizard.
 - **There is no option to create a repository.** The wizard only offers **Create new repository** for providers that support it. For Entire, create the repository on Entire first, push your code, and connect it.
 - **The framework shows as Other.** Appwrite detects the framework from the `package.json` in the root directory. If your app lives in a subfolder, set the **Root directory** to that folder, and if Appwrite still doesn't recognize the framework, select it yourself.
+- **No check runs appear on Entire.** Silent mode stops Appwrite from reporting builds back to Entire. Turn it off in the site or function's Git settings.
 - **The build fails.** Open the deployment in the Console and read the build logs. Most failures come from a root directory that doesn't contain the app, or a build command that doesn't match the package manager.
 
 # Getting started with Entire on Appwrite Cloud
