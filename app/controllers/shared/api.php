@@ -254,8 +254,14 @@ Http::init()
 
             // Apply permission
             if ($apiKey->getType() === API_KEY_ORGANIZATION) {
+                // Organization keys carry the base team role so they can operate within the
+                // organization under their own scopes, but not the synthetic owner role. The key
+                // document records no membership role of its creator, so granting owner here made
+                // every organization key an owner regardless of who created it, letting it pass the
+                // team:{id}/owner permission and role checks that gate strictly-owner actions such
+                // as deleting the organization. Authorization stays enabled for organization keys
+                // (unlike standard keys above), so document permissions enforce this.
                 $authorization->addRole(Role::team($team->getId())->toString());
-                $authorization->addRole(Role::team($team->getId(), 'owner')->toString());
             } elseif ($apiKey->getType() === API_KEY_ACCOUNT) {
                 // Account keys act as the console user on the Console API only. On any other
                 // project they would inject the console user's roles (user:{id}, users,

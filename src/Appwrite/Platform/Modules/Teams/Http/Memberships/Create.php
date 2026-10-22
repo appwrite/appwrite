@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Teams\Http\Memberships;
 
+use Appwrite\Auth\OwnerRole;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Mail as MailMessage;
@@ -286,6 +287,10 @@ class Create extends Action
         // must not count as privileged enough to invite with arbitrary roles.
         if (! $isOwner && ! $isAppUser && ($project->getId() === 'console' || ! $isPrivilegedUser)) {
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to send invitations for this team');
+        }
+
+        if (! OwnerRole::mayAssign($roles, $project->getId(), $isOwner)) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'Only an organization owner can assign the owner role');
         }
 
         $membership = $dbForProject->findOne('memberships', [

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Teams\Http\Memberships;
 
+use Appwrite\Auth\OwnerRole;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -117,6 +118,10 @@ class Update extends Action
         // membership role changes; only the team owner or an API key may.
         if (!$isOwner && !$isAppUser && ($project->getId() === 'console' || !$isPrivilegedUser)) {
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to modify roles');
+        }
+
+        if (!OwnerRole::mayAssign($roles, $project->getId(), $isOwner)) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'Only an organization owner can assign the owner role');
         }
 
         /**
