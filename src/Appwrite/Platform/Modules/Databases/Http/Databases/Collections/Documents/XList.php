@@ -118,8 +118,13 @@ class XList extends Action
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
         if ($transactionId !== null) {
-            $transaction = $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId));
-            if ($transaction->isEmpty() || $this->isTransactionTypeMismatch($transaction)) {
+            $transaction = ($isAPIKey || $isPrivilegedUser)
+                ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
+                : $dbForProject->getDocument('transactions', $transactionId);
+            if (
+                (($isAPIKey || $isPrivilegedUser) && $transaction->isEmpty())
+                || (!$transaction->isEmpty() && $this->isTransactionTypeMismatch($transaction))
+            ) {
                 throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
             }
         }
