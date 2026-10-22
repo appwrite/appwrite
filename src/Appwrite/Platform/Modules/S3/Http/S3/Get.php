@@ -163,7 +163,11 @@ class Get extends Base
                 $etag = '"' . $file->getAttribute('signature', '') . '"';
 
                 if ($ifNoneMatch === $etag) {
-                    $response->setStatusCode(Response::STATUS_CODE_NOT_MODIFIED)->send('');
+                    $this->applyContentHeaders($response, $request, $file);
+                    $response
+                        ->addHeader('ETag', $etag)
+                        ->setStatusCode(Response::STATUS_CODE_NOT_MODIFIED)
+                        ->send('');
                     return;
                 }
                 if ($ifMatch !== '' && $ifMatch !== $etag) {

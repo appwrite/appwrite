@@ -120,6 +120,15 @@ final class S3CustomServerTest extends Scope
             $this->assertStringStartsWith('attachment;', $object['headers']['content-disposition'], $case['name']);
             $this->assertSame(\file_get_contents(\realpath(__DIR__ . '/../../../resources/' . $case['source'])), $object['body'], $case['name']);
 
+            $cached = $this->call(Client::METHOD_GET, $path, headers: [
+                'if-none-match' => $object['headers']['etag'],
+            ]);
+            $this->assertSame(304, $cached['headers']['status-code'], $case['name']);
+            $this->assertSame("script-src 'none';", $cached['headers']['content-security-policy'], $case['name']);
+            $this->assertSame('nosniff', $cached['headers']['x-content-type-options'], $case['name']);
+            $this->assertStringStartsWith('attachment;', $cached['headers']['content-disposition'], $case['name']);
+            $this->assertSame($object['headers']['etag'], $cached['headers']['etag'], $case['name']);
+
             $range = $this->call(Client::METHOD_GET, $path, headers: ['range' => 'bytes=0-10']);
             $this->assertSame(206, $range['headers']['status-code'], $case['name']);
             $this->assertSame("script-src 'none';", $range['headers']['content-security-policy'], $case['name']);
