@@ -15,6 +15,7 @@ use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Services\TablesDB;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
+use Utopia\Client\Destinations;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
@@ -67,6 +68,7 @@ class Migrations extends Action
     protected ?Device $deviceForFiles;
     protected ?Document $project;
     protected ?PublicHostname $publicHostname = null;
+    protected ?Destinations $publicInternet = null;
 
     protected ?Document $sourceProject = null;
 
@@ -113,6 +115,7 @@ class Migrations extends Action
             ->inject('plan')
             ->inject('authorization')
             ->inject('publicHostname')
+            ->inject('publicInternet')
             ->callback($this->action(...));
     }
 
@@ -135,6 +138,7 @@ class Migrations extends Action
         array $plan,
         Authorization $authorization,
         PublicHostname $publicHostname,
+        Destinations $publicInternet,
     ): void {
         $migrationMessage = Migration::fromArray($message->getPayload());
         $this->getDatabasesDB = $getDatabasesDB;
@@ -162,6 +166,7 @@ class Migrations extends Action
         $this->dbForPlatform = $dbForPlatform;
         $this->project = $project;
         $this->publicHostname = $publicHostname;
+        $this->publicInternet = $publicInternet;
 
         $platform = $migrationMessage->platform ?: Config::getParam('platform', []);
 
@@ -180,6 +185,7 @@ class Migrations extends Action
             $this->dbForPlatform = null;
             $this->project = null;
             $this->publicHostname = null;
+            $this->publicInternet = null;
             $this->deviceForMigrations = null;
             $this->deviceForFiles = null;
             $this->plan = [];
@@ -340,6 +346,13 @@ class Migrations extends Action
             ),
             default => throw new Exception(Exception::MIGRATION_SOURCE_TYPE_INVALID),
         };
+
+        // The endpoint was checked when the migration was created; the fetch is
+        // now. Hold every connection and redirect hop to a public address, so
+        // DNS cannot answer differently in between (Supabase extends NHost)
+        if ($migrationSource instanceof SourceAppwrite || $migrationSource instanceof NHost) {
+            $migrationSource->setDestinations($this->publicInternet);
+        }
 
         $resources = $migration->getAttribute('resources', []);
         $this->sourceReport = $migrationSource->report($resources);

@@ -630,6 +630,11 @@ Http::init()
                     }
                 }
 
+                // Accounts match an email case-insensitively, so must the limit
+                // counting attempts against one: User@x and user@x are one bucket
+                if (isset($params['{param-email}'])) {
+                    $params['{param-email}'] = \strtolower(\trim($params['{param-email}']));
+                }
                 $checking = true;
                 $isRateLimited = $timelimit($abuseKey, $abuseLimit, $route->getLabel('abuse-time', 3600), function (TimeLimit $timeLimit) use ($params, $response, $shouldCheckAbuse, &$closestLimit): bool {
                     $timeLimit = $timeLimit->withParams($params);

@@ -478,6 +478,18 @@ trait AccountBase
         ]);
 
         $this->assertEquals($session['headers']['status-code'], 429);
+
+        // The account is limited, not one spelling of its email: another letter
+        // case from another address counts against the same attempts
+        $otherIp = '198.51.100.' . random_int(1, 254);
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', \array_merge($baseHeaders, [
+            'x-forwarded-for' => $otherIp,
+        ]), [
+            'email' => \strtoupper($email),
+            'password' => 'wrongPassword',
+        ]);
+
+        $this->assertEquals(429, $session['headers']['status-code']);
     }
 
     /**

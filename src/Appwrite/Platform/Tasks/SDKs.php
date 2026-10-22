@@ -127,6 +127,7 @@ class SDKs extends Action
         }
 
         $platforms = Config::getParam('sdks');
+        $failed = [];
         foreach ($platforms as $key => $platform) {
             if ($selectedPlatforms !== null && ! \in_array($key, $selectedPlatforms) && ($sdks === null)) {
                 continue;
@@ -471,7 +472,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $this->addSpec($result, $spec);
                     }
                 } catch (\Throwable $exception) {
-                    Console::error($exception->getMessage());
+                    // Whatever generate() left behind is not the SDK: nothing of it is pushed, released or copied
+                    Console::error("  {$language['name']} SDK was not generated: " . $exception->getMessage());
+                    $failed[] = "{$platform['name']}/{$language['name']}";
+                    continue;
                 }
 
                 $gitUrl = $language['gitUrl'];
@@ -495,6 +499,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 $this->copyExamples($language, $version, $result, $resultExamples);
             }
+        }
+
+        if (! empty($failed)) {
+            throw new \Exception('SDKs not generated: ' . \implode(', ', $failed));
         }
 
         if (! empty($prUrls)) {

@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Project\Http\Project\Keys;
 
 use Appwrite\Auth\Key;
+use Appwrite\Auth\Scopes;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -79,6 +80,7 @@ class Create extends Base
             ->inject('project')
             ->inject('authorization')
             ->inject('apiKey')
+            ->inject('scopes')
             ->callback($this->action(...));
     }
 
@@ -94,10 +96,17 @@ class Create extends Base
         Document $project,
         Authorization $authorization,
         ?Key $apiKey,
+        Scopes $grantedScopes,
     ) {
         // Dynamic supported for backwards compatibility
         if ($apiKey !== null && \in_array($apiKey->getType(), [API_KEY_STANDARD, API_KEY_EPHEMERAL, 'dynamic'], true)) {
             throw new Exception(Exception::KEY_CREATION_DENIED);
+        }
+
+        // A key acts with its scopes, so a caller may grant only scopes it holds itself
+        $missing = $grantedScopes->missing($scopes);
+        if ($missing !== []) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Cannot grant scopes the caller does not hold: ' . \implode(', ', $missing));
         }
 
         $keyId = ($keyId == 'unique()') ? Id::unique() : $keyId;
