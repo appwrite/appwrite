@@ -2668,14 +2668,42 @@ Http::post('/v1/account/tokens/magic-url')
 
         $authorization->addRole(Role::user($user->getId())->toString());
 
-        $token = $dbForProject->createDocument('tokens', $token
-            ->setAttribute('$permissions', [
-                Permission::read(Role::user($user->getId())),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ]));
+        $token->setAttribute('$permissions', [
+            Permission::read(Role::user($user->getId())),
+            Permission::update(Role::user($user->getId())),
+            Permission::delete(Role::user($user->getId())),
+        ]);
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $created = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $user, $email, $token) {
+            $current = $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+            if (
+                $current->isEmpty()
+                || \strtolower((string) $current->getAttribute('email')) !== \strtolower($email)
+            ) {
+                return new Document();
+            }
+
+            return $dbForProject->createDocument('tokens', $token);
+        }));
+
+        $deliverable = !$created->isEmpty();
+        if ($deliverable) {
+            $token = $created;
+            $dbForProject->purgeCachedDocument('users', $user->getId());
+        } else {
+            $dummyUserId = Id::unique();
+            $token
+                ->setAttribute('userId', $dummyUserId)
+                ->setAttribute('userInternalId', Id::unique())
+                ->setAttribute('$permissions', [
+                    Permission::read(Role::user($dummyUserId)),
+                    Permission::update(Role::user($dummyUserId)),
+                    Permission::delete(Role::user($dummyUserId)),
+                ]);
+            $authorization->addRole(Role::user($dummyUserId)->toString());
+            $token = $dbForProject->createDocument('tokens', $token);
+            $authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $token->getId()));
+        }
 
         if (empty($url)) {
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
@@ -2799,18 +2827,20 @@ Http::post('/v1/account/tokens/magic-url')
             'team' => '',
         ];
 
-        $publisherForMails->enqueue(new MailMessage(
-            project: $project,
-            recipient: $email,
-            subject: $subject,
-            template: MAIL_TEMPLATE_MAGIC_URL,
-            body: $body,
-            preview: $preview,
-            smtp: $smtpConfig,
-            variables: $emailVariables,
-            customMailOptions: $project->getId() === 'console' ? ['senderName' => $platform['emailSenderName']] : [],
-            platform: $platform,
-        ));
+        if ($deliverable) {
+            $publisherForMails->enqueue(new MailMessage(
+                project: $project,
+                recipient: $email,
+                subject: $subject,
+                template: MAIL_TEMPLATE_MAGIC_URL,
+                body: $body,
+                preview: $preview,
+                smtp: $smtpConfig,
+                variables: $emailVariables,
+                customMailOptions: $project->getId() === 'console' ? ['senderName' => $platform['emailSenderName']] : [],
+                platform: $platform,
+            ));
+        }
 
         $token->setAttribute('secret', $tokenSecret);
 
@@ -3020,14 +3050,42 @@ Http::post('/v1/account/tokens/email')
 
         $authorization->addRole(Role::user($user->getId())->toString());
 
-        $token = $dbForProject->createDocument('tokens', $token
-            ->setAttribute('$permissions', [
-                Permission::read(Role::user($user->getId())),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ]));
+        $token->setAttribute('$permissions', [
+            Permission::read(Role::user($user->getId())),
+            Permission::update(Role::user($user->getId())),
+            Permission::delete(Role::user($user->getId())),
+        ]);
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $created = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $user, $email, $token) {
+            $current = $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+            if (
+                $current->isEmpty()
+                || \strtolower((string) $current->getAttribute('email')) !== \strtolower($email)
+            ) {
+                return new Document();
+            }
+
+            return $dbForProject->createDocument('tokens', $token);
+        }));
+
+        $deliverable = !$created->isEmpty();
+        if ($deliverable) {
+            $token = $created;
+            $dbForProject->purgeCachedDocument('users', $user->getId());
+        } else {
+            $dummyUserId = Id::unique();
+            $token
+                ->setAttribute('userId', $dummyUserId)
+                ->setAttribute('userInternalId', Id::unique())
+                ->setAttribute('$permissions', [
+                    Permission::read(Role::user($dummyUserId)),
+                    Permission::update(Role::user($dummyUserId)),
+                    Permission::delete(Role::user($dummyUserId)),
+                ]);
+            $authorization->addRole(Role::user($dummyUserId)->toString());
+            $token = $dbForProject->createDocument('tokens', $token);
+            $authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $token->getId()));
+        }
 
         $subject = $locale->getText("emails.otpSession.subject");
         $preview = $locale->getText("emails.otpSession.preview");
@@ -3157,19 +3215,21 @@ Http::post('/v1/account/tokens/email')
             ]);
         }
 
-        $publisherForMails->enqueue(new MailMessage(
-            project: $project,
-            recipient: $email,
-            subject: $subject,
-            template: MAIL_TEMPLATE_OTP,
-            bodyTemplate: $bodyTemplate,
-            body: $body,
-            preview: $preview,
-            smtp: $smtpConfig,
-            variables: $emailVariables,
-            customMailOptions: $smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE ? ['senderName' => $platform['emailSenderName']] : [],
-            platform: $platform,
-        ));
+        if ($deliverable) {
+            $publisherForMails->enqueue(new MailMessage(
+                project: $project,
+                recipient: $email,
+                subject: $subject,
+                template: MAIL_TEMPLATE_OTP,
+                bodyTemplate: $bodyTemplate,
+                body: $body,
+                preview: $preview,
+                smtp: $smtpConfig,
+                variables: $emailVariables,
+                customMailOptions: $smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE ? ['senderName' => $platform['emailSenderName']] : [],
+                platform: $platform,
+            ));
+        }
 
         $token->setAttribute('secret', $tokenSecret);
 
@@ -5035,7 +5095,8 @@ Http::post('/v1/account/verifications/email')
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
 
-        if (empty($user->getAttribute('email'))) {
+        $email = \strtolower((string) $user->getAttribute('email'));
+        if ($email === '') {
             throw new Exception(Exception::USER_EMAIL_NOT_FOUND);
         }
 
@@ -5059,12 +5120,32 @@ Http::post('/v1/account/verifications/email')
 
         $authorization->addRole(Role::user($user->getId())->toString());
 
-        $verification = $dbForProject->createDocument('tokens', $verification
-            ->setAttribute('$permissions', [
-                Permission::read(Role::user($user->getId())),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ]));
+        $verification->setAttribute('$permissions', [
+            Permission::read(Role::user($user->getId())),
+            Permission::update(Role::user($user->getId())),
+            Permission::delete(Role::user($user->getId())),
+        ]);
+
+        $verification = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $user, $email, $verification) {
+            $current = $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+            if (
+                $current->isEmpty()
+                || $current->getAttribute('emailVerification')
+                || \strtolower((string) $current->getAttribute('email')) !== $email
+            ) {
+                return new Document();
+            }
+
+            return $dbForProject->createDocument('tokens', $verification);
+        }));
+
+        if ($verification->isEmpty()) {
+            $current = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId()));
+            if (!$current->isEmpty() && $current->getAttribute('emailVerification')) {
+                throw new Exception(Exception::USER_EMAIL_ALREADY_VERIFIED);
+            }
+            throw new Exception(Exception::USER_EMAIL_NOT_FOUND);
+        }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
@@ -5990,7 +6071,8 @@ Http::post('/v1/account/verifications/email/otp')
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
 
-        if (empty($user->getAttribute('email'))) {
+        $email = \strtolower((string) $user->getAttribute('email'));
+        if ($email === '') {
             throw new Exception(Exception::USER_EMAIL_NOT_FOUND);
         }
 
@@ -6018,12 +6100,32 @@ Http::post('/v1/account/verifications/email/otp')
 
         $authorization->addRole(Role::user($user->getId())->toString());
 
-        $verification = $dbForProject->createDocument('tokens', $verification
-            ->setAttribute('$permissions', [
-                Permission::read(Role::user($user->getId())),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ]));
+        $verification->setAttribute('$permissions', [
+            Permission::read(Role::user($user->getId())),
+            Permission::update(Role::user($user->getId())),
+            Permission::delete(Role::user($user->getId())),
+        ]);
+
+        $verification = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $user, $email, $verification) {
+            $current = $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+            if (
+                $current->isEmpty()
+                || $current->getAttribute('emailVerification')
+                || \strtolower((string) $current->getAttribute('email')) !== $email
+            ) {
+                return new Document();
+            }
+
+            return $dbForProject->createDocument('tokens', $verification);
+        }));
+
+        if ($verification->isEmpty()) {
+            $current = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId()));
+            if (!$current->isEmpty() && $current->getAttribute('emailVerification')) {
+                throw new Exception(Exception::USER_EMAIL_ALREADY_VERIFIED);
+            }
+            throw new Exception(Exception::USER_EMAIL_NOT_FOUND);
+        }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
