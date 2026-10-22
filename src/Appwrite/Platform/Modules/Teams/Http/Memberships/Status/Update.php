@@ -127,24 +127,50 @@ class Update extends Action
             ->setAttribute('confirm', true)
         ;
 
-        // The invite proves the address it was sent to, and only one address on file tells which that was
-        $hasEmail = !empty($targetUser->getAttribute('email'));
-        $hasPhone = !empty($targetUser->getAttribute('phone'));
-        $verification = match (true) {
-            $hasEmail && !$hasPhone => 'emailVerification',
-            $hasPhone && !$hasEmail => 'phoneVerification',
-            default => null,
-        };
+        $authorization->addRole(Role::user($targetUser->getId())->toString());
 
-        if ($verification !== null) {
-            $targetUser->setAttribute($verification, true);
-            $authorization->skip(fn () => $dbForProject->updateDocument('users', $targetUser->getId(), new Document([$verification => true])));
+        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $membership, $team, $targetUser, $secret, $proofForToken) {
+            // Lock the user first, as an address change does, so a voided invite cannot slip through
+            $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $targetUser->getId(), forUpdate: true));
+
+            // Re-read under a lock, a concurrent accept of the same invite must not be counted twice
+            $current = $authorization->skip(fn () => $dbForProject->getDocument('memberships', $membership->getId(), forUpdate: true));
+
+            if ($current->getAttribute('confirm') === true) {
+                return new Document();
+            }
+
+            if (!$proofForToken->verify($secret, (string) $current->getAttribute('secret'))) {
+                throw new Exception(Exception::TEAM_INVALID_SECRET);
+            }
+
+            $confirmed = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['joined' => $membership->getAttribute('joined'), 'confirm' => true]));
+
+            $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+
+            // The invite proves the address it was sent to, and only one address on file tells which that was
+            $hasEmail = !empty($user->getAttribute('email'));
+            $hasPhone = !empty($user->getAttribute('phone'));
+            $verification = match (true) {
+                $hasEmail && !$hasPhone => 'emailVerification',
+                $hasPhone && !$hasEmail => 'phoneVerification',
+                default => null,
+            };
+
+            if ($verification !== null) {
+                $targetUser->setAttribute($verification, true);
+                $authorization->skip(fn () => $dbForProject->updateDocument('users', $targetUser->getId(), new Document([$verification => true])));
+            }
+
+            return $confirmed;
+        });
+
+        if ($membership->isEmpty()) {
+            throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
         }
 
         // Create session for the user if not logged in
         if (!$hasSession) {
-            $authorization->addRole(Role::user($targetUser->getId())->toString());
-
             $detector = new Detector($request->getUserAgent('UNKNOWN'));
             $authDuration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
             $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
@@ -202,25 +228,6 @@ class Update extends Action
                     sameSite: Config::getParam('cookieSamesite')
                 )
             ;
-        }
-
-        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $membership, $team) {
-            // Re-read under a lock, a concurrent accept of the same invite must not be counted twice
-            $current = $authorization->skip(fn () => $dbForProject->getDocument('memberships', $membership->getId(), forUpdate: true));
-
-            if ($current->getAttribute('confirm') === true) {
-                return new Document();
-            }
-
-            $confirmed = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['joined' => $membership->getAttribute('joined'), 'confirm' => true]));
-
-            $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
-
-            return $confirmed;
-        });
-
-        if ($membership->isEmpty()) {
-            throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
         }
 
         $dbForProject->purgeCachedDocument('users', $targetUser->getId());
