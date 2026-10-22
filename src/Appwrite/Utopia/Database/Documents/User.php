@@ -136,12 +136,12 @@ class User extends Document
      *
      * @return bool|string
      */
-    public function sessionVerify(string $secret, Token $proofForToken, ?string $validAfter = null)
+    public function sessionVerify(string $secret, Token $proofForToken, ?string $invalidatedAt)
     {
         $sessions = $this->getAttribute('sessions', []);
 
         foreach ($sessions as $session) {
-            if ($validAfter !== null && DateTime::formatTz($session->getCreatedAt()) <= $validAfter) {
+            if ($invalidatedAt !== null && DateTime::formatTz($session->getCreatedAt()) <= $invalidatedAt) {
                 continue;
             }
 
@@ -165,7 +165,7 @@ class User extends Document
      * Used by JWT authentication, which binds to a session ID rather than a
      * session secret.
      */
-    public function sessionActive(string $sessionId, ?string $validAfter = null): bool
+    public function sessionActive(string $sessionId, ?string $invalidatedAt): bool
     {
         $session = $this->getSession($sessionId);
 
@@ -173,7 +173,7 @@ class User extends Document
             return false;
         }
 
-        if ($validAfter !== null && DateTime::formatTz($session->getCreatedAt()) <= $validAfter) {
+        if ($invalidatedAt !== null && DateTime::formatTz($session->getCreatedAt()) <= $invalidatedAt) {
             return false;
         }
 

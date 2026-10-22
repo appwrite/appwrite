@@ -1866,7 +1866,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         // createSession later. Deleting the current session in that flow would
         // sign the caller out until the exchange, so it is left in place.
         if (empty($state['token'])) {
-            $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $project->getAttribute('auths', [])['sessionsValidAfter'] ?? null);
+            $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
 
             if ($current) { // Replace the current session with the new one.
                 $currentDocument = $dbForProject->getDocument('sessions', $current);
@@ -3603,7 +3603,7 @@ Http::post('/v1/account/jwts')
             throw new Exception(Exception::USER_JWT_CREATION_DENIED);
         }
 
-        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $project->getAttribute('auths', [])['sessionsValidAfter'] ?? null);
+        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
 
         if (!$sessionId) {
             throw new Exception(Exception::USER_SESSION_NOT_FOUND);

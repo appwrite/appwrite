@@ -212,7 +212,7 @@ class Create extends Action
             $sessionUpgrade = true;
         }
 
-        $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $project->getAttribute('auths', [])['sessionsValidAfter'] ?? null);
+        $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
 
         if ($user->isEmpty()) {
             $session = $dbForProject->findOne('sessions', [ // Get user by provider id

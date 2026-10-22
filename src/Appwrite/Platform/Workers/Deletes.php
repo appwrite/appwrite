@@ -1284,14 +1284,14 @@ class Deletes extends Action
      * @return void
      * @throws Exception|Throwable
      */
-    private function deleteExpiredSessions(Document $project, callable $getProjectDB, ?string $validAfter = null): void
+    private function deleteExpiredSessions(Document $project, callable $getProjectDB, ?string $invalidatedAt = null): void
     {
         Console::info('Delete expired sessions');
 
         $dbForProject = $getProjectDB($project);
 
-        if ($validAfter !== null) {
-            $cutoff = $validAfter;
+        if ($invalidatedAt !== null) {
+            $cutoff = $invalidatedAt;
         } else {
             $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
             $cutoff = DateTime::addSeconds(new \DateTime(), -1 * $duration);
@@ -1299,11 +1299,17 @@ class Deletes extends Action
 
         // Delete Sessions
         $this->deleteByGroup('sessions', [
-            Query::select([...$this->selects, '$createdAt']),
+            Query::select([...$this->selects, '$createdAt', 'userId']),
             Query::lessThanEqual('$createdAt', $cutoff),
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
-        ], $dbForProject);
+        ], $dbForProject, function (Document $session) use ($dbForProject) {
+            $userId = $session->getAttribute('userId');
+
+            if (!empty($userId)) {
+                $dbForProject->purgeCachedDocument('users', $userId);
+            }
+        });
     }
 
     /**

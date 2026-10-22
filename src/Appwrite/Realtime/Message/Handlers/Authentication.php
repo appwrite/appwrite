@@ -33,6 +33,7 @@ class Authentication extends Action
             ->inject('connectionId')
             ->inject('realtime')
             ->inject('database')
+            ->inject('dbForConsole')
             ->inject('register')
             ->inject('response')
             ->inject('presenceState')
@@ -51,6 +52,7 @@ class Authentication extends Action
         int $connectionId,
         Realtime $realtime,
         Database $database,
+        Database $dbForConsole,
         Registry $register,
         Response $response,
         PresenceState $presenceState,
@@ -78,14 +80,19 @@ class Authentication extends Action
         $impersonatedUserId = $realtime->connections[$connectionId]['impersonatedUserId'] ?? null;
         $projectId = $realtime->connections[$connectionId]['projectId'] ?? null;
 
-        $validAfter = null;
+        $invalidatedAt = null;
+
         if ($projectId !== null && $projectId !== '') {
-            $consoleDatabase = getConsoleDB();
-            $projectDoc = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
-            $validAfter = $projectDoc->getAttribute('auths', [])['sessionsValidAfter'] ?? null;
+            // The message scope resolves the connection's project, except on the
+            // console project, where the user lives in the platform database.
+            $epochProject = ($project !== null && !$project->isEmpty())
+                ? $project
+                : $dbForConsole->getAuthorization()->skip(fn () => $dbForConsole->getDocument('projects', $projectId));
+
+            $invalidatedAt = $epochProject->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null;
         }
 
-        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $validAfter);
+        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $invalidatedAt);
 
         if (empty($user->getId()) || $sessionId === false) {
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Session is not valid.');

@@ -5,13 +5,11 @@ namespace Appwrite\Platform\Modules\Project\Http\Project\Sessions;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
-use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -33,10 +31,9 @@ class Delete extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
             ->setHttpPath('/v1/project/sessions')
-            ->httpAlias('/v1/projects/:projectId/sessions')
             ->desc('Delete all project sessions')
             ->groups(['api', 'project'])
-            ->label('scope', ['users.write', 'sessions.write'])
+            ->label('scope', 'users.write')
             ->label('event', 'projects.[projectId].sessions.delete')
             ->label('audits.event', 'project.sessions.delete')
             ->label('audits.resource', 'project/{project.$id}')
@@ -44,7 +41,7 @@ class Delete extends Action
                 namespace: 'project',
                 group: 'sessions',
                 name: 'deleteSessions',
-                description: <<<'EOT'
+                description: <<<EOT
                 Delete all sessions in the project. Any session created before this request will be invalidated immediately: users will be signed out of every active client (web, mobile, server SDKs, JWTs), and will be able to sign in again afterwards. API keys are not affected by this action.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
@@ -62,7 +59,6 @@ class Delete extends Action
             ->inject('queueForEvents')
             ->inject('publisherForDeletes')
             ->inject('authorization')
-            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -73,16 +69,11 @@ class Delete extends Action
         Event $queueForEvents,
         DeletePublisher $publisherForDeletes,
         Authorization $authorization,
-        User $authUser,
     ): void {
-        if (! $authUser->isKey($authorization->getRoles()) && ! $authUser->isPrivileged($authorization->getRoles())) {
-            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
-        }
-
-        $epoch = DateTime::formatTz(DateTime::now());
+        $invalidatedAt = DateTime::formatTz(DateTime::now());
 
         $auths = $project->getAttribute('auths', []);
-        $auths['sessionsValidAfter'] = $epoch;
+        $auths['sessionsInvalidatedAt'] = $invalidatedAt;
 
         $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
             'auths' => $auths,
@@ -93,7 +84,7 @@ class Delete extends Action
             project: $project,
             type: DELETE_TYPE_SESSIONS,
             document: $project,
-            datetime: $epoch,
+            datetime: $invalidatedAt,
         ));
 
         $queueForEvents->setParam('projectId', $project->getId());

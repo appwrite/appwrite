@@ -93,10 +93,10 @@ final class UserTest extends TestCase
             'sessions' => $tokens2,
         ]);
 
-        $this->assertEquals('token1', $user1->sessionVerify($secret, $proofForToken));
-        $this->assertEquals(false, $user1->sessionVerify('false-secret', $proofForToken));
-        $this->assertEquals(false, $user2->sessionVerify($secret, $proofForToken));
-        $this->assertEquals(false, $user2->sessionVerify('false-secret', $proofForToken));
+        $this->assertEquals('token1', $user1->sessionVerify($secret, $proofForToken, null));
+        $this->assertEquals(false, $user1->sessionVerify('false-secret', $proofForToken, null));
+        $this->assertEquals(false, $user2->sessionVerify($secret, $proofForToken, null));
+        $this->assertEquals(false, $user2->sessionVerify('false-secret', $proofForToken, null));
     }
 
     public function testSessionActive(): void
@@ -124,10 +124,10 @@ final class UserTest extends TestCase
             ],
         ]);
 
-        $this->assertTrue($user->sessionActive('active'));
-        $this->assertFalse($user->sessionActive('expired'));
-        $this->assertFalse($user->sessionActive('missing-expire'));
-        $this->assertFalse($user->sessionActive('missing'));
+        $this->assertTrue($user->sessionActive('active', null));
+        $this->assertFalse($user->sessionActive('expired', null));
+        $this->assertFalse($user->sessionActive('missing-expire', null));
+        $this->assertFalse($user->sessionActive('missing', null));
     }
 
     public static function sessionVerifyEpochProvider(): array
@@ -142,14 +142,14 @@ final class UserTest extends TestCase
                 $secret,
                 $proofForToken,
                 DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -120)), // createdAt: 2 minutes ago
-                DateTime::formatTz(DateTime::now()),                              // validAfter: now
+                DateTime::formatTz(DateTime::now()),                              // invalidatedAt: now
                 false,
             ],
             'session at epoch is rejected (<=)' => [
                 $hash,
                 $secret,
                 $proofForToken,
-                DateTime::formatTz(DateTime::now()),                              // createdAt == validAfter
+                DateTime::formatTz(DateTime::now()),                              // createdAt == invalidatedAt
                 DateTime::formatTz(DateTime::now()),
                 false,
             ],
@@ -158,10 +158,10 @@ final class UserTest extends TestCase
                 $secret,
                 $proofForToken,
                 DateTime::formatTz(DateTime::addSeconds(new \DateTime(), 60)),    // createdAt: future
-                DateTime::formatTz(DateTime::now()),                              // validAfter: now
+                DateTime::formatTz(DateTime::now()),                              // invalidatedAt: now
                 'sessionId',
             ],
-            'null validAfter — existing behavior unchanged' => [
+            'null invalidatedAt — existing behavior unchanged' => [
                 $hash,
                 $secret,
                 $proofForToken,
@@ -173,7 +173,7 @@ final class UserTest extends TestCase
     }
 
     #[DataProvider('sessionVerifyEpochProvider')]
-    public function testSessionVerifyEpoch(string $hash, string $secret, Token $proofForToken, string $createdAt, ?string $validAfter, string|bool $expected): void
+    public function testSessionVerifyEpoch(string $hash, string $secret, Token $proofForToken, string $createdAt, ?string $invalidatedAt, string|bool $expected): void
     {
         $user = new User([
             '$id' => Id::custom('sessionId'),
@@ -189,7 +189,7 @@ final class UserTest extends TestCase
             ],
         ]);
 
-        $result = $user->sessionVerify($secret, $proofForToken, $validAfter);
+        $result = $user->sessionVerify($secret, $proofForToken, $invalidatedAt);
         $this->assertSame($expected, $result);
     }
 
@@ -198,7 +198,7 @@ final class UserTest extends TestCase
         return [
             'session before epoch is rejected' => [
                 DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -120)), // createdAt: 2 minutes ago
-                DateTime::formatTz(DateTime::now()),                              // validAfter: now
+                DateTime::formatTz(DateTime::now()),                              // invalidatedAt: now
                 false,
             ],
             'session at epoch is rejected (<=)' => [
@@ -211,7 +211,7 @@ final class UserTest extends TestCase
                 DateTime::formatTz(DateTime::now()),
                 true,
             ],
-            'null validAfter — existing behavior unchanged' => [
+            'null invalidatedAt — existing behavior unchanged' => [
                 DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -120)),
                 null,
                 true,
@@ -220,7 +220,7 @@ final class UserTest extends TestCase
     }
 
     #[DataProvider('sessionActiveEpochProvider')]
-    public function testSessionActiveEpoch(string $createdAt, ?string $validAfter, bool $expected): void
+    public function testSessionActiveEpoch(string $createdAt, ?string $invalidatedAt, bool $expected): void
     {
         $user = new User([
             '$id' => Id::custom('user1'),
@@ -235,7 +235,7 @@ final class UserTest extends TestCase
             ],
         ]);
 
-        $this->assertSame($expected, $user->sessionActive('active', $validAfter));
+        $this->assertSame($expected, $user->sessionActive('active', $invalidatedAt));
     }
 
     public function testGetSessionExpiry(): void

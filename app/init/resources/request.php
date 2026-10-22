@@ -513,14 +513,14 @@ return function (Container $context): void {
             }
         }
 
-        $sessionsValidAfter = $mode === APP_MODE_ADMIN
-            ? ($console->getAttribute('auths', [])['sessionsValidAfter'] ?? null)
-            : ($project->getAttribute('auths', [])['sessionsValidAfter'] ?? null);
+        $sessionsInvalidatedAt = $mode === APP_MODE_ADMIN
+            ? ($console->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null)
+            : ($project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
 
         if (
             ! $user ||
             $user->isEmpty() // Check a document has been found in the DB
-            || ! $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $sessionsValidAfter)
+            || ! $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $sessionsInvalidatedAt)
         ) { // Validate user has valid login token
             $user = new User([]);
         }
@@ -560,7 +560,7 @@ return function (Container $context): void {
                 }
             }
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (! empty($jwtSessionId) && ! $user->sessionActive($jwtSessionId, $sessionsValidAfter)) { // Match JWT to active session
+            if (! empty($jwtSessionId) && ! $user->sessionActive($jwtSessionId, $sessionsInvalidatedAt)) { // Match JWT to active session
                 $user = new User([]);
             }
         }
@@ -674,12 +674,12 @@ return function (Container $context): void {
             return;
         }
 
-        $sessionsValidAfter = $mode === APP_MODE_ADMIN
-            ? ($console->getAttribute('auths', [])['sessionsValidAfter'] ?? null)
-            : ($project->getAttribute('auths', [])['sessionsValidAfter'] ?? null);
+        $sessionsInvalidatedAt = $mode === APP_MODE_ADMIN
+            ? ($console->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null)
+            : ($project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
 
         $sessions = $user->getAttribute('sessions', []);
-        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $sessionsValidAfter);
+        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $sessionsInvalidatedAt);
 
         $authJWT = $request->getHeaderLine('x-appwrite-jwt', '');
         if (! $sessionId && ! empty($authJWT)) {
@@ -691,7 +691,7 @@ return function (Container $context): void {
             }
 
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (($payload['userId'] ?? '') === $user->getId() && ! empty($jwtSessionId) && $user->sessionActive($jwtSessionId, $sessionsValidAfter)) {
+            if (($payload['userId'] ?? '') === $user->getId() && ! empty($jwtSessionId) && $user->sessionActive($jwtSessionId, $sessionsInvalidatedAt)) {
                 $sessionId = $jwtSessionId;
             }
         }

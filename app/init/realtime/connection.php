@@ -208,6 +208,10 @@ return function (Container $container): void {
     $container->set('user', function (Request $request, Document $project, Document $console, Authorization $authorization, Store $store, Token $proofForToken) use ($getMode, $getDbForPlatform, $getDbForProject) {
         $mode = $getMode($request, $project);
 
+        $sessionsInvalidatedAt = $mode === APP_MODE_ADMIN
+            ? ($console->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null)
+            : ($project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
+
         $authorization->setStatus(true);
 
         $dbForPlatform = $getDbForPlatform($authorization);
@@ -234,7 +238,7 @@ return function (Container $container): void {
         if (
             !$user
             || $user->isEmpty()
-            || !$user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $project->getAttribute('auths', [])['sessionsValidAfter'] ?? null)
+            || !$user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $sessionsInvalidatedAt)
         ) {
             $user = new User([]);
         }
@@ -276,7 +280,7 @@ return function (Container $container): void {
             }
 
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (!empty($jwtSessionId) && !$user->sessionActive($jwtSessionId, $project->getAttribute('auths', [])['sessionsValidAfter'] ?? null)) {
+            if (!empty($jwtSessionId) && !$user->sessionActive($jwtSessionId, $sessionsInvalidatedAt)) {
                 $user = new User([]);
             }
         }
@@ -318,12 +322,18 @@ return function (Container $container): void {
         return $user;
     }, ['request', 'project', 'console', 'authorization', 'store', 'proofForToken']);
 
-    $container->set('session', function (Request $request, User $user, Store $store, Token $proofForToken): ?Document {
+    $container->set('session', function (Request $request, Document $project, Document $console, User $user, Store $store, Token $proofForToken) use ($getMode): ?Document {
         if ($user->isEmpty()) {
             return null;
         }
 
-        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $project->getAttribute('auths', [])['sessionsValidAfter'] ?? null);
+        $mode = $getMode($request, $project);
+
+        $sessionsInvalidatedAt = $mode === APP_MODE_ADMIN
+            ? ($console->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null)
+            : ($project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
+
+        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $sessionsInvalidatedAt);
 
         $authJWT = $request->getHeaderLine('x-appwrite-jwt', (string)($request->getParam('jwt', '')));
         if (!$sessionId && !empty($authJWT)) {
@@ -342,7 +352,7 @@ return function (Container $container): void {
             }
 
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (($payload['userId'] ?? '') === $user->getId() && !empty($jwtSessionId) && $user->sessionActive($jwtSessionId, $project->getAttribute('auths', [])['sessionsValidAfter'] ?? null)) {
+            if (($payload['userId'] ?? '') === $user->getId() && !empty($jwtSessionId) && $user->sessionActive($jwtSessionId, $sessionsInvalidatedAt)) {
                 $sessionId = $jwtSessionId;
             }
         }
@@ -359,7 +369,7 @@ return function (Container $container): void {
         }
 
         return null;
-    }, ['request', 'user', 'store', 'proofForToken']);
+    }, ['request', 'project', 'console', 'user', 'store', 'proofForToken']);
 
     // A connection holds no token to present again, so it ends when the JWT it was
     // opened with expires, as an HTTP request with that JWT would then fail.
