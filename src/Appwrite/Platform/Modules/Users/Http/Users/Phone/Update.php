@@ -69,8 +69,6 @@ class Update extends Action
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $oldPhone = $user->getAttribute('phone');
-
         // Store null instead of empty string so unique constraint allows multiple users without phone
         $phoneValue = $number !== '' ? $number : null;
 
@@ -90,47 +88,58 @@ class Update extends Action
         }
 
         try {
-            $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
-                'phone' => $phoneValue,
-                'phoneVerification' => $user->getAttribute('phoneVerification'),
-            ]));
-            $oldTarget = \array_find($user->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('identifier') === $oldPhone);
+            $user = $dbForProject->withTransaction(function () use ($dbForProject, $user, $number, $phoneValue) {
+                $current = $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+                if ($current->isEmpty()) {
+                    throw new Exception(Exception::USER_NOT_FOUND);
+                }
 
-            if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                if ($number !== '') {
-                    $dbForProject->updateDocument('targets', $oldTarget->getId(), new Document(['identifier' => $number]));
-                    $oldTarget->setAttribute('identifier', $number);
+                $lockedPhone = $current->getAttribute('phone');
+
+                $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
+                    'phone' => $phoneValue,
+                    'phoneVerification' => $user->getAttribute('phoneVerification'),
+                ]));
+                $oldTarget = \array_find($user->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('identifier') === $lockedPhone);
+
+                if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
+                    if ($number !== '') {
+                        $dbForProject->updateDocument('targets', $oldTarget->getId(), new Document(['identifier' => $number]));
+                        $oldTarget->setAttribute('identifier', $number);
+                    } else {
+                        $dbForProject->deleteDocument('targets', $oldTarget->getId());
+                    }
                 } else {
-                    $dbForProject->deleteDocument('targets', $oldTarget->getId());
+                    if ($number !== '') {
+                        $target = $dbForProject->createDocument('targets', new Document([
+                            '$permissions' => [
+                                Permission::read(Role::user($user->getId())),
+                                Permission::update(Role::user($user->getId())),
+                                Permission::delete(Role::user($user->getId())),
+                            ],
+                            'userId' => $user->getId(),
+                            'userInternalId' => $user->getSequence(),
+                            'providerType' => 'sms',
+                            'identifier' => $number,
+                        ]));
+                        $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+                    }
                 }
-            } else {
-                if ($number !== '') {
-                    $target = $dbForProject->createDocument('targets', new Document([
-                        '$permissions' => [
-                            Permission::read(Role::user($user->getId())),
-                            Permission::update(Role::user($user->getId())),
-                            Permission::delete(Role::user($user->getId())),
-                        ],
-                        'userId' => $user->getId(),
-                        'userInternalId' => $user->getSequence(),
-                        'providerType' => 'sms',
-                        'identifier' => $number,
-                    ]));
-                    $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
-                }
-            }
 
-            $sequence = $user->getSequence();
-            if ($oldPhone !== $phoneValue && $sequence !== '' && $sequence !== null) {
-                $dbForProject->deleteDocuments('tokens', [
-                    Query::equal('userInternalId', [$sequence]),
-                    Query::equal('type', [TOKEN_TYPE_PHONE]),
-                ]);
-                $dbForProject->deleteDocuments('challenges', [
-                    Query::equal('userInternalId', [$sequence]),
-                    Query::equal('type', [Type::PHONE]),
-                ]);
-            }
+                $sequence = $user->getSequence();
+                if ($lockedPhone !== $phoneValue && $sequence !== '' && $sequence !== null) {
+                    $dbForProject->deleteDocuments('tokens', [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('type', [TOKEN_TYPE_PHONE]),
+                    ]);
+                    $dbForProject->deleteDocuments('challenges', [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('type', [Type::PHONE]),
+                    ]);
+                }
+
+                return $user;
+            });
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);

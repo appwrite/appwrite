@@ -5312,6 +5312,24 @@ final class AccountCustomClientTest extends Scope
 
         $token = $createToken($userId, $numbers[1]);
 
+        $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'factor' => 'phone',
+        ]);
+        $this->assertEquals(201, $challenge['headers']['status-code']);
+
+        $sms = $this->getLastRequestForProject($projectId, Scope::REQUEST_TYPE_SMS, [
+            'header_X-Username' => 'username',
+            'header_X-Key' => 'password',
+            'method' => 'POST',
+        ], probe: function (array $request) use ($numbers, $token) {
+            $this->assertEquals($numbers[1], $request['data']['to'] ?? null);
+            $this->assertStringNotContainsString($token, (string) ($request['data']['message'] ?? ''));
+        });
+        $this->assertNotEmpty($sms);
+        $otp = \explode(' ', $sms['data']['message'])[0];
+
         $response = $this->client->call(Client::METHOD_PATCH, '/account/phone', \array_merge($headers, [
             'cookie' => 'a_session_' . $projectId . '=' . $session,
         ]), [
@@ -5325,6 +5343,15 @@ final class AccountCustomClientTest extends Scope
             'secret' => $token,
         ]);
         $this->assertEquals(401, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'challengeId' => $challenge['body']['$id'],
+            'otp' => $otp,
+        ]);
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $response['body']['type']);
     }
 
     public function testConvertPhoneToPassword(): void

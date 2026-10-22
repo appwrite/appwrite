@@ -4071,8 +4071,6 @@ Http::patch('/v1/account/phone')
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
 
-        $oldPhone = $user->getAttribute('phone');
-
         $user
             ->setAttribute('phone', $phone)
             ->setAttribute('phoneVerification', false) // After this user needs to confirm phone number again
@@ -4091,26 +4089,37 @@ Http::patch('/v1/account/phone')
         }
 
         try {
-            $user = $dbForProject->updateDocument('users', $user->getId(), $user);
-            $oldTarget = \array_find($user->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('identifier') === $oldPhone);
+            $user = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $user, $phone) {
+                $current = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
+                if ($current->isEmpty()) {
+                    throw new Exception(Exception::USER_NOT_FOUND);
+                }
 
-            if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
-            }
+                $lockedPhone = $current->getAttribute('phone');
 
-            $sequence = $user->getSequence();
-            if ($oldPhone !== $phone && $sequence !== '' && $sequence !== null) {
-                $authorization->skip(function () use ($dbForProject, $sequence) {
-                    $dbForProject->deleteDocuments('tokens', [
-                        Query::equal('userInternalId', [$sequence]),
-                        Query::equal('type', [TOKEN_TYPE_PHONE]),
-                    ]);
-                    $dbForProject->deleteDocuments('challenges', [
-                        Query::equal('userInternalId', [$sequence]),
-                        Query::equal('type', [Type::PHONE]),
-                    ]);
-                });
-            }
+                $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+                $oldTarget = \array_find($user->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('identifier') === $lockedPhone);
+
+                if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
+                    $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
+                }
+
+                $sequence = $user->getSequence();
+                if ($lockedPhone !== $phone && $sequence !== '' && $sequence !== null) {
+                    $authorization->skip(function () use ($dbForProject, $sequence) {
+                        $dbForProject->deleteDocuments('tokens', [
+                            Query::equal('userInternalId', [$sequence]),
+                            Query::equal('type', [TOKEN_TYPE_PHONE]),
+                        ]);
+                        $dbForProject->deleteDocuments('challenges', [
+                            Query::equal('userInternalId', [$sequence]),
+                            Query::equal('type', [Type::PHONE]),
+                        ]);
+                    });
+                }
+
+                return $user;
+            });
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
