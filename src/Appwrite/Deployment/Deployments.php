@@ -965,6 +965,7 @@ readonly class Deployments
 
         $apiKey = (new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $timeout, 0))->encode([
             'projectId' => $project->getId(),
+            'projectSequence' => $project->getSequence(),
             'scopes' => static::scopes($resource),
         ]);
 
