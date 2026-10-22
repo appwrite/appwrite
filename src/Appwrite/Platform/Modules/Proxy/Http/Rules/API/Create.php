@@ -121,16 +121,7 @@ class Create extends Action
 
         $rule = $this->createRule($rule, $dbForPlatform, $authorization);
 
-        if ($rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING) {
-            $publisherForCertificates->enqueue(new \Appwrite\Event\Message\Certificate(
-                project: $project,
-                domain: new Document([
-                    'domain' => $rule->getAttribute('domain'),
-                    'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
-                ]),
-                action: \Appwrite\Event\Certificate::ACTION_GENERATION,
-            ));
-        }
+        $this->scheduleCertificateForRule($publisherForCertificates, $project, $rule);
 
         $queueForEvents->setParam('ruleId', $rule->getId());
 
