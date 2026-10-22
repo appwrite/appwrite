@@ -51,6 +51,7 @@ import {
   Waf,
 } from '@appwrite.io/console'
 import { Agent } from '@/lib/appwrite/agent'
+import { API_EXPLORER_AUTH_LOCAL_STORAGE_KEY } from '@/lib/api-explorer/auth-storage'
 import {
   getDebugEndpointBaseUrl,
   subscribeToDebugEndpointChange,
@@ -424,6 +425,7 @@ const CONSOLE_SDK_PROJECT_ID = 'console'
  *
  * - Clears operator impersonation.
  * - Removes Appwrite `cookieFallback` from localStorage (SDK uses it when cookies are restricted).
+ * - Removes API keys the explorer saved for each project.
  * - Clears in-memory session/JWT/key on the shared console and project clients.
  * - Best-effort expiry of `a_session_console` on the current document host (only works for
  *   non-httpOnly cookies; cross-site session cookies require a successful server sign-out).
@@ -437,6 +439,7 @@ export function clearConsoleSessionLocally(): void {
 
   try {
     window.localStorage.removeItem('cookieFallback')
+    window.localStorage.removeItem(API_EXPLORER_AUTH_LOCAL_STORAGE_KEY)
   } catch {
     /* private mode */
   }
