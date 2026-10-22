@@ -324,7 +324,10 @@ class Create extends Base
                 ));
             } else {
                 $data = [
-                    'headers' => $headers,
+                    // The worker mints the key and user JWT when the schedule
+                    // fires; the ones minted above would be stale by then and
+                    // have no business at rest on the schedule.
+                    'headers' => Headers::stripReserved($headers, ['x-appwrite-client-ip']),
                     'path' => $path,
                     'method' => $method,
                     'body' => $body,
