@@ -16,7 +16,7 @@ faqs:
   - question: "Why does this matter on the Free plan?"
     answer: "Every deployment's code and build count toward your storage, and on the Free plan that's 2GB for your whole organization, shared with your files and databases. Old deployments you'll never use again can take up a big part of it. Cleaning them up after 30 days gives that space back without you doing anything."
   - question: "How long can I keep deployments on each plan?"
-    answer: "Inactive deployments are kept for 30 days by default on every plan. You can choose up to 90 days on the Free and Education plans, and up to 3 years on the Start and Pro plans. On Free and Education, each function or site also keeps only its 100 newest inactive deployments. Enterprise plans start with the same options as Pro, and our sales team can set up a custom policy."
+    answer: "Inactive deployments are kept for 30 days by default on every plan. You can choose up to 90 days on the Free and Education plans, and up to 3 years on the Start and Pro plans. On Free and Education, each function or site also keeps only its 100 newest inactive deployments. For a longer or custom policy, our sales team can set one up for you."
   - question: "Can I still keep deployments forever?"
     answer: "Not on Appwrite Cloud. Functions and sites set to keep deployments forever, which is the default today, switch to 30 days on November 5. You can choose a longer retention period up to your plan's maximum, and download any deployment you want to keep a copy of."
   - question: "How is a deployment's age counted?"
@@ -59,7 +59,7 @@ Open your function or site in the Console and go to **Settings** > **Build** > *
 | Start | 30 days | 3 years | No limit |
 | Pro | 30 days | 3 years | No limit |
 
-Enterprise plans start with the same options as Pro. For a longer or custom policy, [talk to our sales team](/sales).
+For a longer or custom policy, [talk to our sales team](/sales).
 
 If you've already picked a longer period than your plan allows, it drops to your plan's maximum: a Free function set to 1 year keeps 90 days.
 
