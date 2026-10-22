@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, CreditCard, Shield, Users } from 'lucide-react'
+import { AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
+import { AppwriteException } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useOrganizations } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -58,9 +59,7 @@ export function ClaimProjectTransfer({
         .organization(teamId)
         .updateProjectTransferStatus({ transferId, secret }),
     onSuccess: async (project) => {
-      toast.success(
-        `${project.name} ${t('has been transferred to your organization')}`,
-      )
+      toast.success(`${project.name} ${t('has been claimed')}`)
       await queryClient.invalidateQueries({ queryKey: ['projects'] })
       navigate({
         to: '/projects/$projectId',
@@ -68,7 +67,7 @@ export function ClaimProjectTransfer({
       })
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, t('Failed to transfer project')))
+      toast.error(getErrorMessage(error, t('Failed to claim project')))
     },
   })
 
@@ -81,14 +80,10 @@ export function ClaimProjectTransfer({
       <div className="w-full max-w-md rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h1 className="text-[15px] font-semibold text-foreground">
-            {t('Transfer project')}
+            {t('Claim project')}
           </h1>
           <p className="text-[13px] text-muted-foreground mt-2">
-            {preview.data
-              ? t(
-                  'You have been invited to move this project into one of your organizations.',
-                )
-              : t('Claim a project that was shared with you.')}
+            {t('Choose the organization that should receive this project.')}
           </p>
         </div>
         <div className="border-t border-border" />
@@ -98,7 +93,7 @@ export function ClaimProjectTransfer({
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription className="text-[13px]">
                 {t(
-                  'This transfer link is incomplete. Ask the project owner to share it again.',
+                  'This transfer link is incomplete. Ask the sender to share it again.',
                 )}
               </AlertDescription>
             </Alert>
@@ -132,7 +127,7 @@ export function ClaimProjectTransfer({
                   htmlFor="transfer-organization"
                   className="text-[13px] font-medium text-foreground"
                 >
-                  {t('Move to')}
+                  {t('Target organization')}
                 </Label>
                 <Select
                   value={teamId}
@@ -147,7 +142,7 @@ export function ClaimProjectTransfer({
                       placeholder={
                         organizationsLoading
                           ? t('Loading organizations...')
-                          : t('Select destination')
+                          : t('Select organization')
                       }
                     />
                   </SelectTrigger>
@@ -167,10 +162,16 @@ export function ClaimProjectTransfer({
                 <Alert>
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription className="text-[13px]">
-                    {getErrorMessage(
-                      preview.error,
-                      t('This transfer link is no longer valid.'),
-                    )}
+                    {/* The generic 403 message would not say what to do next */}
+                    {preview.error instanceof AppwriteException &&
+                    preview.error.type === 'transfer_recipient_mismatch'
+                      ? t(
+                          'This link can only be claimed by a different organization. Select another one.',
+                        )
+                      : getErrorMessage(
+                          preview.error,
+                          t('This transfer link is no longer valid.'),
+                        )}
                   </AlertDescription>
                 </Alert>
               )}
@@ -183,9 +184,6 @@ export function ClaimProjectTransfer({
                     )}
                   </AlertDescription>
                 </Alert>
-              )}
-              {preview.isSuccess && !isAlreadyOwner && (
-                <TransferConsiderations />
               )}
             </>
           )}
@@ -205,55 +203,10 @@ export function ClaimProjectTransfer({
             disabled={!canClaim}
             onClick={() => claimMutation.mutate()}
           >
-            {t('Transfer project')}
+            {t('Claim project')}
           </Button>
         </div>
       </div>
-    </div>
-  )
-}
-
-const CONSIDERATIONS = [
-  {
-    icon: Shield,
-    title: 'Permissions',
-    description:
-      'Depending on your role in the target organization, your level of access may change after transfer.',
-  },
-  {
-    icon: Users,
-    title: 'Access',
-    description:
-      'Members who are not part of the destination organization will lose access and must be invited to the new organization to regain access.',
-  },
-  {
-    icon: CreditCard,
-    title: 'Features and usage',
-    description:
-      'The target organization’s pricing plan may limit features or usage (e.g. executions, storage, or team size) for this project.',
-  },
-] as const
-
-function TransferConsiderations() {
-  const t = useT()
-
-  return (
-    <div className="space-y-3">
-      {CONSIDERATIONS.map(({ icon: Icon, title, description }) => (
-        <div key={title} className="flex gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted">
-            <Icon className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div>
-            <p className="text-[13px] font-medium text-foreground">
-              {t(title)}
-            </p>
-            <p className="text-[12px] text-muted-foreground mt-0.5">
-              {t(description)}
-            </p>
-          </div>
-        </div>
-      ))}
     </div>
   )
 }

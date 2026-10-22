@@ -1,17 +1,23 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, Copy, Link2, Trash2 } from 'lucide-react'
+import { AlertTriangle, Copy, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
-import type { Models } from '@appwrite.io/console'
+import { Query, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { buildConsoleUrl, copyToClipboard } from '@/lib/utils/context-menu'
 import { useT } from '@/lib/i18n/translate'
+import { ConfirmActionDialog } from '@/components/global/shared/ConfirmActionDialog'
+import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
+import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { Pagination } from '@/components/global/shared/Pagination'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog,
   DialogContent,
@@ -20,18 +26,37 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 const EXPIRATIONS = [
   { value: '1', label: '24 hours', seconds: 24 * 60 * 60 },
   { value: '7', label: '7 days', seconds: 7 * 24 * 60 * 60 },
   { value: '30', label: '30 days', seconds: 30 * 24 * 60 * 60 },
 ] as const
+
+const DEFAULT_PAGE_SIZE = 10
+
+const HEAD_CLASS_NAME =
+  'px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider'
 
 export function buildTransferUrl(transfer: Models.Transfer): string {
   const params = new URLSearchParams({
@@ -56,14 +81,41 @@ export function TransferProjectCard({
   const [expiration, setExpiration] = useState<string>('1')
   const [recipientId, setRecipientId] = useState('')
   const [link, setLink] = useState<string | null>(null)
+  const [transferToDelete, setTransferToDelete] =
+    useState<Models.Transfer | null>(null)
+  const [requestedPage, setRequestedPage] = useState(1)
+  const [displayedPage, setDisplayedPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
 
   const organization = sdk.forConsole.organization(teamId)
   const queryKey = ['projectTransfers', teamId, projectId]
 
-  const transfers = useQuery({
-    queryKey,
-    queryFn: () => organization.listProjectTransfers({ projectId }),
+  const listPage = (page: number) => ({
+    queryKey: [...queryKey, page, pageSize],
+    queryFn: () =>
+      organization.listProjectTransfers({
+        projectId,
+        queries: [
+          Query.orderDesc('$createdAt'),
+          Query.limit(pageSize),
+          Query.offset((page - 1) * pageSize),
+        ],
+      }),
   })
+
+  // Fetch the requested page, but keep showing the current one until it arrives
+  const requested = useQuery(listPage(requestedPage))
+  const displayed = useQuery(listPage(displayedPage))
+
+  useEffect(() => {
+    if (
+      !requested.isFetching &&
+      requestedPage !== displayedPage &&
+      requested.data
+    ) {
+      setDisplayedPage(requestedPage)
+    }
+  }, [displayedPage, requested.data, requested.isFetching, requestedPage])
 
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -89,6 +141,7 @@ export function TransferProjectCard({
     mutationFn: (transferId: string) =>
       organization.deleteProjectTransfer({ transferId }),
     onSuccess: async () => {
+      setTransferToDelete(null)
       toast.success(t('Transfer link has been deleted'))
       await queryClient.invalidateQueries({ queryKey })
     },
@@ -106,7 +159,8 @@ export function TransferProjectCard({
     }
   }
 
-  const activeTransfers = transfers.data?.transfers ?? []
+  const transfers = displayed.data?.transfers ?? []
+  const total = displayed.data?.total ?? 0
 
   return (
     <>
@@ -120,58 +174,98 @@ export function TransferProjectCard({
           </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
             {t(
-              'Create a link to move this project to another organization. Whoever opens the link can claim the project for an organization they manage, even if they are not a member of yours. Each link works once.',
+              'Create a link that lets another organization claim this project. Each link can be claimed once.',
             )}
           </p>
         </div>
         <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-2">
-            {t('Active links')}
-          </p>
-          {transfers.isError ? (
+        <div className="px-6 py-4 space-y-4">
+          {displayed.isError ? (
             <p className="text-[13px] text-muted-foreground">
               {t('Failed to load transfer links')}
             </p>
-          ) : activeTransfers.length === 0 ? (
+          ) : transfers.length === 0 ? (
             <p className="text-[13px] text-muted-foreground">
-              {transfers.isLoading
+              {displayed.isLoading
                 ? t('Loading...')
                 : t('No active transfer links')}
             </p>
           ) : (
-            <ul className="divide-y divide-border rounded-lg border border-border">
-              {activeTransfers.map((transfer) => (
-                <li
-                  key={transfer.$id}
-                  className="flex items-center justify-between gap-3 px-3 py-2.5"
-                >
-                  <div className="flex min-w-0 items-center gap-2.5">
-                    <Link2 className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    <div className="min-w-0">
-                      <p className="text-[13px] text-foreground">
-                        {transfer.recipientId
-                          ? `${t('Only organization')} ${transfer.recipientId}`
-                          : t('Any organization')}
-                      </p>
-                      <p className="text-[12px] text-muted-foreground">
-                        {t('Expires')} <DateTooltip date={transfer.expire} />
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 text-[13px]"
-                    disabled={deleteMutation.isPending}
-                    onClick={() => deleteMutation.mutate(transfer.$id)}
-                  >
-                    <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                    {t('Delete')}
-                  </Button>
-                </li>
-              ))}
-            </ul>
+            <>
+              <div className="rounded-lg border border-border bg-card">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent border-b border-border">
+                      <TableHead className={HEAD_CLASS_NAME}>
+                        {t('Recipient')}
+                      </TableHead>
+                      <TableHead className={HEAD_CLASS_NAME}>
+                        {t('Created')}
+                      </TableHead>
+                      <TableHead className={HEAD_CLASS_NAME}>
+                        {t('Expires')}
+                      </TableHead>
+                      <TableHead className={`${HEAD_CLASS_NAME} w-[64px]`} />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {transfers.map((transfer) => (
+                      <TableRow key={transfer.$id}>
+                        <TableCell className="px-4 py-3">
+                          {transfer.recipientId ? (
+                            <CopyableId id={transfer.recipientId} size="xs" />
+                          ) : (
+                            <span className="text-[13px] text-muted-foreground">
+                              {t('Any organization')}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-[13px]">
+                          <DateTooltip date={transfer.$createdAt} />
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-[13px]">
+                          <DateTooltip date={transfer.expire} />
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          <div className="flex justify-end">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <RowActionsMenuTrigger
+                                  aria-label={t('Transfer link actions')}
+                                />
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuItem
+                                  onClick={() => setTransferToDelete(transfer)}
+                                >
+                                  <MenuItemContent icon={Trash2}>
+                                    {t('Delete')}
+                                  </MenuItemContent>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <Pagination
+                currentPage={displayedPage}
+                totalItems={total}
+                pageSize={pageSize}
+                pageSizeOptions={[10, 25, 50, 100]}
+                onPageChange={setRequestedPage}
+                onPageSizeChange={(size) => {
+                  setPageSize(size)
+                  setRequestedPage(1)
+                  setDisplayedPage(1)
+                }}
+                itemLabel={t('transfer links')}
+                scrollToTopOnPageChange={false}
+              />
+            </>
           )}
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30">
@@ -187,49 +281,54 @@ export function TransferProjectCard({
 
       <Dialog open={dialogOpen} onOpenChange={closeDialog}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-start">
+          <DialogHeader className="px-6 pt-6 text-start">
             <DialogTitle>{t('Create transfer link')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {link
-                ? t(
-                    'Share this link with the person who should receive the project.',
-                  )
+                ? t('Share this link with the recipient organization.')
                 : t(
-                    'Choose how long the link works and, optionally, which organization can claim the project.',
+                    'Choose how long the link is valid and which organization can claim the project.',
                   )}
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
           {link ? (
-            <div className="px-6 py-4 space-y-3">
-              <div className="flex gap-2">
-                <Input
+            <div className="px-6 pb-4 pt-0 space-y-3">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label
+                    htmlFor="transfer-link"
+                    className="text-[13px] font-medium text-foreground"
+                  >
+                    {t('Transfer link')}
+                  </Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-[12px]"
+                    onClick={() => copyToClipboard(t('Transfer link'), link)}
+                  >
+                    <Copy className="h-3 w-3 me-1" />
+                    {t('Copy')}
+                  </Button>
+                </div>
+                <Textarea
+                  id="transfer-link"
                   readOnly
                   value={link}
-                  className="h-9 font-mono text-[12px]"
-                  onFocus={(event) => event.currentTarget.select()}
+                  className="font-mono text-[12px] min-h-[80px] resize-none break-all"
+                  onClick={(event) => event.currentTarget.select()}
                 />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 text-[13px] shrink-0"
-                  onClick={() => copyToClipboard(t('Transfer link'), link)}
-                >
-                  <Copy className="h-3.5 w-3.5 mr-1.5" />
-                  {t('Copy')}
-                </Button>
               </div>
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription className="text-[13px]">
-                  {t(
-                    'Copy the link now. It is only shown once, and anyone with it can claim the project.',
-                  )}
+                  {t('This link is shown only once.')}
                 </AlertDescription>
               </Alert>
             </div>
           ) : (
-            <div className="px-6 py-4 space-y-4">
+            <div className="px-6 pb-4 pt-0 space-y-4">
               <div>
                 <Label
                   htmlFor="transfer-expiration"
@@ -252,22 +351,20 @@ export function TransferProjectCard({
               </div>
               <div>
                 <Label
-                  htmlFor="transfer-team"
+                  htmlFor="transfer-recipient"
                   className="text-[13px] font-medium text-foreground"
                 >
-                  {t('Organization ID (optional)')}
+                  {t('Recipient organization ID (optional)')}
                 </Label>
                 <Input
-                  id="transfer-team"
+                  id="transfer-recipient"
                   value={recipientId}
                   onChange={(event) => setRecipientId(event.target.value)}
                   placeholder={t('Any organization')}
                   className="mt-2 h-9"
                 />
                 <p className="text-[12px] text-muted-foreground mt-1.5">
-                  {t(
-                    'Only this organization will be able to claim the project.',
-                  )}
+                  {t('Leave empty to let any organization claim the project.')}
                 </p>
               </div>
             </div>
@@ -304,6 +401,23 @@ export function TransferProjectCard({
           </div>
         </DialogContent>
       </Dialog>
+
+      <ConfirmActionDialog
+        open={!!transferToDelete}
+        onOpenChange={(open) => {
+          if (!open) setTransferToDelete(null)
+        }}
+        title={t('Delete transfer link')}
+        description={t(
+          'The link will stop working and the project can no longer be claimed with it.',
+        )}
+        confirmLabel={t('Delete')}
+        confirmVariant="destructive"
+        isConfirming={deleteMutation.isPending}
+        onConfirm={() => {
+          if (transferToDelete) deleteMutation.mutate(transferToDelete.$id)
+        }}
+      />
     </>
   )
 }
