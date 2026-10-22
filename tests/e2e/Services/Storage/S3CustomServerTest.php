@@ -197,7 +197,9 @@ final class S3CustomServerTest extends Scope
         $this->assertSame(200, $renamed['headers']['status-code']);
         $this->assertSame($quotedName, $renamed['body']['name']);
 
-        $quoted = $this->call(Client::METHOD_GET, '/' . $bucketId . '/' . $quotedKey);
+        $quoted = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $uploaded['body']['$id'] . '/view', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
         $this->assertSame(200, $quoted['headers']['status-code']);
         $disposition = (string) $quoted['headers']['content-disposition'];
         $this->assertStringStartsWith('attachment;', $disposition);

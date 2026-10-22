@@ -1323,6 +1323,7 @@ trait StorageBase
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
+                Permission::update(Role::any()),
             ],
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
@@ -1342,10 +1343,11 @@ trait StorageBase
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
 
-        $file = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'], array_merge([
+        $file = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
             'name' => $name,
         ]);
         $this->assertEquals(200, $file['headers']['status-code']);
