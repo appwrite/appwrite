@@ -125,15 +125,6 @@ export function PropertySettings({
                 <CopyableId id={property.$id} size="sm" />
               </span>
             </p>
-            {/* Analytics-specific: the ID meant for client-side code. */}
-            {property.snippetId ? (
-              <p className="text-[13px] text-muted-foreground">
-                {t('Snippet ID:')}{' '}
-                <span className="ms-1.5">
-                  <CopyableId id={property.snippetId} size="sm" />
-                </span>
-              </p>
-            ) : null}
             <p className="text-[13px] text-muted-foreground">
               {t('Created:')}{' '}
               <DateTooltip
