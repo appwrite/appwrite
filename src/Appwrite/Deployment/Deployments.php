@@ -3,6 +3,7 @@
 namespace Appwrite\Deployment;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\Key;
 use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
@@ -916,6 +917,7 @@ readonly class Deployments
         }
 
         $apiKey = (new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $timeout, 0))->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectId' => $project->getId(),
             'scopes' => static::scopes($resource),
         ]);

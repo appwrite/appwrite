@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
 use Appwrite\AppwriteException;
+use Appwrite\Auth\Key;
 use Appwrite\Client;
 use Appwrite\Event\Message\Mail as MailMessage;
 use Appwrite\Event\Message\Migration;
@@ -528,6 +529,7 @@ class Migrations extends Action
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400, 0);
 
         $apiKey = $jwt->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectId' => $project->getId(),
             'disabledMetrics' => [
                 METRIC_DATABASES_OPERATIONS_READS,

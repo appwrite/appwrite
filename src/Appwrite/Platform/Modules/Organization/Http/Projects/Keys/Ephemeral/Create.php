@@ -94,6 +94,7 @@ class Create extends Action
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $duration, 0);
 
         $secret = $jwt->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectId' => $project->getId(),
             'scopes' => $scopes
         ]);
