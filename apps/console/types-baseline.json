@@ -1079,9 +1079,6 @@
   "src/lib/console-banners/use-native-oauth-promo-visibility.ts": {
     "TS2339: Property 'prefs' does not exist on type '{}'.": 2
   },
-  "src/lib/cover-generator/brand-background.ts": {
-    "TS6133: 'getCoverBrandThemeForSvgExport' is declared but its value is never read.": 1
-  },
   "src/lib/cover-generator/chart/constants.ts": {
     "TS2352: Conversion of type '({ theme: \"light\" | \"dark\" | \"light-grid\" | \"dark-grid\" | \"light-aurora\" | \"dark-aurora\" | \"light-beam\" | \"dark-beam\" | \"light-plain\" | \"dark-plain\" | \"dark-glow\" | \"dark-mono\"; format: \"jpeg\" | \"png\" | \"avif\"; width: number; height: number; } & { template: \"bar-chart\"; title?: string | undefined; subtitle?: string | undefined; frameWidthPercent: number; pointCount: number; showGrid: boolean; showValues: boolean; } & Partial<Record<`label${number}`, string>> & Partial<Record<`value${number}`, number>>) | ({ theme: \"light\" | \"dark\" | \"light-grid\" | \"dark-grid\" | \"light-aurora\" | \"dark-aurora\" | \"light-beam\" | \"dark-beam\" | \"light-plain\" | \"dark-plain\" | \"dark-glow\" | \"dark-mono\"; format: \"jpeg\" | \"png\" | \"avif\"; width: number; height: number; } & { template: \"line-chart\"; title?: string | undefined; subtitle?: string | undefined; frameWidthPercent: number; pointCount: number; showGrid: boolean; showValues: boolean; showArea: boolean; } & Partial<Record<`label${number}`, string>> & Partial<Record<`value${number}`, number>>)' to type 'Record<string, string | number | undefined>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.": 1
   },

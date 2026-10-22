@@ -48,11 +48,17 @@ export async function fetchCoverRemoteImage(
       return null
     }
 
+    const reader = response.body.getReader()
     const chunks: Uint8Array[] = []
     let size = 0
-    for await (const chunk of response.body) {
+    for (;;) {
+      const { done, value: chunk } = await reader.read()
+      if (done) break
       size += chunk.byteLength
-      if (size > MAX_BYTES) return null
+      if (size > MAX_BYTES) {
+        await reader.cancel()
+        return null
+      }
       chunks.push(chunk)
     }
     return Buffer.concat(chunks)
