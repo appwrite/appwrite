@@ -92,7 +92,6 @@ class Update extends Action
             'migrations.retry',
         );
 
-        $error = null;
         try {
             $published = $publisherForMigrations->enqueue(new MigrationMessage(
                 project: $project,
@@ -100,12 +99,14 @@ class Update extends Action
                 platform: $platform,
             ));
         } catch (\Throwable $error) {
-            $published = false;
+            // The message may still have been queued, so the migration stays `pending`: the stuck
+            // migration sweep fails it if no worker ever picks it up, without risking a duplicate run.
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to queue the migration retry.', previous: $error);
         }
 
         if ($published === false) {
-            // Nothing will pick the migration up, so put it back to `failed` (unless a worker already
-            // has) to keep it retryable instead of stuck as in progress.
+            // The queue refused the message, so nothing will pick the migration up: put it back to
+            // `failed` (unless a worker already has it) to keep it retryable.
             $lock->withKey(
                 $key,
                 function () use ($dbForProject, $migrationId): void {
@@ -118,7 +119,7 @@ class Update extends Action
                 'migrations.retry',
             );
 
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to queue the migration retry.', previous: $error);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to queue the migration retry.');
         }
 
         $response->noContent();
