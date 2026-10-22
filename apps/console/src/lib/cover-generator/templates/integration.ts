@@ -14,7 +14,6 @@ import { getCoverTheme } from '@/lib/cover-generator/themes'
 const ICON_SIZE = INTEGRATION_ICON_DEFAULT_SIZE
 const ICON_GAP_FROM_CENTER = 64
 const CARD_SIZE = getIntegrationIconCardSize(ICON_SIZE)
-const ARTBOARD_CENTER_Y = 315
 
 export async function renderIntegrationTemplateSvg(
   data: CoverIntegrationData,
@@ -22,6 +21,7 @@ export async function renderIntegrationTemplateSvg(
 ): Promise<string> {
   const brand = getCoverBrandThemeForSvgExport(themeId)
   const themeFamily = getCoverTheme(themeId).family
+  const centerY = 250
   const [leftHref, rightHref] = await Promise.all([
     prepareCoverIconDataUri(data.logoLeft, ICON_SIZE, { themeFamily, themeId }),
     prepareCoverIconDataUri(data.logoRight, ICON_SIZE, { themeFamily, themeId }),
@@ -31,8 +31,6 @@ export async function renderIntegrationTemplateSvg(
     ? wrapTextLines(stripCoverTitleSuffix(data.title), 28, 2)
     : []
   const subtitle = data.subtitle?.trim()
-  // Without copy below them, the logos sit in the middle of the artboard.
-  const centerY = titleLines.length || subtitle ? 250 : ARTBOARD_CENTER_Y
 
   const titleFontSize = 52
   const subtitleFontSize = 24

@@ -45,20 +45,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
-    "slug": "migrate-from-railway-to-appwrite",
-    "href": "/blog/post/migrate-from-railway-to-appwrite",
-    "title": "Railway to Appwrite: whether and how to migrate",
-    "description": "Thinking about moving off Railway? See which parts of a Railway project map to Appwrite, which don't, and how to move your databases, apps, and files.",
-    "date": "2026-10-22",
-    "lastUpdated": "2026-10-22",
-    "timeToRead": 8,
-    "author": "aditya-oberai",
-    "category": "migrations",
-    "featured": false,
-    "cover": "/images/blog/migrate-from-railway-to-appwrite/cover.avif",
-    "hasCover": true
-  },
-  {
     "slug": "php2shell-appwrite-not-affected",
     "href": "/blog/post/php2shell-appwrite-not-affected",
     "title": "PHP2Shell RCE flaws: Why Appwrite is not affected",
