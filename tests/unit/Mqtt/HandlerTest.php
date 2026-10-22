@@ -7,6 +7,7 @@ namespace Tests\Unit\Mqtt;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Mqtt\Handler;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Mqtt\Fakes\Accounts;
 use Tests\Unit\Mqtt\Fakes\GrantingHandler;
 use Tests\Unit\Mqtt\Fakes\NullPubSub;
 use Tests\Unit\Mqtt\Fakes\RecordingAdapter;
@@ -35,14 +36,20 @@ final class HandlerTest extends TestCase
 
     private Handler $handler;
 
+    private Accounts $accounts;
+
     protected function setUp(): void
     {
         $this->adapter = new RecordingAdapter();
         $this->server = new Server($this->adapter, new GrantingHandler());
         $this->server->start();
 
+        $this->accounts = new Accounts();
+        $container = new Container();
+        $container->set('authorizer', fn (): \Closure => $this->accounts->authorize(...));
+
         $this->handler = new Handler(
-            new Container(),
+            $container,
             new Mqtt(new NoTelemetry(), new NullPubSub()),
             fn () => throw new \LogicException('deliver() must not touch the cache'),
             fn () => 5,
@@ -50,15 +57,15 @@ final class HandlerTest extends TestCase
         );
     }
 
-    private function subscribe(int $fd, string $userId, string $filter, ?int $expire = null): void
+    /** @param array<string, int> $expiries expire and sessionExpire, as unix timestamps */
+    private function subscribe(int $fd, string $userId, string $filter, array $expiries = []): void
     {
-        $user = ['projectId' => self::PROJECT, 'userId' => $userId];
-        if ($expire !== null) {
-            $user['expire'] = (string) $expire;
-        }
-
         $properties = new Properties();
-        $properties->add(new Property(Property::USER, $user));
+        $properties->add(new Property(Property::USER, [
+            'projectId' => self::PROJECT,
+            'userId' => $userId,
+            ...\array_map(\strval(...), $expiries),
+        ]));
 
         $this->adapter->deliver(
             $fd,
@@ -97,8 +104,8 @@ final class HandlerTest extends TestCase
 
     public function testExpiredCredentialIsDisconnectedOnDelivery(): void
     {
-        $this->subscribe(1, 'owner', 'users/owner', \time() - 1);
-        $this->subscribe(2, 'owner', 'users/owner', \time() + 3600);
+        $this->subscribe(1, 'owner', 'users/owner', ['expire' => \time() - 1]);
+        $this->subscribe(2, 'owner', 'users/owner', ['expire' => \time() + 3600]);
 
         $delivered = $this->handler->deliver($this->server, self::PROJECT, 'users/owner', '{}', Packet::QOS_1, 1);
 
@@ -108,6 +115,31 @@ final class HandlerTest extends TestCase
         $this->assertSame([], $this->adapter->publishes(1), 'a connection with an expired credential received a push');
         $this->assertSame([1], $this->adapter->closed);
         $this->assertCount(1, $this->adapter->publishes(2));
+    }
+
+    public function testExtendedSessionKeepsReceiving(): void
+    {
+        $this->subscribe(1, 'owner', 'users/owner', ['sessionExpire' => \time() - 1]);
+
+        // Test for SUCCESS: the session still authorizes past its recorded expiry, as an extended one would.
+        $this->assertSame(1, $this->handler->deliver($this->server, self::PROJECT, 'users/owner', '{}', Packet::QOS_1, 1));
+        $this->assertCount(1, $this->adapter->publishes(1));
+        $this->assertSame(1, $this->accounts->authorizations);
+
+        // Checked again only once the recheck interval passes.
+        $this->assertSame(1, $this->handler->deliver($this->server, self::PROJECT, 'users/owner', '{}', Packet::QOS_1, 2));
+        $this->assertSame(1, $this->accounts->authorizations);
+    }
+
+    public function testEndedSessionIsDisconnectedOnDelivery(): void
+    {
+        $this->subscribe(1, 'owner', 'users/owner', ['sessionExpire' => \time() - 1]);
+        $this->accounts->blocked['owner'] = true;
+
+        // Test for FAILURE: past its recorded expiry the session no longer authorizes, so the connection is closed.
+        $this->assertSame(0, $this->handler->deliver($this->server, self::PROJECT, 'users/owner', '{}', Packet::QOS_1, 1));
+        $this->assertSame(Disconnect::NOT_AUTHORIZED, $this->adapter->disconnects(1)[0]->reasonCode);
+        $this->assertSame([1], $this->adapter->closed);
     }
 
     public function testOrdinaryTopicsStillFanOutToWildcards(): void

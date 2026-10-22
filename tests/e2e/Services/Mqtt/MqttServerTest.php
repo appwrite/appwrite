@@ -511,6 +511,33 @@ final class MqttServerTest extends Scope
         }
     }
 
+    public function testEnablingMfaDisconnectsSessionMissingFactor(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId] = $this->createUser();
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $verification = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/verification', $server, ['emailVerification' => true]);
+        $this->assertSame(200, $verification['headers']['status-code']);
+        $session = $this->createSession($userId);
+
+        $subscriber = $this->subscribeToUserTopic($projectId, $userId, $session, 'e2e-revoke-mfa-', 'appwrite-session');
+
+        try {
+            $mfa = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/mfa', $server, ['mfa' => true]);
+            $this->assertSame(200, $mfa['headers']['status-code']);
+
+            // Test for SUCCESS: the single-factor session no longer authorizes, so its connection is ended.
+            $this->assertSame(Disconnect::NOT_AUTHORIZED, $subscriber->awaitDisconnect(self::REVOKE_TIMEOUT), 'the broker did not disconnect a session left short of factors');
+        } finally {
+            $subscriber->disconnect();
+        }
+    }
+
     public function testAccountLogoutOpenConnectionIsDisconnected(): void
     {
         $projectId = $this->getProject()['$id'];

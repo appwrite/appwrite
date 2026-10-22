@@ -39,6 +39,9 @@ class Handler implements MqttHandler
     // subscribe only to its own. Wildcards under it are refused so they can't span other users.
     private const USER_TOPIC_PREFIX = 'users';
 
+    // Seconds before a connection whose session passed its recorded expiry is checked again.
+    private const SESSION_RECHECK = 60;
+
 
     /** @var array<string, array<string, array<int, Connection>>> project => userId => fd => connection */
     private array $connections = [];
@@ -382,7 +385,7 @@ class Handler implements MqttHandler
             }
 
             // The credential the connection was opened with has expired, as an HTTP request with it would fail.
-            if ($this->expired($connection)) {
+            if (!$this->current($connection)) {
                 $this->untrack($connection);
                 $connection->disconnect(Disconnect::NOT_AUTHORIZED, (new Exception(Exception::USER_UNAUTHORIZED))->getMessage());
                 continue;
@@ -522,12 +525,31 @@ class Handler implements MqttHandler
         }
     }
 
-    /** Whether the credential the connection was opened with has expired. */
-    private function expired(Connection $connection): bool
+    /**
+     * Whether the credential the connection was opened with is still valid. A token's expiry is
+     * final; a session can be extended, so once its recorded expiry passes it is checked again.
+     */
+    private function current(Connection $connection): bool
     {
-        $expire = $connection->identity['expire'] ?? null;
+        $now = \time();
 
-        return \is_int($expire) && $expire < \time();
+        $expire = $connection->identity['expire'] ?? null;
+        if (\is_int($expire) && $expire < $now) {
+            return false;
+        }
+
+        $sessionExpire = $connection->identity['sessionExpire'] ?? null;
+        if (!\is_int($sessionExpire) || $sessionExpire >= $now) {
+            return true;
+        }
+
+        if (!$this->authorized($connection->identity)) {
+            return false;
+        }
+
+        $connection->identity['sessionExpire'] = $now + self::SESSION_RECHECK;
+
+        return true;
     }
 
     /** @return array<int, Connection> fd => connection */

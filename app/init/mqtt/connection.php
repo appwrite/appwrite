@@ -26,10 +26,10 @@ return function (Container $container): void {
     };
 
     /**
-     * The user a credential authenticates, with the session it runs on and the time it stops
-     * being valid, or [] when it authenticates nobody.
+     * The user a credential authenticates, with the session it runs on, when the token itself
+     * expires and when that session was due to expire, or [] when it authenticates nobody.
      *
-     * @return array{user?: User, sessionId?: string, expire?: ?int}
+     * @return array{user?: User, sessionId?: string, expire?: ?int, sessionExpire?: ?int}
      */
     $getUser = function (Document $project, string $authMethod, string $credential, Authorization $authorization) use ($container): array {
         if ($project->isEmpty() || $credential === '') {
@@ -75,15 +75,11 @@ return function (Container $container): void {
                     return [];
                 }
 
-                $expires = \array_filter([
-                    \is_int($payload['exp'] ?? null) ? $payload['exp'] : null,
-                    $sessionId !== '' ? $user->getSessionExpiry($sessionId) : null,
-                ], \is_int(...));
-
                 return [
                     'user' => $user,
                     'sessionId' => $sessionId,
-                    'expire' => $expires === [] ? null : \min($expires),
+                    'expire' => \is_int($payload['exp'] ?? null) ? $payload['exp'] : null,
+                    'sessionExpire' => $sessionId !== '' ? $user->getSessionExpiry($sessionId) : null,
                 ];
 
             case 'appwrite-session':
@@ -109,7 +105,8 @@ return function (Container $container): void {
                 return [
                     'user' => $user,
                     'sessionId' => $sessionId,
-                    'expire' => $user->getSessionExpiry($sessionId),
+                    'expire' => null,
+                    'sessionExpire' => $user->getSessionExpiry($sessionId),
                 ];
 
             default:
@@ -137,6 +134,7 @@ return function (Container $container): void {
                 'userId' => $authenticated['user']->getId(),
                 'sessionId' => $authenticated['sessionId'] ?? '',
                 'expire' => $authenticated['expire'] ?? null,
+                'sessionExpire' => $authenticated['sessionExpire'] ?? null,
             ];
         };
     }, []);
