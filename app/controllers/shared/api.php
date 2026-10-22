@@ -608,10 +608,9 @@ Http::init()
 
         foreach ($abuseKeyLabel as $abuseKey) {
             $isRateLimited = false;
+            $checking = false;
 
             try {
-                $start = $request->getContentRangeStart();
-                $end = $request->getContentRangeEnd();
                 $params = [
                     '{projectId}' => (string) $project->getId(),
                     '{userId}' => (string) $user->getId(),
@@ -619,7 +618,7 @@ Http::init()
                     '{ip}' => (string) $request->getIP(),
                     '{url}' => $request->getHostname() . $route->getPath(),
                     '{method}' => (string) $request->getMethod(),
-                    '{chunkId}' => (string) (int) ($start / ($end + 1 - $start)),
+                    '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
                 ];
 
                 foreach ($request->getParams() as $key => $value) {
@@ -628,6 +627,7 @@ Http::init()
                     }
                 }
 
+                $checking = true;
                 $isRateLimited = $timelimit($abuseKey, $abuseLimit, $route->getLabel('abuse-time', 3600), function (TimeLimit $timeLimit) use ($params, $response, $shouldCheckAbuse, &$closestLimit): bool {
                     $timeLimit = $timeLimit->withParams($params);
                     $result = $shouldCheckAbuse ? $timeLimit->check() : $timeLimit->peek();
@@ -641,6 +641,11 @@ Http::init()
                     return $shouldCheckAbuse && $result->limited;
                 });
             } catch (\Throwable $th) {
+                // Only a limiter outage fails open; a request that breaks the key is refused.
+                if (! $checking) {
+                    throw $th;
+                }
+
                 \error_log((string) $th);
 
                 continue;
@@ -990,8 +995,6 @@ Http::shutdown()
         $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
 
         foreach ($abuseKeyLabel as $abuseKey) {
-            $start = $request->getContentRangeStart();
-            $end = $request->getContentRangeEnd();
             $params = [
                 '{projectId}' => (string) $project->getId(),
                 '{userId}' => (string) $user->getId(),
@@ -999,7 +1002,7 @@ Http::shutdown()
                 '{ip}' => (string) $request->getIP(),
                 '{url}' => $request->getHostname() . $route->getPath(),
                 '{method}' => (string) $request->getMethod(),
-                '{chunkId}' => (string) (int) ($start / ($end + 1 - $start)),
+                '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
             ];
 
             foreach ($request->getParams() as $key => $value) {
