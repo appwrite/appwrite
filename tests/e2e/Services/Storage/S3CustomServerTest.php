@@ -230,14 +230,17 @@ final class S3CustomServerTest extends Scope
          * Test for SUCCESS
          */
         $this->uploadPart($bucketId, $key, $uploadId, 1, $part);
-        // Replacing a part does not count its earlier size twice.
+        // Retrying a part does not count its earlier size twice.
         $etag = $this->uploadPart($bucketId, $key, $uploadId, 1, $part);
 
         /**
          * Test for FAILURE
          */
-        $tooLarge = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, ['partNumber' => '1', 'uploadId' => $uploadId], \str_repeat('a', 1025));
+        $tooLarge = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, ['partNumber' => '3', 'uploadId' => $uploadId], \str_repeat('a', 1025));
         $this->assertSame(400, $tooLarge['headers']['status-code'], $tooLarge['body']);
+
+        $replaced = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, ['partNumber' => '1', 'uploadId' => $uploadId], \str_repeat('b', 600));
+        $this->assertSame(400, $replaced['headers']['status-code'], $replaced['body']);
 
         $cumulative = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, ['partNumber' => '2', 'uploadId' => $uploadId], $part);
         $this->assertSame(400, $cumulative['headers']['status-code'], $cumulative['body']);

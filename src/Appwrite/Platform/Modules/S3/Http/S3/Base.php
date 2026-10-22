@@ -264,6 +264,12 @@ abstract class Base extends Action
             throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, 'Part number must be an integer between 1 and ' . self::MULTIPART_MAX_PARTS . '.');
         }
 
+        // Devices keep the first bytes staged for a part number, so a retry must resend the same content.
+        $staged = $upload['parts'][(string) $partNumber]['etag'] ?? null;
+        if ($staged !== null && $staged !== $etag) {
+            throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, 'Part ' . $partNumber . ' was already uploaded with different content. Start a new multipart upload to change it.');
+        }
+
         $size = \strlen($body);
         foreach (($upload['parts'] ?? []) as $number => $part) {
             if ((int) $number !== $partNumber) {
