@@ -10,6 +10,7 @@ use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\Membership;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Token;
@@ -91,6 +92,8 @@ class Update extends Action
             throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
         }
 
+        $membership = new Membership($membership->getArrayCopy());
+
         $team = $authorization->skip(fn () => $dbForProject->getDocument('teams', $teamId));
 
         if ($team->isEmpty()) {
@@ -127,7 +130,7 @@ class Update extends Action
             ->setAttribute('confirm', true)
         ;
 
-        $channel = $this->deliveredChannel($membership, $targetUser);
+        $channel = $membership->deliveredChannel($targetUser);
 
         if ($channel === 'email' && !empty($targetUser->getAttribute('email'))) {
             $targetUser->setAttribute('emailVerification', true);
@@ -236,31 +239,5 @@ class Update extends Action
                 ->setAttribute('userEmail', $targetUser->getAttribute('email')),
             Response::MODEL_MEMBERSHIP
         );
-    }
-
-    /**
-     * Channel the invite secret was delivered over.
-     * Unknown rows fail safe: only infer email or phone when the user has exactly one.
-     */
-    private function deliveredChannel(Document $membership, Document $user): string
-    {
-        $channel = $membership->getAttribute('channel', '');
-
-        if ($channel === 'email' || $channel === 'phone') {
-            return $channel;
-        }
-
-        $email = $user->getAttribute('email', '');
-        $phone = $user->getAttribute('phone', '');
-
-        if (!empty($email) && empty($phone)) {
-            return 'email';
-        }
-
-        if (!empty($phone) && empty($email)) {
-            return 'phone';
-        }
-
-        return '';
     }
 }
