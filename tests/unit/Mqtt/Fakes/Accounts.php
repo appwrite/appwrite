@@ -20,12 +20,14 @@ final class Accounts
 
     public int $authorizations = 0;
 
+    public int $authentications = 0;
+
     public bool $unavailable = false;
 
     /** @var (\Closure(string, string): void)|null runs after the status was read, as a block landing mid-CONNECT would */
     public ?\Closure $whileAuthenticating = null;
 
-    /** @return array<string, string> */
+    /** @return array<string, int|string> */
     public function authenticate(string $projectId, string $authMethod, string $credential): array
     {
         [$userId, $sessionId] = \array_pad(\explode('/', $credential, 2), 2, '');
@@ -36,8 +38,11 @@ final class Accounts
 
         $identity = ['projectId' => $projectId === '' ? 'console' : $projectId, 'userId' => $userId];
         if ($sessionId !== '') {
+            // Each connection is due for its next check at its own time, as connections opened apart are.
             $identity['sessionId'] = $sessionId;
+            $identity['recheckAt'] = \time() + 60 + $this->authentications;
         }
+        $this->authentications++;
 
         if ($this->whileAuthenticating !== null) {
             ($this->whileAuthenticating)($identity['projectId'], $identity['userId']);

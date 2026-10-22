@@ -452,7 +452,10 @@ class Handler implements MqttHandler
         $decisions = [];
         $revoked = [];
         foreach ($connections as $fd => $connection) {
-            $key = (string) \json_encode($connection->identity);
+            // The credential only: when a connection is next due for a check does not change the answer.
+            $credential = $connection->identity;
+            unset($credential['recheckAt']);
+            $key = (string) \json_encode($credential);
             $decisions[$key] ??= $this->authorized($connection->identity);
             if (!$decisions[$key]) {
                 $revoked[$fd] = $connection;
