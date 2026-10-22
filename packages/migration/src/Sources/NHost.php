@@ -125,11 +125,19 @@ class NHost extends Source
         $this->storageURL = "https://{$this->subdomain}.storage.{$this->region}.nhost.run";
     }
 
+    /**
+     * The Postgres host the source connects to, so a caller can check where it resolves before connecting.
+     */
+    public function getDatabaseHost(): string
+    {
+        return $this->subdomain.'.db.'.$this->region.'.nhost.run';
+    }
+
     public function getDatabase(): PDO
     {
         if (! $this->pdo) {
             try {
-                $this->pdo = new \PDO('pgsql:host='.$this->subdomain.'.db.'.$this->region.'.nhost.run'.';port='.$this->port.';dbname='.$this->databaseName, $this->username, $this->password);
+                $this->pdo = new \PDO('pgsql:host='.$this->getDatabaseHost().';port='.$this->port.';dbname='.$this->databaseName, $this->username, $this->password);
             } catch (\PDOException $e) {
                 throw new \Exception('Failed to connect to database: '.$e->getMessage(), self::statusCodeFromThrowable($e), $e);
             }
