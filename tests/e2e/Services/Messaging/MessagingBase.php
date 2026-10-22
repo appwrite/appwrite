@@ -1376,6 +1376,60 @@ trait MessagingBase
         $this->assertEquals("Invalid `serviceAccountJSON` param: FCM service account JSON must include a non-empty 'client_email' field, which identifies the service account used for authentication. or null", $response['body']['message']);
     }
 
+    public function testCreateSMTPProviderPrivateHost(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        // Outside the dev allowlist of internal addresses
+        foreach (['169.254.169.254', 'tls://10.0.0.1:587', 'smtp.appwrite.io;ssl://[fe80::1]:465'] as $host) {
+            $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', $headers, [
+                'providerId' => Id::unique(),
+                'name' => 'Private SMTP',
+                'host' => $host,
+                'port' => 587,
+                'fromEmail' => 'tester@appwrite.io',
+            ]);
+
+            $this->assertSame(400, $response['headers']['status-code'], $host);
+            $this->assertSame('general_argument_invalid', $response['body']['type']);
+            $this->assertStringContainsString('private or reserved', $response['body']['message']);
+        }
+    }
+
+    public function testUpdateSMTPProviderPrivateHost(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        // A host that does not resolve yet is stored and checked again when a message is sent
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', $headers, [
+            'providerId' => Id::unique(),
+            'name' => 'SMTP',
+            'host' => 'smtp.appwrite.io',
+            'port' => 587,
+            'fromEmail' => 'tester@appwrite.io',
+        ]);
+        $this->assertSame(201, $provider['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/smtp/' . $provider['body']['$id'], $headers, [
+            'host' => '169.254.169.254',
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+        $this->assertStringContainsString('169.254.169.254', $response['body']['message']);
+
+        $stored = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $provider['body']['$id'], $headers);
+        $this->assertSame('smtp.appwrite.io', $stored['body']['credentials']['host']);
+    }
+
     public function testCreateTwilioProviderAlphanumericSender(): void
     {
         $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/twilio', [

@@ -181,14 +181,14 @@ $container->set('telemetry', fn () => new NoTelemetry(), []);
  * A malformed DSN is reported and read as unset rather than thrown: this resolves for every
  * messaging job, so one bad platform variable must not stop a project's push and email.
  */
-$container->set('adapterForSMS', function (Telemetry $telemetry): ?SMSAdapter {
+$container->set('adapterForSMS', function (Telemetry $telemetry, PublicHostname $publicHostname): ?SMSAdapter {
     try {
-        return (new MessagingProvider($telemetry))->internalSMS();
+        return (new MessagingProvider($telemetry, $publicHostname))->internalSMS();
     } catch (\Throwable $error) {
         Console::error('Ignoring _APP_SMS_PROVIDER: ' . $error->getMessage());
         return null;
     }
-}, ['telemetry']);
+}, ['telemetry', 'publicHostname']);
 
 $container->set('authorization', fn () => new Authorization(), []);
 
