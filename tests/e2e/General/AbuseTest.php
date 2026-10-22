@@ -592,6 +592,78 @@ final class AbuseTest extends Scope
         $this->assertGuestLimited(Client::METHOD_POST, '/tablesdb/transactions/' . Id::unique() . '/operations', ['operations' => []], 120);
     }
 
+    #[Group('abuseEnabled')]
+    public function testAbuseCreateTransactionCollectionsAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_POST, '/databases/transactions', [], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseUpdateTransactionCollectionsAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_PATCH, '/databases/transactions/' . Id::unique(), ['rollback' => true], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseDeleteTransactionCollectionsAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_DELETE, '/databases/transactions/' . Id::unique(), [], 60);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseCreateTransactionTablesAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_POST, '/tablesdb/transactions', [], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseUpdateTransactionTablesAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_PATCH, '/tablesdb/transactions/' . Id::unique(), ['rollback' => true], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseDeleteTransactionTablesAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_DELETE, '/tablesdb/transactions/' . Id::unique(), [], 60);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseCreateTransactionDocumentsDBAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_POST, '/documentsdb/transactions', [], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseUpdateTransactionDocumentsDBAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_PATCH, '/documentsdb/transactions/' . Id::unique(), ['rollback' => true], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseDeleteTransactionDocumentsDBAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_DELETE, '/documentsdb/transactions/' . Id::unique(), [], 60);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseCreateTransactionVectorsDBAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_POST, '/vectorsdb/transactions', [], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseUpdateTransactionVectorsDBAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_PATCH, '/vectorsdb/transactions/' . Id::unique(), ['rollback' => true], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseDeleteTransactionVectorsDBAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_DELETE, '/vectorsdb/transactions/' . Id::unique(), [], 60);
+    }
+
     /**
      * @param array<string, mixed> $params
      */
