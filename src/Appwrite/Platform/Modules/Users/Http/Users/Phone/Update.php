@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Users\Http\Users\Phone;
 
+use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -117,6 +118,18 @@ class Update extends Action
                     ]));
                     $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
                 }
+            }
+
+            $sequence = $user->getSequence();
+            if ($oldPhone !== $phoneValue && $sequence !== '' && $sequence !== null) {
+                $dbForProject->deleteDocuments('tokens', [
+                    Query::equal('userInternalId', [$sequence]),
+                    Query::equal('type', [TOKEN_TYPE_PHONE]),
+                ]);
+                $dbForProject->deleteDocuments('challenges', [
+                    Query::equal('userInternalId', [$sequence]),
+                    Query::equal('type', [Type::PHONE]),
+                ]);
             }
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {

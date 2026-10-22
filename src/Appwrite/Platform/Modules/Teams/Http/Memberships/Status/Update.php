@@ -127,8 +127,19 @@ class Update extends Action
             ->setAttribute('confirm', true)
         ;
 
-        $targetUser->setAttribute('emailVerification', true);
-        $authorization->skip(fn () => $dbForProject->updateDocument('users', $targetUser->getId(), new Document(['emailVerification' => true])));
+        // The invite proves the address it was sent to, and only one address on file tells which that was
+        $hasEmail = !empty($targetUser->getAttribute('email'));
+        $hasPhone = !empty($targetUser->getAttribute('phone'));
+        $verification = match (true) {
+            $hasEmail && !$hasPhone => 'emailVerification',
+            $hasPhone && !$hasEmail => 'phoneVerification',
+            default => null,
+        };
+
+        if ($verification !== null) {
+            $targetUser->setAttribute($verification, true);
+            $authorization->skip(fn () => $dbForProject->updateDocument('users', $targetUser->getId(), new Document([$verification => true])));
+        }
 
         // Create session for the user if not logged in
         if (!$hasSession) {

@@ -4097,6 +4097,20 @@ Http::patch('/v1/account/phone')
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
             }
+
+            $sequence = $user->getSequence();
+            if ($oldPhone !== $phone && $sequence !== '' && $sequence !== null) {
+                $authorization->skip(function () use ($dbForProject, $sequence) {
+                    $dbForProject->deleteDocuments('tokens', [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('type', [TOKEN_TYPE_PHONE]),
+                    ]);
+                    $dbForProject->deleteDocuments('challenges', [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('type', [Type::PHONE]),
+                    ]);
+                });
+            }
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);

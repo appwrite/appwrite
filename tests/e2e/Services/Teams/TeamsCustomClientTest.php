@@ -71,6 +71,17 @@ final class TeamsCustomClientTest extends Scope
         $this->assertEquals(200, $confirmation['headers']['status-code']);
         $this->assertTrue($confirmation['body']['confirm']);
 
+        $account = $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $confirmation['cookies']['a_session_' . $projectId],
+        ]);
+
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertTrue($account['body']['phoneVerification']);
+        $this->assertFalse($account['body']['emailVerification']);
+
         /**
          * Test for FAILURE
          * The invitation cannot be accepted again.
@@ -86,6 +97,77 @@ final class TeamsCustomClientTest extends Scope
 
         $this->assertEquals(409, $confirmation['headers']['status-code']);
         $this->assertEquals('membership_already_confirmed', $confirmation['body']['type']);
+    }
+
+    public function testUpdateMembershipStatusByPhoneKeepsEmailUnverified(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $team = $this->createTeamHelper('Phone Invites');
+        $email = \uniqid() . 'phone-invite@localhost.test';
+        $password = 'password';
+        $phone = '+1202' . \random_int(1000000, 9999999);
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => 'unique()',
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $account['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $cookie = 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId];
+
+        $account = $this->client->call(Client::METHOD_PATCH, '/account/phone', \array_merge($headers, [
+            'cookie' => $cookie,
+        ]), [
+            'phone' => $phone,
+            'password' => $password,
+        ]);
+        $this->assertEquals(200, $account['headers']['status-code']);
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['teamUid'] . '/memberships', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'phone' => $phone,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#invitation',
+        ]);
+        $this->assertEquals(201, $membership['headers']['status-code']);
+
+        $sms = $this->getLastRequestForProject($projectId, Scope::REQUEST_TYPE_SMS, [
+            'header_X-Username' => 'username',
+            'header_X-Key' => 'password',
+            'method' => 'POST',
+        ], probe: function (array $request) use ($phone) {
+            $this->assertEquals($phone, $request['data']['to'] ?? null);
+        });
+        $this->assertNotEmpty($sms);
+        \parse_str((string) \parse_url((string) $sms['data']['message'], PHP_URL_QUERY), $params);
+
+        $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'] . '/status', \array_merge($headers, [
+            'cookie' => $cookie,
+        ]), [
+            'userId' => $params['userId'],
+            'secret' => $params['secret'],
+        ]);
+        $this->assertEquals(200, $confirmation['headers']['status-code']);
+        $this->assertTrue($confirmation['body']['confirm']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => $cookie,
+        ]));
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertFalse($account['body']['emailVerification']);
     }
 
     public function testGetMembershipPrivacy(): void

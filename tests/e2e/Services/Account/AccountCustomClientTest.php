@@ -5251,6 +5251,82 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
     }
 
+    public function testCreateSessionWithPhoneAfterPhoneUpdate(): void
+    {
+        $this->ensurePhoneAuthEnabled();
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+        $numbers = \array_map(fn (int $index): string => '+1' . \substr(\str_replace('.', '', (string) \microtime(true)) . \getmypid() . $index . \random_int(10, 99), -9), [1, 2, 3]);
+
+        $createToken = function (string $userId, string $number) use ($projectId, $headers): string {
+            $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', $headers, [
+                'userId' => $userId,
+                'phone' => $number,
+            ]);
+            $this->assertEquals(201, $response['headers']['status-code']);
+
+            $sms = $this->getLastRequestForProject($projectId, Scope::REQUEST_TYPE_SMS, [
+                'header_X-Username' => 'username',
+                'header_X-Key' => 'password',
+                'method' => 'POST',
+            ], probe: function (array $request) use ($number) {
+                $this->assertEquals($number, $request['data']['to'] ?? null);
+            });
+            $this->assertNotEmpty($sms);
+
+            return \explode(' ', $sms['data']['message'])[0];
+        };
+
+        /**
+         * Test for FAILURE - a token sent before the server changes the number is no longer accepted
+         */
+        $userId = Id::unique();
+        $token = $createToken($userId, $numbers[0]);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/phone', \array_merge($headers, [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'number' => $numbers[1],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', $headers, [
+            'userId' => $userId,
+            'secret' => $token,
+        ]);
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - a token sent before the user changes the number is no longer accepted
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', $headers, [
+            'userId' => $userId,
+            'secret' => $createToken($userId, $numbers[1]),
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $session = $response['cookies']['a_session_' . $projectId];
+
+        $token = $createToken($userId, $numbers[1]);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/phone', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'phone' => $numbers[2],
+            'password' => 'new-password',
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', $headers, [
+            'userId' => $userId,
+            'secret' => $token,
+        ]);
+        $this->assertEquals(401, $response['headers']['status-code']);
+    }
+
     public function testConvertPhoneToPassword(): void
     {
         $data = $this->setupPhoneSession();
