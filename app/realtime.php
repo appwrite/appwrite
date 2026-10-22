@@ -644,7 +644,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         // been delivered.
                         $revoked = static fn (?string $sessionId): bool => $user->isEmpty()
                             || $user->getAttribute('status') === false
-                            || ($sessionId !== null && !$user->sessionActive($sessionId));
+                            || ($sessionId !== null && !$user->sessionActive($sessionId, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null));
 
                         foreach ($impersonating as $connection) {
                             $impersonatorSessionId = $realtime->connections[$connection]['impersonator']['sessionId'] ?? null;
@@ -739,6 +739,45 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             // above doesn't touch them. Drop any whose authorizing team role
                             // the connection no longer holds (membership revoked / project moved).
                             $eventTailRegistry->revalidateConnection($connection, $roles);
+                        }
+                    }
+                } elseif ($event['permissionsChanged']) {
+                    // `projects.{projectId}.sessions.delete`: every connection of the named
+                    // project re-validates its session against the new invalidation timestamp.
+                    // The project is taken from the `projects.<id>` channel, as no single
+                    // userId covers all connections.
+                    $targetProjectId = '';
+                    foreach (($event['data']['channels'] ?? []) as $channel) {
+                        if (\str_starts_with($channel, 'projects.')) {
+                            $targetProjectId = \substr($channel, \strlen('projects.'));
+                            break;
+                        }
+                    }
+
+                    if ($targetProjectId !== '' && $targetProjectId !== 'console') {
+                        $consoleDatabase = getConsoleDB();
+                        $targetProject = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $targetProjectId));
+                        $database = getProjectDB($targetProject);
+                        $invalidatedAt = $targetProject->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null;
+
+                        foreach ($realtime->getProjectConnections($targetProjectId) as $connection) {
+                            $userId = $realtime->connections[$connection]['userId'] ?? '';
+                            $sessionId = $realtime->connections[$connection]['sessionId'] ?? null;
+
+                            if ($userId === '' || $sessionId === null) {
+                                continue; // Guests and key connections hold no session to invalidate.
+                            }
+
+                            /** @var User $user */
+                            $user = $database->getDocument('users', $userId);
+
+                            if (
+                                $user->isEmpty()
+                                || $user->getAttribute('status') === false
+                                || !$user->sessionActive($sessionId, $invalidatedAt)
+                            ) {
+                                $closing[$connection] = true;
+                            }
                         }
                     }
                 }
