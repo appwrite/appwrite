@@ -229,11 +229,9 @@ class User extends Document
      */
     public static function revokeCredentials(Database $dbForProject, Document $user): void
     {
-        self::invalidateAuthentication($dbForProject, $user);
-
         $sequence = $user->getSequence();
         if ($sequence !== '' && $sequence !== null) {
-            foreach (['tokens', 'authenticators', 'identities'] as $collection) {
+            foreach (['sessions', 'tokens', 'challenges', 'authenticators', 'identities'] as $collection) {
                 $dbForProject->deleteDocuments($collection, [
                     Query::equal('userInternalId', [$sequence]),
                 ]);
@@ -262,9 +260,6 @@ class User extends Document
             ->setAttribute('tokens', [])
             ->setAttribute('challenges', [])
             ->setAttribute('authenticators', [])
-            ->setAttribute('targets', \array_values(\array_filter(
-                $user->getAttribute('targets', []),
-                static fn (mixed $target): bool => $target instanceof Document && $target->getAttribute('providerType') === MESSAGE_TYPE_EMAIL,
-            )));
+            ->setAttribute('targets', []);
     }
 }
