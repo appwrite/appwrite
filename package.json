@@ -14,6 +14,6 @@
     "app/config/specs"
   ],
   "devDependencies": {
-    "prettier": "^3.9.0"
+    "prettier": "^3.9.10"
   }
 }
