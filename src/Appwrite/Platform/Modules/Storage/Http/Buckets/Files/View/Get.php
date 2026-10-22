@@ -170,11 +170,14 @@ class Get extends Action
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
         }
 
+        $name = (string) $file->getAttribute('name', '');
+        $filename = $this->quotedDispositionFilename($name);
+
         $response
             ->setContentType($contentType)
             ->addHeader('Content-Security-Policy', "script-src 'none';")
             ->addHeader('X-Content-Type-Options', 'nosniff')
-            ->addHeader('Content-Disposition', $disposition . '; filename="' . $file->getAttribute('name', '') . '"')
+            ->addHeader('Content-Disposition', $disposition . '; filename="' . $filename . '"; filename*=UTF-8\'\'' . \rawurlencode($name !== '' ? $name : 'download'))
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
         ;
@@ -253,5 +256,21 @@ class Get extends Action
             }
             throw $error;
         }
+    }
+
+    private function quotedDispositionFilename(string $name): string
+    {
+        $fallback = '';
+        $length = \strlen($name);
+        for ($i = 0; $i < $length; $i++) {
+            $char = $name[$i];
+            $code = \ord($char);
+            if ($code < 32 || $code === 127 || $char === '"' || $char === '\\' || $char === ';') {
+                continue;
+            }
+            $fallback .= $char;
+        }
+
+        return $fallback !== '' ? $fallback : 'download';
     }
 }

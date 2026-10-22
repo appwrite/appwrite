@@ -375,9 +375,11 @@ return [
             Attribute::string(key: 'status', size: 16, default: 'pending'),
             Attribute::integer(key: 'operations', required: true, default: 0, signed: false),
             Attribute::datetime(key: 'expiresAt', required: true),
+            Attribute::string(key: 'type', size: 32, default: DATABASE_TYPE_LEGACY),
         ],
         'indexes' => [
             Index::key(key: '_key_expiresAt', attributes: ['expiresAt'], orders: [OrderDirection::Desc]),
+            Index::key(key: '_key_type', attributes: ['type'], orders: [OrderDirection::Asc]),
         ],
     ],
 

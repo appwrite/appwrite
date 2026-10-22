@@ -144,7 +144,7 @@ class Update extends Action
         $transaction = ($isAPIKey || $isPrivilegedUser)
             ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
             : $dbForProject->getDocument('transactions', $transactionId);
-        if ($transaction->isEmpty()) {
+        if ($transaction->isEmpty() || $this->isTransactionTypeMismatch($transaction)) {
             throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
         }
         if ($transaction->getAttribute('status', '') !== 'pending') {
@@ -266,7 +266,7 @@ class Update extends Action
                         $collection = $collections[$collectionId];
 
                         if (\in_array($action, ['increment', 'decrement'], true) && \is_array($data)) {
-                            $currentAttribute = $this->getAttributeNameFromData($data);
+                            $currentAttribute = TransactionState::attributeOf($data, $this->getAttributeKey());
                             $currentChange = $data['value'] ?? 1;
                         }
 
@@ -842,28 +842,6 @@ class Update extends Action
     }
 
     /**
-     * Get the attribute/column name from data, with fallback for cross-API compatibility
-     *
-     * @param array $data The operation data
-     * @return string The attribute/column name
-     */
-    private function getAttributeNameFromData(array $data): string
-    {
-        $expectedKey = $this->getAttributeKey();
-        if (isset($data[$expectedKey])) {
-            return $data[$expectedKey];
-        }
-
-        // Try the opposite key for cross-API compatibility
-        $fallbackKey = $expectedKey === 'attribute' ? 'column' : 'attribute';
-        if (isset($data[$fallbackKey])) {
-            return $data[$fallbackKey];
-        }
-
-        return '';
-    }
-
-    /**
      * Handle increment operation
      *
      * @param Database $dbForDatabases
@@ -885,7 +863,7 @@ class Update extends Action
         array &$state
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
-        $attribute = $this->getAttributeNameFromData($data);
+        $attribute = TransactionState::attributeOf($data, $this->getAttributeKey());
 
         if ($dependent) {
             $state[$collectionId][$documentId] = $dbForDatabases->increaseDocumentAttribute($collectionId, $documentId, $attribute, $data['value'] ?? 1, $data['max'] ?? null);
@@ -919,7 +897,7 @@ class Update extends Action
         array &$state
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
-        $attribute = $this->getAttributeNameFromData($data);
+        $attribute = TransactionState::attributeOf($data, $this->getAttributeKey());
 
         if ($dependent) {
             $state[$collectionId][$documentId] = $dbForDatabases->decreaseDocumentAttribute($collectionId, $documentId, $attribute, $data['value'] ?? 1, $data['min'] ?? null);

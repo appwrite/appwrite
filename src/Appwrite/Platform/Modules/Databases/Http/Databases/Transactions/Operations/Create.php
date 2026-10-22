@@ -100,7 +100,7 @@ class Create extends Action
         $transaction = ($isAPIKey || $isPrivilegedUser)
             ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
             : $dbForProject->getDocument('transactions', $transactionId);
-        if ($transaction->isEmpty()) {
+        if ($transaction->isEmpty() || $this->isTransactionTypeMismatch($transaction)) {
             throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
         }
         if ($transaction->getAttribute('status', '') !== 'pending') {
@@ -123,7 +123,7 @@ class Create extends Action
             );
         }
 
-        $databases = $collections = $staged = [];
+        $databases = $collections = $dbsForDatabases = $staged = [];
         foreach ($operations as $operation) {
             if (!$isAPIKey && !$isPrivilegedUser && \in_array($operation['action'], [
                 'bulkCreate',
@@ -215,7 +215,7 @@ class Create extends Action
                     }
 
                     if ($operation['action'] !== 'delete') {
-                        $dbForDatabases = $getDatabasesDB($database);
+                        $dbForDatabases = $dbsForDatabases[$database->getId()] ??= $getDatabasesDB($database);
                         $data = \is_array($operation['data'] ?? null) ? $operation['data'] : [];
                         $creates = $operation['action'] === 'create' || ($operation['action'] === 'upsert' && !$exists);
 

@@ -88,6 +88,37 @@ class Action extends AppwriteAction
         return !in_array($database->getAttribute('type', ''), $this->getAllowedDatabaseTypes(), true);
     }
 
+    /**
+     * Legacy and TablesDB also match a missing type so list and get agree when
+     * V25 did not backfill a preexisting row.
+     *
+     * @return Query[]
+     */
+    protected function getTransactionTypeQueryFilters(): array
+    {
+        $types = $this->getAllowedDatabaseTypes();
+        $equal = Query::equal('type', $types);
+
+        if (!\in_array(DATABASE_TYPE_LEGACY, $types, true)) {
+            return [$equal];
+        }
+
+        return [Query::or([
+            $equal,
+            Query::isNull('type'),
+        ])];
+    }
+
+    /**
+     * Transactions created before `type` was stored belong to the legacy family.
+     */
+    protected function isTransactionTypeMismatch(Document $transaction): bool
+    {
+        $type = $transaction->getAttribute('type') ?: DATABASE_TYPE_LEGACY;
+
+        return !\in_array($type, $this->getAllowedDatabaseTypes(), true);
+    }
+
     public function setHttpPath(string $path): self
     {
         if (\str_contains($path, '/tablesdb')) {

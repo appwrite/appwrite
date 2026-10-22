@@ -20,12 +20,13 @@ class DocumentsDB extends Database
      *     enabled: bool,
      *     originalId: string|null,
      *     database?: string,
-     *     status: string|null
+     *     status: string|null,
+     *     description?: string,
      * } $array
      */
     public static function fromArray(array $array): self
     {
-        return new self(
+        return (new self(
             $array['id'],
             $array['name'],
             createdAt: $array['createdAt'] ?? '',
@@ -35,6 +36,6 @@ class DocumentsDB extends Database
             type: $array['type'] ?? Resource::TYPE_DATABASE_DOCUMENTSDB,
             database: $array['database'] ?? '',
             databaseStatus: $array['status'] ?? null
-        );
+        ))->setDescription($array['description'] ?? '');
     }
 }
