@@ -13,9 +13,9 @@
       "id": "messaging-html-text",
       "title": "messaging: main's HTML-to-text and public SMTP hosts",
       "area": "Database 8",
-      "status": "progress",
-      "updated": "2026-10-22T18:55:00Z",
-      "note": "Catch-up I, 2-hour box. Eleven messaging commits on main: carriage returns from character references collapse in the plain-text part, the HTML-to-text conversion loses unreachable branches, and SMTP hosts must be public (SMTPAddressesTest)."
+      "status": "done",
+      "updated": "2026-10-22T20:20:00Z",
+      "note": "Catch-up I. The plain-text part is read off the parsed document as PHP's Dom\\HTMLDocument builds it (html5ever with scripting off; the declared <meta> charset applied as lexbor does), and SMTP takes per-host addresses. messaging: run 312/312, API 100%, PHP tests 20/20, fuzz 0 differences on seeds 12388 and 4242."
     },
     {
       "id": "crate-layout",
