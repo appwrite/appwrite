@@ -644,7 +644,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         // been delivered.
                         $revoked = static fn (?string $sessionId): bool => $user->isEmpty()
                             || $user->getAttribute('status') === false
-                            || ($sessionId !== null && !$user->sessionActive($sessionId));
+                            || ($sessionId !== null && (!$user->sessionActive($sessionId) || !$user->sessionFactorsMet($sessionId)));
 
                         foreach ($impersonating as $connection) {
                             $impersonatorSessionId = $realtime->connections[$connection]['impersonator']['sessionId'] ?? null;
@@ -959,6 +959,13 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $session = $connectionContainer->get('session'); /** @var ?Document $session */
         $jwtExpire = $connectionContainer->get('jwtExpire'); /** @var ?int $jwtExpire */
         if (!$impersonatorUser->isEmpty()) {
+            // As over HTTP: impersonating needs a session to count factors on, and a blocked user cannot be impersonated.
+            if ($session === null) {
+                throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
+            }
+            if ($targetUser->getAttribute('status') === false) {
+                throw new Exception(Exception::USER_BLOCKED);
+            }
             getConsoleDB()->setMetadata('user', $targetUser->getId());
             getProjectDB($project)->setMetadata('user', $targetUser->getId());
         }
@@ -1019,7 +1026,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $impersonator = $impersonatorUser->isEmpty() ? null : [
             'projectId' => $impersonatorUser->getAttribute('projectId'),
             'userId' => $impersonatorUser->getId(),
-            'sessionId' => $session?->getId(),
+            'sessionId' => $session->getId(),
         ];
         // Impersonated or not, the connection lasts only as long as the session it runs on.
         $expire = $session !== null ? $user->getSessionExpiry($session->getId()) : null;
@@ -1294,8 +1301,9 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
          *
          * Abuse limits are sending 32 times per minute and connection.
          */
-        $isRateLimited = $container->get('timelimit')('url:{url},connection:{connection}', 32, 60, function (TimeLimit $timeLimit) use ($connection, $containerId): bool {
-            return $timeLimit->withParams(['{connection}' => (string) $connection, '{container}' => (string) $containerId])->check()->limited && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled';
+        // Connection ids are only unique within a container, so the key carries the container too.
+        $isRateLimited = $container->get('timelimit')('project:{project},container:{container},connection:{connection}', 32, 60, function (TimeLimit $timeLimit) use ($connection, $containerId, $projectId): bool {
+            return $timeLimit->withParams(['{project}' => (string) $projectId, '{connection}' => (string) $connection, '{container}' => (string) $containerId])->check()->limited && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled';
         });
 
         if ($isRateLimited) {
