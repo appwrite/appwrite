@@ -33,6 +33,7 @@ The `Mutex` and `Semaphore` primitives require the [Swoole](https://github.com/s
 | `Semaphore`   | Single worker, coroutine-scoped | `Swoole\Coroutine\Channel($permits)` | Capping concurrent access (e.g. outbound request pool)  |
 | `File`        | Single host, cross-process      | `flock()`                            | Cron guards, shared-filesystem coordination             |
 | `Distributed` | Cross-host, cluster-wide        | Redis `SET NX EX` + Lua release      | Coordinating workers across machines                    |
+| `Striped`     | Single worker, coroutine-scoped | Fixed pool of `Mutex`                | Per-key locking with a bounded number of lock objects   |
 
 ## Usage
 
@@ -81,6 +82,23 @@ run(function () use ($mutex): void {
         });
     }
 });
+```
+
+### Striped
+
+Locks by key against a fixed pool of mutexes, so the number of lock objects stays constant no matter how many distinct keys you lock. Keys that hash to the same stripe serialise.
+
+```php
+<?php
+
+use Utopia\Lock\Striped;
+
+$locks = new Striped(); // 256 stripes by default
+
+// Negative timeout waits indefinitely; 0.0 does not wait; a positive value is seconds.
+$locks->withLock($connectionId, function (): void {
+    // only one holder per key (and per colliding stripe) at a time
+}, timeout: -1.0);
 ```
 
 ### Semaphore
