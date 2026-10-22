@@ -18,7 +18,7 @@ use Utopia\Mqtt\Packet\Unsuback;
 use Utopia\Mqtt\Packet\Unsubscribe;
 
 /**
- * A broker handler that accepts every CONNECT (identity from the projectId/userId user
+ * A broker handler that accepts every CONNECT (identity from the projectId/userId/expire user
  * properties) and grants every SUBSCRIBE filter. It installs subscriptions that Appwrite's
  * subscribe gate would refuse, such as one granted before the gate existed, so delivery
  * can be tested on its own.
@@ -30,6 +30,9 @@ final class GrantingHandler implements Handler
         $properties = $connect->userProperties();
         $connection->prefix = $properties['projectId'] ?? '';
         $connection->identity = ['projectId' => $connection->prefix, 'userId' => $properties['userId'] ?? ''];
+        if (isset($properties['expire'])) {
+            $connection->identity['expire'] = (int) $properties['expire'];
+        }
 
         return Connack::accept();
     }

@@ -12,6 +12,7 @@ use Tests\Unit\Mqtt\Fakes\NullPubSub;
 use Tests\Unit\Mqtt\Fakes\RecordingAdapter;
 use Utopia\DI\Container;
 use Utopia\Mqtt\Packet;
+use Utopia\Mqtt\Packet\Disconnect;
 use Utopia\Mqtt\Packet\Specs\V5;
 use Utopia\Mqtt\Properties;
 use Utopia\Mqtt\Property;
@@ -49,15 +50,20 @@ final class HandlerTest extends TestCase
         );
     }
 
-    private function subscribe(int $fd, string $userId, string ...$filters): void
+    private function subscribe(int $fd, string $userId, string $filter, ?int $expire = null): void
     {
+        $user = ['projectId' => self::PROJECT, 'userId' => $userId];
+        if ($expire !== null) {
+            $user['expire'] = (string) $expire;
+        }
+
         $properties = new Properties();
-        $properties->add(new Property(Property::USER, ['projectId' => self::PROJECT, 'userId' => $userId]));
+        $properties->add(new Property(Property::USER, $user));
 
         $this->adapter->deliver(
             $fd,
             V5::connect('client-' . $fd, 60, true, $properties),
-            V5::subscribe(1, $filters, Packet::QOS_1),
+            V5::subscribe(1, [$filter], Packet::QOS_1),
         );
         $this->adapter->sent[$fd] = []; // drop CONNACK/SUBACK; only deliveries matter below
     }
@@ -87,6 +93,21 @@ final class HandlerTest extends TestCase
 
         $this->assertSame(1, $delivered);
         $this->assertCount(1, $this->adapter->publishes(1));
+    }
+
+    public function testExpiredCredentialIsDisconnectedOnDelivery(): void
+    {
+        $this->subscribe(1, 'owner', 'users/owner', \time() - 1);
+        $this->subscribe(2, 'owner', 'users/owner', \time() + 3600);
+
+        $delivered = $this->handler->deliver($this->server, self::PROJECT, 'users/owner', '{}', Packet::QOS_1, 1);
+
+        // Test for FAILURE: the connection whose credential expired gets nothing and is closed.
+        $this->assertSame(1, $delivered);
+        $this->assertSame(Disconnect::NOT_AUTHORIZED, $this->adapter->disconnects(1)[0]->reasonCode);
+        $this->assertSame([], $this->adapter->publishes(1), 'a connection with an expired credential received a push');
+        $this->assertSame([1], $this->adapter->closed);
+        $this->assertCount(1, $this->adapter->publishes(2));
     }
 
     public function testOrdinaryTopicsStillFanOutToWildcards(): void

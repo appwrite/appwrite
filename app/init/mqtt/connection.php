@@ -25,9 +25,15 @@ return function (Container $container): void {
         return $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
     };
 
-    $getUser = function (Document $project, string $authMethod, string $credential, Authorization $authorization) use ($container): User {
+    /**
+     * The user a credential authenticates, with the session it runs on and the time it stops
+     * being valid, or [] when it authenticates nobody.
+     *
+     * @return array{user?: User, sessionId?: string, expire?: ?int}
+     */
+    $getUser = function (Document $project, string $authMethod, string $credential, Authorization $authorization) use ($container): array {
         if ($project->isEmpty() || $credential === '') {
-            return new User([]);
+            return [];
         }
 
         $authorization->setStatus(true);
@@ -43,7 +49,7 @@ return function (Container $container): void {
                 try {
                     $payload = $jwt->decode($credential);
                 } catch (JWTException) {
-                    return new User([]);
+                    return [];
                 }
 
                 $userId = $payload['userId'] ?? '';
@@ -55,7 +61,7 @@ return function (Container $container): void {
                 $jwtProjectId = $payload['projectId'] ?? '';
                 $bound = $jwtProjectId !== '' ? $jwtProjectId === $project->getId() : $sessionId !== '';
                 if (!$bound) {
-                    return new User([]);
+                    return [];
                 }
 
                 /** @var User $user */
@@ -64,12 +70,21 @@ return function (Container $container): void {
                 if (
                     $user->isEmpty()
                     || $user->getAttribute('status', true) === false // blocked account
-                    || ($sessionId !== '' && !$user->sessionActive($sessionId))
+                    || ($sessionId !== '' && (!$user->sessionActive($sessionId) || !$user->sessionFactorsMet($sessionId)))
                 ) {
-                    return new User([]);
+                    return [];
                 }
 
-                return $user;
+                $expires = \array_filter([
+                    \is_int($payload['exp'] ?? null) ? $payload['exp'] : null,
+                    $sessionId !== '' ? $user->getSessionExpiry($sessionId) : null,
+                ], \is_int(...));
+
+                return [
+                    'user' => $user,
+                    'sessionId' => $sessionId,
+                    'expire' => $expires === [] ? null : \min($expires),
+                ];
 
             case 'appwrite-session':
                 $store = new Store();
@@ -80,19 +95,25 @@ return function (Container $container): void {
 
                 /** @var User $user */
                 $user = $dbForProject->getDocument('users', $store->getProperty('id', ''));
+                $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
 
                 if (
                     $user->isEmpty()
                     || $user->getAttribute('status', true) === false // blocked account
-                    || !$user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+                    || !$sessionId
+                    || !$user->sessionFactorsMet($sessionId)
                 ) {
-                    return new User([]);
+                    return [];
                 }
 
-                return $user;
+                return [
+                    'user' => $user,
+                    'sessionId' => $sessionId,
+                    'expire' => $user->getSessionExpiry($sessionId),
+                ];
 
             default:
-                return new User([]);
+                return [];
         }
     };
 
@@ -105,14 +126,17 @@ return function (Container $container): void {
                 return [];
             }
 
-            $user = $getUser($project, $authMethod, $credential, $authorization);
-            if ($user->isEmpty()) {
+            $authenticated = $getUser($project, $authMethod, $credential, $authorization);
+            if (!isset($authenticated['user'])) {
                 return [];
             }
 
+            // The session and expiry are kept so the connection ends with the credential it was opened with.
             return [
                 'projectId' => $project->getId(),
-                'userId' => $user->getId(),
+                'userId' => $authenticated['user']->getId(),
+                'sessionId' => $authenticated['sessionId'] ?? '',
+                'expire' => $authenticated['expire'] ?? null,
             ];
         };
     }, []);
@@ -122,6 +146,11 @@ return function (Container $container): void {
             $userId = $identity['userId'] ?? '';
             $projectId = $identity['projectId'] ?? '';
             if ($userId === '' || $projectId === '') {
+                return false;
+            }
+
+            $expire = $identity['expire'] ?? null;
+            if (\is_int($expire) && $expire < \time()) {
                 return false;
             }
 
@@ -135,10 +164,17 @@ return function (Container $container): void {
             $getProjectDB = $container->get('getProjectDB');
             $dbForProject = $getProjectDB($project);
             $dbForProject->setAuthorization($authorization);
+            /** @var User $user */
             $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
             // status: true = enabled, false = blocked.
-            return !$user->isEmpty() && $user->getAttribute('status', true) !== false;
+            if ($user->isEmpty() || $user->getAttribute('status', true) === false) {
+                return false;
+            }
+
+            $sessionId = $identity['sessionId'] ?? '';
+
+            return $sessionId === '' || ($user->sessionActive($sessionId) && $user->sessionFactorsMet($sessionId));
         };
     }, []);
 };
