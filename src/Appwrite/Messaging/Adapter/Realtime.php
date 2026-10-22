@@ -5,6 +5,7 @@ namespace Appwrite\Messaging\Adapter;
 use Appwrite\Messaging\Adapter as MessagingAdapter;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Utopia\Database\RuntimeQuery;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
@@ -737,11 +738,17 @@ class Realtime extends MessagingAdapter
                 $roles = [Role::user(ID::custom($parts[1]))->toString()];
                 break;
             case 'rules':
-            case 'migrations':
                 $channels[] = 'console';
                 $channels[] = 'projects.' . $project->getId();
                 $projectId = 'console';
                 $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                break;
+            case 'migrations':
+                // Migrations carry project data, so only those who can read the project receive them.
+                $channels[] = 'console';
+                $channels[] = 'projects.' . $project->getId();
+                $projectId = 'console';
+                $roles = $project->getPermissionsByType(Database::PERMISSION_READ);
                 break;
             case 'projects':
                 $channels[] = 'console';
