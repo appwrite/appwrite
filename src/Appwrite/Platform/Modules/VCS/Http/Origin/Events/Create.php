@@ -268,11 +268,20 @@ class Create extends Action
      */
     private function filterRepositories(array $repositories, Database $dbForPlatform, Authorization $authorization): array
     {
-        return \array_values(\array_filter($repositories, function (Document $repository) use ($dbForPlatform, $authorization) {
-            $installation = $authorization->skip(fn () => $dbForPlatform->getDocument('installations', $repository->getAttribute('installationId', '')));
+        $installationIds = \array_values(\array_unique(\array_filter(\array_map(fn (Document $repository) => $repository->getAttribute('installationId', ''), $repositories))));
 
-            return !$installation->isEmpty() && $installation->getAttribute('provider', 'github') === 'origin';
-        }));
+        if (empty($installationIds)) {
+            return [];
+        }
+
+        $installations = $authorization->skip(fn () => $dbForPlatform->find('installations', [
+            Query::equal('$id', $installationIds),
+            Query::equal('provider', ['origin']),
+            Query::limit(\count($installationIds)),
+        ]));
+        $installationIds = \array_map(fn (Document $installation) => $installation->getId(), $installations);
+
+        return \array_values(\array_filter($repositories, fn (Document $repository) => \in_array($repository->getAttribute('installationId', ''), $installationIds, true)));
     }
 
     private function isProjectInCurrentRegion(Document $project): bool
