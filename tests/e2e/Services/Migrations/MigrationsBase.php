@@ -4794,6 +4794,54 @@ trait MigrationsBase
     }
 
     /**
+     * A refused import creates no migration, so a copy it left in the imports
+     * directory would never be read or removed.
+     */
+    public function testRefusedImportLeavesNoCopy(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            'bucketId' => Id::unique(),
+            'name' => 'Refused imports',
+            'allowedFileExtensions' => ['csv', 'json'],
+        ]);
+        $this->assertSame(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $files = [
+            'csv' => new CURLFile(realpath(__DIR__ . '/../../../resources/csv/documents.csv'), 'text/csv', 'documents.csv'),
+            'json' => new CURLFile(realpath(__DIR__ . '/../../../resources/json/documents.json'), 'application/json', 'documents.json'),
+        ];
+
+        foreach ($files as $format => $upload) {
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge($headers, [
+                'content-type' => 'multipart/form-data',
+            ]), [
+                'fileId' => Id::unique(),
+                'file' => $upload,
+            ]);
+            $this->assertSame(201, $file['headers']['status-code']);
+            $fileId = $file['body']['$id'];
+
+            $import = $this->client->call(Client::METHOD_POST, '/migrations/' . $format . '/imports', $headers, [
+                'bucketId' => $bucketId,
+                'fileId' => $fileId,
+                'databaseId' => 'missing',
+                'collectionId' => 'missing',
+            ]);
+            $this->assertSame(404, $import['headers']['status-code'], $format);
+
+            $copies = \glob(APP_STORAGE_IMPORTS . '/app-' . $this->getProject()['$id'] . '/*_' . $fileId . '.' . $format);
+            $this->assertSame([], $copies, $format . ' import refused, but its copy is still on disk');
+        }
+    }
+
+    /**
      * Test CSV export with email notification
      */
     public function testCreateCSVExport(): void

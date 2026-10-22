@@ -31,6 +31,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "php2shell-appwrite-not-affected",
+    "href": "/blog/post/php2shell-appwrite-not-affected",
+    "title": "PHP2Shell RCE flaws: Why Appwrite is not affected",
+    "description": "PHP2Shell, CVE-2026-109618 and CVE-2026-109619, doesn't affect Appwrite because it runs on Swoole. Here's why, and what PHP Functions users should check.",
+    "date": "2026-10-22",
+    "lastUpdated": "2026-10-22",
+    "timeToRead": 4,
+    "author": "luke-silver",
+    "category": "security",
+    "featured": false,
+    "cover": "/images/blog/php2shell-appwrite-not-affected/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-appwrite-databases-hackathon",
     "href": "/blog/post/announcing-appwrite-databases-hackathon",
     "title": "Announcing the Appwrite Databases Hackathon",

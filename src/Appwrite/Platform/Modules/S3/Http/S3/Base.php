@@ -19,6 +19,7 @@ use Appwrite\Utopia\Database\Validator\Folder;
 use Appwrite\Utopia\Response;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Console\Console;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -590,19 +591,19 @@ abstract class Base extends Action
             throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Failed to save object.');
         }
 
-        $attributes = [
-            'name' => $name,
-            'folder' => $folder,
-            'path' => $path,
-            'signature' => $etag,
-            'mimeType' => $contentType,
-            'sizeOriginal' => \strlen($body),
-            'sizeActual' => $deviceForFiles->getFileSize($path),
-            'search' => \implode(' ', [$fileId, $folder, $name]),
-            'metadata' => $metadata,
-        ];
-
         try {
+            $attributes = [
+                'name' => $name,
+                'folder' => $folder,
+                'path' => $path,
+                'signature' => $etag,
+                'mimeType' => $contentType,
+                'sizeOriginal' => \strlen($body),
+                'sizeActual' => $deviceForFiles->getFileSize($path),
+                'search' => \implode(' ', [$fileId, $folder, $name]),
+                'metadata' => $metadata,
+            ];
+
             if ($existing !== null) {
                 $file = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->updateDocument(
                     'bucket_' . $bucket->getSequence(),
@@ -623,26 +624,61 @@ abstract class Base extends Action
                 ])));
             }
         } catch (\Throwable $error) {
-            $deviceForFiles->delete($path);
+            $this->discard($deviceForFiles, $path);
             throw $error;
         }
 
         if ($previousPath !== '' && $previousPath !== $path) {
-            try {
-                // Backend deletes may wait for an active GET. Do not hold up
-                // publication of the replacement while reclaiming the old version.
-                $publisherForDeletes->enqueue(new DeleteMessage(
-                    project: $project,
-                    type: DELETE_TYPE_FILES,
-                    resource: $previousPath,
-                ));
-            } catch (\Throwable) {
-                // The replacement is committed; stale-path cleanup is best effort.
-            }
+            $this->reclaim($project, $publisherForDeletes, $deviceForFiles, $previousPath);
         }
 
         return $file;
     }
+
+    /**
+     * Removes a version no document references any more. The deletes worker
+     * takes it, because a backend delete may wait for an active GET of the
+     * same object and the replacement is already live. When the queue refuses
+     * the message the version is deleted here, so nothing is left behind
+     * unless storage refuses as well.
+     */
+    protected function reclaim(Document $project, DeletePublisher $publisherForDeletes, Device $deviceForFiles, string $path): void
+    {
+        try {
+            if ($publisherForDeletes->enqueue(new DeleteMessage(
+                project: $project,
+                type: DELETE_TYPE_FILES,
+                resource: $path,
+            )) !== false) {
+                return;
+            }
+            $reason = 'the broker refused it';
+        } catch (\Throwable $error) {
+            $reason = $error->getMessage();
+        }
+
+        Console::warning("Failed to queue the deletion of replaced object version {$path}, deleting it inline: {$reason}");
+        $this->discard($deviceForFiles, $path);
+    }
+
+    /**
+     * Deletes a version nothing references without failing the caller: the
+     * request already has an outcome, so a storage error is reported instead.
+     */
+    protected function discard(Device $deviceForFiles, string $path): void
+    {
+        try {
+            if ($deviceForFiles->delete($path) || !$deviceForFiles->exists($path)) {
+                return;
+            }
+            $reason = 'storage refused it';
+        } catch (\Throwable $error) {
+            $reason = $error->getMessage();
+        }
+
+        Console::error("Orphaned object version {$path}: {$reason}");
+    }
+
     /**
      * @return array{0: Document, 1: string}
      */
@@ -931,23 +967,13 @@ abstract class Base extends Action
                 $cleanup = false;
 
                 if ($previousPath !== '' && $previousPath !== $path) {
-                    try {
-                        // Backend deletes may wait for an active GET. Do not hold up
-                        // publication of the replacement while reclaiming the old version.
-                        $publisherForDeletes->enqueue(new DeleteMessage(
-                            project: $project,
-                            type: DELETE_TYPE_FILES,
-                            resource: $previousPath,
-                        ));
-                    } catch (\Throwable) {
-                        // The replacement is already committed; old-path cleanup is best effort.
-                    }
+                    $this->reclaim($project, $publisherForDeletes, $deviceForFiles, $previousPath);
                 }
 
                 return [$file, $existing === null ? 'create' : 'update'];
             } catch (\Throwable $error) {
                 if ($cleanup) {
-                    $deviceForFiles->delete($path);
+                    $this->discard($deviceForFiles, $path);
                 }
                 throw $error;
             }
