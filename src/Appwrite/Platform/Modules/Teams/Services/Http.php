@@ -6,6 +6,7 @@ use Appwrite\Platform\Modules\Teams\Http\Logs\XList as ListLogs;
 use Appwrite\Platform\Modules\Teams\Http\Memberships\Create as CreateMembership;
 use Appwrite\Platform\Modules\Teams\Http\Memberships\Delete as DeleteMembership;
 use Appwrite\Platform\Modules\Teams\Http\Memberships\Get as GetMembership;
+use Appwrite\Platform\Modules\Teams\Http\Memberships\Status\Get as GetMembershipStatusView;
 use Appwrite\Platform\Modules\Teams\Http\Memberships\Status\Update as UpdateMembershipStatus;
 use Appwrite\Platform\Modules\Teams\Http\Memberships\Update as UpdateMembership;
 use Appwrite\Platform\Modules\Teams\Http\Memberships\XList as ListMemberships;
@@ -42,6 +43,7 @@ class Http extends Service
         $this->addAction(UpdateMembership::getName(), new UpdateMembership());
         $this->addAction(DeleteMembership::getName(), new DeleteMembership());
         $this->addAction(UpdateMembershipStatus::getName(), new UpdateMembershipStatus());
+        $this->addAction(GetMembershipStatusView::getName(), new GetMembershipStatusView());
 
         // Logs
         $this->addAction(ListLogs::getName(), new ListLogs());
