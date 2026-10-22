@@ -82,6 +82,17 @@ final class TeamsCustomClientTest extends Scope
         $this->assertTrue($account['body']['phoneVerification']);
         $this->assertFalse($account['body']['emailVerification']);
 
+        $session = $this->client->call(Client::METHOD_GET, '/account/sessions/current', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $confirmation['cookies']['a_session_' . $projectId],
+        ]);
+
+        $this->assertEquals(200, $session['headers']['status-code']);
+        $this->assertSame(['phone'], $session['body']['factors']);
+        $this->assertSame('phone', $session['body']['provider']);
+
         /**
          * Test for FAILURE
          * The invitation cannot be accepted again.

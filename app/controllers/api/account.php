@@ -5593,16 +5593,20 @@ Http::put('/v1/account/verifications/phone')
 
         $authorization->addRole(Role::user($profile->getId())->toString());
 
-        $profile = $dbForProject->updateDocument('users', $profile->getId(), new Document(['phoneVerification' => true]));
-
-        $user->setAttributes($profile->getArrayCopy());
-
         $verificationDocument = $dbForProject->getDocument('tokens', $verifiedToken->getId());
 
-        /**
-         * We act like we're updating and validating the verification token but actually we don't need it anymore.
-         */
-        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
+        // Claim the token under the user row lock a phone change takes, which deletes tokens sent to the old number
+        $profile = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $profile, $verifiedToken) {
+            $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
+
+            if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
+                throw new Exception(Exception::USER_INVALID_TOKEN);
+            }
+
+            return $dbForProject->updateDocument('users', $profile->getId(), new Document(['phoneVerification' => true]));
+        });
+
+        $user->setAttributes($profile->getArrayCopy());
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         $queueForEvents
