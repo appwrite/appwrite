@@ -104,8 +104,12 @@ class Presence extends Action
         $heldForUser = \is_array($hold) && ($hold['userId'] ?? null) === $userId;
 
         if (!$heldForUser) {
-            // First presence on this socket: stake the claim now so a sibling message refreshes.
-            $realtime->connections[$connectionId]['presence'] = ['projectId' => $projectId, 'userId' => $userId, 'sequence' => null];
+            // First presence on this socket: stake the claim now so a sibling message refreshes. Guard
+            // on the connection still existing -- onClose may have removed it during the user lookup
+            // above, and a bare assignment would auto-vivify a zombie entry the close guard then trusts.
+            if (isset($realtime->connections[$connectionId])) {
+                $realtime->connections[$connectionId]['presence'] = ['projectId' => $projectId, 'userId' => $userId, 'sequence' => null];
+            }
             $sequence = null;
             $follower = false;
         } elseif (($hold['sequence'] ?? null) === null) {
@@ -133,9 +137,12 @@ class Presence extends Action
         $created = $write['created'];
         $counted = $write['counted'];
 
-        // onClose may have run during the upsert; only record the hold while the socket is open.
+        // onClose may have run during the upsert; only record the hold while the socket is open. A
+        // follower never records a hold: it added no count, so the establishing sibling owns the socket's
+        // single hold -- otherwise this message could decrement a row it never counted and delete a
+        // presence another socket still holds.
         $closed = !isset($realtime->connections[$connectionId]);
-        if (!$closed) {
+        if (!$closed && !$follower) {
             $realtime->connections[$connectionId]['presence'] = [
                 'projectId' => $projectId,
                 'userId' => $userId,
