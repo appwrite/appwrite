@@ -1,0 +1,42 @@
+name: Security Review
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      since:
+        description: Review commits merged after this git date, instead of since the last successful review
+        default: ''
+
+permissions: {}
+
+concurrency:
+  group: security-review
+  cancel-in-progress: false
+
+jobs:
+  owner:
+    if: github.repository == 'appwrite/appwrite'
+    permissions:
+      pull-requests: read
+    uses: abnegate/claude-pr-owner/.github/workflows/owner.yml@0fd4563c63a358bc81f826d84b406d3f93f2ea57 # feat/security-review
+    with:
+      learner: ${{ vars.CLAUDE_LEARNER }}
+
+  review:
+    needs: owner
+    if: needs.owner.outputs.enrolled == 'true'
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      security-events: write
+    uses: abnegate/claude-pr-owner/.github/workflows/security-review.yml@0fd4563c63a358bc81f826d84b406d3f93f2ea57 # feat/security-review
+    secrets:
+      oauth_token: ${{ secrets[needs.owner.outputs.oauth_secret] }}
+      api_key: ${{ secrets[needs.owner.outputs.api_key_secret] }}
+      openai_api_key: ${{ secrets[needs.owner.outputs.openai_secret] }}
+    with:
+      since: ${{ inputs.since }}
+      history: security-review.yml,security-review-deep.yml

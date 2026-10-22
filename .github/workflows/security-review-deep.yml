@@ -1,0 +1,44 @@
+name: Security Review (Deep)
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: security-review
+  cancel-in-progress: false
+
+jobs:
+  owner:
+    if: github.repository == 'appwrite/appwrite'
+    permissions:
+      pull-requests: read
+    uses: abnegate/claude-pr-owner/.github/workflows/owner.yml@0fd4563c63a358bc81f826d84b406d3f93f2ea57 # feat/security-review
+    with:
+      learner: ${{ vars.CLAUDE_LEARNER }}
+
+  review:
+    needs: owner
+    if: needs.owner.outputs.enrolled == 'true'
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      security-events: write
+    uses: abnegate/claude-pr-owner/.github/workflows/security-review.yml@0fd4563c63a358bc81f826d84b406d3f93f2ea57 # feat/security-review
+    secrets:
+      api_key: ${{ secrets[needs.owner.outputs.deep_api_key_secret] }}
+      openai_api_key: ${{ secrets[needs.owner.outputs.deep_openai_secret] }}
+    with:
+      mode: deep
+      areas: |
+        entrypoints: app src/Appwrite/Utopia src/Appwrite/Extend src/Appwrite/Network src/Appwrite/SDK
+        identity: src/Appwrite/Auth src/Appwrite/Platform/Modules/Account src/Appwrite/Platform/Modules/Users src/Appwrite/Platform/Modules/Teams src/Appwrite/Platform/Modules/Tokens src/Appwrite/Platform/Modules/Console
+        databases: src/Appwrite/Platform/Modules/Databases src/Appwrite/Databases src/Appwrite/GraphQL
+        projects: src/Appwrite/Platform/Modules/Project src/Appwrite/Platform/Modules/Projects src/Appwrite/Platform/Modules/Organization src/Appwrite/Platform/Modules/Webhooks
+        compute: src/Appwrite/Platform/Modules/Functions src/Appwrite/Platform/Modules/Sites src/Appwrite/Platform/Modules/Compute src/Appwrite/Platform/Modules/Proxy src/Appwrite/Execution src/Appwrite/Deployment src/Appwrite/Docker
+        storage: src/Appwrite/Platform/Modules/Storage src/Appwrite/Platform/Modules/S3 src/Appwrite/Platform/Modules/Avatars src/Appwrite/AvatarPhotos
+        integrations: src/Appwrite/Platform/Modules/VCS src/Appwrite/Vcs src/Appwrite/Platform/Modules/Migrations src/Appwrite/Migration src/Appwrite/Platform/Modules/Messaging src/Appwrite/Messaging
+        realtime: src/Appwrite/Realtime src/Appwrite/Mqtt src/Appwrite/Platform/Modules/Presences src/Appwrite/Event
+        workers: src/Appwrite/Platform/Workers src/Appwrite/Platform/Tasks src/Appwrite/Platform/Modules/Usage src/Appwrite/Usage src/Appwrite/Platform/Modules/Health src/Appwrite/Platform/Modules/Advisor
