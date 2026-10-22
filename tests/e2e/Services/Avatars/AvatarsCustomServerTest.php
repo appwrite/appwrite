@@ -225,25 +225,27 @@ final class AvatarsCustomServerTest extends Scope
         $offset = 0;
         $largeId = Id::unique();
 
-        while ($offset < $size) {
-            $chunk = \fread($handle, $chunkSize);
-            $end = $offset + \strlen($chunk) - 1;
+        try {
+            while ($offset < $size) {
+                $chunk = \fread($handle, $chunkSize);
+                $end = $offset + \strlen($chunk) - 1;
 
-            $large = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', \array_merge([
-                'content-type' => 'multipart/form-data',
-                'content-range' => 'bytes ' . $offset . '-' . $end . '/' . $size,
-                'x-appwrite-id' => $largeId,
-            ], $headers), [
-                'fileId' => $largeId,
-                'file' => new \CURLFile('data://video/mp4;base64,' . \base64_encode($chunk), 'video/mp4', 'large-file.mp4'),
-            ]);
+                $large = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', \array_merge([
+                    'content-type' => 'multipart/form-data',
+                    'content-range' => 'bytes ' . $offset . '-' . $end . '/' . $size,
+                    'x-appwrite-id' => $largeId,
+                ], $headers), [
+                    'fileId' => $largeId,
+                    'file' => new \CURLFile('data://video/mp4;base64,' . \base64_encode($chunk), 'video/mp4', 'large-file.mp4'),
+                ]);
 
-            $this->assertEquals(201, $large['headers']['status-code']);
+                $this->assertEquals(201, $large['headers']['status-code']);
 
-            $offset = $end + 1;
+                $offset = $end + 1;
+            }
+        } finally {
+            \fclose($handle);
         }
-
-        \fclose($handle);
 
         $domain = 'avatars-' . \uniqid() . '.127.0.0.1.nip.io';
 
