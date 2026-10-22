@@ -260,6 +260,21 @@ class Create extends Action
         } while ($installationCursor !== null);
     }
 
+    /**
+     * Keeps the repositories connected through an installation of this provider.
+     *
+     * @param array<Document> $repositories
+     * @return array<Document>
+     */
+    private function filterRepositories(array $repositories, Database $dbForPlatform, Authorization $authorization): array
+    {
+        return \array_values(\array_filter($repositories, function (Document $repository) use ($dbForPlatform, $authorization) {
+            $installation = $authorization->skip(fn () => $dbForPlatform->getDocument('installations', $repository->getAttribute('installationId', '')));
+
+            return !$installation->isEmpty() && $installation->getAttribute('provider', 'github') === 'origin';
+        }));
+    }
+
     private function isProjectInCurrentRegion(Document $project): bool
     {
         try {
@@ -314,10 +329,10 @@ class Create extends Action
         ]));
 
         // Find associated repositories
-        $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
+        $repositories = $this->filterRepositories($authorization->skip(fn () => $dbForPlatform->find('repositories', [
             Query::equal('providerRepositoryId', [$providerRepositoryId]),
             Query::limit(100),
-        ]));
+        ])), $dbForPlatform, $authorization);
 
         // Create new deployment only on push (not committed by us) and not when branch is deleted
         if (!\in_array($providerCommitAuthorEmail, [APP_VCS_GITHUB_EMAIL, APP_VCS_ORIGIN_EMAIL], true) && !$providerBranchDeleted) {
@@ -384,10 +399,10 @@ class Create extends Action
                 ...array_filter(array_column($prFiles, 'previousFilename'))
             ];
 
-            $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
+            $repositories = $this->filterRepositories($authorization->skip(fn () => $dbForPlatform->find('repositories', [
                 Query::equal('providerRepositoryId', [$providerRepositoryId]),
                 Query::orderDesc('$createdAt')
-            ]));
+            ])), $dbForPlatform, $authorization);
 
             $this->createGitDeployments($vcs, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, \strval($providerPullRequestId), $providerAffectedFiles, $external, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory);
         }

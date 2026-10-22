@@ -349,6 +349,21 @@ class Create extends Action
         }
     }
 
+    /**
+     * Keeps the repositories connected through an installation of this provider.
+     *
+     * @param array<Document> $repositories
+     * @return array<Document>
+     */
+    private function filterRepositories(array $repositories, Database $dbForPlatform, Authorization $authorization): array
+    {
+        return \array_values(\array_filter($repositories, function (Document $repository) use ($dbForPlatform, $authorization) {
+            $installation = $authorization->skip(fn () => $dbForPlatform->getDocument('installations', $repository->getAttribute('installationId', '')));
+
+            return !$installation->isEmpty() && $installation->getAttribute('provider', 'github') === 'entire';
+        }));
+    }
+
     private function isProjectInCurrentRegion(Document $project): bool
     {
         try {
@@ -402,10 +417,10 @@ class Create extends Action
         }
 
         // Find associated repositories
-        $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
+        $repositories = $this->filterRepositories($authorization->skip(fn () => $dbForPlatform->find('repositories', [
             Query::equal('providerRepositoryId', [$providerRepositoryId]),
             Query::limit(100),
-        ]));
+        ])), $dbForPlatform, $authorization);
 
         // A delivery for a repository nothing deploys from needs no token
         if (empty($repositories)) {
