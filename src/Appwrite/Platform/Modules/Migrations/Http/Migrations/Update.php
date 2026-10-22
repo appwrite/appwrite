@@ -68,10 +68,12 @@ class Update extends Action
         Lock $lock,
         MigrationPublisher $publisherForMigrations
     ): void {
+        $key = 'lock:project:' . $project->getSequence() . ':migrations:' . $migrationId . ':retry';
+
         // Every attempt writes to the same migration-based paths, so a second retry must be
         // refused until this one has moved the migration out of `failed`.
         $migration = $lock->withKey(
-            'lock:project:' . $project->getSequence() . ':migrations:' . $migrationId . ':retry',
+            $key,
             function () use ($dbForProject, $migrationId): Document {
                 $migration = $dbForProject->getDocument('migrations', $migrationId);
 
@@ -90,11 +92,34 @@ class Update extends Action
             'migrations.retry',
         );
 
-        $publisherForMigrations->enqueue(new MigrationMessage(
-            project: $project,
-            migration: $migration,
-            platform: $platform,
-        ));
+        $error = null;
+        try {
+            $published = $publisherForMigrations->enqueue(new MigrationMessage(
+                project: $project,
+                migration: $migration,
+                platform: $platform,
+            ));
+        } catch (\Throwable $error) {
+            $published = false;
+        }
+
+        if ($published === false) {
+            // Nothing will pick the migration up, so put it back to `failed` (unless a worker already
+            // has) to keep it retryable instead of stuck as in progress.
+            $lock->withKey(
+                $key,
+                function () use ($dbForProject, $migrationId): void {
+                    if ($dbForProject->getDocument('migrations', $migrationId)->getAttribute('status') === 'pending') {
+                        $dbForProject->updateDocument('migrations', $migrationId, new Document([
+                            'status' => 'failed',
+                        ]));
+                    }
+                },
+                'migrations.retry',
+            );
+
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to queue the migration retry.', previous: $error);
+        }
 
         $response->noContent();
     }
