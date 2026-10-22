@@ -49,6 +49,7 @@ Http::init()
     ->groups(['api'])
     ->inject('route')
     ->inject('request')
+    ->inject('response')
     ->inject('dbForPlatform')
     ->inject('dbForProject')
     ->inject('auditContext')
@@ -64,7 +65,7 @@ Http::init()
     ->inject('lock')
     ->inject('impersonatorUser')
     ->inject('targetUser')
-    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, string $projectIdFromPath, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock, Document $impersonatorUser, User $targetUser) {
+    ->action(function (Route $route, Request $request, Response $response, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, string $projectIdFromPath, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock, Document $impersonatorUser, User $targetUser) {
 
         /**
          * Handle user authentication and session validation.
@@ -309,7 +310,10 @@ Http::init()
             }
 
             $projectId = $project->getId();
-            if ($projectId === 'console' && str_starts_with($route->getPath(), '/v1/projects/:projectId')) {
+            if (str_starts_with($route->getPath(), '/v1/organization/projects')) {
+                // Organization routes act on the project in the path; without one they act on the whole organization.
+                $projectId = $projectIdFromPath !== '' ? $projectIdFromPath : 'console';
+            } elseif ($projectId === 'console' && str_starts_with($route->getPath(), '/v1/projects/:projectId')) {
                 $projectId = $projectIdFromPath;
             }
 
@@ -339,7 +343,9 @@ Http::init()
              * For console projects resource, we use platform DB.
              * Enabling authorization restricts admin user to the projects they have access to.
              */
-            if ($project->getId() === 'console' && ($route->getPath() === '/v1/projects' || $route->getPath() === '/v1/projects/:projectId')) {
+            $isProjectsRead = $project->getId() === 'console' && \in_array($route->getPath(), ['/v1/projects', '/v1/projects/:projectId'], true);
+            $isOrganizationProjectsRead = $request->getMethod() === Request::METHOD_GET && \in_array($route->getPath(), ['/v1/organization/projects', '/v1/organization/projects/:projectId'], true);
+            if ($isProjectsRead || $isOrganizationProjectsRead) {
                 $authorization->setStatus(true);
             } else {
                 // Otherwise, disable authorization checks.
@@ -362,13 +368,14 @@ Http::init()
         if (
             $isUserDiscovery
             && !$user->isEmpty()
+            && !\in_array('users.read', $scopes, true)
             && (
                 $user->getAttribute('impersonator', false)
                 || !$impersonatorUser->isEmpty()
             )
         ) {
             $scopes[] = 'users.read';
-            $scopes = \array_unique($scopes);
+            $response->setHideCredentials(true);
         }
 
         $authorization->addRole($role);
@@ -601,10 +608,9 @@ Http::init()
 
         foreach ($abuseKeyLabel as $abuseKey) {
             $isRateLimited = false;
+            $checking = false;
 
             try {
-                $start = $request->getContentRangeStart();
-                $end = $request->getContentRangeEnd();
                 $params = [
                     '{projectId}' => (string) $project->getId(),
                     '{userId}' => (string) $user->getId(),
@@ -612,7 +618,7 @@ Http::init()
                     '{ip}' => (string) $request->getIP(),
                     '{url}' => $request->getHostname() . $route->getPath(),
                     '{method}' => (string) $request->getMethod(),
-                    '{chunkId}' => (string) (int) ($start / ($end + 1 - $start)),
+                    '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
                 ];
 
                 foreach ($request->getParams() as $key => $value) {
@@ -621,6 +627,7 @@ Http::init()
                     }
                 }
 
+                $checking = true;
                 $isRateLimited = $timelimit($abuseKey, $abuseLimit, $route->getLabel('abuse-time', 3600), function (TimeLimit $timeLimit) use ($params, $response, $shouldCheckAbuse, &$closestLimit): bool {
                     $timeLimit = $timeLimit->withParams($params);
                     $result = $shouldCheckAbuse ? $timeLimit->check() : $timeLimit->peek();
@@ -634,6 +641,11 @@ Http::init()
                     return $shouldCheckAbuse && $result->limited;
                 });
             } catch (\Throwable $th) {
+                // Only a limiter outage fails open; a request that breaks the key is refused.
+                if (! $checking) {
+                    throw $th;
+                }
+
                 \error_log((string) $th);
 
                 continue;
@@ -983,8 +995,6 @@ Http::shutdown()
         $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
 
         foreach ($abuseKeyLabel as $abuseKey) {
-            $start = $request->getContentRangeStart();
-            $end = $request->getContentRangeEnd();
             $params = [
                 '{projectId}' => (string) $project->getId(),
                 '{userId}' => (string) $user->getId(),
@@ -992,7 +1002,7 @@ Http::shutdown()
                 '{ip}' => (string) $request->getIP(),
                 '{url}' => $request->getHostname() . $route->getPath(),
                 '{method}' => (string) $request->getMethod(),
-                '{chunkId}' => (string) (int) ($start / ($end + 1 - $start)),
+                '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
             ];
 
             foreach ($request->getParams() as $key => $value) {

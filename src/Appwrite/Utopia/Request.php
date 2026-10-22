@@ -216,9 +216,21 @@ class Request extends UtopiaRequest
      */
     public function getHeaders(): array
     {
-        $headers = parent::getHeaders();
+        return $this->getHeadersWithoutCookies([]);
+    }
 
-        $cookies = $this->getCookieParams();
+    /**
+     * Get all headers like getHeaders(), leaving the named cookies out of the synthesized `cookie` header.
+     *
+     * @param list<string> $names
+     * @return array<string, array<int, string>>
+     */
+    public function getHeadersWithoutCookies(array $names): array
+    {
+        $headers = parent::getHeaders();
+        unset($headers['cookie']);
+
+        $cookies = \array_diff_key($this->getCookieParams(), \array_flip($names));
         if (!empty($cookies)) {
             $pairs = [];
             foreach ($cookies as $key => $value) {
@@ -251,6 +263,36 @@ class Request extends UtopiaRequest
         }
 
         return UtopiaRequest::getUserAgent($default);
+    }
+
+    /**
+     * Index of the chunk this range starts in, for chunks of the given size. 0 without a valid range.
+     */
+    public function getContentRangeChunk(int $size): int
+    {
+        $start = $this->getContentRangeStart();
+
+        if ($start === null) {
+            return 0;
+        }
+
+        return \intdiv($start, $size);
+    }
+
+    /**
+     * @return array{unit: string, size: int, start: int, end: int}|null
+     */
+    #[\Override]
+    protected function parseContentRange(): ?array
+    {
+        $data = parent::parseContentRange();
+
+        // Bounds past PHP_INT_MAX saturate to it, and end + 1 must stay an integer.
+        if ($data === null || $data['size'] >= PHP_INT_MAX) {
+            return null;
+        }
+
+        return $data;
     }
 
     /**

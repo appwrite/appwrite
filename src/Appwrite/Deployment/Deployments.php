@@ -8,6 +8,7 @@ use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Validator\VariableKey;
 use Appwrite\Vcs\Validator\Directory;
+use Executor\Executor;
 use OpenRuntimes\Orchestrator\Enum\ArchiveCompression;
 use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use OpenRuntimes\Orchestrator\Enum\ReadFormat;
@@ -670,7 +671,7 @@ readonly class Deployments
      */
     public static function id(string $projectId, string $deploymentId): string
     {
-        return "{$projectId}-{$deploymentId}-build";
+        return Executor::runtimeId($projectId, $deploymentId) . '-build';
     }
 
     /**
