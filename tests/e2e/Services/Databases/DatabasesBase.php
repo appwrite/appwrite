@@ -932,6 +932,174 @@ trait DatabasesBase
         $this->assertTrue($response['body']['enabled']);
     }
 
+    /**
+     * Regression: increment/decrement must honor the collection `enabled` flag like every
+     * other document action. Before the fix these two endpoints skipped the enabled gate,
+     * so a client session kept mutating numeric attributes in a disabled collection.
+     */
+    public function testDisabledCollectionBlocksIncrement(): void
+    {
+        if ($this->getSide() !== 'client') {
+            $this->markTestSkipped('The enabled gate only applies to non-privileged (client) callers');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+
+        // A self-contained collection the acting client user can create and update in.
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Counters',
+            'permissions' => [
+                Permission::create(Role::users()),
+                Permission::read(Role::users()),
+            ],
+            $this->getSecurityParam() => true,
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->createAttribute($databaseId, $collectionId, 'integer', [
+                'key' => 'count',
+                'required' => false,
+            ]);
+            $this->assertEquals(202, $attribute['headers']['status-code']);
+            $this->waitForAllAttributes($databaseId, $collectionId);
+        }
+
+        // Create a document while the collection is enabled, owned by the acting user.
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => [
+                'count' => 1,
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $documentId = $document['body']['$id'];
+
+        // Increment works while the collection is enabled.
+        $response = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId) . '/count/increment', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), ['value' => 1]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(2, $response['body']['count']);
+
+        // Disable the collection (keep its permissions and document security intact).
+        $disable = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $collectionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'Counters',
+            'permissions' => [
+                Permission::create(Role::users()),
+                Permission::read(Role::users()),
+            ],
+            'enabled' => false,
+            $this->getSecurityParam() => true,
+        ]);
+        $this->assertEquals(200, $disable['headers']['status-code']);
+        $this->assertFalse($disable['body']['enabled']);
+
+        // Test for FAILURE: increment and decrement must be refused on the disabled
+        // collection, exactly like create/update/delete/get (404).
+        $increment = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId) . '/count/increment', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), ['value' => 1]);
+        $this->assertEquals(404, $increment['headers']['status-code']);
+
+        $decrement = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId) . '/count/decrement', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), ['value' => 1]);
+        $this->assertEquals(404, $decrement['headers']['status-code']);
+    }
+
+    /**
+     * Regression: upsert must only role-check permissions the caller **supplied**, not
+     * permissions **inherited** from the existing document (parity with update). Before the
+     * fix, a non-privileged user with update permission upserting a shared document whose
+     * stored permissions named roles they do not hold was refused (USER_UNAUTHORIZED), even
+     * when they sent no permissions of their own.
+     */
+    public function testUpsertDoesNotRevalidateInheritedPermissions(): void
+    {
+        if ($this->getSide() !== 'client') {
+            $this->markTestSkipped('The caller-role check only applies to non-privileged (client) callers');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $userId = $this->getUser()['$id'];
+        $otherId = 'other' . \uniqid();
+
+        // Collection with document-level security so the document's own permissions govern.
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Shared',
+            'permissions' => [Permission::create(Role::users())],
+            $this->getSecurityParam() => true,
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->createAttribute($databaseId, $collectionId, 'string', [
+                'key' => 'title',
+                'size' => 64,
+                'required' => false,
+            ]);
+            $this->assertEquals(202, $attribute['headers']['status-code']);
+            $this->waitForAllAttributes($databaseId, $collectionId);
+        }
+
+        // Create the document with the privileged key so it can carry roles the acting user
+        // does not hold: the user may update it, but its read/delete name someone else.
+        $documentId = ID::unique();
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            $this->getRecordIdParam() => $documentId,
+            'data' => ['title' => 'v1'],
+            'permissions' => [
+                Permission::read(Role::user($otherId)),
+                Permission::update(Role::user($userId)),
+                Permission::delete(Role::user($otherId)),
+            ],
+        ]);
+        $this->assertEquals(201, $created['headers']['status-code']);
+
+        // The acting user upserts (PUT) without supplying permissions. The inherited
+        // read/delete(other) must NOT be re-checked against the caller's roles.
+        $upsert = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $collectionId, $documentId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => ['title' => 'v2'],
+        ]);
+        $this->assertEquals(200, $upsert['headers']['status-code']);
+        $this->assertEquals('v2', $upsert['body']['title']);
+    }
+
     public function testCreateAttributes(): void
     {
         if (!$this->getSupportForAttributes()) {

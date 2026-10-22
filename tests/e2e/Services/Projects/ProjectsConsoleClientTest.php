@@ -7449,6 +7449,73 @@ final class ProjectsConsoleClientTest extends Scope
         }
     }
 
+    #[Group('projectsCRUD')]
+    public function testProjectSpecificPermissionsPrefixCollision(): void
+    {
+        // Two projects whose IDs are prefix siblings: 'A' is a string prefix of 'B'. A
+        // project-scoped role for B ("project-{B}-owner") must grant access to B only. The
+        // admin-role match keys off an exact 'project-{projectId}-' boundary; a prefix-only
+        // check (str_starts_with 'project-' . $projectIdA) would have leaked B's grant onto A.
+        $teamId = Id::unique();
+        $base = 'pfx' . \substr(\bin2hex(\random_bytes(5)), 0, 8);
+        $projectIdA = $base;
+        $projectIdB = $base . '2';
+
+        $this->setupProject(['projectId' => $projectIdA, 'name' => 'Prefix A'], $teamId);
+        $this->setupProject(['projectId' => $projectIdB, 'name' => 'Prefix B'], $teamId, false);
+
+        $testUserEmail = 'test-' . Id::unique() . '@localhost.test';
+        [ 'membershipId' => $membershipId ] = $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $testUserEmail,
+            'name' => 'Prefix User',
+            'roles' => ['owner'],
+        ]);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => $testUserEmail,
+            'password' => 'password',
+        ]);
+        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
+
+        // Grant a role on project B only. The member must see B and never the prefix sibling A.
+        $this->updateMembershipRole($teamId, $membershipId, ["project-$projectIdB-owner"]);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.9.4',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $returnedProjectIds = \array_column($response['body']['projects'], '$id');
+        $this->assertContains($projectIdB, $returnedProjectIds);
+        $this->assertNotContains($projectIdA, $returnedProjectIds);
+
+        // The member can read project B directly, but not the prefix-sibling A.
+        $getB = $this->client->call(Client::METHOD_GET, '/projects/' . $projectIdB, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+        ]);
+        $this->assertEquals(200, $getB['headers']['status-code']);
+
+        $getA = $this->client->call(Client::METHOD_GET, '/projects/' . $projectIdA, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+        ]);
+        $this->assertNotEquals(200, $getA['headers']['status-code']);
+    }
+
     #[Group('ciIgnore')]
     public function testProjectSpecificPermissionsForUpdateProject(): void
     {

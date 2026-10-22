@@ -306,6 +306,14 @@ return function (Container $container): void {
         $accountKeyUserId = $request->getHeaderLine('x-appwrite-user', '');
 
         if (!empty($accountKeyUserId) && !empty($accountKey)) {
+            // Account keys act as the console user on the console project only. On any other
+            // project the credentials are rejected (as the HTTP gate does) rather than silently
+            // ignored, so a key-only client cannot fall through to a guest connection and a
+            // key+session combination cannot skip the mutual-authentication check.
+            if ($project->getId() !== 'console') {
+                throw new Exception(Exception::USER_UNAUTHORIZED, 'Account API keys can only be used with the console project.');
+            }
+
             if (!$user->isEmpty()) {
                 throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
             }
