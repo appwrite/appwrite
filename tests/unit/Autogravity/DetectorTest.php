@@ -15,6 +15,8 @@ use Utopia\Cache\Adapter\Memory;
 use Utopia\Cache\Cache;
 use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
+use Utopia\Span\Span;
+use Utopia\Span\Storage\Memory as SpanMemory;
 
 final class DetectorTest extends TestCase
 {
@@ -61,6 +63,58 @@ final class DetectorTest extends TestCase
         $detector->get('second-source');
 
         $this->assertSame(2, $http->requests);
+    }
+
+    public function testRecordsCacheHitOnCurrentSpan(): void
+    {
+        Span::setStorage(new SpanMemory());
+        $span = Span::init('test.autogravity');
+
+        try {
+            $http = new CountingClient(new Response(
+                200,
+                body: new Stream('{"gravity":{"x":0.7,"y":0.4},"confidence":0.9}')
+            ));
+            $detector = new Detector(new Client($http), new Cache(new Memory()));
+
+            $detector->get('source-image');
+            $this->assertFalse($span->get('autogravity.cache'));
+            $this->assertSame(\strlen('source-image'), $span->get('autogravity.bytes'));
+
+            $detector->get('source-image');
+            $this->assertTrue($span->get('autogravity.cache'));
+            $this->assertSame(1, $http->requests);
+        } finally {
+            Span::setStorage(null);
+        }
+    }
+
+    public function testRecordsFailureOnCurrentSpan(): void
+    {
+        Span::setStorage(new SpanMemory());
+        $span = Span::init('test.autogravity');
+
+        try {
+            $detector = new Detector(new Client(new CountingClient(
+                new Response(413, body: new Stream('{"error":"payload too large"}'))
+            )), new Cache(new Memory()));
+
+            try {
+                $detector->get('huge-image');
+                $this->fail('Autogravity must surface payload errors');
+            } catch (Exception $e) {
+                $this->assertSame('payload too large', $e->getMessage());
+                $this->assertSame(413, $e->getCode());
+            }
+
+            $this->assertFalse($span->get('autogravity.cache'));
+            $this->assertSame(\strlen('huge-image'), $span->get('autogravity.bytes'));
+            $this->assertSame('payload too large', $span->get('autogravity.error'));
+            $this->assertSame(413, $span->get('autogravity.status'));
+            $this->assertNotInstanceOf(\Throwable::class, $span->getError());
+        } finally {
+            Span::setStorage(null);
+        }
     }
 }
 

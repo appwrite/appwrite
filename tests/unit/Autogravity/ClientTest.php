@@ -77,4 +77,13 @@ final class ClientTest extends TestCase
 
         $this->client(new Response(502, body: new Stream('<html>')))->analyze('image');
     }
+
+    public function testAnalyzePayloadTooLarge(): void
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Autogravity failed with status 413');
+        $this->expectExceptionCode(413);
+
+        $this->client(new Response(413, body: new Stream('')))->analyze('huge-image');
+    }
 }
