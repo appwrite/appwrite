@@ -345,6 +345,55 @@ pub async fn create_token(ctx: &mut Context, user_id: &str, mut token: Document)
     Ok(db.create_document("tokens", token).await?)
 }
 
+/// `createDocument('tokens', $token)` in a transaction holding the user's row
+/// lock (`getDocument('users', $id, forUpdate: true)`), with authorization
+/// skipped, only while the locked user `allows` it: `None` when it no longer
+/// does (deleted, or its address changed meanwhile).
+pub async fn create_bound_token<F>(db: &Database, user_id: &str, token: Document, allows: F) -> Result<Option<Document>>
+where
+    F: Fn(&Document) -> bool + Send + Sync,
+{
+    let allows = &allows;
+    let created = db
+        .authorization()
+        .skip(db.with_transaction(|| {
+            let db = db.clone();
+            let user_id = user_id.to_owned();
+            let token = token.clone();
+            async move {
+                let current = db.get_document("users", &user_id, Vec::new(), true).await?;
+                if current.is_empty() || !allows(&current) {
+                    return Ok(None);
+                }
+                Ok(Some(db.create_document("tokens", token).await?))
+            }
+        }))
+        .await?;
+    Ok(created)
+}
+
+/// `strtolower($user->getAttribute('email')) === $email`: the locked user
+/// still has the address (`email` lowercased already).
+pub fn has_email(user: &Document, email: &str) -> bool {
+    user.string_or_empty("email").to_ascii_lowercase() == email
+}
+
+/// A token that binds no one: a fresh user ID and internal ID with that
+/// user's permissions, created and deleted at once with authorization
+/// skipped (the response does not tell an undeliverable request apart).
+pub async fn create_unbound_token(db: &Database, mut token: Document, delete: bool) -> Result<Document> {
+    let user_id = appwrite_core::database::unique_id();
+    token.put("userId", Value::from(user_id.as_str()));
+    token.put("userInternalId", Value::from(appwrite_core::database::unique_id().as_str()));
+    token.set("$permissions", owner_permissions(&user_id))?;
+    let authorization = db.authorization();
+    let token = authorization.skip(db.create_document("tokens", token)).await?;
+    if delete {
+        authorization.skip(db.delete_document("tokens", token.id())).await?;
+    }
+    Ok(token)
+}
+
 /// `$profile->tokenVerify($type, $secret, $proof)`: the user's first token
 /// of `kind` whose secret matches and that has not expired.
 pub fn token_verify(user: &Document, kind: i64, secret: &str) -> Option<Document> {
@@ -642,6 +691,81 @@ pub async fn delete_user_targets(db: &Database, user_sequence: i64) -> Result<()
         Some(&mut DeleteSubscribers { db }),
     )
     .await?;
+    Ok(())
+}
+
+/// `User::revokeCredentials()`: every way into the account but its email
+/// address revoked (password, sessions, tokens, MFA factors, passkeys,
+/// identities, phone and push targets) in one transaction, and mirrored on
+/// `user`. For the verified owner of an address claiming an account that
+/// was registered with it and never verified, so nobody else keeps access.
+pub async fn revoke_credentials(db: &Database, user: &mut User) -> Result<()> {
+    if user.sequence == 0 || user.status == Some(false) {
+        return Ok(());
+    }
+    let hash = Argon2::new();
+    let mut attributes = Document::default();
+    attributes.put("password", Value::Null);
+    attributes.put("hash", Value::from(hash.name()));
+    attributes.put("hashOptions", hash_options(&hash));
+    attributes.put("passwordHistory", Value::Array(Default::default()));
+    attributes.put("passwordUpdate", Value::Null);
+    attributes.put("passwordPwned", Value::Null);
+    attributes.put("phone", Value::Null);
+    attributes.put("phoneVerification", Value::Bool(false));
+    attributes.put("mfa", Value::Bool(false));
+    attributes.put("mfaRecoveryCodes", Value::Array(Default::default()));
+
+    let sequence = user.sequence.to_string();
+    db.with_transaction(|| {
+        let db = db.clone();
+        let id = user.id.clone();
+        let sequence = sequence.clone();
+        let attributes = attributes.clone();
+        async move {
+            for collection in ["sessions", "tokens", "challenges", "authenticators", "identities"] {
+                db.delete_documents(
+                    collection,
+                    vec![Query::equal("userInternalId", [sequence.as_str()])],
+                    utopia_database::database::BATCH_SIZE,
+                    None,
+                )
+                .await?;
+            }
+            delete_targets(
+                &db,
+                vec![Query::equal("userInternalId", [sequence.as_str()]), Query::not_equal("providerType", "email")],
+            )
+            .await
+            .map_err(|e| utopia_database::Error::new(Kind::Exception, e.message.into_owned()))?;
+            db.update_document("users", &id, attributes).await?;
+            Ok(())
+        }
+    })
+    .await?;
+
+    user.password = None;
+    user.hash = attributes.string("hash");
+    user.hash_options = attributes.json("hashOptions");
+    user.password_history.clear();
+    user.password_update = None;
+    user.password_pwned = None;
+    user.phone = None;
+    user.phone_verification = Some(false);
+    user.mfa = Some(false);
+    user.mfa_recovery_codes.clear();
+    user.sessions.clear();
+    user.authenticators.clear();
+    user.targets.clear();
+    Ok(())
+}
+
+/// `Deletes\Targets::delete()`: the targets `queries` match, each with its
+/// subscribers (and their topics' totals).
+async fn delete_targets(db: &Database, mut queries: Vec<Query>) -> Result<()> {
+    queries.push(Query::order_asc("", None));
+    db.delete_documents("targets", queries, utopia_database::database::BATCH_SIZE, Some(&mut DeleteSubscribers { db }))
+        .await?;
     Ok(())
 }
 

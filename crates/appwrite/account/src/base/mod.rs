@@ -398,6 +398,12 @@ pub fn set_default_hash(user: &mut Document) {
 /// duplicate is `user_already_exists`.
 pub async fn create_user(ctx: &mut Context, user: Document) -> Result<User> {
     let user = over_signed_in(ctx, user).await?;
+    insert_user(ctx, user).await
+}
+
+/// `createDocument('users', $user)` of a new document, with authorization
+/// skipped; a duplicate is `user_already_exists`.
+pub async fn insert_user(ctx: &mut Context, user: Document) -> Result<User> {
     let db = ctx.db()?;
     let skipped = skipped(&[]);
     let created =

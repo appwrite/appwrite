@@ -7,7 +7,7 @@ use utopia_emails::EmailValidator;
 use utopia_http::{Cookie, Response};
 use utopia_validators::{AllOf, Assoc, Text, Validator};
 
-use appwrite_core::database::documents::User;
+use appwrite_core::database::documents::{Attributes, User};
 use appwrite_core::platform::{Context, Route};
 use appwrite_core::response::{UserModel, prefs_value};
 use appwrite_core::validators::{Password, PasswordDictionary, PasswordStrength, Phone};
@@ -381,7 +381,6 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
     let user = base::session_user(ctx)?;
     let pwned = check_password(ctx, &user, &password, Some(&email), None).await?;
 
-    let old_email = user.email.clone();
     let email = email.to_lowercase();
     let db = ctx.db()?;
 
@@ -414,12 +413,72 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
         return Err(Error::new(ErrorType::UserTargetAlreadyExists));
     }
 
-    let result = async {
-        let mut updated = base::update_user(&db, &user.id, updates, &[base::TARGETS]).await?;
-        move_target(&db, &mut updated, old_email.as_deref(), &email).await?;
+    // Under the user's row lock: the address it had then moves its target,
+    // and a change of address voids the email-bound tokens sent to the old one.
+    let result = Box::pin(async {
+        let changed = db
+            .with_transaction(|| {
+                let db = db.clone();
+                let id = user.id.clone();
+                let updates = updates.clone();
+                let email = email.clone();
+                let sequence = user.sequence.to_string();
+                // Boxed: the transaction's future is large.
+                Box::pin(async move {
+                    let authorization = db.authorization();
+                    let current = authorization.skip(db.get_document("users", &id, Vec::new(), true)).await?;
+                    if current.is_empty() {
+                        return Ok(false);
+                    }
+                    let locked = current.string("email");
+                    let skipped = base::skipped(&[]);
+                    db.skip_filters(Some(skipped.as_slice()), db.update_document("users", &id, updates)).await?;
+                    if let Some(locked) = &locked {
+                        let target = authorization
+                            .skip(db.find_one(
+                                "targets",
+                                vec![
+                                    Query::equal("userInternalId", [sequence.as_str()]),
+                                    Query::equal("identifier", [locked.as_str()]),
+                                ],
+                            ))
+                            .await?;
+                        if !target.is_empty() {
+                            let mut moved = Document::default();
+                            moved.put("identifier", Value::from(email.as_str()));
+                            authorization.skip(db.update_document("targets", target.id(), moved)).await?;
+                        }
+                    }
+                    if locked.as_deref() != Some(email.as_str()) {
+                        let kinds = [
+                            base::TOKEN_TYPE_RECOVERY,
+                            base::TOKEN_TYPE_RECOVERY_OTP,
+                            base::TOKEN_TYPE_VERIFICATION,
+                            base::TOKEN_TYPE_VERIFICATION_OTP,
+                            crate::base::token_type::MAGIC_URL,
+                            crate::base::token_type::EMAIL,
+                        ];
+                        authorization
+                            .skip(db.delete_documents(
+                                "tokens",
+                                vec![Query::equal("userInternalId", [sequence.as_str()]), Query::equal("type", kinds)],
+                                utopia_database::database::BATCH_SIZE,
+                                None,
+                            ))
+                            .await?;
+                    }
+                    Ok(true)
+                })
+            })
+            .await?;
+        if !changed {
+            return Err(Error::new(ErrorType::UserNotFound));
+        }
+        let reloaded = db.authorization().skip(base::user_document(&db, &user.id, &[base::TARGETS])).await?;
+        let updated = User::from(&reloaded);
         db.purge_cached_document("users", &updated.id).await?;
         Ok::<User, Error>(updated)
-    }
+    })
     .await;
     let user = result.map_err(|e| duplicate_as(e, ErrorType::GeneralBadRequest))?;
     ctx.event_param("userId", user.id.clone());
