@@ -181,10 +181,11 @@ final class HeadersTest extends TestCase
 
         $this->assertSame([
             'Content-Type' => 'application/json',
-            'X-Appwrite-Client-Ip' => '203.0.113.10',
+            'x-appwrite-client-ip' => '203.0.113.10',
         ], Headers::stripReserved([
             'Content-Type' => 'application/json',
-            'X-Appwrite-Client-Ip' => '203.0.113.10',
+            'X-Appwrite-Client-Ip' => '198.51.100.1',
+            'x-appwrite-client-ip' => '203.0.113.10',
             'x-appwrite-user-id' => 'caller',
         ], ['x-appwrite-client-ip']));
     }

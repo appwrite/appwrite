@@ -91,7 +91,7 @@ class Headers extends Validator
 
     /**
      * Drop reserved Appwrite headers, matching names case-insensitively.
-     * Names in $keep (compared case-insensitively) are left in place.
+     * Names in $keep stay only when the header key matches exactly.
      *
      * @param array<array-key, mixed> $headers
      * @param list<string> $keep
@@ -99,15 +99,15 @@ class Headers extends Validator
      */
     public static function stripReserved(array $headers, array $keep = []): array
     {
-        $keepLower = [];
+        $keepExact = [];
         foreach ($keep as $name) {
-            $keepLower[\strtolower($name)] = true;
+            $keepExact[$name] = true;
         }
 
         $sanitized = [];
 
         foreach ($headers as $key => $value) {
-            if (\is_string($key) && self::isReserved($key) && !isset($keepLower[\strtolower($key)])) {
+            if (\is_string($key) && self::isReserved($key) && !isset($keepExact[$key])) {
                 continue;
             }
 
