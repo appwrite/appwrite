@@ -451,6 +451,7 @@
             "getDatabase": "",
             "getDatabaseName": "public",
             "getDatabaseStatus": null,
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "public",
@@ -490,6 +491,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Table",
             "getCreatedAt": "",
             "getDatabase": {
+              "description": "",
               "id": "public",
               "name": "public",
               "createdAt": "",
@@ -499,6 +501,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "TestTable",
@@ -539,6 +542,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Table",
             "getCreatedAt": "",
             "getDatabase": {
+              "description": "",
               "id": "public",
               "name": "public",
               "createdAt": "",
@@ -548,6 +552,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "FunctionalDefaultTestTable",
@@ -591,6 +596,7 @@
             "getBucketName": "default",
             "getCompression": "none",
             "getCreatedAt": "",
+            "getDescription": "",
             "getEnabled": false,
             "getEncryption": false,
             "getFileSecurity": false,
@@ -603,6 +609,7 @@
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getStatus": "success",
+            "getStripMetadata": false,
             "getTransformations": false,
             "getUpdatedAt": ""
           }

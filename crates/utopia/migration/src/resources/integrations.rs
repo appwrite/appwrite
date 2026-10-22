@@ -51,7 +51,7 @@ impl ApiKey {
         };
         let created = to_string(&i.or("createdAt", Value::from("")), &p(7, "createdAt"))?;
         let updated = to_string(&i.or("updatedAt", Value::from("")), &p(8, "updatedAt"))?;
-        Ok(key.resource(id, created, updated))
+        Ok(super::described(key.resource(id, created, updated), super::description_if_string(&i)))
     }
 }
 

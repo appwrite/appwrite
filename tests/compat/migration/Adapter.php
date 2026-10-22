@@ -619,6 +619,26 @@ final class Adapter implements Base, Benchmarks
                     $a['port'] ?? $port,
                 ));
             },
+            'nhost.database' => function (array $a, Session $s) {
+                $source = new NHost($a['subdomain'], $a['region'], $a['adminSecret'] ?? 'secret', $a['database'], $a['username'] ?? 'postgres', $a['password'] ?? 'password', ...(isset($a['port']) ? [$a['port']] : []));
+                if (isset($a['address'])) {
+                    $source->setDatabaseAddress($a['address']);
+                }
+
+                return ['host' => $source->getDatabaseHost(), 'dsn' => $source->getDatabaseDsn()];
+            },
+            'supabase.database' => function (array $a, Session $s) {
+                [$host, $port] = \explode(':', $s->service('migration-supabase-db'));
+                $source = new Supabase($s->service('migration-api') . '/p/supabase', 'test-key', $host, 'postgres', 'postgres', 'postgres', $port);
+                if (isset($a['address'])) {
+                    $source->setDatabaseAddress($a['address']);
+                }
+
+                // The fixture's address differs per runtime.
+                $fixture = fn (string $v) => \str_replace([$host, 'port=' . $port], ['{host}', 'port={port}'], $v);
+
+                return ['host' => $fixture($source->getDatabaseHost()), 'dsn' => $fixture($source->getDatabaseDsn())];
+            },
             'nhost.status_code' => fn (array $a, Session $s) => (new \ReflectionMethod(NHost::class, 'statusCodeFromSqlState'))->invoke(null, $a['sqlstate']),
             'appwrite_destination.new' => function (array $a, Session $s) {
                 $db = $s->get($a['db']);

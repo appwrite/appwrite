@@ -36,6 +36,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -226,8 +236,9 @@
           },
           "expect": {
             "name": "Database",
+            "description": "",
             "enabled": true,
-            "search": "database Database",
+            "search": "database Database ",
             "originalId": null,
             "type": "tablesdb",
             "database": "",
@@ -270,6 +281,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -474,8 +495,9 @@
           },
           "expect": {
             "name": "Database",
+            "description": "",
             "enabled": true,
-            "search": "database Database",
+            "search": "database Database ",
             "originalId": null,
             "type": "tablesdb",
             "database": "",
@@ -518,6 +540,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -724,8 +756,9 @@
           },
           "expect": {
             "name": "Database",
+            "description": "",
             "enabled": true,
-            "search": "database Database",
+            "search": "database Database ",
             "originalId": null,
             "type": "tablesdb",
             "database": "",
@@ -775,6 +808,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -983,8 +1026,9 @@
           },
           "expect": {
             "name": "Database",
+            "description": "",
             "enabled": true,
-            "search": "database Database",
+            "search": "database Database ",
             "originalId": null,
             "type": "tablesdb",
             "database": "",
@@ -1028,6 +1072,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -1304,7 +1358,7 @@
           "expect": {
             "name": "Database",
             "enabled": true,
-            "search": "database-provisioning Database",
+            "search": "database-provisioning Database ",
             "originalId": null,
             "type": "tablesdb",
             "database": "",
@@ -1314,6 +1368,7 @@
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
+            "description": "",
             "$collection": "databases"
           }
         },
@@ -1336,7 +1391,7 @@
           "expect": {
             "name": "Database",
             "enabled": true,
-            "search": "database-failed Database",
+            "search": "database-failed Database ",
             "originalId": null,
             "type": "tablesdb",
             "database": "",
@@ -1346,6 +1401,7 @@
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
+            "description": "",
             "$collection": "databases"
           }
         },
@@ -1374,6 +1430,19 @@
                   "type": "string",
                   "size": 256,
                   "required": true,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "key": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
                   "default": null,
                   "signed": true,
                   "array": false,
@@ -1532,6 +1601,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -1808,7 +1887,7 @@
           "expect": {
             "name": "Database",
             "enabled": true,
-            "search": "database-provisioning Database",
+            "search": "database-provisioning Database ",
             "originalId": null,
             "type": "tablesdb",
             "database": "",
@@ -1818,6 +1897,7 @@
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
+            "description": "",
             "$collection": "databases"
           }
         },
@@ -1840,7 +1920,7 @@
           "expect": {
             "name": "Database",
             "enabled": true,
-            "search": "database-failed Database",
+            "search": "database-failed Database ",
             "originalId": null,
             "type": "tablesdb",
             "database": "",
@@ -1850,6 +1930,7 @@
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
+            "description": "",
             "$collection": "databases"
           }
         },
@@ -1878,6 +1959,19 @@
                   "type": "string",
                   "size": 256,
                   "required": true,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "key": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
                   "default": null,
                   "signed": true,
                   "array": false,
@@ -2042,6 +2136,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -2312,7 +2416,7 @@
           "expect": {
             "name": "Database",
             "enabled": true,
-            "search": "database-provisioning Database",
+            "search": "database-provisioning Database ",
             "originalId": null,
             "type": "tablesdb",
             "database": "",
@@ -2322,6 +2426,7 @@
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
+            "description": "",
             "$collection": "databases"
           }
         },
@@ -2344,7 +2449,7 @@
           "expect": {
             "name": "Database",
             "enabled": true,
-            "search": "database-failed Database",
+            "search": "database-failed Database ",
             "originalId": null,
             "type": "tablesdb",
             "database": "",
@@ -2354,6 +2459,7 @@
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
+            "description": "",
             "$collection": "databases"
           }
         },
@@ -2382,6 +2488,19 @@
                   "type": "string",
                   "size": 256,
                   "required": true,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "key": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
                   "default": null,
                   "signed": true,
                   "array": false,
@@ -2546,6 +2665,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -2816,7 +2945,7 @@
           "expect": {
             "name": "Database",
             "enabled": true,
-            "search": "database-provisioning Database",
+            "search": "database-provisioning Database ",
             "originalId": null,
             "type": "tablesdb",
             "database": "",
@@ -2826,6 +2955,7 @@
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
+            "description": "",
             "$collection": "databases"
           }
         },
@@ -2848,7 +2978,7 @@
           "expect": {
             "name": "Database",
             "enabled": true,
-            "search": "database-failed Database",
+            "search": "database-failed Database ",
             "originalId": null,
             "type": "tablesdb",
             "database": "",
@@ -2858,6 +2988,7 @@
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
+            "description": "",
             "$collection": "databases"
           }
         },
@@ -2886,6 +3017,19 @@
                   "type": "string",
                   "size": 256,
                   "required": true,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "key": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
                   "default": null,
                   "signed": true,
                   "array": false,
@@ -3044,6 +3188,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -3254,7 +3408,7 @@
           "expect": {
             "name": "Database",
             "enabled": true,
-            "search": "database Database",
+            "search": "database Database ",
             "originalId": null,
             "type": "tablesdb",
             "database": "",
@@ -3264,6 +3418,7 @@
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
+            "description": "",
             "$collection": "databases"
           }
         },
@@ -3292,6 +3447,19 @@
                   "type": "string",
                   "size": 256,
                   "required": true,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "key": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
                   "default": null,
                   "signed": true,
                   "array": false,
@@ -3436,6 +3604,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -3646,7 +3824,7 @@
           "expect": {
             "name": "Database",
             "enabled": true,
-            "search": "database Database",
+            "search": "database Database ",
             "originalId": null,
             "type": "tablesdb",
             "database": "",
@@ -3656,6 +3834,7 @@
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
+            "description": "",
             "$collection": "databases"
           }
         },
@@ -3684,6 +3863,19 @@
                   "type": "string",
                   "size": 256,
                   "required": true,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "key": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
                   "default": null,
                   "signed": true,
                   "array": false,
@@ -3828,6 +4020,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -4089,8 +4291,9 @@
           },
           "expect": {
             "name": "Database",
+            "description": "",
             "enabled": true,
-            "search": "database-first Database",
+            "search": "database-first Database ",
             "originalId": null,
             "type": "tablesdb",
             "database": "",
@@ -4121,8 +4324,9 @@
           },
           "expect": {
             "name": "Database",
+            "description": "",
             "enabled": true,
-            "search": "database-second Database",
+            "search": "database-second Database ",
             "originalId": null,
             "type": "tablesdb",
             "database": "",
@@ -4153,8 +4357,9 @@
           },
           "expect": {
             "name": "Database",
+            "description": "",
             "enabled": true,
-            "search": "database-third Database",
+            "search": "database-third Database ",
             "originalId": null,
             "type": "tablesdb",
             "database": "",

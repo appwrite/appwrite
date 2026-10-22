@@ -116,7 +116,7 @@ impl ProjectVariable {
         };
         let created = to_string(&i.or("createdAt", Value::from("")), &param(class, 5, "createdAt"))?;
         let updated = to_string(&i.or("updatedAt", Value::from("")), &param(class, 6, "updatedAt"))?;
-        Ok(v.resource(id, created, updated))
+        Ok(super::described(v.resource(id, created, updated), super::description_if_string(&i)))
     }
 }
 
@@ -307,6 +307,6 @@ impl Webhook {
         };
         let created = to_string(&i.or("createdAt", Value::from("")), &p(9, "createdAt"))?;
         let updated = to_string(&i.or("updatedAt", Value::from("")), &p(10, "updatedAt"))?;
-        Ok(w.resource(id, created, updated))
+        Ok(super::described(w.resource(id, created, updated), super::description_if_string(&i)))
     }
 }

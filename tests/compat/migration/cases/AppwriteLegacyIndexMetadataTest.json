@@ -36,6 +36,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -101,6 +111,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -287,6 +307,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -680,6 +710,16 @@
                   "$id": "name",
                   "type": "string",
                   "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
                   "required": false,
                   "default": null,
                   "array": false,
@@ -1139,6 +1179,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -1294,6 +1344,7 @@
               "slug"
             ],
             "getCreatedAt": "",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "index-idx_title_slug",
             "getKey": "idx_title_slug",
@@ -1306,7 +1357,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -1359,6 +1412,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -1430,6 +1493,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -1616,6 +1689,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -2012,6 +2095,16 @@
                   "$id": "name",
                   "type": "string",
                   "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
                   "required": false,
                   "default": null,
                   "array": false,
@@ -2467,6 +2560,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -2622,6 +2725,7 @@
               "slug"
             ],
             "getCreatedAt": "",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "index-idx_title_slug",
             "getKey": "idx_title_slug",
@@ -2637,7 +2741,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -2690,6 +2796,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -2761,6 +2877,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -2947,6 +3073,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -3343,6 +3479,16 @@
                   "$id": "name",
                   "type": "string",
                   "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
                   "required": false,
                   "default": null,
                   "array": false,
@@ -3801,6 +3947,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -3956,6 +4112,7 @@
               "slug"
             ],
             "getCreatedAt": "",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "index-idx_title_slug",
             "getKey": "idx_title_slug",
@@ -3971,7 +4128,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -4024,6 +4183,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -4095,6 +4264,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -4281,6 +4460,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -4680,6 +4869,16 @@
                   "$id": "name",
                   "type": "string",
                   "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
                   "required": false,
                   "default": null,
                   "array": false,
@@ -5141,6 +5340,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -5296,6 +5505,7 @@
               "slug"
             ],
             "getCreatedAt": "",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "index-idx_title_slug",
             "getKey": "idx_title_slug",
@@ -5314,7 +5524,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -5367,6 +5579,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -5438,6 +5660,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -5624,6 +5856,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -6023,6 +6265,16 @@
                   "$id": "name",
                   "type": "string",
                   "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
                   "required": false,
                   "default": null,
                   "array": false,
@@ -6481,6 +6733,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -6636,6 +6898,7 @@
               "slug"
             ],
             "getCreatedAt": "",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "index-idx_title_slug",
             "getKey": "idx_title_slug",
@@ -6654,7 +6917,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "skip",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -6707,6 +6972,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -6778,6 +7053,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -6964,6 +7249,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -7360,6 +7655,16 @@
                   "$id": "name",
                   "type": "string",
                   "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
                   "required": false,
                   "default": null,
                   "array": false,
@@ -7815,6 +8120,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -7970,6 +8285,7 @@
               "slug"
             ],
             "getCreatedAt": "",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "index-idx_title_slug",
             "getKey": "idx_title_slug",
@@ -7985,7 +8301,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -8038,6 +8356,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -8109,6 +8437,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -8295,6 +8633,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -8691,6 +9039,16 @@
                   "$id": "name",
                   "type": "string",
                   "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
                   "required": false,
                   "default": null,
                   "array": false,
@@ -9146,6 +9504,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -9301,6 +9669,7 @@
               "slug"
             ],
             "getCreatedAt": "",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "index-idx_title_slug",
             "getKey": "idx_title_slug",
@@ -9316,7 +9685,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -9369,6 +9740,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -9440,6 +9821,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -9626,6 +10017,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -10025,6 +10426,16 @@
                   "$id": "name",
                   "type": "string",
                   "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
                   "required": false,
                   "default": null,
                   "array": false,
@@ -10483,6 +10894,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -10638,6 +11059,7 @@
               "slug"
             ],
             "getCreatedAt": "",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "index-idx_title_slug",
             "getKey": "idx_title_slug",
@@ -10656,7 +11078,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -10709,6 +11133,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -10780,6 +11214,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -10966,6 +11410,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -11359,6 +11813,16 @@
                   "$id": "name",
                   "type": "string",
                   "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
                   "required": false,
                   "default": null,
                   "array": false,
@@ -11821,6 +12285,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -11976,6 +12450,7 @@
               "slug"
             ],
             "getCreatedAt": "",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "index-idx_title_slug",
             "getKey": "idx_title_slug",
@@ -11991,7 +12466,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -12044,6 +12521,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -12115,6 +12602,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -12301,6 +12798,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -12697,6 +13204,16 @@
                   "$id": "name",
                   "type": "string",
                   "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
                   "required": false,
                   "default": null,
                   "array": false,
@@ -13152,6 +13669,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -13307,6 +13834,7 @@
               "title"
             ],
             "getCreatedAt": "",
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "index-idx_title_slug",
             "getKey": "idx_title_slug",
@@ -13322,7 +13850,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",

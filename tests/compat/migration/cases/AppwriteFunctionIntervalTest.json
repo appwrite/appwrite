@@ -241,6 +241,7 @@
             "getCommands": "",
             "getCreatedAt": "",
             "getDeploymentRetention": 0,
+            "getDescription": "",
             "getEnabled": true,
             "getEntrypoint": "",
             "getEvents": [],
@@ -278,16 +279,16 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.4.0 ()",
+                "user-agent": "AppwritePHPSDK/32.0.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
-                "x-appwrite-response-format": "2.0.0",
+                "x-appwrite-response-format": "2.5.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.4.0"
+                "x-sdk-version": "32.0.0"
               },
-              "body": "{\"functionId\":\"function\",\"name\":\"Function\",\"runtime\":\"node-22\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"deploymentRetention\":0,\"interval\":60}"
+              "body": "{\"functionId\":\"function\",\"name\":\"Function\",\"runtime\":\"node-22\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"deploymentRetention\":0,\"interval\":60,\"description\":\"\"}"
             }
           ]
         }
@@ -551,6 +552,7 @@
             "getCommands": "",
             "getCreatedAt": "",
             "getDeploymentRetention": 0,
+            "getDescription": "",
             "getEnabled": true,
             "getEntrypoint": "",
             "getEvents": [],
@@ -588,16 +590,16 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.4.0 ()",
+                "user-agent": "AppwritePHPSDK/32.0.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
-                "x-appwrite-response-format": "2.0.0",
+                "x-appwrite-response-format": "2.5.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.4.0"
+                "x-sdk-version": "32.0.0"
               },
-              "body": "{\"functionId\":\"function\",\"name\":\"Function\",\"runtime\":\"node-22\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"deploymentRetention\":0,\"interval\":5}"
+              "body": "{\"functionId\":\"function\",\"name\":\"Function\",\"runtime\":\"node-22\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"deploymentRetention\":0,\"interval\":5,\"description\":\"\"}"
             },
             {
               "method": "POST",
@@ -606,16 +608,16 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.4.0 ()",
+                "user-agent": "AppwritePHPSDK/32.0.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
-                "x-appwrite-response-format": "2.0.0",
+                "x-appwrite-response-format": "2.5.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.4.0"
+                "x-sdk-version": "32.0.0"
               },
-              "body": "{\"functionId\":\"function\",\"name\":\"Function\",\"runtime\":\"node-22\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"deploymentRetention\":0}"
+              "body": "{\"functionId\":\"function\",\"name\":\"Function\",\"runtime\":\"node-22\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"deploymentRetention\":0,\"description\":\"\"}"
             }
           ]
         }
@@ -852,6 +854,7 @@
             "getCommands": "",
             "getCreatedAt": "",
             "getDeploymentRetention": 0,
+            "getDescription": "",
             "getEnabled": true,
             "getEntrypoint": "",
             "getEvents": [],
@@ -889,16 +892,16 @@
               "headers": {
                 "accept": "application/json",
                 "content-type": "application/json",
-                "user-agent": "AppwritePHPSDK/30.4.0 ()",
+                "user-agent": "AppwritePHPSDK/32.0.0 ()",
                 "x-appwrite-key": "test-key",
                 "x-appwrite-project": "p-${ns}",
-                "x-appwrite-response-format": "2.0.0",
+                "x-appwrite-response-format": "2.5.0",
                 "x-sdk-language": "php",
                 "x-sdk-name": "PHP",
                 "x-sdk-platform": "server",
-                "x-sdk-version": "30.4.0"
+                "x-sdk-version": "32.0.0"
               },
-              "body": "{\"functionId\":\"function\",\"name\":\"Function\",\"runtime\":\"php-8.4\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"deploymentRetention\":0}"
+              "body": "{\"functionId\":\"function\",\"name\":\"Function\",\"runtime\":\"php-8.4\",\"execute\":[],\"events\":[],\"schedule\":\"\",\"timeout\":0,\"enabled\":true,\"logging\":true,\"entrypoint\":\"\",\"commands\":\"\",\"scopes\":[],\"deploymentRetention\":0,\"description\":\"\"}"
             }
           ]
         }

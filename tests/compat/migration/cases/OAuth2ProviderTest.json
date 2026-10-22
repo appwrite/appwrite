@@ -31,6 +31,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": true,
@@ -82,6 +83,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": true,
@@ -133,6 +135,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": true,
@@ -184,6 +187,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": true,
@@ -235,6 +239,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": true,
@@ -286,6 +291,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": true,
@@ -353,6 +359,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -415,6 +422,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "svc",
             "getDestinationSecretFields": {
               "keyID": "K",
@@ -482,6 +490,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -544,6 +553,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": {
               "endpoint": "https://idp.example.test"
@@ -609,6 +619,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": {
               "endpoint": "https://idp.example.test"
@@ -674,6 +685,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -736,6 +748,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -798,6 +811,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -860,6 +874,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -922,6 +937,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -984,6 +1000,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -1046,6 +1063,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -1108,6 +1126,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -1170,6 +1189,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -1232,6 +1252,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -1294,6 +1315,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -1356,6 +1378,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -1418,6 +1441,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": {
               "endpoint": "https://idp.example.test"
@@ -1483,6 +1507,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -1545,6 +1570,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": {
               "endpoint": "https://idp.example.test"
@@ -1610,6 +1636,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": {
               "prompt": [
@@ -1679,6 +1706,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -1741,6 +1769,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -1803,6 +1832,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": {
               "keycloakDomain": "https://idp.example.test",
@@ -1870,6 +1900,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -1932,6 +1963,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -1994,6 +2026,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -2057,6 +2090,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -2119,6 +2153,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": {
               "wellKnownEndpoint": "https://w",
@@ -2189,6 +2224,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": {
               "oktaDomain": "example.test",
@@ -2256,6 +2292,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -2318,6 +2355,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -2380,6 +2418,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -2442,6 +2481,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -2504,6 +2544,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -2566,6 +2607,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -2628,6 +2670,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -2690,6 +2733,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -2752,6 +2796,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -2814,6 +2859,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -2876,6 +2922,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -2938,6 +2985,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -3000,6 +3048,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -3062,6 +3111,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -3124,6 +3174,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -3186,6 +3237,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -3248,6 +3300,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -3310,6 +3363,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -3372,6 +3426,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": "client-123",
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -3436,6 +3491,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "",
+            "getDescription": "",
             "getDestinationAppId": null,
             "getDestinationSecretFields": [],
             "getEnabled": false,
@@ -3483,6 +3539,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Auth\\OAuth2\\OAuth2Provider",
             "getCreatedAt": "c",
+            "getDescription": "",
             "getDestinationAppId": "42",
             "getDestinationSecretFields": [],
             "getEnabled": true,

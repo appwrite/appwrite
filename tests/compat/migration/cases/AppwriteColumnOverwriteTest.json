@@ -36,6 +36,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -101,6 +111,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -287,6 +307,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -563,6 +593,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -699,9 +739,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "title",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -734,6 +777,7 @@
             },
             "getCreatedAt": "",
             "getDefault": "hello",
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -749,7 +793,9 @@
             "getSize": 100,
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -987,6 +1033,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -1123,9 +1179,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "title",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -1158,6 +1217,7 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -1173,7 +1233,9 @@
             "getSize": 120,
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -1263,6 +1325,7 @@
           "expect": [
             {
               "key": "title",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",
@@ -1327,6 +1390,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -1398,6 +1471,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -1584,6 +1667,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -1859,6 +1952,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -1995,9 +2098,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Email",
             "getAttribute": {
+              "description": "",
               "key": "mail",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -2030,6 +2136,7 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "email",
             "getFormatOptions": [],
@@ -2045,7 +2152,9 @@
             "getSize": 254,
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -2283,6 +2392,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -2419,9 +2538,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Email",
             "getAttribute": {
+              "description": "",
               "key": "mail",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -2454,6 +2576,7 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "email",
             "getFormatOptions": [],
@@ -2469,7 +2592,9 @@
             "getSize": 254,
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -2559,6 +2684,7 @@
           "expect": [
             {
               "key": "mail",
+              "description": "",
               "databaseInternalId": "1",
               "databaseId": "shop",
               "collectionInternalId": "1",

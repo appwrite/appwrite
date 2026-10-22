@@ -116,13 +116,14 @@ impl Database {
         let database_type = to_string(&i.or("type", Value::from(default_type)), &p(7, "type"))?;
         let database = to_opt_string(&i.or("database", default_dsn), &p(8, "database"))?;
         let status = to_opt_string(&i.or("status", Value::Null), &p(9, "databaseStatus"))?;
-        Ok(Database { flavor, name, enabled, database_type, database, status }.resource(Base {
+        let database = Database { flavor, name, enabled, database_type, database, status }.resource(Base {
             id,
             original_id,
             created_at,
             updated_at,
             ..Base::default()
-        }))
+        });
+        Ok(super::described(database, super::description(&i)?))
     }
 }
 
@@ -202,12 +203,13 @@ impl Table {
         let created = to_string(&i.or("createdAt", Value::from("")), &p(6, "createdAt"))?;
         let updated = to_string(&i.or("updatedAt", Value::from("")), &p(7, "updatedAt"))?;
         let enabled = to_bool(&i.or("enabled", Value::Bool(true)), &p(8, "enabled"))?;
-        Ok(Table::new(false, database, name, row_security, enabled).resource(
+        let table = Table::new(false, database, name, row_security, enabled).resource(
             id,
             super::strings(&permissions),
             created,
             updated,
-        ))
+        );
+        Ok(super::described(table, super::description(&i)?))
     }
 
     /// PHP: `Collection::fromArray()`: the database's class from its `type`.
@@ -234,13 +236,14 @@ impl Table {
         let created = to_string(&i.or("createdAt", Value::from("")), &p(6, "createdAt"))?;
         let updated = to_string(&i.or("updatedAt", Value::from("")), &p(7, "updatedAt"))?;
         let enabled = to_bool(&i.or("enabled", Value::Bool(true)), &p(8, "enabled"))?;
+        let description = super::description(&i)?;
         let dimension = to_opt_int(
             &i.or("dimension", Value::Null),
             &param("Utopia\\Migration\\Resources\\Database\\Collection::setDimension", 1, "dimension"),
         )?;
         let table = Table::new(true, database, name, row_security, enabled);
         table.set_dimension(dimension);
-        Ok(table.resource(id, super::strings(&permissions), created, updated))
+        Ok(super::described(table.resource(id, super::strings(&permissions), created, updated), description))
     }
 }
 
@@ -656,7 +659,7 @@ impl Field {
             filters: f.filters.clone(),
             options: Mutex::new(f.options()),
         };
-        Some(attribute.resource(base.created_at, base.updated_at))
+        Some(super::described(attribute.resource(base.created_at, base.updated_at), base.description))
     }
 }
 
@@ -1027,7 +1030,7 @@ pub mod columns {
             }
             FieldClass::Attribute => return Err(Error::InvalidArgument("Attribute has no fromArray()".into())),
         };
-        Ok(field.resource(created()?, updated()?))
+        Ok(crate::resources::described(field.resource(created()?, updated()?), crate::resources::description(&i)?))
     }
 }
 
@@ -1090,7 +1093,10 @@ impl Index {
         let orders = to_array(&i.or("orders", Value::Array(Array::new())), &p(7, "orders"))?;
         let created = to_string(&i.or("createdAt", Value::from("")), &p(8, "createdAt"))?;
         let updated = to_string(&i.or("updatedAt", Value::from("")), &p(9, "updatedAt"))?;
-        Ok(Index { key, table, index_type, columns, lengths, orders }.resource(id, created, updated))
+        Ok(super::described(
+            Index { key, table, index_type, columns, lengths, orders }.resource(id, created, updated),
+            super::description(&i)?,
+        ))
     }
 }
 

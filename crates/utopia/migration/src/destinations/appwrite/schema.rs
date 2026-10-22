@@ -400,7 +400,8 @@ impl Appwrite {
         let source_type = if empty(&d.database_type) { "legacy".to_owned() } else { d.database_type.clone() };
         let original = r.original_id();
         let source_original = if empty(&original) { Value::Null } else { Value::from(original.as_str()) };
-        attr(existing, "name").strict_eq(&Value::from(d.name.as_str()))
+        attr_or(existing, "description", Value::from("")).strict_eq(&Value::from(r.description().as_str()))
+            && attr(existing, "name").strict_eq(&Value::from(d.name.as_str()))
             && attr(existing, "enabled").strict_eq(&Value::Bool(d.enabled))
             && attr(existing, "type").strict_eq(&Value::from(source_type.as_str()))
             && attr(existing, "originalId").strict_eq(&source_original)
@@ -422,7 +423,8 @@ impl Appwrite {
         let database_type = if empty(&d.database_type) { "legacy".to_owned() } else { d.database_type.clone() };
         let original = r.original_id();
         let original = if empty(&original) { DbValue::Null } else { s(&original) };
-        let search = format!("{} {}", r.id(), d.name);
+        let description = r.description();
+        let search = format!("{} {} {description}", r.id(), d.name);
 
         let existing = self.db_for_project.get_document(META_DATABASES, &r.id(), Vec::new(), false).await?;
         let is_incomplete = !existing.is_empty() && self.support_for_database_status().await? && {
@@ -448,6 +450,7 @@ impl Appwrite {
                 SchemaAction::Overwrite => {
                     let mut pairs = vec![
                         ("name", s(&d.name)),
+                        ("description", s(&description)),
                         ("search", s(&search)),
                         ("enabled", DbValue::Bool(d.enabled)),
                         ("type", s(&database_type)),
@@ -479,6 +482,7 @@ impl Appwrite {
         let mut pairs = vec![
             ("$id", s(&r.id())),
             ("name", s(&d.name)),
+            ("description", s(&description)),
             ("enabled", DbValue::Bool(d.enabled)),
             ("search", s(&search)),
             ("$createdAt", s(&created_at)),
@@ -525,7 +529,8 @@ impl Appwrite {
 
     fn table_spec_matches(&self, existing: &Document, r: &ResourceRef) -> Result<bool> {
         let Some(t) = r.as_table() else { return Ok(false) };
-        if !attr(existing, "name").strict_eq(&Value::from(t.name.as_str()))
+        if !attr_or(existing, "description", Value::from("")).strict_eq(&Value::from(r.description().as_str()))
+            || !attr(existing, "name").strict_eq(&Value::from(t.name.as_str()))
             || !attr(existing, "enabled").strict_eq(&Value::Bool(t.enabled))
             || !attr(existing, "documentSecurity").strict_eq(&Value::Bool(t.row_security))
         {
@@ -563,7 +568,8 @@ impl Appwrite {
         if !db.collection_exists(METADATA, None).await? {
             db.create(None).await?;
         }
-        let search = format!("{} {name}", r.id());
+        let description = r.description();
+        let search = format!("{} {name} {description}", r.id());
 
         if self.on_duplicate != OnDuplicate::Fail {
             let existing = self
@@ -585,6 +591,7 @@ impl Appwrite {
                     let permissions = Permission::aggregate(&r.permissions(), &default_permissions())?;
                     let mut pairs = vec![
                         ("name", s(&name)),
+                        ("description", s(&description)),
                         ("search", s(&search)),
                         ("enabled", DbValue::Bool(enabled)),
                         ("$permissions", strings(&permissions)),
@@ -611,6 +618,7 @@ impl Appwrite {
             ("documentSecurity", DbValue::Bool(row_security)),
             ("enabled", DbValue::Bool(enabled)),
             ("name", s(&name)),
+            ("description", s(&description)),
             ("search", s(&search)),
             ("$createdAt", s(&created_at)),
             ("$updatedAt", s(&updated_at)),
@@ -706,9 +714,13 @@ impl Appwrite {
         &self,
         existing: &Document,
         f: &crate::resources::database::Field,
+        description: &str,
         t: &str,
         relationship: bool,
     ) -> bool {
+        if !attr_or(existing, "description", Value::from("")).strict_eq(&Value::from(description)) {
+            return false;
+        }
         if !type_matches(&attr(existing, "type"), t) {
             return false;
         }
@@ -793,7 +805,9 @@ impl Appwrite {
                 self.db_for_project.get_document(META_ATTRIBUTES, &attribute_meta_id, Vec::new(), false).await?;
             let mut action =
                 self.on_duplicate.resolve_schema_action(!existing.is_empty(), Some(&updated_at), existing.updated_at());
-            if action != SchemaAction::Create && self.attribute_spec_matches(&existing, f, t, relationship) {
+            if action != SchemaAction::Create
+                && self.attribute_spec_matches(&existing, f, &r.description(), t, relationship)
+            {
                 action = SchemaAction::Skip;
             }
             let early = match action {
@@ -824,31 +838,36 @@ impl Appwrite {
         }
 
         let filters = strings(&f.filters);
-        let column_doc = |table: &Document, key: &str, options: &Array| -> Result<Document> {
-            doc(vec![
-                ("$id", s(&meta_id(&database, table, key))),
-                ("key", s(key)),
-                ("databaseInternalId", s(&seq(&database))),
-                ("databaseId", s(database.id())),
-                ("collectionInternalId", s(&seq(table))),
-                ("collectionId", s(table.id())),
-                ("type", s(t)),
-                ("status", s("available")),
-                ("size", DbValue::Int(f.size)),
-                ("required", DbValue::Bool(f.required)),
-                ("signed", DbValue::Bool(f.signed)),
-                ("default", db_value(&f.default)),
-                ("array", DbValue::Bool(f.array)),
-                ("format", s(&f.format)),
-                ("formatOptions", DbValue::Array(db_array(&f.format_options))),
-                ("filters", filters.clone()),
-                ("options", DbValue::Array(db_array(options))),
-                ("$createdAt", s(&created_at)),
-                ("$updatedAt", s(&updated_at)),
-            ])
-        };
+        let column_doc =
+            |table: &Document, key: &str, description: Option<&str>, options: &Array| -> Result<Document> {
+                let mut pairs = vec![("$id", s(&meta_id(&database, table, key))), ("key", s(key))];
+                if let Some(description) = description {
+                    pairs.push(("description", s(description)));
+                }
+                pairs.extend([
+                    ("databaseInternalId", s(&seq(&database))),
+                    ("databaseId", s(database.id())),
+                    ("collectionInternalId", s(&seq(table))),
+                    ("collectionId", s(table.id())),
+                    ("type", s(t)),
+                    ("status", s("available")),
+                    ("size", DbValue::Int(f.size)),
+                    ("required", DbValue::Bool(f.required)),
+                    ("signed", DbValue::Bool(f.signed)),
+                    ("default", db_value(&f.default)),
+                    ("array", DbValue::Bool(f.array)),
+                    ("format", s(&f.format)),
+                    ("formatOptions", DbValue::Array(db_array(&f.format_options))),
+                    ("filters", filters.clone()),
+                    ("options", DbValue::Array(db_array(options))),
+                    ("$createdAt", s(&created_at)),
+                    ("$updatedAt", s(&updated_at)),
+                ]);
+                doc(pairs)
+            };
         let options = f.options();
-        let column = column_doc(&table, &key, &options)?;
+        let description = r.description();
+        let column = column_doc(&table, &key, Some(&description), &options)?;
         let collection_id = table_collection_id(&database, &table);
         let checked = match resource_attribute(f, t) {
             Ok(attribute) => match db.check_attribute(&collection_id, &attribute).await {
@@ -880,7 +899,7 @@ impl Appwrite {
             options.set("twoWayKey".into(), Value::from(key.as_str()));
             options.set("side".into(), Value::from(RelationshipSide::Child.as_str()));
             let partner_key = partner_key.unwrap_or_default();
-            let partner = column_doc(&related, &partner_key, &options)?;
+            let partner = column_doc(&related, &partner_key, None, &options)?;
             match self.db_for_project.create_document(META_ATTRIBUTES, partner).await {
                 Ok(p) => {
                     two_way_attribute = Some(p);
@@ -1056,6 +1075,7 @@ impl Appwrite {
                 META_ATTRIBUTES,
                 existing.id(),
                 doc(vec![
+                    ("description", s(&r.description())),
                     ("key", s(&f.key)),
                     ("type", s(t)),
                     ("size", DbValue::Int(f.size)),
@@ -1110,6 +1130,7 @@ impl Appwrite {
                 META_ATTRIBUTES,
                 existing.id(),
                 doc(vec![
+                    ("description", s(&r.description())),
                     ("key", s(&f.key)),
                     ("type", s(t)),
                     ("options", DbValue::Array(db_array(&options))),
@@ -1148,6 +1169,9 @@ impl Appwrite {
     /// PHP: `indexSpecMatches()` (private).
     fn index_spec_matches(&self, existing: &Document, r: &ResourceRef) -> bool {
         let Kind::Index(i) = r.kind() else { return false };
+        if !attr_or(existing, "description", Value::from("")).strict_eq(&Value::from(r.description().as_str())) {
+            return false;
+        }
         let Ok(deployed) = Index::from_document(existing) else { return false };
         let mut wanted = Array::new();
         wanted.set("key".into(), Value::from(i.key.as_str()));
@@ -1294,6 +1318,7 @@ impl Appwrite {
         let index = doc(vec![
             ("$id", s(&index_meta_id)),
             ("key", s(&i.key)),
+            ("description", s(&r.description())),
             ("status", s("available")),
             ("databaseInternalId", s(&seq(&database))),
             ("databaseId", s(database.id())),
