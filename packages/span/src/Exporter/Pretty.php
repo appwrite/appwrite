@@ -142,7 +142,7 @@ readonly class Pretty implements Exporter
     private function error(\Throwable $error): string
     {
         $type = $error::class;
-        $message = $error->getMessage();
+        $message = $this->escape($error->getMessage());
         $file = $error->getFile();
         $line = $error->getLine();
 
@@ -157,8 +157,16 @@ readonly class Pretty implements Exporter
             $value === null => 'null',
             $value === true => 'true',
             $value === false => 'false',
-            default => (string) $value,
+            default => $this->escape((string) $value),
         };
+    }
+
+    /**
+     * Escape control characters so a value cannot break lines or emit terminal escape sequences.
+     */
+    private function escape(string $value): string
+    {
+        return addcslashes($value, "\0..\37\177");
     }
 
     private function formatDuration(float $seconds): string

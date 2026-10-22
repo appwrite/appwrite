@@ -69,7 +69,8 @@ readonly class Stdout implements Exporter
             }
         }
 
-        $output = json_encode($data, JSON_UNESCAPED_SLASHES);
+        // Substitute what cannot be encoded rather than drop the whole record.
+        $output = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR);
 
         if ($output === false) {
             return;

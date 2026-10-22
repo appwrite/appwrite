@@ -79,4 +79,39 @@ class StdoutTest extends TestCase
         $this->assertArrayHasKey('span.finished_at', $attributes);
         $this->assertArrayHasKey('span.duration', $attributes);
     }
+
+    public function testExportKeepsARecordWithInvalidUtf8(): void
+    {
+        $lines = explode(PHP_EOL, rtrim($this->export('stdout'), PHP_EOL));
+
+        $this->assertCount(1, $lines, 'the record is not one line');
+
+        $record = json_decode($lines[0], true, flags: JSON_THROW_ON_ERROR);
+        $this->assertIsArray($record);
+        $this->assertSame("ok\u{FFFD}1", $record['invalid']);
+        $this->assertSame("a\033[31m\nb", $record['control']);
+        $this->assertSame('kept', $record['plain']);
+    }
+
+    /**
+     * Run the fixture in its own process, since the exporter writes to the real STDOUT.
+     */
+    private function export(string $exporter): string
+    {
+        $process = proc_open(
+            [PHP_BINARY, __DIR__ . '/Fixtures/export.php', $exporter],
+            [1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+            $pipes,
+        );
+        $this->assertIsResource($process);
+
+        $output = (string) stream_get_contents($pipes[1]);
+        $errors = (string) stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+
+        $this->assertSame(0, proc_close($process), $errors);
+
+        return $output;
+    }
 }

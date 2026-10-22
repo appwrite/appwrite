@@ -474,7 +474,10 @@ $swoole->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swoo
             // All good, user is optional information
         }
         Span::add('http.hostname', $request->getHostname());
-        Span::add('http.locale', (string)$request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', '')));
+        $locale = (string) $request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', ''));
+        if (\in_array($locale, $app->context()->get('localeCodes'), true)) {
+            Span::add('http.locale', $locale);
+        }
 
         $sdk = $route?->getLabel("sdk", false);
         if (!empty($sdk)) {

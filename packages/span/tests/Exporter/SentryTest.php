@@ -105,7 +105,7 @@ class SentryTest extends TestCase
 
     public function testExportDoesNotThrowWithValidSpan(): void
     {
-        $exporter = new Sentry(dsn: 'https://key@sentry.io/123');
+        $exporter = new Sentry(dsn: 'https://key@sentry.io/123', client: new RecordingClient());
         $span = new Span();
         $span->set('action', 'test');
         $span->finish();
@@ -119,7 +119,7 @@ class SentryTest extends TestCase
 
     public function testExportHandlesSpanWithParentId(): void
     {
-        $exporter = new Sentry(dsn: 'https://key@sentry.io/123');
+        $exporter = new Sentry(dsn: 'https://key@sentry.io/123', client: new RecordingClient());
         $span = new Span();
         $span->set('span.parent_id', 'abc123def456');
         $span->finish();
@@ -132,7 +132,7 @@ class SentryTest extends TestCase
 
     public function testExportHandlesSpanWithError(): void
     {
-        $exporter = new Sentry(dsn: 'https://key@sentry.io/123');
+        $exporter = new Sentry(dsn: 'https://key@sentry.io/123', client: new RecordingClient());
         $span = new Span();
         $span->setError(new \RuntimeException('Test error'));
         $span->finish();
@@ -176,9 +176,28 @@ class SentryTest extends TestCase
         $this->assertStringContainsString('"value":"Test error"', (string) $client->request->getBody());
     }
 
+    public function testExportSendsAnEventWithInvalidUtf8(): void
+    {
+        $client = new RecordingClient();
+        $exporter = new Sentry(dsn: 'https://key@sentry.io/123', client: $client);
+        $span = new Span('test');
+        $span->set('invalid', "ok\xB1\x31");
+        $span->finish(error: new \RuntimeException("bad \xB1 byte"));
+
+        $exporter->export($span);
+
+        $this->assertNotNull($client->request, 'the event was dropped');
+        $lines = explode("\n", (string) $client->request->getBody());
+        $this->assertCount(3, $lines);
+
+        $payload = json_decode($lines[2], true, flags: JSON_THROW_ON_ERROR);
+        $this->assertIsArray($payload);
+        $this->assertSame("bad \u{FFFD} byte", $payload['message']);
+    }
+
     public function testExportHandlesSpanWithAllAttributes(): void
     {
-        $exporter = new Sentry(dsn: 'https://key@sentry.io/123');
+        $exporter = new Sentry(dsn: 'https://key@sentry.io/123', client: new RecordingClient());
         $span = new Span();
         $span->set('action', 'http.request');
         $span->set('user.id', '123');
@@ -195,7 +214,7 @@ class SentryTest extends TestCase
 
     public function testExportHandlesHttpConventionAttributes(): void
     {
-        $exporter = new Sentry(dsn: 'https://key@sentry.io/123');
+        $exporter = new Sentry(dsn: 'https://key@sentry.io/123', client: new RecordingClient());
         $span = new Span('http.request');
         $span->set('http.url', 'https://api.example.com/users');
         $span->set('http.method', 'POST');
@@ -268,6 +287,7 @@ class SentryTest extends TestCase
     {
         $exporter = new Sentry(
             dsn: 'https://key@sentry.io/123',
+            client: new RecordingClient(),
             classifier: fn (string $key): SentryField => match (true) {
                 str_starts_with($key, 'tenant.') => SentryField::Tag,
                 str_starts_with($key, 'user.') => SentryField::Context,

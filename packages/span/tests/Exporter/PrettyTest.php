@@ -71,4 +71,36 @@ class PrettyTest extends TestCase
         $this->assertArrayHasKey('span.finished_at', $attributes);
         $this->assertArrayHasKey('span.duration', $attributes);
     }
+
+    public function testExportEscapesControlCharactersInValues(): void
+    {
+        $output = $this->export('pretty');
+
+        $this->assertStringContainsString('a\033[31m\nb', $output);
+        $this->assertStringNotContainsString("a\033[31m", $output, 'a raw escape sequence reached the terminal');
+        $this->assertStringNotContainsString("m\nb", $output, 'a raw line break split the value');
+        $this->assertStringContainsString('kept', $output);
+    }
+
+    /**
+     * Run the fixture in its own process, since the exporter writes to the real STDOUT.
+     */
+    private function export(string $exporter): string
+    {
+        $process = proc_open(
+            [PHP_BINARY, __DIR__ . '/Fixtures/export.php', $exporter],
+            [1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+            $pipes,
+        );
+        $this->assertIsResource($process);
+
+        $output = (string) stream_get_contents($pipes[1]);
+        $errors = (string) stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+
+        $this->assertSame(0, proc_close($process), $errors);
+
+        return $output;
+    }
 }

@@ -286,7 +286,8 @@ class Sentry implements Exporter
             $payloadData['server_name'] = $this->serverName;
         }
 
-        $payload = json_encode($payloadData);
+        // Substitute what cannot be encoded rather than drop the whole event.
+        $payload = json_encode($payloadData, JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR);
 
         if ($header === false || $itemHeader === false || $payload === false) {
             return null;
