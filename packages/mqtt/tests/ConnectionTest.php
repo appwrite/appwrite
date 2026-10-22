@@ -358,10 +358,10 @@ final class ConnectionTest extends TestCase
         $this->assertSame(Packet::DISCONNECT, $disconnect->type);
         $this->assertSame(Disconnect::PROTOCOL_ERROR, ord($disconnect->body[0]));
         $this->assertSame([9], $adapter->closed);
-        $this->assertSame('client-9', $handler->clientId, 'the second CONNECT replaced the client id');
+        $this->assertSame('client-9', $handler->clientId, "the client id is not the first CONNECT's");
     }
 
-    public function testSecondConnectOnA311ClientClosesWithoutSendingAPacket(): void
+    public function testSecondConnectOnA311ClientClosesWithoutADisconnectPacket(): void
     {
         $adapter = new RecordingAdapter();
         $handler = new AcceptingHandler();
