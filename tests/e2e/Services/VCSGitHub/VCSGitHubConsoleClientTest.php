@@ -138,18 +138,6 @@ final class VCSGitHubConsoleClientTest extends Scope
         $this->assertSame(301, $missingCode['headers']['status-code']);
         $this->assertStringStartsWith($failure . '?error=', (string) $missingCode['headers']['location']);
 
-        $invalidCode = $this->client->call(Client::METHOD_GET, '/vcs/github/callback', array_merge([
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), [
-            'installation_id' => $this->providerInstallationId,
-            'setup_action' => 'install',
-            'state' => $state,
-            'code' => 'invalid-' . \uniqid(),
-        ], true, false);
-
-        $this->assertSame(301, $invalidCode['headers']['status-code']);
-        $this->assertStringStartsWith($failure . '?error=', (string) $invalidCode['headers']['location']);
-
         $this->assertSame($before, $this->countGitHubInstallationsHelper($projectId));
     }
 

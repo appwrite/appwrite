@@ -125,12 +125,17 @@ class Get extends Action
                 return;
             }
 
-            $vcs = $vcsFactory->fromInstallation(new Document([
-                'provider' => 'github',
-                'providerInstallationId' => $providerInstallationId,
-            ]));
-            $owner = $vcs->getOwnerName($providerInstallationId);
-            $personal = $oauth2->getUserSlug($accessToken) === $owner;
+            try {
+                $vcs = $vcsFactory->fromInstallation(new Document([
+                    'provider' => 'github',
+                    'providerInstallationId' => $providerInstallationId,
+                ]));
+                $owner = $vcs->getOwnerName($providerInstallationId);
+                $personal = $oauth2->getUserSlug($accessToken) === $owner;
+            } catch (\Throwable) {
+                $this->failure($response, $redirectFailure, 'Failed to read the installation details from GitHub. Please restart the installation from the Appwrite Console.');
+                return;
+            }
 
             $projectInternalId = $project->getSequence();
 
