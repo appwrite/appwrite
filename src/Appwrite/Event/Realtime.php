@@ -122,7 +122,7 @@ class Realtime extends Event
             try {
                 $this->realtime->send(
                     projectId: $projectId,
-                    payload: $this->getRealtimePayload(),
+                    payload: \array_diff_key($this->getRealtimePayload(), \array_flip($target['sensitive'] ?? [])),
                     events: $allEvents,
                     channels: $target['channels'],
                     roles: $target['roles'],

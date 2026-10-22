@@ -729,6 +729,38 @@ final class MessagingTest extends TestCase
         }
     }
 
+    public function testFromPayloadUserEventsDropAccountSecrets(): void
+    {
+        // Account events reach the user's own sockets; what a server response held stays out.
+        foreach ([
+            'users.A.create',
+            'users.A.update.labels',
+            'users.A.sessions.S.create',
+            'users.A.tokens.T.create',
+            'users.A.create.mfa.recovery-codes',
+            'users.A.identities.I.delete',
+        ] as $event) {
+            $result = Realtime::fromPayload(
+                event: $event,
+                payload: new Document(['$id' => Id::custom('A')]),
+            );
+
+            foreach (['password', 'hash', 'hashOptions', 'secret', 'providerAccessToken', 'providerRefreshToken', 'providerIdToken', 'recoveryCodes'] as $key) {
+                $this->assertContains($key, $result['sensitive'], $event);
+            }
+        }
+
+        // Other payloads are the resource itself, whose attributes may be named anything.
+        $result = Realtime::fromPayload(
+            event: 'databases.D.collections.C.documents.X.create',
+            payload: new Document(['$id' => 'X', '$permissions' => [Permission::read(Role::any())]]),
+            database: new Document(['$id' => 'D']),
+            collection: new Document(['$id' => 'C', 'documentSecurity' => true]),
+        );
+
+        $this->assertSame([], $result['sensitive']);
+    }
+
     public function testSubscribeKeepsConnectionAuthorizationState(): void
     {
         $realtime = new Realtime();
