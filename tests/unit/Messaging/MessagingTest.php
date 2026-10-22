@@ -689,6 +689,8 @@ final class MessagingTest extends TestCase
             'users.A.sessions.S.delete',
             'users.A.sessions.delete',
             'users.A.delete',
+            // Enabling MFA or verifying a factor can leave other sessions short of factors.
+            'users.A.update.mfa',
         ] as $event) {
             $result = Realtime::fromPayload(
                 event: $event,
@@ -708,7 +710,6 @@ final class MessagingTest extends TestCase
             'users.A.update.prefs',
             'users.A.update.name',
             'users.A.update.avatar',
-            'users.A.update.mfa',
             'users.A.update.mfa.recovery-codes',
             'users.A.create.mfa.recovery-codes',
             'users.A.delete.mfa',

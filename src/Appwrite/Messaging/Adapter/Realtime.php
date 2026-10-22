@@ -57,12 +57,12 @@ class Realtime extends MessagingAdapter
     // connections are held to.
     // `update.email` and `update.phone` stay out: they reset verification, which
     // changes roles.
+    // `update.mfa` stays out: enabling MFA or verifying a factor can leave sessions short of factors.
     private const USER_EVENTS_WITHOUT_ACCESS_CHANGE = [
         'create',
         'update.name',
         'update.prefs',
         'update.avatar',
-        'update.mfa',
         'update.mfa.recovery-codes',
         'create.mfa.recovery-codes',
         'delete.mfa',
