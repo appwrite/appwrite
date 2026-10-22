@@ -265,6 +265,29 @@ final class RequestTest extends TestCase
         $this->assertArrayNotHasKey('cookie', $request->getHeaders());
     }
 
+    public function testGetHeadersWithoutCookiesLeavesNamedCookiesOut(): void
+    {
+        $swoole = new SwooleRequest();
+        $swoole->header = ['host' => 'example.com'];
+        $swoole->cookie = ['a_jwt_console' => 'jwt', 'theme' => 'dark', 'a_session_console' => 'secret'];
+        $request = new Request($swoole);
+
+        $headers = $request->getHeadersWithoutCookies(['a_jwt_console', 'a_session_console']);
+
+        $this->assertSame(['theme=dark'], $headers['cookie']);
+        $this->assertSame(['example.com'], $headers['host']);
+    }
+
+    public function testGetHeadersWithoutCookiesOmitsCookieHeaderWhenAllLeftOut(): void
+    {
+        $swoole = new SwooleRequest();
+        $swoole->header = ['host' => 'example.com', 'cookie' => 'a_jwt_console=jwt'];
+        $swoole->cookie = ['a_jwt_console' => 'jwt'];
+        $request = new Request($swoole);
+
+        $this->assertArrayNotHasKey('cookie', $request->getHeadersWithoutCookies(['a_jwt_console']));
+    }
+
     public function testGetParamsCachesRawParamsWhenFilterThrows4xx(): void
     {
         /*
