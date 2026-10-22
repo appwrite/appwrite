@@ -9,8 +9,8 @@ use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
-use Appwrite\Platform\Modules\Compute\Validator\Specification;
 use Appwrite\Platform\Modules\Compute\Validator\RootDirectory;
+use Appwrite\Platform\Modules\Compute\Validator\Specification;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -204,6 +204,12 @@ class Update extends Base
 
         if (empty($runtime)) {
             $runtime = $function->getAttribute('runtime');
+        }
+
+        // The runtimes the operator enabled bound an update as they do a create
+        $allowList = \array_filter(\explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
+        if (!empty($allowList) && !\in_array($runtime, $allowList)) {
+            throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $runtime . '" is not supported');
         }
 
         $description ??= $function->getAttribute('description', '');
