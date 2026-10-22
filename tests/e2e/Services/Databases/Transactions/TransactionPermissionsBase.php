@@ -845,6 +845,150 @@ trait TransactionPermissionsBase
     }
 
     /**
+     * Bulk upsert must expand aggregate permissions per document, like bulk create.
+     */
+    public function testStagingExpandsAggregatePermissionsForBulkUpsert(): void
+    {
+        $keyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $collectionId = $this->setupAggregateCollection($keyHeaders, 'permAggUpsert');
+        $recordId = 'aggUpsert' . uniqid();
+
+        $transactionId = $this->createKeyTransaction($keyHeaders);
+        $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $keyHeaders, [
+            'operations' => [[
+                'action' => 'bulkUpsert',
+                'databaseId' => $this->getPermissionsDatabase(),
+                $this->getContainerIdParam() => $collectionId,
+                'data' => [[
+                    '$id' => $recordId,
+                    'title' => 'Aggregate upsert',
+                    '$permissions' => [Permission::write(Role::user('probeUpsert'))],
+                ]],
+            ]]
+        ]);
+        $this->assertEquals(201, $staged['headers']['status-code']);
+        $this->commitKeyTransaction($keyHeaders, $transactionId);
+
+        $permissions = $this->readRecordPermissions($keyHeaders, $collectionId, $recordId);
+        $this->assertContains(Permission::update(Role::user('probeUpsert')), $permissions);
+        $this->assertContains(Permission::delete(Role::user('probeUpsert')), $permissions);
+        $this->assertNotContains(Permission::write(Role::user('probeUpsert')), $permissions);
+    }
+
+    /**
+     * Bulk update must expand the aggregate permissions carried in its data block.
+     */
+    public function testStagingExpandsAggregatePermissionsForBulkUpdate(): void
+    {
+        $keyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $collectionId = $this->setupAggregateCollection($keyHeaders, 'permAggUpdate');
+        $recordId = 'aggUpdate' . uniqid();
+
+        // Seed a row the bulk update will match.
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId), $keyHeaders, [
+            $this->getRecordIdParam() => $recordId,
+            'data' => ['title' => 'seed'],
+        ]);
+        $this->assertEquals(201, $created['headers']['status-code']);
+
+        $transactionId = $this->createKeyTransaction($keyHeaders);
+        $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $keyHeaders, [
+            'operations' => [[
+                'action' => 'bulkUpdate',
+                'databaseId' => $this->getPermissionsDatabase(),
+                $this->getContainerIdParam() => $collectionId,
+                'data' => [
+                    'queries' => [Query::equal('$id', [$recordId])->toString()],
+                    'data' => [
+                        '$permissions' => [Permission::write(Role::user('probeUpdate'))],
+                    ],
+                ],
+            ]]
+        ]);
+        $this->assertEquals(201, $staged['headers']['status-code']);
+        $this->commitKeyTransaction($keyHeaders, $transactionId);
+
+        $permissions = $this->readRecordPermissions($keyHeaders, $collectionId, $recordId);
+        $this->assertContains(Permission::update(Role::user('probeUpdate')), $permissions);
+        $this->assertContains(Permission::delete(Role::user('probeUpdate')), $permissions);
+        $this->assertNotContains(Permission::write(Role::user('probeUpdate')), $permissions);
+    }
+
+    /**
+     * @param array<string, string> $keyHeaders
+     */
+    private function setupAggregateCollection(array $keyHeaders, string $collectionId): string
+    {
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $keyHeaders, [
+            $this->getContainerIdParam() => $collectionId,
+            'name' => $collectionId,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            $this->getSecurityParam() => true,
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $id = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $id, 'string'), $keyHeaders, [
+                'key' => 'title',
+                'size' => 255,
+                'required' => false,
+            ]);
+            $this->assertEquals(202, $attribute['headers']['status-code']);
+            $this->waitForAllAttributes($this->getPermissionsDatabase(), $id);
+        }
+
+        return $id;
+    }
+
+    /**
+     * @param array<string, string> $keyHeaders
+     */
+    private function createKeyTransaction(array $keyHeaders): string
+    {
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $keyHeaders);
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+
+        return $transaction['body']['$id'];
+    }
+
+    /**
+     * @param array<string, string> $keyHeaders
+     */
+    private function commitKeyTransaction(array $keyHeaders, string $transactionId): void
+    {
+        $commit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $keyHeaders, ['commit' => true]);
+        $this->assertEquals(200, $commit['headers']['status-code']);
+    }
+
+    /**
+     * @param array<string, string> $keyHeaders
+     * @return array<string>
+     */
+    private function readRecordPermissions(array $keyHeaders, string $collectionId, string $recordId): array
+    {
+        $document = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, $recordId), $keyHeaders);
+        $this->assertEquals(200, $document['headers']['status-code']);
+
+        return $document['body']['$permissions'];
+    }
+
+    /**
      * Test that staging cannot grant roles the user lacks on a related document
      */
     public function testCannotSetUnauthorizedRelatedPermissions(): void
