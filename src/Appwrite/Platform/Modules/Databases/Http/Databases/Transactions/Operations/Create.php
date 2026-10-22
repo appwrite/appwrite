@@ -289,15 +289,20 @@ class Create extends Action
     }
 
     /**
-     * Validate a permissions array and expand aggregates (write → update + delete) so the
+     * Validate a permissions value and expand aggregates (write → update + delete) so the
      * staged document carries the same permissions the direct document endpoints persist.
+     * A non-array value is rejected as a bad request rather than raising a type error.
      *
-     * @param array<string> $permissions
+     * @param mixed $permissions
      * @return array<string>
      * @throws Exception
      */
-    private function normalizePermissions(array $permissions): array
+    private function normalizePermissions(mixed $permissions): array
     {
+        if (!\is_array($permissions)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Permissions must be an array of permission strings.');
+        }
+
         $validator = new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [
             PermissionType::Read,
             PermissionType::Update,

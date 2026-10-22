@@ -925,6 +925,38 @@ trait TransactionPermissionsBase
     }
 
     /**
+     * A scalar $permissions value must be rejected as a bad request (400), not raise a type
+     * error (500): the operation validator checks that data is an array but not the shape of
+     * its $permissions member.
+     */
+    public function testStagingRejectsScalarPermissions(): void
+    {
+        $keyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $collectionId = $this->setupAggregateCollection($keyHeaders, 'permAggScalar');
+
+        $transactionId = $this->createKeyTransaction($keyHeaders);
+        $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $keyHeaders, [
+            'operations' => [[
+                'action' => 'create',
+                'databaseId' => $this->getPermissionsDatabase(),
+                $this->getContainerIdParam() => $collectionId,
+                $this->getRecordIdParam() => 'scalar' . uniqid(),
+                'data' => [
+                    'title' => 'Scalar permissions',
+                    '$permissions' => 'read("any")',
+                ],
+            ]]
+        ]);
+
+        $this->assertEquals(400, $staged['headers']['status-code']);
+    }
+
+    /**
      * @param array<string, string> $keyHeaders
      */
     private function setupAggregateCollection(array $keyHeaders, string $collectionId): string
