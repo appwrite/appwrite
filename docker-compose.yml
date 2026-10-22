@@ -2066,7 +2066,8 @@ networks:
   browser:
     name: browser
   # Build containers and their sidecars; only the API and the orchestrator
-  # join it from the stack.
+  # join it from the stack. Anything else a build must reach - a git provider
+  # or an S3 endpoint hosted alongside the stack - has to join it too.
   builds:
     name: builds
 secrets:
