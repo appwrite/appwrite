@@ -151,10 +151,6 @@ final class Mime
             $data = str_replace(["\t", "\n", "\r", "\f"], ' ', $node->data);
             $words = implode(' ', array_filter(explode(' ', $data), static fn (string $word): bool => $word !== ''));
 
-            if ($words === '') {
-                return $data === '' ? '' : ' ';
-            }
-
             return (str_starts_with($data, ' ') ? ' ' : '') . $words . (str_ends_with($data, ' ') ? ' ' : '');
         }
 
