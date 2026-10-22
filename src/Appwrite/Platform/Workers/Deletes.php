@@ -1371,6 +1371,7 @@ class Deletes extends Action
         }
 
         $expiry = DateTime::addSeconds(new \DateTime(), -1 * DATA_EXPORT_RETENTION);
+        $stranded = new \DateTime(DateTime::addSeconds(new \DateTime(), -2 * DATA_EXPORT_RETENTION));
 
         Console::info('Deleting export files older than ' . $expiry);
 
@@ -1382,12 +1383,18 @@ class Deletes extends Action
             Query::createdBefore($expiry),
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
-        ], $dbForPlatform, function (Document $file) use ($collection, $dbForPlatform, $deviceForFiles) {
+        ], $dbForPlatform, function (Document $file) use ($collection, $dbForPlatform, $deviceForFiles, $stranded) {
             $path = $file->getAttribute('path');
 
             // Workers with different storage devices can share this database, and an S3 delete
             // of a missing key still succeeds: only the worker holding the object drops the row.
+            // A row past twice the retention has outlived a full cycle of every worker, so one
+            // whose object is gone (deleted before its row, say) is stranded and dropped.
             if (!$deviceForFiles->exists($path)) {
+                if (new \DateTime($file->getCreatedAt() ?? 'now') < $stranded) {
+                    $dbForPlatform->deleteDocument($collection, $file->getId());
+                    Console::success('Deleted stranded export row: ' . $file->getId());
+                }
                 return;
             }
 
