@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Database\Documents;
 
+use Appwrite\Deletes\Targets;
 use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Proof;
 use Utopia\Auth\Proofs\Token;
@@ -225,37 +226,46 @@ class User extends Document
      *
      * Used when the verified owner of the email claims an account that was
      * registered with it but never verified, so nobody else keeps access.
-     * Mutates `$user` in place; the caller persists it.
+     * Persists the revocation in one transaction and mirrors it on `$user`.
      */
     public static function revokeCredentials(Database $dbForProject, Document $user): void
     {
         $sequence = $user->getSequence();
-        if ($sequence !== '' && $sequence !== null) {
+        if ($sequence === '' || $sequence === null || $user->getAttribute('status') === false) {
+            return;
+        }
+
+        $hash = new Argon2();
+        $attributes = [
+            'password' => null,
+            'hash' => $hash->getName(),
+            'hashOptions' => $hash->getOptions(),
+            'passwordHistory' => [],
+            'passwordUpdate' => null,
+            'passwordPwned' => null,
+            'phone' => null,
+            'phoneVerification' => false,
+            'mfa' => false,
+            'mfaRecoveryCodes' => [],
+        ];
+
+        $dbForProject->withTransaction(function () use ($dbForProject, $user, $sequence, $attributes) {
             foreach (['sessions', 'tokens', 'challenges', 'authenticators', 'identities'] as $collection) {
                 $dbForProject->deleteDocuments($collection, [
                     Query::equal('userInternalId', [$sequence]),
                 ]);
             }
 
-            $dbForProject->deleteDocuments('targets', [
+            Targets::delete($dbForProject, Query::and([
                 Query::equal('userInternalId', [$sequence]),
                 Query::notEqual('providerType', MESSAGE_TYPE_EMAIL),
-            ]);
-        }
+            ]));
 
-        $hash = new Argon2();
+            $dbForProject->updateDocument('users', $user->getId(), new Document($attributes));
+        });
 
         $user
-            ->setAttribute('password', null)
-            ->setAttribute('hash', $hash->getName())
-            ->setAttribute('hashOptions', $hash->getOptions())
-            ->setAttribute('passwordHistory', [])
-            ->setAttribute('passwordUpdate', null)
-            ->setAttribute('passwordPwned', null)
-            ->setAttribute('phone', null)
-            ->setAttribute('phoneVerification', false)
-            ->setAttribute('mfa', false)
-            ->setAttribute('mfaRecoveryCodes', [])
+            ->setAttributes($attributes)
             ->setAttribute('sessions', [])
             ->setAttribute('tokens', [])
             ->setAttribute('challenges', [])
