@@ -161,7 +161,7 @@ return function (Container $container): void {
             }
 
             $expire = $identity['expire'] ?? null;
-            if (\is_int($expire) && $expire < \time()) {
+            if (\is_int($expire) && $expire <= \time()) {
                 return false;
             }
 

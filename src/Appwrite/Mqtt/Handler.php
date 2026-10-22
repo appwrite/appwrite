@@ -534,7 +534,8 @@ class Handler implements MqttHandler
         $now = \time();
 
         $expire = $connection->identity['expire'] ?? null;
-        if (\is_int($expire) && $expire < $now) {
+        // Expired from its exp second on, as the JWT library reads it.
+        if (\is_int($expire) && $expire <= $now) {
             return false;
         }
 

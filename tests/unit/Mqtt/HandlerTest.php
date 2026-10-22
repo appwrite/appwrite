@@ -104,7 +104,7 @@ final class HandlerTest extends TestCase
 
     public function testExpiredCredentialIsDisconnectedOnDelivery(): void
     {
-        $this->subscribe(1, 'owner', 'users/owner', ['expire' => \time() - 1]);
+        $this->subscribe(1, 'owner', 'users/owner', ['expire' => \time()]);
         $this->subscribe(2, 'owner', 'users/owner', ['expire' => \time() + 3600]);
 
         $delivered = $this->handler->deliver($this->server, self::PROJECT, 'users/owner', '{}', Packet::QOS_1, 1);
