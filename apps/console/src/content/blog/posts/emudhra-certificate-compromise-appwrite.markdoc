@@ -45,8 +45,8 @@ Appwrite's servers and workers make outbound HTTPS requests on your behalf. They
 
 The patch updates that trust store in Appwrite's images:
 
-- **Appwrite 2.6.0** moves to `appwrite/base` 2.2.5. It requires Alpine's `ca-certificates` package at `20261020-r0` or later, which distrusts the compromised chains, and builds the embedded Go Git helper with Go 1.27.3, which adds an eMudhra denylist to `crypto/x509`.
-- **Appwrite 1.9.8** keeps its existing base image and applies the same `ca-certificates` update to it.
+- **Appwrite 2.6.0** requires Alpine's `ca-certificates` package at `20261020-r0` or later, which distrusts the compromised chains, and builds the embedded Go Git helper with Go 1.27.3, which adds an eMudhra denylist to `crypto/x509`.
+- **Appwrite 1.9.8** applies the same `ca-certificates` update.
 - **Both releases** also update the image stage that downloads dependencies, so the build itself rejects the chains.
 
 We tested Appwrite's cURL and Swoole HTTP clients against the public test hosts that Mozilla's Dennis Jackson maintains at [emudhra.we-have-a-problem.com](https://emudhra.we-have-a-problem.com/). Both clients reject the compromised chains and still accept normal HTTPS endpoints. Appwrite Cloud runs the same patched base image.
