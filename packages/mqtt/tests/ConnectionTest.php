@@ -17,6 +17,7 @@ use Utopia\Mqtt\Packet\Connect;
 use Utopia\Mqtt\Packet\Disconnect;
 use Utopia\Mqtt\Packet\Puback;
 use Utopia\Mqtt\Packet\Publish;
+use Utopia\Mqtt\Packet\Specs\V3;
 use Utopia\Mqtt\Packet\Specs\V5;
 use Utopia\Mqtt\Packet\Suback;
 use Utopia\Mqtt\Packet\Subscribe;
@@ -338,6 +339,39 @@ final class ConnectionTest extends TestCase
         $this->assertFalse($handler->connection->active, 'a connection closed during onConnect was marked active');
         $this->assertArrayNotHasKey('mqtt.connections.active', $telemetry->upDownCounters, 'a connection closed during onConnect moved the active gauge');
         $this->assertArrayNotHasKey('mqtt.connections.opened', $telemetry->counters, 'a connection closed during onConnect was counted as opened');
+    }
+
+    public function testSecondConnectIsAProtocolErrorThatClosesTheConnection(): void
+    {
+        $adapter = new RecordingAdapter();
+        $handler = new AcceptingHandler();
+        $telemetry = new TestTelemetry();
+        (new Server($adapter, $handler))->setTelemetry($telemetry)->start();
+
+        $adapter->deliver(9, V5::connect('client-9'), V5::connect('client-other'));
+
+        $this->assertSame(1, $handler->connects, 'the second CONNECT reached the handler');
+        $this->assertCount(2, $adapter->sent, 'expected a CONNACK then a DISCONNECT');
+        $this->assertSame(Packet::CONNACK, Packet::parse($adapter->sent[0][1])->type);
+
+        $disconnect = Packet::parse($adapter->sent[1][1]);
+        $this->assertSame(Packet::DISCONNECT, $disconnect->type);
+        $this->assertSame(Disconnect::PROTOCOL_ERROR, ord($disconnect->body[0]));
+        $this->assertSame([9], $adapter->closed);
+        $this->assertSame('client-9', $handler->clientId, "the client id is not the first CONNECT's");
+    }
+
+    public function testSecondConnectOnA311ClientClosesWithoutADisconnectPacket(): void
+    {
+        $adapter = new RecordingAdapter();
+        $handler = new AcceptingHandler();
+        (new Server($adapter, $handler))->start();
+
+        $adapter->deliver(9, V3::connect('client-9'), V3::connect('client-9'));
+
+        $this->assertSame(1, $handler->connects);
+        $this->assertCount(1, $adapter->sent, 'only the CONNACK is sent to a 3.1.1 client');
+        $this->assertSame([9], $adapter->closed);
     }
 
     /**
