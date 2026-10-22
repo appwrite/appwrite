@@ -964,6 +964,10 @@ abstract class Base extends Action
                 }
 
                 $existing = $this->findObject($dbForProject, $bucket, $key);
+                if ($existing === null) {
+                    // The object this upload replaces may have been deleted since it started.
+                    $this->newObjectPath($key);
+                }
                 $previousPath = $existing?->getAttribute('path', '') ?? '';
                 $cleanup = $previousPath !== $path;
                 $file = $this->createObjectDocument(
