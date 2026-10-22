@@ -169,7 +169,7 @@ class Update extends Base
         int $buildTimeout,
         Bus $bus,
         array $platform,
-        Device $deviceForBuilds,
+        ?Device $deviceForBuilds = null,
     ) {
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];

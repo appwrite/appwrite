@@ -168,7 +168,7 @@ class Update extends Base
         Executor $executor,
         Authorization $authorization,
         array $platform,
-        Device $deviceForBuilds,
+        ?Device $deviceForBuilds = null,
     ) {
         // TODO: If only branch changes, re-deploy
         $function = $dbForProject->getDocument('functions', $functionId);

@@ -76,8 +76,12 @@ class Base extends Action
      * Builds key their cache by runtime image, so a runtime change leaves the
      * previous image's cache where no later build or delete looks for it.
      */
-    protected function deleteStaleBuildCache(Device $deviceForBuilds, string $projectId, Document $previous, Document $resource): void
+    protected function deleteStaleBuildCache(?Device $deviceForBuilds, string $projectId, Document $previous, Document $resource): void
     {
+        if ($deviceForBuilds === null) {
+            return;
+        }
+
         try {
             $stale = Deployments::resourceCachePath($projectId, $previous);
             if ($stale === Deployments::resourceCachePath($projectId, $resource)) {
