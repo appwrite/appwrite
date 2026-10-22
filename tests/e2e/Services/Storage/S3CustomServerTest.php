@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Storage;
 
+use Appwrite\Event\Event;
 use CURLFile;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
@@ -11,6 +12,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Id;
+use Utopia\System\System;
 
 /**
  * Drives the S3-compatible gateway with AWS Signature V4 requests. The `s3`
@@ -281,6 +283,63 @@ final class S3CustomServerTest extends Scope
             ], $this->getHeaders()), decode: false);
             $this->assertSame(200, $next['headers']['status-code']);
             $this->assertSame($replacement, $next['body']);
+        }
+    }
+
+    /**
+     * Breaks the deletes queue for the whole stack, so it runs in the queue lane where no other test's jobs are in flight.
+     */
+    #[Group('queueRetry')]
+    public function testOverwriteWithoutDeletesQueue(): void
+    {
+        $bucketId = $this->setupBucket();
+        $key = 'outage/' . Id::unique() . '.txt';
+        $uploads = getDevice(APP_STORAGE_UPLOADS . '/app-' . $this->getProject()['$id']);
+        $stored = fn (): array => \array_map(
+            fn ($file): string => $file->path,
+            $uploads->listFiles($uploads->getRoot() . '/' . $bucketId . '/', 10)->files
+        );
+
+        $put = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, body: 'original');
+        $this->assertSame(200, $put['headers']['status-code'], $put['body']);
+        $this->assertCount(1, $stored());
+
+        $redis = new \Redis();
+        $redis->connect(System::getEnv('_APP_REDIS_HOST', 'redis'), (int) System::getEnv('_APP_REDIS_PORT', '6379'));
+        $password = System::getEnv('_APP_REDIS_PASS', '');
+        if ($password !== '') {
+            $user = System::getEnv('_APP_REDIS_USER', '');
+            $redis->auth($user !== '' ? [$user, $password] : $password);
+        }
+        $queue = 'utopia-queue.queue.' . System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME);
+        $backup = $queue . '.outage.' . Id::unique();
+        $moved = $redis->exists($queue) && $redis->rename($queue, $backup);
+        // A string at the list key fails every push to the queue with WRONGTYPE.
+        $redis->set($queue, 'outage');
+
+        try {
+            /**
+             * Test for SUCCESS
+             */
+            $put = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, body: 'replacement');
+            $this->assertSame(200, $put['headers']['status-code'], $put['body']);
+            $this->assertCount(1, $stored(), 'PutObject left the replaced version in storage: ' . \implode(', ', $stored()));
+            $object = $this->call(Client::METHOD_GET, '/' . $bucketId . '/' . $key);
+            $this->assertSame('replacement', $object['body']);
+
+            $uploadId = $this->createMultipartUpload($bucketId, $key);
+            $etag = $this->uploadPart($bucketId, $key, $uploadId, 1, 'multipart');
+            $complete = $this->completeMultipartUpload($bucketId, $key, $uploadId, [1 => $etag]);
+            $this->assertSame(200, $complete['headers']['status-code'], $complete['body']);
+            $this->assertCount(1, $stored(), 'CompleteMultipartUpload left the replaced version in storage: ' . \implode(', ', $stored()));
+            $object = $this->call(Client::METHOD_GET, '/' . $bucketId . '/' . $key);
+            $this->assertSame('multipart', $object['body']);
+        } finally {
+            $redis->del($queue);
+            if ($moved) {
+                $redis->rename($backup, $queue);
+            }
+            $redis->close();
         }
     }
 
