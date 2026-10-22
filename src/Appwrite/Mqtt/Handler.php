@@ -39,10 +39,6 @@ class Handler implements MqttHandler
     // subscribe only to its own. Wildcards under it are refused so they can't span other users.
     private const USER_TOPIC_PREFIX = 'users';
 
-    // Seconds before a connection whose session passed its recorded expiry is checked again.
-    private const SESSION_RECHECK = 60;
-
-
     /** @var array<string, array<string, array<int, Connection>>> project => userId => fd => connection */
     private array $connections = [];
 
@@ -527,7 +523,8 @@ class Handler implements MqttHandler
 
     /**
      * Whether the credential the connection was opened with is still valid. A token's expiry is
-     * final; a session can be extended, so once its recorded expiry passes it is checked again.
+     * final; a session is checked again whenever it falls due, as it may since have been extended,
+     * ended or left short of factors.
      */
     private function current(Connection $connection): bool
     {
@@ -538,8 +535,8 @@ class Handler implements MqttHandler
             return false;
         }
 
-        $sessionExpire = $connection->identity['sessionExpire'] ?? null;
-        if (!\is_int($sessionExpire) || $sessionExpire >= $now) {
+        $recheckAt = $connection->identity['recheckAt'] ?? null;
+        if (!\is_int($recheckAt) || $recheckAt > $now) {
             return true;
         }
 
@@ -547,7 +544,7 @@ class Handler implements MqttHandler
             return false;
         }
 
-        $connection->identity['sessionExpire'] = $now + self::SESSION_RECHECK;
+        $connection->identity['recheckAt'] = $now + APP_MQTT_SESSION_RECHECK;
 
         return true;
     }

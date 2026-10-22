@@ -25,13 +25,23 @@ return function (Container $container): void {
         return $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
     };
 
+    // A session can end or lose its factors without a revoke reaching the broker (an MFA
+    // requirement raised by verifying an email or phone), so delivery checks it again at least
+    // this often, and once it is due to expire.
+    $getRecheckAt = static function (User $user, string $sessionId): int {
+        $recheckAt = \time() + APP_MQTT_SESSION_RECHECK;
+        $expire = $user->getSessionExpiry($sessionId);
+
+        return $expire === null ? $recheckAt : \min($recheckAt, $expire);
+    };
+
     /**
      * The user a credential authenticates, with the session it runs on, when the token itself
-     * expires and when that session was due to expire, or [] when it authenticates nobody.
+     * expires and when that session is next due to be checked, or [] when it authenticates nobody.
      *
-     * @return array{user?: User, sessionId?: string, expire?: ?int, sessionExpire?: ?int}
+     * @return array{user?: User, sessionId?: string, expire?: ?int, recheckAt?: ?int}
      */
-    $getUser = function (Document $project, string $authMethod, string $credential, Authorization $authorization) use ($container): array {
+    $getUser = function (Document $project, string $authMethod, string $credential, Authorization $authorization) use ($container, $getRecheckAt): array {
         if ($project->isEmpty() || $credential === '') {
             return [];
         }
@@ -79,7 +89,7 @@ return function (Container $container): void {
                     'user' => $user,
                     'sessionId' => $sessionId,
                     'expire' => \is_int($payload['exp'] ?? null) ? $payload['exp'] : null,
-                    'sessionExpire' => $sessionId !== '' ? $user->getSessionExpiry($sessionId) : null,
+                    'recheckAt' => $sessionId !== '' ? $getRecheckAt($user, $sessionId) : null,
                 ];
 
             case 'appwrite-session':
@@ -106,7 +116,7 @@ return function (Container $container): void {
                     'user' => $user,
                     'sessionId' => $sessionId,
                     'expire' => null,
-                    'sessionExpire' => $user->getSessionExpiry($sessionId),
+                    'recheckAt' => $getRecheckAt($user, $sessionId),
                 ];
 
             default:
@@ -134,7 +144,7 @@ return function (Container $container): void {
                 'userId' => $authenticated['user']->getId(),
                 'sessionId' => $authenticated['sessionId'] ?? '',
                 'expire' => $authenticated['expire'] ?? null,
-                'sessionExpire' => $authenticated['sessionExpire'] ?? null,
+                'recheckAt' => $authenticated['recheckAt'] ?? null,
             ];
         };
     }, []);

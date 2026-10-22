@@ -57,14 +57,14 @@ final class HandlerTest extends TestCase
         );
     }
 
-    /** @param array<string, int> $expiries expire and sessionExpire, as unix timestamps */
-    private function subscribe(int $fd, string $userId, string $filter, array $expiries = []): void
+    /** @param array<string, int|string> $credential sessionId, and expire and recheckAt as unix timestamps */
+    private function subscribe(int $fd, string $userId, string $filter, array $credential = []): void
     {
         $properties = new Properties();
         $properties->add(new Property(Property::USER, [
             'projectId' => self::PROJECT,
             'userId' => $userId,
-            ...\array_map(\strval(...), $expiries),
+            ...\array_map(\strval(...), $credential),
         ]));
 
         $this->adapter->deliver(
@@ -117,11 +117,11 @@ final class HandlerTest extends TestCase
         $this->assertCount(1, $this->adapter->publishes(2));
     }
 
-    public function testExtendedSessionKeepsReceiving(): void
+    public function testDueSessionIsCheckedAgain(): void
     {
-        $this->subscribe(1, 'owner', 'users/owner', ['sessionExpire' => \time() - 1]);
+        $this->subscribe(1, 'owner', 'users/owner', ['sessionId' => 'session', 'recheckAt' => \time() - 1]);
 
-        // Test for SUCCESS: the session still authorizes past its recorded expiry, as an extended one would.
+        // Test for SUCCESS: a session that falls due and still authorizes, as an extended one would, keeps receiving.
         $this->assertSame(1, $this->handler->deliver($this->server, self::PROJECT, 'users/owner', '{}', Packet::QOS_1, 1));
         $this->assertCount(1, $this->adapter->publishes(1));
         $this->assertSame(1, $this->accounts->authorizations);
@@ -133,13 +133,15 @@ final class HandlerTest extends TestCase
 
     public function testEndedSessionIsDisconnectedOnDelivery(): void
     {
-        $this->subscribe(1, 'owner', 'users/owner', ['sessionExpire' => \time() - 1]);
-        $this->accounts->blocked['owner'] = true;
+        $this->subscribe(1, 'owner', 'users/owner', ['sessionId' => 'session', 'recheckAt' => \time() - 1]);
+        $this->subscribe(2, 'owner', 'users/owner', ['sessionId' => 'session', 'recheckAt' => \time() + 3600]);
+        $this->accounts->ended['session'] = true;
 
-        // Test for FAILURE: past its recorded expiry the session no longer authorizes, so the connection is closed.
-        $this->assertSame(0, $this->handler->deliver($this->server, self::PROJECT, 'users/owner', '{}', Packet::QOS_1, 1));
+        // Test for FAILURE: once due, a session that ended or lost its factors without a revoke is closed.
+        $this->assertSame(1, $this->handler->deliver($this->server, self::PROJECT, 'users/owner', '{}', Packet::QOS_1, 1));
         $this->assertSame(Disconnect::NOT_AUTHORIZED, $this->adapter->disconnects(1)[0]->reasonCode);
         $this->assertSame([1], $this->adapter->closed);
+        $this->assertCount(1, $this->adapter->publishes(2), 'a connection not yet due was checked early');
     }
 
     public function testOrdinaryTopicsStillFanOutToWildcards(): void
