@@ -1316,8 +1316,32 @@ class Install extends Action
         }
     }
 
+    /**
+     * Docker honours a named volume's subPath since API 1.45 (Engine 26). An
+     * older daemon drops the field without a word and mounts the whole builds
+     * volume into every build worker, where every project's build output is
+     * then within reach of any build.
+     */
+    protected function warnOnLegacyDockerApi(): void
+    {
+        $output = [];
+        $exitCode = 1;
+        @exec('docker version --format {{.Server.APIVersion}} 2>/dev/null', $output, $exitCode);
+
+        $version = \trim((string) ($output[0] ?? ''));
+        if ($exitCode !== 0 || $version === '') {
+            return;
+        }
+
+        if (\version_compare($version, '1.45', '<')) {
+            Console::warning("Docker API {$version} cannot mount only a project's directory of the builds volume into its builds (volume subPath needs Engine 26 / API 1.45), so every build sees every project's build output. Upgrade Docker before hosting more than one project.");
+        }
+    }
+
     protected function runDockerCompose(array $input, bool $isLocalInstall, bool $useExistingConfig, bool $isCLI, ?callable $progress = null, bool $isUpgrade = false): void
     {
+        $this->warnOnLegacyDockerApi();
+
         $env = '';
         if (!$useExistingConfig) {
             foreach ($input as $key => $value) {
