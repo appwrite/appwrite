@@ -19,13 +19,13 @@ use function Swoole\Coroutine\run;
  */
 class MockOtlpServer
 {
-    private const HOST = '127.0.0.1';
+    private const string HOST = '127.0.0.1';
 
     private static int $portOffset = 0;
 
     private Server $server;
 
-    private int $port;
+    private readonly int $port;
 
     /** @var array<int, array{payload: string, headers: array<string, string>, timestamp: float}> */
     private array $requests = [];

@@ -556,6 +556,7 @@ class Local extends Device
             size: $this->getFileSize($path),
             modifiedAt: $modified === false ? null : new \DateTimeImmutable('@' . $modified),
             etag: $this->getFileHash($path),
+            mimeType: $this->getFileMimeType($path),
         );
     }
 

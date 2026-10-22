@@ -117,6 +117,11 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     description: 'Override extra Git VCS OAuth connect (Origin)',
   },
   {
+    key: 'VITE_CONSOLE_VCS_ENTIRE',
+    group: 'Runtime',
+    description: 'Override Entire on Git connect',
+  },
+  {
     key: 'VITE_CONSOLE_PRE_LAUNCH',
     group: 'Runtime',
     description: 'Pre-launch lock (only /init; unset = off)',
@@ -263,6 +268,7 @@ function readRuntimePresence(): Record<string, boolean> {
     VITE_CONSOLE_DATABASE_PITR_RESTORE: isNonEmpty(config.databasePitrRestore),
     VITE_CONSOLE_PROJECT_ENVIRONMENTS: isNonEmpty(config.projectEnvironments),
     VITE_CONSOLE_EXTRA_VCS_OAUTH: isNonEmpty(config.extraVcsOAuth),
+    VITE_CONSOLE_VCS_ENTIRE: isNonEmpty(config.vcsEntire),
     VITE_CONSOLE_PRE_LAUNCH: isNonEmpty(config.preLaunch),
   }
 }

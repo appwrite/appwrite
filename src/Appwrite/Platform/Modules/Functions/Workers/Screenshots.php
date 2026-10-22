@@ -12,6 +12,7 @@ use Appwrite\Screenshots\Exception as ScreenshotsException;
 use Exception;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Id;
@@ -80,7 +81,9 @@ class Screenshots extends Action
         // Deleted since the build queued the capture: there is nothing left to
         // capture or to attach the screenshots to, on this attempt or any other.
         if ($deployment->isEmpty()) {
-            throw new PermanentFailure('Deployment not found');
+            $this->abandon($project, $deploymentId, 'Deployment not found');
+
+            return;
         }
 
         $siteId = $deployment->getAttribute('resourceId');
@@ -88,7 +91,9 @@ class Screenshots extends Action
         $site = $dbForProject->getDocument('sites', $siteId);
 
         if ($site->isEmpty()) {
-            throw new PermanentFailure('Site not found');
+            $this->abandon($project, $deploymentId, 'Site not found');
+
+            return;
         }
 
         Span::add('site.framework', $site->getAttribute('framework', ''));
@@ -113,13 +118,13 @@ class Screenshots extends Action
             ]);
 
             if ($rule->isEmpty()) {
-                throw new \Exception("Rule for deployment not found");
+                throw new PermanentFailure('Rule for deployment not found');
             }
 
             $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
 
             if ($bucket->isEmpty()) {
-                throw new \Exception('Bucket not found');
+                throw new PermanentFailure('Bucket not found');
             }
 
             $routerHost = System::getEnv('_APP_WORKER_SCREENSHOTS_ROUTER', '');
@@ -240,19 +245,26 @@ class Screenshots extends Action
 
             $this->recordTelemetry($counter, 'failure');
 
-            // The browser service refuses a host that resolves to a private or
-            // reserved address before it navigates. The domain points there by
-            // the customer's DNS, so the next attempt is refused the same way.
-            // Its other refusals (a page timeout, a certificate still being
-            // issued) can pass on a later attempt and stay retriable.
-            if ($th instanceof ScreenshotsException && \str_contains($th->getMessage(), 'is not publicly routable')) {
-                throw new PermanentFailure($th->getMessage(), $th->getCode(), $th);
+            // Best-effort: a permanent failure, or the last attempt (NATS only), is acknowledged, not dead-lettered.
+            $unroutable = $th instanceof ScreenshotsException && \str_contains($th->getMessage(), 'is not publicly routable');
+            if ($th instanceof PermanentFailure || $unroutable || $message->isLastAttempt()) {
+                $this->abandon($project, $deployment->getId(), $th->getMessage());
+
+                return;
             }
 
             throw $th;
         }
 
         $this->recordTelemetry($counter, 'success');
+    }
+
+    protected function abandon(Document $project, string $deploymentId, string $reason): void
+    {
+        Span::add('screenshot.status', 'failed');
+        Span::add('screenshot.reason', $reason);
+
+        Console::warning('Screenshot abandoned: project=' . $project->getId() . ' deployment=' . $deploymentId . ' reason=' . $reason);
     }
 
     protected function recordTelemetry(Counter $counter, string $result): void

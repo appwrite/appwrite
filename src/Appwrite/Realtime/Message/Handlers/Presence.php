@@ -90,24 +90,70 @@ class Presence extends Action
 
         $presenceDocument = new Document($presenceData);
         $presenceState->setPermissions($presenceDocument, $permissions, $user, $authorization);
+        if ($presenceId !== 'unique()') {
+            $presenceDocument->setAttribute('$id', $presenceId);
+        }
 
-        $presence = $presenceState->upsertForUser(
-            $database,
-            $presenceDocument,
-            $presenceId,
-            (string) $user->getSequence(),
-            function () use ($presenceState, $publisherForUsage, $project): void {
+        $projectId = $project->getId();
+
+        // Row this socket already counts against; matching its sequence means a status refresh,
+        // not a new hold. Sequence (not id) so a same-id delete-and-recreate is seen as new.
+        $stash = $realtime->connections[$connectionId]['presence'] ?? null;
+        $sequence = (\is_array($stash) && ($stash['userId'] ?? null) === $userId)
+            ? ($stash['sequence'] ?? null)
+            : null;
+
+        $write = $presenceState->upsertForUserWithConnections($database, $presenceDocument, $userId, $sequence);
+        $presence = $write['presence'];
+        $created = $write['created'];
+        $counted = $write['counted'];
+
+        // Socket closed mid-write: onClose ran before this hold was stashed, so undo any count we
+        // added, and if that deleted the row announce offline instead of the online upsert below.
+        if (!isset($realtime->connections[$connectionId])) {
+            $deleted = $counted
+                ? $presenceState->releaseConnectionForUser($database, $userId, (string) $presence->getSequence())
+                : null;
+
+            if ($deleted !== null) {
+                // created-then-deleted nets zero usage; otherwise undo the creator's +1.
+                $presenceState->triggerPresenceDeleted($database, $project, $userId, $deleted, $publisherForUsage, $queueForEvents, $queueForRealtime, triggerUsage: !$created);
+            } elseif ($created) {
+                // Created row survives under another socket's hold: count the online transition here.
                 $presenceState->triggerUsage($publisherForUsage, $project, 1);
-            },
-        );
+            }
+
+            foreach (['$collection', '$tenant', 'hostname', 'permissionsHash', 'userInternalId', 'connections'] as $attribute) {
+                $presence->removeAttribute($attribute);
+            }
+
+            return [
+                'type' => 'response',
+                'data' => [
+                    'to' => 'presence',
+                    'presence' => $presence->getArrayCopy(),
+                ],
+            ];
+        }
+
+        // Stash so onClose releases this exact hold; a heartbeat refreshes without recounting.
+        $realtime->connections[$connectionId]['presence'] = [
+            'projectId' => $projectId,
+            'userId' => $userId,
+            'sequence' => (string) $presence->getSequence(),
+        ];
+
+        // Usage +1 only on actual creation (user came online), not on an increment.
+        if ($created) {
+            $presenceState->triggerUsage($publisherForUsage, $project, 1);
+        }
 
         $presence->removeAttribute('$collection');
         $presence->removeAttribute('$tenant');
         $presence->removeAttribute('hostname');
         $presence->removeAttribute('permissionsHash');
         $presence->removeAttribute('userInternalId');
-
-        $realtime->connections[$connectionId]['presences'][$presence->getId()] = true;
+        $presence->removeAttribute('connections');
 
         $presenceState->triggerEvent(
             $queueForEvents,
