@@ -168,10 +168,11 @@ final class SitesConsoleClientTest extends Scope
             'fallbackFile' => '',
         ]);
 
-        $deploymentId = $this->setupDeployment($siteId, [
+        $deploymentId = $this->createDeploymentAccepted($siteId, [
             'code' => $this->packageSite('static-themed'),
             'activate' => 'false'
         ]);
+        $this->waitDeploymentReady($siteId, $deploymentId);
 
         $screenshotIds = [];
         $this->assertEventually(function () use ($siteId, $deploymentId, &$screenshotIds) {
@@ -233,7 +234,8 @@ final class SitesConsoleClientTest extends Scope
         // Two captures take a few seconds each; anything the worker keeps lands well within this window.
         $deadline = \microtime(true) + 45;
         do {
-            $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/screenshots/files?project=console', array_merge($this->getHeaders(), [
+            $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/screenshots/files', array_merge($this->getHeaders(), [
+                'x-appwrite-project' => 'console',
                 'x-appwrite-mode' => 'default',
             ]), [
                 'queries' => [Query::createdAfter($createdAt)->toString()],
