@@ -15,6 +15,7 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\FileName;
 use Appwrite\Utopia\Database\Validator\Folder;
 use Appwrite\Utopia\Request\Validator\File;
 use Appwrite\Utopia\Response;
@@ -222,6 +223,13 @@ class Create extends Action
         $fileName = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
         $fileTmpName = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
         $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+
+        // The name goes back out in Content-Disposition, where a line break
+        // would end the header or make the server drop it
+        $fileNameValidator = new FileName();
+        if (!$fileNameValidator->isValid($fileName)) {
+            throw new Exception(Exception::STORAGE_INVALID_FILE, 'File name ' . $fileNameValidator->getDescription());
+        }
 
         $contentRange = $request->getHeaderLine('content-range');
         $fileId = $fileId === 'unique()' ? Id::unique() : $fileId;

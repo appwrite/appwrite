@@ -516,14 +516,14 @@ trait StorageBase
         $cases = [
             // SVG is executable in a browser, so it is served as a download
             // (attachment) and never rendered as a top-level document.
-            ['source' => 'logo.svg', 'mimeType' => 'image/svg+xml', 'contentType' => 'image/svg+xml', 'disposition' => 'attachment'],
-            ['source' => 'logo.png', 'mimeType' => 'image/png', 'contentType' => 'image/png', 'disposition' => 'inline'],
-            ['source' => 'document.pdf', 'mimeType' => 'application/pdf', 'contentType' => 'application/pdf', 'disposition' => 'inline'],
+            ['source' => 'logo.svg', 'mimeType' => 'image/svg+xml', 'contentType' => 'image/svg+xml', 'disposition' => 'attachment', 'downloadType' => 'image/svg+xml'],
+            ['source' => 'logo.png', 'mimeType' => 'image/png', 'contentType' => 'image/png', 'disposition' => 'inline', 'downloadType' => 'image/png'],
+            ['source' => 'document.pdf', 'mimeType' => 'application/pdf', 'contentType' => 'application/pdf', 'disposition' => 'inline', 'downloadType' => 'application/pdf'],
             // HTML is not in the storage-mimes allowlist on purpose: rendering
             // user uploads as HTML on the API origin would allow stored XSS.
-            ['source' => 'page.html', 'mimeType' => 'text/html', 'contentType' => 'text/plain', 'disposition' => 'inline'],
+            ['source' => 'page.html', 'mimeType' => 'text/html', 'contentType' => 'text/plain', 'disposition' => 'inline', 'downloadType' => 'application/octet-stream'],
             // A TrueType font sniffs as a bare SFNT, so its type comes from the extension.
-            ['source' => '../../public/fonts/Poppins-Bold.ttf', 'mimeType' => 'font/ttf', 'contentType' => 'text/plain', 'disposition' => 'inline'],
+            ['source' => '../../public/fonts/Poppins-Bold.ttf', 'mimeType' => 'font/ttf', 'contentType' => 'text/plain', 'disposition' => 'inline', 'downloadType' => 'application/octet-stream'],
         ];
 
         foreach ($cases as $case) {
@@ -552,7 +552,28 @@ trait StorageBase
             $this->assertEquals('nosniff', $view['headers']['x-content-type-options'], $case['source']);
             $this->assertStringStartsWith($case['disposition'] . ';', $view['headers']['content-disposition'], $case['source']);
             $this->assertEquals(\file_get_contents($source), $view['body'], $case['source']);
+
+            // A download is served from the API origin too: always an
+            // attachment, never a type that renders as a document there
+            $download = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/download', array_merge([
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $download['headers']['status-code'], $case['source']);
+            $this->assertEquals($case['downloadType'], $download['headers']['content-type'], $case['source']);
+            $this->assertEquals("script-src 'none';", $download['headers']['content-security-policy'], $case['source']);
+            $this->assertEquals('nosniff', $download['headers']['x-content-type-options'], $case['source']);
+            $this->assertStringStartsWith('attachment;', $download['headers']['content-disposition'], $case['source']);
         }
+
+        // A name that would break the disposition header is refused
+        $rename = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => "page\r\nContent-Disposition: inline.html",
+        ]);
+        $this->assertEquals(400, $rename['headers']['status-code']);
     }
 
     public function testCreateBucketFileWithFolder(): void
@@ -1046,9 +1067,12 @@ trait StorageBase
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $file5['headers']['status-code']);
-        $this->assertEquals('attachment; filename="logo.png"', $file5['headers']['content-disposition']);
+        $this->assertEquals('attachment; filename="logo.png"; filename*=UTF-8\'\'logo.png', $file5['headers']['content-disposition']);
         $this->assertEquals('image/png', $file5['headers']['content-type']);
         $this->assertNotEmpty($file5['body']);
+        $this->assertEquals('nosniff', $file5['headers']['x-content-type-options']);
+        $this->assertEquals("script-src 'none';", $file5['headers']['content-security-policy']);
+
 
         // Test ranged download
         $file51 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
@@ -1061,7 +1085,7 @@ trait StorageBase
         $originalChunk = \file_get_contents($path, false, null, 0, 100);
 
         $this->assertEquals(206, $file51['headers']['status-code']);
-        $this->assertEquals('attachment; filename="logo.png"', $file51['headers']['content-disposition']);
+        $this->assertEquals('attachment; filename="logo.png"; filename*=UTF-8\'\'logo.png', $file51['headers']['content-disposition']);
         $this->assertEquals('image/png', $file51['headers']['content-type']);
         $this->assertNotEmpty($file51['body']);
         $this->assertEquals($originalChunk, $file51['body']);
@@ -1216,7 +1240,7 @@ trait StorageBase
         ], $this->getHeaders()));
         $fileData = $file7['body'];
         $this->assertEquals(200, $file7['headers']['status-code']);
-        $this->assertEquals('attachment; filename="large-file.mp4"', $file7['headers']['content-disposition']);
+        $this->assertEquals('attachment; filename="large-file.mp4"; filename*=UTF-8\'\'large-file.mp4', $file7['headers']['content-disposition']);
         $this->assertEquals('video/mp4', $file7['headers']['content-type']);
         $this->assertNotEmpty($fileData);
         $this->assertEquals(md5_file(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4')), md5($fileData)); // validate the file is downloaded correctly
