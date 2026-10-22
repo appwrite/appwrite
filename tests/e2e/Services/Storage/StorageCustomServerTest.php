@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Storage;
 
+use Ahc\Jwt\JWT;
 use Appwrite\Extend\Exception;
 use CURLFile;
 use PHPUnit\Framework\Attributes\Group;
@@ -1026,5 +1027,56 @@ final class StorageCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         $this->assertEquals(404, $file['headers']['status-code']);
+    }
+
+    public function testFilePushContentDisposition(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => Id::unique(),
+            'name' => 'Push Filename',
+        ]);
+        $this->assertSame(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/script.svg'), 'image/svg+xml', 'café logo.svg'),
+        ]);
+        $this->assertSame(201, $file['headers']['status-code']);
+        $fileId = $file['body']['$id'];
+
+        $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
+        $push = fn (array $claims): array => $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/push', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'project' => $this->getProject()['$id'],
+            'jwt' => $encoder->encode(\array_merge([
+                'bucketId' => $bucketId,
+                'fileId' => $fileId,
+                'projectId' => $this->getProject()['$id'],
+            ], $claims)),
+        ]);
+
+        /**
+         * Test for SUCCESS
+         */
+        foreach ([[], ['disposition' => 'inline'], ['disposition' => 'other']] as $claims) {
+            $response = $push($claims);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertSame('attachment; filename="caf_ logo.svg"; filename*=UTF-8\'\'' . \rawurlencode('café logo.svg'), $response['headers']['content-disposition']);
+            $this->assertSame("script-src 'none';", $response['headers']['content-security-policy']);
+        }
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $push(['fileId' => 'other']);
+        $this->assertSame(401, $response['headers']['status-code']);
     }
 }
