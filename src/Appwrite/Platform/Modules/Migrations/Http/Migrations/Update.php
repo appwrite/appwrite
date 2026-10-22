@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Migrations\Http\Migrations;
 use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Locking\Lock;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -53,6 +54,7 @@ class Update extends Action
             ->inject('dbForProject')
             ->inject('project')
             ->inject('platform')
+            ->inject('lock')
             ->inject('publisherForMigrations')
             ->callback($this->action(...));
     }
@@ -63,21 +65,30 @@ class Update extends Action
         Database $dbForProject,
         Document $project,
         array $platform,
+        Lock $lock,
         MigrationPublisher $publisherForMigrations
     ): void {
-        $migration = $dbForProject->getDocument('migrations', $migrationId);
+        // Every attempt writes to the same migration-based paths, so a second retry must be
+        // refused until this one has moved the migration out of `failed`.
+        $migration = $lock->withKey(
+            'lock:project:' . $project->getSequence() . ':migrations:' . $migrationId . ':retry',
+            function () use ($dbForProject, $migrationId): Document {
+                $migration = $dbForProject->getDocument('migrations', $migrationId);
 
-        if ($migration->isEmpty()) {
-            throw new Exception(Exception::MIGRATION_NOT_FOUND);
-        }
+                if ($migration->isEmpty()) {
+                    throw new Exception(Exception::MIGRATION_NOT_FOUND);
+                }
 
-        if ($migration->getAttribute('status') !== 'failed') {
-            throw new Exception(Exception::MIGRATION_IN_PROGRESS, 'Migration not failed yet');
-        }
+                if ($migration->getAttribute('status') !== 'failed') {
+                    throw new Exception(Exception::MIGRATION_IN_PROGRESS, 'Migration not failed yet');
+                }
 
-        $migration
-            ->setAttribute('status', 'pending')
-            ->setAttribute('dateUpdated', \time());
+                return $dbForProject->updateDocument('migrations', $migrationId, new Document([
+                    'status' => 'pending',
+                ]));
+            },
+            'migrations.retry',
+        );
 
         $publisherForMigrations->enqueue(new MigrationMessage(
             project: $project,
