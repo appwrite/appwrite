@@ -19,6 +19,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Http\Http;
 use Utopia\Http\Route;
 use Utopia\Locale\Locale;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
@@ -174,7 +175,8 @@ Http::get('/v1/mock/tests/general/oauth2/user')
             $user = [
                 'id' => $id,
                 'name' => 'Canonical Email User',
-                'email' => 'oauth.' . $id . '@gmail.com',
+                // Any address only in development, where the e2e suite runs
+                'email' => \str_contains($id, '@') && System::getEnv('_APP_ENV', 'development') === 'development' ? $id : 'oauth.' . $id . '@gmail.com',
                 'verified' => true,
                 'photo' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
             ];
@@ -239,7 +241,7 @@ Http::patch('/v1/mock/tests/general/oauth2/native')
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, bool $enabled, string $provider, ?string $appId, array $clientIds, Response $response, Database $dbForPlatform) {
-        $isDevelopment = Http::isDevelopment(); // Production unless _APP_ENV says development, as everywhere else
+        $isDevelopment = System::getEnv('_APP_ENV', 'production') === 'development';
 
         if (!$isDevelopment) {
             throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
@@ -367,7 +369,7 @@ Http::post('/v1/mock/api-key-unprefixed')
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
-        $isDevelopment = Http::isDevelopment(); // Production unless _APP_ENV says development, as everywhere else
+        $isDevelopment = System::getEnv('_APP_ENV', 'production') === 'development';
 
         if (!$isDevelopment) {
             throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
@@ -420,7 +422,7 @@ Http::get('/v1/mock/github/callback')
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $providerInstallationId, string $projectId, VcsFactory $vcsFactory, Document $project, Response $response, Database $dbForPlatform) {
-        $isDevelopment = Http::isDevelopment(); // Production unless _APP_ENV says development, as everywhere else
+        $isDevelopment = System::getEnv('_APP_ENV', 'production') === 'development';
 
         if (!$isDevelopment) {
             throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);

@@ -258,6 +258,13 @@ class Deletes extends Action
         Span::add('project.id', $project->getId());
         Span::add('type', $type);
 
+        // The project was deleted after the job was queued: getProjectDB() refuses it, and its own deletion removes its data.
+        if ($project->isEmpty() && !$this->runsWithoutProject(\strval($type), $document)) {
+            Span::add('project.id', $deleteMessage->project?->getId() ?? '');
+            Span::add('skipped', 'deleted');
+            return;
+        }
+
         switch (\strval($type)) {
             case DELETE_TYPE_DOCUMENT:
                 switch ($document->getCollection()) {
@@ -354,14 +361,6 @@ class Deletes extends Action
                 $this->deleteOldCSVExports($dbForPlatform, $deviceForFiles);
                 break;
             case DELETE_TYPE_MAINTENANCE:
-                // The project was deleted after the job was queued; getProjectDB() would hand back the platform database.
-                if ($project->isEmpty()) {
-                    // The injected project is empty here, so name the one the message was queued for.
-                    Span::add('project.id', $deleteMessage->project?->getId() ?? '');
-                    Span::add('maintenance.skipped', 'deleted');
-                    break;
-                }
-
                 $this->deleteExpiredTargets($project, $getProjectDB);
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention, $executionsRetentionCount, $executionStore);
                 $this->deleteExpiredSessions($project, $getProjectDB);
@@ -379,6 +378,25 @@ class Deletes extends Action
             default:
                 throw new \Exception('No delete operation for type: ' . \strval($type));
         }
+    }
+
+    /**
+     * Platform-wide jobs, and documents that live in the platform database, still run once their project is gone.
+     */
+    private function runsWithoutProject(string $type, Document $document): bool
+    {
+        if ($type === DELETE_TYPE_DOCUMENT) {
+            return \in_array($document->getCollection(), [DELETE_TYPE_PROJECTS, DELETE_TYPE_RULES], true);
+        }
+
+        return \in_array($type, [
+            DELETE_TYPE_FILES,
+            DELETE_TYPE_TEAM_PROJECTS,
+            DELETE_TYPE_REALTIME,
+            DELETE_TYPE_SCHEDULES,
+            DELETE_TYPE_CSV_EXPORTS,
+            DELETE_TYPE_REPORT,
+        ], true);
     }
 
     private function deleteReport(Database $dbForPlatform, Document $project, Document $report): void
@@ -1091,6 +1109,13 @@ class Deletes extends Action
                 Console::error('Failed to delete cache storage directory: ' . $th->getMessage());
             }
 
+            try {
+                $deviceForImports = new TelemetryDevice($telemetry, getDevice(APP_STORAGE_IMPORTS . '/app-' . $projectId));
+                $deviceForImports->delete($deviceForImports->getRoot(), true);
+            } catch (Throwable $th) {
+                Console::error('Failed to delete imports storage directory: ' . $th->getMessage());
+            }
+
         } finally {
             $dbForProject->setValidation(true);
         }
@@ -1457,6 +1482,7 @@ class Deletes extends Action
             $this->deleteDeploymentFiles($deviceForSites, $document);
             $this->deleteDeploymentScreenshots($deviceForFiles, $dbForPlatform, $document);
         });
+        $this->deleteBuildCache($deviceForBuilds, $project, $document);
 
         /**
          * Delete Logs
@@ -1537,6 +1563,7 @@ class Deletes extends Action
             $this->deleteDeploymentFiles($deviceForFunctions, $document);
             $this->deleteBuildFiles($deviceForBuilds, $document);
         });
+        $this->deleteBuildCache($deviceForBuilds, $project, $document);
 
         /**
          * Delete Executions
@@ -1603,11 +1630,14 @@ class Deletes extends Action
             $path = $file->getAttribute('path', '');
 
             try {
-                if ($deviceForFiles->delete($path)) {
-                    Console::success('Deleted deployment screenshot: ' . $path);
-                } else {
+                // Local devices report false for an object that is already gone; the row goes either way then.
+                if (!$deviceForFiles->delete($path) && $deviceForFiles->exists($path)) {
                     Console::error('Failed to delete deployment screenshot: ' . $path);
+                    continue;
                 }
+
+                $dbForPlatform->deleteDocument('bucket_' . $bucket->getSequence(), $id);
+                Console::success('Deleted deployment screenshot: ' . $path);
             } catch (\Throwable $th) {
                 Console::error('Failed to delete deployment screenshot: ' . $path);
                 Console::error('[Error] Type: ' . get_class($th));
@@ -1655,6 +1685,31 @@ class Deletes extends Action
      * @param Document $deployment
      * @return void
      */
+    /**
+     * The build cache belongs to the function or site, not to a deployment,
+     * so deleting the deployments leaves it behind.
+     */
+    private function deleteBuildCache(Device $deviceForBuilds, Document $project, Document $resource): void
+    {
+        try {
+            $path = Deployments::resourceCachePath($project->getId(), $resource);
+        } catch (Exception $th) {
+            // A runtime that is no longer offered has no image to key a cache by
+            Console::warning('Skipped build cache for ' . $resource->getId() . ': ' . $th->getMessage());
+            return;
+        }
+
+        try {
+            if ($deviceForBuilds->delete($path)) {
+                Console::success('Deleted build cache: ' . $path);
+            }
+        } catch (Throwable $th) {
+            Console::error('Failed to delete build cache: ' . $path);
+            Console::error('[Error] Type: ' . get_class($th));
+            Console::error('[Error] Message: ' . $th->getMessage());
+        }
+    }
+
     private function deleteBuildFiles(Device $device, Document $deployment): void
     {
         $deploymentId = $deployment->getId();

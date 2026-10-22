@@ -4,67 +4,99 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Utopia\Response\Filters;
 
-use Appwrite\Auth\Scopes;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V26;
 use PHPUnit\Framework\TestCase;
+use Swoole\Http\Request as SwooleRequest;
 use Utopia\Database\Document;
 
 final class V26Test extends TestCase
 {
-    public function testKeyAndWebhookSecretsNeedTheirWriteScopes(): void
+    public function testOmitsKeySecretWithoutWriteScope(): void
     {
-        $project = $this->parse(new Scopes());
+        $content = $this->parse(['project.read']);
 
-        $this->assertSame('', $project['keys'][0]['secret']);
-        $this->assertSame('', $project['webhooks'][0]['secret']);
-        $this->assertSame('', $project['webhooks'][0]['authPassword']);
-        // The rest of the shape is unchanged
-        $this->assertSame('key1', $project['keys'][0]['$id']);
-        $this->assertSame(['users.read'], $project['keys'][0]['scopes']);
-        $this->assertSame('https://example.com/hook', $project['webhooks'][0]['url']);
+        $this->assertSame('key', $content['keys'][0]['$id']);
+        $this->assertSame('', $content['keys'][0]['secret']);
     }
 
-    public function testManagersStillReadTheSecrets(): void
+    public function testKeepsKeySecretWithWriteScope(): void
     {
-        $project = $this->parse((new Scopes())->grant(['keys.write', 'webhooks.write']));
+        $content = $this->parse(['project.read', 'keys.write']);
 
-        $this->assertSame('standard_secret', $project['keys'][0]['secret']);
-        $this->assertSame('signature-key', $project['webhooks'][0]['secret']);
-        $this->assertSame('basic-pass', $project['webhooks'][0]['authPassword']);
+        $this->assertSame('standard_secret', $content['keys'][0]['secret']);
     }
 
-    public function testKeysWriteDoesNotRevealWebhookSecrets(): void
+    public function testKeepsKeySecretWithOrganizationWriteScope(): void
     {
-        $project = $this->parse((new Scopes())->grant(['keys.write']));
+        $content = $this->parse(['projects.read', 'organization.projects.keys.write']);
 
-        $this->assertSame('standard_secret', $project['keys'][0]['secret']);
-        $this->assertSame('', $project['webhooks'][0]['secret']);
+        $this->assertSame('standard_secret', $content['keys'][0]['secret']);
+    }
+
+    public function testOmitsWebhookCredentials(): void
+    {
+        $content = $this->parse(['project.read', 'keys.write', 'webhooks.write']);
+
+        $this->assertSame('webhook', $content['webhooks'][0]['$id']);
+        $this->assertSame('user', $content['webhooks'][0]['authUsername']);
+        $this->assertSame('', $content['webhooks'][0]['authPassword']);
+        $this->assertSame('', $content['webhooks'][0]['secret']);
+    }
+
+    public function testOmitsSecretsInProjectList(): void
+    {
+        $request = new Request(new SwooleRequest());
+        $request->setScopes(['projects.read']);
+        $filter = new V26($request);
+        $filter->setRawContent(new Document([
+            'projects' => [$this->project()],
+        ]));
+
+        $content = $filter->parse([
+            'total' => 1,
+            'projects' => [['$id' => 'project']],
+        ], Response::MODEL_PROJECT_LIST);
+
+        $this->assertSame('', $content['projects'][0]['keys'][0]['secret']);
+        $this->assertSame('', $content['projects'][0]['webhooks'][0]['authPassword']);
+        $this->assertSame('', $content['projects'][0]['webhooks'][0]['secret']);
     }
 
     /**
+     * @param array<string> $scopes
      * @return array<string, mixed>
      */
-    private function parse(Scopes $scopes): array
+    private function parse(array $scopes): array
     {
-        $filter = new V26($scopes);
-        $filter->setRawContent(new Document([
-            '$id' => 'project1',
-            'keys' => [new Document([
-                '$id' => 'key1',
-                'name' => 'Key',
-                'scopes' => ['users.read'],
-                'secret' => 'standard_secret',
-            ])],
-            'webhooks' => [new Document([
-                '$id' => 'webhook1',
-                'url' => 'https://example.com/hook',
-                'httpUser' => 'basic-user',
-                'httpPass' => 'basic-pass',
-                'signatureKey' => 'signature-key',
-            ])],
-        ]));
+        $request = new Request(new SwooleRequest());
+        $request->setScopes($scopes);
+        $filter = new V26($request);
+        $filter->setRawContent($this->project());
 
-        return $filter->parse(['$id' => 'project1'], Response::MODEL_PROJECT);
+        return $filter->parse(['$id' => 'project'], Response::MODEL_PROJECT);
+    }
+
+    private function project(): Document
+    {
+        return new Document([
+            '$id' => 'project',
+            'keys' => [
+                new Document([
+                    '$id' => 'key',
+                    'name' => 'Key',
+                    'secret' => 'standard_secret',
+                ]),
+            ],
+            'webhooks' => [
+                new Document([
+                    '$id' => 'webhook',
+                    'httpUser' => 'user',
+                    'httpPass' => 'password',
+                    'signatureKey' => 'signature',
+                ]),
+            ],
+        ]);
     }
 }

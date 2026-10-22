@@ -14,7 +14,6 @@ use Appwrite\Utopia\Response;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\PermissionType;
@@ -155,24 +154,13 @@ class Get extends Action
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
         }
 
-        // A download is served from the API origin like any other response:
-        // should the attachment disposition ever not reach the browser, an
-        // uploaded document must not render, let alone run, in that origin.
-        $contentType = \in_array($file->getAttribute('mimeType'), Config::getParam('storage-mimes'))
-            ? $file->getAttribute('mimeType')
-            : 'application/octet-stream';
-
-        $name = (string) $file->getAttribute('name', '');
-        $filename = $this->quotedDispositionFilename($name);
-
         $response
-            ->setContentType($contentType)
-            ->addHeader('Content-Security-Policy', "script-src 'none';")
-            ->addHeader('X-Content-Type-Options', 'nosniff')
+            ->setContentType($file->getAttribute('mimeType'))
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->addHeader('Content-Disposition', 'attachment; filename="' . $filename . '"; filename*=UTF-8\'\'' . \rawurlencode($name !== '' ? $name : 'download'))
-        ;
+            ->addHeader('Content-Security-Policy', "sandbox; script-src 'none';")
+            ->setHeader('X-Content-Type-Options', 'nosniff')
+            ->setContentDisposition(Response::DISPOSITION_ATTACHMENT, (string) $file->getAttribute('name', ''));
 
         $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
@@ -248,21 +236,5 @@ class Get extends Action
             }
             throw $error;
         }
-    }
-
-    private function quotedDispositionFilename(string $name): string
-    {
-        $fallback = '';
-        $length = \strlen($name);
-        for ($i = 0; $i < $length; $i++) {
-            $char = $name[$i];
-            $code = \ord($char);
-            if ($code < 32 || $code === 127 || $char === '"' || $char === '\\' || $char === ';') {
-                continue;
-            }
-            $fallback .= $char;
-        }
-
-        return $fallback !== '' ? $fallback : 'download';
     }
 }

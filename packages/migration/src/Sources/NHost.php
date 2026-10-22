@@ -113,10 +113,10 @@ class NHost extends Source
 
     public string $storageURL;
 
+    protected string $databaseAddress = '';
+
     public function __construct(string $subdomain, string $region, string $adminSecret, string $databaseName, string $username, string $password, string $port = '5432')
     {
-        self::assertCoordinates($subdomain, $region, $databaseName, $port);
-
         $this->subdomain = $subdomain;
         $this->region = $region;
         $this->adminSecret = $adminSecret;
@@ -128,45 +128,37 @@ class NHost extends Source
     }
 
     /**
-     * The project's coordinates become a host under nhost.run and keywords of
-     * a libpq connection string. A subdomain or region must therefore be a
-     * single DNS label, so the host stays under nhost.run, and none of them
-     * may carry whitespace, quotes or '=', which would add connection keywords
-     * (hostaddr=, host=) pointing anywhere.
-     *
-     * @throws \InvalidArgumentException
+     * The Postgres host the source connects to, so a caller can check where it resolves before connecting.
      */
-    public static function assertCoordinates(string $subdomain, string $region, string $databaseName, string $port): void
+    public function getDatabaseHost(): string
     {
-        foreach (['subdomain' => $subdomain, 'region' => $region] as $name => $label) {
-            if (! self::isLabel($label)) {
-                throw new \InvalidArgumentException("Invalid NHost {$name}: a single DNS label of letters, digits and hyphens is expected.");
-            }
-        }
-
-        if ($databaseName === '' || \strlen($databaseName) > 63 || ! \ctype_alnum(\str_replace(['_', '-'], '', $databaseName))) {
-            throw new \InvalidArgumentException('Invalid NHost database name: letters, digits, underscores and hyphens are expected.');
-        }
-
-        if (! \ctype_digit($port) || (int) $port < 1 || (int) $port > 65535) {
-            throw new \InvalidArgumentException('Invalid NHost database port.');
-        }
+        return $this->subdomain.'.db.'.$this->region.'.nhost.run';
     }
 
-    private static function isLabel(string $label): bool
+    /**
+     * Connect to the database host on this address (libpq hostaddr), so the connection lands where the caller
+     * checked rather than wherever the host resolves at connect time. TLS still verifies the host. Set it before
+     * the first connection.
+     */
+    public function setDatabaseAddress(string $address): static
     {
-        return $label !== ''
-            && \strlen($label) <= 63
-            && \ctype_alnum(\str_replace('-', '', $label))
-            && ! \str_starts_with($label, '-')
-            && ! \str_ends_with($label, '-');
+        $this->databaseAddress = $address;
+
+        return $this;
+    }
+
+    public function getDatabaseDsn(): string
+    {
+        $address = $this->databaseAddress === '' ? '' : ';hostaddr='.$this->databaseAddress;
+
+        return 'pgsql:host='.$this->getDatabaseHost().$address.';port='.$this->port.';dbname='.$this->databaseName;
     }
 
     public function getDatabase(): PDO
     {
         if (! $this->pdo) {
             try {
-                $this->pdo = new \PDO('pgsql:host='.$this->subdomain.'.db.'.$this->region.'.nhost.run'.';port='.$this->port.';dbname='.$this->databaseName, $this->username, $this->password);
+                $this->pdo = new \PDO($this->getDatabaseDsn(), $this->username, $this->password);
             } catch (\PDOException $e) {
                 throw new \Exception('Failed to connect to database: '.$e->getMessage(), self::statusCodeFromThrowable($e), $e);
             }

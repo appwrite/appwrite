@@ -7,6 +7,8 @@ use Appwrite\Event\Message\Build as BuildMessage;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Validator\VariableKey;
+use Appwrite\Vcs\Validator\Directory;
+use Executor\Executor;
 use OpenRuntimes\Orchestrator\Enum\ArchiveCompression;
 use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use OpenRuntimes\Orchestrator\Enum\ReadFormat;
@@ -46,10 +48,10 @@ use Utopia\VCS\Adapter\Git;
  * + unarchive, run by the sidecar) — a GET has no request-body cap, so large
  * sources are fine. The build output and package-manager cache go wherever
  * the builds device is (see storage()). On the local device only this
- * project's directory on the builds volume is attached to the build worker
- * at its Appwrite path, so build.sh writes its artifact + the cache squashfs
- * straight onto the volume Appwrite already reads, and cannot list or write
- * another project's tree. On a remote device (S3 and friends) no volume spans
+ * deployment's directory and this project's cache directory on the builds
+ * volume are attached to the build worker at their Appwrite paths, so build.sh
+ * writes its artifact + the cache squashfs straight onto the volume Appwrite
+ * already reads, and cannot list or write another deployment's tree. On a remote device (S3 and friends) no volume spans
  * Appwrite and the build workers, so the sidecar moves them over s3://
  * upload/download artifacts instead. The orchestrator supports the generic
  * _APP_STORAGE_S3_* configuration; legacy provider-specific variables and
@@ -239,6 +241,21 @@ readonly class Deployments
         string $ref,
         string $rootDirectory = '',
     ): Document {
+        // Values stored before root directories were validated may still leave the repository
+        if (!(new Directory(\PHP_INT_MAX))->isValid($rootDirectory)) {
+            $message = 'Root directory must stay inside the repository.';
+            $this->dbForProject->updateDocuments('deployments', new Document([
+                'status' => 'failed',
+                'buildLogs' => "\n{$message}\n",
+                'buildEndedAt' => DateTime::now(),
+            ]), [
+                Query::equal('$id', [$deployment->getId()]),
+                Query::notEqual('status', 'canceled'),
+            ]);
+
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $message);
+        }
+
         $deployment->setAttribute('providerRootDirectory', $rootDirectory);
 
         if ($vcs->supportsRepositoryArchives()) {
@@ -664,7 +681,7 @@ readonly class Deployments
      */
     public static function id(string $projectId, string $deploymentId): string
     {
-        return "{$projectId}-{$deploymentId}-build";
+        return Executor::runtimeId($projectId, $deploymentId) . '-build';
     }
 
     /**
@@ -686,6 +703,27 @@ readonly class Deployments
     public static function buildPath(string $projectId, string $deploymentId): string
     {
         return static::device($projectId)->getPath("{$deploymentId}/" . static::artifact());
+    }
+
+    /**
+     * Whether $path holds a deployment file that is safe to read: on the local
+     * device a regular file inside the device root, reached without symbolic
+     * links, since builds can write the builds volume.
+     */
+    public static function isArtifact(Device $device, string $path): bool
+    {
+        if ($path === '') {
+            return false;
+        }
+
+        if ($device->getType() !== DeviceType::Local) {
+            return $device->exists($path);
+        }
+
+        return \str_starts_with($path, \rtrim($device->getRoot(), '/') . '/')
+            && !\is_link($path)
+            && \is_file($path)
+            && \realpath($path) === $path;
     }
 
     /**
@@ -742,6 +780,20 @@ readonly class Deployments
     }
 
     /**
+     * The build cache of the image a resource builds with now. The key hashes
+     * the image, so a runtime change leaves the previous cache at another key
+     * and deleting the resource has to remove this one.
+     *
+     * @throws Exception when the resource's runtime is not supported
+     */
+    public static function resourceCachePath(string $projectId, Document $resource): string
+    {
+        $runtime = self::runtime($resource, self::version($resource));
+
+        return static::cachePath($projectId, static::cacheKey($projectId, $resource->getId(), $runtime['image'] ?? ''));
+    }
+
+    /**
      * The builds device for a project, as everything else reads it
      * (deviceForBuilds).
      */
@@ -753,11 +805,11 @@ readonly class Deployments
     /**
      * Where build.sh's output artifact and package-manager cache land, and
      * what the job needs to get them there. On the local device only this
-     * project's subdirectory of the builds volume is mounted (Volume.subPath)
-     * and build.sh writes straight to buildPath()/cachePath() — sibling
-     * app-{projectId} trees stay off the worker. The project directory is
-     * created first because Docker's named-volume Subpath must exist before
-     * the container starts. On a remote device (S3 and friends) build.sh
+     * deployment's output directory and this project's cache directory of the
+     * builds volume are mounted (Volume.subPath) and build.sh writes straight
+     * to buildPath()/cachePath() — sibling deployments and app-{projectId}
+     * trees stay off the worker. Both directories are created first because
+     * Docker's named-volume Subpath must exist before the container starts. On a remote device (S3 and friends) build.sh
      * writes into the job workspace and the sidecar moves output and cache
      * over s3:// artifacts, keyed as buildPath()/cachePath(), so everything
      * reading through deviceForBuilds works unchanged. Open Runtimes Orchestrator
@@ -777,22 +829,32 @@ readonly class Deployments
         $cachePath = static::cachePath($projectId, $cacheKey);
         $device = static::device($projectId);
 
+        $volume = System::getEnv('_APP_BUILDS_VOLUME', 'appwrite-builds');
+        $outputDirectory = static::outputDirectory($projectId, $deploymentId);
+        $cacheDirectory = \dirname($cachePath);
+
         if ($device instanceof Local) {
-            $device->createDirectory($device->getRoot());
+            $device->createDirectory($outputDirectory);
+            $device->createDirectory($cacheDirectory);
         }
 
         return match ($device->getType()) {
             DeviceType::Local => [
                 'volumes' => [
                     new Volume(
-                        source: System::getEnv('_APP_BUILDS_VOLUME', 'appwrite-builds'),
-                        path: $device->getRoot(),
-                        subPath: "app-{$projectId}",
+                        source: $volume,
+                        path: $outputDirectory,
+                        subPath: "app-{$projectId}/{$deploymentId}",
+                    ),
+                    new Volume(
+                        source: $volume,
+                        path: $cacheDirectory,
+                        subPath: "app-{$projectId}/cache",
                     ),
                 ],
                 'artifacts' => [],
                 'environment' => [
-                    'OPEN_RUNTIMES_BUILD_OUTPUT_DIR' => static::outputDirectory($projectId, $deploymentId),
+                    'OPEN_RUNTIMES_BUILD_OUTPUT_DIR' => $outputDirectory,
                     'OPEN_RUNTIMES_BUILD_CACHE_ARTIFACT' => $cachePath,
                 ],
             ],

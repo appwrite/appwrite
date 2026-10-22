@@ -7,10 +7,10 @@ use Appwrite\Deployment\GitAction;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception as AppwriteException;
-use Appwrite\Platform\Modules\Compute\Validator\RootDirectory;
 use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\Validator\Directory;
 use Exception;
 use Utopia\Config\Config;
 use Utopia\Console\Command;
@@ -54,6 +54,47 @@ class Builds extends Action
         $warning = "[WARNING] Logs truncated. The output exceeded {$limit} characters.\n";
 
         return $warning . \substr($logs, -($limit - \strlen($warning)));
+    }
+
+    /**
+     * Resolves a repository directory inside its checkout, refusing symbolic
+     * links and anything that resolves outside it.
+     *
+     * @throws BuildException
+     */
+    private function confine(string $checkout, string $directory, bool $create = false): string
+    {
+        $root = \realpath($checkout);
+        if ($root === false) {
+            throw new BuildException('Repository checkout is missing.');
+        }
+
+        $path = $root;
+        foreach (\explode('/', $directory) as $segment) {
+            if ($segment === '' || $segment === '.') {
+                continue;
+            }
+            if ($segment === '..') {
+                throw new BuildException('Root directory must stay inside the repository.');
+            }
+
+            $path .= '/' . $segment;
+            if (\is_link($path)) {
+                throw new BuildException('Root directory "' . $directory . '" must not be a symbolic link.');
+            }
+            if (!\file_exists($path) && (!$create || !\mkdir($path))) {
+                throw new BuildException('Root directory "' . $directory . '" not found in the repository.');
+            }
+            if (!\is_dir($path)) {
+                throw new BuildException('Root directory "' . $directory . '" must be a directory.');
+            }
+        }
+
+        if (\realpath($path) !== $path) {
+            throw new BuildException('Root directory must stay inside the repository.');
+        }
+
+        return $path;
     }
 
     /**
@@ -279,16 +320,12 @@ class Builds extends Action
             // VCS and VCS+Temaplte
             $tmpDirectory = '/tmp/builds/' . $deploymentId . '/code';
             $rootDirectory = $resource->getAttribute('providerRootDirectory', '');
+            if (!(new Directory(\PHP_INT_MAX))->isValid($rootDirectory)) {
+                throw new BuildException('Root directory must stay inside the repository.');
+            }
             $rootDirectory = \rtrim($rootDirectory, '/');
             $rootDirectory = \ltrim($rootDirectory, '.');
             $rootDirectory = \ltrim($rootDirectory, '/');
-
-            // Both directories are appended to paths on this host, where the
-            // template is copied in, moved and packed. The endpoints refuse a
-            // value that could leave the checkout; a stored one may predate that.
-            if (!RootDirectory::isConfined($rootDirectory)) {
-                throw new BuildException('Root directory must be a path inside the repository.');
-            }
 
             $owner = $providerAdapter->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
             $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
@@ -327,8 +364,11 @@ class Builds extends Action
             // Local refactoring for function folder with spaces
             if (str_contains($rootDirectory, ' ')) {
                 $rootDirectoryWithoutSpaces = str_replace(' ', '', $rootDirectory);
-                $from = $tmpDirectory . '/' . $rootDirectory;
-                $to = $tmpDirectory . '/' . $rootDirectoryWithoutSpaces;
+                $from = $this->confine($tmpDirectory, $rootDirectory);
+                $to = $this->confine($tmpDirectory, \dirname($rootDirectoryWithoutSpaces)) . '/' . \basename($rootDirectoryWithoutSpaces);
+                if (\file_exists($to) || \is_link($to)) {
+                    throw new BuildException('Root directory "' . $rootDirectoryWithoutSpaces . '" already exists in the repository.');
+                }
                 $exit = Console::execute((new Command('mv'))->argument($from)->argument($to), '', $stdout, $stderr);
 
                 if ($exit !== 0) {
@@ -344,13 +384,12 @@ class Builds extends Action
             $templateReferenceValue = $template->getAttribute('referenceValue', '');
 
             $templateRootDirectory = $template->getAttribute('rootDirectory', '');
+            if (!(new Directory(\PHP_INT_MAX))->isValid($templateRootDirectory)) {
+                throw new BuildException('Template root directory must stay inside the template repository.');
+            }
             $templateRootDirectory = \rtrim($templateRootDirectory, '/');
             $templateRootDirectory = \ltrim($templateRootDirectory, '.');
             $templateRootDirectory = \ltrim($templateRootDirectory, '/');
-
-            if (!RootDirectory::isConfined($templateRootDirectory)) {
-                throw new BuildException('Template root directory must be a path inside the template repository.');
-            }
 
             if (! empty($templateRepositoryName) && ! empty($templateOwnerName) && ! empty($templateReferenceType) && ! empty($templateReferenceValue)) {
                 // Clone template repo
@@ -363,17 +402,21 @@ class Builds extends Action
                     throw new \Exception('Unable to clone code repository: ' . $stderr);
                 }
 
-                // Ensure directories
-                Console::execute((new Command('mkdir'))->flag('-p')->argument($tmpTemplateDirectory . '/' . $templateRootDirectory), '', $stdout, $stderr);
-                Console::execute((new Command('mkdir'))->flag('-p')->argument($tmpDirectory . '/' . $rootDirectory), '', $stdout, $stderr);
+                $source = $this->confine($tmpTemplateDirectory, $templateRootDirectory, true);
+                $destination = $this->confine($tmpDirectory, $rootDirectory, true);
 
-                // Merge template into user repo
+                // Merge template into user repo, keeping only links that stay inside the template
                 $rsync = (new Command('rsync'))
                     ->flag('-av')
+                    ->flag('--safe-links')
                     ->option('--exclude', '.git')
-                    ->argument($tmpTemplateDirectory . '/' . $templateRootDirectory . '/')
-                    ->argument($tmpDirectory . '/' . $rootDirectory);
-                Console::execute($rsync, '', $stdout, $stderr);
+                    ->argument($source . '/')
+                    ->argument($destination);
+                $exit = Console::execute($rsync, '', $stdout, $stderr);
+
+                if ($exit !== 0) {
+                    throw new \Exception('Unable to merge template into repository: ' . $stderr);
+                }
 
                 // Commit and push
                 $commitMessage = 'Create ' . $resource->getAttribute('name', '') . ' function';
@@ -444,7 +487,7 @@ class Builds extends Action
                     $resource,
                     $deployment,
                     $timeout,
-                    \rtrim($tmpDirectory . '/' . $rootDirectory, '/'),
+                    $this->confine($tmpDirectory, $rootDirectory),
                 );
             }
         } catch (\Throwable $th) {

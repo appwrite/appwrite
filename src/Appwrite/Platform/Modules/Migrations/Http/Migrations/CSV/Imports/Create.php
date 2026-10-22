@@ -121,6 +121,21 @@ class Create extends Action
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND, 'File not found in ' . $path);
         }
 
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $databaseType = $database->getAttribute('type');
+        if (!\in_array($databaseType, CSV_ALLOWED_DATABASE_TYPES)) {
+            throw new Exception(Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED, 'Database type not supported for csv');
+        }
+
+        $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
+        if ($collection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
         // No encryption or compression on files above 20MB.
         $hasEncryption = !empty($file->getAttribute('openSSLCipher'));
         $compression = $file->getAttribute('algorithm', Compression::NONE);
@@ -160,21 +175,6 @@ class Create extends Action
             }
         } elseif (!$deviceForFiles->copy($path, $newPath, $deviceForMigrations)) {
             throw new \Exception('Unable to copy file');
-        }
-
-        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
-        }
-
-        $databaseType = $database->getAttribute('type');
-        if (!\in_array($databaseType, CSV_ALLOWED_DATABASE_TYPES)) {
-            throw new Exception(Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED, 'Database type not supported for csv');
-        }
-
-        $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
-        if ($collection->isEmpty()) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
         $fileSize = $deviceForMigrations->getFileSize($newPath);
