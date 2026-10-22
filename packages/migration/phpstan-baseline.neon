@@ -1531,13 +1531,13 @@ parameters:
 			path: src/Resources/Database/Collection.php
 
 		-
-			message: '#^Parameter \#1 \$array of static method Utopia\\Migration\\Resources\\Database\\Database\:\:fromArray\(\) expects array\{id\: string, name\: string, createdAt\: string, updatedAt\: string, enabled\: bool, originalId\: string\|null, database\: string, status\: string\|null\}, array\{id\: string, name\: string, type\: string\} given\.$#'
+			message: '#^Parameter \#1 \$array of static method Utopia\\Migration\\Resources\\Database\\Database\:\:fromArray\(\) expects array\{id\: string, name\: string, createdAt\: string, updatedAt\: string, enabled\: bool, originalId\: string\|null, database\: string, status\: string\|null, \.\.\.\}, array\{id\: string, name\: string, type\: string\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Resources/Database/Collection.php
 
 		-
-			message: '#^Parameter \#1 \$array of static method Utopia\\Migration\\Resources\\Database\\DocumentsDB\:\:fromArray\(\) expects array\{id\: string, name\: string, createdAt\: string, updatedAt\: string, enabled\: bool, originalId\: string\|null, database\?\: string, status\: string\|null\}, array\{id\: string, name\: string, type\: ''documentsdb''\} given\.$#'
+			message: '#^Parameter \#1 \$array of static method Utopia\\Migration\\Resources\\Database\\DocumentsDB\:\:fromArray\(\) expects array\{id\: string, name\: string, createdAt\: string, updatedAt\: string, enabled\: bool, originalId\: string\|null, database\?\: string, status\: string\|null, \.\.\.\}, array\{id\: string, name\: string, type\: ''documentsdb''\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Resources/Database/Collection.php
@@ -1555,7 +1555,7 @@ parameters:
 			path: src/Resources/Database/Columns/BigInt.php
 
 		-
-			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, array\: bool, default\: int\|null, formatOptions\: array\{min\: int\|null, max\: int\|null\}, createdAt\: string, updatedAt\: string\}\.$#'
+			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, array\: bool, default\: int\|null, formatOptions\: array\{min\: int\|null, max\: int\|null\}, createdAt\: string, updatedAt\: string, \.\.\.\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: src/Resources/Database/Columns/BigInt.php
@@ -1567,7 +1567,7 @@ parameters:
 			path: src/Resources/Database/Columns/BigInt.php
 
 		-
-			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, array\: bool, default\: bool\|null, createdAt\: string, updatedAt\: string\}\.$#'
+			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, array\: bool, default\: bool\|null, createdAt\: string, updatedAt\: string, description\?\: string\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: src/Resources/Database/Columns/Boolean.php
@@ -1579,7 +1579,7 @@ parameters:
 			path: src/Resources/Database/Columns/Boolean.php
 
 		-
-			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, array\: bool, default\: string\|null, createdAt\: string, updatedAt\: string\}\.$#'
+			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, array\: bool, default\: string\|null, createdAt\: string, updatedAt\: string, description\?\: string\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: src/Resources/Database/Columns/DateTime.php
@@ -1597,7 +1597,7 @@ parameters:
 			path: src/Resources/Database/Columns/Decimal.php
 
 		-
-			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, array\: bool, default\: float\|null, formatOptions\: array\{min\: float\|null, max\: float\|null\}, createdAt\: string, updatedAt\: string\}\.$#'
+			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, array\: bool, default\: float\|null, formatOptions\: array\{min\: float\|null, max\: float\|null\}, createdAt\: string, updatedAt\: string, \.\.\.\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: src/Resources/Database/Columns/Decimal.php
@@ -1633,7 +1633,7 @@ parameters:
 			path: src/Resources/Database/Columns/Integer.php
 
 		-
-			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, array\: bool, default\: int\|null, formatOptions\: array\{min\: int\|null, max\: int\|null\}, createdAt\: string, updatedAt\: string\}\.$#'
+			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, array\: bool, default\: int\|null, formatOptions\: array\{min\: int\|null, max\: int\|null\}, createdAt\: string, updatedAt\: string, \.\.\.\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: src/Resources/Database/Columns/Integer.php
@@ -1651,7 +1651,7 @@ parameters:
 			path: src/Resources/Database/Columns/Line.php
 
 		-
-			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, default\: array\<mixed\>\|null, createdAt\: string, updatedAt\: string\}\.$#'
+			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, default\: array\<mixed\>\|null, createdAt\: string, updatedAt\: string, description\?\: string\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: src/Resources/Database/Columns/Line.php
@@ -1693,7 +1693,7 @@ parameters:
 			path: src/Resources/Database/Columns/ObjectType.php
 
 		-
-			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, default\: array\<mixed\>\|null, createdAt\: string, updatedAt\: string\}\.$#'
+			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, default\: array\<mixed\>\|null, createdAt\: string, updatedAt\: string, description\?\: string\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: src/Resources/Database/Columns/ObjectType.php
@@ -1711,7 +1711,7 @@ parameters:
 			path: src/Resources/Database/Columns/Point.php
 
 		-
-			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, default\: array\<mixed\>\|null, createdAt\: string, updatedAt\: string\}\.$#'
+			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, default\: array\<mixed\>\|null, createdAt\: string, updatedAt\: string, description\?\: string\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: src/Resources/Database/Columns/Point.php
@@ -1729,7 +1729,7 @@ parameters:
 			path: src/Resources/Database/Columns/Polygon.php
 
 		-
-			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, default\: array\<mixed\>\|null, createdAt\: string, updatedAt\: string\}\.$#'
+			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, default\: array\<mixed\>\|null, createdAt\: string, updatedAt\: string, description\?\: string\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: src/Resources/Database/Columns/Polygon.php
@@ -1789,7 +1789,7 @@ parameters:
 			path: src/Resources/Database/Columns/Relationship.php
 
 		-
-			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, options\: array\{relatedCollection\: string, relationType\: string, twoWay\: bool, twoWayKey\: string\|null, onDelete\: string, side\: string\}, createdAt\: string, updatedAt\: string\}\.$#'
+			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, options\: array\{relatedCollection\: string, relationType\: string, twoWay\: bool, twoWayKey\: string\|null, onDelete\: string, side\: string\}, createdAt\: string, updatedAt\: string, description\?\: string\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: src/Resources/Database/Columns/Relationship.php
@@ -1831,7 +1831,7 @@ parameters:
 			path: src/Resources/Database/Columns/Vector.php
 
 		-
-			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, size\: int, required\: bool, default\: array\<mixed\>\|null, createdAt\: string, updatedAt\: string\}\.$#'
+			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, size\: int, required\: bool, default\: array\<mixed\>\|null, createdAt\: string, updatedAt\: string, description\?\: string\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: src/Resources/Database/Columns/Vector.php
@@ -1885,7 +1885,7 @@ parameters:
 			path: src/Resources/Database/Row.php
 
 		-
-			message: '#^Parameter \#1 \$array of static method Utopia\\Migration\\Resources\\Database\\Database\:\:fromArray\(\) expects array\{id\: string, name\: string, createdAt\: string, updatedAt\: string, enabled\: bool, originalId\: string\|null, database\: string, status\: string\|null\}, array\{id\: string, name\: string\} given\.$#'
+			message: '#^Parameter \#1 \$array of static method Utopia\\Migration\\Resources\\Database\\Database\:\:fromArray\(\) expects array\{id\: string, name\: string, createdAt\: string, updatedAt\: string, enabled\: bool, originalId\: string\|null, database\: string, status\: string\|null, \.\.\.\}, array\{id\: string, name\: string\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Resources/Database/Table.php
@@ -3517,13 +3517,13 @@ parameters:
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Parameter \#1 \$array of static method Utopia\\Migration\\Resources\\Database\\Database\:\:fromArray\(\) expects array\{id\: string, name\: string, createdAt\: string, updatedAt\: string, enabled\: bool, originalId\: string\|null, database\: string, status\: string\|null\}, array given\.$#'
+			message: '#^Parameter \#1 \$array of static method Utopia\\Migration\\Resources\\Database\\Database\:\:fromArray\(\) expects array\{id\: string, name\: string, createdAt\: string, updatedAt\: string, enabled\: bool, originalId\: string\|null, database\: string, status\: string\|null, \.\.\.\}, array given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Parameter \#1 \$array of static method Utopia\\Migration\\Resources\\Database\\DocumentsDB\:\:fromArray\(\) expects array\{id\: string, name\: string, createdAt\: string, updatedAt\: string, enabled\: bool, originalId\: string\|null, database\?\: string, status\: string\|null\}, array given\.$#'
+			message: '#^Parameter \#1 \$array of static method Utopia\\Migration\\Resources\\Database\\DocumentsDB\:\:fromArray\(\) expects array\{id\: string, name\: string, createdAt\: string, updatedAt\: string, enabled\: bool, originalId\: string\|null, database\?\: string, status\: string\|null, \.\.\.\}, array given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Sources/Appwrite.php
@@ -3799,7 +3799,7 @@ parameters:
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Parameter \#2 \$entity of static method Utopia\\Migration\\Sources\\Appwrite\:\:getEntity\(\) expects array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\?\: bool, rowSecurity\?\: bool, permissions\: array\<string\>\|null, createdAt\: string, updatedAt\: string, \.\.\.\}, array\{id\: mixed, name\: mixed, rowSecurity\: mixed, documentSecurity\: mixed, permissions\: mixed, createdAt\: mixed, updatedAt\: mixed, enabled\: mixed, \.\.\.\} given\.$#'
+			message: '#^Parameter \#2 \$entity of static method Utopia\\Migration\\Sources\\Appwrite\:\:getEntity\(\) expects array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\?\: bool, rowSecurity\?\: bool, permissions\: array\<string\>\|null, createdAt\: string, updatedAt\: string, \.\.\.\}, array\{id\: mixed, name\: mixed, description\: string, rowSecurity\: mixed, documentSecurity\: mixed, permissions\: mixed, createdAt\: mixed, updatedAt\: mixed, \.\.\.\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Sources/Appwrite.php
