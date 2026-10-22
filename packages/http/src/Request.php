@@ -162,15 +162,16 @@ abstract class Request
     }
 
     /**
-     * Read the first value of the first trusted header that carries one.
+     * Read the value the nearest proxy wrote to the first trusted header that carries one.
      *
      * @param  array<int, string>  $headers
      */
     protected function trustedValue(array $headers): ?string
     {
         foreach ($headers as $header) {
-            // Each hop appends, so the leftmost value is the client's own.
-            $value = trim(explode(',', $this->getHeaderLine($header))[0]);
+            // Entries left of the nearest hop may come from the client.
+            $values = explode(',', $this->getHeaderLine($header));
+            $value = trim((string) end($values));
 
             if ($value !== '') {
                 return $value;

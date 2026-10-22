@@ -139,7 +139,7 @@ final class SwooleRequestTest extends TestCase
     public function testTrustsANamedForwardedHost(): void
     {
         $request = new Request(
-            $this->schemeRequest(['X-Forwarded-Host' => 'Example.com:8443, proxy.internal']),
+            $this->schemeRequest(['X-Forwarded-Host' => 'spoofed.example:9000, Example.com:8443']),
             new TrustedHeaders(host: ['x-forwarded-host']),
         );
 
