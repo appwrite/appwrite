@@ -351,16 +351,14 @@ class Get extends Base
             $disposition = $overrideDisposition;
         }
 
-        if ($this->requiresAttachment($storedType, $contentType)) {
-            $disposition = $this->attachmentDisposition((string) $file->getAttribute('name', ''));
-        }
-
         $response
             ->setContentType($contentType)
             ->addHeader('Content-Security-Policy', "script-src 'none';")
             ->setHeader('X-Content-Type-Options', 'nosniff');
 
-        if ($disposition !== '') {
+        if ($this->requiresAttachment($storedType, $contentType)) {
+            $response->setContentDisposition(Response::DISPOSITION_ATTACHMENT, (string) $file->getAttribute('name', ''));
+        } elseif ($disposition !== '') {
             $response->setHeader('Content-Disposition', $disposition);
         }
     }
@@ -379,30 +377,6 @@ class Get extends Base
         }
 
         return false;
-    }
-
-    private function attachmentDisposition(string $name): string
-    {
-        $fallback = $this->quotedDispositionFilename($name);
-        $encoded = \rawurlencode($name !== '' ? $name : 'download');
-
-        return 'attachment; filename="' . $fallback . '"; filename*=UTF-8\'\'' . $encoded;
-    }
-
-    private function quotedDispositionFilename(string $name): string
-    {
-        $fallback = '';
-        $length = \strlen($name);
-        for ($i = 0; $i < $length; $i++) {
-            $char = $name[$i];
-            $code = \ord($char);
-            if ($code < 32 || $code === 127 || $char === '"' || $char === '\\' || $char === ';') {
-                continue;
-            }
-            $fallback .= $char;
-        }
-
-        return $fallback !== '' ? $fallback : 'download';
     }
 
     /**

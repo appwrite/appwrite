@@ -52,7 +52,10 @@ use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\System\System;
+use Utopia\Validator\AnyOf;
 use Utopia\Validator\Hostname;
+use Utopia\Validator\Identifier;
+use Utopia\Validator\Label;
 
 class Migrations extends Action
 {
@@ -187,6 +190,34 @@ class Migrations extends Action
     }
 
     /**
+     * Migrations created before the API validated these parts are checked here too.
+     *
+     * @param array<string, mixed> $credentials
+     */
+    private function nhost(array $credentials): NHost
+    {
+        $label = new Label();
+        $database = new AnyOf([new Identifier(63), new Label()], AnyOf::TYPE_STRING);
+
+        if (!$label->isValid($credentials['subdomain']) || !$label->isValid($credentials['region']) || !$database->isValid($credentials['database'])) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'NHost subdomain, region or database name is invalid.');
+        }
+
+        $source = new NHost(
+            $credentials['subdomain'],
+            $credentials['region'],
+            $credentials['adminSecret'],
+            $credentials['database'],
+            $credentials['username'],
+            $credentials['password'],
+            $credentials['port'],
+        );
+
+        // Connect Postgres to the address just checked, so DNS cannot answer differently (SSRF)
+        return $source->setDatabaseAddress($this->publicHostname->address($source->getDatabaseHost()));
+    }
+
+    /**
      * @throws Exception
      */
     protected function processSource(Document $migration): Source
@@ -282,15 +313,7 @@ class Migrations extends Action
                 $credentials['password'],
                 $credentials['port'],
             ),
-            NHost::getName() => new NHost(
-                $credentials['subdomain'],
-                $credentials['region'],
-                $credentials['adminSecret'],
-                $credentials['database'],
-                $credentials['username'],
-                $credentials['password'],
-                $credentials['port'],
-            ),
+            NHost::getName() => $this->nhost($credentials),
             SourceAppwrite::getName() => new SourceAppwrite(
                 $credentials['projectId'],
                 $credentials['endpoint'],
@@ -456,7 +479,7 @@ class Migrations extends Action
     {
         $queueForRealtime
             ->setProject($project)
-            ->setSubscribers(['console', $project->getId()])
+            ->setSubscribers(['console'])
             ->setEvent('migrations.[migrationId].update')
             ->setParam('migrationId', $migration->getId())
             ->setPayload($migration->getArrayCopy(), sensitive: ['credentials'])
@@ -529,6 +552,7 @@ class Migrations extends Action
 
         $apiKey = $jwt->encode([
             'projectId' => $project->getId(),
+            'projectSequence' => $project->getSequence(),
             'disabledMetrics' => [
                 METRIC_DATABASES_OPERATIONS_READS,
                 METRIC_DATABASES_OPERATIONS_WRITES,
@@ -639,12 +663,17 @@ class Migrations extends Action
                 return;
             }
 
-            $destination->success();
+            $destinationType = $migration->getAttribute('destination');
+            $export = $destinationType === DestinationCSV::getName() || $destinationType === DestinationJSON::getName();
+
+            // An export destination succeeds once its file row exists, inside handleDataExportComplete().
+            if (!$export) {
+                $destination->success();
+            }
             $source->success();
 
-            $destinationType = $migration->getAttribute('destination');
-            if ($destinationType === DestinationCSV::getName() || $destinationType === DestinationJSON::getName()) {
-                $this->handleDataExportComplete($project, $migration, $publisherForMails, $queueForRealtime, $platform, $authorization);
+            if ($export) {
+                $this->handleDataExportComplete($project, $migration, $destination, $publisherForMails, $queueForRealtime, $platform, $authorization);
             }
 
             $migration->setAttribute('status', 'completed');
@@ -812,6 +841,7 @@ class Migrations extends Action
      *
      * @param Document $project
      * @param Document $migration
+     * @param Destination $destination
      * @param MailPublisher $publisherForMails
      * @param Realtime $queueForRealtime
      * @param array $platform
@@ -821,6 +851,7 @@ class Migrations extends Action
     protected function handleDataExportComplete(
         Document $project,
         Document $migration,
+        Destination $destination,
         MailPublisher $publisherForMails,
         Realtime $queueForRealtime,
         array $platform,
@@ -906,6 +937,9 @@ class Migrations extends Action
         ]));
 
         Console::info("Created file document in bucket: $fileId");
+
+        // The file row owns the file now: a later failure must not delete it from under the row.
+        $destination->success();
 
         // The link is emailed, so it lives as long as the file itself does.
         $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', DATA_EXPORT_RETENTION, 0);

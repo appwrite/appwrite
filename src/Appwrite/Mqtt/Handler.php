@@ -60,13 +60,6 @@ class Handler implements MqttHandler
     {
         $authMethod = $connect->authMethod ?? '';
 
-        // A second CONNECT on an accepted connection is a protocol violation (MQTT 5.0 §3.1); refusing closes the socket.
-        if ($connection->active) {
-            Span::add('mqtt.result', 'duplicate_connect');
-            $this->mqtt->connectRefused->add(1, ['reason' => 'protocol_error']);
-            return Connack::refuse(Connack::UNSPECIFIED_ERROR);
-        }
-
         $this->untrack($connection);
         $connection->prefix = $connect->userProperties()['projectId'] ?? '';
         Span::add('project.id', $connection->prefix);

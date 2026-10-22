@@ -158,8 +158,9 @@ class Get extends Action
             ->setContentType($file->getAttribute('mimeType'))
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"')
-        ;
+            ->addHeader('Content-Security-Policy', "sandbox; script-src 'none';")
+            ->setHeader('X-Content-Type-Options', 'nosniff')
+            ->setContentDisposition(Response::DISPOSITION_ATTACHMENT, (string) $file->getAttribute('name', ''));
 
         $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt

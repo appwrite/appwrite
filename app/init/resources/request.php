@@ -20,6 +20,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Geo\Client as GeoClient;
 use Appwrite\Geo\Geo;
+use Appwrite\GraphQL\ResolverLock;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Locking\Lock;
 use Appwrite\Network\Cors;
@@ -80,6 +81,8 @@ use Utopia\Usage\Tenant as UsageTenant;
  */
 return function (Container $context): void {
     $context->set('utopia:graphql', fn ($utopia) => $utopia, ['utopia']);
+
+    $context->set('resolverLock', fn (): ResolverLock => new ResolverLock(), []);
 
     $context->set('lock', function (Group $pools, Telemetry $telemetry, Document $project): Lock {
         return new Lock(
@@ -259,7 +262,7 @@ return function (Container $context): void {
     /**
      * List of allowed request hostnames for the request.
      */
-    $context->set('allowedHostnames', function (array $platform, Document $project, Document $rule, Request $request) {
+    $context->set('allowedHostnames', function (array $platform, Document $project, Document $rule, Request $request, string $mode) {
         $allowed = [...($platform['hostnames'] ?? [])];
 
         /* Add the console host, the default OAuth2 redirects land on it even when _APP_CONSOLE_URL points elsewhere */
@@ -268,8 +271,8 @@ return function (Container $context): void {
             $allowed[] = $consoleHostname;
         }
 
-        /* Add platform configured hostnames */
-        if (! $project->isEmpty() && $project->getId() !== 'console') {
+        /* Add platform configured hostnames, admin mode carries the console session so only console hosts may use it */
+        if (! $project->isEmpty() && $project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
             $platforms = $project->getAttribute('platforms', []);
             $hostnames = Platform::getHostnames($platforms);
             $allowed = [...$allowed, ...$hostnames];
@@ -288,21 +291,23 @@ return function (Container $context): void {
             $allowed[] = $hostname;
         }
 
-        /* Allow the request origin of rule */
-        if (! $rule->isEmpty() && ! empty($rule->getAttribute('domain', ''))) {
+        /* Allow the request origin of rule, in admin mode only when it belongs to a trusted console project */
+        $trustedProjects = \array_filter(\explode(',', System::getEnv('_APP_CONSOLE_TRUSTED_PROJECTS', '')));
+        $ruleAllowed = $mode !== APP_MODE_ADMIN || \in_array($rule->getAttribute('projectId', ''), $trustedProjects, true);
+        if (! $rule->isEmpty() && ! empty($rule->getAttribute('domain', '')) && $ruleAllowed) {
             $allowed[] = $rule->getAttribute('domain', '');
         }
 
         return array_unique($allowed);
-    }, ['platform', 'project', 'rule', 'request']);
+    }, ['platform', 'project', 'rule', 'request', 'mode']);
 
     /**
      * List of allowed request schemes for the request.
      */
-    $context->set('allowedSchemes', function (array $platform, Document $project) {
+    $context->set('allowedSchemes', function (array $platform, Document $project, string $mode) {
         $allowed = [...($platform['schemas'] ?? [])];
 
-        if (! $project->isEmpty() && $project->getId() !== 'console') {
+        if (! $project->isEmpty() && $project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
             /* Add hardcoded schemes */
             $allowed[] = 'exp';
             $allowed[] = 'appwrite-callback-' . $project->getId();
@@ -314,7 +319,7 @@ return function (Container $context): void {
         }
 
         return array_unique($allowed);
-    }, ['platform', 'project']);
+    }, ['platform', 'project', 'mode']);
 
     /**
      * Whether the request origin is verified against the request hostname.
@@ -598,7 +603,9 @@ return function (Container $context): void {
 
         $path = (string) \parse_url($request->getURI(), PHP_URL_PATH);
         $segments = \array_values(\array_filter(\explode('/', $path), fn (string $segment) => $segment !== ''));
-        if (($segments[0] ?? '') !== 'v1' || ($segments[1] ?? '') !== 'projects') {
+        $isProjectPath = ($segments[1] ?? '') === 'projects';
+        $isOrganizationProjectPath = ($segments[1] ?? '') === 'organization' && ($segments[2] ?? '') === 'projects';
+        if (($segments[0] ?? '') !== 'v1' || (!$isProjectPath && !$isOrganizationProjectPath)) {
             return '';
         }
 
@@ -646,7 +653,8 @@ return function (Container $context): void {
         $deprecatedProjectPathPrefix = '/v1/projects/';
         if (!empty($route)) {
             $isDeprecatedAlias = $projectIdFromPath !== '' &&
-                !\str_starts_with($route->getPath(), $deprecatedProjectPathPrefix);
+                !\str_starts_with($route->getPath(), $deprecatedProjectPathPrefix) &&
+                !\str_starts_with($route->getPath(), '/v1/organization/projects/');
 
             if ($isDeprecatedAlias) {
                 $projectId = $projectIdFromPath;
@@ -759,7 +767,13 @@ return function (Container $context): void {
             $query = Query::getByType($queries, [Method::Limit])[0] ?? null;
             $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
 
-            return $complexity * $limit;
+            // Anything past the cap fails the query either way; capping keeps the sum an int.
+            $over = (int) System::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250) + 1;
+            if (!\is_int($limit) || $limit < 1 || $limit >= $over) {
+                return $over;
+            }
+
+            return \min($complexity * $limit, $over);
         };
 
         $attributes = function (int $limit, int $offset) use ($dbForProject, $authorization) {

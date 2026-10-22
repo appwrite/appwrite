@@ -15,6 +15,7 @@ use Appwrite\Platform\Modules\S3\Auth\SignatureV4;
 use Appwrite\Platform\Modules\S3\Requests\AwsChunked;
 use Appwrite\Platform\Modules\S3\Responses\S3Xml;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Validator\Filename;
 use Appwrite\Utopia\Database\Validator\Folder;
 use Appwrite\Utopia\Response;
 use Utopia\Cache\Cache;
@@ -174,6 +175,22 @@ abstract class Base extends Action
         ];
     }
 
+    /**
+     * Only new objects are validated, so earlier names stay readable and deletable.
+     *
+     * @return array{folder: string, name: string}
+     */
+    protected function newObjectPath(string $key): array
+    {
+        $object = $this->objectPath($key);
+        $filename = new Filename(0);
+        if (!$filename->isValid($object['name'])) {
+            throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, $filename->getDescription());
+        }
+
+        return $object;
+    }
+
     protected function isFolderMarker(string $key): bool
     {
         return $key !== '' && \str_ends_with($key, '/');
@@ -192,7 +209,7 @@ abstract class Base extends Action
     protected function createMultipartUpload(Database $dbForProject, Cache $cache, Document $project, Device $deviceForFiles, Document $bucket, string $key, string $uploadId, string $contentType, array $metadata): array
     {
         $existing = $this->findObject($dbForProject, $bucket, $key);
-        $object = $existing === null ? $this->objectPath($key) : [
+        $object = $existing === null ? $this->newObjectPath($key) : [
             'folder' => $existing->getAttribute('folder', ''),
             'name' => $existing->getAttribute('name', ''),
         ];
@@ -572,7 +589,7 @@ abstract class Base extends Action
     protected function putObject(Database $dbForProject, Document $project, DeletePublisher $publisherForDeletes, Device $deviceForFiles, Document $bucket, string $key, string $body, string $contentType, array $metadata = []): Document
     {
         $existing = $this->findObject($dbForProject, $bucket, $key);
-        $object = $existing === null ? $this->objectPath($key) : [
+        $object = $existing === null ? $this->newObjectPath($key) : [
             'folder' => $existing->getAttribute('folder', ''),
             'name' => $existing->getAttribute('name', ''),
         ];
@@ -947,6 +964,10 @@ abstract class Base extends Action
                 }
 
                 $existing = $this->findObject($dbForProject, $bucket, $key);
+                if ($existing === null) {
+                    // The object this upload replaces may have been deleted since it started.
+                    $this->newObjectPath($key);
+                }
                 $previousPath = $existing?->getAttribute('path', '') ?? '';
                 $cleanup = $previousPath !== $path;
                 $file = $this->createObjectDocument(

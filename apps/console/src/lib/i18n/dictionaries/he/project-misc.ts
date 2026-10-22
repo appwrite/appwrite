@@ -2499,8 +2499,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'It will stop receiving events immediately. This action cannot be undone.':
     'הוא יפסיק לקבל אירועים באופן מיידי. לא ניתן לבטל פעולה זו.',
   'Last deployed:': 'פריסה אחרונה:',
-  'Leave blank to keep current password unchanged.':
-    'השאירו ריק כדי לשמור על הסיסמה הנוכחית ללא שינוי.',
+  'Leave blank to keep the current password. Re-enter it when changing the host, port, or secure protocol.':
+    'השאירו ריק כדי לשמור על הסיסמה הנוכחית. הזינו אותה מחדש בעת שינוי המארח, הפורט או הפרוטוקול המאובטח.',
   'Leave blank to keep existing': 'השאירו ריק כדי לשמור על הקיים',
   'Leave empty to auto-generate': 'השאירו ריק ליצירה אוטומטית',
   'Leave empty to clear the whole project':
