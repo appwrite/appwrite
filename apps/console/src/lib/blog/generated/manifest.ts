@@ -31,6 +31,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "emudhra-certificate-compromise-appwrite",
+    "href": "/blog/post/emudhra-certificate-compromise-appwrite",
+    "title": "eMudhra certificate compromise: Appwrite is patched",
+    "description": "Appwrite Cloud and self-hosted Appwrite 2.6.0 and 1.9.8 now reject the compromised eMudhra certificate chains. Here's what we changed and how to upgrade.",
+    "date": "2026-10-22",
+    "lastUpdated": "2026-10-22",
+    "timeToRead": 4,
+    "author": "chirag-aggarwal",
+    "category": "security",
+    "featured": false,
+    "cover": "/images/blog/emudhra-certificate-compromise-appwrite/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "php2shell-appwrite-not-affected",
     "href": "/blog/post/php2shell-appwrite-not-affected",
     "title": "PHP2Shell RCE flaws: Why Appwrite is not affected",
