@@ -162,6 +162,25 @@ abstract class Request
     }
 
     /**
+     * Read the first value of the first trusted header that carries one.
+     *
+     * @param  array<int, string>  $headers
+     */
+    protected function trustedValue(array $headers): ?string
+    {
+        foreach ($headers as $header) {
+            // Each hop appends, so the leftmost value is the client's own.
+            $value = trim(explode(',', $this->getHeaderLine($header))[0]);
+
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Get IP
      *
      * Returns users IP address.

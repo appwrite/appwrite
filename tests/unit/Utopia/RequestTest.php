@@ -66,6 +66,42 @@ final class RequestTest extends TestCase
         }
     }
 
+    public function testGetHostnameIgnoresForwardedHostFromUntrustedClient(): void
+    {
+        $previous = getenv('_APP_TRUSTED_PROXIES');
+        putenv('_APP_TRUSTED_PROXIES=10.0.0.0/8');
+
+        try {
+            $swoole = new SwooleRequest();
+            $swoole->server = ['remote_addr' => '203.0.113.10'];
+            $swoole->header = ['host' => 'api.example.com', 'x-forwarded-host' => 'other.example.com:8443', 'x-forwarded-port' => '8443'];
+            $request = new Request($swoole);
+
+            $this->assertSame('api.example.com', $request->getHostname());
+            $this->assertSame('', $request->getPort());
+        } finally {
+            putenv($previous === false ? '_APP_TRUSTED_PROXIES' : '_APP_TRUSTED_PROXIES=' . $previous);
+        }
+    }
+
+    public function testGetHostnameHonorsForwardedHostFromTrustedProxy(): void
+    {
+        $previous = getenv('_APP_TRUSTED_PROXIES');
+        putenv('_APP_TRUSTED_PROXIES=10.0.0.0/8');
+
+        try {
+            $swoole = new SwooleRequest();
+            $swoole->server = ['remote_addr' => '10.0.0.2'];
+            $swoole->header = ['host' => 'api.example.com', 'x-forwarded-host' => 'other.example.com', 'x-forwarded-port' => '8443'];
+            $request = new Request($swoole);
+
+            $this->assertSame('other.example.com', $request->getHostname());
+            $this->assertSame('8443', $request->getPort());
+        } finally {
+            putenv($previous === false ? '_APP_TRUSTED_PROXIES' : '_APP_TRUSTED_PROXIES=' . $previous);
+        }
+    }
+
     /**
      * @return \Iterator<string, array{0: string, 1: string}>
      */

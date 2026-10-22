@@ -610,7 +610,7 @@ Http::init()
                     '{userId}' => (string) $user->getId(),
                     '{userAgent}' => (string) $request->getUserAgent(''),
                     '{ip}' => (string) $request->getIP(),
-                    '{url}' => $request->getHostname() . $route->getPath(),
+                    '{url}' => $route->getPath(),
                     '{method}' => (string) $request->getMethod(),
                     '{chunkId}' => (string) (int) ($start / ($end + 1 - $start)),
                 ];
@@ -990,7 +990,7 @@ Http::shutdown()
                 '{userId}' => (string) $user->getId(),
                 '{userAgent}' => (string) $request->getUserAgent(''),
                 '{ip}' => (string) $request->getIP(),
-                '{url}' => $request->getHostname() . $route->getPath(),
+                '{url}' => $route->getPath(),
                 '{method}' => (string) $request->getMethod(),
                 '{chunkId}' => (string) (int) ($start / ($end + 1 - $start)),
             ];

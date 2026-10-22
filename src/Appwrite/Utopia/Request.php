@@ -27,8 +27,13 @@ class Request extends UtopiaRequest
     {
         $trustedHeaders = System::getEnv('_APP_TRUSTED_HEADERS', 'x-forwarded-for');
         $this->trustedProxies = TrustedProxies::fromEnvironment();
+        $fromProxy = $this->trustedProxies->contains($request->server['remote_addr'] ?? '0.0.0.0');
 
-        parent::__construct($request, new TrustedHeaders(ip: explode(',', $trustedHeaders)));
+        parent::__construct($request, new TrustedHeaders(
+            ip: explode(',', $trustedHeaders),
+            host: $fromProxy ? ['x-forwarded-host'] : [],
+            port: $fromProxy ? ['x-forwarded-port'] : [],
+        ));
     }
 
     #[\Override]
