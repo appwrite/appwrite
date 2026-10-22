@@ -1662,7 +1662,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('authorization')
     ->inject('platform')
     ->inject('clientForOAuth2')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, User $user, Database $dbForProject, Geo $geo, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, array $platform, Client $clientForOAuth2) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('mqtt')
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, User $user, Database $dbForProject, Geo $geo, Database $dbForPlatform, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, array $platform, Client $clientForOAuth2, Mqtt $mqtt) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1889,6 +1890,12 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 if (!$currentDocument->isEmpty()) {
                     $dbForProject->deleteDocument('sessions', $currentDocument->getId());
                     $dbForProject->purgeCachedDocument('users', $user->getId());
+
+                    try {
+                        $mqtt->revoke($project->getId(), $user->getId());
+                    } catch (\Throwable $error) {
+                        Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+                    }
                 }
             }
         }
