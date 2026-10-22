@@ -25,11 +25,11 @@ final class File implements Lock
     {
         $this->open();
 
-        if ($timeout <= 0.0) {
+        if ($timeout === 0.0) {
             return $this->tryAcquire();
         }
 
-        $deadline = microtime(true) + $timeout;
+        $deadline = $timeout > 0.0 ? microtime(true) + $timeout : null;
         $delay = 0.01;
 
         do {
@@ -37,12 +37,18 @@ final class File implements Lock
                 return true;
             }
 
-            $remaining = $deadline - microtime(true);
-            if ($remaining <= 0.0) {
-                return false;
+            if ($deadline !== null) {
+                $remaining = $deadline - microtime(true);
+                if ($remaining <= 0.0) {
+                    return false;
+                }
+
+                $sleep = min($delay, $remaining);
+            } else {
+                $sleep = $delay;
             }
 
-            usleep((int) (min($delay, $remaining) * 1_000_000));
+            usleep((int) ($sleep * 1_000_000));
             $delay = min($delay * 2.0, 0.25);
         } while (true);
     }

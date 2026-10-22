@@ -333,4 +333,11 @@ final class DistributedTest extends TestCase
         $this->assertNotEmpty($messages);
         $holder->release();
     }
+
+    public function testNegativeTimeoutAcquiresWhenUnheld(): void
+    {
+        $lock = new Distributed($this->redis, $this->key, 30);
+        $this->assertTrue($lock->acquire(-1.0));
+        $lock->release();
+    }
 }

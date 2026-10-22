@@ -141,4 +141,59 @@ final class FileTest extends TestCase
             @unlink($done);
         }
     }
+
+    public function testNegativeTimeoutAcquiresWhenUnheld(): void
+    {
+        $lock = new File($this->path);
+        $this->assertTrue($lock->acquire(-1.0));
+        $lock->release();
+    }
+
+    public function testNegativeTimeoutBlocksUntilRelease(): void
+    {
+        if (! \function_exists('pcntl_fork')) {
+            $this->markTestSkipped('pcntl_fork required');
+        }
+
+        $ready = tempnam(sys_get_temp_dir(), 'utopia-lock-ready-');
+        $done = tempnam(sys_get_temp_dir(), 'utopia-lock-done-');
+
+        $pid = pcntl_fork();
+        $this->assertNotSame(-1, $pid, 'Failed to fork');
+
+        if ($pid === 0) {
+            $child = new File($this->path);
+            $acquired = $child->tryAcquire();
+            file_put_contents($ready, $acquired ? '1' : '0');
+
+            // Hold lock for 100ms
+            usleep(100_000);
+
+            $child->release();
+            file_put_contents($done, '1');
+            exit(0);
+        }
+
+        try {
+            $deadline = microtime(true) + 5.0;
+            while (microtime(true) < $deadline && file_get_contents($ready) !== '1') {
+                usleep(10_000);
+            }
+
+            $parent = new File($this->path);
+            $start = microtime(true);
+            $acquired = $parent->acquire(-1.0);
+            $elapsed = microtime(true) - $start;
+
+            $this->assertTrue($acquired, 'Parent should acquire lock after child releases');
+            $this->assertGreaterThanOrEqual(0.05, $elapsed, 'Parent should block until child releases');
+            $this->assertSame('1', file_get_contents($done));
+
+            $parent->release();
+        } finally {
+            pcntl_waitpid($pid, $status);
+            @unlink($ready);
+            @unlink($done);
+        }
+    }
 }
