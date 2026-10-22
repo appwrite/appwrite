@@ -20,6 +20,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Geo\Client as GeoClient;
 use Appwrite\Geo\Geo;
+use Appwrite\GraphQL\ResolverLock;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Locking\Lock;
 use Appwrite\Network\Cors;
@@ -80,6 +81,8 @@ use Utopia\Usage\Tenant as UsageTenant;
  */
 return function (Container $context): void {
     $context->set('utopia:graphql', fn ($utopia) => $utopia, ['utopia']);
+
+    $context->set('resolverLock', fn (): ResolverLock => new ResolverLock(), []);
 
     $context->set('lock', function (Group $pools, Telemetry $telemetry, Document $project): Lock {
         return new Lock(
