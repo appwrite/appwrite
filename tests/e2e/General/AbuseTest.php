@@ -12,6 +12,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideNone;
 use Utopia\Database\Id;
 use Utopia\Database\Permission;
+use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\System\System;
 
@@ -662,6 +663,50 @@ final class AbuseTest extends Scope
     public function testAbuseDeleteTransactionVectorsDBAPI(): void
     {
         $this->assertGuestLimited(Client::METHOD_DELETE, '/vectorsdb/transactions/' . Id::unique(), [], 60);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testGraphQLComplexityIgnoresInvalidLimits(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $query = 'query listUsers($first: [String!], $second: [String!]) {
+            first: usersList(queries: $first) { total users { _id } }
+            second: usersList(queries: $second) { total }
+        }';
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', $headers, [
+            'query' => $query,
+            'variables' => [
+                'first' => [Query::limit(10)->toString()],
+                'second' => [Query::limit(10)->toString()],
+            ],
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertArrayNotHasKey('errors', $response['body']);
+
+        /**
+         * Test for FAILURE
+         */
+        foreach ([[100, -100000], [PHP_INT_MAX, 10]] as [$first, $second]) {
+            $response = $this->client->call(Client::METHOD_POST, '/graphql', $headers, [
+                'query' => $query,
+                'variables' => [
+                    'first' => [\json_encode(['method' => 'limit', 'values' => [$first]])],
+                    'second' => [\json_encode(['method' => 'limit', 'values' => [$second]])],
+                ],
+            ]);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertArrayHasKey('errors', $response['body']);
+            $this->assertStringContainsString('Max query complexity', (string) $response['body']['errors'][0]['message']);
+            $this->assertArrayNotHasKey('data', $response['body']);
+        }
     }
 
     /**
