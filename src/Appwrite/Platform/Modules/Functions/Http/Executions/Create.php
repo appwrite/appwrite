@@ -309,6 +309,10 @@ class Create extends Base
             ->setContext('function', $function);
 
         if ($async) {
+            // The worker mints the function's key when it runs the function and sets the JWT header
+            // from the message's jwt, so the headers kept for it carry neither
+            $headers = \array_diff_key($headers, \array_flip(['x-appwrite-key', 'x-appwrite-user-jwt']));
+
             if (is_null($scheduledAt)) {
                 $publisherForFunctions->enqueue(new FunctionMessage(
                     project: $project,

@@ -1150,7 +1150,7 @@ class Migrations extends Action
             platform: $platform,
         ));
 
-        Console::info("CSV export {$emailType} notification email sent to " . $user->getAttribute('email'));
+        Console::info("CSV export {$emailType} notification email sent to user " . $user->getId());
     }
 
     /**

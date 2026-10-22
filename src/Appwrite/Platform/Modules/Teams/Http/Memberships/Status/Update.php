@@ -106,7 +106,7 @@ class Update extends Action
         }
 
         if ($userId !== $membership->getAttribute('userId')) {
-            throw new Exception(Exception::TEAM_INVITE_MISMATCH, 'Invite does not belong to current user (' . $targetUser->getAttribute('email') . ')');
+            throw new Exception(Exception::TEAM_INVITE_MISMATCH);
         }
 
         $hasSession = !$targetUser->isEmpty();
@@ -115,7 +115,7 @@ class Update extends Action
         }
 
         if ($membership->getAttribute('userInternalId') !== $targetUser->getSequence()) {
-            throw new Exception(Exception::TEAM_INVITE_MISMATCH, 'Invite does not belong to current user (' . $targetUser->getAttribute('email') . ')');
+            throw new Exception(Exception::TEAM_INVITE_MISMATCH);
         }
 
         if ($membership->getAttribute('confirm') === true) {

@@ -3296,6 +3296,9 @@ final class RealtimeCustomClientTest extends Scope
         $this->assertContains("functions.*.executions.*", $responseUpdate['data']['events']);
         $this->assertContains("functions.*", $responseUpdate['data']['events']);
         $this->assertNotEmpty($responseUpdate['data']['payload']);
+        // The user who ran it reads the execution without its logs and errors, as over the API
+        $this->assertSame('', $responseUpdate['data']['payload']['logs']);
+        $this->assertSame('', $responseUpdate['data']['payload']['errors']);
 
         $client->close();
 

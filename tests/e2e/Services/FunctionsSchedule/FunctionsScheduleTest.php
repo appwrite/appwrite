@@ -11,6 +11,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Services\Functions\FunctionsBase;
+use Utopia\Database\Query;
 use Utopia\Database\Role;
 
 final class FunctionsScheduleTest extends Scope
@@ -366,6 +367,23 @@ final class FunctionsScheduleTest extends Scope
         $this->assertCount(1, $execution['body']['requestHeaders']);
         $this->assertEquals('x-appwrite-client-ip', $execution['body']['requestHeaders'][0]['name']);
         $this->assertNotEmpty($execution['body']['requestHeaders'][0]['value']);
+
+        // The schedule keeps the request's headers for the worker, but not the function's key or the user's JWT
+        $schedules = $this->client->call(Client::METHOD_GET, '/projects/' . $this->getProject()['$id'] . '/schedules', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'queries' => [Query::equal('resourceId', [$executionId])->toString()],
+        ]);
+
+        $this->assertEquals(200, $schedules['headers']['status-code']);
+        $this->assertCount(1, $schedules['body']['schedules']);
+        $scheduled = $schedules['body']['schedules'][0]['data']['headers'];
+        $this->assertSame('custom-value', $scheduled['x-custom-header']);
+        $this->assertArrayNotHasKey('x-appwrite-key', $scheduled);
+        $this->assertArrayNotHasKey('x-appwrite-user-jwt', $scheduled);
 
         $this->assertEventually(function () use ($functionId, $executionId) {
             $execution = $this->getExecution($functionId, $executionId);
