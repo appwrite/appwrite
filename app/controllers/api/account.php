@@ -229,40 +229,42 @@ $createSession = function (string $userId, string $secret, Request $request, Res
 
     $authorization->addRole(Role::user($user->getId())->toString());
 
+    // Magic URL and email OTP prove the email, a phone OTP proves the phone
+    $verification = match ($verifiedToken->getAttribute('type')) {
+        TOKEN_TYPE_MAGIC_URL, TOKEN_TYPE_EMAIL => 'emailVerification',
+        TOKEN_TYPE_PHONE => 'phoneVerification',
+        default => null,
+    };
+
     // Claim the token and issue the session together: of concurrent exchanges only the one that deletes the token
-    // gets a session, and a failed insert rolls the claim back so the token can be retried
-    $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user) {
+    // gets a session, and a failed insert rolls the claim back so the token can be retried. The user row lock
+    // orders this against an address change, which deletes the token and resets the verification it proves
+    $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user, $verification) {
+        $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
+
         if (!$authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()))) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        return $dbForProject->createDocument('sessions', $session
+        $session = $dbForProject->createDocument('sessions', $session
             ->setAttribute('$permissions', [
                 Permission::read(Role::user($user->getId())),
                 Permission::update(Role::user($user->getId())),
                 Permission::delete(Role::user($user->getId())),
             ]));
+
+        if ($verification !== null) {
+            $dbForProject->updateDocument('users', $user->getId(), new Document([$verification => true]));
+        }
+
+        return $session;
     });
 
+    if ($verification !== null) {
+        $user->setAttribute($verification, true);
+    }
+
     $dbForProject->purgeCachedDocument('users', $user->getId());
-
-    // Magic URL + Email OTP
-    if ($verifiedToken->getAttribute('type') === TOKEN_TYPE_MAGIC_URL || $verifiedToken->getAttribute('type') === TOKEN_TYPE_EMAIL) {
-        $user->setAttribute('emailVerification', true);
-    }
-
-    if ($verifiedToken->getAttribute('type') === TOKEN_TYPE_PHONE) {
-        $user->setAttribute('phoneVerification', true);
-    }
-
-    try {
-        $dbForProject->updateDocument('users', $user->getId(), new Document([
-            'emailVerification' => $user->getAttribute('emailVerification'),
-            'phoneVerification' => $user->getAttribute('phoneVerification'),
-        ]));
-    } catch (\Throwable $th) {
-        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
-    }
 
     $bus->dispatch(new SessionCreated(
         user: $user->getArrayCopy(),
