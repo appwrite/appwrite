@@ -960,7 +960,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $jwtExpire = $connectionContainer->get('jwtExpire'); /** @var ?int $jwtExpire */
         if (!$impersonatorUser->isEmpty()) {
             // As over HTTP: impersonating needs a session to count factors on, and a blocked user cannot be impersonated.
-            if ($session === null) {
+            if ($session === null || !$user->sessionFactorsMet($session->getId())) {
                 throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
             }
             if ($targetUser->getAttribute('status') === false) {
