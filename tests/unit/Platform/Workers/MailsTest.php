@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Platform\Workers;
 
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Workers\Mails;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Network\FixedLookup;
+use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Database\Document;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Exception\InvalidArgumentException;
@@ -113,12 +116,14 @@ final class MailsTest extends TestCase
                 new Document(['$id' => 'project-x']),
                 $registry,
                 new None(),
+                $this->publicHostname(),
             );
             $worker->action(
                 $message,
                 new Document(['$id' => 'project-x']),
                 $registry,
                 new None(),
+                $this->publicHostname(),
             );
         } finally {
             \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
@@ -163,6 +168,7 @@ final class MailsTest extends TestCase
                 new Document(['$id' => 'project-x']),
                 $registry,
                 new None(),
+                $this->publicHostname(),
             );
         } finally {
             \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
@@ -219,6 +225,12 @@ final class MailsTest extends TestCase
         $this->assertSame(1, $adapter->sendCount);
     }
 
+    private function publicHostname(): PublicHostname
+    {
+        // These sends go through the pooled platform adapter, so nothing dials a host and nothing needs to resolve
+        return new PublicHostname(new PublicInternet(), new FixedLookup());
+    }
+
     private function assertMailWorkerThrows(SpyMailAdapter $adapter, string $expectedMessage): void
     {
         $this->expectException(\Exception::class);
@@ -258,6 +270,7 @@ final class MailsTest extends TestCase
                 new Document(['$id' => 'project-x']),
                 $registry,
                 new None(),
+                $this->publicHostname(),
             );
         } finally {
             \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
