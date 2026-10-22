@@ -4,6 +4,8 @@ require_once __DIR__ . '/init.php';
 $registerWorkerMessageResources = require __DIR__ . '/init/worker/message.php';
 
 use Appwrite\Auth\EncryptionKey;
+use Appwrite\Auth\ExecutorSecret;
+use Appwrite\Auth\JobsSecret;
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Workers\Jobs;
@@ -25,6 +27,14 @@ try {
     EncryptionKey::assertProduction(
         System::getEnv('_APP_ENV', 'production'),
         System::getEnv('_APP_OPENSSL_KEY_V1')
+    );
+    JobsSecret::assertProduction(
+        System::getEnv('_APP_ENV', 'production'),
+        System::getEnv('_APP_JOBS_SECRET')
+    );
+    ExecutorSecret::assertProduction(
+        System::getEnv('_APP_ENV', 'production'),
+        System::getEnv('_APP_EXECUTOR_SECRET')
     );
 } catch (\RuntimeException $exception) {
     Console::error($exception->getMessage());

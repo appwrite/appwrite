@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Auth\EncryptionKey;
+use Appwrite\Auth\ExecutorSecret;
 use Appwrite\Auth\JobsSecret;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Compose\Files;
@@ -451,9 +452,13 @@ class Install extends Action
             $name = $var['name'];
             $value = $input[$name] ?? '';
             $value = is_string($value) ? $value : '';
-            $input[$name] = $name === '_APP_JOBS_SECRET'
-                ? JobsSecret::resolve($value)
-                : EncryptionKey::resolve($value, $shouldGenerateSecrets);
+            // Nothing is encrypted with the jobs and executor secrets, so a
+            // placeholder is replaced on an upgrade as well as on a fresh install
+            $input[$name] = match ($name) {
+                '_APP_JOBS_SECRET' => JobsSecret::resolve($value),
+                '_APP_EXECUTOR_SECRET' => ExecutorSecret::resolve($value),
+                default => EncryptionKey::resolve($value, $shouldGenerateSecrets),
+            };
         }
 
         // Multiline values (e.g. GitHub App PEM private keys) are allowed; env.phtml

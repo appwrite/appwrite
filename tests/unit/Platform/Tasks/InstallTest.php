@@ -46,6 +46,24 @@ final class InstallTest extends TestCase
         }
     }
 
+    public function testUpgradeReplacesPlaceholderJobsAndExecutorSecrets(): void
+    {
+        // Nothing is encrypted with these two, so an upgrade may rotate a
+        // placeholder; the encryption key stays, since data depends on it.
+        $installed = [
+            '_APP_OPENSSL_KEY_V1' => EncryptionKey::PLACEHOLDER,
+            '_APP_JOBS_SECRET' => EncryptionKey::PLACEHOLDER,
+            '_APP_EXECUTOR_SECRET' => EncryptionKey::PLACEHOLDER,
+        ];
+
+        $input = (new Install())->prepareEnvironmentVariables($installed, $this->variables(), false);
+
+        $this->assertSame(EncryptionKey::PLACEHOLDER, $input['_APP_OPENSSL_KEY_V1']);
+        $this->assertFalse(EncryptionKey::isInsecure($input['_APP_JOBS_SECRET']));
+        $this->assertFalse(EncryptionKey::isInsecure($input['_APP_EXECUTOR_SECRET']));
+        $this->assertNotSame($input['_APP_JOBS_SECRET'], $input['_APP_EXECUTOR_SECRET']);
+    }
+
     /**
      * @return array<string, array<string, mixed>> The variables config keyed by name, as the install task reads it
      */

@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Auth\EncryptionKey;
+use Appwrite\Auth\ExecutorSecret;
 use Appwrite\Auth\JobsSecret;
 use Appwrite\ClamAV\Network;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
@@ -99,7 +100,7 @@ class Doctor extends Action
 
         // The executor creates containers on the host; its secret is the
         // only thing between anything on the internal network and that.
-        if (EncryptionKey::isInsecure(System::getEnv('_APP_EXECUTOR_SECRET'))) {
+        if (ExecutorSecret::isInsecure(System::getEnv('_APP_EXECUTOR_SECRET'))) {
             Console::log('🔴 Not using a unique secret key for the executor');
         } else {
             Console::log('🟢 Using a unique secret key for the executor');
