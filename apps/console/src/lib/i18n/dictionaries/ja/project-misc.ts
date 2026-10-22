@@ -2003,8 +2003,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'It will stop receiving events immediately. This action cannot be undone.':
     'イベントの受信はすぐに停止します。この操作は元に戻せません。',
   'Last deployed:': '最終デプロイ:',
-  'Leave blank to keep current password unchanged.':
-    '空欄のままにすると、現在のパスワードは変更されません。',
+  'Leave blank to keep the current password. Re-enter it when changing the host, port, or secure protocol.':
+    '空欄のままにすると、現在のパスワードが保持されます。ホスト、ポート、またはセキュアプロトコルを変更する場合は、パスワードを再入力してください。',
   'Leave blank to keep existing': '空欄のままにすると既存の値を保持',
   'Leave empty to auto-generate': '空欄の場合は自動生成',
   'Leave empty to clear the whole project':

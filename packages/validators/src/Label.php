@@ -1,12 +1,16 @@
 <?php
 
-namespace Appwrite\Network\Validator;
+declare(strict_types=1);
 
-use Utopia\Validator\Validator;
+namespace Utopia\Validator;
 
 /**
- * A single DNS label, such as the subdomain or region a provider hostname is built from:
- * 1 to 63 ASCII letters, digits or hyphens, not starting or ending with a hyphen.
+ * Label
+ *
+ * Validates a single DNS label as RFC 1123 allows it in a hostname: 1 to 63
+ * lowercase letters, digits and hyphens, not starting or ending with a hyphen.
+ * Dots are rejected, so a value can be placed between fixed parts of a hostname
+ * without adding or changing any other label.
  */
 class Label extends Validator
 {
@@ -14,7 +18,7 @@ class Label extends Validator
 
     public function getDescription(): string
     {
-        return 'Value must be 1 to ' . self::MAX_LENGTH . ' letters, digits or hyphens, and must not start or end with a hyphen.';
+        return 'Value must be 1 to ' . self::MAX_LENGTH . ' lowercase letters, digits and hyphens, and must not start or end with a hyphen.';
     }
 
     public function isArray(): bool
@@ -37,6 +41,6 @@ class Label extends Validator
             return false;
         }
 
-        return \ctype_alnum(\str_replace('-', '', $value));
+        return \ctype_alnum(\str_replace('-', '', $value)) && \strtolower($value) === $value;
     }
 }

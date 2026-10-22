@@ -108,12 +108,15 @@ $container->set('clientForWebhooks', fn () => new Client(new CurlAdapter(), new 
         \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
     )
 )), []);
-$container->set('clientForAvatars', fn () => new Client(new CurlAdapter(), new PublicInternet(
+// cURL counts decoded bytes against the size cap and aborts the transfer once it is passed.
+$container->set('clientForAvatars', fn () => (new Client(new CurlAdapter(options: [
+    \CURLOPT_MAXFILESIZE_LARGE => APP_STORAGE_READ_BUFFER,
+]), new PublicInternet(
     ...\array_map(
         fn (string $range) => new IPRange($range),
         \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
     )
-)), []);
+)))->withConnectTimeout(5)->withTimeout(15), []);
 
 // Where a connection to a user-chosen host may land, for clients that check each address they reach.
 $container->set('publicInternet', fn () => new PublicInternet(...\array_map(
@@ -182,14 +185,14 @@ $container->set('telemetry', fn () => new NoTelemetry(), []);
  * A malformed DSN is reported and read as unset rather than thrown: this resolves for every
  * messaging job, so one bad platform variable must not stop a project's push and email.
  */
-$container->set('adapterForSMS', function (Telemetry $telemetry): ?SMSAdapter {
+$container->set('adapterForSMS', function (Telemetry $telemetry, PublicHostname $publicHostname): ?SMSAdapter {
     try {
-        return (new MessagingProvider($telemetry))->internalSMS();
+        return (new MessagingProvider($telemetry, $publicHostname))->internalSMS();
     } catch (\Throwable $error) {
         Console::error('Ignoring _APP_SMS_PROVIDER: ' . $error->getMessage());
         return null;
     }
-}, ['telemetry']);
+}, ['telemetry', 'publicHostname']);
 
 $container->set('authorization', fn () => new Authorization(), []);
 

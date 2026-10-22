@@ -15,7 +15,6 @@ use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Services\TablesDB;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
-use Appwrite\Utopia\Migration\Sources\NHost;
 use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
@@ -45,6 +44,7 @@ use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
 use Utopia\Migration\Sources\CSV;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\JSON;
+use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Target;
 use Utopia\Migration\Transfer;
@@ -53,7 +53,10 @@ use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\System\System;
+use Utopia\Validator\AnyOf;
 use Utopia\Validator\Hostname;
+use Utopia\Validator\Identifier;
+use Utopia\Validator\Label;
 
 class Migrations extends Action
 {
@@ -193,6 +196,34 @@ class Migrations extends Action
     }
 
     /**
+     * Migrations created before the API validated these parts are checked here too.
+     *
+     * @param array<string, mixed> $credentials
+     */
+    private function nhost(array $credentials): NHost
+    {
+        $label = new Label();
+        $database = new AnyOf([new Identifier(63), new Label()], AnyOf::TYPE_STRING);
+
+        if (!$label->isValid($credentials['subdomain']) || !$label->isValid($credentials['region']) || !$database->isValid($credentials['database'])) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'NHost subdomain, region or database name is invalid.');
+        }
+
+        $source = new NHost(
+            $credentials['subdomain'],
+            $credentials['region'],
+            $credentials['adminSecret'],
+            $credentials['database'],
+            $credentials['username'],
+            $credentials['password'],
+            $credentials['port'],
+        );
+
+        // Connect Postgres to the address just checked, so DNS cannot answer differently (SSRF)
+        return $source->setDatabaseAddress($this->publicHostname->address($source->getDatabaseHost()));
+    }
+
+    /**
      * @throws Exception
      */
     protected function processSource(Document $migration): Source
@@ -288,17 +319,7 @@ class Migrations extends Action
                 $credentials['password'],
                 $credentials['port'],
             ),
-            NHost::getName() => new NHost(
-                $credentials['subdomain'],
-                $credentials['region'],
-                $credentials['adminSecret'],
-                $credentials['database'],
-                $credentials['username'],
-                $credentials['password'],
-                $credentials['port'],
-                // Connect Postgres to the address just checked, so DNS cannot answer differently (SSRF)
-                $this->publicHostname->address(NHost::databaseHost($credentials['subdomain'], $credentials['region'])),
-            ),
+            NHost::getName() => $this->nhost($credentials),
             SourceAppwrite::getName() => new SourceAppwrite(
                 $credentials['projectId'],
                 $credentials['endpoint'],
@@ -469,7 +490,7 @@ class Migrations extends Action
     {
         $queueForRealtime
             ->setProject($project)
-            ->setSubscribers(['console', $project->getId()])
+            ->setSubscribers(['console'])
             ->setEvent('migrations.[migrationId].update')
             ->setParam('migrationId', $migration->getId())
             ->setPayload($migration->getArrayCopy(), sensitive: ['credentials'])
@@ -542,6 +563,7 @@ class Migrations extends Action
 
         $apiKey = $jwt->encode([
             'projectId' => $project->getId(),
+            'projectSequence' => $project->getSequence(),
             'disabledMetrics' => [
                 METRIC_DATABASES_OPERATIONS_READS,
                 METRIC_DATABASES_OPERATIONS_WRITES,

@@ -337,10 +337,10 @@ trait MigrationsBase
     }
 
     /**
-     * NHost hostnames and the database DSN are built from the subdomain, region and database
-     * name, so each must be a plain DNS label or identifier.
+     * NHost's subdomain and region become labels of the source hostname, and the database
+     * name part of its connection string, so each must keep that shape.
      */
-    public function testNHostMigrationRejectsMalformedSource(): void
+    public function testNHostMigrationWithInvalidHostPartsIsRefused(): void
     {
         $headers = [
             'content-type' => 'application/json',
@@ -352,30 +352,36 @@ trait MigrationsBase
 
         $valid = [
             'resources' => NHost::getSupportedResources(),
-            'subdomain' => 'abcdefghijklmnop',
+            'subdomain' => 'abcdefghijklmnopqrst',
             'region' => 'eu-central-1',
             'adminSecret' => 'any',
-            'database' => 'abcdefghijklmnop',
+            'database' => 'abcdefghijklmnopqrst',
             'username' => 'postgres',
             'password' => 'any',
         ];
 
-        $malformed = [
-            ['subdomain' => '169.254.169.254:80/#'],
-            ['subdomain' => 'abc.internal'],
-            ['region' => 'eu;host=169.254.169.254'],
-            ['database' => 'db;host=169.254.169.254'],
-            ['database' => 'db host'],
+        $invalid = [
+            ['subdomain', 'example.com'],
+            ['subdomain', 'abc;port=1'],
+            ['subdomain', 'ABC'],
+            ['region', 'eu central'],
+            ['region', 'eu-central-1.example.com'],
+            ['database', 'postgres;host=example.com'],
+            ['database', 'post gres'],
         ];
 
-        foreach ($malformed as $params) {
-            $response = $this->client->call(Client::METHOD_POST, '/migrations/nhost', $headers, \array_merge($valid, $params));
-            $this->assertSame(400, $response['headers']['status-code'], \json_encode($params));
-            $this->assertSame('general_argument_invalid', $response['body']['type'], \json_encode($params));
+        foreach ($invalid as [$param, $value]) {
+            $params = \array_merge($valid, [$param => $value]);
 
-            $response = $this->client->call(Client::METHOD_GET, '/migrations/nhost/report', $headers, \array_merge($valid, $params));
-            $this->assertSame(400, $response['headers']['status-code'], \json_encode($params));
-            $this->assertSame('general_argument_invalid', $response['body']['type'], \json_encode($params));
+            $response = $this->client->call(Client::METHOD_POST, '/migrations/nhost', $headers, $params);
+            $this->assertSame(400, $response['headers']['status-code'], "create with {$param} {$value}");
+            $this->assertSame('general_argument_invalid', $response['body']['type']);
+            $this->assertStringContainsString($param, $response['body']['message']);
+
+            $response = $this->client->call(Client::METHOD_GET, '/migrations/nhost/report', $headers, $params);
+            $this->assertSame(400, $response['headers']['status-code'], "report with {$param} {$value}");
+            $this->assertSame('general_argument_invalid', $response['body']['type']);
+            $this->assertStringContainsString($param, $response['body']['message']);
         }
 
         $this->assertSame($before, $countMigrations());

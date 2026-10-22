@@ -94,16 +94,36 @@ class Delete extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
+        // Read under the row lock the screenshots worker's update also takes: its screenshot IDs are
+        // either in the snapshot the Deletes worker gets, or the worker finds the deployment gone.
+        $snapshot = $deployment;
         try {
-            if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
-            }
-        } catch (TransactionException) {
-            $deploymentExists = !$dbForProject->getDocument('deployments', $deployment->getId())->isEmpty();
+            $dbForProject->withTransaction(function () use ($dbForProject, $deployment, &$snapshot) {
+                $snapshot = $dbForProject->getDocument('deployments', $deployment->getId(), forUpdate: true);
 
-            if ($deploymentExists && !$dbForProject->deleteDocument('deployments', $deployment->getId())) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
-            }
+                if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
+                }
+            });
+        } catch (TransactionException) {
+            // If the delete committed, the last locked read is the snapshot; otherwise lock and read again to delete.
+            $dbForProject->withTransaction(function () use ($dbForProject, $deployment, &$snapshot) {
+                $current = $dbForProject->getDocument('deployments', $deployment->getId(), forUpdate: true);
+
+                if ($current->isEmpty()) {
+                    return;
+                }
+
+                $snapshot = $current;
+
+                if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
+                }
+            });
+        }
+
+        if (!$snapshot->isEmpty()) {
+            $deployment = $snapshot;
         }
 
         if (!empty($deployment->getAttribute('sourcePath', ''))) {
