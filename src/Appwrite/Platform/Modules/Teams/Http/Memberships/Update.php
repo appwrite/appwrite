@@ -135,12 +135,34 @@ class Update extends Action
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId());
 
-        $response->dynamic(
-            $membership
-                ->setAttribute('teamName', $team->getAttribute('name'))
-                ->setAttribute('userName', $profile->getAttribute('name'))
-                ->setAttribute('userEmail', $profile->getAttribute('email')),
-            Response::MODEL_MEMBERSHIP
-        );
+        $membership
+            ->setAttribute('teamName', $team->getAttribute('name'))
+            ->setAttribute('userName', $profile->getAttribute('name'))
+            ->setAttribute('userEmail', $profile->getAttribute('email'));
+
+        $queueForEvents->setPayload($this->eventPayload($membership, $project, $response));
+
+        $response->dynamic($membership, Response::MODEL_MEMBERSHIP);
+    }
+
+    /**
+     * The event reaches other team members, so it follows the project's membership privacy.
+     *
+     * @return array<string, mixed>
+     */
+    private function eventPayload(Document $membership, Document $project, Response $response): array
+    {
+        $auths = $project->getAttribute('auths', []);
+        $payload = new Document($membership->getArrayCopy());
+
+        if (!($auths['membershipsUserName'] ?? true)) {
+            $payload->removeAttribute('userName');
+        }
+
+        if (!($auths['membershipsUserEmail'] ?? true)) {
+            $payload->removeAttribute('userEmail');
+        }
+
+        return $response->output($payload, Response::MODEL_MEMBERSHIP);
     }
 }

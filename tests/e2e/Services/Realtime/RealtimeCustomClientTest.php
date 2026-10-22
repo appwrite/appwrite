@@ -3400,6 +3400,107 @@ final class RealtimeCustomClientTest extends Scope
         $client->close();
     }
 
+    public function testChannelMembershipsFollowsMembershipPrivacy(): void
+    {
+        $project = $this->getProject(true);
+        $projectId = $project['$id'];
+        $adminHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+
+        $policy = $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $adminHeaders, [
+            'userId' => true,
+            'userEmail' => false,
+            'userPhone' => true,
+            'userName' => false,
+            'userMFA' => true,
+            'userAccessedAt' => false,
+        ]);
+        $this->assertEquals(200, $policy['headers']['status-code']);
+
+        $createUser = function (string $name) use ($adminHeaders): array {
+            $email = uniqid('', true) . bin2hex(random_bytes(4)) . '@localhost.test';
+            $user = $this->client->call(Client::METHOD_POST, '/users', $adminHeaders, [
+                'userId' => Id::unique(),
+                'email' => $email,
+                'password' => 'password',
+                'name' => $name,
+            ]);
+            $this->assertEquals(201, $user['headers']['status-code']);
+
+            return ['id' => $user['body']['$id'], 'email' => $email, 'name' => $name];
+        };
+
+        $viewer = $createUser('Privacy Viewer');
+        $member = $createUser('Privacy Member');
+
+        $team = $this->client->call(Client::METHOD_POST, '/teams', $adminHeaders, [
+            'teamId' => Id::unique(),
+            'name' => 'Realtime Privacy Team',
+        ]);
+        $this->assertEquals(201, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $adminHeaders, [
+            'userId' => $viewer['id'],
+            'roles' => ['member'],
+        ]);
+        $this->assertEquals(201, $membership['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $viewer['email'],
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        $client = $this->getWebsocket(['memberships'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+        ], $projectId);
+        $response = json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+
+        try {
+            $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $adminHeaders, [
+                'userId' => $member['id'],
+                'roles' => ['member'],
+            ]);
+            $this->assertEquals(201, $membership['headers']['status-code']);
+            $membershipId = $membership['body']['$id'];
+
+            $createEvent = $this->receiveUntilEvent(
+                $client,
+                fn (array $message): bool => ($message['type'] ?? null) === 'event'
+                    && \in_array("teams.{$teamId}.memberships.{$membershipId}.create", $message['data']['events'] ?? [], true)
+            );
+            $this->assertSame($membershipId, $createEvent['data']['payload']['$id']);
+            $this->assertSame('', $createEvent['data']['payload']['userName'] ?? '');
+            $this->assertSame('', $createEvent['data']['payload']['userEmail'] ?? '');
+
+            $updated = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $membershipId, $adminHeaders, [
+                'roles' => ['editor'],
+            ]);
+            $this->assertEquals(200, $updated['headers']['status-code']);
+
+            $updateEvent = $this->receiveUntilEvent(
+                $client,
+                fn (array $message): bool => ($message['type'] ?? null) === 'event'
+                    && \in_array("teams.{$teamId}.memberships.{$membershipId}.update", $message['data']['events'] ?? [], true)
+            );
+            $this->assertSame(['editor'], $updateEvent['data']['payload']['roles']);
+            $this->assertSame('', $updateEvent['data']['payload']['userName'] ?? '');
+            $this->assertSame('', $updateEvent['data']['payload']['userEmail'] ?? '');
+        } finally {
+            $client->close();
+        }
+    }
+
     public function testChannelsTablesDB()
     {
         $user = $this->getUser();
