@@ -7557,6 +7557,87 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
+    public function testImpersonationHidesProviderCredentials(): void
+    {
+        $this->updateMockProvider(true);
+
+        $projectId = $this->getProject()['$id'];
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $sub = 'idtoken-' . \uniqid('', true) . \bin2hex(\random_bytes(4));
+        $email = 'idtoken.impersonated.' . \uniqid('', true) . \bin2hex(\random_bytes(4)) . '@localhost.test';
+        $accessToken = 'mock-access-token-' . \bin2hex(\random_bytes(4));
+
+        $target = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken(['sub' => $sub, 'email' => $email, 'email_verified' => true]),
+            'accessToken' => $accessToken,
+            'accessTokenExpiry' => 3600,
+        ]);
+        $this->assertSame(201, $target['headers']['status-code']);
+        $targetId = $target['body']['userId'];
+
+        $impersonator = $this->client->call(Client::METHOD_POST, '/users', $serverHeaders, [
+            'userId' => Id::unique(),
+            'email' => 'impersonator.' . \uniqid('', true) . '@localhost.test',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $impersonator['headers']['status-code']);
+        $impersonatorId = $impersonator['body']['$id'];
+
+        $patch = $this->client->call(Client::METHOD_PATCH, '/users/' . $impersonatorId . '/impersonator', $serverHeaders, ['impersonator' => true]);
+        $this->assertSame(200, $patch['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $impersonatorId . '/sessions', $serverHeaders);
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        $ownHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $target['cookies']['a_session_' . $projectId],
+        ];
+        $impersonationHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-session' => $session['body']['secret'],
+            'x-appwrite-impersonate-user-id' => $targetId,
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        $identities = $this->client->call(Client::METHOD_GET, '/account/identities', $ownHeaders);
+        $this->assertSame(200, $identities['headers']['status-code']);
+        $this->assertSame($accessToken, $identities['body']['identities'][0]['providerAccessToken']);
+
+        $sessions = $this->client->call(Client::METHOD_GET, '/account/sessions', $ownHeaders);
+        $this->assertSame(200, $sessions['headers']['status-code']);
+        $this->assertSame($accessToken, $sessions['body']['sessions'][0]['providerAccessToken']);
+
+        /**
+         * Test for FAILURE
+         */
+        $identities = $this->client->call(Client::METHOD_GET, '/account/identities', $impersonationHeaders);
+        $this->assertSame(200, $identities['headers']['status-code']);
+        $this->assertSame(1, $identities['body']['total']);
+        $this->assertSame('', $identities['body']['identities'][0]['providerAccessToken']);
+        $this->assertSame('', $identities['body']['identities'][0]['providerRefreshToken']);
+        $this->assertSame('', $identities['body']['identities'][0]['providerIdToken']);
+
+        $sessions = $this->client->call(Client::METHOD_GET, '/account/sessions', $impersonationHeaders);
+        $this->assertSame(200, $sessions['headers']['status-code']);
+        $this->assertNotEmpty($sessions['body']['sessions']);
+        foreach ($sessions['body']['sessions'] as $listed) {
+            $this->assertSame($targetId, $listed['userId']);
+            $this->assertSame('', $listed['providerAccessToken']);
+            $this->assertSame('', $listed['providerRefreshToken']);
+        }
+    }
+
     public function testCreateIdTokenSessionInvalidToken(): void
     {
         $this->updateMockProvider(true);

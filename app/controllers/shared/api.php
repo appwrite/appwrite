@@ -49,6 +49,7 @@ Http::init()
     ->groups(['api'])
     ->inject('route')
     ->inject('request')
+    ->inject('response')
     ->inject('dbForPlatform')
     ->inject('dbForProject')
     ->inject('auditContext')
@@ -64,7 +65,7 @@ Http::init()
     ->inject('lock')
     ->inject('impersonatorUser')
     ->inject('targetUser')
-    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, string $projectIdFromPath, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock, Document $impersonatorUser, User $targetUser) {
+    ->action(function (Route $route, Request $request, Response $response, Database $dbForPlatform, Database $dbForProject, AuditContext $auditContext, Document $project, string $projectIdFromPath, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization, Lock $lock, Document $impersonatorUser, User $targetUser) {
 
         /**
          * Handle user authentication and session validation.
@@ -362,13 +363,14 @@ Http::init()
         if (
             $isUserDiscovery
             && !$user->isEmpty()
+            && !\in_array('users.read', $scopes, true)
             && (
                 $user->getAttribute('impersonator', false)
                 || !$impersonatorUser->isEmpty()
             )
         ) {
             $scopes[] = 'users.read';
-            $scopes = \array_unique($scopes);
+            $response->setHideCredentials(true);
         }
 
         $authorization->addRole($role);

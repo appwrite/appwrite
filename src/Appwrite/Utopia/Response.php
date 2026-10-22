@@ -385,6 +385,8 @@ class Response extends SwooleResponse
      */
     protected bool $showSensitive = false;
 
+    protected bool $hideCredentials = false;
+
     /**
      * @var array<string, Model>
      */
@@ -616,6 +618,10 @@ class Response extends SwooleResponse
                 }
             }
 
+            if ($rule['credential'] && ($this->hideCredentials || $this->impersonatorUser !== null)) {
+                $data->setAttribute($key, $rule['default'] ?? '');
+            }
+
             if ($rule['type'] === Model::TYPE_DATETIME) {
                 $data->setAttribute($key, $rule['array']
                     ? \array_map(Model::formatDatetime(...), $data[$key])
@@ -798,6 +804,11 @@ class Response extends SwooleResponse
     public function setUser(DBUser $user): void
     {
         $this->user = $user;
+    }
+
+    public function setHideCredentials(bool $hideCredentials): void
+    {
+        $this->hideCredentials = $hideCredentials;
     }
 
     public function setImpersonatorUser(Document $impersonatorUser): void
