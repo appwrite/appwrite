@@ -2369,6 +2369,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
     block: `  postgresql:
     image: appwrite/postgres:0.1.0
     container_name: appwrite-postgresql
+    init: true
     shm_size: 1g
     logging:
       driver: json-file
