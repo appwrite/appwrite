@@ -13,6 +13,80 @@ use Utopia\Database\Id;
  */
 trait KeysBase
 {
+    public function testKeysScopesBeyondCaller(): void
+    {
+        $projectHeaders = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        // A key that may manage keys, and nothing else
+        $manager = $this->client->call(Client::METHOD_POST, '/project/keys/ephemeral', $projectHeaders, [
+            'scopes' => ['keys.read', 'keys.write'],
+            'duration' => 900,
+        ]);
+        $this->assertSame(201, $manager['headers']['status-code']);
+
+        $managerHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $manager['body']['secret'],
+        ];
+
+        $consoleHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-mode' => 'admin',
+        ];
+
+        $key = $this->client->call(Client::METHOD_POST, '/project/keys', $consoleHeaders, [
+            'keyId' => Id::unique(),
+            'name' => 'Narrow Key',
+            'scopes' => ['users.read'],
+        ]);
+        $this->assertSame(201, $key['headers']['status-code']);
+        $keyId = $key['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         */
+        // A key acts with its scopes, so the manager cannot hand out more than it holds
+        $ephemeral = $this->client->call(Client::METHOD_POST, '/project/keys/ephemeral', $managerHeaders, [
+            'scopes' => ['keys.read', 'users.write'],
+            'duration' => 900,
+        ]);
+        $this->assertSame(401, $ephemeral['headers']['status-code']);
+        $this->assertSame('general_unauthorized_scope', $ephemeral['body']['type']);
+
+        $widened = $this->client->call(Client::METHOD_PUT, '/project/keys/' . $keyId, $managerHeaders, [
+            'name' => 'Narrow Key',
+            'scopes' => ['users.read', 'databases.write'],
+        ]);
+        $this->assertSame(401, $widened['headers']['status-code']);
+        $this->assertSame('general_unauthorized_scope', $widened['body']['type']);
+
+        /**
+         * Test for SUCCESS
+         */
+        // Scopes the key already holds stay, and scopes the manager holds may be added
+        $renamed = $this->client->call(Client::METHOD_PUT, '/project/keys/' . $keyId, $managerHeaders, [
+            'name' => 'Narrow Key Renamed',
+            'scopes' => ['users.read', 'keys.read'],
+        ]);
+        $this->assertSame(200, $renamed['headers']['status-code']);
+        $this->assertSame(['users.read', 'keys.read'], $renamed['body']['scopes']);
+
+        $ephemeral = $this->client->call(Client::METHOD_POST, '/project/keys/ephemeral', $managerHeaders, [
+            'scopes' => ['keys.read'],
+            'duration' => 900,
+        ]);
+        $this->assertSame(201, $ephemeral['headers']['status-code']);
+
+        $this->client->call(Client::METHOD_DELETE, '/project/keys/' . $keyId, $consoleHeaders);
+    }
+
     public function testKeysLifecycle(): void
     {
         $projectHeaders = array_merge([

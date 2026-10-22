@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\Keys;
 
+use Appwrite\Auth\Scopes;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -73,6 +74,7 @@ class Update extends Base
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
+            ->inject('scopes')
             ->callback($this->action(...));
     }
 
@@ -87,11 +89,18 @@ class Update extends Base
         Database $dbForPlatform,
         Document $project,
         Authorization $authorization,
+        Scopes $grantedScopes,
     ) {
         $key = $authorization->skip(fn () => $dbForPlatform->getDocument('keys', $keyId));
 
         if ($key->isEmpty() || $key->getAttribute('resourceType', '') !== 'projects' || $key->getAttribute('resourceInternalId', '') !== $project->getSequence()) {
             throw new Exception(Exception::KEY_NOT_FOUND);
+        }
+
+        // A key acts with its scopes, so a caller may grant only scopes it holds itself; ones the key already has stay
+        $missing = $grantedScopes->missing(\array_values(\array_diff($scopes, $key->getAttribute('scopes', []))));
+        if ($missing !== []) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Cannot grant scopes the caller does not hold: ' . \implode(', ', $missing));
         }
 
         $updates = new Document([

@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Organization\Http\Projects\Keys;
 
 use Appwrite\Auth\Key;
+use Appwrite\Auth\Scopes;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
@@ -76,6 +77,7 @@ class Create extends Action
             ->inject('authorization')
             ->inject('apiKey')
             ->inject('auditContext')
+            ->inject('scopes')
             ->callback($this->action(...));
     }
 
@@ -93,7 +95,14 @@ class Create extends Action
         Authorization $authorization,
         ?Key $apiKey,
         AuditContext $auditContext,
+        Scopes $grantedScopes,
     ) {
+        // A key acts with its scopes, so a caller may grant only scopes it holds itself
+        $missing = $grantedScopes->missing($scopes);
+        if ($missing !== []) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Cannot grant scopes the caller does not hold: ' . \implode(', ', $missing));
+        }
+
         // Dynamic supported for backwards compatibility
         if ($apiKey !== null && \in_array($apiKey->getType(), [API_KEY_STANDARD, API_KEY_EPHEMERAL, 'dynamic'], true)) {
             throw new Exception(Exception::KEY_CREATION_DENIED);

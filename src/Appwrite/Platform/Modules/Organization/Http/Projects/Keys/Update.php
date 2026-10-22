@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Organization\Http\Projects\Keys;
 
 use Appwrite\Auth\Key;
+use Appwrite\Auth\Scopes;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
@@ -72,6 +73,7 @@ class Update extends Action
             ->inject('authorization')
             ->inject('apiKey')
             ->inject('auditContext')
+            ->inject('scopes')
             ->callback($this->action(...));
     }
 
@@ -89,6 +91,7 @@ class Update extends Action
         Authorization $authorization,
         ?Key $apiKey,
         AuditContext $auditContext,
+        Scopes $grantedScopes,
     ) {
         $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey);
 
@@ -99,6 +102,12 @@ class Update extends Action
 
         if ($key->isEmpty() || $key->getAttribute('resourceType', '') !== 'projects' || $key->getAttribute('resourceInternalId', '') !== $project->getSequence()) {
             throw new Exception(Exception::KEY_NOT_FOUND);
+        }
+
+        // A key acts with its scopes, so a caller may grant only scopes it holds itself; ones the key already has stay
+        $missing = $grantedScopes->missing(\array_values(\array_diff($scopes, $key->getAttribute('scopes', []))));
+        if ($missing !== []) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Cannot grant scopes the caller does not hold: ' . \implode(', ', $missing));
         }
 
         $updates = new Document([

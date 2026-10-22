@@ -4,8 +4,10 @@ namespace Appwrite\Platform\Modules\Organization\Http\Projects\Keys\Ephemeral;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Key;
+use Appwrite\Auth\Scopes;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Organization\Http\Projects\Keys\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -70,6 +72,7 @@ class Create extends Action
             ->inject('team')
             ->inject('apiKey')
             ->inject('auditContext')
+            ->inject('scopes')
             ->callback($this->action(...));
     }
 
@@ -83,7 +86,14 @@ class Create extends Action
         Document $team,
         ?Key $apiKey,
         AuditContext $auditContext,
+        Scopes $grantedScopes,
     ) {
+        // A key acts with its scopes, so a caller may grant only scopes it holds itself
+        $missing = $grantedScopes->missing($scopes);
+        if ($missing !== []) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Cannot grant scopes the caller does not hold: ' . \implode(', ', $missing));
+        }
+
         $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey);
 
         // The request may run through the console project; events and audits belong to the resolved project

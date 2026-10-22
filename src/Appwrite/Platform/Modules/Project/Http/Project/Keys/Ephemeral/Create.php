@@ -3,7 +3,9 @@
 namespace Appwrite\Platform\Modules\Project\Http\Project\Keys\Ephemeral;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\Scopes;
 use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -68,6 +70,7 @@ class Create extends Base
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('project')
+            ->inject('scopes')
             ->callback($this->action(...));
     }
 
@@ -77,7 +80,14 @@ class Create extends Base
         Response $response,
         QueueEvent $queueForEvents,
         Document $project,
+        Scopes $grantedScopes,
     ) {
+        // A key acts with its scopes, so a caller may grant only scopes it holds itself
+        $missing = $grantedScopes->missing($scopes);
+        if ($missing !== []) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Cannot grant scopes the caller does not hold: ' . \implode(', ', $missing));
+        }
+
         $keyId = Id::unique();
 
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $duration, 0);
