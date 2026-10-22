@@ -1231,6 +1231,7 @@ class Appwrite extends Source
             $response = $this->reader->listDatabases($queries);
 
             foreach ($response as $database) {
+                $database = $database instanceof UtopiaDocument ? $database->getArrayCopy() : $database;
                 $originalType = $database['type'] ?? Resource::TYPE_DATABASE_LEGACY;
 
                 $databaseFamilyType = $originalType;
@@ -1242,6 +1243,7 @@ class Appwrite extends Source
                     $newDatabase = self::getDatabase($databaseFamilyType, [
                         'id' => $database['$id'],
                         'name' => $database['name'],
+                        'description' => \is_array($database) && \is_string($database['description'] ?? null) ? $database['description'] : '',
                         'createdAt' => $database['$createdAt'],
                         'updatedAt' => $database['$updatedAt'],
                         'type' => $originalType,
@@ -1303,10 +1305,12 @@ class Appwrite extends Source
 
                 $response = $this->reader->listTables($database, $queries);
                 foreach ($response as $table) {
+                    $table = $table instanceof UtopiaDocument ? $table->getArrayCopy() : $table;
                     $rowSecurity = $table['rowSecurity'] ?? $table['documentSecurity'] ?? false;
                     $newTable = self::getEntity($databaseName, [
                         'id' => $table['$id'],
                         'name' => $table['name'],
+                        'description' => \is_array($table) && \is_string($table['description'] ?? null) ? $table['description'] : '',
                         'rowSecurity' => $rowSecurity,
                         'documentSecurity' => $rowSecurity,
                         'permissions' => $table['$permissions'],
@@ -1317,6 +1321,7 @@ class Appwrite extends Source
                         'database' => [
                             'id' => $database->getId(),
                             'name' => $database->getDatabaseName(),
+                            'description' => $database->getDescription(),
                             'type' => $database->getType(),
                             'database' => $database->getDatabase(),
                         ]
@@ -1420,7 +1425,8 @@ class Appwrite extends Source
                 $response = $this->reader->listIndexes($table, $queries);
 
                 foreach ($response as $index) {
-                    $indexes[] = new Index(
+                    $index = $index instanceof UtopiaDocument ? $index->getArrayCopy() : $index;
+                    $indexes[] = (new Index(
                         $index['$id'],
                         $index['key'],
                         $table,
@@ -1430,7 +1436,7 @@ class Appwrite extends Source
                         $index['orders'] ?? [],
                         $index['$createdAt'] = empty($index['$createdAt']) ? UtopiaDateTime::now() : $index['$createdAt'],
                         $index['$updatedAt'] = empty($index['$updatedAt']) ? UtopiaDateTime::now() : $index['$updatedAt'],
-                    );
+                    ))->setDescription(\is_array($index) && \is_string($index['description'] ?? null) ? $index['description'] : '');
                 }
 
                 if (empty($indexes)) {
@@ -1620,7 +1626,7 @@ class Appwrite extends Source
         $convertedBuckets = [];
 
         foreach ($buckets->buckets as $bucket) {
-            $convertedBuckets[] = new Bucket(
+            $convertedBuckets[] = (new Bucket(
                 $bucket->id,
                 $bucket->name,
                 $bucket->permissions,
@@ -1633,7 +1639,8 @@ class Appwrite extends Source
                 $bucket->antivirus,
                 false,
                 $bucket->transformations ?? false,
-            );
+                stripMetadata: $bucket->stripMetadata,
+            ))->setDescription($bucket->description);
         }
 
         if (empty($convertedBuckets)) {
@@ -2237,14 +2244,14 @@ class Appwrite extends Source
             $variables = [];
 
             foreach ($response->variables as $variable) {
-                $variables[] = new ProjectVariable(
+                $variables[] = (new ProjectVariable(
                     $variable->id,
                     $variable->key,
                     $variable->value,
                     $variable->secret,
                     createdAt: $variable->createdAt,
                     updatedAt: $variable->updatedAt,
-                );
+                ))->setDescription($variable->description);
 
                 $lastId = $variable->id;
             }
@@ -2284,7 +2291,7 @@ class Appwrite extends Source
             $webhooks = [];
 
             foreach ($response->webhooks as $webhook) {
-                $webhooks[] = new Webhook(
+                $webhooks[] = (new Webhook(
                     $webhook->id,
                     $webhook->name,
                     $webhook->url,
@@ -2295,7 +2302,7 @@ class Appwrite extends Source
                     $webhook->enabled,
                     createdAt: $webhook->createdAt,
                     updatedAt: $webhook->updatedAt,
-                );
+                ))->setDescription($webhook->description);
 
                 $lastId = $webhook->id;
             }
@@ -2341,7 +2348,7 @@ class Appwrite extends Source
             $convertedResources = [];
 
             foreach ($response->functions as $function) {
-                $convertedFunc = new Func(
+                $convertedFunc = (new Func(
                     $function->id,
                     $function->name,
                     $function->runtime,
@@ -2359,19 +2366,19 @@ class Appwrite extends Source
                     $function->buildSpecification ?: '',
                     $function->interval ?? 0,
                     $function->deploymentRetention,
-                );
+                ))->setDescription($function->description);
                 $functions[] = $convertedFunc;
 
                 $convertedResources[] = $convertedFunc;
 
                 foreach ($this->functions->listVariables($function->id)->variables as $var) {
-                    $convertedResources[] = new EnvVar(
+                    $convertedResources[] = (new EnvVar(
                         $var->id,
                         $convertedFunc,
                         $var->key,
                         $var->value,
                         $var->secret,
-                    );
+                    ))->setDescription($var->description);
                 }
             }
 
@@ -2774,7 +2781,7 @@ class Appwrite extends Source
             }
 
             foreach ($response->topics as $topic) {
-                $topics[] = new Topic(
+                $topics[] = (new Topic(
                     $topic->id,
                     $topic->name,
                     $topic->subscribe ?? [],
@@ -2782,7 +2789,7 @@ class Appwrite extends Source
                     $topic->updatedAt ?? '',
                     $topic->qos,
                     $topic->expiry,
-                );
+                ))->setDescription($topic->description);
 
                 $lastDocument = $topic->id;
             }
@@ -2931,7 +2938,7 @@ class Appwrite extends Source
             $convertedResources = [];
 
             foreach ($response->sites as $site) {
-                $convertedSite = new Site(
+                $convertedSite = (new Site(
                     $site->id,
                     $site->name,
                     $site->framework,
@@ -2950,19 +2957,19 @@ class Appwrite extends Source
                     $site->startCommand,
                     $site->deploymentRetention,
                     $site->scopes,
-                );
+                ))->setDescription($site->description);
                 $sites[] = $convertedSite;
                 $convertedResources[] = $convertedSite;
 
                 $variables = $this->sites->listVariables($site->id);
                 foreach ($variables->variables ?? [] as $var) {
-                    $convertedResources[] = new SiteEnvVar(
+                    $convertedResources[] = (new SiteEnvVar(
                         $var->id,
                         $convertedSite,
                         $var->key,
                         $var->value,
                         $var->secret,
-                    );
+                    ))->setDescription($var->description);
                 }
             }
 
@@ -3371,7 +3378,7 @@ class Appwrite extends Source
             $apiKeys = [];
 
             foreach ($response->keys as $key) {
-                $apiKeys[] = new ApiKey(
+                $apiKeys[] = (new ApiKey(
                     $key->id,
                     $key->name,
                     $key->scopes,
@@ -3380,7 +3387,7 @@ class Appwrite extends Source
                     $key->sdks,
                     createdAt: $key->createdAt,
                     updatedAt: $key->updatedAt,
-                );
+                ))->setDescription($key->description);
 
                 $lastId = $key->id;
             }
@@ -3445,7 +3452,7 @@ class Appwrite extends Source
         // size the type itself implies. Resolve both the way the server does.
         ['type' => $type, 'format' => $format, 'size' => $size] = Column::resolve($column);
 
-        return match ($type) {
+        return (match ($type) {
             Column::TYPE_STRING => match ($format) {
                 Column::TYPE_EMAIL => new Email(
                     $column['key'],
@@ -3662,7 +3669,7 @@ class Appwrite extends Source
 
 
             default => throw new \InvalidArgumentException("Unsupported column type: {$type}"),
-        };
+        })->setDescription(\is_array($column) && \is_string($column['description'] ?? null) ? $column['description'] : '');
     }
 
     /**

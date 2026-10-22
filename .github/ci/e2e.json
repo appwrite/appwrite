@@ -197,7 +197,18 @@
         "src/Appwrite/Platform/Workers/StatsResources.php",
         "src/Appwrite/Platform/Workers/StatsUsage.php",
         "src/Appwrite/Platform/Workers/Certificates.php",
-        "src/Appwrite/Certificates/"
+        "src/Appwrite/Certificates/",
+        "src/Appwrite/Maintenance/",
+        "src/Appwrite/Platform/Tasks/ScheduleMaintenance.php",
+        "src/Appwrite/Platform/Tasks/Schedule.php",
+        "src/Appwrite/Schedule/Source/Maintenance.php",
+        "src/Appwrite/Platform/Workers/Deletes.php",
+        "src/Appwrite/Platform/Workers/Maintenance.php",
+        "src/Appwrite/Event/Message/Maintenance.php",
+        "src/Appwrite/Event/Publisher/Maintenance.php",
+        "app/config/workers.php",
+        "app/init/resources.php",
+        "packages/schedule/"
       ]
     },
     {
@@ -532,7 +543,7 @@
       "storage_antivirus": "disabled",
       "compose_profiles": "",
       "wait": "executor",
-      "services": ["Functions", "Webhooks"]
+      "services": ["Functions", "Storage", "Webhooks"]
     }
   ]
 }
