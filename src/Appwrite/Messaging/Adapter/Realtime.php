@@ -882,11 +882,17 @@ class Realtime extends MessagingAdapter
                 }
                 break;
             case 'rules':
-            case 'migrations':
                 $channels[] = 'console';
                 $channels[] = 'projects.' . $project->getId();
                 $projectId = 'console';
                 $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                break;
+            case 'migrations':
+                // Migrations carry project data, so only those who can read the project receive them.
+                $channels[] = 'console';
+                $channels[] = 'projects.' . $project->getId();
+                $projectId = 'console';
+                $roles = $project->getPermissionsByType(PermissionType::Read);
                 break;
             case 'projects':
                 $channels[] = 'console';

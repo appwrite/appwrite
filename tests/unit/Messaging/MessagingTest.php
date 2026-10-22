@@ -1337,6 +1337,49 @@ final class MessagingTest extends TestCase
         $this->assertSame([Role::team('team123')->toString()], $result['roles']);
     }
 
+    public function testFromPayloadMigrationsReachOnlyProjectReaders(): void
+    {
+        $project = new Document([
+            '$id' => Id::custom('project1'),
+            'teamId' => 'org1',
+            '$permissions' => [
+                Permission::read(Role::team('org1', 'owner')),
+                Permission::read(Role::team('org1', 'developer')),
+                Permission::read(Role::team('org1', 'project-project1-developer')),
+                Permission::update(Role::team('org1', 'owner')),
+            ],
+        ]);
+
+        $result = Realtime::fromPayload(
+            event: 'migrations.migration1.update',
+            payload: new Document(['$id' => Id::custom('migration1')]),
+            project: $project,
+        );
+
+        $this->assertSame('console', $result['projectId']);
+        $this->assertSame([
+            Role::team('org1', 'owner')->toString(),
+            Role::team('org1', 'developer')->toString(),
+            Role::team('org1', 'project-project1-developer')->toString(),
+        ], $result['roles']);
+
+        $realtime = new Realtime();
+        $realtime->subscribe('console', 1, 'sub', [Role::team('org1')->toString(), Role::team('org1', 'billing')->toString()], ['console']);
+        $realtime->subscribe('console', 2, 'sub', [Role::team('org1')->toString(), Role::team('org1', 'project-project2-developer')->toString()], ['console']);
+        $realtime->subscribe('console', 3, 'sub', [Role::team('org1')->toString(), Role::team('org1', 'project-project1-developer')->toString()], ['console']);
+
+        $receivers = $realtime->getSubscribers([
+            'project' => 'console',
+            'roles' => $result['roles'],
+            'data' => [
+                'channels' => $result['channels'],
+                'payload' => ['$id' => 'migration1'],
+            ],
+        ]);
+
+        $this->assertSame([3], \array_keys($receivers));
+    }
+
     public function testFromPayloadDocumentSecurityIncludesPayloadAnyRead(): void
     {
         $result = Realtime::fromPayload(
