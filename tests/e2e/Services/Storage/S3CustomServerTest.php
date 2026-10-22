@@ -214,8 +214,27 @@ final class S3CustomServerTest extends Scope
         $this->assertSame(200, $quoted['headers']['status-code']);
         $disposition = (string) $quoted['headers']['content-disposition'];
         $this->assertStringStartsWith('attachment;', $disposition);
-        $this->assertStringContainsString('filename="caféname.svg"', $disposition);
+        $this->assertStringContainsString('filename="caf_name.svg"', $disposition);
         $this->assertStringContainsString("filename*=UTF-8''" . \rawurlencode($quotedName), $disposition);
+    }
+
+    public function testPutObjectControlCharacterKey(): void
+    {
+        $bucketId = $this->setupBucket();
+
+        /**
+         * Test for SUCCESS
+         */
+        $put = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . Id::unique() . '%20%22name%22.txt', body: 'appwrite');
+        $this->assertSame(200, $put['headers']['status-code'], $put['body']);
+
+        /**
+         * Test for FAILURE
+         */
+        foreach (['%0A', '%0D%0A', '%00', '%7F'] as $control) {
+            $put = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . Id::unique() . $control . '.txt', body: 'appwrite');
+            $this->assertSame(400, $put['headers']['status-code'], $control);
+        }
     }
 
     #[Group('s3')]
