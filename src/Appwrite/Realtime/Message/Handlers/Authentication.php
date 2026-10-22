@@ -85,11 +85,11 @@ class Authentication extends Action
         if ($projectId !== null && $projectId !== '') {
             // The message scope resolves the connection's project, except on the
             // console project, where the user lives in the platform database.
-            $epochProject = ($project !== null && !$project->isEmpty())
+            $invalidatedAtProject = ($project !== null && !$project->isEmpty())
                 ? $project
                 : $dbForConsole->getAuthorization()->skip(fn () => $dbForConsole->getDocument('projects', $projectId));
 
-            $invalidatedAt = $epochProject->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null;
+            $invalidatedAt = $invalidatedAtProject->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null;
         }
 
         $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $invalidatedAt);

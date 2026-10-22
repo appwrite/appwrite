@@ -743,9 +743,9 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     }
                 } elseif ($event['permissionsChanged']) {
                     // `projects.{projectId}.sessions.delete`: every connection of the named
-                    // project re-validates its session against the new epoch. The project is
-                    // taken from the `projects.<id>` channel, as no single userId covers all
-                    // connections.
+                    // project re-validates its session against the new invalidation timestamp.
+                    // The project is taken from the `projects.<id>` channel, as no single
+                    // userId covers all connections.
                     $targetProjectId = '';
                     foreach (($event['data']['channels'] ?? []) as $channel) {
                         if (\str_starts_with($channel, 'projects.')) {

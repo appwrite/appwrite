@@ -912,7 +912,7 @@ class Realtime extends MessagingAdapter
                 $projectId = 'console';
                 $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 // A project-wide sign-out: every connection of this project re-validates
-                // its session against the new epoch in the realtime worker.
+                // its session against the new invalidation timestamp in the realtime worker.
                 if (($parts[2] ?? '') === 'sessions' && ($parts[3] ?? '') === 'delete') {
                     $permissionsChanged = true;
                 }

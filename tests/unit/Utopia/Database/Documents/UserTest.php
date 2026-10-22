@@ -130,14 +130,14 @@ final class UserTest extends TestCase
         $this->assertFalse($user->sessionActive('missing', null));
     }
 
-    public static function sessionVerifyEpochProvider(): array
+    public static function sessionVerifyInvalidationProvider(): array
     {
         $secret = 'secret1';
         $proofForToken = new Token();
         $hash = $proofForToken->hash($secret);
 
         return [
-            'session before epoch is rejected' => [
+            'session before invalidation is rejected' => [
                 $hash,
                 $secret,
                 $proofForToken,
@@ -145,7 +145,7 @@ final class UserTest extends TestCase
                 DateTime::formatTz(DateTime::now()),                              // invalidatedAt: now
                 false,
             ],
-            'session at epoch is rejected (<=)' => [
+            'session at invalidation is rejected (<=)' => [
                 $hash,
                 $secret,
                 $proofForToken,
@@ -153,7 +153,7 @@ final class UserTest extends TestCase
                 DateTime::formatTz(DateTime::now()),
                 false,
             ],
-            'session after epoch passes' => [
+            'session after invalidation passes' => [
                 $hash,
                 $secret,
                 $proofForToken,
@@ -172,8 +172,8 @@ final class UserTest extends TestCase
         ];
     }
 
-    #[DataProvider('sessionVerifyEpochProvider')]
-    public function testSessionVerifyEpoch(string $hash, string $secret, Token $proofForToken, string $createdAt, ?string $invalidatedAt, string|bool $expected): void
+    #[DataProvider('sessionVerifyInvalidationProvider')]
+    public function testSessionVerifyInvalidation(string $hash, string $secret, Token $proofForToken, string $createdAt, ?string $invalidatedAt, string|bool $expected): void
     {
         $user = new User([
             '$id' => Id::custom('sessionId'),
@@ -193,20 +193,20 @@ final class UserTest extends TestCase
         $this->assertSame($expected, $result);
     }
 
-    public static function sessionActiveEpochProvider(): array
+    public static function sessionActiveInvalidationProvider(): array
     {
         return [
-            'session before epoch is rejected' => [
+            'session before invalidation is rejected' => [
                 DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -120)), // createdAt: 2 minutes ago
                 DateTime::formatTz(DateTime::now()),                              // invalidatedAt: now
                 false,
             ],
-            'session at epoch is rejected (<=)' => [
+            'session at invalidation is rejected (<=)' => [
                 DateTime::formatTz(DateTime::now()),
                 DateTime::formatTz(DateTime::now()),
                 false,
             ],
-            'session after epoch passes' => [
+            'session after invalidation passes' => [
                 DateTime::formatTz(DateTime::addSeconds(new \DateTime(), 60)),
                 DateTime::formatTz(DateTime::now()),
                 true,
@@ -219,8 +219,8 @@ final class UserTest extends TestCase
         ];
     }
 
-    #[DataProvider('sessionActiveEpochProvider')]
-    public function testSessionActiveEpoch(string $createdAt, ?string $invalidatedAt, bool $expected): void
+    #[DataProvider('sessionActiveInvalidationProvider')]
+    public function testSessionActiveInvalidation(string $createdAt, ?string $invalidatedAt, bool $expected): void
     {
         $user = new User([
             '$id' => Id::custom('user1'),
