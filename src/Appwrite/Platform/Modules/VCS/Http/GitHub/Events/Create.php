@@ -138,6 +138,13 @@ class Create extends Action
                 }
 
                 if (!$project->isEmpty()) {
+                    $projectRegion = $project->getAttribute('region', '');
+                    $currentRegion = System::getEnv('_APP_REGION', 'default');
+                    if (!empty($projectRegion) && $projectRegion !== $currentRegion) {
+                        Console::warning("Skipping project {$projectId}: not accessible in region {$currentRegion} (project region: {$projectRegion})");
+                        continue;
+                    }
+
                     $dbForProject = $getProjectDB($project);
 
                     foreach (['functions', 'sites'] as $collection) {
