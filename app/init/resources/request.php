@@ -767,7 +767,13 @@ return function (Container $context): void {
             $query = Query::getByType($queries, [Method::Limit])[0] ?? null;
             $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
 
-            return $complexity * $limit;
+            // Anything past the cap fails the query either way; capping keeps the sum an int.
+            $over = (int) System::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250) + 1;
+            if (!\is_int($limit) || $limit < 1 || $limit >= $over) {
+                return $over;
+            }
+
+            return \min($complexity * $limit, $over);
         };
 
         $attributes = function (int $limit, int $offset) use ($dbForProject, $authorization) {
