@@ -87,6 +87,17 @@ final class HeadersTest extends TestCase
         ];
         $this->assertTrue($this->object->isValid($headers));
 
+        // The executor's protocol with the runtime is not the caller's to speak
+        $headers = [
+            'X-Open-Runtimes-Log-Id' => '../../other-runtime/logs/execution',
+        ];
+        $this->assertFalse($this->object->isValid($headers));
+
+        $headers = [
+            'x-open-runtimes-timeout' => '1',
+        ];
+        $this->assertFalse($this->object->isValid($headers));
+
         $headers = [
             'Content-Type' => 'application/json',
             'X-Custom-Header' => 'value'
@@ -229,6 +240,14 @@ final class HeadersTest extends TestCase
 
         $this->assertSame([], Headers::stripReserved([
             'x-appwrite-user-id' => '',
+        ]));
+
+        $this->assertSame([
+            'x-custom' => 'ok',
+        ], Headers::stripReserved([
+            'x-custom' => 'ok',
+            'X-Open-Runtimes-Log-Id' => '../../other-runtime/logs/execution',
+            'x-open-runtimes-secret' => 'guess',
         ]));
 
         $this->assertSame([

@@ -24,7 +24,7 @@ class Headers extends Validator
      */
     public function getDescription(): string
     {
-        return 'Headers must contain at most ' . $this->maxKeys . ' keys and ' . $this->maxSize . ' bytes in total. Valid key chars are a-z, A-Z, 0-9, and hyphen. Keys can\'t start or end with a hyphen, or start with "x-appwrite". Values can\'t be arrays or objects, or contain line breaks or other control characters.';
+        return 'Headers must contain at most ' . $this->maxKeys . ' keys and ' . $this->maxSize . ' bytes in total. Valid key chars are a-z, A-Z, 0-9, and hyphen. Keys can\'t start or end with a hyphen, or start with "x-appwrite" or "x-open-runtimes". Values can\'t be arrays or objects, or contain line breaks or other control characters.';
     }
 
     /**
@@ -159,9 +159,16 @@ class Headers extends Validator
         return $headers;
     }
 
+    /**
+     * x-appwrite-* carries what Appwrite tells the function about the
+     * request; x-open-runtimes-* is the executor's protocol with the runtime
+     * (secret, timeout, logging, log id). Neither is the caller's to send.
+     */
     private static function isReserved(string $key): bool
     {
-        return \str_starts_with(\strtolower($key), 'x-appwrite-');
+        $key = \strtolower($key);
+
+        return \str_starts_with($key, 'x-appwrite-') || \str_starts_with($key, 'x-open-runtimes-');
     }
 
     /**
