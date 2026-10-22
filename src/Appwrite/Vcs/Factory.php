@@ -71,8 +71,6 @@ class Factory
             $adapter->setIssuer($issuer);
         }
 
-        $adapter->setSelfSigned($this->getEnv($key, 'selfSigned') === 'enabled');
-
         return $adapter;
     }
 

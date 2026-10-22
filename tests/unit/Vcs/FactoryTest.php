@@ -26,7 +26,6 @@ final class FactoryTest extends TestCase
     {
         \putenv('_APP_VCS_TEST_TOKEN');
         \putenv('_APP_VCS_TEST_ENDPOINT');
-        \putenv('_APP_VCS_TEST_SELF_SIGNED');
     }
 
     public function testRegistryEntries(): void
@@ -219,23 +218,6 @@ final class FactoryTest extends TestCase
         foreach (['github', 'gitea', 'gitlab', 'bitbucket', 'origin', 'entire'] as $key) {
             $this->assertFalse($factory->fromProvider($key)->isSelfSigned(), "'{$key}' must verify certificates by default");
         }
-    }
-
-    public function testFromProviderAcceptsSelfSignedCertificatesWhenEnabled(): void
-    {
-        $entry = [
-            'adapter' => Gitea::class,
-            'variables' => [
-                'selfSigned' => ['required' => false, 'envVariable' => '_APP_VCS_TEST_SELF_SIGNED'],
-            ],
-        ];
-        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['gitea' => $entry]);
-
-        \putenv('_APP_VCS_TEST_SELF_SIGNED=disabled');
-        $this->assertFalse($factory->fromProvider('gitea')->isSelfSigned());
-
-        \putenv('_APP_VCS_TEST_SELF_SIGNED=enabled');
-        $this->assertTrue($factory->fromProvider('gitea')->isSelfSigned());
     }
 
     public function testGetWebhookSecret(): void

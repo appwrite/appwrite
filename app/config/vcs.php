@@ -48,7 +48,6 @@ return [
             'clientId' => ['required' => true, 'envVariable' => '_APP_VCS_GITEA_CLIENT_ID'],
             'clientSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITEA_CLIENT_SECRET'],
             'webhookSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITEA_WEBHOOK_SECRET'],
-            'selfSigned' => ['required' => false, 'envVariable' => '_APP_VCS_GITEA_SELF_SIGNED'],
         ],
     ],
     'gitlab' => [
@@ -66,7 +65,6 @@ return [
             'clientId' => ['required' => true, 'envVariable' => '_APP_VCS_GITLAB_CLIENT_ID'],
             'clientSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITLAB_CLIENT_SECRET'],
             'webhookSecret' => ['required' => true, 'envVariable' => '_APP_VCS_GITLAB_WEBHOOK_SECRET'],
-            'selfSigned' => ['required' => false, 'envVariable' => '_APP_VCS_GITLAB_SELF_SIGNED'],
         ],
     ],
     'origin' => [
