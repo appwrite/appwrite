@@ -8186,6 +8186,34 @@ final class AccountCustomClientTest extends Scope
             ]);
 
             $this->assertEquals(201, $response['headers']['status-code']);
+
+            $local = 'idtokenalias' . \bin2hex(\random_bytes(8));
+            $aliased = $local . '+tag@gmail.com';
+            $canonicalized = $local . '@gmail.com';
+            $projectId = $this->getProject()['$id'];
+
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken([
+                    'sub' => 'idtoken-' . \uniqid('', true),
+                    'email' => $aliased,
+                    'email_verified' => true,
+                ]),
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+
+            $account = $this->client->call(Client::METHOD_GET, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'cookie' => 'a_session_' . $projectId . '=' . $response['cookies']['a_session_' . $projectId],
+            ]);
+
+            $this->assertEquals(200, $account['headers']['status-code']);
+            $this->assertEquals($canonicalized, $account['body']['email']);
+            $this->assertEquals($canonicalized, $account['body']['emailCanonical']);
+            $this->assertTrue($account['body']['emailIsCanonical']);
         } finally {
             $this->updateProjectEmailPolicy('deny-aliased-email', false);
         }
