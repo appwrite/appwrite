@@ -108,12 +108,15 @@ $container->set('clientForWebhooks', fn () => new Client(new CurlAdapter(), new 
         \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
     )
 )), []);
-$container->set('clientForAvatars', fn () => new Client(new CurlAdapter(), new PublicInternet(
+// cURL counts decoded bytes against the size cap and aborts the transfer once it is passed.
+$container->set('clientForAvatars', fn () => (new Client(new CurlAdapter(options: [
+    \CURLOPT_MAXFILESIZE_LARGE => APP_STORAGE_READ_BUFFER,
+]), new PublicInternet(
     ...\array_map(
         fn (string $range) => new IPRange($range),
         \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
     )
-)), []);
+)))->withConnectTimeout(5)->withTimeout(15), []);
 
 // Checked before connecting, for hosts a request accepts. Resolves through _APP_DNS_EXTERNAL,
 // falling back to _APP_DNS, never the container's own resolver.
