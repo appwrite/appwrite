@@ -635,6 +635,81 @@ trait TransactionPermissionsBase
     }
 
     /**
+     * Regression for the transaction-staging permission-aggregate bypass: a write()
+     * permission must be expanded and role-checked exactly like create/read/update/delete.
+     * Before the fix, write("role you don't hold") matched none of the four checked types
+     * and was staged (and persisted at commit) unvalidated. The direct document endpoints
+     * always aggregated first, so this gap was unique to the staging endpoint.
+     */
+    public function testCannotStageUnauthorizedAggregatePermissions(): void
+    {
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => 'permAggregate',
+            'name' => 'Permission Aggregate',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            $this->getSecurityParam() => true,
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'title',
+                'size' => 255,
+                'required' => false,
+            ]);
+            $this->assertEquals(202, $attribute['headers']['status-code']);
+            $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
+        }
+
+        $stage = function (array $permissions) use ($collection): array {
+            $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertEquals(201, $transaction['headers']['status-code']);
+
+            return $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transaction['body']['$id']) . '/operations', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'operations' => [[
+                    'action' => 'create',
+                    'databaseId' => $this->getPermissionsDatabase(),
+                    $this->getContainerIdParam() => $collection['body']['$id'],
+                    $this->getRecordIdParam() => \uniqid('agg'),
+                    'data' => [
+                        'title' => 'Aggregate',
+                        '$permissions' => $permissions,
+                    ],
+                ]]
+            ]);
+        };
+
+        // Test for SUCCESS: a write() aggregate for a role the caller holds is accepted.
+        $allowed = $stage([Permission::write(Role::user($this->getUser()['$id']))]);
+        $this->assertEquals(201, $allowed['headers']['status-code']);
+
+        // Test for FAILURE: a write() aggregate for a role the caller does not hold is
+        // refused — this is the bypass the direct endpoints never had.
+        $denied = $stage([Permission::write(Role::team('adminTeam'))]);
+        $this->assertEquals(401, $denied['headers']['status-code']);
+        $this->assertStringContainsString('Permissions must be one of', $denied['body']['message']);
+    }
+
+    /**
      * Test that staging cannot grant roles the user lacks on a related document
      */
     public function testCannotSetUnauthorizedRelatedPermissions(): void

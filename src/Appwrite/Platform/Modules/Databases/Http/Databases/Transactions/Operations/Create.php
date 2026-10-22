@@ -21,6 +21,7 @@ use Utopia\Database\PermissionType;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
+use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Query\Schema\ColumnType;
@@ -194,7 +195,22 @@ class Create extends Action
 
                     // Users can only set permissions for roles they have
                     if (isset($operation['data']['$permissions'])) {
-                        $permissions = $operation['data']['$permissions'];
+                        $validator = new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [
+                            PermissionType::Read,
+                            PermissionType::Update,
+                            PermissionType::Delete,
+                            PermissionType::Write,
+                        ]);
+                        if (!$validator->isValid($operation['data']['$permissions'])) {
+                            throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
+                        }
+
+                        // Expand aggregates such as write() so every granted role is checked
+                        $permissions = Permission::aggregate($operation['data']['$permissions'], [
+                            PermissionType::Read,
+                            PermissionType::Update,
+                            PermissionType::Delete,
+                        ]);
                         $roles = $authorization->getRoles();
                         foreach ([PermissionType::Read, PermissionType::Create, PermissionType::Update, PermissionType::Delete] as $type) {
                             foreach ($permissions as $permission) {
@@ -212,6 +228,7 @@ class Create extends Action
                                 }
                             }
                         }
+                        $operation['data']['$permissions'] = $permissions;
                     }
 
                     if ($operation['action'] !== 'delete') {
