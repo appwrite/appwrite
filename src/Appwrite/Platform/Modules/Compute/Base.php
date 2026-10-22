@@ -23,6 +23,7 @@ use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Adapter\Swoole\Request;
+use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Exception\RepositoryNotFound;
@@ -69,6 +70,28 @@ class Base extends Action
 
         // Otherwise, use the lowest specification available in the plan
         return $allowedSpecifications[0];
+    }
+
+    /**
+     * Builds key their cache by runtime image, so a runtime change leaves the
+     * previous image's cache where no later build or delete looks for it.
+     */
+    protected function deleteStaleBuildCache(?Device $deviceForBuilds, string $projectId, Document $previous, Document $resource): void
+    {
+        if ($deviceForBuilds === null) {
+            return;
+        }
+
+        try {
+            $stale = Deployments::resourceCachePath($projectId, $previous);
+            if ($stale === Deployments::resourceCachePath($projectId, $resource)) {
+                return;
+            }
+            $deviceForBuilds->delete($stale);
+        } catch (\Throwable $th) {
+            // The update is already saved; a cache left behind costs storage, not correctness
+            Console::warning('Failed to delete stale build cache for ' . $resource->getId() . ': ' . $th->getMessage());
+        }
     }
 
     /**

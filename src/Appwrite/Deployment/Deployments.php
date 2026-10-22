@@ -732,6 +732,20 @@ readonly class Deployments
     }
 
     /**
+     * The build cache of the image a resource builds with now. The key hashes
+     * the image, so a runtime change leaves the previous cache at another key
+     * and deleting the resource has to remove this one.
+     *
+     * @throws Exception when the resource's runtime is not supported
+     */
+    public static function resourceCachePath(string $projectId, Document $resource): string
+    {
+        $runtime = self::runtime($resource, self::version($resource));
+
+        return static::cachePath($projectId, static::cacheKey($projectId, $resource->getId(), $runtime['image'] ?? ''));
+    }
+
+    /**
      * The builds device for a project, as everything else reads it
      * (deviceForBuilds).
      */

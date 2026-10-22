@@ -1464,6 +1464,7 @@ class Deletes extends Action
             $this->deleteDeploymentFiles($deviceForSites, $document);
             $this->deleteDeploymentScreenshots($deviceForFiles, $dbForPlatform, $document);
         });
+        $this->deleteBuildCache($deviceForBuilds, $project, $document);
 
         /**
          * Delete Logs
@@ -1544,6 +1545,7 @@ class Deletes extends Action
             $this->deleteDeploymentFiles($deviceForFunctions, $document);
             $this->deleteBuildFiles($deviceForBuilds, $document);
         });
+        $this->deleteBuildCache($deviceForBuilds, $project, $document);
 
         /**
          * Delete Executions
@@ -1662,6 +1664,31 @@ class Deletes extends Action
      * @param Document $deployment
      * @return void
      */
+    /**
+     * The build cache belongs to the function or site, not to a deployment,
+     * so deleting the deployments leaves it behind.
+     */
+    private function deleteBuildCache(Device $deviceForBuilds, Document $project, Document $resource): void
+    {
+        try {
+            $path = Deployments::resourceCachePath($project->getId(), $resource);
+        } catch (Exception $th) {
+            // A runtime that is no longer offered has no image to key a cache by
+            Console::warning('Skipped build cache for ' . $resource->getId() . ': ' . $th->getMessage());
+            return;
+        }
+
+        try {
+            if ($deviceForBuilds->delete($path)) {
+                Console::success('Deleted build cache: ' . $path);
+            }
+        } catch (Throwable $th) {
+            Console::error('Failed to delete build cache: ' . $path);
+            Console::error('[Error] Type: ' . get_class($th));
+            Console::error('[Error] Message: ' . $th->getMessage());
+        }
+    }
+
     private function deleteBuildFiles(Device $device, Document $deployment): void
     {
         $deploymentId = $deployment->getId();
