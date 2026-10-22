@@ -1041,7 +1041,7 @@ final class RealtimeCustomClientTest extends Scope
         ]));
         $response = json_decode($client->receive(), true);
         $this->assertSame('error', $response['type']);
-        $this->assertSame(401, $response['data']['code']);
+        $this->assertSame(403, $response['data']['code']);
         $client->close();
 
         $client = $this->getWebsocket(['account'], [
