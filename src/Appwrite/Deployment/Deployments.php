@@ -611,10 +611,18 @@ readonly class Deployments
         if ($command !== '') {
             $build->argument($command);
         }
-        $env = self::variables($project, $resource, $deployment, $runtime, $cpus, $memory, $endpoint, $timeout) + [
-            'OPEN_RUNTIMES_BUILD_INPUT_DIR' => '/mnt/code/source',
-            'OPEN_RUNTIMES_BUILD_COMPRESSION' => static::compression(),
-        ] + ($isSite ? ['OPEN_RUNTIMES_BUILD_MANIFEST' => '/mnt/code/manifest.json'] : []) + $output['environment'];
+        // build.sh reads where the source is, and where the artifact and cache
+        // land, from these. A resource variable of the same name must not
+        // redirect them, so the platform's values are merged last and win.
+        $env = \array_merge(
+            self::variables($project, $resource, $deployment, $runtime, $cpus, $memory, $endpoint, $timeout),
+            [
+                'OPEN_RUNTIMES_BUILD_INPUT_DIR' => '/mnt/code/source',
+                'OPEN_RUNTIMES_BUILD_COMPRESSION' => static::compression(),
+            ],
+            $isSite ? ['OPEN_RUNTIMES_BUILD_MANIFEST' => '/mnt/code/manifest.json'] : [],
+            $output['environment'],
+        );
 
         // Two terminal callbacks: exit carries the code (fires before
         // post-job artifacts), complete confirms artifact delivery — the

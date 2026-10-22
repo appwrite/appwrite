@@ -244,6 +244,29 @@ final class DeploymentsTest extends TestCase
         );
     }
 
+    public function testPayloadBuildPathsOverrideResourceVariables(): void
+    {
+        // build.sh takes its input, output and cache locations from these;
+        // a resource variable of the same name must not move them.
+        $payload = $this->withLocalBuilds(fn () => $this->buildPayload([
+            'OPEN_RUNTIMES_BUILD_INPUT_DIR' => '/mnt/code/elsewhere',
+            'OPEN_RUNTIMES_BUILD_OUTPUT_DIR' => APP_STORAGE_BUILDS . '/app-project2/deployment1',
+            'OPEN_RUNTIMES_BUILD_CACHE_ARTIFACT' => APP_STORAGE_BUILDS . '/app-project2/cache/x.sqfs',
+            'OPEN_RUNTIMES_BUILD_COMPRESSION' => 'compression-from-variable',
+            'OPEN_RUNTIMES_ENTRYPOINT' => 'entrypoint-from-variable',
+            'OPEN_RUNTIMES_OUTPUT_DIRECTORY' => 'output-from-variable',
+        ]));
+
+        $environment = $payload['environment'];
+
+        $this->assertSame('/mnt/code/source', $environment['OPEN_RUNTIMES_BUILD_INPUT_DIR']);
+        $this->assertSame(Deployments::outputDirectory('project1', 'deployment1'), $environment['OPEN_RUNTIMES_BUILD_OUTPUT_DIR']);
+        $this->assertStringStartsWith(APP_STORAGE_BUILDS . '/app-project1/', $environment['OPEN_RUNTIMES_BUILD_CACHE_ARTIFACT']);
+        $this->assertNotSame('compression-from-variable', $environment['OPEN_RUNTIMES_BUILD_COMPRESSION']);
+        $this->assertSame('', $environment['OPEN_RUNTIMES_ENTRYPOINT']);
+        $this->assertSame('', $environment['OPEN_RUNTIMES_OUTPUT_DIRECTORY']);
+    }
+
     /**
      * @template T
      * @param callable(): T $test
