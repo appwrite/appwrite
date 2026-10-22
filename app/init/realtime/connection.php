@@ -284,7 +284,9 @@ return function (Container $container): void {
         $accountKey = $request->getHeaderLine('x-appwrite-key', '');
         $accountKeyUserId = $request->getHeaderLine('x-appwrite-user', '');
 
-        if (!empty($accountKeyUserId) && !empty($accountKey)) {
+        // Account keys act as the console user on the console project only; honoring them on
+        // another project would subscribe the console user's roles to that project's channels.
+        if (!empty($accountKeyUserId) && !empty($accountKey) && $project->getId() === 'console') {
             if (!$user->isEmpty()) {
                 throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
             }
