@@ -27,7 +27,7 @@ If you're on the Free plan and your storage keeps creeping toward the limit, old
 
 Every time you push to Git or redeploy, your function or site gets a new deployment, and the old one sticks around. Only one of them, the active deployment, serves your traffic. The rest are inactive, but each one is still a full copy of your code and build, and it takes up storage. On the Free plan, that's the same 2GB your files and databases use. A few months of pushes can fill most of it.
 
-From **November 5, 2026**, you won't have to clean them up by hand. Inactive deployments on Appwrite Cloud are cleaned up automatically once they're more than **30 days** old, and the space goes back to your files and databases. Your active deployment always stays, and you can keep the rest for longer if you want more history.
+From **November 5, 2026**, you won't have to clean them up by hand. By default, inactive deployments on Appwrite Cloud are cleaned up once they're more than **30 days** old, and the space goes back to your files and databases. If you want more history, you can keep them for longer, up to a maximum that depends on your plan. Your active deployment always stays.
 
 # More room on the Free plan
 
@@ -52,7 +52,7 @@ Today, every function and site is set to **Keep deployments forever** unless you
 
 Open your function or site in the Console and go to **Settings** > **Build** > **Retention**. Turn off **Keep deployments forever**, choose a **Retention period** up to your plan's maximum, and click **Update**.
 
-| Plan | Kept by default | Longest you can choose | Inactive deployments kept per function or site |
+| Plan | Default | Maximum | Deployments kept |
 | --- | --- | --- | --- |
 | Free | 30 days | 90 days | Newest 100 |
 | Education | 30 days | 90 days | Newest 100 |
