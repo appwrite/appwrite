@@ -144,6 +144,7 @@ export const PUBLIC_ICON_FILENAMES = [
   'quarkus.svg',
   'qwik.svg',
   'rails.svg',
+  'railway.svg',
   'raygun.svg',
   'rclone.svg',
   'react-native.svg',
