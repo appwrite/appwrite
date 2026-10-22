@@ -2149,6 +2149,7 @@ trait UsersBase
 
         $costs = [
             ['passwordCpu' => 1048576],
+            ['passwordCpu' => 3],
             ['passwordMemory' => 64],
             ['passwordParallel' => 64],
             ['passwordLength' => 4096],
