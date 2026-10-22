@@ -1043,6 +1043,27 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertStringStartsWith($consoleUrl . '?error=', (string) $response['headers']['location']);
     }
 
+    public function testCreateInstallationWithReplayedState(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $consoleUrl = $this->settingsUrl($projectId);
+        $state = $this->buildGiteaState($projectId, $consoleUrl, $consoleUrl);
+
+        $first = $this->callGiteaCallbackHelper(['state' => $state]);
+
+        $this->assertSame(301, $first['headers']['status-code']);
+        $this->assertStringContainsString('code is missing', \urldecode((string) $first['headers']['location']));
+
+        /**
+         * Test for FAILURE
+         */
+        $replay = $this->callGiteaCallbackHelper(['state' => $state]);
+
+        $this->assertSame(301, $replay['headers']['status-code']);
+        $this->assertStringStartsWith($consoleUrl . '?error=', (string) $replay['headers']['location']);
+        $this->assertStringContainsString('already used', \urldecode((string) $replay['headers']['location']));
+    }
+
     public function testCreateInstallationWithEmptyRedirects(): void
     {
         $projectId = $this->getProject()['$id'];

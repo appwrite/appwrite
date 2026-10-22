@@ -14,8 +14,10 @@ use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Id;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Text;
@@ -64,6 +66,7 @@ abstract class Base extends Action
             ->inject('dbForPlatform')
             ->inject('platform')
             ->inject('user')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -73,7 +76,8 @@ abstract class Base extends Action
         Response $response,
         Database $dbForPlatform,
         array $platform,
-        User $user
+        User $user,
+        Authorization $authorization
     ) {
         $key = static::getProvider();
 
@@ -109,6 +113,16 @@ abstract class Base extends Action
 
         if ($user->isEmpty() || $user->getId() !== $state->userId) {
             $this->failure($response, $redirectFailure, 'The installation was started by a different Appwrite account. Please sign in with that account, or restart the installation from the Appwrite Console.');
+            return;
+        }
+
+        // Each state completes one installation; ids are capped at 36 characters
+        try {
+            $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document([
+                '$id' => 'vcs-state-' . \substr(\hash('sha256', $state->nonce), 0, 26),
+            ])));
+        } catch (Duplicate) {
+            $this->failure($response, $redirectFailure, 'This installation request was already used. Please restart the installation from the Appwrite Console.');
             return;
         }
 
