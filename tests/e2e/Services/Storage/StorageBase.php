@@ -1311,6 +1311,59 @@ trait StorageBase
         $this->assertEquals('nosniff', $view['headers']['x-content-type-options']);
     }
 
+    public function testFileViewContentDispositionFilename(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => Id::unique(),
+            'name' => 'View Filename',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $name = 'café;"name.svg';
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/script.svg'), 'image/svg+xml', 'quoted.svg'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        $file = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => $name,
+        ]);
+        $this->assertEquals(200, $file['headers']['status-code']);
+        $this->assertSame($name, $file['body']['name']);
+
+        $view = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/view', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $view['headers']['status-code']);
+        $disposition = (string) $view['headers']['content-disposition'];
+        $this->assertStringStartsWith('attachment;', $disposition);
+        $this->assertStringContainsString('filename="caféname.svg"', $disposition);
+        $this->assertStringContainsString("filename*=UTF-8''" . \rawurlencode($name), $disposition);
+    }
+
     public function testFilePreviewCache(): void
     {
         $data = $this->setupBucketFile();
