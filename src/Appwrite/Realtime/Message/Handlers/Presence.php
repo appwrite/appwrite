@@ -10,6 +10,7 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Presences\State as PresenceState;
 use Appwrite\Realtime\Message\Dispatcher;
 use Appwrite\Utopia\Database\Documents\User;
+use Swoole\Coroutine;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -101,26 +102,41 @@ class Presence extends Action
         // a concurrent presence message on the same socket sees it and does not count twice. No lock,
         // no DB inside one: the upsert below runs unlocked and the database serializes the write.
         $hold = $realtime->connections[$connectionId]['presence'] ?? null;
+
+        // A sibling message on this socket is mid-establish (a staked claim with no sequence yet). Wait
+        // for it to resolve: it either publishes the row's sequence (it counted -- we follow without
+        // counting) or its claim disappears because its write failed (we take over and count, so a live
+        // socket is never left uncounted). Only the in-memory claim knows whether our own socket's
+        // sibling counted; the database cannot. This wait blocks nothing but this coroutine.
+        if (\is_array($hold) && ($hold['userId'] ?? null) === $userId && ($hold['sequence'] ?? null) === null) {
+            for ($attempt = 1; $attempt <= 250; $attempt++) {
+                Coroutine::sleep(0.002);
+                if (!isset($realtime->connections[$connectionId])) {
+                    break;
+                }
+                $hold = $realtime->connections[$connectionId]['presence'] ?? null;
+                if (!\is_array($hold) || ($hold['userId'] ?? null) !== $userId || ($hold['sequence'] ?? null) !== null) {
+                    break;
+                }
+            }
+        }
+
         $heldForUser = \is_array($hold) && ($hold['userId'] ?? null) === $userId;
 
         if (!$heldForUser) {
-            // First presence on this socket: stake the claim now so a sibling message refreshes. Guard
-            // on the connection still existing -- onClose may have removed it during the user lookup
-            // above, and a bare assignment would auto-vivify a zombie entry the close guard then trusts.
+            // First presence on this socket, or the establishing sibling failed: stake the claim and
+            // count. Guard on the connection still existing -- onClose may have removed it during the
+            // user lookup, and a bare assignment would auto-vivify a zombie entry the close guard trusts.
             if (isset($realtime->connections[$connectionId])) {
                 $realtime->connections[$connectionId]['presence'] = ['projectId' => $projectId, 'userId' => $userId, 'sequence' => null];
             }
             $sequence = null;
             $follower = false;
-        } elseif (($hold['sequence'] ?? null) === null) {
-            // A sibling message is still establishing the hold: refresh without counting.
-            $sequence = null;
-            $follower = true;
         } else {
-            // Established hold: a status refresh, or a recount if the row was recreated (the state
-            // method compares this sequence against the row).
+            // A sibling owns this socket's hold: refresh the row's data without counting. It records no
+            // hold of its own, so it can never release a count it did not add.
             $sequence = $hold['sequence'];
-            $follower = false;
+            $follower = true;
         }
 
         try {
