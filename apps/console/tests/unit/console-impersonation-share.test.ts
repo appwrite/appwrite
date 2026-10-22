@@ -33,6 +33,15 @@ describe('resolveConsoleImpersonationRedirect', () => {
       resolveConsoleImpersonationRedirect('/impersonate/user123?email=a'),
     ).toBe(ACCOUNT_PATH_AFTER_IMPERSONATION)
   })
+
+  test.each(['/\\example.com', '/\t/example.com', '/\n/example.com', '/a\\b'])(
+    'rejects paths a browser would read as another host: %j',
+    (redirect) => {
+      expect(resolveConsoleImpersonationRedirect(redirect)).toBe(
+        ACCOUNT_PATH_AFTER_IMPERSONATION,
+      )
+    },
+  )
 })
 
 describe('buildConsoleImpersonationShareUrl', () => {

@@ -45,13 +45,22 @@ const AUTH_REDIRECT_PATHS = new Set([
   '/auth/magic-url',
 ])
 
+/**
+ * A path on the console origin. Browsers read `\` as `/` and drop tabs and
+ * newlines, so those characters are refused before the URL check.
+ */
 function isSafeConsoleRedirect(redirect: string): boolean {
-  // Reject protocol-relative URLs (//evil.com) alongside absolute ones.
-  return (
-    redirect.startsWith('/') &&
-    !redirect.startsWith('//') &&
-    !redirect.includes('://')
-  )
+  if (!redirect.startsWith('/') || redirect.startsWith('//')) return false
+  for (const character of redirect) {
+    const code = character.charCodeAt(0)
+    if (character === '\\' || code < 0x20 || code === 0x7f) return false
+  }
+  const origin = 'https://console.invalid'
+  try {
+    return new URL(redirect, origin).origin === origin
+  } catch {
+    return false
+  }
 }
 
 /**
