@@ -129,7 +129,35 @@ class Update extends Action
 
         $authorization->addRole(Role::user($targetUser->getId())->toString());
 
-        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $membership, $team, $targetUser, $secret, $proofForToken) {
+        // Built up front and stored with the confirmation, so a failure cannot consume the invite without a session
+        $session = null;
+        $sessionSecret = '';
+        if (!$hasSession) {
+            $detector = new Detector($request->getUserAgent('UNKNOWN'));
+            $authDuration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
+            $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
+            $sessionSecret = $proofForToken->generate();
+            $session = new Document(array_merge([
+                '$id' => Id::unique(),
+                '$permissions' => [
+                    Permission::read(Role::user($targetUser->getId())),
+                    Permission::update(Role::user($targetUser->getId())),
+                    Permission::delete(Role::user($targetUser->getId())),
+                ],
+                'userId' => $targetUser->getId(),
+                'userInternalId' => $targetUser->getSequence(),
+                'provider' => SESSION_PROVIDER_EMAIL,
+                'providerUid' => $targetUser->getAttribute('email'),
+                'secret' => $proofForToken->hash($sessionSecret), // One way hash encryption to protect DB leak
+                'userAgent' => $request->getUserAgent('UNKNOWN'),
+                'ip' => $request->getIP(),
+                'factors' => ['email'],
+                'countryCode' => \strtolower($geo->get($request->getIP())->getCountryCode()),
+                'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
+            ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
+        }
+
+        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $membership, $team, $targetUser, $secret, $proofForToken, &$session) {
             // Lock the user first, as an address change does, so a voided invite cannot slip through
             $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $targetUser->getId(), forUpdate: true));
 
@@ -162,6 +190,10 @@ class Update extends Action
                 $authorization->skip(fn () => $dbForProject->updateDocument('users', $targetUser->getId(), new Document([$verification => true])));
             }
 
+            if ($session !== null) {
+                $session = $dbForProject->createDocument('sessions', $session);
+            }
+
             return $confirmed;
         });
 
@@ -169,38 +201,13 @@ class Update extends Action
             throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
         }
 
-        // Create session for the user if not logged in
+        // Hand the new session to a user who was not logged in
         if (!$hasSession) {
-            $detector = new Detector($request->getUserAgent('UNKNOWN'));
-            $authDuration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
-            $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
-            $secret = $proofForToken->generate();
-            $session = new Document(array_merge([
-                '$id' => Id::unique(),
-                '$permissions' => [
-                    Permission::read(Role::user($targetUser->getId())),
-                    Permission::update(Role::user($targetUser->getId())),
-                    Permission::delete(Role::user($targetUser->getId())),
-                ],
-                'userId' => $targetUser->getId(),
-                'userInternalId' => $targetUser->getSequence(),
-                'provider' => SESSION_PROVIDER_EMAIL,
-                'providerUid' => $targetUser->getAttribute('email'),
-                'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
-                'userAgent' => $request->getUserAgent('UNKNOWN'),
-                'ip' => $request->getIP(),
-                'factors' => ['email'],
-                'countryCode' => \strtolower($geo->get($request->getIP())->getCountryCode()),
-                'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
-            ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
-
-            $session = $dbForProject->createDocument('sessions', $session);
-
             $authorization->addRole(Role::user($userId)->toString());
 
             $encoded = $store
                 ->setProperty('id', $targetUser->getId())
-                ->setProperty('secret', $secret)
+                ->setProperty('secret', $sessionSecret)
                 ->encode();
 
             if (!$domainVerification) {
