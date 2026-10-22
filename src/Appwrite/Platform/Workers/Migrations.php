@@ -213,9 +213,8 @@ class Migrations extends Action
             $credentials['port'],
         );
 
-        $this->publicHostname->address($source->getDatabaseHost());
-
-        return $source;
+        // Connect Postgres to the address just checked, so DNS cannot answer differently (SSRF)
+        return $source->setDatabaseAddress($this->publicHostname->address($source->getDatabaseHost()));
     }
 
     /**

@@ -80,7 +80,7 @@ class Get extends Action
         $nhost = new NHost($subdomain, $region, $adminSecret, $database, $username, $password, (string) $port);
 
         try {
-            $publicHostname->address($nhost->getDatabaseHost());
+            $nhost->setDatabaseAddress($publicHostname->address($nhost->getDatabaseHost()));
         } catch (\InvalidArgumentException $exception) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $exception->getMessage());
         }
