@@ -3541,24 +3541,6 @@ parameters:
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Parameter \#1 \$data of method Utopia\\Migration\\Resources\\Functions\\Deployment\:\:setData\(\) expects string, array\<mixed\>\|string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sources/Appwrite.php
-
-		-
-			message: '#^Parameter \#1 \$data of method Utopia\\Migration\\Resources\\Sites\\Deployment\:\:setData\(\) expects string, array\<mixed\>\|string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sources/Appwrite.php
-
-		-
-			message: '#^Parameter \#1 \$data of method Utopia\\Migration\\Resources\\Storage\\File\:\:setData\(\) expects string, array\<mixed\>\|string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sources/Appwrite.php
-
-		-
 			message: '#^Parameter \#1 \$databaseType of static method Utopia\\Migration\\Sources\\Appwrite\:\:getDatabase\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -3730,12 +3712,6 @@ parameters:
 			message: '#^Parameter \#1 \$resource of method Utopia\\Migration\\Sources\\Appwrite\\Reader\<mixed\>\:\:listColumns\(\) expects Utopia\\Migration\\Resources\\Database\\Table, array\<Utopia\\Migration\\Resources\\Database\\Table\>\|Utopia\\Migration\\Resources\\Database\\Table given\.$#'
 			identifier: argument.type
 			count: 1
-			path: src/Sources/Appwrite.php
-
-		-
-			message: '#^Parameter \#1 \$string of function strlen expects string, array\<mixed\>\|string given\.$#'
-			identifier: argument.type
-			count: 2
 			path: src/Sources/Appwrite.php
 
 		-
@@ -3973,12 +3949,6 @@ parameters:
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Parameter \#6 \$data of class Utopia\\Migration\\Resources\\Sites\\Deployment constructor expects string, array\<mixed\>\|string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sources/Appwrite.php
-
-		-
 			message: '#^Parameter \#6 \$events of class Utopia\\Migration\\Resources\\Functions\\Func constructor expects array\<string\>, array given\.$#'
 			identifier: argument.type
 			count: 1
@@ -4016,12 +3986,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#7 \$allowedFileExtensions of class Utopia\\Migration\\Resources\\Storage\\Bucket constructor expects array\<string\>, array given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sources/Appwrite.php
-
-		-
-			message: '#^Parameter \#7 \$data of class Utopia\\Migration\\Resources\\Functions\\Deployment constructor expects string, array\<mixed\>\|string given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Sources/Appwrite.php
@@ -5791,12 +5755,6 @@ parameters:
 			path: src/Sources/Firebase.php
 
 		-
-			message: '#^Parameter \#1 \$data of method Utopia\\Migration\\Resources\\Storage\\File\:\:setData\(\) expects string, array\<mixed\>\|string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sources/Firebase.php
-
-		-
 			message: '#^Parameter \#1 \$data of method Utopia\\Migration\\Sources\\Firebase\:\:base64UrlEncode\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -5846,12 +5804,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$originalId of method Utopia\\Migration\\Resource\:\:setOriginalId\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sources/Firebase.php
-
-		-
-			message: '#^Parameter \#1 \$string of function strlen expects string, array\<mixed\>\|string given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Sources/Firebase.php
@@ -6223,12 +6175,6 @@ parameters:
 			path: src/Sources/NHost.php
 
 		-
-			message: '#^Parameter \#1 \$data of method Utopia\\Migration\\Resources\\Storage\\File\:\:setData\(\) expects string, array\<mixed\>\|string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Sources/NHost.php
-
-		-
 			message: '#^Parameter \#1 \$errorInfo of static method Utopia\\Migration\\Sources\\NHost\:\:statusCodeFromErrorInfo\(\) expects array\<int, mixed\>\|null, array given\.$#'
 			identifier: argument.type
 			count: 8
@@ -6543,12 +6489,6 @@ parameters:
 		-
 			message: '#^Method Utopia\\Migration\\Sources\\Supabase\:\:report\(\) should return array\<string, int\> but returns array\<string, bool\|float\|int\|string\|null\>\.$#'
 			identifier: return.type
-			count: 1
-			path: src/Sources/Supabase.php
-
-		-
-			message: '#^Parameter \#1 \$data of method Utopia\\Migration\\Resources\\Storage\\File\:\:setData\(\) expects string, array\<mixed\>\|string given\.$#'
-			identifier: argument.type
 			count: 1
 			path: src/Sources/Supabase.php
 

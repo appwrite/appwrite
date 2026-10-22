@@ -60,6 +60,31 @@ final class TargetRequestTest extends TestCase
         $target->request('GET', '/redirect?to='.\rawurlencode('file:///etc/hosts'));
     }
 
+    public function testJSONResponseIsDecodedByDefault(): void
+    {
+        $response = $this->target($this->server->getURL())->request('GET', '/download');
+
+        $this->assertSame(['stored' => 'as a file'], $response);
+    }
+
+    public function testDownloadIsNotDecoded(): void
+    {
+        $target = $this->target($this->server->getURL());
+
+        $response = $target->request('GET', '/download', headers: ['range' => 'bytes=0-21'], decode: false);
+
+        $this->assertSame('{"stored":"as a file"}', $response);
+    }
+
+    public function testDownloadChunkIsNotDecoded(): void
+    {
+        $target = $this->target($this->server->getURL());
+
+        $response = $target->request('GET', '/download', headers: ['range' => 'bytes=0-9'], decode: false);
+
+        $this->assertSame('{"stored":', $response);
+    }
+
     public function testResolverPinsTheConnection(): void
     {
         $port = $this->server->getPort();

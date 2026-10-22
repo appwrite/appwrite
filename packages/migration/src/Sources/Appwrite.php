@@ -1726,7 +1726,8 @@ class Appwrite extends Source
             $chunkData = $this->call(
                 'GET',
                 "/storage/buckets/{$file->getBucket()->getId()}/files/{$file->getId()}/download",
-                ['range' => "bytes=$start-$end"]
+                ['range' => "bytes=$start-$end"],
+                decode: false
             );
 
             // Send the chunk to the callback function
@@ -2476,7 +2477,8 @@ class Appwrite extends Source
                 "/functions/{$func->getId()}/deployments/{$deployment->id}/download",
                 [],
                 [],
-                $responseHeaders
+                $responseHeaders,
+                decode: false
             );
 
             $size = strlen($file);
@@ -2526,7 +2528,8 @@ class Appwrite extends Source
             $chunkData = $this->call(
                 'GET',
                 "/functions/{$func->getId()}/deployments/{$deployment->getSequence()}/download",
-                ['range' => "bytes=$start-$end"]
+                ['range' => "bytes=$start-$end"],
+                decode: false
             );
 
             // Send the chunk to the callback function
@@ -3065,7 +3068,8 @@ class Appwrite extends Source
                 "/sites/{$site->getId()}/deployments/{$deployment->id}/download",
                 [],
                 [],
-                $responseHeaders
+                $responseHeaders,
+                decode: false
             );
 
             $size = strlen($file);
@@ -3112,7 +3116,8 @@ class Appwrite extends Source
             $chunkData = $this->call(
                 'GET',
                 "/sites/{$site->getId()}/deployments/{$siteDeployment->getSequence()}/download",
-                ['range' => "bytes=$start-$end"]
+                ['range' => "bytes=$start-$end"],
+                decode: false
             );
 
             $siteDeployment
