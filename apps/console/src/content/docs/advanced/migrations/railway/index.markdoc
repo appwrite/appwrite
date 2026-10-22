@@ -359,11 +359,13 @@ A Railway Function is a single TypeScript file that runs on Bun. `railway config
 
 ## Cron jobs {% #cron-jobs %}
 
-A Railway cron job is a service that starts on a schedule, runs, and exits. On Appwrite, the job's code becomes a function, and the schedule moves to the function:
+A Railway cron job is a service that starts on a schedule, runs, and exits. On Appwrite, the job's code becomes a function, and the schedule moves to the function. Move the schedule rather than copying it, so the job never runs on both platforms at once:
 
-1. Move the job's code into a function handler, as above.
+1. Move the job's code into a function handler, as above, and test it with a manual run from the function's **Executions** > **Execute now**.
+1. Remove the cron schedule from the Railway service.
 1. Open the function's **Settings** > **Executions** > **Schedule**, choose **Cron**, and enter the same expression you used on Railway.
-1. Remove the schedule from the Railway service once the function has run successfully.
+
+Make the switch between two scheduled runs, so no run is skipped or repeated.
 
 {% only_dark %}
 ![Schedule card in a function's execution settings](/images/docs/functions/execution/dark/interval-schedule.avif)
