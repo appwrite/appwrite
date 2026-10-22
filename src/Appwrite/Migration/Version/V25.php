@@ -241,23 +241,27 @@ class V25 extends Migration
                         $this->dbForProject->purgeCachedCollection($id);
 
                         try {
+                            $cursor = null;
                             do {
-                                $transactions = $this->dbForProject->find($id, [
+                                $queries = [
                                     Query::isNull('type'),
                                     Query::limit($this->limit),
-                                ]);
-                                $updated = 0;
+                                ];
+                                if ($cursor !== null) {
+                                    $queries[] = Query::cursorAfter($cursor);
+                                }
+                                $transactions = $this->dbForProject->find($id, $queries);
                                 foreach ($transactions as $transaction) {
                                     try {
                                         $this->dbForProject->updateDocument($id, $transaction->getId(), new Document([
                                             'type' => DATABASE_TYPE_LEGACY,
                                         ]));
-                                        $updated++;
                                     } catch (Throwable $th) {
                                         Console::warning("Failed to backfill \"type\" for transaction {$transaction->getId()}: {$th->getMessage()}");
                                     }
+                                    $cursor = $transaction;
                                 }
-                            } while ($updated > 0 && \count($transactions) === $this->limit);
+                            } while (\count($transactions) === $this->limit);
                         } catch (Throwable $th) {
                             Console::warning("Failed to backfill \"type\" in collection {$id}: {$th->getMessage()}");
                         }
