@@ -59,8 +59,8 @@ class Get extends Action
             ->param('password', '', new PasswordFormat(new Text(512)), 'Source\'s Database Password.')
             ->param('port', 5432, new Integer(true), 'Source\'s Database Port.', true, example: '5432')
             ->inject('response')
-            ->inject('publicInternet')
             ->inject('publicHostname')
+            ->inject('publicInternet')
             ->callback($this->action(...));
     }
 

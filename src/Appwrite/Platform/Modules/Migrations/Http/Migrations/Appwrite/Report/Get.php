@@ -54,9 +54,9 @@ class Get extends Action
             ->param('projectID', '', new Text(512), "Source's Project ID")
             ->param('key', '', new Text(512), "Source's API Key")
             ->inject('response')
-            ->inject('publicInternet')
             ->inject('getDatabasesDB')
             ->inject('publicHostname')
+            ->inject('publicInternet')
             ->callback($this->action(...));
     }
 
