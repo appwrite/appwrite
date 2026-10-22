@@ -169,15 +169,26 @@ abstract class Base extends Action
             throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, $validator->getDescription());
         }
 
-        $filename = new Filename(0);
-        if (!$filename->isValid($name)) {
-            throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, $filename->getDescription());
-        }
-
         return [
             'folder' => Folder::normalize($folder),
             'name' => $name,
         ];
+    }
+
+    /**
+     * Only new objects are validated, so earlier names stay readable and deletable.
+     *
+     * @return array{folder: string, name: string}
+     */
+    protected function newObjectPath(string $key): array
+    {
+        $object = $this->objectPath($key);
+        $filename = new Filename(0);
+        if (!$filename->isValid($object['name'])) {
+            throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, $filename->getDescription());
+        }
+
+        return $object;
     }
 
     protected function isFolderMarker(string $key): bool
@@ -198,7 +209,7 @@ abstract class Base extends Action
     protected function createMultipartUpload(Database $dbForProject, Cache $cache, Document $project, Device $deviceForFiles, Document $bucket, string $key, string $uploadId, string $contentType, array $metadata): array
     {
         $existing = $this->findObject($dbForProject, $bucket, $key);
-        $object = $existing === null ? $this->objectPath($key) : [
+        $object = $existing === null ? $this->newObjectPath($key) : [
             'folder' => $existing->getAttribute('folder', ''),
             'name' => $existing->getAttribute('name', ''),
         ];
@@ -578,7 +589,7 @@ abstract class Base extends Action
     protected function putObject(Database $dbForProject, Document $project, DeletePublisher $publisherForDeletes, Device $deviceForFiles, Document $bucket, string $key, string $body, string $contentType, array $metadata = []): Document
     {
         $existing = $this->findObject($dbForProject, $bucket, $key);
-        $object = $existing === null ? $this->objectPath($key) : [
+        $object = $existing === null ? $this->newObjectPath($key) : [
             'folder' => $existing->getAttribute('folder', ''),
             'name' => $existing->getAttribute('name', ''),
         ];
