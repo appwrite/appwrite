@@ -78,42 +78,34 @@ impl ApiKey {
         }
     }
 
-    fn guest(project: &Project, kind: KeyType) -> Self {
-        Self {
-            kind,
-            role: roles::GUESTS.to_owned(),
-            scopes: roles::scopes(roles::GUESTS).into_iter().map(str::to_owned).collect(),
-            name: "UNKNOWN".to_owned(),
-            project_id: project.id.clone(),
-            user_id: String::new(),
-            team_id: String::new(),
-            expired: false,
-            disabled_metrics: Vec::new(),
-            stored: None,
-        }
-    }
-
     /// `Key::decode($project, $team, $user, $key)`. `owners` are the keys of
     /// the account key's user and of the project's organization, when the
-    /// header is of those types.
-    pub fn decode(project: &Project, header: &str, jwt_key: &str, owners: &Owners<'_>) -> Self {
+    /// header is of those types. `None` where PHP throws `USER_UNAUTHORIZED`:
+    /// an unknown secret or prefix, a JWT that fails to decode, or an
+    /// ephemeral key of another project.
+    pub fn decode(project: &Project, header: &str, jwt_key: &str, owners: &Owners<'_>) -> Option<Self> {
         let (kind, secret) = match header.split_once('_') {
             Some((prefix, secret)) => (KeyType::parse(prefix), secret),
             None => (KeyType::Standard, header),
         };
         match kind {
             KeyType::Ephemeral | KeyType::Dynamic => {
-                let (claims, expired) = match jwt::decode(jwt_key, secret, 86_400) {
-                    Ok(c) => (c, false),
-                    Err(_) => (Default::default(), true),
-                };
+                let claims = jwt::decode(jwt_key, secret, 86_400).ok()?;
                 let claim_str = |k: &str| claims.get(k).and_then(Value::as_str).unwrap_or("").to_owned();
                 let project_check_disabled = matches!(claims.get("projectCheckDisabled"), Some(Value::Bool(true)));
-                // As in PHP, the check also runs for a token that failed to
-                // decode: its claims are empty, so it becomes a guest key.
                 let project_id = claim_str("projectId");
                 if !project_check_disabled && project_id != project.id {
-                    return Self::guest(project, kind);
+                    return None;
+                }
+                // Keys issued before the sequence claim carry none; they
+                // expire within a day.
+                let sequence = match claims.get("projectSequence") {
+                    None | Some(Value::Null) => None,
+                    Some(Value::String(s)) => Some(s.clone()),
+                    Some(other) => Some(other.to_string()),
+                };
+                if !project_check_disabled && sequence.is_some_and(|s| s != project.sequence) {
+                    return None;
                 }
                 let mut scopes: Vec<String> = claims
                     .get("scopes")
@@ -131,7 +123,7 @@ impl ApiKey {
                     .and_then(Value::as_array)
                     .map(|a| a.iter().filter_map(|s| s.as_str().map(str::to_owned)).collect())
                     .unwrap_or_default();
-                Self {
+                Some(Self {
                     kind,
                     role: roles::KEYS.to_owned(),
                     scopes,
@@ -139,15 +131,13 @@ impl ApiKey {
                     project_id,
                     user_id: String::new(),
                     team_id: String::new(),
-                    expired,
+                    expired: false,
                     disabled_metrics,
                     stored: None,
-                }
+                })
             }
             KeyType::Standard => {
-                let Some(stored) = project.keys.iter().find(|k| k.secret == header) else {
-                    return Self::guest(project, kind);
-                };
+                let stored = project.keys.iter().find(|k| k.secret == header)?;
                 let now = datetime::now();
                 let expired = stored.expire.map(|e| e < now).unwrap_or(false);
                 let mut scopes = stored.scopes.clone();
@@ -156,7 +146,7 @@ impl ApiKey {
                         scopes.push((*s).to_owned());
                     }
                 }
-                Self {
+                Some(Self {
                     kind,
                     role: roles::KEYS.to_owned(),
                     scopes,
@@ -167,28 +157,22 @@ impl ApiKey {
                     expired,
                     disabled_metrics: Vec::new(),
                     stored: Some(stored.clone()),
-                }
+                })
             }
             // An account key: role `users`, its own scopes only.
             KeyType::Account => {
-                let Some((user_id, stored)) =
-                    owners.account.and_then(|(id, keys)| keys.iter().find(|k| k.secret == header).map(|k| (id, k)))
-                else {
-                    return Self::guest(project, kind);
-                };
-                Self::owned(kind, roles::USERS, stored, String::new(), user_id.to_owned(), String::new())
+                let (user_id, stored) =
+                    owners.account.and_then(|(id, keys)| keys.iter().find(|k| k.secret == header).map(|k| (id, k)))?;
+                Some(Self::owned(kind, roles::USERS, stored, String::new(), user_id.to_owned(), String::new()))
             }
             // An organization key: role `keys`, its own scopes only.
             KeyType::Organization => {
-                let Some((team_id, stored)) = owners
+                let (team_id, stored) = owners
                     .organization
-                    .and_then(|(id, keys)| keys.iter().find(|k| k.secret == header).map(|k| (id, k)))
-                else {
-                    return Self::guest(project, kind);
-                };
-                Self::owned(kind, roles::KEYS, stored, String::new(), String::new(), team_id.to_owned())
+                    .and_then(|(id, keys)| keys.iter().find(|k| k.secret == header).map(|k| (id, k)))?;
+                Some(Self::owned(kind, roles::KEYS, stored, String::new(), String::new(), team_id.to_owned()))
             }
-            other => Self::guest(project, other),
+            KeyType::OAuth2 | KeyType::Unknown => None,
         }
     }
 }
@@ -215,4 +199,63 @@ pub fn session_verify<'a>(sessions: &'a [Session], secret: &str) -> Option<&'a S
 pub fn session_active(user: &User, session_id: &str) -> bool {
     let now: NaiveDateTime = datetime::now();
     user.sessions.iter().any(|s| s.id == session_id && s.expire.map(|e| e >= now).unwrap_or(false))
+}
+
+#[cfg(test)]
+mod tests {
+    use serde_json::{Map, Value, json};
+    use utopia_database::Document;
+
+    use super::{ApiKey, KeyType, Owners, jwt};
+    use crate::database::Project;
+
+    const SECRET: &str = "test-openssl-key";
+
+    fn project() -> Project {
+        let mut document = Document::default();
+        document.put("$id", utopia_database::Value::from("p1"));
+        document.put("$sequence", utopia_database::Value::from("7"));
+        Project::from(&document)
+    }
+
+    fn ephemeral(claims: Value) -> String {
+        let Value::Object(claims) = claims else { unreachable!() };
+        format!("ephemeral_{}", jwt::encode(SECRET, claims, 3600))
+    }
+
+    fn decode(header: &str) -> Option<ApiKey> {
+        ApiKey::decode(&project(), header, SECRET, &Owners::default())
+    }
+
+    #[test]
+    fn refuses_unknown_secrets_and_prefixes() {
+        assert!(decode("standard_unknown").is_none());
+        assert!(decode("unknown").is_none());
+        assert!(decode("oauth2_whatever").is_none());
+        assert!(decode("account_whatever").is_none());
+        assert!(decode("organization_whatever").is_none());
+    }
+
+    #[test]
+    fn refuses_an_ephemeral_key_that_fails_to_decode() {
+        assert!(decode("ephemeral_not.a.jwt").is_none());
+        let other = format!("ephemeral_{}", jwt::encode("other-key", Map::new(), 3600));
+        assert!(decode(&other).is_none());
+    }
+
+    #[test]
+    fn binds_ephemeral_keys_to_the_project_and_its_sequence() {
+        assert!(decode(&ephemeral(json!({"projectId": "p2"}))).is_none());
+        assert!(decode(&ephemeral(json!({"projectId": "p1", "projectSequence": 8}))).is_none());
+        assert!(decode(&ephemeral(json!({"projectId": "p1", "projectSequence": "8"}))).is_none());
+
+        let key = decode(&ephemeral(json!({"projectId": "p1", "projectSequence": 7}))).expect("same sequence");
+        assert_eq!(key.kind, KeyType::Ephemeral);
+        assert!(!key.expired);
+        // Keys issued before the sequence claim carry none.
+        assert!(decode(&ephemeral(json!({"projectId": "p1"}))).is_some());
+        // With the project check off, neither is checked.
+        let unchecked = json!({"projectId": "p2", "projectSequence": 8, "projectCheckDisabled": true});
+        assert!(decode(&ephemeral(unchecked)).is_some());
+    }
 }

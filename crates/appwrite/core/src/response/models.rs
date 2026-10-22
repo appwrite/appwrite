@@ -36,9 +36,15 @@ impl Serialize for UserModel<'_> {
         m.serialize_entry("$createdAt", &dt(&u.created_at))?;
         m.serialize_entry("$updatedAt", &dt(&u.updated_at))?;
         m.serialize_entry("name", s(&u.name))?;
-        m.serialize_entry("password", &u.password)?;
-        m.serialize_entry("hash", &u.hash)?;
-        m.serialize_entry("hashOptions", &u.hash_options)?;
+        if r.hide_credentials {
+            m.serialize_entry("password", "")?;
+            m.serialize_entry("hash", "")?;
+            m.serialize_entry("hashOptions", &Value::Array(Vec::new()))?;
+        } else {
+            m.serialize_entry("password", &u.password)?;
+            m.serialize_entry("hash", &u.hash)?;
+            m.serialize_entry("hashOptions", &u.hash_options)?;
+        }
         m.serialize_entry("registration", &dt(&u.registration))?;
         m.serialize_entry("status", &u.status.unwrap_or(true))?;
         m.serialize_entry("labels", &u.labels)?;
@@ -193,9 +199,10 @@ impl Serialize for SessionModel<'_> {
         m.serialize_entry("expire", &dt(&x.expire))?;
         m.serialize_entry("provider", s(&x.provider))?;
         m.serialize_entry("providerUid", s(&x.provider_uid))?;
-        m.serialize_entry("providerAccessToken", s(&x.provider_access_token))?;
+        let credential = |v| if r.hide_credentials { "" } else { s(v) };
+        m.serialize_entry("providerAccessToken", credential(&x.provider_access_token))?;
         m.serialize_entry("providerAccessTokenExpiry", &dt(&x.provider_access_token_expiry))?;
-        m.serialize_entry("providerRefreshToken", s(&x.provider_refresh_token))?;
+        m.serialize_entry("providerRefreshToken", credential(&x.provider_refresh_token))?;
         m.serialize_entry("ip", s(&x.ip))?;
         m.serialize_entry("osCode", s(&x.os_code))?;
         m.serialize_entry("osName", s(&x.os_name))?;
@@ -316,6 +323,7 @@ impl Serialize for PasskeyChallengeModel<'_> {
 /// `identity` model.
 pub struct IdentityModel<'a> {
     pub identity: &'a Identity,
+    pub render: Render,
 }
 
 impl Serialize for IdentityModel<'_> {
@@ -329,10 +337,11 @@ impl Serialize for IdentityModel<'_> {
         m.serialize_entry("provider", s(&i.provider))?;
         m.serialize_entry("providerUid", s(&i.provider_uid))?;
         m.serialize_entry("providerEmail", s(&i.provider_email))?;
-        m.serialize_entry("providerAccessToken", s(&i.provider_access_token))?;
+        let credential = |v| if self.render.hide_credentials { "" } else { s(v) };
+        m.serialize_entry("providerAccessToken", credential(&i.provider_access_token))?;
         m.serialize_entry("providerAccessTokenExpiry", &dt(&i.provider_access_token_expiry))?;
-        m.serialize_entry("providerRefreshToken", s(&i.provider_refresh_token))?;
-        m.serialize_entry("providerIdToken", s(&i.provider_id_token))?;
+        m.serialize_entry("providerRefreshToken", credential(&i.provider_refresh_token))?;
+        m.serialize_entry("providerIdToken", credential(&i.provider_id_token))?;
         m.end()
     }
 }
@@ -341,13 +350,15 @@ impl Serialize for IdentityModel<'_> {
 pub struct IdentityListModel<'a> {
     pub total: i64,
     pub identities: &'a [Identity],
+    pub render: Render,
 }
 
 impl Serialize for IdentityListModel<'_> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut m = serializer.serialize_map(Some(2))?;
         m.serialize_entry("total", &self.total)?;
-        let items: Vec<IdentityModel<'_>> = self.identities.iter().map(|i| IdentityModel { identity: i }).collect();
+        let items: Vec<IdentityModel<'_>> =
+            self.identities.iter().map(|i| IdentityModel { identity: i, render: self.render }).collect();
         m.serialize_entry("identities", &items)?;
         m.end()
     }

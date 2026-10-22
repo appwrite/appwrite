@@ -54,6 +54,9 @@ pub(in crate::platform) async fn auth(
         ctx.user.as_ref().map(|u| u.email.clone().unwrap_or_else(|| "User".to_owned()));
     let mut key_actor = false;
 
+    if !ctx.request.header_or_empty("x-appwrite-key").is_empty() && ctx.key.is_none() {
+        return Err(Error::new(ErrorType::UserUnauthorized));
+    }
     if let Some(key) = ctx.key.clone() {
         if key.expired {
             return Err(Error::new(ErrorType::ProjectKeyExpired));
@@ -85,6 +88,15 @@ pub(in crate::platform) async fn auth(
             };
             track_key_usage(ctx, owner, stored).await;
         }
+        // Account keys act as the console user on the Console API only: on
+        // another project the console user's roles could collide with the
+        // project's own users and teams.
+        if key.kind == KeyType::Account && !ctx.project.is_console() {
+            return Err(Error::with_message(
+                ErrorType::UserUnauthorized,
+                "Account API keys can only be used with the console project.",
+            ));
+        }
         // An organization key acts as the organization's owner.
         if key.kind == KeyType::Organization {
             extra_roles.push(format!("team:{}", key.team_id));
@@ -112,7 +124,11 @@ pub(in crate::platform) async fn auth(
         let project_prefix = format!("project-{project_id}");
         for admin_role in admin_roles {
             let team_wide = !admin_role.starts_with("project-");
-            if team_wide || (project_id != Project::CONSOLE && admin_role.starts_with(&project_prefix)) {
+            // Role names carry no '-', so everything before the last '-'
+            // must be exactly `project-{projectId}`: a prefix match would
+            // leak a grant on project `app2` to project `app`.
+            let scope = admin_role.rfind('-').map_or("", |at| &admin_role[..at]);
+            if team_wide || (project_id != Project::CONSOLE && scope == project_prefix) {
                 let r =
                     if team_wide { admin_role.clone() } else { admin_role.rsplit('-').next().unwrap_or("").to_owned() };
                 scopes.extend(roles::scopes(&r).into_iter().map(str::to_owned));
@@ -145,6 +161,8 @@ pub(in crate::platform) async fn auth(
         && !scopes.iter().any(|s| s == "users.read")
     {
         scopes.push("users.read".to_owned());
+        // The grant is for discovery: password hashes stay hidden.
+        ctx.hide_credentials = true;
     }
 
     // Authorization roles.

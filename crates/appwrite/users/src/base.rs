@@ -68,7 +68,7 @@ pub const SESSIONS: &str = "subQuerySessions";
 pub const AUTHENTICATORS: &str = "subQueryAuthenticators";
 
 /// The user sub-query filters (`APP_USERS_SUBQUERIES`) other than `keep`.
-fn skipped(keep: &[&str]) -> Vec<String> {
+pub(crate) fn skipped(keep: &[&str]) -> Vec<String> {
     filters::USERS_SUBQUERIES.iter().filter(|f| !keep.contains(f)).map(|f| (*f).to_owned()).collect()
 }
 

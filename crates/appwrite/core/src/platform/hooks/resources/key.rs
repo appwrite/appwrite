@@ -40,7 +40,11 @@ pub(in crate::platform) async fn resolve(
             account: (!ctx.account_keys.is_empty()).then_some((account_user.as_str(), ctx.account_keys.as_slice())),
             organization: organization.as_ref().map(|(id, _, keys)| (id.as_str(), keys.as_slice())),
         };
-        let key = ApiKey::decode(&ctx.project, key_header, &state.config.openssl_key_v1, &owners);
+        // A secret `Key::decode` refuses leaves no key: the auth hook
+        // answers 401 for the header.
+        let Some(key) = ApiKey::decode(&ctx.project, key_header, &state.config.openssl_key_v1, &owners) else {
+            return Ok(String::new());
+        };
         if !key.project_id.is_empty() && (header_project.is_empty() || header_project != key.project_id) {
             return Err(Error::new(ErrorType::ProjectIdMissing));
         }
