@@ -1,5 +1,5 @@
 import { access, readFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { join, resolve, sep } from 'node:path'
 import { resolveSiteAssetUrl } from '@/lib/marketing/site-origin'
 import { getCoverRenderSiteOrigin } from '@/lib/cover-generator/render-context'
 import { fetchCoverRemoteImage } from '@/lib/cover-generator/remote-image'
@@ -27,7 +27,9 @@ export async function readCoverPublicAssetBuffer(
 ): Promise<Buffer | null> {
   const normalized = relativePath.replace(/^\/+/, '')
   for (const root of getCoverPublicAssetRoots()) {
-    const filepath = join(root, normalized)
+    const filepath = resolve(root, normalized)
+    // Bundled assets only: `..` segments must not leave the asset root.
+    if (!filepath.startsWith(`${root}${sep}`)) return null
     try {
       await access(filepath)
       return await readFile(filepath)
