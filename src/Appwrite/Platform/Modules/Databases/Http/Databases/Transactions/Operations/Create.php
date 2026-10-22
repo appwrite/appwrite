@@ -123,7 +123,7 @@ class Create extends Action
             );
         }
 
-        $databases = $collections = $staged = [];
+        $databases = $collections = $dbsForDatabases = $staged = [];
         foreach ($operations as $operation) {
             if (!$isAPIKey && !$isPrivilegedUser && \in_array($operation['action'], [
                 'bulkCreate',
@@ -215,7 +215,7 @@ class Create extends Action
                     }
 
                     if ($operation['action'] !== 'delete') {
-                        $dbForDatabases = $getDatabasesDB($database);
+                        $dbForDatabases = $dbsForDatabases[$database->getId()] ??= $getDatabasesDB($database);
                         $data = \is_array($operation['data'] ?? null) ? $operation['data'] : [];
                         $creates = $operation['action'] === 'create' || ($operation['action'] === 'upsert' && !$exists);
 
