@@ -11,6 +11,7 @@ import {
   useIsFetching,
 } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
+import { BuyDomainHeaderButton } from '../shared/BuyDomainHeaderButton'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 import type { Models } from '@appwrite.io/console'
 import {
@@ -504,7 +505,22 @@ function SiteLayoutContent() {
                     })
                 : undefined
             }
-            beforeCreateButtons={undefined}
+            beforeCreateButtons={
+              activeTab === 'domains' ? (
+                <BuyDomainHeaderButton
+                  orgId={project?.teamId}
+                  onClick={() =>
+                    navigate({
+                      to: '/projects/$projectId/sites/$siteId/domains/buy',
+                      params: {
+                        projectId: projectId!,
+                        siteId: siteId!,
+                      },
+                    })
+                  }
+                />
+              ) : undefined
+            }
             contentAfterBorder={
               buildingAlert || configAlert ? (
                 <div>

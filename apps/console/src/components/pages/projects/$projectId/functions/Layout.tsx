@@ -5,8 +5,13 @@ import {
   Outlet,
   useNavigate,
 } from '@tanstack/react-router'
-import { useMutation, useQueryClient, useIsFetching } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQueryClient,
+  useIsFetching,
+} from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
+import { BuyDomainHeaderButton } from '../shared/BuyDomainHeaderButton'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
 import type { Models } from '@appwrite.io/console'
@@ -540,104 +545,120 @@ function FunctionLayoutContent() {
       >
         <div
           className={cn(
-            isExecutionsTabLayout &&
-              'sticky top-0 z-20 shrink-0 bg-background',
+            isExecutionsTabLayout && 'sticky top-0 z-20 shrink-0 bg-background',
           )}
         >
           <ServiceHeader
             title={
-            <DetailResourceHeaderTitle
-              kind="function"
-              label={func.name || t('Unnamed Function')}
-              resourceId={func.$id}
-              projectId={projectId}
-              back={{
-                to: '/projects/$projectId/functions',
-                params: { projectId: projectId! },
-                'aria-label': t('Back to functions'),
-              }}
-            />
-          }
-          tabs={tabs}
-          activeTab={activeTab}
-          fullWidthBorder
-          fullWidth={activeTab === 'executions'}
-          showToolbarBottomBorder={isExecutionsTabLayout}
-          searchPlaceholder={
-            activeTab === 'domains' ? t('Search domain...') : undefined
-          }
-          searchValue={activeTab === 'domains' ? domainsSearchValue : undefined}
-          onSearchChange={
-            activeTab === 'domains' ? handleDomainsSearchChange : undefined
-          }
-          showFilters={activeTab === 'executions' || activeTab === 'domains'}
-          filterTrigger={
-            activeTab === 'executions' || activeTab === 'domains' ? (
-              <FiltersPopover
-                open={filtersOpen}
-                onOpenChange={setFiltersOpen}
-                columns={functionFilterColumns}
-                filterMap={functionFilterMap}
-                onRemoveFilter={removeFunctionFilter}
-                onClearAll={clearAllFunctionFilters}
-                onApplyFilter={applyFunctionFilter}
-                resourceLabel={
-                  activeTab === 'executions' ? 'executions' : 'domains'
-                }
-                filterScope={`functions.${activeTab}`}
-                onApplyQuery={(queryParam) => {
-                  navigate({
-                    to: location.pathname,
-                    search: (prev) => ({
-                      ...(typeof prev === 'object' && prev !== null
-                        ? prev
-                        : {}),
-                      query: queryParam ?? undefined,
-                      page: 1,
-                    }),
-                    replace: true,
-                  })
+              <DetailResourceHeaderTitle
+                kind="function"
+                label={func.name || t('Unnamed Function')}
+                resourceId={func.$id}
+                projectId={projectId}
+                back={{
+                  to: '/projects/$projectId/functions',
+                  params: { projectId: projectId! },
+                  'aria-label': t('Back to functions'),
                 }}
-                teamId={project?.teamId}
               />
-            ) : undefined
-          }
-          showRefresh={activeTab === 'executions' && hasRefreshHandler}
-          onRefresh={activeTab === 'executions' ? triggerRefresh : undefined}
-          isRefreshing={executionsListRefreshing}
-          beforeCreateButtons={undefined}
-          createLabel={
-            activeTab === 'deployments'
-              ? undefined
-              : activeTab === 'executions'
-                ? t('Create execution')
-                : activeTab === 'domains'
-                  ? t('Add domain')
-                  : undefined
-          }
-          createAnalyticsAction={
-            activeTab === 'executions' ? 'create-execution' : undefined
-          }
-          onCreate={
-            activeTab === 'deployments'
-              ? undefined
-              : activeTab === 'executions'
-                ? handleCreateExecution
-                : activeTab === 'domains'
-                  ? handleAddDomain
-                  : undefined
-          }
-          createDisabled={activeTab === 'executions' && !func?.deploymentId}
-          contentAfterBorder={
-            disabledAlert || buildingAlert || configAlert ? (
-              <div>
-                {disabledAlert}
-                {buildingAlert}
-                {configAlert}
-              </div>
-            ) : undefined
-          }
-        />
+            }
+            tabs={tabs}
+            activeTab={activeTab}
+            fullWidthBorder
+            fullWidth={activeTab === 'executions'}
+            showToolbarBottomBorder={isExecutionsTabLayout}
+            searchPlaceholder={
+              activeTab === 'domains' ? t('Search domain...') : undefined
+            }
+            searchValue={
+              activeTab === 'domains' ? domainsSearchValue : undefined
+            }
+            onSearchChange={
+              activeTab === 'domains' ? handleDomainsSearchChange : undefined
+            }
+            showFilters={activeTab === 'executions' || activeTab === 'domains'}
+            filterTrigger={
+              activeTab === 'executions' || activeTab === 'domains' ? (
+                <FiltersPopover
+                  open={filtersOpen}
+                  onOpenChange={setFiltersOpen}
+                  columns={functionFilterColumns}
+                  filterMap={functionFilterMap}
+                  onRemoveFilter={removeFunctionFilter}
+                  onClearAll={clearAllFunctionFilters}
+                  onApplyFilter={applyFunctionFilter}
+                  resourceLabel={
+                    activeTab === 'executions' ? 'executions' : 'domains'
+                  }
+                  filterScope={`functions.${activeTab}`}
+                  onApplyQuery={(queryParam) => {
+                    navigate({
+                      to: location.pathname,
+                      search: (prev) => ({
+                        ...(typeof prev === 'object' && prev !== null
+                          ? prev
+                          : {}),
+                        query: queryParam ?? undefined,
+                        page: 1,
+                      }),
+                      replace: true,
+                    })
+                  }}
+                  teamId={project?.teamId}
+                />
+              ) : undefined
+            }
+            showRefresh={activeTab === 'executions' && hasRefreshHandler}
+            onRefresh={activeTab === 'executions' ? triggerRefresh : undefined}
+            isRefreshing={executionsListRefreshing}
+            beforeCreateButtons={
+              activeTab === 'domains' ? (
+                <BuyDomainHeaderButton
+                  orgId={project?.teamId}
+                  onClick={() =>
+                    navigate({
+                      to: '/projects/$projectId/functions/$functionId/domains/buy',
+                      params: {
+                        projectId: projectId!,
+                        functionId: functionId!,
+                      },
+                    })
+                  }
+                />
+              ) : undefined
+            }
+            createLabel={
+              activeTab === 'deployments'
+                ? undefined
+                : activeTab === 'executions'
+                  ? t('Create execution')
+                  : activeTab === 'domains'
+                    ? t('Add domain')
+                    : undefined
+            }
+            createAnalyticsAction={
+              activeTab === 'executions' ? 'create-execution' : undefined
+            }
+            onCreate={
+              activeTab === 'deployments'
+                ? undefined
+                : activeTab === 'executions'
+                  ? handleCreateExecution
+                  : activeTab === 'domains'
+                    ? handleAddDomain
+                    : undefined
+            }
+            createDisabled={activeTab === 'executions' && !func?.deploymentId}
+            contentAfterBorder={
+              disabledAlert || buildingAlert || configAlert ? (
+                <div>
+                  {disabledAlert}
+                  {buildingAlert}
+                  {configAlert}
+                </div>
+              ) : undefined
+            }
+          />
         </div>
         <div
           className={cn(
@@ -719,7 +740,10 @@ function FunctionLayoutContent() {
           </>
         )}
         {activeDeployment && (
-          <Dialog open={redeployDialogOpen} onOpenChange={setRedeployDialogOpen}>
+          <Dialog
+            open={redeployDialogOpen}
+            onOpenChange={setRedeployDialogOpen}
+          >
             <DialogContent className="sm:max-w-md p-0">
               <DialogHeader className="px-6 pt-6 pb-4 text-start">
                 <DialogTitle>{t('Redeploy deployment')}</DialogTitle>
@@ -731,7 +755,10 @@ function FunctionLayoutContent() {
                     "This will create a new build for this deployment using the current function configuration. The original deployment's code will be preserved and used for the new build.",
                   )}
                 </DialogDescription>
-                <DeploymentInfo deployment={activeDeployment} showStatus={true} />
+                <DeploymentInfo
+                  deployment={activeDeployment}
+                  showStatus={true}
+                />
               </div>
               <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                 <Button
