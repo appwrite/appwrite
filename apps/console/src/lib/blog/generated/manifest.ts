@@ -3,6 +3,34 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-appwrite-entire-partnership",
+    "href": "/blog/post/announcing-appwrite-entire-partnership",
+    "title": "Appwrite partners with Entire to deploy Sites and Functions",
+    "description": "Appwrite and Entire are partnering. Entire joins Appwrite's Git providers, so every push to an Entire repository builds and deploys Sites and Functions.",
+    "date": "2026-10-27",
+    "lastUpdated": "2026-10-27",
+    "timeToRead": 6,
+    "author": "matej-baco",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-appwrite-entire-partnership/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "deploy-from-entire-to-appwrite",
+    "href": "/blog/post/deploy-from-entire-to-appwrite",
+    "title": "How to deploy from Entire to Appwrite Sites and Functions",
+    "description": "Connect an Entire repository to Appwrite and deploy a site and a function on every push, with private branch previews, path filters, and check runs on Entire.",
+    "date": "2026-10-27",
+    "lastUpdated": "2026-10-27",
+    "timeToRead": 9,
+    "author": "aditya-oberai",
+    "category": "tutorials",
+    "featured": false,
+    "cover": "/images/blog/deploy-from-entire-to-appwrite/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-verification-and-recovery-codes",
     "href": "/blog/post/announcing-verification-and-recovery-codes",
     "title": "Announcing 6-digit codes for email verification and password recovery",

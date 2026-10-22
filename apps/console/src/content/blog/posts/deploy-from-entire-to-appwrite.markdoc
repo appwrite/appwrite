@@ -1,0 +1,228 @@
+---
+layout: post
+title: "How to deploy from Entire to Appwrite Sites and Functions"
+description: Connect an Entire repository to Appwrite and deploy a site and a function on every push, with private branch previews, path filters, and check runs on Entire.
+date: 2026-10-27
+cover: /images/blog/deploy-from-entire-to-appwrite/cover.avif
+timeToRead: 9
+author: aditya-oberai
+category: tutorials
+featured: false
+faqs:
+  - question: "How do I deploy an Entire repository to Appwrite?"
+    answer: "Go to **Project settings** > **Git configuration** in the Appwrite Console and click **Connect to Entire**. Approve the installation on entire.io and select your repositories. Then create a Site or Function, pick your Entire project and repository under **Import repository**, configure the branch and root directory, and deploy. Every later push to that repository deploys automatically."
+  - question: "Which Entire repositories can Appwrite access?"
+    answer: "Only the repositories you select when you approve the installation on entire.io. Appwrite gets read access to their contents and write access to check runs. It cannot create or delete repositories on Entire. To add more repositories later, use **Update Entire permissions** in the creation wizard or **Configure** on the installation in **Project settings** > **Git configuration**."
+  - question: "Can one Appwrite project deploy from several Entire projects?"
+    answer: "Yes. Each installation covers one Entire project. Click **Connect with Entire** in **Project settings** > **Git configuration** to add another, and each Entire project appears as its own owner in the repository picker."
+  - question: "Do pushes to other branches deploy?"
+    answer: "Yes, but they don't go live. A push to a branch other than the production branch creates a deployment that is built but not activated. For Sites, Appwrite generates a [preview link](/docs/products/sites/previews) that only members of your Appwrite organization can open."
+  - question: "Why didn't my push to Entire create a deployment?"
+    answer: "Check three things: the repository is connected to the Site or Function, the branch matches the branch filters in **Build triggers**, and at least one changed file matches the path filters. The first push of a new branch has no previous commit to compare against, so it deploys regardless of path filters."
+  - question: "Does Appwrite comment on Entire trails?"
+    answer: "Not today. Appwrite reports each build as a check run on the commit instead, with the build result, a link to the deployment in the Appwrite Console, and the preview URL for Sites."
+---
+
+Entire keeps your code and the agent sessions behind it in one repository. Appwrite runs that code. With Entire now an Appwrite Git provider, you can connect the two once and let every push deploy.
+
+This guide deploys a web app with [Appwrite Sites](/docs/products/sites) and an API with [Appwrite Functions](/docs/products/functions) from a single Entire repository. By the end, pushes to `main` update production, pushes to other branches produce private previews, and every build reports back to Entire as a check run.
+
+# How deploying from Entire to Appwrite works
+
+To deploy from Entire, connect your Entire project to Appwrite from **Project settings** > **Git configuration**, approve the installation on entire.io, then create a Site or Function from one of the project's repositories. From then on, every push to that repository triggers a build:
+
+- **Production branch:** the deployment builds and activates.
+- **Any other branch:** the deployment builds but stays inactive. Sites get a preview link.
+- **Every build:** Appwrite writes a check run to the commit on Entire with the result and a link to the deployment.
+
+Under the hood, Appwrite installs as a plugin on your Entire project. Entire notifies Appwrite of each push, Appwrite fetches that commit through Entire's own Git tooling, builds it, and reports the outcome back to the commit.
+
+# Prerequisites
+
+- An [Appwrite Cloud](/sign-in) account with a project.
+- An Entire account and an organization you can create projects in.
+- The [Entire CLI](https://docs.entire.com/installation), installed and signed in with `entire login`. Its installer also adds `git-remote-entire`, the helper Git calls for `entire://` remotes, so plain `git push` works.
+- A web app built with a [framework Appwrite Sites supports](/docs/products/sites/frameworks). The function example uses Node.js.
+
+# Step 1: Create an Entire project and repository
+
+Appwrite can't create repositories on Entire, so the repository has to exist before you connect it.
+
+Entire repositories live inside projects. A project has an owner, usually your organization, and a primary region where new repositories are created by default. Each Appwrite installation connects to one Entire project, so keep the repositories you plan to deploy in the same project when you can.
+
+Create both from the CLI:
+
+```bash
+entire login
+entire project create acme --owner acme-org
+entire repo create storefront --project acme
+entire repo view /et/acme/storefront
+```
+
+Project names are 3 to 32 characters of lowercase letters, numbers, and hyphens, and they must be unique across Entire. `entire repo view` prints the repository's regions and its clone URL, which uses Entire's `entire://` scheme:
+
+```txt
+entire://aws-us-east-2.entire.io/et/acme/storefront
+```
+
+If you prefer the browser, create a project from your organization on entire.io, create a repository inside it, and copy the clone command from the repository page. Entire's [repository docs](https://docs.entire.com/guides/repositories/entire-native-repositories) cover primary regions and regional mirrors in more detail.
+
+## Push your code
+
+This guide uses one repository for both the site and the function, which is also where path filters start to matter later:
+
+```txt
+storefront/
+├── apps/
+│   └── web/            # Appwrite Site
+└── functions/
+    └── api/            # Appwrite Function
+        ├── package.json
+        └── src/
+            └── main.js
+```
+
+The function can start small. Appwrite calls the default export with a context object that carries the request, the response, and logging helpers:
+
+```js
+// functions/api/src/main.js
+export default async ({ req, res, log }) => {
+  log(`Handling ${req.method} ${req.path}`);
+  return res.json({ ok: true, path: req.path });
+};
+```
+
+Mark the package as an ES module so the `export default` syntax works:
+
+```json
+{
+  "name": "api",
+  "type": "module",
+  "main": "src/main.js"
+}
+```
+
+Point your local repository at Entire and push:
+
+```bash
+git remote add origin entire://aws-us-east-2.entire.io/et/acme/storefront
+git push -u origin main
+```
+
+# Step 2: Connect Entire to your Appwrite project
+
+1. In the Appwrite Console, open your project and go to **Project settings** > **Git configuration**.
+2. Click **Connect to Entire**. If the project already has a Git installation, the button reads **Connect with Entire**.
+3. entire.io opens Appwrite's installation page. Choose your Entire project and select the repositories Appwrite can deploy from.
+4. Approve the installation. Entire sends you back to the Console, and your Entire project appears in the **Owner** column of the installation list.
+
+You can also connect from the Site or Function creation wizard. When the project has no Git installation yet, **Import repository** shows a **Connect Entire** button that runs the same flow.
+
+The installation asks Entire for two permissions: read access to repository contents, so Appwrite can build your code, and write access to checks, so it can report build results. It cannot create or delete repositories. Approval is per Entire project, so to deploy from a second project, click **Connect with Entire** again. Each installation appears as its own owner in the repository picker.
+
+# Step 3: Deploy a site from your Entire repository
+
+1. Go to **Sites** and click **Create site**.
+2. Under **Import repository**, open the organization menu and choose your Entire project. Entire projects are marked with the Entire icon.
+3. Find `storefront` in the list and click **Connect**.
+4. Enter a **Site name** and confirm the **Framework**. Appwrite detects it from the repository's files. If it can't, select it manually.
+5. Under **Repository**, keep **Branch** set to `main` and set **Root directory** to `./apps/web`.
+6. Add any environment variables your app needs under **Variables**.
+7. Click **Deploy**.
+
+Appwrite fetches the commit from Entire, runs your install and build commands, and serves the output on the site's domain. Because `main` is the production branch, this first deployment activates as soon as the build succeeds.
+
+# Step 4: Push to deploy and read the check run on Entire
+
+Make a change in `apps/web`, commit it, and push to `main`:
+
+```bash
+git commit -am "Update the landing page copy"
+git push
+```
+
+Entire notifies Appwrite of the push. Appwrite creates a deployment, builds it, and activates it, replacing the previous production deployment.
+
+While that happens, the commit on Entire gets a check run named after your site and your Appwrite project. A site named `storefront-web` in a project named `Acme` reports as `storefront-web (Acme)`. The check's title tracks the deployment:
+
+| Check run title | What it means |
+|---|---|
+| `Starting...` | The deployment is queued. |
+| `Building...` | The build is running. |
+| `Build succeeded.` | The deployment is ready. |
+| `Build failed.` | The build stopped with an error. Open the logs in the Console. |
+| `Build canceled.` | Someone canceled the build. |
+
+The check's summary lists the site and project, the deployment ID with a link to it in the Console, the commit, the build duration, and the preview URL. Its details link opens that deployment's own URL, so you can go from the commit to the running build in one click.
+
+# Step 5: Preview a branch before it ships
+
+Push a branch other than `main`:
+
+```bash
+git switch -c redesign-hero
+# edit apps/web
+git commit -am "Try a new hero section"
+git push -u origin redesign-hero
+```
+
+Appwrite builds this deployment but does not activate it, so production keeps serving the previous version. To open the preview, go to your site's **Deployments** tab, click the deployment, and click **Visit**.
+
+[Preview deployments](/docs/products/sites/previews) are private. Opening one requires an Appwrite account in the organization that owns the site. The first time you open one, Appwrite asks you to authorize **Appwrite Preview** so it can confirm your membership.
+
+You don't have to go to the Console to find the link. The check run on the branch's latest commit links straight to the preview, so anyone reviewing the branch on Entire can open what changed. Merging the branch into `main` and pushing deploys it to production.
+
+# Step 6: Deploy a function from the same repository
+
+1. Go to **Functions** and click **Create function**.
+2. Under **Connect Git repository**, choose your Entire project, find `storefront`, and click **Connect**.
+3. Enter a **Function name** and choose a Node.js **Runtime**.
+4. Set the **Production branch** to `main` and the **Root directory** to `functions/api`.
+5. Under **Build**, set the **Entrypoint** to `src/main.js` and the **Build commands** to `npm install`.
+6. Click **Create and deploy**.
+
+Pushes to `main` now create a function deployment that activates and handles executions once it builds. Pushes to other branches create deployments that stay inactive until you activate them. Function builds get a check run on Entire too, and its details link opens the deployment in the Console.
+
+For more on entrypoints, runtimes, and the context object, see [Develop Appwrite Functions](/docs/products/functions/develop).
+
+# Step 7: Scope builds with branch and path filters
+
+With a site and a function in one repository, every push now builds both. A copy change in `apps/web` shouldn't rebuild your API, and a fix in `functions/api` shouldn't redeploy your site. [Build triggers](/blog/post/announcing-git-deployment-triggers) fix that.
+
+For the site, go to **Sites** > your site > **Settings** > **Git repository** and add a path filter under **Build triggers**:
+
+```txt
+apps/web/**
+```
+
+For the function, go to **Functions** > your function > **Settings** > **Configuration** > **Git settings** and add:
+
+```txt
+functions/api/**
+```
+
+Branch filters work the same way. Add patterns such as `main` and `preview/**` to limit which branches create deployments at all.
+
+Appwrite works out which files a push changed by comparing the push's previous and new commits on Entire. The first push of a new branch has nothing to compare against, so it deploys regardless of path filters. After that, the filters apply to every push on the branch.
+
+# Manage the Entire connection over time
+
+- **Add repositories.** If a repository is missing from the picker, it wasn't selected during installation. Click **Update Entire permissions** under **Can't find a repository?** in the creation wizard, or open the installation's menu in **Project settings** > **Git configuration** and click **Configure**. Both reopen Appwrite's installation page on entire.io.
+- **Disconnect from Appwrite.** Open the installation's menu in **Project settings** > **Git configuration** and click **Disconnect**. The dialog lists the Sites and Functions that use the installation before you confirm.
+- **Uninstall from Entire.** If you remove Appwrite from your Entire project, Appwrite disconnects every Site and Function that deployed from it and removes the installation. Their current deployments keep serving, but new pushes stop deploying.
+
+# Troubleshooting Entire deployments
+
+- **The repository isn't listed.** Add it to the installation as described above, then click **Refresh repositories** in the wizard.
+- **There is no option to create a repository.** The wizard only offers **Create new repository** for providers that support it. For Entire, create the repository on Entire first, push your code, and connect it.
+- **No check run appears on Entire.** Check whether **Silent mode** is on for the Site or Function. With it enabled, Appwrite skips the check runs it would otherwise write for that resource.
+- **The build fails.** Open the deployment in the Console and read the build logs. Most failures come from a root directory that doesn't contain the app, or a build command that doesn't match the package manager.
+
+# Getting started with Entire on Appwrite Cloud
+
+Once the installation is in place, deploying from Entire looks like any other Git workflow on Appwrite: push to `main` to ship, push a branch to preview, and read the result on the commit. The difference is that the repository also keeps the agent sessions that produced each change, so the commit, its history, and its running deployment are all one click apart.
+
+- [Sign up for Appwrite Cloud](/sign-in) to connect your first Entire project.
+- [Deploy Sites from Git](/docs/products/sites/deploy-from-git) covers build triggers, install and build commands, and output directories.
+- [Deploy Functions from Git](/docs/products/functions/deploy-from-git) covers the same ground for serverless functions.
+- [Preview deployments](/docs/products/sites/previews) explains how branch previews are created and who can open them.
