@@ -175,7 +175,7 @@ Http::get('/v1/mock/tests/general/oauth2/user')
             $user = [
                 'id' => $id,
                 'name' => 'Canonical Email User',
-                'email' => 'oauth.' . $id . '@gmail.com',
+                'email' => \str_contains($id, '@') ? $id : 'oauth.' . $id . '@gmail.com',
                 'verified' => true,
                 'photo' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
             ];
