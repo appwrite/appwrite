@@ -93,7 +93,7 @@ impl Site {
         let s = |k: &str, d: &str, n, name| to_string(&i.or(k, Value::from(d)), &p(n, name));
         let spec = |a: &str, b: &str| i.get(a).or_else(|| i.get(b)).cloned().unwrap_or_else(|| Value::from(""));
         let id = to_string(&i.raw("id"), &p(1, "id"))?;
-        Ok(Site {
+        let site = Site {
             name: to_string(&i.raw("name"), &p(2, "name"))?,
             framework: to_string(&i.raw("framework"), &p(3, "framework"))?,
             build_runtime: to_string(&i.raw("buildRuntime"), &p(4, "buildRuntime"))?,
@@ -112,7 +112,8 @@ impl Site {
             deployment_retention: to_int(&i.or("deploymentRetention", Value::Int(0)), &p(17, "deploymentRetention"))?,
             scopes: to_array(&i.or("scopes", Value::Array(Array::new())), &p(18, "scopes"))?,
         }
-        .resource(id))
+        .resource(id);
+        Ok(super::described(site, super::description_if_string(&i)))
     }
 }
 
@@ -145,13 +146,14 @@ impl SiteEnvVar {
         let site = Site::from_array(
             &i.array("site", &param("Utopia\\Migration\\Resources\\Sites\\Site::fromArray", 1, "array"))?,
         )?;
-        Ok(SiteEnvVar {
+        let var = SiteEnvVar {
             site,
             key: to_string(&i.raw("key"), &p(3, "key"))?,
             value: to_string(&i.raw("value"), &p(4, "value"))?,
             secret: super::cast_bool(&i.or("secret", Value::Bool(false))),
         }
-        .resource(id))
+        .resource(id);
+        Ok(super::described(var, super::description_if_string(&i)))
     }
 }
 

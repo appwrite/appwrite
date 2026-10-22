@@ -33,6 +33,8 @@ pub struct Bucket {
     pub update_limits: bool,
     /// Whether image transformations are allowed.
     pub transformations: bool,
+    /// Whether image metadata is stripped from uploads.
+    pub strip_metadata: bool,
 }
 
 impl Default for Bucket {
@@ -48,6 +50,7 @@ impl Default for Bucket {
             anti_virus: false,
             update_limits: false,
             transformations: false,
+            strip_metadata: false,
         }
     }
 }
@@ -80,8 +83,11 @@ impl Bucket {
             anti_virus: b("antiVirus", 10, "antiVirus")?,
             update_limits: b("updateLimits", 11, "updateLimits")?,
             transformations: b("transformations", 12, "transformations")?,
+            strip_metadata: matches!(i.get("stripMetadata"), Some(Value::Bool(true))),
         };
-        Ok(bucket.resource(id, super::strings(&permissions)))
+        let bucket = bucket.resource(id, super::strings(&permissions));
+        bucket.set_description(super::description_if_string(&i));
+        Ok(bucket)
     }
 }
 

@@ -36,6 +36,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -101,6 +111,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -287,6 +307,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -1206,6 +1236,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -1271,6 +1311,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -1457,6 +1507,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -2376,6 +2436,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -2441,6 +2511,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -2627,6 +2707,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -3558,6 +3648,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -3623,6 +3723,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -3809,6 +3919,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -4736,6 +4856,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -4801,6 +4931,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -4987,6 +5127,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -5901,6 +6051,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -5966,6 +6126,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -6152,6 +6322,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -7067,6 +7247,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -7132,6 +7322,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -7318,6 +7518,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -8248,6 +8458,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -8313,6 +8533,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,
@@ -8499,6 +8729,16 @@
                 "$id": "key",
                 "type": "string",
                 "size": 256,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
                 "required": false,
                 "default": null,
                 "array": false,

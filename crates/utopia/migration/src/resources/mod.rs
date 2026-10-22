@@ -22,6 +22,7 @@ pub mod templates;
 use php_std::{Array, Value};
 
 use crate::error::{Error, Result};
+use crate::resource::ResourceRef;
 
 /// Reads a PHP array the way `fromArray()` does.
 pub(crate) struct Input<'a> {
@@ -100,6 +101,29 @@ pub(crate) fn to_string(value: &Value, param: &Param) -> Result<String> {
         }
         _ => Err(type_error(param, "string", value)),
     }
+}
+
+/// `->setDescription($array['description'] ?? '')`: coerced to the `string`
+/// parameter of `Resource::setDescription()`.
+pub(crate) fn description(i: &Input<'_>) -> Result<String> {
+    to_string(
+        &i.or("description", Value::from("")),
+        &param("Utopia\\Migration\\Resource::setDescription", 1, "description"),
+    )
+}
+
+/// `->setDescription(\is_string($array['description'] ?? null) ? $array['description'] : '')`.
+pub(crate) fn description_if_string(i: &Input<'_>) -> String {
+    match i.get("description") {
+        Some(Value::Str(s)) => String::from_utf8_lossy(s.as_bytes()).into_owned(),
+        _ => String::new(),
+    }
+}
+
+/// `$resource->setDescription($description)`, returning the resource.
+pub(crate) fn described(resource: ResourceRef, description: String) -> ResourceRef {
+    resource.set_description(description);
+    resource
 }
 
 /// Coerces to a `string` parameter that carries bytes (chunk data).

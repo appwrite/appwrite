@@ -160,6 +160,7 @@
       "doc": "Every public get*/is* method of a resource without required parameters, by name (Values::describe)",
       "covers": [
         "Utopia\\Migration\\Resource::getCreatedAt",
+        "Utopia\\Migration\\Resource::getDescription",
         "Utopia\\Migration\\Resource::getId",
         "Utopia\\Migration\\Resource::getMessage",
         "Utopia\\Migration\\Resource::getOriginalId",
@@ -528,6 +529,7 @@
         "Utopia\\Migration\\Resources\\Storage\\Bucket::getGroup",
         "Utopia\\Migration\\Resources\\Storage\\Bucket::getMaxFileSize",
         "Utopia\\Migration\\Resources\\Storage\\Bucket::getName",
+        "Utopia\\Migration\\Resources\\Storage\\Bucket::getStripMetadata",
         "Utopia\\Migration\\Resources\\Storage\\Bucket::getTransformations",
         "Utopia\\Migration\\Resources\\Storage\\File::getBucket",
         "Utopia\\Migration\\Resources\\Storage\\File::getChunkSize",
@@ -604,6 +606,7 @@
       "doc": "A setter ($resource->setStatus(...), ...): {\"$self\": true} for the fluent $this",
       "covers": [
         "Utopia\\Migration\\Resource::setCreatedAt",
+        "Utopia\\Migration\\Resource::setDescription",
         "Utopia\\Migration\\Resource::setId",
         "Utopia\\Migration\\Resource::setMessage",
         "Utopia\\Migration\\Resource::setOriginalId",
@@ -1052,7 +1055,11 @@
         "Utopia\\Migration\\Target::error",
         "Utopia\\Migration\\Target::cleanUp",
         "Utopia\\Migration\\Destinations\\CSV::shutdown",
-        "Utopia\\Migration\\Destinations\\JSON::shutdown"
+        "Utopia\\Migration\\Destinations\\CSV::success",
+        "Utopia\\Migration\\Destinations\\CSV::error",
+        "Utopia\\Migration\\Destinations\\JSON::shutdown",
+        "Utopia\\Migration\\Destinations\\JSON::success",
+        "Utopia\\Migration\\Destinations\\JSON::error"
       ]
     },
     "target.fetch": {
@@ -1416,6 +1423,20 @@
         "Utopia\\Migration\\Sources\\Supabase::exportFiles",
         "Utopia\\Migration\\Sources\\Supabase::getName",
         "Utopia\\Migration\\Sources\\Supabase::report"
+      ]
+    },
+    "nhost.database": {
+      "doc": "new Sources\\NHost(...) (no connection), setDatabaseAddress() when address is given: its getDatabaseHost() and getDatabaseDsn()",
+      "covers": [
+        "Utopia\\Migration\\Sources\\NHost::getDatabaseHost",
+        "Utopia\\Migration\\Sources\\NHost::setDatabaseAddress",
+        "Utopia\\Migration\\Sources\\NHost::getDatabaseDsn"
+      ]
+    },
+    "supabase.database": {
+      "doc": "new Sources\\Supabase(...) on the migration-supabase-db fixture, setDatabaseAddress() when address is given: its getDatabaseHost() and getDatabaseDsn()",
+      "covers": [
+        "Utopia\\Migration\\Sources\\Supabase::getDatabaseHost"
       ]
     },
     "nhost.status_code": {

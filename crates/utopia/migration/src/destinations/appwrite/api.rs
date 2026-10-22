@@ -221,6 +221,8 @@ impl Appwrite {
                             ("encryption", Value::Bool(b.encryption)),
                             ("antivirus", Value::Bool(b.anti_virus)),
                             ("transformations", Value::Bool(b.transformations)),
+                            ("description", v(&r.description())),
+                            ("stripMetadata", Value::Bool(b.strip_metadata)),
                         ],
                     )
                     .await?;
@@ -555,6 +557,7 @@ impl Appwrite {
                             ("key", v(&e.key)),
                             ("value", v(&e.value)),
                             ("secret", Value::Bool(e.secret)),
+                            ("description", v(&r.description())),
                         ],
                     )
                     .await?;
@@ -594,6 +597,7 @@ impl Appwrite {
                     ("runtimeSpecification", or_null(&f.specification)),
                     ("deploymentRetention", Value::Int(f.deployment_retention)),
                     ("interval", interval.map_or(Value::Null, Value::Int)),
+                    ("description", v(&r.description())),
                 ],
             )
             .await?;
@@ -693,6 +697,7 @@ impl Appwrite {
                             ("subscribe", Value::Array(t.subscribe.clone())),
                             ("qos", t.qos.map_or(Value::Null, Value::Int)),
                             ("expiry", t.expiry.map_or(Value::Null, Value::Int)),
+                            ("description", v(&r.description())),
                         ],
                     )
                     .await?;
@@ -909,6 +914,13 @@ impl Appwrite {
                     ("scheduledAt", scheduled),
                     ("replyToEmail", optional_string(d, "replyToEmail")),
                     ("replyToName", optional_string(d, "replyToName")),
+                    (
+                        "emails",
+                        match get_or_null(d, "emails") {
+                            e @ Value::Array(_) => e,
+                            _ => Value::Null,
+                        },
+                    ),
                 ],
             ),
             "sms" => (
@@ -1014,6 +1026,7 @@ impl Appwrite {
                             ("runtimeSpecification", or_null(&s.specification)),
                             ("deploymentRetention", Value::Int(s.deployment_retention)),
                             ("scopes", Value::Array(s.scopes.clone())),
+                            ("description", v(&r.description())),
                         ],
                     )
                     .await?;
@@ -1029,6 +1042,7 @@ impl Appwrite {
                             ("key", v(&e.key)),
                             ("value", v(&e.value)),
                             ("secret", Value::Bool(e.secret)),
+                            ("description", v(&r.description())),
                         ],
                     )
                     .await?;

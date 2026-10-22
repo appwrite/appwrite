@@ -542,6 +542,7 @@ pub fn construct(class: &str, args: &Json, session: &Session) -> Result<Resource
             anti_virus: n.bool("antiVirus", false)?,
             update_limits: n.bool("updateLimits", false)?,
             transformations: n.bool("transformations", false)?,
+            strip_metadata: n.bool("stripMetadata", false)?,
         }
         .resource(n.string("id", "")?, n.strings("permissions")?),
         "Storage\\File" => File::new(
@@ -746,6 +747,7 @@ pub fn describe(r: &ResourceRef) -> Json {
     let b = r.base_snapshot();
     let mut g: Vec<(&str, Json)> = vec![
         ("getCreatedAt", s(&b.created_at)),
+        ("getDescription", s(&b.description)),
         ("getGroup", s(r.group())),
         ("getId", s(&b.id)),
         ("getMessage", s(&b.message)),
@@ -1095,6 +1097,7 @@ pub fn describe(r: &ResourceRef) -> Json {
             ("getEncryption", bool(x.encryption)),
             ("getFileSecurity", bool(x.file_security)),
             ("getMaxFileSize", x.max_file_size.map_or(Json::Null, Json::from)),
+            ("getStripMetadata", bool(x.strip_metadata)),
             ("getTransformations", bool(x.transformations)),
         ]),
         Kind::File(f) => {
@@ -1151,6 +1154,7 @@ pub fn set(r: &ResourceRef, method: &str, args: &Named<'_>) -> Result<Json, Faul
         }),
         "setCreatedAt" => r.set_created_at(text(&first(args)?)),
         "setUpdatedAt" => r.set_updated_at(text(&first(args)?)),
+        "setDescription" => r.set_description(text(&first(args)?)),
         "setStart" | "setEnd" | "setData" => {
             let v = first(args)?;
             let apply = |c: &mut Chunk| match method {

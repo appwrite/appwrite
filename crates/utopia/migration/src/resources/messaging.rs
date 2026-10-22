@@ -226,6 +226,6 @@ impl Topic {
             expiry: to_opt_int(&i.or("expiry", Value::Null), &p(7, "expiry"))?,
             ..topic
         };
-        Ok(topic.resource(id, created, updated))
+        Ok(super::described(topic.resource(id, created, updated), super::description_if_string(&i)))
     }
 }

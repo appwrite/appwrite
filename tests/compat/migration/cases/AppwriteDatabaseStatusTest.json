@@ -36,6 +36,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -270,6 +280,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -524,6 +544,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -769,6 +799,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -1028,6 +1068,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -1538,6 +1588,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -2036,6 +2096,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,
@@ -2546,6 +2616,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -3050,6 +3130,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -3442,6 +3532,16 @@
                 "filters": []
               },
               {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
                 "$id": "enabled",
                 "type": "boolean",
                 "size": 0,
@@ -3828,6 +3928,16 @@
                 "type": "string",
                 "size": 256,
                 "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "description",
+                "type": "string",
+                "size": 1024,
+                "required": false,
                 "default": null,
                 "array": false,
                 "signed": true,

@@ -10527,6 +10527,373 @@
           "expect": false
         }
       ]
+    },
+    {
+      "name": "testCSVExportFailureLeavesNoFile",
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "test_db"
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "test_table",
+              "id": "test_table_id"
+            }
+          },
+          "bind": "tbl",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "special_row",
+              "table": {
+                "$ref": "tbl"
+              },
+              "data": {
+                "quote_field": "Text with \"quotes\"",
+                "comma_field": "Text, with, commas",
+                "newline_field": "Text with\nnewlines",
+                "mixed_field": "Text with \"quotes\", commas, and\\nnewlines"
+              }
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "csv_destination.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/out",
+            "resource_id": "test_db:test_table_id",
+            "directory": "",
+            "filename": "test_db_test_table_id"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "r"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "special_row",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "shutdown"
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/out/test_db_test_table_id.csv"
+          },
+          "expect": true
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "error"
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/out/test_db_test_table_id.csv"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testCSVExportFailureKeepsAFileItDoesNotOwn",
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "test_db"
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db"
+              },
+              "name": "test_table",
+              "id": "test_table_id"
+            }
+          },
+          "bind": "tbl",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "special_row",
+              "table": {
+                "$ref": "tbl"
+              },
+              "data": {
+                "quote_field": "Text with \"quotes\"",
+                "comma_field": "Text, with, commas",
+                "newline_field": "Text with\nnewlines",
+                "mixed_field": "Text with \"quotes\", commas, and\\nnewlines"
+              }
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "csv_destination.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/out",
+            "resource_id": "test_db:test_table_id",
+            "directory": "",
+            "filename": "test_db_test_table_id"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {},
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.register_cache",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "destination.import",
+          "args": {
+            "destination": {
+              "$ref": "d"
+            },
+            "resources": [
+              {
+                "$ref": "r"
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "row",
+                "id": "special_row",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "shutdown"
+          },
+          "expect": null
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "success"
+          },
+          "expect": null
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "d"
+            },
+            "hook": "error"
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/out/test_db_test_table_id.csv"
+          },
+          "expect": true
+        },
+        {
+          "op": "csv_destination.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/out",
+            "resource_id": "test_db:test_table_id",
+            "directory": "",
+            "filename": "test_db_test_table_id"
+          },
+          "bind": "retry",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.lifecycle",
+          "args": {
+            "target": {
+              "$ref": "retry"
+            },
+            "hook": "error"
+          },
+          "expect": null
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/out/test_db_test_table_id.csv"
+          },
+          "expect": true
+        }
+      ]
     }
   ]
 }
