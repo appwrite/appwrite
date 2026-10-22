@@ -1091,6 +1091,13 @@ class Deletes extends Action
                 Console::error('Failed to delete cache storage directory: ' . $th->getMessage());
             }
 
+            try {
+                $deviceForImports = new TelemetryDevice($telemetry, getDevice(APP_STORAGE_IMPORTS . '/app-' . $projectId));
+                $deviceForImports->delete($deviceForImports->getRoot(), true);
+            } catch (Throwable $th) {
+                Console::error('Failed to delete imports storage directory: ' . $th->getMessage());
+            }
+
         } finally {
             $dbForProject->setValidation(true);
         }
