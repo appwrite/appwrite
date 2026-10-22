@@ -137,6 +137,19 @@ class Executor
             $version = 'v5';
         }
 
+        // Mitigate Bun runtime memory leak when logging is enabled (Issue #14419)
+        $isBun = \str_contains($image, '/bun:') || \str_contains($image, 'bun-');
+        if ($isBun) {
+            if (System::getEnv('_APP_FUNCTIONS_BUN_LOGGING', 'enabled') === 'disabled') {
+                $logging = false;
+            }
+
+            if ($memory === 0) {
+                $defaultMemory = \defined('APP_COMPUTE_MEMORY_DEFAULT') ? APP_COMPUTE_MEMORY_DEFAULT : 512;
+                $memory = (int) System::getEnv('_APP_FUNCTIONS_BUN_MEMORY_LIMIT', (string) $defaultMemory);
+            }
+        }
+
         $params = [
             'runtimeId' => $runtimeId,
             'variables' => $variables,

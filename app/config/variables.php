@@ -1347,6 +1347,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_FUNCTIONS_BUN_LOGGING',
+                'description' => 'Control execution logging for Bun functions (enabled/disabled). Set to disabled to prevent memory leaks in Bun runtime during continuous executions.',
+                'introduction' => '1.7.0',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_EXECUTOR_SECRET',
                 'description' => 'The secret key used by Appwrite to communicate with the function executor. Make sure to change this.',
                 'introduction' => '0.13.0',
