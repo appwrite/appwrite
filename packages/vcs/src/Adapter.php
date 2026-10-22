@@ -32,7 +32,7 @@ abstract class Adapter
     public const WEBHOOK_SCOPE_INSTALLATION = 'installation';
     public const WEBHOOK_SCOPE_REPOSITORY = 'repository';
 
-    protected bool $selfSigned = true;
+    protected bool $selfSigned = false;
 
     protected string $endpoint;
 
@@ -42,6 +42,19 @@ abstract class Adapter
      * @var array<string, string>
      */
     protected $headers = [];
+
+    /**
+     * Accept self-signed TLS certificates, for self-hosted providers on a private CA
+     */
+    public function setSelfSigned(bool $selfSigned): void
+    {
+        $this->selfSigned = $selfSigned;
+    }
+
+    public function isSelfSigned(): bool
+    {
+        return $this->selfSigned;
+    }
 
     /**
      * Get Adapter Name
@@ -516,7 +529,6 @@ abstract class Adapter
             ->withConnectTimeout(0)
             ->withTimeout(15);
 
-        // Allow self signed certificates
         if ($this->selfSigned) {
             $client = $client->withSslVerification(false);
         }
