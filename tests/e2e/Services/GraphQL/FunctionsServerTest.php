@@ -397,7 +397,7 @@ final class FunctionsServerTest extends Scope
                 'name' => 'Test Function Updated',
                 'execute' => [Role::any()->toString()],
                 'entrypoint' => 'index.php',
-                'runtime' => 'node-22', // A runtime _APP_FUNCTIONS_RUNTIMES allows, since an update may only move to one
+                'runtime' => 'php-8.0',
                 'vars' => [
                     'name' => 'John Doe',
                     'age' => 42,
