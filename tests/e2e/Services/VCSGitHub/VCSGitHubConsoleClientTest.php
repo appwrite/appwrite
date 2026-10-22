@@ -111,6 +111,30 @@ final class VCSGitHubConsoleClientTest extends Scope
         $this->assertNotEmpty($response['body']['installationId']);
     }
 
+    public function testGitHubCallbackRejectsUnverifiedInstallation(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $failure = 'http://localhost/console/project-' . $projectId . '/failure';
+        $before = $this->countGitHubInstallationsHelper($projectId);
+
+        /**
+         * Test for FAILURE
+         */
+        $missingCode = $this->client->call(Client::METHOD_GET, '/vcs/github/callback', array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'installation_id' => $this->providerInstallationId,
+            'setup_action' => 'install',
+            'state' => $this->buildGitHubState($projectId, $failure),
+        ], true, false);
+
+        $this->assertSame(301, $missingCode['headers']['status-code']);
+        $this->assertStringStartsWith($failure . '?error=', (string) $missingCode['headers']['location']);
+        $this->assertStringContainsString('authorization code', \urldecode((string) $missingCode['headers']['location']));
+
+        $this->assertSame($before, $this->countGitHubInstallationsHelper($projectId));
+    }
+
     public function testGitHubCallbackRejectsUnboundState(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -171,6 +195,21 @@ final class VCSGitHubConsoleClientTest extends Scope
             'setup_action' => 'request',
             'state' => $state,
         ], true, false);
+    }
+
+    private function countGitHubInstallationsHelper(string $projectId): int
+    {
+        $installations = $this->client->call(Client::METHOD_GET, '/vcs/installations', array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('provider', ['github'])->toString(),
+            ],
+        ]);
+
+        $this->assertSame(200, $installations['headers']['status-code']);
+
+        return $installations['body']['total'];
     }
 
     public function testGetInstallation(): void
