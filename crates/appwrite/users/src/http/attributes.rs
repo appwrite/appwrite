@@ -8,6 +8,7 @@ use utopia_http::Response;
 use utopia_validators::{AllOf, ArrayList, Boolean, Text, Validator, php};
 
 use appwrite_core::database::documents::{self, User, text};
+use appwrite_core::database::filters;
 use appwrite_core::datetime;
 use appwrite_core::platform::Context;
 use appwrite_core::response::UserModel;
@@ -231,7 +232,6 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
             return Err(Error::new(ErrorType::UserTargetAlreadyExists));
         }
     }
-    let old_email = user.email.clone();
     let meta = base::Metadata::of(Some(&email));
     base::check_email_policy(ctx, &meta)?;
 
@@ -239,15 +239,75 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
     updates.put("email", DbValue::from(email.as_str()));
     updates.put("emailVerification", DbValue::Bool(false));
     meta.apply(&mut updates);
-    let result = async {
-        let mut updated = base::update_user(ctx, &user.id, updates, &[base::TARGETS]).await?;
-        sync_target(ctx, &mut updated, old_email.as_deref(), &email, "email").await?;
-        Ok::<User, Error>(updated)
-    }
+
+    // Under the user's row lock: the address it had then moves (or loses)
+    // its target, and a change of address voids the email-bound tokens
+    // sent to the old one.
+    let locked = Box::pin(db.with_transaction(|| {
+        let db = db.clone();
+        let id = user.id.clone();
+        let updates = updates.clone();
+        let email = email.clone();
+        Box::pin(async move {
+            let current = db.get_document("users", &id, Vec::new(), true).await?;
+            if current.is_empty() {
+                return Ok(None);
+            }
+            let locked_email = documents::Attributes::string(&current, "email");
+            let skipped = base::skipped(&[]);
+            let mut updated =
+                db.skip_filters(Some(skipped.as_slice()), db.update_document("users", &id, updates)).await?;
+            let targets = filters::sub_query(&db, base::TARGETS, &updated).await?;
+            updated.put("targets", targets);
+            let mut user = User::from(&updated);
+            let old = locked_email.as_deref().and_then(|l| user.targets.iter().position(|t| t.identifier == l));
+            match old {
+                Some(index) if !email.is_empty() => {
+                    let mut moved = Document::default();
+                    moved.put("identifier", DbValue::from(email.as_str()));
+                    db.update_document("targets", &user.targets[index].id, moved).await?;
+                    user.targets[index].identifier = email.clone();
+                }
+                // The deleted target stays in the response (PHP keeps it in memory).
+                Some(index) => {
+                    db.delete_document("targets", &user.targets[index].id).await?;
+                }
+                None if !email.is_empty() => {
+                    let target = db.create_document("targets", base::new_target(&user, "email", &email)).await?;
+                    user.targets.push((&target).into());
+                }
+                None => {}
+            }
+            if locked_email.as_deref() != Some(email.as_str()) && user.sequence != 0 {
+                db.delete_documents(
+                    "tokens",
+                    vec![
+                        Query::equal("userInternalId", [user.sequence.to_string()]),
+                        Query::equal("type", EMAIL_BOUND_TOKENS),
+                    ],
+                    utopia_database::database::BATCH_SIZE,
+                    None,
+                )
+                .await?;
+            }
+            Ok(Some(user))
+        })
+    }))
     .await;
-    let updated = result.map_err(|e| duplicate_as(e, ErrorType::UserEmailAlreadyExists))?;
+    let updated = match locked {
+        Ok(Some(updated)) => updated,
+        Ok(None) => return Err(Error::new(ErrorType::UserNotFound)),
+        Err(e) if e.is_a(Kind::Duplicate) => return Err(Error::new(ErrorType::UserEmailAlreadyExists)),
+        Err(e) => return Err(e.into()),
+    };
+    db.purge_cached_document("users", &updated.id).await?;
     respond(ctx, &updated).await
 }
+
+/// The token types bound to the address they were sent to: recovery,
+/// recovery OTP, verification, verification OTP, magic URL and email OTP
+/// (`TOKEN_TYPE_*`).
+const EMAIL_BOUND_TOKENS: [i64; 6] = [3, 11, 2, 10, 5, 9];
 
 /// `PATCH /v1/users/:userId/phone`.
 pub async fn phone(ctx: &mut Context) -> Result<Response> {

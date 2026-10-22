@@ -68,7 +68,7 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
     let header_project = ctx.request.header_or_empty("x-appwrite-project").to_owned();
     let supplied_project = resources::project::resolve(ctx, &platform_db, &header_project).await?;
     // -- rule (the custom domain the request comes from) -------------------
-    ctx.rule_domain = hostnames::rule_domain(&state, &platform_db, &ctx.project, &ctx.request).await?;
+    ctx.rule = hostnames::rule_domain(&state, &platform_db, &ctx.project, &ctx.request).await?;
     resources::mode::resolve(ctx, &supplied_project);
     admin_console::admin_console(ctx)?;
     request::formats(ctx);
@@ -77,7 +77,7 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
     let team_sequence = resources::key::resolve(ctx, &platform_db, &header_project, &key_header).await?;
     request::filters(ctx).await?;
     request::force_https(ctx)?;
-    security::security(ctx, &key_header)?;
+    security::security(ctx)?;
     certificates::certify(ctx).await?;
     auth::auth(ctx, &platform_db, &header_project, &team_sequence).await?;
 
@@ -93,9 +93,7 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
 
 /// Builds the final response (success or error) and schedules shutdown work.
 pub(super) fn finalize(mut ctx: Context, result: Result<Response>) -> Response {
-    let state = ctx.state.clone();
-    let allowed =
-        hostnames::allowed_hostnames(&state, &ctx.project, ctx.project_found, &ctx.request, ctx.rule_domain.as_deref());
+    let allowed = ctx.allowed_hostnames();
     let cors = network::cors_headers(ctx.request.header_or_empty("origin"), &allowed);
     let https = ctx
         .request

@@ -419,7 +419,7 @@ pub fn token_payload(token: &Token) -> Bytes {
         secret: None,
         phrase: "",
         reveal: false,
-        render: Render { sensitive: true, format: None },
+        render: Render { sensitive: true, hide_credentials: false, format: None },
     }))
 }
 

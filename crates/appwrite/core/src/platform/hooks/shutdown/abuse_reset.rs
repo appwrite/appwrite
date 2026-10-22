@@ -53,7 +53,7 @@ mod abuse_reset_tests {
 
     fn params(email: &str) -> Vec<(String, String)> {
         vec![
-            ("{url}".to_owned(), "localhost/v1/account/sessions/email".to_owned()),
+            ("{url}".to_owned(), "/v1/account/sessions/email".to_owned()),
             ("{ip}".to_owned(), "127.0.0.1".to_owned()),
             ("{param-email}".to_owned(), email.to_owned()),
         ]

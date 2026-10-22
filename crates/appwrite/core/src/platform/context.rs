@@ -82,6 +82,9 @@ pub struct Context {
     /// Impersonated user (roles come from this user when set).
     pub target_user: Option<User>,
     pub key: Option<ApiKey>,
+    /// `$response->setHideCredentials(true)`: the impersonator's discovery
+    /// grant authorises the read.
+    pub hide_credentials: bool,
     pub role: String,
     pub roles: Vec<String>,
     pub scopes: Vec<String>,
@@ -103,7 +106,7 @@ pub struct Context {
     pub secured: bool,
     /// The domain of the custom domain rule the request comes from, when it
     /// serves the project (the `rule` resource).
-    pub rule_domain: Option<String>,
+    pub rule: Option<hostnames::Rule>,
     /// The abuse keys' parameters (`{projectId}`, `{ip}`, ...), for the
     /// limits' reset after the action.
     pub abuse_params: Vec<(String, String)>,
@@ -150,7 +153,7 @@ impl Context {
             project: console,
             project_found: true,
             secured: false,
-            rule_domain: None,
+            rule: None,
             abuse_params: Vec::new(),
             account_keys: Vec::new(),
             failed: false,
@@ -164,6 +167,7 @@ impl Context {
             session: None,
             target_user: None,
             key: None,
+            hide_credentials: false,
             role: roles::GUESTS.to_owned(),
             roles: vec!["any".to_owned()],
             scopes: Vec::new(),
@@ -204,7 +208,11 @@ impl Context {
 
     /// Whether sensitive fields are visible (API keys and privileged users).
     pub fn render(&self) -> Render {
-        Render { sensitive: roles::is_key(&self.roles) || roles::is_privileged(&self.roles), format: self.format }
+        Render {
+            sensitive: roles::is_key(&self.roles) || roles::is_privileged(&self.roles),
+            hide_credentials: self.hide_credentials || self.target_user.is_some(),
+            format: self.format,
+        }
     }
 
     pub fn is_key(&self) -> bool {
@@ -389,26 +397,21 @@ impl Context {
             &self.project,
             self.project_found,
             &self.request,
-            self.rule_domain.as_deref(),
+            self.rule.as_ref(),
+            self.mode == Mode::Admin,
         )
     }
 
     /// The `allowedSchemes` resource.
     pub fn allowed_schemes(&self) -> Vec<String> {
-        hostnames::allowed_schemes(&self.state, &self.project, self.project_found)
+        hostnames::allowed_schemes(&self.state, &self.project, self.project_found, self.mode == Mode::Admin)
     }
 
     /// The `redirectValidator` resource: `url` must be on an allowed
     /// hostname or scheme. The error is the validator's description.
     pub fn validate_redirect(&self, url: &str) -> std::result::Result<(), String> {
-        let hosts = hostnames::allowed_hostnames(
-            &self.state,
-            &self.project,
-            self.project_found,
-            &self.request,
-            self.rule_domain.as_deref(),
-        );
-        let schemes = hostnames::allowed_schemes(&self.state, &self.project, self.project_found);
+        let hosts = self.allowed_hostnames();
+        let schemes = self.allowed_schemes();
         crate::network::validate_redirect(url, &hosts, &schemes)
     }
 

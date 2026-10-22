@@ -61,7 +61,7 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
     let identities = db.find("identities", queries, PermissionType::Read).await?;
     let total = if include_total { db.count("identities", filters, Some(LIMIT_COUNT)).await? } else { 0 };
     let identities: Vec<Identity> = documents::all(&identities);
-    Ok(ctx.ok(&IdentityListModel { total, identities: &identities }))
+    Ok(ctx.ok(&IdentityListModel { total, identities: &identities, render: ctx.render() }))
 }
 
 /// `DELETE /v1/account/identities/:identityId`.
@@ -74,6 +74,6 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
     db.delete_document("identities", &identity_id).await?;
     ctx.event_param("userId", identity.user_id.clone().unwrap_or_default());
     ctx.event_param("identityId", identity.id.clone());
-    ctx.event_payload(&IdentityModel { identity: &identity });
+    ctx.event_payload(&IdentityModel { identity: &identity, render: ctx.render() });
     Ok(ctx.no_content())
 }
