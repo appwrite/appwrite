@@ -17,7 +17,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\Integer;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 
 class Create extends Base
@@ -56,10 +56,10 @@ class Create extends Base
             ->param('email', '', new EmailValidator(), 'User email.')
             ->param('password', '', new Password(), 'User password hashed using Scrypt.')
             ->param('passwordSalt', '', new Text(128), 'Optional salt used to hash password.')
-            ->param('passwordCpu', 8, new Integer(), 'Optional CPU cost used to hash password.', example: '8')
-            ->param('passwordMemory', 14, new Integer(), 'Optional memory cost used to hash password.', example: '65536')
-            ->param('passwordParallel', 1, new Integer(), 'Optional parallelization cost used to hash password.', example: '1')
-            ->param('passwordLength', 64, new Integer(), 'Optional hash length used to hash password.', example: '64')
+            ->param('passwordCpu', 8, new Range(2, 65536), 'Optional CPU cost used to hash password. Maximum is 65536.', example: '8')
+            ->param('passwordMemory', 14, new Range(1, 16), 'Optional memory cost used to hash password. Maximum is 16.', example: '14')
+            ->param('passwordParallel', 1, new Range(1, 4), 'Optional parallelization cost used to hash password. Maximum is 4.', example: '1')
+            ->param('passwordLength', 64, new Range(16, 128), 'Optional hash length used to hash password. Must be between 16 and 128.', example: '64')
             ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
             ->inject('response')
             ->inject('project')

@@ -1880,7 +1880,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => 'password',
             'name' => 'Users Recovery Email',
@@ -2057,6 +2057,114 @@ trait UsersBase
 
         $this->assertEquals($session['headers']['status-code'], 201);
         $this->updateProjectinvalidateSessionsProperty(false);
+    }
+
+    public function testUpdateUserPasswordEmpty(): void
+    {
+        $hash = '$2y$04$zsTzx5Gh9luG1E6kRKwKm.FyJ4YLHDgA1NYC.tnKgyToZfrarfJtu';
+
+        $user = $this->client->call(Client::METHOD_POST, '/users/bcrypt', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => Id::unique(),
+            'email' => 'password-empty-' . \uniqid() . '@appwrite.io',
+            'password' => $hash,
+        ]);
+
+        $this->assertSame(201, $user['headers']['status-code']);
+        $this->assertSame('bcrypt', $user['body']['hash']);
+
+        $userId = $user['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/password', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'password' => '',
+        ]);
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('', $response['body']['password']);
+
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $userId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertSame(200, $user['headers']['status-code']);
+        $this->assertSame('', $user['body']['password']);
+        $this->assertSame('bcrypt', $user['body']['hash']);
+    }
+
+    public function testCreateUserHashLimits(): void
+    {
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        /**
+         * Test for SUCCESS
+         */
+        $user = $this->client->call(Client::METHOD_POST, '/users/argon2', $headers, [
+            'userId' => Id::unique(),
+            'email' => 'argon2-limit-' . \uniqid() . '@appwrite.io',
+            'password' => '$argon2id$v=19$m=1024,t=2,p=1$TmtWSjZ3aE5keWNEdFlhcg$KjIALjgKcbZxSfJh1RkK6/9wqD+WbGVRjzTJ3BIQaBg',
+        ]);
+
+        $this->assertSame(201, $user['headers']['status-code']);
+        $this->assertSame('argon2', $user['body']['hash']);
+
+        /**
+         * Test for FAILURE
+         */
+        $imports = [
+            '/users/bcrypt' => [
+                '$2y$16$xX/myGbFU.ZSKHSi6EHdBOySTdYm8QxBLXmOPHrYMwV0mHRBBSBOq',
+                '$argon2id$v=19$m=1024,t=2,p=1$TmtWSjZ3aE5keWNEdFlhcg$KjIALjgKcbZxSfJh1RkK6/9wqD+WbGVRjzTJ3BIQaBg',
+            ],
+            '/users/argon2' => [
+                '$argon2id$v=19$m=4194304,t=2,p=1$TmtWSjZ3aE5keWNEdFlhcg$KjIALjgKcbZxSfJh1RkK6/9wqD+WbGVRjzTJ3BIQaBg',
+                '$argon2id$v=19$m=1024,t=64,p=1$TmtWSjZ3aE5keWNEdFlhcg$KjIALjgKcbZxSfJh1RkK6/9wqD+WbGVRjzTJ3BIQaBg',
+            ],
+            '/users/phpass' => [
+                '$P$Sr387rwferoKN7uwHZqNMu98q3U8RO.',
+                '$2a$31$xX/myGbFU.ZSKHSi6EHdBOySTdYm8QxBLXmOPHrYMwV0mHRBBSBOq',
+            ],
+        ];
+
+        foreach ($imports as $path => $hashes) {
+            foreach ($hashes as $hash) {
+                $response = $this->client->call(Client::METHOD_POST, $path, $headers, [
+                    'userId' => Id::unique(),
+                    'email' => 'hash-limit-' . \uniqid() . '@appwrite.io',
+                    'password' => $hash,
+                ]);
+
+                $this->assertSame(400, $response['headers']['status-code'], $path . ' accepted ' . $hash);
+                $this->assertSame('general_argument_invalid', $response['body']['type']);
+            }
+        }
+
+        $costs = [
+            ['passwordCpu' => 1048576],
+            ['passwordMemory' => 64],
+            ['passwordParallel' => 64],
+            ['passwordLength' => 4096],
+        ];
+
+        foreach ($costs as $cost) {
+            $response = $this->client->call(Client::METHOD_POST, '/users/scrypt', $headers, array_merge([
+                'userId' => Id::unique(),
+                'email' => 'scrypt-limit-' . \uniqid() . '@appwrite.io',
+                'password' => '3fdef49701bc4cfaacd551fe017283513284b4731e6945c263246ef948d3cf63b5d269c31fd697246085111a428245e24a4ddc6b64c687bc60a8910dbafc1d5b',
+                'passwordSalt' => 'appwrite',
+            ], $cost));
+
+            $this->assertSame(400, $response['headers']['status-code'], \array_key_first($cost) . ' was accepted');
+            $this->assertSame('general_argument_invalid', $response['body']['type']);
+        }
     }
 
     #[Retry(count: 1)]
