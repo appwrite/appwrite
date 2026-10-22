@@ -240,7 +240,7 @@ Http::patch('/v1/mock/tests/general/oauth2/native')
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, bool $enabled, string $provider, ?string $appId, array $clientIds, Response $response, Database $dbForPlatform) {
-        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+        $isDevelopment = System::getEnv('_APP_ENV', 'production') === 'development';
 
         if (!$isDevelopment) {
             throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
@@ -368,7 +368,7 @@ Http::post('/v1/mock/api-key-unprefixed')
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
-        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+        $isDevelopment = System::getEnv('_APP_ENV', 'production') === 'development';
 
         if (!$isDevelopment) {
             throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
@@ -421,7 +421,7 @@ Http::get('/v1/mock/github/callback')
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $providerInstallationId, string $projectId, VcsFactory $vcsFactory, Document $project, Response $response, Database $dbForPlatform) {
-        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+        $isDevelopment = System::getEnv('_APP_ENV', 'production') === 'development';
 
         if (!$isDevelopment) {
             throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
