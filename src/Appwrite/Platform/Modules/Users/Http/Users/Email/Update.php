@@ -143,41 +143,47 @@ class Update extends Action
         ;
 
         try {
-            $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
-                'email' => $user->getAttribute('email'),
-                'emailVerification' => $user->getAttribute('emailVerification'),
-                'emailCanonical' => $user->getAttribute('emailCanonical'),
-                'emailIsCanonical' => $user->getAttribute('emailIsCanonical'),
-                'emailIsCorporate' => $user->getAttribute('emailIsCorporate'),
-                'emailIsDisposable' => $user->getAttribute('emailIsDisposable'),
-                'emailIsFree' => $user->getAttribute('emailIsFree'),
-            ]));
-            $oldTarget = \array_find($user->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('identifier') === $oldEmail);
+            $user = $dbForProject->withTransaction(function () use ($dbForProject, $user, $oldEmail, $email) {
+                $current = $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+                if ($current->isEmpty()) {
+                    throw new Exception(Exception::USER_NOT_FOUND);
+                }
 
-            if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                if (\strlen($email) !== 0) {
-                    $dbForProject->updateDocument('targets', $oldTarget->getId(), new Document(['identifier' => $email]));
-                    $oldTarget->setAttribute('identifier', $email);
+                $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
+                    'email' => $user->getAttribute('email'),
+                    'emailVerification' => $user->getAttribute('emailVerification'),
+                    'emailCanonical' => $user->getAttribute('emailCanonical'),
+                    'emailIsCanonical' => $user->getAttribute('emailIsCanonical'),
+                    'emailIsCorporate' => $user->getAttribute('emailIsCorporate'),
+                    'emailIsDisposable' => $user->getAttribute('emailIsDisposable'),
+                    'emailIsFree' => $user->getAttribute('emailIsFree'),
+                ]));
+                $oldTarget = \array_find($user->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('identifier') === $oldEmail);
+
+                if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
+                    if (\strlen($email) !== 0) {
+                        $dbForProject->updateDocument('targets', $oldTarget->getId(), new Document(['identifier' => $email]));
+                        $oldTarget->setAttribute('identifier', $email);
+                    } else {
+                        $dbForProject->deleteDocument('targets', $oldTarget->getId());
+                    }
                 } else {
-                    $dbForProject->deleteDocument('targets', $oldTarget->getId());
+                    if (\strlen($email) !== 0) {
+                        $target = $dbForProject->createDocument('targets', new Document([
+                            '$permissions' => [
+                                Permission::read(Role::user($user->getId())),
+                                Permission::update(Role::user($user->getId())),
+                                Permission::delete(Role::user($user->getId())),
+                            ],
+                            'userId' => $user->getId(),
+                            'userInternalId' => $user->getSequence(),
+                            'providerType' => 'email',
+                            'identifier' => $email,
+                        ]));
+                        $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+                    }
                 }
-            } else {
-                if (\strlen($email) !== 0) {
-                    $target = $dbForProject->createDocument('targets', new Document([
-                        '$permissions' => [
-                            Permission::read(Role::user($user->getId())),
-                            Permission::update(Role::user($user->getId())),
-                            Permission::delete(Role::user($user->getId())),
-                        ],
-                        'userId' => $user->getId(),
-                        'userInternalId' => $user->getSequence(),
-                        'providerType' => 'email',
-                        'identifier' => $email,
-                    ]));
-                    $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
-                }
-            }
-            if ($oldEmail !== $email) {
+
                 $sequence = $user->getSequence();
                 if ($sequence !== '' && $sequence !== null) {
                     $dbForProject->deleteDocuments('tokens', [
@@ -192,7 +198,9 @@ class Update extends Action
                         ]),
                     ]);
                 }
-            }
+
+                return $user;
+            });
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);

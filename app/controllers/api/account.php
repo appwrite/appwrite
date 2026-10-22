@@ -3885,13 +3885,19 @@ Http::patch('/v1/account/email')
         }
 
         try {
-            $user = $dbForProject->updateDocument('users', $user->getId(), $user);
-            $oldTarget = \array_find($user->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('identifier') === $oldEmail);
+            $user = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $user, $oldEmail, $email) {
+                $current = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
+                if ($current->isEmpty()) {
+                    throw new Exception(Exception::USER_NOT_FOUND);
+                }
 
-            if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email)));
-            }
-            if ($oldEmail !== $email) {
+                $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+                $oldTarget = \array_find($user->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('identifier') === $oldEmail);
+
+                if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
+                    $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email)));
+                }
+
                 $sequence = $user->getSequence();
                 if ($sequence !== '' && $sequence !== null) {
                     $authorization->skip(fn () => $dbForProject->deleteDocuments('tokens', [
@@ -3906,7 +3912,9 @@ Http::patch('/v1/account/email')
                         ]),
                     ]));
                 }
-            }
+
+                return $user;
+            });
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST);
@@ -4209,12 +4217,45 @@ Http::post('/v1/account/recovery')
 
         $authorization->addRole(Role::user($userId)->toString());
 
-        $recovery = $dbForProject->createDocument('tokens', $recovery
-            ->setAttribute('$permissions', [
-                Permission::read(Role::user($userId)),
-                Permission::update(Role::user($userId)),
-                Permission::delete(Role::user($userId)),
-            ]));
+        $recovery->setAttribute('$permissions', [
+            Permission::read(Role::user($userId)),
+            Permission::update(Role::user($userId)),
+            Permission::delete(Role::user($userId)),
+        ]);
+
+        if ($deliverable) {
+            $created = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $profile, $email, $recovery) {
+                $current = $dbForProject->getDocument('users', $profile->getId(), forUpdate: true);
+                if (
+                    $current->isEmpty()
+                    || $current->getAttribute('status') === false
+                    || \strtolower((string) $current->getAttribute('email')) !== $email
+                ) {
+                    return new Document();
+                }
+
+                return $dbForProject->createDocument('tokens', $recovery);
+            }));
+
+            if ($created->isEmpty()) {
+                $deliverable = false;
+                $dummyUserId = Id::unique();
+                $recovery
+                    ->setAttribute('userId', $dummyUserId)
+                    ->setAttribute('userInternalId', Id::unique())
+                    ->setAttribute('$permissions', [
+                        Permission::read(Role::user($dummyUserId)),
+                        Permission::update(Role::user($dummyUserId)),
+                        Permission::delete(Role::user($dummyUserId)),
+                    ]);
+                $authorization->addRole(Role::user($dummyUserId)->toString());
+                $recovery = $dbForProject->createDocument('tokens', $recovery);
+            } else {
+                $recovery = $created;
+            }
+        } else {
+            $recovery = $dbForProject->createDocument('tokens', $recovery);
+        }
 
         if ($deliverable) {
             $dbForProject->purgeCachedDocument('users', $profile->getId());
@@ -4586,12 +4627,45 @@ Http::post('/v1/account/recovery/otp')
 
         $authorization->addRole(Role::user($userId)->toString());
 
-        $recovery = $dbForProject->createDocument('tokens', $recovery
-            ->setAttribute('$permissions', [
-                Permission::read(Role::user($userId)),
-                Permission::update(Role::user($userId)),
-                Permission::delete(Role::user($userId)),
-            ]));
+        $recovery->setAttribute('$permissions', [
+            Permission::read(Role::user($userId)),
+            Permission::update(Role::user($userId)),
+            Permission::delete(Role::user($userId)),
+        ]);
+
+        if ($deliverable) {
+            $created = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $profile, $email, $recovery) {
+                $current = $dbForProject->getDocument('users', $profile->getId(), forUpdate: true);
+                if (
+                    $current->isEmpty()
+                    || $current->getAttribute('status') === false
+                    || \strtolower((string) $current->getAttribute('email')) !== $email
+                ) {
+                    return new Document();
+                }
+
+                return $dbForProject->createDocument('tokens', $recovery);
+            }));
+
+            if ($created->isEmpty()) {
+                $deliverable = false;
+                $dummyUserId = Id::unique();
+                $recovery
+                    ->setAttribute('userId', $dummyUserId)
+                    ->setAttribute('userInternalId', Id::unique())
+                    ->setAttribute('$permissions', [
+                        Permission::read(Role::user($dummyUserId)),
+                        Permission::update(Role::user($dummyUserId)),
+                        Permission::delete(Role::user($dummyUserId)),
+                    ]);
+                $authorization->addRole(Role::user($dummyUserId)->toString());
+                $recovery = $dbForProject->createDocument('tokens', $recovery);
+            } else {
+                $recovery = $created;
+            }
+        } else {
+            $recovery = $dbForProject->createDocument('tokens', $recovery);
+        }
 
         if ($deliverable) {
             $dbForProject->purgeCachedDocument('users', $profile->getId());

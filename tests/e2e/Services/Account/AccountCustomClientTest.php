@@ -1558,6 +1558,15 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $account['headers']['status-code']);
         $this->assertEquals($newEmail, $account['body']['email']);
 
+        $retry = $this->client->call(Client::METHOD_PATCH, '/account/email', array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $cookie,
+        ]), [
+            'email' => $newEmail,
+            'password' => $password,
+        ]);
+        $this->assertEquals(200, $retry['headers']['status-code']);
+        $this->assertEquals($newEmail, $retry['body']['email']);
+
         $stale = $this->client->call(Client::METHOD_PUT, '/account/recovery', $headers, [
             'userId' => $userId,
             'secret' => $secret,
