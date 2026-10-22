@@ -443,6 +443,24 @@ final class AbuseTest extends Scope
         $this->assertSame(429, $response['headers']['status-code'], 'A guest querying past the limit is throttled');
     }
 
+    private function assertAvatarFetchLimited(string $path): void
+    {
+        $max = 60;
+        $headers = [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-for' => '198.51.100.' . \random_int(1, 254),
+        ];
+
+        $this->startCountingInOneWindow(60);
+        for ($i = 0; $i < $max; $i++) {
+            $response = $this->client->call(Client::METHOD_GET, $path, $headers, ['url' => 'http://127.0.0.1/?request=' . $i]);
+            $this->assertNotSame(429, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_GET, $path, $headers, ['url' => 'http://127.0.0.1/?request=' . $max]);
+        $this->assertSame(429, $response['headers']['status-code'], 'A guest fetching past the limit is throttled');
+    }
+
     private function createCollectionOrTable(bool $isCollection = true): array
     {
         $api = $isCollection ? '/databases' : '/tablesdb';
@@ -624,6 +642,18 @@ final class AbuseTest extends Scope
     }
 
     #[Group('abuseEnabled')]
+    public function testAbuseGetAvatarImage(): void
+    {
+        $this->assertAvatarFetchLimited('/avatars/image');
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseGetAvatarFavicon(): void
+    {
+        $this->assertAvatarFetchLimited('/avatars/favicon');
+    }
+
+    #[Group('abuseEnabled')]
     public function testAbuseCreateTransactionOperationsCollectionsAPI(): void
     {
         $this->assertGuestLimited(Client::METHOD_POST, '/databases/transactions/' . Id::unique() . '/operations', ['operations' => []], 120);
@@ -705,6 +735,60 @@ final class AbuseTest extends Scope
     public function testAbuseDeleteTransactionVectorsDBAPI(): void
     {
         $this->assertGuestLimited(Client::METHOD_DELETE, '/vectorsdb/transactions/' . Id::unique(), [], 60);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseLimitWithOutOfRangeContentRange(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-for' => '2001:db8:c0::' . \dechex(\random_int(1, 0xffff)) . ':' . \dechex(\random_int(1, 0xffff)),
+            'content-range' => 'bytes 9223372036854775807-9223372036854775807/9223372036854775807',
+        ];
+
+        $this->startCountingInOneWindow(3600);
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+                'userId' => Id::unique(),
+                'email' => 'range.' . \bin2hex(\random_bytes(8)) . '@example.com',
+                'password' => 'password',
+            ]);
+            $this->assertNotSame(429, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => Id::unique(),
+            'email' => 'range.' . \bin2hex(\random_bytes(8)) . '@example.com',
+            'password' => 'password',
+        ]);
+        $this->assertSame(429, $response['headers']['status-code'], 'A Content-Range header must not bypass the limit');
+    }
+
+    #[Group('abuseEnabled')]
+    public function testCreateFileWithOutOfRangeContentRange(): void
+    {
+        $bucketId = $this->createBucket()['bucketId'];
+
+        foreach ([
+            'bytes 9223372036854775807-9223372036854775807/9223372036854775807',
+            'bytes 0-99999999999999999999/99999999999999999999',
+        ] as $contentRange) {
+            $fileId = Id::unique();
+            $response = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-id' => $fileId,
+                'content-range' => $contentRange,
+                'x-forwarded-for' => '203.0.113.' . \random_int(1, 254),
+            ], [
+                'fileId' => $fileId,
+                'file' => new CURLFile(realpath(__DIR__ . '/../../resources/logo.png'), 'image/png', 'range.png'),
+            ]);
+
+            $this->assertSame(400, $response['headers']['status-code'], $contentRange);
+            $this->assertSame('storage_invalid_content_range', $response['body']['type'], $contentRange);
+        }
     }
 
     /**
