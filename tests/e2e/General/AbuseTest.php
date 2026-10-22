@@ -707,6 +707,7 @@ final class AbuseTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-id' => $fileId,
                 'content-range' => $contentRange,
+                'x-forwarded-for' => '203.0.113.' . \random_int(1, 254),
             ], [
                 'fileId' => $fileId,
                 'file' => new CURLFile(realpath(__DIR__ . '/../../resources/logo.png'), 'image/png', 'range.png'),
