@@ -1034,7 +1034,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          * Abuse limits are connecting 128 times per minute and ip address.
          */
         $isRateLimited = $timelimit('url:{url},ip:{ip}', 128, 60, function (TimeLimit $timeLimit) use ($request): bool {
-            return System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $timeLimit->withParams(['{ip}' => $request->getIP(), '{url}' => $request->getURI()])->check()->limited;
+            return System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $timeLimit->withParams(['{ip}' => $request->getIP(), '{url}' => '/v1/realtime'])->check()->limited;
         });
 
         if ($isRateLimited) {
