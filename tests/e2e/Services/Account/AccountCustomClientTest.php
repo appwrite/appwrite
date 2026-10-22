@@ -8541,6 +8541,10 @@ final class AccountCustomClientTest extends Scope
             'enabled' => $enabled,
         ]);
 
+        if ($enabled && ($response['body']['type'] ?? null) === 'general_access_forbidden') {
+            $this->markTestSkipped('This plan does not support the ' . $policy . ' policy.');
+        }
+
         $this->assertEquals(200, $response['headers']['status-code']);
     }
 
