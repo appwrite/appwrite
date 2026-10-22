@@ -20,19 +20,18 @@ jobs:
     if: github.repository == 'appwrite/appwrite'
     permissions:
       pull-requests: read
-    uses: abnegate/claude-pr-owner/.github/workflows/owner.yml@7fd1b0898b251832801bffebb2a5c0878a4848ab # feat/security-review
+    uses: abnegate/claude-pr-owner/.github/workflows/owner.yml@090ced411ffede2be34b5bba2da691ab83c73ff7 # feat/security-review
     with:
       learner: ${{ vars.CLAUDE_LEARNER }}
 
   review:
     needs: owner
-    if: needs.owner.outputs.enrolled == 'true'
     permissions:
       actions: read
       contents: read
       issues: write
       security-events: write
-    uses: abnegate/claude-pr-owner/.github/workflows/security-review.yml@7fd1b0898b251832801bffebb2a5c0878a4848ab # feat/security-review
+    uses: abnegate/claude-pr-owner/.github/workflows/security-review.yml@090ced411ffede2be34b5bba2da691ab83c73ff7 # feat/security-review
     secrets:
       oauth_token: ${{ secrets[needs.owner.outputs.oauth_secret] }}
       api_key: ${{ secrets[needs.owner.outputs.api_key_secret] }}
