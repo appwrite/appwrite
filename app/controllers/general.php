@@ -1005,7 +1005,7 @@ Http::init()
                 $response->addFilter(new ResponseV27());
             }
             if (version_compare($responseFormat, '1.9.5', '<')) {
-                $response->addFilter(new ResponseV26());
+                $response->addFilter(new ResponseV26($request));
             }
             if (version_compare($responseFormat, '1.9.4', '<')) {
                 $response->addFilter(new ResponseV25());
