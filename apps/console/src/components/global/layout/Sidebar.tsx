@@ -339,8 +339,6 @@ export function ConsoleSidebar({
   const { access, isLoading: scopesLoading } = useOrganizationScopes(
     project?.teamId,
   )
-  const { showProjectAgents } = useDebugOverrides()
-
   const { overviewItem, settingsItem } = getNavItems(projectId, sidebarCopy)
 
   const visibleCategories = useMemo(() => {
@@ -368,9 +366,7 @@ export function ConsoleSidebar({
               features.videos && canSeeProjectNavItem(access, features, item.id)
             )
           if (item.id === 'agents')
-            return (
-              showProjectAgents && canShowAgentMcpConnectCta(access, features)
-            )
+            return canShowAgentMcpConnectCta(access, features)
           return canSeeProjectNavItem(access, features, item.id)
         }),
       }))
@@ -382,7 +378,6 @@ export function ConsoleSidebar({
     access,
     sidebarCopy,
     isCloud,
-    showProjectAgents,
   ])
 
   const showOverview = canSeeProjects(access, features)

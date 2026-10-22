@@ -23,7 +23,6 @@ export const DEBUG_OVERRIDE_KEYS = {
   mockCloudStatusAlert: 'debug:mockCloudStatusAlert',
   showFullscreenLoader: 'debug:showFullscreenLoader',
   showFunctionsLocalEditor: 'debug:showFunctionsLocalEditor',
-  showProjectAgents: 'debug:showProjectAgents',
   showConstruction: 'debug:showConstruction',
   mockInitCurrentDay: 'debug:mockInitCurrentDay',
   mockInitTicketType: 'debug:mockInitTicketType',
@@ -84,11 +83,6 @@ export type DebugOverrides = {
    * (Monaco + gzip deploy prep). Default false.
    */
   showFunctionsLocalEditor: boolean
-  /**
-   * When true, exposes the project Agents page and lands new projects on it
-   * from the project root. When false, the root always opens Overview. Default false.
-   */
-  showProjectAgents: boolean
   /**
    * When true, show the DEV construction bar at the top of the header stack.
    * Default true, or VITE_CONSTRUCTION when set.
@@ -255,10 +249,6 @@ export function loadDebugOverrides(): DebugOverrides {
       DEBUG_OVERRIDE_KEYS.showFunctionsLocalEditor,
       false,
     ),
-    showProjectAgents: readBooleanFromStorage(
-      DEBUG_OVERRIDE_KEYS.showProjectAgents,
-      false,
-    ),
     showConstruction: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.showConstruction,
       getShowConstructionDefault(),
@@ -366,7 +356,6 @@ export const FEATURE_FLAGS_MENU_DEBUG_KEYS = [
   'showActivityChart',
   'showNativeAppBar',
   'showSuccessTeamCard',
-  'showProjectAgents',
   'showConstruction',
   'unlockOnboardingLocks',
   'previewOnboardingComplete',
@@ -383,7 +372,6 @@ export const FEATURE_FLAGS_MENU_DEBUG_DEFAULTS: Pick<
   showActivityChart: false,
   showNativeAppBar: false,
   showSuccessTeamCard: false,
-  showProjectAgents: false,
   showConstruction: getShowConstructionDefault(),
   unlockOnboardingLocks: false,
   previewOnboardingComplete: false,
@@ -456,7 +444,6 @@ export function getDefaultDebugOverrides(): DebugOverrides {
     mockCloudStatusAlert: 'live',
     showFullscreenLoader: ephemeralOverrides.showFullscreenLoader ?? false,
     showFunctionsLocalEditor: false,
-    showProjectAgents: false,
     showConstruction: getShowConstructionDefault(),
     mockInitCurrentDay: getInitMockCurrentDayDefault(),
     mockInitTicketType: null,
