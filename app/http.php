@@ -40,6 +40,10 @@ try {
     exit(1);
 }
 
+if (EncryptionKey::isInsecure(System::getEnv('_APP_EXECUTOR_SECRET'))) {
+    Console::warning('_APP_EXECUTOR_SECRET is the public default "' . EncryptionKey::PLACEHOLDER . '". Set a unique secret.');
+}
+
 $files = new Files();
 $files->load(__DIR__ . '/../public');
 

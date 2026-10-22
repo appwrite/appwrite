@@ -1353,7 +1353,7 @@ return [
                 'default' => 'your-secret-key',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => 'token'
             ],
             [
                 'name' => '_APP_EXECUTOR_HOST',
