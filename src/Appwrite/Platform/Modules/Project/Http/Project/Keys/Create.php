@@ -98,15 +98,15 @@ class Create extends Base
         ?Key $apiKey,
         Scopes $grantedScopes,
     ) {
+        // Dynamic supported for backwards compatibility
+        if ($apiKey !== null && \in_array($apiKey->getType(), [API_KEY_STANDARD, API_KEY_EPHEMERAL, 'dynamic'], true)) {
+            throw new Exception(Exception::KEY_CREATION_DENIED);
+        }
+
         // A key acts with its scopes, so a caller may grant only scopes it holds itself
         $missing = $grantedScopes->missing($scopes);
         if ($missing !== []) {
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Cannot grant scopes the caller does not hold: ' . \implode(', ', $missing));
-        }
-
-        // Dynamic supported for backwards compatibility
-        if ($apiKey !== null && \in_array($apiKey->getType(), [API_KEY_STANDARD, API_KEY_EPHEMERAL, 'dynamic'], true)) {
-            throw new Exception(Exception::KEY_CREATION_DENIED);
         }
 
         $keyId = ($keyId == 'unique()') ? Id::unique() : $keyId;
