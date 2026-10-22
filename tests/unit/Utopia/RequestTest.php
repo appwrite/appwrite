@@ -265,6 +265,36 @@ final class RequestTest extends TestCase
         $this->assertArrayNotHasKey('cookie', $request->getHeaders());
     }
 
+    #[DataProvider('contentRangeCases')]
+    public function testGetContentRangeChunk(string $contentRange, ?int $start, int $chunk): void
+    {
+        $swoole = new SwooleRequest();
+        $swoole->header = ['content-range' => $contentRange];
+        $request = new Request($swoole);
+
+        $this->assertSame($start, $request->getContentRangeStart());
+        $this->assertSame($chunk, $request->getContentRangeChunk());
+    }
+
+    /**
+     * @return \Iterator<string, array{0: string, 1: ?int, 2: int}>
+     */
+    public static function contentRangeCases(): \Iterator
+    {
+        yield 'first chunk' => ['bytes 0-5242879/12582912', 0, 0];
+        yield 'second chunk' => ['bytes 5242880-10485759/12582912', 5242880, 1];
+        yield 'single byte' => ['bytes 7-7/8', 7, 7];
+        yield 'end equal to size' => ['bytes 0-10/10', 0, 0];
+        yield 'bounds at the integer limit' => ['bytes 9223372036854775807-9223372036854775807/9223372036854775807', null, 0];
+        yield 'bounds past the integer limit' => ['bytes 0-99999999999999999999/99999999999999999999', null, 0];
+        yield 'size past the integer limit' => ['bytes 0-9/99999999999999999999', null, 0];
+        yield 'start after end' => ['bytes 10-5/20', null, 0];
+        yield 'end past size' => ['bytes 0-20/10', null, 0];
+        yield 'negative start' => ['bytes -1-5/10', null, 0];
+        yield 'missing size' => ['bytes 0-5', null, 0];
+        yield 'missing unit' => ['0-5/10', null, 0];
+    }
+
     public function testGetParamsCachesRawParamsWhenFilterThrows4xx(): void
     {
         /*

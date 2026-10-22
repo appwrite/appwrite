@@ -254,6 +254,37 @@ class Request extends UtopiaRequest
     }
 
     /**
+     * Index of the uploaded chunk, counted in chunks the length of this range. 0 without a valid range.
+     */
+    public function getContentRangeChunk(): int
+    {
+        $start = $this->getContentRangeStart();
+        $end = $this->getContentRangeEnd();
+
+        if ($start === null || $end === null) {
+            return 0;
+        }
+
+        return \intdiv($start, $end - $start + 1);
+    }
+
+    /**
+     * @return array{unit: string, size: int, start: int, end: int}|null
+     */
+    #[\Override]
+    protected function parseContentRange(): ?array
+    {
+        $data = parent::parseContentRange();
+
+        // Bounds past PHP_INT_MAX saturate to it, and end + 1 must stay an integer.
+        if ($data === null || $data['size'] >= PHP_INT_MAX) {
+            return null;
+        }
+
+        return $data;
+    }
+
+    /**
      * Creates a unique stable cache identifier for this GET request.
      * Stable-sorts query params, use `serialize` to ensure key&value are part of cache keys.
      *
