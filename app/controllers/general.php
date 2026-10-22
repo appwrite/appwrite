@@ -12,6 +12,7 @@ use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Functions\Validator\Headers;
 use Appwrite\Network\Cors;
 use Appwrite\Platform\Appwrite;
 use Appwrite\SDK\AuthType;
@@ -372,7 +373,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
         $executionId = ID::unique();
 
-        $headers = \array_merge([], $requestHeaders);
+        $headers = Headers::stripReserved($requestHeaders);
         $headers['x-appwrite-execution-id'] = $executionId;
         $headers['x-appwrite-user-id'] = '';
         $headers['x-appwrite-country-code'] = '';
