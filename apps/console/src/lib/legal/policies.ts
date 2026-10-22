@@ -31,7 +31,7 @@ export const POLICY_LINKS: readonly PolicyLink[] = [
   {
     slug: 'privacy',
     label: 'Privacy Policy',
-    footerLabel: 'Privacy',
+    footerLabel: 'Privacy Policy',
     path: '/privacy',
   },
   {
