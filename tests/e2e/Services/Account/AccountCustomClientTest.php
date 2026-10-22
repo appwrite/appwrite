@@ -7878,6 +7878,36 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEquals($existing['body']['$id'], $response['body']['userId']);
+
+        /**
+         * Test for SUCCESS - an account without email takes an address on another domain of the same mail provider
+         */
+        $projectId = $this->getProject()['$id'];
+        $session = $this->createAnonymousSession();
+
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken([
+                'sub' => 'idtoken-' . \uniqid('', true),
+                'email' => $local . '@live.com',
+                'email_verified' => true,
+            ]),
+        ], [
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEquals($existing['body']['$id'], $response['body']['userId']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $response['cookies']['a_session_' . $projectId],
+        ]);
+
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertEquals($local . '@live.com', $account['body']['email']);
     }
 
     public function testCreateIdTokenSessionAnonymousLinking(): void

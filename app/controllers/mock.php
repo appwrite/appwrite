@@ -175,7 +175,8 @@ Http::get('/v1/mock/tests/general/oauth2/user')
             $user = [
                 'id' => $id,
                 'name' => 'Canonical Email User',
-                'email' => \str_contains($id, '@') ? $id : 'oauth.' . $id . '@gmail.com',
+                // Any address only in development, where the e2e suite runs
+                'email' => \str_contains($id, '@') && System::getEnv('_APP_ENV', 'development') === 'development' ? $id : 'oauth.' . $id . '@gmail.com',
                 'verified' => true,
                 'photo' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
             ];
