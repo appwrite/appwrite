@@ -35,6 +35,14 @@ class TransactionState
      */
     private mixed $getDatabasesDB;
     private User $user;
+    /**
+     * @var array<string, Database>
+     */
+    private array $databases = [];
+    /**
+     * @var array<string, array<Document>>
+     */
+    private array $logs = [];
 
     public function __construct(Database $dbForProject, Authorization $authorization, callable $getDatabasesDB, User $user)
     {
@@ -67,7 +75,7 @@ class TransactionState
         array $queries = [],
         array $pending = []
     ): Document {
-        $dbForDatabases = ($this->getDatabasesDB)($database);
+        $dbForDatabases = $this->dbForDatabases($database);
         if ($transactionId === null) {
             return $dbForDatabases->getDocument($collectionId, $documentId, $queries);
         }
@@ -122,7 +130,7 @@ class TransactionState
         ?string $transactionId = null,
         array $queries = []
     ): array {
-        $dbForDatabases = ($this->getDatabasesDB)($database);
+        $dbForDatabases = $this->dbForDatabases($database);
         if ($transactionId === null) {
             return $dbForDatabases->find($collectionId, $queries);
         }
@@ -212,7 +220,7 @@ class TransactionState
         ?string $transactionId = null,
         array $queries = []
     ): int {
-        $dbForDatabases = ($this->getDatabasesDB)($database);
+        $dbForDatabases = $this->dbForDatabases($database);
         if ($transactionId === null) {
             return $dbForDatabases->count($collectionId, $queries, APP_LIMIT_COUNT);
         }
@@ -676,14 +684,7 @@ class TransactionState
         $state = null;
 
         return function (string $collection, string $id) use ($database, $transaction, $pending, &$state): ?Document {
-            $state ??= $this->replay([
-                ...$this->authorization->skip(fn (): array => $this->dbForProject->find('transactionLogs', [
-                    Query::equal('transactionInternalId', [$transaction->getSequence()]),
-                    Query::orderAsc(),
-                    Query::limit(PHP_INT_MAX),
-                ])),
-                ...$pending,
-            ]);
+            $state ??= $this->replay([...$this->getLogs($transaction), ...$pending]);
 
             $staged = $state[$collection][$id] ?? null;
             if ($staged === null) {
@@ -696,7 +697,7 @@ class TransactionState
                 return new Document($staged['document']->getArrayCopy());
             }
 
-            $stored = $this->authorization->skip(fn (): Document => ($this->getDatabasesDB)($database)->getDocument($collection, $id));
+            $stored = $this->authorization->skip(fn (): Document => $this->dbForDatabases($database)->getDocument($collection, $id));
             if ($stored->isEmpty()) {
                 return new Document($staged['document']->getArrayCopy());
             }
@@ -732,13 +733,30 @@ class TransactionState
             return [];
         }
 
-        $operations = $this->authorization->skip(fn () => $this->dbForProject->find('transactionLogs', [
+        return $this->replay([...$this->getLogs($transaction), ...$pending]);
+    }
+
+    /**
+     * The operations stored for a transaction, read once per request: the endpoints stage their own operations only
+     * after their last read, and pass the ones a read must see as pending.
+     *
+     * @return array<Document>
+     * @throws Exception
+     * @throws Exception\Query
+     * @throws Timeout
+     */
+    private function getLogs(Document $transaction): array
+    {
+        return $this->logs[(string) $transaction->getSequence()] ??= $this->authorization->skip(fn (): array => $this->dbForProject->find('transactionLogs', [
             Query::equal('transactionInternalId', [$transaction->getSequence()]),
             Query::orderAsc(),
-            Query::limit(PHP_INT_MAX)
+            Query::limit(PHP_INT_MAX),
         ]));
+    }
 
-        return $this->replay([...$operations, ...$pending]);
+    private function dbForDatabases(Document $database): Database
+    {
+        return $this->databases[(string) $database->getSequence()] ??= ($this->getDatabasesDB)($database);
     }
 
     /**
