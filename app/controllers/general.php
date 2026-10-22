@@ -1072,7 +1072,8 @@ Http::init()
     ->inject('response')
     ->inject('cors')
     ->inject('originValidator')
-    ->action(function (Request $request, Response $response, Cors $cors, Validator $originValidator) {
+    ->inject('apiKey')
+    ->action(function (Request $request, Response $response, Cors $cors, Validator $originValidator, ?Key $apiKey) {
         // CORS headers
         foreach ($cors->headers($request->getOrigin()) as $name => $value) {
             $response->addHeader($name, $value);
@@ -1090,7 +1091,10 @@ Http::init()
 
         // Application level CSRF protection
         $origin = $request->getOrigin();
-        if (empty($origin) || !empty($request->getHeaderLine('x-appwrite-key'))) {
+        $authenticatedByKey = $apiKey !== null
+            && $apiKey->getRole() === DBUser::ROLE_KEYS
+            && ! $apiKey->isExpired();
+        if (empty($origin) || $authenticatedByKey) {
             return;
         }
         $route = $request->getRoute();
