@@ -162,7 +162,7 @@ class V26 extends Filter
             'name' => $key->getAttribute('name', ''),
             'expire' => $key->getAttribute('expire', ''),
             'scopes' => $key->getAttribute('scopes', []),
-            'secret' => \in_array('keys.write', $this->request->getScopes(), true) ? $key->getAttribute('secret', '') : '',
+            'secret' => \array_intersect(['organization.projects.keys.write', 'keys.write'], $this->request->getScopes()) === [] ? '' : $key->getAttribute('secret', ''),
             'accessedAt' => $key->getAttribute('accessedAt', ''),
             'sdks' => $key->getAttribute('sdks', []),
         ];

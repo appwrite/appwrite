@@ -28,6 +28,13 @@ final class V26Test extends TestCase
         $this->assertSame('standard_secret', $content['keys'][0]['secret']);
     }
 
+    public function testKeepsKeySecretWithOrganizationWriteScope(): void
+    {
+        $content = $this->parse(['projects.read', 'organization.projects.keys.write']);
+
+        $this->assertSame('standard_secret', $content['keys'][0]['secret']);
+    }
+
     public function testOmitsWebhookCredentials(): void
     {
         $content = $this->parse(['project.read', 'keys.write', 'webhooks.write']);
