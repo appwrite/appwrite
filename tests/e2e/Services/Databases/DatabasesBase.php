@@ -2219,6 +2219,17 @@ trait DatabasesBase
 
         $missing = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $containerId), $headers);
         $this->assertSame(404, $missing['headers']['status-code']);
+
+        $keyed = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Inline Encrypted Keyed',
+            $this->getSchemaResource() => [
+                ['key' => 'secret', 'type' => ColumnType::String->value, 'size' => APP_DATABASE_ENCRYPT_SIZE_MIN - 1, 'filters' => ['encrypt' => true]],
+            ],
+        ]);
+
+        $this->assertSame(400, $keyed['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_BAD_REQUEST, $keyed['body']['type']);
     }
 
     /**

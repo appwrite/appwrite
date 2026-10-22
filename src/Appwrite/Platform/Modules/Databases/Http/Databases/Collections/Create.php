@@ -162,8 +162,8 @@ class Create extends Action
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Relationship attributes cannot be created inline. Use the create relationship endpoint instead.');
             }
 
-            $filters = $attribute['filters'] ?? [];
-            if (!\is_array($filters) || !\in_array('encrypt', $filters, true)) {
+            // Loose match, as the attribute response filter reads it, so no filters shape skips the checks
+            if (!\in_array('encrypt', (array) ($attribute['filters'] ?? []))) {
                 continue;
             }
 
