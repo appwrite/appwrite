@@ -1374,18 +1374,30 @@ class Deletes extends Action
 
         Console::info('Deleting export files older than ' . $expiry);
 
-        $this->deleteByGroup('bucket_' . $bucket->getSequence(), [
+        $collection = 'bucket_' . $bucket->getSequence();
+
+        $this->listByGroup($collection, [
             Query::select([...$this->selects, '$createdAt', 'name', 'path']),
             Query::equal('bucketId', [$bucket->getId()]),
             Query::createdBefore($expiry),
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
-        ], $dbForPlatform, function (Document $file) use ($deviceForFiles) {
+        ], $dbForPlatform, function (Document $file) use ($collection, $dbForPlatform, $deviceForFiles) {
             $path = $file->getAttribute('path');
-            if ($deviceForFiles->exists($path)) {
-                $deviceForFiles->delete($path);
-                Console::success('Deleted export file: ' . $file->getAttribute('name'));
+
+            // Workers with different storage devices can share this database, and an S3 delete
+            // of a missing key still succeeds: only the worker holding the object drops the row.
+            if (!$deviceForFiles->exists($path)) {
+                return;
             }
+
+            if (!$deviceForFiles->delete($path)) {
+                Console::warning('Failed to delete export file, keeping its row for the next run: ' . $path);
+                return;
+            }
+
+            $dbForPlatform->deleteDocument($collection, $file->getId());
+            Console::success('Deleted export file: ' . $file->getAttribute('name'));
         });
     }
 
