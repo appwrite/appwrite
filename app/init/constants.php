@@ -44,6 +44,7 @@ const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element 
 const APP_LIMIT_ROLE_LENGTH = 81; // Maximum length of a team role: `project-<projectId>-<role>` is 9 template characters around two 36-character IDs
 const APP_LIMIT_SUBQUERY = 1000;
 const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 25;
+const APP_LIMIT_REALTIME_SUBSCRIPTIONS = APP_LIMIT_SUBQUERY; // Maximum subscriptions one realtime connection can hold; SDKs resend all of them in one frame on reconnect
 
 const APP_PROJECTS_SUBQUERIES = [
     'subQueryKeys',

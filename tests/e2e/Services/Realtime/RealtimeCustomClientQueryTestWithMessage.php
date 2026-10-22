@@ -586,6 +586,55 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         $client->close();
     }
 
+    public function testSubscribeLimits(): void
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ];
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->receiveSubscribeMessageResponse(\array_fill(0, APP_LIMIT_ARRAY_PARAMS_SIZE + 1, 'documents'), $headers, []);
+        $this->assertEquals('error', $response['type']);
+        $this->assertStringContainsString('channels is allowed per subscription', (string) $response['data']['message']);
+
+        $response = $this->receiveSubscribeMessageResponse(['documents'], $headers, \array_fill(0, APP_LIMIT_ARRAY_PARAMS_SIZE + 1, Query::select(['*'])->toString()));
+        $this->assertEquals('error', $response['type']);
+        $this->assertStringContainsString('queries is allowed per subscription', (string) $response['data']['message']);
+
+        $client = $this->getWebsocket([], $headers);
+
+        try {
+            $half = \intdiv(APP_LIMIT_REALTIME_SUBSCRIPTIONS, 2) + 1;
+            $batch = static fn (string $prefix): array => \array_map(
+                static fn (int $index): array => ['subscriptionId' => $prefix . $index, 'channels' => ['documents']],
+                \range(1, $half),
+            );
+
+            $this->sendSubscribeMessage($client, $batch('first'));
+
+            $client->send(\json_encode([
+                'type' => 'subscribe',
+                'data' => $batch('second'),
+            ]));
+            $response = \json_decode($client->receive(), true);
+            $this->assertEquals('error', $response['type']);
+            $this->assertStringContainsString('subscriptions is allowed per connection', (string) $response['data']['message']);
+
+            /**
+             * Test for SUCCESS
+             */
+            $this->sendSubscribeMessage($client, $batch('first'));
+        } finally {
+            $client->close();
+        }
+    }
+
     public function testInvalidQueryShouldNotSubscribe(): void
     {
         $user = $this->getUser();
