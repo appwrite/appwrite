@@ -125,7 +125,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.', view: $errorView);
             }
 
-            if (\str_ends_with($host, $denyDomain)) {
+            if (\str_ends_with($host, '.' . $denyDomain)) {
                 $exception = new AppwriteException(AppwriteException::RULE_NOT_FOUND, 'This domain is not connected to any Appwrite resources. Visit domains tab under function/site settings to configure it.', view: $errorView);
 
                 $exception->addCTA('Start with this domain', $url);

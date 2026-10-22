@@ -159,6 +159,9 @@ final class DomainTest extends TestCase
         $this->assertTrue($validator->isValid('shard4.stage.google.com'));
 
         $this->assertFalse($validator->isValid('appwrite.network'));
+        // A name that merely ends with the restricted hostname is not under it
+        $this->assertTrue($validator->isValid('notappwrite.network'));
+        $this->assertTrue($validator->isValid('stage.notappwrite.network'));
         $this->assertFalse($validator->isValid('preview-a.appwrite.network'));
         $this->assertFalse($validator->isValid('branch-a.appwrite.network'));
         $this->assertTrue($validator->isValid('google.appwrite.network'));
