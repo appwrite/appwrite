@@ -299,8 +299,6 @@ if (!function_exists('checkForProjectUsage')) {
 
 $realtime = getRealtime();
 $presenceState = new PresenceState();
-// Shared across every connection in this worker: presence writes are serialized per socket through a
-// fixed pool of stripes, so memory stays constant rather than one lock per connection.
 $presenceLock = new PresenceLock();
 $eventTailRegistry = new EventTailRegistry(
     rate: (int) System::getEnv('_APP_REALTIME_TAIL_RATE', 50)

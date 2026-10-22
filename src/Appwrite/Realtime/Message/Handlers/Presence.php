@@ -74,11 +74,7 @@ class Presence extends Action
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User must be authorized');
         }
 
-        // Serialize presence writes on this socket. Swoole runs each message in its own coroutine and
-        // does not serialize them per connection, so two overlapping presence messages would both read
-        // no hold and both increment the row's connections count, while onClose releases once -- leaking
-        // the socket online. The shared striped lock makes the second write wait, then see the first's
-        // hold and refresh (persisting its status/metadata and emitting its event) instead of recounting.
+        // Serialize this socket's presence writes so two overlapping messages can't both count it.
         $presenceLock->acquire($connectionId);
 
         try {
@@ -108,8 +104,7 @@ class Presence extends Action
             $projectId = $project->getId();
 
             // Row this socket already counts against; matching its sequence means a status refresh,
-            // not a new hold. Sequence (not id) so a same-id delete-and-recreate is seen as new. Under
-            // the lock, a second message on this socket reads the first's stash and takes this path.
+            // not a new hold. Sequence (not id) so a same-id delete-and-recreate is seen as new.
             $stash = $realtime->connections[$connectionId]['presence'] ?? null;
             $sequence = (\is_array($stash) && ($stash['userId'] ?? null) === $userId)
                 ? ($stash['sequence'] ?? null)
