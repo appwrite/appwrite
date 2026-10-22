@@ -89,11 +89,24 @@ class Action extends AppwriteAction
     }
 
     /**
+     * Legacy and TablesDB also match a missing type so list and get agree when
+     * V25 did not backfill a preexisting row.
+     *
      * @return Query[]
      */
     protected function getTransactionTypeQueryFilters(): array
     {
-        return [Query::equal('type', $this->getAllowedDatabaseTypes())];
+        $types = $this->getAllowedDatabaseTypes();
+        $equal = Query::equal('type', $types);
+
+        if (!\in_array(DATABASE_TYPE_LEGACY, $types, true)) {
+            return [$equal];
+        }
+
+        return [Query::or([
+            $equal,
+            Query::isNull('type'),
+        ])];
     }
 
     /**
