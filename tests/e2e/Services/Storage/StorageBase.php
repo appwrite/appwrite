@@ -1266,6 +1266,45 @@ trait StorageBase
         $this->assertStringContainsString('60000x1', $preview['body']['message']);
     }
 
+    public function testFilePreviewOnePixelSideWithGravity(): void
+    {
+        $data = $this->setupBucketFile();
+        $bucketId = $data['bucketId'];
+
+        // kitten-2.jpg is landscape, so a 1px width derives a height below one pixel.
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-a/kitten-2.jpg'), 'image/jpeg', 'kitten-2.jpg'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertSame(201, $file['headers']['status-code']);
+
+        $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width' => 1,
+            'height' => 0,
+            'gravity' => 'top-left',
+            'output' => 'png',
+        ]);
+
+        $this->assertSame(200, $preview['headers']['status-code']);
+        $this->assertSame('image/png', $preview['headers']['content-type']);
+
+        $image = new \Imagick();
+        $image->readImageBlob($preview['body']);
+        $this->assertSame(1, $image->getImageWidth());
+        $this->assertSame(1, $image->getImageHeight());
+    }
+
     public function testFileViewSvgIsNotExecutable(): void
     {
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
