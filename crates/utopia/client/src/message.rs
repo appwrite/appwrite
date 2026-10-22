@@ -49,17 +49,19 @@ impl Headers {
     /// Replaces a field (any case) with these values, last.
     ///
     /// Fails with [`Error::InvalidArgument`] (`Invalid header name.`) unless
-    /// the name is an RFC 9110 token.
+    /// the name is an RFC 9110 token, then (`Header values must not contain
+    /// CR, LF or NUL characters.`) when a value holds one of them.
     pub fn set<V: Into<String>>(
         &mut self,
         name: &str,
         values: impl IntoIterator<Item = V>,
     ) -> Result<&mut Headers, Error> {
         check(name)?;
+        let values = checked(values)?;
         if let Some(i) = self.position(name) {
             self.fields.remove(i);
         }
-        self.fields.push((name.to_owned(), values.into_iter().map(Into::into).collect()));
+        self.fields.push((name.to_owned(), values));
         Ok(self)
     }
 
@@ -72,10 +74,10 @@ impl Headers {
         values: impl IntoIterator<Item = V>,
     ) -> Result<&mut Headers, Error> {
         check(name)?;
-        let values = values.into_iter().map(Into::into);
+        let values = checked(values)?;
         match self.position(name) {
             Some(i) => self.fields[i].1.extend(values),
-            None => self.fields.push((name.to_owned(), values.collect())),
+            None => self.fields.push((name.to_owned(), values)),
         }
         Ok(self)
     }
@@ -89,11 +91,15 @@ impl Headers {
         }
     }
 
-    /// Checks the names of a received response in order, as PHP's response
+    /// Checks the fields of a received response in order, as PHP's response
     /// builder adds them: an integer-like name is a `TypeError` (PHP keys
-    /// the headers by name), any other non-token an invalid name.
+    /// the headers by name), any other non-token an invalid name, then a
+    /// value with CR, LF or NUL an invalid value.
     pub(crate) fn check(&self) -> Result<(), Error> {
-        self.fields.iter().try_for_each(|(name, _)| built(name))
+        self.fields.iter().try_for_each(|(name, values)| {
+            built(name)?;
+            values.iter().try_for_each(|v| value(v))
+        })
     }
 
     /// Removes a field (any case).
@@ -139,6 +145,28 @@ fn check(name: &str) -> Result<(), Error> {
         return Err(Error::InvalidArgument("Invalid header name.".into()));
     }
     Ok(())
+}
+
+/// A header value: no CR, LF or NUL (PSR-7).
+///
+/// PHP: `strpbrk($value, "\r\n\0") !== false` in `normalizeHeaderValue()`.
+fn value(value: &str) -> Result<(), Error> {
+    if value.bytes().any(|b| matches!(b, b'\r' | b'\n' | 0)) {
+        return Err(Error::InvalidArgument("Header values must not contain CR, LF or NUL characters.".into()));
+    }
+    Ok(())
+}
+
+/// Values checked in order, failing at the first invalid one.
+fn checked<V: Into<String>>(values: impl IntoIterator<Item = V>) -> Result<Vec<String>, Error> {
+    values
+        .into_iter()
+        .map(|v| {
+            let v = v.into();
+            value(&v)?;
+            Ok(v)
+        })
+        .collect()
 }
 
 /// A request body.
@@ -317,8 +345,9 @@ impl Response {
     /// version.
     ///
     /// Fails with [`Error::InvalidArgument`] for a status outside 100–599
-    /// (`Invalid response status code.`) or a header name that is not a
-    /// token (`Invalid header name.`).
+    /// (`Invalid response status code.`), a header name that is not a
+    /// token (`Invalid header name.`) or a value with CR, LF or NUL
+    /// (`Header values must not contain CR, LF or NUL characters.`).
     ///
     /// PHP: `(new Builder($responseFactory, $streamFactory))->build($statusCode,
     /// $reasonPhrase, $headers, $body, $protocolVersion)`.
@@ -386,8 +415,7 @@ impl Response {
 
     /// With a header value added (keeping the values it already has).
     ///
-    /// Fails with [`Error::InvalidArgument`] (`Invalid header name.`) unless
-    /// the name is a token.
+    /// Fails like [`Headers::set`].
     ///
     /// PHP: `withAddedHeader($name, $value)`.
     pub fn with_header(mut self, name: &str, value: &str) -> Result<Response, Error> {
@@ -435,5 +463,29 @@ impl Response {
     /// The body as text, lossily decoded as UTF-8.
     pub fn text(&self) -> std::borrow::Cow<'_, str> {
         String::from_utf8_lossy(&self.body)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rejects_line_breaks_and_nul_in_values() {
+        for value in ["one\rtwo", "one\ntwo", "one\r\nX-Injected: yes", "one\0two"] {
+            let error = Request::new("GET", "http://localhost/").unwrap().header("X-Test", value).unwrap_err();
+            assert_eq!(
+                error.to_string(),
+                Error::InvalidArgument("Header values must not contain CR, LF or NUL characters.".into()).to_string()
+            );
+            assert!(Headers::new().add("X-Test", ["valid", value]).is_err());
+            assert!(Response::build(200, "OK", [("X-Test", value)], "", "1.1").is_err());
+        }
+        let mut headers = Headers::new();
+        headers.set("X-Test", ["one\ttwo é"]).unwrap();
+        assert_eq!(headers.line("X-Test"), "one\ttwo é");
+        // The name is checked first.
+        let error = Headers::new().set("Bad Name", ["a\nb"]).unwrap_err();
+        assert_eq!(error.to_string(), Error::InvalidArgument("Invalid header name.".into()).to_string());
     }
 }

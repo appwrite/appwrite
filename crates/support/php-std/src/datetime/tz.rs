@@ -648,7 +648,7 @@ mod tests {
         assert!(TzInfo::get("Europe/Pariss").is_none());
         let utc = TzInfo::get("UTC").unwrap();
         assert_eq!(utc.info(0).abbr, "UTC");
-        assert_eq!(version(), "2026.3");
+        assert_eq!(version(), "2026.5");
     }
 
     #[test]

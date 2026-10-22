@@ -13,12 +13,12 @@ struct State<'a> {
 impl State<'_> {
     fn error(&mut self, at: usize, message: &'static str) {
         let character = self.string.get(at).copied().unwrap_or(0);
-        self.errors.errors.push(Message { position: at as i64, character, message });
+        self.errors.error(Message { position: at as i64, character, message });
     }
 
     fn warning(&mut self, at: usize, message: &'static str) {
         let character = self.string.get(at).copied().unwrap_or(0);
-        self.errors.warnings.push(Message { position: at as i64, character, message });
+        self.errors.warning(Message { position: at as i64, character, message });
     }
 
     /// `timelib_get_signed_nr` (its errors report position 0: the scanner
@@ -26,7 +26,7 @@ impl State<'_> {
     fn get_signed_nr(&mut self, c: &mut Cursor, max: usize) -> i64 {
         while !c.cur().is_ascii_digit() && c.cur() != b'+' && c.cur() != b'-' {
             if c.cur() == 0 {
-                self.errors.errors.push(Message { position: 0, character: 0, message: "Found unexpected data" });
+                self.errors.error(Message { position: 0, character: 0, message: "Found unexpected data" });
                 return 0;
             }
             c.p += 1;
@@ -40,7 +40,7 @@ impl State<'_> {
         }
         while !c.cur().is_ascii_digit() {
             if c.cur() == 0 {
-                self.errors.errors.push(Message { position: 0, character: 0, message: "Found unexpected data" });
+                self.errors.error(Message { position: 0, character: 0, message: "Found unexpected data" });
                 return 0;
             }
             c.p += 1;
@@ -59,7 +59,7 @@ impl State<'_> {
         match i64::try_from(v) {
             Ok(v) => v,
             Err(_) => {
-                self.errors.errors.push(Message { position: 0, character: 0, message: "Number out of range" });
+                self.errors.error(Message { position: 0, character: 0, message: "Number out of range" });
                 0
             }
         }

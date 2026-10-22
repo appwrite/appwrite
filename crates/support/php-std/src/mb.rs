@@ -143,13 +143,16 @@ fn decode(s: &[u8]) -> impl Iterator<Item = u32> + '_ {
     std::iter::from_fn(move || if pos < s.len() { Some(decode_one(s, &mut pos)) } else { None })
 }
 
-/// `mb_wchar_to_utf8`: appends `w`, or `bad` for an error marker or a value
-/// beyond U+10FFFF. (PHP 8.5.11 encodes surrogates as they are.)
+/// `mb_wchar_to_utf8`: appends `w`, or `bad` for an error marker, a
+/// surrogate (an error since PHP 8.5.12; php-std never uses the internal
+/// BADUTF8 mode that keeps them) or a value beyond U+10FFFF.
 fn encode(out: &mut Vec<u8>, w: u32, bad: &[u8]) {
     if w < 0x80 {
         out.push(w as u8);
     } else if w < 0x800 {
         out.extend_from_slice(&[0xC0 | (w >> 6) as u8, 0x80 | (w & 0x3F) as u8]);
+    } else if (0xD800..=0xDFFF).contains(&w) {
+        out.extend_from_slice(bad);
     } else if w < 0x10000 {
         out.extend_from_slice(&[0xE0 | (w >> 12) as u8, 0x80 | ((w >> 6) & 0x3F) as u8, 0x80 | (w & 0x3F) as u8]);
     } else if w < 0x110000 {
@@ -517,9 +520,8 @@ fn map_case(s: &[u8]) -> Option<Vec<u8>> {
 /// `offset_to_pointer_utf8`: the byte position `offset` characters from the
 /// start (or from the end, when negative), counting characters by lead bytes.
 ///
-/// Deviation: PHP 8.5.11 can step past the end of a string that ends in a
-/// truncated sequence and then reads out of bounds; this stops at the end
-/// (as later PHP releases do).
+/// A string that ends in a truncated sequence stops at its end (GH-23106,
+/// PHP 8.5.12: `pos > end` is clamped).
 fn offset_to_pointer(s: &[u8], offset: i64) -> Option<usize> {
     if offset < 0 {
         let mut pos = s.len();
