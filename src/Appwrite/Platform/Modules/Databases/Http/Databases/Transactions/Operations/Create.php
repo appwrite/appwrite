@@ -20,6 +20,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
+use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
@@ -203,9 +204,18 @@ class Create extends Action
                         }
                     }
 
-                    // Users can only set permissions for roles they have
-                    if (isset($operation['data']['$permissions'])) {
-                        $permissions = $operation['data']['$permissions'];
+                }
+
+                // Normalize supplied permissions for every caller: validate the shape and
+                // expand aggregates (write → update+delete) so the staged document carries the
+                // same permissions the direct document endpoints persist, whoever stages it.
+                // The commit handler writes staged data verbatim, so aggregates must be
+                // expanded here rather than relying on a later pass.
+                if (isset($operation['data']['$permissions'])) {
+                    $permissions = $this->normalizePermissions($operation['data']['$permissions']);
+
+                    // Non-privileged callers may only grant roles they hold.
+                    if (!$isAPIKey && !$isPrivilegedUser) {
                         $roles = $authorization->getRoles();
                         foreach (Database::PERMISSIONS as $type) {
                             foreach ($permissions as $permission) {
@@ -224,6 +234,21 @@ class Create extends Action
                             }
                         }
                     }
+
+                    $operation['data']['$permissions'] = $permissions;
+                }
+            } else {
+                // Bulk operations are API-key/admin only, but their per-document permissions
+                // still need aggregates expanded so the committed rows match what the direct
+                // bulk endpoints persist (the commit handler writes the staged data verbatim).
+                if (\in_array($operation['action'], ['bulkCreate', 'bulkUpsert']) && \is_array($operation['data'] ?? null)) {
+                    foreach ($operation['data'] as $index => $document) {
+                        if (\is_array($document) && isset($document['$permissions'])) {
+                            $operation['data'][$index]['$permissions'] = $this->normalizePermissions($document['$permissions']);
+                        }
+                    }
+                } elseif ($operation['action'] === 'bulkUpdate' && isset($operation['data']['data']['$permissions'])) {
+                    $operation['data']['data']['$permissions'] = $this->normalizePermissions($operation['data']['data']['$permissions']);
                 }
             }
 
@@ -260,5 +285,37 @@ class Create extends Action
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
             ->dynamic($transaction, UtopiaResponse::MODEL_TRANSACTION);
+    }
+
+    /**
+     * Validate a permissions value and expand aggregates (write → update + delete) so the
+     * staged document carries the same permissions the direct document endpoints persist.
+     * A non-array value is rejected as a bad request rather than raising a type error.
+     *
+     * @param mixed $permissions
+     * @return array<string>
+     * @throws Exception
+     */
+    private function normalizePermissions(mixed $permissions): array
+    {
+        if (!\is_array($permissions)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Permissions must be an array of permission strings.');
+        }
+
+        $validator = new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [
+            Database::PERMISSION_READ,
+            Database::PERMISSION_UPDATE,
+            Database::PERMISSION_DELETE,
+            Database::PERMISSION_WRITE,
+        ]);
+        if (!$validator->isValid($permissions)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
+        }
+
+        return Permission::aggregate($permissions, [
+            Database::PERMISSION_READ,
+            Database::PERMISSION_UPDATE,
+            Database::PERMISSION_DELETE,
+        ]) ?? [];
     }
 }
