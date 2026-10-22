@@ -13,6 +13,12 @@ use Utopia\Database\Document;
 
 final class DeploymentsTest extends TestCase
 {
+    public function testLockIsScopedToTheProject(): void
+    {
+        $this->assertNotSame(Deployments::lock('1', 'deployment1'), Deployments::lock('2', 'deployment1'));
+        $this->assertSame(Deployments::lock('1', 'deployment1'), Deployments::lock('1', 'deployment1'));
+    }
+
     public function testSiteCommandIncludesFrameworkAndDeploymentCommands(): void
     {
         Config::setParam('frameworks', [

@@ -658,6 +658,14 @@ readonly class Deployments
     }
 
     /**
+     * The lock serializing a deployment's build callbacks and its cancellation.
+     */
+    public static function lock(string $projectInternalId, string $deploymentId): string
+    {
+        return "jobs-deployment:{$projectInternalId}:{$deploymentId}";
+    }
+
+    /**
      * The build output directory on the builds volume, where build.sh writes
      * under the volume strategy (see storage()).
      */
