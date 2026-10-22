@@ -15,6 +15,7 @@ use Appwrite\Platform\Modules\S3\Auth\SignatureV4;
 use Appwrite\Platform\Modules\S3\Requests\AwsChunked;
 use Appwrite\Platform\Modules\S3\Responses\S3Xml;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Validator\Filename;
 use Appwrite\Utopia\Database\Validator\Folder;
 use Appwrite\Utopia\Response;
 use Utopia\Cache\Cache;
@@ -166,6 +167,11 @@ abstract class Base extends Action
 
         if ($name === '' || !$validator->isValid($folder)) {
             throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, $validator->getDescription());
+        }
+
+        $filename = new Filename(0);
+        if (!$filename->isValid($name)) {
+            throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, $filename->getDescription());
         }
 
         return [
