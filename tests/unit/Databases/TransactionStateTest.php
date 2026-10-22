@@ -15,8 +15,13 @@ use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Event;
+use Utopia\Database\Event\Document\Found;
+use Utopia\Database\Event\Domain;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Filter;
+use Utopia\Database\Hook\Lifecycle;
+use Utopia\Database\Hook\Selective;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
@@ -156,6 +161,50 @@ final class TransactionStateTest extends TestCase
         $this->assertTrue($this->state->getDocument(new Document(), self::CUSTOMERS, 'cy', $transaction->getId(), pending: $pending)->isEmpty());
         $this->assertTrue($this->state->getDocument(new Document(), self::CUSTOMERS, 'ada', $transaction->getId(), pending: $pending)->isEmpty());
         $this->assertSame('Bob', $this->state->getDocument(new Document(), self::CUSTOMERS, 'bob', $transaction->getId(), pending: $pending)->getAttribute('name'));
+    }
+
+    public function testARequestReadsTheStoredOperationsAndItsDatabaseOnce(): void
+    {
+        $transaction = $this->shop();
+        foreach (['cy', 'dee', 'eve'] as $id) {
+            $this->stage($transaction, 'create', $id, ['$id' => $id, 'name' => \ucfirst($id)]);
+        }
+
+        $reads = new class () implements Lifecycle, Selective {
+            public int $count = 0;
+
+            public function handles(Event $event): bool
+            {
+                return $event === Event::DocumentFind;
+            }
+
+            public function handle(Domain $event): void
+            {
+                if ($event instanceof Found && $event->collection === 'transactionLogs') {
+                    $this->count++;
+                }
+            }
+        };
+        $this->store->addHook($reads);
+
+        $store = $this->store;
+        $databases = 0;
+        $state = new TransactionState($store, $store->getAuthorization(), function () use ($store, &$databases): Database {
+            $databases++;
+            return $store;
+        }, new User());
+
+        $pending = [];
+        foreach (['ada', 'bob', 'cy', 'dee', 'eve', 'fay'] as $id) {
+            $document = $state->getDocument(new Document(), self::CUSTOMERS, $id, $transaction->getId(), pending: $pending);
+            $state->stagedView(new Document(), $transaction, $pending)(self::CUSTOMERS, $id);
+            $this->assertSame($id === 'fay', $document->isEmpty(), "{$id} reads as staged and stored");
+            $pending[] = $this->pending($transaction, 'update', $id, ['name' => "{$id} again"]);
+        }
+
+        $this->assertSame('ada again', $state->getDocument(new Document(), self::CUSTOMERS, 'ada', $transaction->getId(), pending: $pending)->getAttribute('name'), 'an operation staged earlier in the request is seen by a later read');
+        $this->assertSame(1, $reads->count, 'the stored operations are read once per request, not once per operation');
+        $this->assertSame(1, $databases, 'the database is built once per request, not once per operation');
     }
 
     /**
