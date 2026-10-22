@@ -1348,12 +1348,12 @@ return [
             ],
             [
                 'name' => '_APP_EXECUTOR_SECRET',
-                'description' => 'The secret key used by Appwrite to communicate with the function executor. Make sure to change this.',
+                'description' => 'The secret key used by Appwrite to communicate with the function executor. Whoever holds it can drive the executor, which creates containers on the host. The installer generates a unique value; never run with the public `your-secret-key` placeholder. **Keep it a secret**.',
                 'introduction' => '0.13.0',
                 'default' => 'your-secret-key',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => 'token'
             ],
             [
                 'name' => '_APP_EXECUTOR_HOST',

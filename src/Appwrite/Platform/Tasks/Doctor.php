@@ -97,6 +97,14 @@ class Doctor extends Action
             Console::log('🟢 Using a unique secret key for jobs callbacks');
         }
 
+        // The executor creates containers on the host; its secret is the
+        // only thing between anything on the internal network and that.
+        if (EncryptionKey::isInsecure(System::getEnv('_APP_EXECUTOR_SECRET'))) {
+            Console::log('🔴 Not using a unique secret key for the executor');
+        } else {
+            Console::log('🟢 Using a unique secret key for the executor');
+        }
+
         if (System::getEnv('_APP_ENV', 'development') !== 'production') {
             Console::log('🔴 App environment is set for development');
         } else {
