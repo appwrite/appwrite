@@ -64,8 +64,6 @@ class Create extends Action
         callable $deploymentsFactory,
         array $platform
     ) {
-        $this->preprocessEvent($request);
-
         $vcs = $vcsFactory->fromProvider('github');
 
         $event = $request->getHeaderLine('x-github-event', '');
@@ -81,6 +79,11 @@ class Create extends Action
         if (!$valid) {
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Invalid webhook payload signature. Please make sure the webhook secret has same value in your GitHub app and in the _APP_VCS_GITHUB_WEBHOOK_SECRET environment variable');
         }
+
+        // Only a validly-signed delivery is preprocessed (on Cloud this fans the event out to
+        // other regions). Running it before the signature check let an unauthenticated POST
+        // trigger N cross-region forwards — an amplification vector.
+        $this->preprocessEvent($request);
 
         $parsedPayloads = $vcs->getEvents($event, $payload);
 
