@@ -369,6 +369,16 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $update['headers']['status-code']);
         $this->assertEquals(['databases.write'], $update['body']['scopes']);
 
+        // Scopes the function already holds stay, even when the caller lacks
+        // them: saving it unchanged must not need them
+        $update = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, $headers, [
+            'name' => 'Scoped',
+            'runtime' => 'node-22',
+            'scopes' => ['databases.write'],
+        ]);
+        $this->assertEquals(200, $update['headers']['status-code']);
+        $this->assertEquals(['databases.write'], $update['body']['scopes']);
+
         $this->cleanupFunction($functionId);
     }
 

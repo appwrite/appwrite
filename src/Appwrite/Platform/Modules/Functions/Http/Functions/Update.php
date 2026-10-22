@@ -171,18 +171,18 @@ class Update extends Base
         array $platform,
         Scopes $grantedScopes
     ) {
-        // A caller may hand a function only the scopes it holds itself; the
-        // function runs with them through its ephemeral key
-        $missing = $grantedScopes->missing($scopes);
-        if ($missing !== []) {
-            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Cannot grant scopes the caller does not hold: ' . \implode(', ', $missing));
-        }
-
         // TODO: If only branch changes, re-deploy
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        }
+
+        // The function runs with its scopes through its ephemeral key, so a caller
+        // may add only scopes it holds itself; ones the function already has stay
+        $missing = $grantedScopes->missing(\array_values(\array_diff($scopes, $function->getAttribute('scopes', []))));
+        if ($missing !== []) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Cannot grant scopes the caller does not hold: ' . \implode(', ', $missing));
         }
 
         $installation = $dbForPlatform->getDocument('installations', $installationId);

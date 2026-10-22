@@ -172,13 +172,6 @@ class Update extends Base
         array $platform,
         Scopes $grantedScopes
     ) {
-        // A caller may hand a site only the scopes it holds itself; the site
-        // runs with them through its ephemeral key
-        $missing = $grantedScopes->missing($scopes ?? []);
-        if ($missing !== []) {
-            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Cannot grant scopes the caller does not hold: ' . \implode(', ', $missing));
-        }
-
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
             $adapters = \array_keys($configFramework['adapters'] ?? []);
@@ -199,6 +192,13 @@ class Update extends Base
 
         if ($site->isEmpty()) {
             throw new Exception(Exception::SITE_NOT_FOUND);
+        }
+
+        // The site runs with its scopes through its ephemeral key, so a caller
+        // may add only scopes it holds itself; ones the site already has stay
+        $missing = $grantedScopes->missing(\array_values(\array_diff($scopes ?? [], $site->getAttribute('scopes', []))));
+        if ($missing !== []) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Cannot grant scopes the caller does not hold: ' . \implode(', ', $missing));
         }
 
         $installation = $dbForPlatform->getDocument('installations', $installationId);
