@@ -1337,7 +1337,20 @@ async fn build_adapter(
                     )
                     .with_auto_tls(args.get("smtpAutoTLS").and_then(Value::as_bool).unwrap_or(false))
                     .with_x_mailer(arg_str(args, "xMailer")?.unwrap_or_default())
-                    .with_keep_alive(args.get("keepAlive").and_then(Value::as_bool).unwrap_or(false));
+                    .with_keep_alive(args.get("keepAlive").and_then(Value::as_bool).unwrap_or(false))
+                    .with_addresses(
+                        args.get("addresses")
+                            .and_then(Value::as_object)
+                            .map(|addresses| {
+                                addresses
+                                    .iter()
+                                    .map(|(host, address)| {
+                                        (host.clone(), address.as_str().unwrap_or_default().to_owned())
+                                    })
+                                    .collect()
+                            })
+                            .unwrap_or_default(),
+                    );
                 for (key, set) in [
                     ("timeout", Smtp::with_timeout as fn(Smtp, i64) -> Smtp),
                     ("timelimit", Smtp::with_time_limit),
@@ -1503,6 +1516,7 @@ async fn resolve_host(host: &str, a: &Args<'_>, s: &Session) -> Result<(String, 
             let port = s.get::<Arc<SmtpServer>>(server)?.port.to_string();
             host = host.replace(&format!("{{port{i}}}"), &port);
             ports.push((format!("127.0.0.1:{port}"), format!("127.0.0.1:{{port{i}}}")));
+            ports.push((format!(":{port}"), format!(":{{port{i}}}")));
         }
     }
     if host.contains("{closed}") {

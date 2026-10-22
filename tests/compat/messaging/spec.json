@@ -1142,6 +1142,11 @@
           "max": 60
         },
         {
+          "gen": "string",
+          "alphabet": "<>/=\"' aprehfdivtbl#&;13x ​\n\t",
+          "max": 80
+        },
+        {
           "gen": "pick",
           "from": [
             "<style>a{}</style>x",
@@ -1150,6 +1155,9 @@
             "<!-- c -->x",
             "<?php ?>y",
             "a<b",
+            "<p>It&#039;s &lt;b&gt; &amp; &quot;caf&eacute;&quot; &#x263A;</p>",
+            "<a href=\" https://x.test \">Go</a><a href=\"#t\">t</a><pre>\n a\n  b</pre>x<br>y",
+            "<div> ‌ </div><table><tr><td>a&#13;b</td></tr></table><ul><li>c</ul>",
             "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
           ]
         }

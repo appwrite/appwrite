@@ -4,6 +4,7 @@
 //!
 //! PHP: `Utopia\Messaging\Adapter\Email` and its subclasses.
 
+mod html;
 mod mailgun;
 pub mod mime;
 mod resend;

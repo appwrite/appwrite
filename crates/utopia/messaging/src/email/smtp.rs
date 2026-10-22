@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use indexmap::IndexMap;
 use utopia_async::sync::Mutex;
 use utopia_smtp::auth::{Login, Plain};
 use utopia_smtp::{Client, Encryption, Outcome, TcpTransport, Timeouts, Tls};
@@ -109,6 +110,7 @@ pub struct Smtp {
     time_limit: i64,
     ping_threshold: i64,
     restart_threshold: i64,
+    addresses: IndexMap<String, String>,
     client: Mutex<Option<Client<TcpTransport>>>,
     base: Base,
 }
@@ -140,6 +142,7 @@ impl Smtp {
             time_limit: 30,
             ping_threshold: 30,
             restart_threshold: 100,
+            addresses: IndexMap::new(),
             client: Mutex::new(None),
             base: Base::new(Http::new("SMTP")),
         }
@@ -209,6 +212,16 @@ impl Smtp {
         self
     }
 
+    /// Host => address to dial it on, as each host appears in the host
+    /// string (`smtp1.example.com` => `203.0.113.10`, `[2001:db8::1]` for
+    /// IPv6), so the connection lands on an address the caller checked. The
+    /// certificate is still verified against the host. A host not listed is
+    /// dialled by name.
+    pub fn with_addresses(mut self, addresses: IndexMap<String, String>) -> Smtp {
+        self.addresses = addresses;
+        self
+    }
+
     /// The servers to try, in order.
     ///
     /// PHP: the private `hosts()`.
@@ -274,10 +287,17 @@ impl Smtp {
         if domain.is_empty() {
             domain = "localhost".into();
         }
-        let mut client = Client::new(TcpTransport::new(host.host.clone(), port, Tls::default()))
-            .with_domain(domain)
-            .with_encryption(host.encryption)
-            .with_timeouts(timeouts);
+        let mut client = Client::new(match self.addresses.get(&host.host) {
+            Some(address) => TcpTransport::new(
+                address.clone(),
+                port,
+                Tls { peer_name: Some(host.host.trim_matches(['[', ']']).to_owned()), ..Tls::default() },
+            ),
+            None => TcpTransport::new(host.host.clone(), port, Tls::default()),
+        })
+        .with_domain(domain)
+        .with_encryption(host.encryption)
+        .with_timeouts(timeouts);
         let absent = |s: &str| matches!(s, "" | "0");
         if !absent(&self.username) && !absent(&self.password) {
             client = client

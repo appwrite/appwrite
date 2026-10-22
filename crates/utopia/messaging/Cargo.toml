@@ -10,9 +10,11 @@ publish.workspace = true
 
 [dependencies]
 bytes.workspace = true
+encoding_rs.workspace = true
 futures-util.workspace = true
 hex.workspace = true
 hmac.workspace = true
+html5ever.workspace = true
 http.workspace = true
 http-body-util.workspace = true
 hyper = { workspace = true, features = ["client", "http2"] }
@@ -35,4 +37,4 @@ hyper = { workspace = true, features = ["client", "server", "http2"] }
 
 [package.metadata.utopia]
 category = "integrations"
-php-sync = "501a1c63739cb0f34134e17870b617ce2d19909c"
+php-sync = "cf0088de2f2a9d30842c28c3f24466d82d8fe9d1"

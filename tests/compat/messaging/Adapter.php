@@ -387,6 +387,7 @@ final class Adapter implements Base, Benchmarks
             $port = (string) $s->get($server)->port;
             $host = str_replace('{port' . $i . '}', $port, $host);
             $ports['127.0.0.1:' . $port] = '127.0.0.1:{port' . $i . '}';
+            $ports[':' . $port] = ':{port' . $i . '}';
         }
         if (str_contains($host, '{closed}')) {
             $port = (string) ScriptedSmtpServer::closedPort();
