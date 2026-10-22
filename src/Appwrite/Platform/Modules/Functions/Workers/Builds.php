@@ -7,6 +7,7 @@ use Appwrite\Deployment\GitAction;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Platform\Modules\Compute\Validator\RootDirectory;
 use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context;
 use Appwrite\Vcs\Factory as VcsFactory;
@@ -282,6 +283,13 @@ class Builds extends Action
             $rootDirectory = \ltrim($rootDirectory, '.');
             $rootDirectory = \ltrim($rootDirectory, '/');
 
+            // Both directories are appended to paths on this host, where the
+            // template is copied in, moved and packed. The endpoints refuse a
+            // value that could leave the checkout; a stored one may predate that.
+            if (!RootDirectory::isConfined($rootDirectory)) {
+                throw new BuildException('Root directory must be a path inside the repository.');
+            }
+
             $owner = $providerAdapter->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
             $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
 
@@ -339,6 +347,10 @@ class Builds extends Action
             $templateRootDirectory = \rtrim($templateRootDirectory, '/');
             $templateRootDirectory = \ltrim($templateRootDirectory, '.');
             $templateRootDirectory = \ltrim($templateRootDirectory, '/');
+
+            if (!RootDirectory::isConfined($templateRootDirectory)) {
+                throw new BuildException('Template root directory must be a path inside the template repository.');
+            }
 
             if (! empty($templateRepositoryName) && ! empty($templateOwnerName) && ! empty($templateReferenceType) && ! empty($templateReferenceValue)) {
                 // Clone template repo
@@ -435,8 +447,6 @@ class Builds extends Action
                     \rtrim($tmpDirectory . '/' . $rootDirectory, '/'),
                 );
             }
-
-            Console::execute((new Command('rm'))->flag('-rf')->argument('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
         } catch (\Throwable $th) {
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
             if ($deployment->getAttribute('status') === 'canceled') {
@@ -505,6 +515,13 @@ class Builds extends Action
                 throw $th;
             }
         } finally {
+            // The checkout holds the customer's source and, in its .git
+            // config, the provider token the clone used: it leaves this
+            // shared host however the build ends.
+            $stdout = '';
+            $stderr = '';
+            Console::execute((new Command('rm'))->flag('-rf')->argument('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
+
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();

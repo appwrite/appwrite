@@ -9,6 +9,7 @@ use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\Platform\Modules\Compute\Validator\Specification;
+use Appwrite\Platform\Modules\Compute\Validator\RootDirectory;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -91,7 +92,7 @@ class Update extends Base
             ->param('providerRepositoryId', null, new Nullable(new Text(128, 0)), 'Repository ID of the repo linked to the function', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
-            ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
+            ->param('providerRootDirectory', '', new RootDirectory(), 'Path to function code in the linked repo.', true)
             ->param('providerBranches', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
             ->param('providerPaths', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
             ->param('buildSpecification', null, fn (array $plan) => new Nullable(new Specification(
