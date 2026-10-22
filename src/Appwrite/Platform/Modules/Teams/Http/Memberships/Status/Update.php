@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Teams\Http\Memberships\Status;
 
+use Appwrite\Auth\MFA\Type;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -151,7 +152,6 @@ class Update extends Action
                 'secret' => $proofForToken->hash($sessionSecret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
-                'factors' => ['email'],
                 'countryCode' => \strtolower($geo->get($request->getIP())->getCountryCode()),
                 'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
@@ -190,7 +190,17 @@ class Update extends Action
                 $authorization->skip(fn () => $dbForProject->updateDocument('users', $targetUser->getId(), new Document([$verification => true])));
             }
 
+            // The session counts only the channel the invite proved; when that is unknown the user signs in instead
+            if ($verification === null) {
+                $session = null;
+            }
+
             if ($session !== null) {
+                $phoneProof = $verification === 'phoneVerification';
+                $session
+                    ->setAttribute('provider', $phoneProof ? SESSION_PROVIDER_PHONE : SESSION_PROVIDER_EMAIL)
+                    ->setAttribute('providerUid', $phoneProof ? $user->getAttribute('phone') : $user->getAttribute('email'))
+                    ->setAttribute('factors', [$phoneProof ? Type::PHONE : Type::EMAIL]);
                 $session = $dbForProject->createDocument('sessions', $session);
             }
 
@@ -202,7 +212,7 @@ class Update extends Action
         }
 
         // Hand the new session to a user who was not logged in
-        if (!$hasSession) {
+        if ($session !== null) {
             $authorization->addRole(Role::user($userId)->toString());
 
             $encoded = $store
