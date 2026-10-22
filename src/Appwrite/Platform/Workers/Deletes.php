@@ -526,14 +526,29 @@ class Deletes extends Action
             return;
         }
 
+        $dbForProject = $getProjectDB($project);
+
         $this->deleteByGroup(
             'subscribers',
             [
                 Query::equal('topicInternalId', [$topic->getSequence()]),
                 Query::orderAsc(),
             ],
-            $getProjectDB($project)
+            $dbForProject
         );
+
+        if ($dbForProject->findCollection('pushLedger') === null) {
+            return;
+        }
+
+        // Ledger rows are keyed by the public topic ID; keep rows of a topic recreated with the same ID.
+        $queries = [Query::equal('topic', [$topic->getId()])];
+        $recreated = $dbForProject->getDocument('topics', $topic->getId());
+        if (!$recreated->isEmpty()) {
+            $queries[] = Query::lessThan('$createdAt', $recreated->getCreatedAt());
+        }
+
+        $dbForProject->deleteDocuments('pushLedger', $queries);
     }
 
     /**

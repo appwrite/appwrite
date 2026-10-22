@@ -198,6 +198,21 @@ final class MqttServerTest extends Scope
         $subscriber->disconnect();
     }
 
+    public function testSecondConnectClosesConnection(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+        ['userId' => $otherUserId, 'jwt' => $otherJwt] = $this->createUser();
+
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-second-connect-' . $userId, cleanStart: true));
+
+        // Test for FAILURE: a CONNECT on an accepted connection is a protocol violation, so the broker closes it.
+        $subscriber->sendConnect($projectId, $otherJwt, 'e2e-second-connect-' . $otherUserId);
+        $this->assertTrue($subscriber->awaitClose(5.0), 'a second CONNECT kept the connection open');
+        $subscriber->disconnect();
+    }
+
     public function testSessionAuthWithInvalidSecretRejected(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -1324,6 +1339,66 @@ final class MqttServerTest extends Scope
             $leftover,
         );
         $this->assertNotContains($bodies[0], $leftoverBodies, 'an already-acked message was re-delivered');
+    }
+
+    public function testRecreatedTopicDoesNotReplayDeletedTopicMessages(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/appwrite', $server, [
+            'providerId' => Id::unique(),
+            'name' => 'appwrite-mqtt-recreate',
+            'enabled' => true,
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
+        $providerId = $provider['body']['$id'];
+
+        $topicId = Id::unique();
+        $createTopic = fn (): array => $this->client->call(Client::METHOD_POST, '/messaging/topics', $server, [
+            'topicId' => $topicId,
+            'name' => 'appwrite-mqtt-recreate',
+            'qos' => 1,
+        ]);
+
+        $this->assertEquals(201, $createTopic()['headers']['status-code']);
+        $this->createSubscriber($server, $topicId, $this->createAppwriteTarget($server, $userId, $providerId));
+        $this->publishCampaign($server, $topicId, 'Old', 'deleted topic message');
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' . $topicId, $server);
+        $this->assertEquals(204, $deleted['headers']['status-code']);
+
+        $this->assertEquals(201, $createTopic()['headers']['status-code']);
+        $this->createSubscriber($server, $topicId, $this->createAppwriteTarget($server, $userId, $providerId));
+
+        $clientId = 'e2e-recreate-' . $userId;
+
+        $seed = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $seed->connect($projectId, $jwt, $clientId, cleanStart: false));
+        $seed->subscribe([$topicId]);
+        $this->assertCount(0, $seed->consume(limit: 1, timeout: 2.0));
+        $seed->disconnect();
+
+        $this->publishCampaign($server, $topicId, 'New', 'recreated topic message');
+
+        $resume = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $resume->connect($projectId, $jwt, $clientId, cleanStart: false));
+        $resume->subscribe([$topicId]);
+        $received = $resume->consume(limit: 2, timeout: 5.0);
+        $resume->disconnect();
+
+        // Test for SUCCESS: only the recreated topic's message is replayed.
+        $bodies = \array_map(
+            fn (array $message): string => \json_decode($message['payload'], true)['notification']['body'],
+            $received,
+        );
+        $this->assertSame(['recreated topic message'], $bodies);
     }
 
     /**
