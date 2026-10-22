@@ -1,7 +1,7 @@
 ---
 layout: changelog
 title: "Verify emails and reset passwords with a 6-digit code"
-date: 2026-10-21
+date: 2026-10-22
 cover: /images/blog/announcing-verification-and-recovery-codes/cover.avif
 tags: auth
 ---
