@@ -106,6 +106,7 @@ class Key
     /**
      * Decode the given secret key into a Key object, containing the project ID, type, role, scopes, and name.
      * Can be a stored API key or an ephemeral key (JWT).
+     * Invalid, expired-JWT, unknown-prefix, or project-mismatched secrets are refused.
      *
      * @throws Exception
      */
@@ -127,16 +128,6 @@ class Key
         $scopes = $roles[User::ROLE_KEYS]['scopes'] ?? [];
         $expired = false;
 
-        $guestKey = new Key(
-            $project->getId(),
-            '',
-            '',
-            $type,
-            User::ROLE_GUESTS,
-            $roles[User::ROLE_GUESTS]['scopes'] ?? [],
-            'UNKNOWN'
-        );
-
         switch ($type) {
             // Dynamic supported for backwards compatibility
             case API_KEY_EPHEMERAL:
@@ -148,11 +139,10 @@ class Key
                     leeway: 0
                 );
 
-                $payload = [];
                 try {
                     $payload = $jwtObj->decode($secret);
                 } catch (JWTException) {
-                    $expired = true;
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
                 $name = $payload['name'] ?? 'Ephemeral Key';
@@ -166,7 +156,7 @@ class Key
                 $scopes = \array_merge($payload['scopes'] ?? [], $scopes);
 
                 if (!$projectCheckDisabled && $projectId !== $project->getId()) {
-                    return $guestKey;
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
                 return new Key(
@@ -193,7 +183,7 @@ class Key
                 );
 
                 if (!$key) {
-                    return $guestKey;
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
                 $expire = $key->getAttribute('expire');
@@ -223,7 +213,7 @@ class Key
 
                 // Invalid key
                 if (!$key) {
-                    return $guestKey;
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
                 $expire = $key->getAttribute('expire');
@@ -259,7 +249,7 @@ class Key
 
                 // Invalid key
                 if (!$key) {
-                    return $guestKey;
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
                 $expire = $key->getAttribute('expire');
@@ -287,7 +277,7 @@ class Key
 
                 return $key;
             default:
-                return $guestKey;
+                throw new Exception(Exception::USER_UNAUTHORIZED);
         }
     }
 }
