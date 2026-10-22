@@ -138,25 +138,25 @@ final class Mime
     {
         if ($node instanceof Text) {
             if ($preformatted) {
-                return str_replace(["\r\n", "\n"], "\r", $node->data);
+                return str_replace("\n", "\r", $node->data);
             }
 
             // Preview padding is a run of invisible characters and no-break spaces
             // with nothing else in it. Elsewhere those characters shape the text.
-            if (str_replace(["\u{00A0}", "\u{200B}", "\u{200C}", "\u{200D}", "\u{200E}", "\u{200F}", "\u{FEFF}", ' ', "\t", "\n", "\r", "\f"], '', $node->data) === '') {
-                return $node->data === '' ? '' : ' ';
+            if (str_replace(["\u{00A0}", "\u{200B}", "\u{200C}", "\u{200D}", "\u{200E}", "\u{200F}", "\u{FEFF}", ' ', "\t", "\n", "\f"], '', $node->data) === '') {
+                return ' ';
             }
 
             // Source whitespace means nothing in HTML; collapse it the way a browser would.
-            $data = str_replace(["\t", "\n", "\r", "\f"], ' ', $node->data);
+            $data = str_replace(["\t", "\n", "\f"], ' ', $node->data);
             $words = implode(' ', array_filter(explode(' ', $data), static fn (string $word): bool => $word !== ''));
 
             return (str_starts_with($data, ' ') ? ' ' : '') . $words . (str_ends_with($data, ' ') ? ' ' : '');
         }
 
-        $name = $node instanceof Element ? strtolower($node->localName) : '';
+        $name = $node instanceof Element ? $node->localName : '';
 
-        if (\in_array($name, ['head', 'style', 'script', 'title', 'template'], true)) {
+        if (\in_array($name, ['style', 'script', 'title', 'template'], true)) {
             return '';
         }
 
