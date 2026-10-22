@@ -433,4 +433,76 @@ final class MigrationVersionsTest extends TestCase
 
         $this->assertSame('legacyuser@example.com', $user->getAttribute('emailCanonical'));
     }
+
+    public function testV25LetsALegacyInstallStoreAMembershipChannel(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV25MembershipChannel')
+            ->setNamespace('migration_membership_channel_' . \uniqid());
+        $database->create();
+
+        (new Audit(new AdapterDatabase($database)))->setup();
+
+        foreach (Config::getParam('collections', [])['projects'] as $key => $collection) {
+            if ($key === 'memberships' || ($collection['$collection'] ?? '') !== Database::METADATA) {
+                continue;
+            }
+
+            $database->createCollection(Collection::create(
+                id: $key,
+                attributes: \array_values($collection['attributes']),
+                indexes: \array_values($collection['indexes']),
+            ));
+        }
+
+        $database->createCollection(Collection::create(id: 'memberships', attributes: [
+            Attribute::string('userInternalId', required: true),
+            Attribute::string('userId'),
+            Attribute::string('teamInternalId', required: true),
+            Attribute::string('teamId'),
+            Attribute::string('roles', size: 128, array: true),
+            Attribute::datetime('invited'),
+            Attribute::datetime('joined'),
+            Attribute::boolean('confirm'),
+            Attribute::string('secret', size: 256),
+            Attribute::string('search', size: 16384),
+        ]));
+
+        $migration = new V25();
+        $migration->setProject(
+            new Document(['$id' => 'project', '$sequence' => '1']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        \ob_start();
+        try {
+            $migration->execute();
+        } finally {
+            \ob_end_clean();
+        }
+
+        $authorization->skip(fn () => $database->createDocument('memberships', new Document([
+            '$id' => 'legacy-membership',
+            'userInternalId' => '1',
+            'userId' => 'user',
+            'teamInternalId' => '1',
+            'teamId' => 'team',
+            'roles' => ['developer'],
+            'confirm' => false,
+            'secret' => 'hash',
+            'search' => 'legacy-membership',
+            'channel' => 'phone',
+        ])));
+
+        $membership = $authorization->skip(fn () => $database->getDocument('memberships', 'legacy-membership'));
+
+        $this->assertSame('phone', $membership->getAttribute('channel'));
+    }
 }

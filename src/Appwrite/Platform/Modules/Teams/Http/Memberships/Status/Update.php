@@ -127,8 +127,15 @@ class Update extends Action
             ->setAttribute('confirm', true)
         ;
 
-        $targetUser->setAttribute('emailVerification', true);
-        $authorization->skip(fn () => $dbForProject->updateDocument('users', $targetUser->getId(), new Document(['emailVerification' => true])));
+        $channel = $this->deliveredChannel($membership, $targetUser);
+
+        if ($channel === 'email' && !empty($targetUser->getAttribute('email'))) {
+            $targetUser->setAttribute('emailVerification', true);
+            $authorization->skip(fn () => $dbForProject->updateDocument('users', $targetUser->getId(), new Document(['emailVerification' => true])));
+        } elseif ($channel === 'phone' && !empty($targetUser->getAttribute('phone'))) {
+            $targetUser->setAttribute('phoneVerification', true);
+            $authorization->skip(fn () => $dbForProject->updateDocument('users', $targetUser->getId(), new Document(['phoneVerification' => true])));
+        }
 
         // Create session for the user if not logged in
         if (!$hasSession) {
@@ -138,6 +145,8 @@ class Update extends Action
             $authDuration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
             $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
             $secret = $proofForToken->generate();
+            $provider = $channel === 'phone' ? SESSION_PROVIDER_PHONE : SESSION_PROVIDER_EMAIL;
+            $providerUid = $channel === 'phone' ? $targetUser->getAttribute('phone') : $targetUser->getAttribute('email');
             $session = new Document(array_merge([
                 '$id' => Id::unique(),
                 '$permissions' => [
@@ -147,12 +156,12 @@ class Update extends Action
                 ],
                 'userId' => $targetUser->getId(),
                 'userInternalId' => $targetUser->getSequence(),
-                'provider' => SESSION_PROVIDER_EMAIL,
-                'providerUid' => $targetUser->getAttribute('email'),
+                'provider' => $provider,
+                'providerUid' => $providerUid,
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
-                'factors' => ['email'],
+                'factors' => [$provider],
                 'countryCode' => \strtolower($geo->get($request->getIP())->getCountryCode()),
                 'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
@@ -227,5 +236,31 @@ class Update extends Action
                 ->setAttribute('userEmail', $targetUser->getAttribute('email')),
             Response::MODEL_MEMBERSHIP
         );
+    }
+
+    /**
+     * Channel the invite secret was delivered over.
+     * Unknown rows fail safe: only infer email or phone when the user has exactly one.
+     */
+    private function deliveredChannel(Document $membership, Document $user): string
+    {
+        $channel = $membership->getAttribute('channel', '');
+
+        if ($channel === 'email' || $channel === 'phone') {
+            return $channel;
+        }
+
+        $email = $user->getAttribute('email', '');
+        $phone = $user->getAttribute('phone', '');
+
+        if (!empty($email) && empty($phone)) {
+            return 'email';
+        }
+
+        if (!empty($phone) && empty($email)) {
+            return 'phone';
+        }
+
+        return '';
     }
 }

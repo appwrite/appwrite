@@ -419,6 +419,16 @@ class V25 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'memberships':
+                    // Which channel the invite secret was sent over.
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'channel');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"channel\" in collection {$id}: {$th->getMessage()}");
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'identities':
                     foreach (['photo', 'providerIdToken'] as $attribute) {
                         try {

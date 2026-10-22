@@ -288,6 +288,15 @@ class Create extends Action
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to send invitations for this team');
         }
 
+        $channel = '';
+        if (! $isPrivilegedUser && ! $isAppUser) {
+            if (! empty($email)) {
+                $channel = 'email';
+            } elseif (! empty($phone)) {
+                $channel = 'phone';
+            }
+        }
+
         $membership = $dbForProject->findOne('memberships', [
             Query::equal('userInternalId', [$invitee->getSequence()]),
             Query::equal('teamInternalId', [$team->getSequence()]),
@@ -314,6 +323,7 @@ class Create extends Action
                 'joined' => ($isPrivilegedUser || $isAppUser) ? DateTime::now() : null,
                 'confirm' => ($isPrivilegedUser || $isAppUser),
                 'secret' => $proofForToken->hash($secret),
+                'channel' => $channel,
                 'search' => implode(' ', [$membershipId, $invitee->getId()]),
             ]);
 
@@ -371,7 +381,8 @@ class Create extends Action
             } else {
                 $membership = $dbForProject->updateDocument('memberships', $membership->getId(), new Document([
                     'secret' => $secretHash,
-                    'invited' => $invitedTime
+                    'invited' => $invitedTime,
+                    'channel' => $channel,
                 ]));
             }
         } else {
