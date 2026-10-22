@@ -19,15 +19,20 @@ final readonly class Cycle
 {
     public const int INTERVAL = 300;
 
-    public const int TICK = 60;
+    /**
+     * The scheduler's schedule.lag gauge reads how far a window start trails "now", so it reads one tick at rest. A
+     * one-second tick keeps it reporting real delay; slots still come once per interval from the trigger.
+     */
+    public const int TICK = 1;
 
-    public const int LEASE = 600;
+    /**
+     * How long a crashed leader holds the claim: a stopped one releases it. Well above a tick and a catch-up burst.
+     */
+    public const int LEASE = 60;
 
     public int $interval;
 
     public int $slots;
-
-    public int $tick;
 
     /**
      * @throws \InvalidArgumentException when the period is under one second
@@ -40,7 +45,6 @@ final readonly class Cycle
 
         $this->interval = \min(self::INTERVAL, $period);
         $this->slots = \intdiv($period, $this->interval);
-        $this->tick = \min(self::TICK, $this->interval);
     }
 
     /**
@@ -82,7 +86,7 @@ final readonly class Cycle
         return new Scheduler(
             source: new Maintenance($this->interval),
             store: $store,
-            tickSeconds: $this->tick,
+            tickSeconds: self::TICK,
             recoverSeconds: $this->seconds(),
             leaseSeconds: self::LEASE,
             token: $token,

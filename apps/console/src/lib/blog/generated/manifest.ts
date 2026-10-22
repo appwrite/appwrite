@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-verification-and-recovery-codes",
+    "href": "/blog/post/announcing-verification-and-recovery-codes",
+    "title": "Announcing 6-digit codes for email verification and password recovery",
+    "description": "Appwrite Auth can email a 6-digit code for email verification and password recovery, so mobile and desktop apps can handle both without a redirect page or a deep link.",
+    "date": "2026-10-22",
+    "lastUpdated": "2026-10-22",
+    "timeToRead": 4,
+    "author": "atharva",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-verification-and-recovery-codes/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "default-deployment-retention",
     "href": "/blog/post/default-deployment-retention",
     "title": "Old deployments will no longer fill up your Appwrite Cloud storage",

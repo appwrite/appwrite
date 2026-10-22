@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6920f9001dbb179d3d316d456aad05f6",
+    "content-hash": "b22d7bcf2bbfb15b09c85e6b40b7ae8f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -69,16 +69,16 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "30.4.0",
+            "version": "32.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "2a57ecdd9f3b7fcf43c7c7776ad1e9aac727d5af"
+                "reference": "864a406cfa4e0004e099b66bfca9b2e28f95b13b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/2a57ecdd9f3b7fcf43c7c7776ad1e9aac727d5af",
-                "reference": "2a57ecdd9f3b7fcf43c7c7776ad1e9aac727d5af",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/864a406cfa4e0004e099b66bfca9b2e28f95b13b",
+                "reference": "864a406cfa4e0004e099b66bfca9b2e28f95b13b",
                 "shasum": ""
             },
             "require": {
@@ -86,6 +86,7 @@
                 "ext-curl": "*",
                 "ext-json": "*",
                 "php": ">=8.5",
+                "psr/http-client": "^1.0",
                 "utopia-php/client": "^0.6"
             },
             "require-dev": {
@@ -110,10 +111,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/30.4.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/32.0.0",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2026-10-14T12:03:49+00:00"
+            "time": "2026-10-20T23:47:23+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -4426,16 +4427,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "8.3.10",
+            "version": "8.3.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "385995429dcee32194e09ee1d376df7015a942ea"
+                "reference": "e1c599d0d045f08d6e9d17b04f4ea4f84ba46d78"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/385995429dcee32194e09ee1d376df7015a942ea",
-                "reference": "385995429dcee32194e09ee1d376df7015a942ea",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/e1c599d0d045f08d6e9d17b04f4ea4f84ba46d78",
+                "reference": "e1c599d0d045f08d6e9d17b04f4ea4f84ba46d78",
                 "shasum": ""
             },
             "require": {
@@ -4493,9 +4494,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/8.3.10"
+                "source": "https://github.com/utopia-php/database/tree/8.3.12"
             },
-            "time": "2026-10-19T04:46:57+00:00"
+            "time": "2026-10-21T11:55:58+00:00"
         },
         {
             "name": "utopia-php/mongo",

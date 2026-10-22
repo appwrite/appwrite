@@ -41,12 +41,13 @@ class Database extends Resource
      *     enabled: bool,
      *     originalId: string|null,
      *     database: string,
-     *     status: string|null
+     *     status: string|null,
+     *     description?: string,
      * } $array
      */
     public static function fromArray(array $array): self
     {
-        return new self(
+        return (new self(
             $array['id'],
             $array['name'],
             createdAt: $array['createdAt'] ?? '',
@@ -56,7 +57,7 @@ class Database extends Resource
             type: $array['type'] ?? 'legacy',
             database: $array['database'] ?? null,
             databaseStatus: $array['status'] ?? null
-        );
+        ))->setDescription($array['description'] ?? '');
     }
 
     /**
@@ -65,6 +66,7 @@ class Database extends Resource
     public function jsonSerialize(): array
     {
         return [
+            'description' => $this->description,
             'id' => $this->id,
             'name' => $this->name,
             'createdAt' => $this->createdAt,
