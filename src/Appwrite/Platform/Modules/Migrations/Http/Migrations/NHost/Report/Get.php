@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Response;
+use Utopia\Client\Destinations;
 use Utopia\Database\Document;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Platform\Enum;
@@ -57,6 +58,7 @@ class Get extends Action
             ->param('password', '', new PasswordFormat(new Text(512)), 'Source\'s Database Password.')
             ->param('port', 5432, new Integer(true), 'Source\'s Database Port.', true, example: '5432')
             ->inject('response')
+            ->inject('publicInternet')
             ->callback($this->action(...));
     }
 
@@ -69,7 +71,8 @@ class Get extends Action
         string $username,
         string $password,
         int $port,
-        Response $response
+        Response $response,
+        Destinations $publicInternet
     ): void {
         try {
             NHost::assertCoordinates($subdomain, $region, $database, (string) $port);
@@ -79,6 +82,8 @@ class Get extends Action
 
         try {
             $nhost = new NHost($subdomain, $region, $adminSecret, $database, $username, $password, (string) $port);
+            // Hold every connection and redirect hop to a public address, so DNS cannot answer differently than when the host was checked
+            $nhost->setDestinations($publicInternet);
             $report = $nhost->report($resources);
         } catch (\Throwable $e) {
             throw new Exception(

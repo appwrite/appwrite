@@ -10,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Response;
+use Utopia\Client\Destinations;
 use Utopia\Database\Document;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Platform\Enum;
@@ -58,6 +59,7 @@ class Get extends Action
             ->param('password', '', new PasswordFormat(new Text(512)), 'Source\'s Database Password.')
             ->param('port', 5432, new Integer(true), 'Source\'s Database Port.', true, example: '5432')
             ->inject('response')
+            ->inject('publicInternet')
             ->inject('publicHostname')
             ->callback($this->action(...));
     }
@@ -71,7 +73,8 @@ class Get extends Action
         string $password,
         int $port,
         Response $response,
-        PublicHostname $publicHostname
+        PublicHostname $publicHostname,
+        Destinations $publicInternet
     ): void {
         // Block a source endpoint or database host that resolves to a private or reserved
         // address to prevent SSRF into the internal network. Postgres connects to the address
@@ -88,6 +91,8 @@ class Get extends Action
 
         try {
             $supabase = new Supabase($endpoint, $apiKey, $databaseAddress, 'postgres', $username, $password, (string) $port);
+            // Hold every connection and redirect hop to a public address, so DNS cannot answer differently than when the host was checked
+            $supabase->setDestinations($publicInternet);
             $report = $supabase->report($resources);
         } catch (\Throwable $e) {
             throw new Exception(
