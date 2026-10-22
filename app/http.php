@@ -309,8 +309,20 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                 $audit->setup();
             }
 
-            if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty()) {
-                $dbForPlatform->createDocument('buckets', new Document([
+            // Console users upload import files here; everything else goes through file permissions.
+            $defaultBucketPermissions = [
+                Permission::create(Role::users()),
+            ];
+
+            $defaultBucket = $authorization->skip(fn () => $dbForPlatform->getDocument('buckets', 'default'));
+            if (!$defaultBucket->isEmpty() && $defaultBucket->getPermissions() !== $defaultBucketPermissions) {
+                $authorization->skip(fn () => $dbForPlatform->updateDocument('buckets', 'default', new Document([
+                    '$permissions' => $defaultBucketPermissions,
+                ])));
+            }
+
+            if ($defaultBucket->isEmpty()) {
+                $authorization->skip(fn () => $dbForPlatform->createDocument('buckets', new Document([
                     '$id' => ID::custom('default'),
                     '$collection' => ID::custom('buckets'),
                     'name' => 'Default',
@@ -321,16 +333,11 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                     'encryption' => true,
                     'antivirus' => true,
                     'fileSecurity' => true,
-                    '$permissions' => [
-                        Permission::create(Role::any()),
-                        Permission::read(Role::any()),
-                        Permission::update(Role::any()),
-                        Permission::delete(Role::any()),
-                    ],
+                    '$permissions' => $defaultBucketPermissions,
                     'search' => 'buckets Default',
-                ]));
+                ])));
 
-                $bucket = $dbForPlatform->getDocument('buckets', 'default');
+                $bucket = $authorization->skip(fn () => $dbForPlatform->getDocument('buckets', 'default'));
 
                 $files = $collections['buckets']['files'] ?? [];
                 if (empty($files)) {
