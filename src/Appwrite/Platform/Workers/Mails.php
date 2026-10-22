@@ -111,8 +111,14 @@ class Mails extends Action
         $bodyTemplate = Template::fromFile($bodyTemplate);
         $bodyTemplate->setParam('{{body}}', $body, escapeHtml: false);
         foreach ($variables as $key => $value) {
-            // TODO: hotfix for redirect param
-            $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: $key !== 'redirect');
+            // The plain-text part is the stripped HTML and shows entities as written, so the
+            // redirect keeps its query separators while quotes and angle brackets are escaped.
+            if ($key === 'redirect' && \is_string($value)) {
+                $bodyTemplate->setParam('{{' . $key . '}}', \str_replace('&amp;', '&', \htmlspecialchars($value, ENT_QUOTES, 'UTF-8')), escapeHtml: false);
+                continue;
+            }
+
+            $bodyTemplate->setParam('{{' . $key . '}}', $value);
         }
         foreach ($this->richTextParams as $key => $value) {
             $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
