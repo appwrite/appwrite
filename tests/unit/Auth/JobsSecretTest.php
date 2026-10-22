@@ -47,6 +47,29 @@ final class JobsSecretTest extends TestCase
         yield 'placeholder' => [JobsSecret::PLACEHOLDER];
     }
 
+    #[DataProvider('insecureInstallSecrets')]
+    public function testResolveReplacesInsecureSecret(string $secret): void
+    {
+        $resolved = JobsSecret::resolve($secret);
+
+        $this->assertFalse(JobsSecret::isInsecure($resolved));
+        $this->assertNotSame($secret, $resolved);
+    }
+
+    /**
+     * @return \Iterator<string, array{0: string}>
+     */
+    public static function insecureInstallSecrets(): \Iterator
+    {
+        yield 'empty' => [''];
+        yield 'placeholder' => [JobsSecret::PLACEHOLDER];
+    }
+
+    public function testResolveKeepsUniqueSecret(): void
+    {
+        $this->assertSame('operator-chosen-jobs-secret', JobsSecret::resolve('operator-chosen-jobs-secret'));
+    }
+
     public function testVerifyAcceptsCustomSecret(): void
     {
         $secret = 'operator-chosen-jobs-secret';

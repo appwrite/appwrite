@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Appwrite\Auth;
 
+use Utopia\Auth\Proofs\Token;
+
 /**
  * HMAC secret for jobs-service callbacks to `/v1/jobs/event`.
  *
@@ -18,6 +20,15 @@ final class JobsSecret
     public static function isInsecure(?string $secret): bool
     {
         return $secret === null || $secret === '' || $secret === self::PLACEHOLDER;
+    }
+
+    public static function resolve(string $secret): string
+    {
+        if (!self::isInsecure($secret)) {
+            return $secret;
+        }
+
+        return (new Token())->generate();
     }
 
     public static function verify(string $body, string $signature, ?string $secret): bool
