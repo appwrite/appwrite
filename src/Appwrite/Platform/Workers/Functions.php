@@ -618,6 +618,7 @@ class Functions extends Action
         $apiKey = $jwtObj->encode([
             Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectId' => $project->getId(),
+            'projectSequence' => $project->getSequence(),
             'scopes' => Deployments::scopes($function)
         ]);
 

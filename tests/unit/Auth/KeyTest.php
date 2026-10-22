@@ -343,6 +343,12 @@ final class KeyTest extends TestCase
                 'scopes' => ['documents.read'],
             ]),
         ];
+        yield 'mismatched ephemeral project sequence' => [
+            new Document(['$id' => $projectId, '$sequence' => '2']),
+            new Document(),
+            new Document(),
+            self::generateKey($projectId, false, ['documents.read'], extra: ['projectSequence' => '1']),
+        ];
         yield 'invalid standard key' => [
             $storedStandard,
             new Document(),
@@ -386,6 +392,35 @@ final class KeyTest extends TestCase
             new Document(),
             'organization_efgh5678',
         ];
+    }
+
+    public function testDecodeEphemeralBoundToProjectSequence(): void
+    {
+        $project = new Document(['$id' => 'test', '$sequence' => '42']);
+
+        $decoded = Key::decode(
+            project: $project,
+            team: new Document(),
+            user: new Document(),
+            key: self::generateKey('test', false, ['documents.read'], extra: ['projectSequence' => '42']),
+        );
+        $this->assertSame('test', $decoded->getProjectId());
+
+        $decoded = Key::decode(
+            project: $project,
+            team: new Document(),
+            user: new Document(),
+            key: self::generateKey('test', false, ['documents.read'], extra: ['projectSequence' => 42]),
+        );
+        $this->assertSame('test', $decoded->getProjectId());
+
+        $decoded = Key::decode(
+            project: $project,
+            team: new Document(),
+            user: new Document(),
+            key: self::generateKey('other', false, ['documents.read'], extra: ['projectSequence' => '1', 'projectCheckDisabled' => true]),
+        );
+        $this->assertTrue($decoded->isProjectCheckDisabled());
     }
 
     public function testDecodeExpiredEphemeral(): void
