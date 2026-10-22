@@ -20,6 +20,7 @@ use Utopia\Database\RelationshipType;
 use Utopia\Database\Role;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
+use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Query\Schema\IndexType;
 use Utopia\System\System;
@@ -331,6 +332,57 @@ trait MigrationsBase
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertStringContainsString('169.254.169.254', $response['body']['message']);
+
+        $this->assertSame($before, $countMigrations());
+    }
+
+    /**
+     * NHost's subdomain and region become labels of the source hostname, and the database
+     * name part of its connection string, so each must keep that shape.
+     */
+    public function testNHostMigrationWithInvalidHostPartsIsRefused(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+        $countMigrations = fn (): int => $this->client->call(Client::METHOD_GET, '/migrations', $headers)['body']['total'];
+        $before = $countMigrations();
+
+        $valid = [
+            'resources' => NHost::getSupportedResources(),
+            'subdomain' => 'abcdefghijklmnopqrst',
+            'region' => 'eu-central-1',
+            'adminSecret' => 'any',
+            'database' => 'abcdefghijklmnopqrst',
+            'username' => 'postgres',
+            'password' => 'any',
+        ];
+
+        $invalid = [
+            ['subdomain', 'example.com'],
+            ['subdomain', 'abc;port=1'],
+            ['subdomain', 'ABC'],
+            ['region', 'eu central'],
+            ['region', 'eu-central-1.example.com'],
+            ['database', 'postgres;host=example.com'],
+            ['database', 'post gres'],
+        ];
+
+        foreach ($invalid as [$param, $value]) {
+            $params = \array_merge($valid, [$param => $value]);
+
+            $response = $this->client->call(Client::METHOD_POST, '/migrations/nhost', $headers, $params);
+            $this->assertSame(400, $response['headers']['status-code'], "create with {$param} {$value}");
+            $this->assertSame('general_argument_invalid', $response['body']['type']);
+            $this->assertStringContainsString($param, $response['body']['message']);
+
+            $response = $this->client->call(Client::METHOD_GET, '/migrations/nhost/report', $headers, $params);
+            $this->assertSame(400, $response['headers']['status-code'], "report with {$param} {$value}");
+            $this->assertSame('general_argument_invalid', $response['body']['type']);
+            $this->assertStringContainsString($param, $response['body']['message']);
+        }
 
         $this->assertSame($before, $countMigrations());
     }
