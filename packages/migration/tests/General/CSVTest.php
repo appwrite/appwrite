@@ -548,6 +548,35 @@ class CSVTest extends TestCase
         }
     }
 
+    public function testCSVExportFailureKeepsAFileItDoesNotOwn(): void
+    {
+        $tempDir = sys_get_temp_dir() . '/csv_test_' . uniqid();
+        mkdir($tempDir, 0755, true);
+
+        $database = new Database('test_db');
+        $table = new Table($database, 'test_table', 'test_table_id');
+
+        $published = new DestinationCSV(new Local($tempDir), 'test_db:test_table_id', '', 'test_db_test_table_id');
+        $source = new MockSource();
+        $source->pushMockResource(new Row('row1', $table, ['name' => 'John Doe']));
+        (new Transfer($source, $published))->run([UtopiaResource::TYPE_ROW], function () {
+            return;
+        });
+        $published->shutdown();
+        $published->success();
+
+        $published->error();
+        $this->assertFileExists($tempDir . '/test_db_test_table_id.csv');
+
+        $retry = new DestinationCSV(new Local($tempDir), 'test_db:test_table_id', '', 'test_db_test_table_id');
+        $retry->error();
+        $this->assertFileExists($tempDir . '/test_db_test_table_id.csv');
+
+        if (is_dir($tempDir)) {
+            $this->recursiveDelete($tempDir);
+        }
+    }
+
     private function recursiveDelete(string $dir): void
     {
         if (is_dir($dir)) {
