@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\E2E\General;
 
 use CURLFile;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -18,6 +19,8 @@ final class AbuseTest extends Scope
 {
     use ProjectCustom;
     use SideNone;
+
+    private const int COUNTING_SECONDS = 20;
 
     protected function setUp(): void
     {
@@ -399,5 +402,109 @@ final class AbuseTest extends Scope
         return [
             'bucketId' => $bucket['body']['$id'],
         ];
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseCreateTransactionCollectionsAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_POST, '/databases/transactions', [], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseUpdateTransactionCollectionsAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_PATCH, '/databases/transactions/' . ID::unique(), ['rollback' => true], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseDeleteTransactionCollectionsAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_DELETE, '/databases/transactions/' . ID::unique(), [], 60);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseCreateTransactionTablesAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_POST, '/tablesdb/transactions', [], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseUpdateTransactionTablesAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_PATCH, '/tablesdb/transactions/' . ID::unique(), ['rollback' => true], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseDeleteTransactionTablesAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_DELETE, '/tablesdb/transactions/' . ID::unique(), [], 60);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseCreateTransactionDocumentsDBAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_POST, '/documentsdb/transactions', [], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseUpdateTransactionDocumentsDBAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_PATCH, '/documentsdb/transactions/' . ID::unique(), ['rollback' => true], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseDeleteTransactionDocumentsDBAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_DELETE, '/documentsdb/transactions/' . ID::unique(), [], 60);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseCreateTransactionVectorsDBAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_POST, '/vectorsdb/transactions', [], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseUpdateTransactionVectorsDBAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_PATCH, '/vectorsdb/transactions/' . ID::unique(), ['rollback' => true], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseDeleteTransactionVectorsDBAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_DELETE, '/vectorsdb/transactions/' . ID::unique(), [], 60);
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    private function assertGuestLimited(string $method, string $path, array $params, int $limit): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-for' => '198.51.100.' . \random_int(1, 254),
+        ];
+
+        $this->startCountingInOneWindow(APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT);
+        for ($i = 0; $i < $limit; $i++) {
+            $response = $this->client->call($method, $path, $headers, $params);
+            $this->assertNotSame(429, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call($method, $path, $headers, $params);
+        $this->assertSame(429, $response['headers']['status-code'], 'A guest past the limit is throttled');
+    }
+
+    /**
+     * A limit counts hits in windows aligned to its period, so a count split across two windows never reaches it.
+     */
+    private function startCountingInOneWindow(int $period): void
+    {
+        $remaining = $period - \fmod(\microtime(true), $period);
+        if ($remaining < self::COUNTING_SECONDS) {
+            \usleep((int) \ceil(($remaining + 0.5) * 1_000_000));
+        }
     }
 }
