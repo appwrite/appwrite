@@ -1698,6 +1698,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_VCS_GITEA_SELF_SIGNED',
+                'description' => 'Set to enabled to accept self-signed TLS certificates from your Gitea instance, for installs behind a private certificate authority. Defaults to disabled, which verifies certificates.',
+                'introduction' => '2.7.0',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_VCS_GITLAB_ENDPOINT',
                 'description' => 'URL of your self-hosted GitLab instance, reachable from the Appwrite server and the browser. Defaults to https://gitlab.com when unset.',
                 'introduction' => '2.0.0',
@@ -1729,6 +1738,15 @@ return [
                 'description' => 'Secret used to validate incoming GitLab webhook payloads.',
                 'introduction' => '2.0.0',
                 'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITLAB_SELF_SIGNED',
+                'description' => 'Set to enabled to accept self-signed TLS certificates from your GitLab instance, for installs behind a private certificate authority. Defaults to disabled, which verifies certificates.',
+                'introduction' => '2.7.0',
+                'default' => 'disabled',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
