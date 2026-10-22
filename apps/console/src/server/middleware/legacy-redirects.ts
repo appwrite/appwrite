@@ -1,6 +1,7 @@
 import { createMiddleware } from '@tanstack/react-start'
 import { getRemovedBlogPostRedirectTarget } from '@/lib/blog/removed-redirect'
 import { getLegacyRedirectTarget } from '@/lib/seo/legacy-redirects'
+import { isValidRelativeRedirect } from '@/lib/relative-redirect'
 
 function resolvePathname(
   pathname: string | undefined,
@@ -52,10 +53,13 @@ export const legacyRedirectsMiddleware = createMiddleware({
 
   // Relative Location: behind the TLS-terminating proxy `request.url` is
   // http://, so an absolute target would add an http hop to every redirect.
+  // It must stay a path on this origin (`//host` would not).
+  const location = `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`
+  if (!isValidRelativeRedirect(location)) {
+    return next()
+  }
   throw new Response(null, {
     status: 301,
-    headers: {
-      Location: `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`,
-    },
+    headers: { Location: location },
   })
 })

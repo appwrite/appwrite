@@ -1,5 +1,6 @@
 import { resolveCategorySlug } from '@/lib/blog/category-slugs'
 import { getInboundRedirect } from '@/lib/seo/inbound-redirects'
+import { isValidRelativeRedirect } from '@/lib/relative-redirect'
 
 /**
  * Legacy URL redirects ported from the old website (appwrite/website
@@ -346,8 +347,20 @@ export function getLegacyRedirectTarget(
   } catch {
     normalized = pathname
   }
+  // Decoding turns `%2F..` and `%5C` into path syntax. Prefix rewrites copy
+  // the rest of the path into the target, which the URL parser would then
+  // resolve outside that prefix; no legacy URL contains them.
+  if (!isValidRelativeRedirect(normalized) || hasDotSegment(normalized)) {
+    return null
+  }
   normalized = normalized.replace(/\/+$/, '') || '/'
   return resolveLegacyRedirect(normalized, search, 0)
+}
+
+function hasDotSegment(pathname: string): boolean {
+  return pathname
+    .split('/')
+    .some((segment) => segment === '.' || segment === '..')
 }
 
 function resolveLegacyRedirect(
