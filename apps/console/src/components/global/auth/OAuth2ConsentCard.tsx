@@ -61,6 +61,7 @@ import {
   type ResolvedResource,
   type ResourceNameMap,
 } from '@/lib/oauth2/authorization-details'
+import { getAppLinkHref } from '@/lib/oauth2/app-links'
 import { getNavigableRedirect, isWebRedirect } from '@/lib/oauth2/redirect'
 import { OAuth2ResourceSelector } from './OAuth2ResourceSelector'
 
@@ -936,6 +937,8 @@ export function OAuth2ConsentShellFooter({
 }) {
   const t = useT()
   const redirectHost = hostnameOf(grant.redirectUri)
+  const termsHref = getAppLinkHref(app.termsUrl)
+  const privacyPolicyHref = getAppLinkHref(app.privacyPolicyUrl)
 
   return (
     <>
@@ -947,11 +950,11 @@ export function OAuth2ConsentShellFooter({
             ? t('After authorizing, return to your device')
             : t('You can revoke access anytime')}
       </span>
-      {app.termsUrl ? (
+      {termsHref ? (
         <>
           <span aria-hidden>·</span>
           <a
-            href={app.termsUrl}
+            href={termsHref}
             target="_blank"
             rel="noreferrer"
             className="link-neutral"
@@ -960,11 +963,11 @@ export function OAuth2ConsentShellFooter({
           </a>
         </>
       ) : null}
-      {app.privacyPolicyUrl ? (
+      {privacyPolicyHref ? (
         <>
           <span aria-hidden>·</span>
           <a
-            href={app.privacyPolicyUrl}
+            href={privacyPolicyHref}
             target="_blank"
             rel="noreferrer"
             className="link-neutral"
