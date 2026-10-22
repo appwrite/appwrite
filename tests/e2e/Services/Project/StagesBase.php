@@ -198,6 +198,33 @@ trait StagesBase
         $this->awaitStage($projectId, 'teams.create', ONBOARDING_STATUS_COMPLETED);
     }
 
+    public function testCreateProjectKeyFromConsoleCompletesStageOnPathProject(): void
+    {
+        $projectId = $this->getProject(fresh: true)['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ];
+
+        $project = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId, $headers);
+        $this->assertSame(200, $project['headers']['status-code']);
+        $headers['x-appwrite-organization'] = $project['body']['teamId'];
+
+        $this->assertSame('pending', $this->getStage($projectId, 'organization.createProjectKey')['status']);
+
+        // The request runs on the console project; the stage belongs to the project in the path.
+        $key = $this->client->call(Client::METHOD_POST, '/organization/projects/' . $projectId . '/keys', $headers, [
+            'keyId' => Id::unique(),
+            'name' => 'Onboarding',
+            'scopes' => ['users.read'],
+        ]);
+        $this->assertSame(201, $key['headers']['status-code']);
+
+        $this->awaitStage($projectId, 'organization.createProjectKey', ONBOARDING_STATUS_COMPLETED);
+    }
+
     protected function listStages(string $projectId, bool $authenticated = true): mixed
     {
         // Stages live under /projects (console scope); use the root console session.
