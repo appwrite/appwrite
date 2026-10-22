@@ -598,7 +598,9 @@ return function (Container $context): void {
 
         $path = (string) \parse_url($request->getURI(), PHP_URL_PATH);
         $segments = \array_values(\array_filter(\explode('/', $path), fn (string $segment) => $segment !== ''));
-        if (($segments[0] ?? '') !== 'v1' || ($segments[1] ?? '') !== 'projects') {
+        $isProjectPath = ($segments[1] ?? '') === 'projects';
+        $isOrganizationProjectPath = ($segments[1] ?? '') === 'organization' && ($segments[2] ?? '') === 'projects';
+        if (($segments[0] ?? '') !== 'v1' || (!$isProjectPath && !$isOrganizationProjectPath)) {
             return '';
         }
 
@@ -646,7 +648,8 @@ return function (Container $context): void {
         $deprecatedProjectPathPrefix = '/v1/projects/';
         if (!empty($route)) {
             $isDeprecatedAlias = $projectIdFromPath !== '' &&
-                !\str_starts_with($route->getPath(), $deprecatedProjectPathPrefix);
+                !\str_starts_with($route->getPath(), $deprecatedProjectPathPrefix) &&
+                !\str_starts_with($route->getPath(), '/v1/organization/projects/');
 
             if ($isDeprecatedAlias) {
                 $projectId = $projectIdFromPath;
