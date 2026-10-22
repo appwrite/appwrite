@@ -3639,13 +3639,27 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
 
-        // Failure: Only a console JWT authorizes a preview
-        $projectJwt = $this->client->call(Client::METHOD_POST, '/account/jwts', array_merge([
+        // Failure: Only a console JWT authorizes a preview; one minted for a
+        // user of the project itself does not
+        $projectEmail = \uniqid() . 'visitor@appwrite.io';
+        $projectHeaders = [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => $cookie,
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-mode' => 'admin',
+        ];
+        $projectUser = $this->client->call(Client::METHOD_POST, '/account', $projectHeaders, [
+            'userId' => Id::unique(),
+            'email' => $projectEmail,
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $projectUser['headers']['status-code']);
+        $projectSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $projectHeaders, [
+            'email' => $projectEmail,
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $projectSession['headers']['status-code']);
+        $projectJwt = $this->client->call(Client::METHOD_POST, '/account/jwts', array_merge($projectHeaders, [
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $projectSession['cookies']['a_session_' . $this->getProject()['$id']],
         ]), []);
         $this->assertEquals(201, $projectJwt['headers']['status-code']);
 
@@ -3825,6 +3839,7 @@ final class SitesCustomServerTest extends Scope
             'siteId' => Id::unique(),
             'name' => 'Scoped',
             'framework' => 'other',
+            'buildRuntime' => 'static-1',
             'adapter' => 'static',
             'scopes' => ['sites.read', 'users.write'],
         ]);
@@ -3839,6 +3854,7 @@ final class SitesCustomServerTest extends Scope
             'siteId' => Id::unique(),
             'name' => 'Scoped',
             'framework' => 'other',
+            'buildRuntime' => 'static-1',
             'adapter' => 'static',
             'scopes' => ['sites.read'],
         ]);
@@ -3852,6 +3868,7 @@ final class SitesCustomServerTest extends Scope
         $update = $this->client->call(Client::METHOD_PUT, '/sites/' . $siteId, $headers, [
             'name' => 'Scoped',
             'framework' => 'other',
+            'buildRuntime' => 'static-1',
             'scopes' => ['databases.write'],
         ]);
         $this->assertEquals(401, $update['headers']['status-code']);
@@ -3872,6 +3889,7 @@ final class SitesCustomServerTest extends Scope
         ]), [
             'name' => 'Scoped',
             'framework' => 'other',
+            'buildRuntime' => 'static-1',
             'scopes' => ['databases.write'],
         ]);
         $this->assertEquals(200, $update['headers']['status-code']);
@@ -3882,6 +3900,7 @@ final class SitesCustomServerTest extends Scope
         $update = $this->client->call(Client::METHOD_PUT, '/sites/' . $siteId, $headers, [
             'name' => 'Scoped',
             'framework' => 'other',
+            'buildRuntime' => 'static-1',
             'scopes' => ['databases.write'],
         ]);
         $this->assertEquals(200, $update['headers']['status-code']);
