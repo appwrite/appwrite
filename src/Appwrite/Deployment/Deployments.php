@@ -133,7 +133,9 @@ readonly class Deployments
         // The jobs-service has no GitHub client of its own — it only fetches
         // tarballs — so $reference must already be a concrete commit/branch/
         // tag; codeload only understands one ref per tarball, not a range.
-        $url = "https://codeload.github.com/{$owner}/{$repository}/tar.gz/{$reference}";
+        // Path segments, so a "?" or "#" in a name cannot reshape the request
+        $encode = fn (string $segment): string => \implode('/', \array_map('rawurlencode', \explode('/', $segment)));
+        $url = "https://codeload.github.com/{$encode($owner)}/{$encode($repository)}/tar.gz/{$encode($reference)}";
 
         return $this->submit($resource, $deployment, $timeout, ['url' => $url, 'subdir' => $rootDirectory]);
     }
