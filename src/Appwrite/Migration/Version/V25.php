@@ -226,6 +226,48 @@ class V25 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'transactions':
+                    if ($collectionType === 'projects') {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'type');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"type\" in collection {$id}: {$th->getMessage()}");
+                        }
+                        try {
+                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_type');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create index \"_key_type\" from {$id}: {$th->getMessage()}");
+                        }
+                        $this->dbForProject->purgeCachedCollection($id);
+
+                        try {
+                            $cursor = null;
+                            do {
+                                $queries = [
+                                    Query::isNull('type'),
+                                    Query::limit($this->limit),
+                                ];
+                                if ($cursor !== null) {
+                                    $queries[] = Query::cursorAfter($cursor);
+                                }
+                                $transactions = $this->dbForProject->find($id, $queries);
+                                foreach ($transactions as $transaction) {
+                                    try {
+                                        $this->dbForProject->updateDocument($id, $transaction->getId(), new Document([
+                                            'type' => DATABASE_TYPE_LEGACY,
+                                        ]));
+                                    } catch (Throwable $th) {
+                                        Console::warning("Failed to backfill \"type\" for transaction {$transaction->getId()}: {$th->getMessage()}");
+                                    }
+                                    $cursor = $transaction;
+                                }
+                            } while (\count($transactions) === $this->limit);
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to backfill \"type\" in collection {$id}: {$th->getMessage()}");
+                        }
+                    }
+                    break;
+
                 case 'databases':
                     if ($collectionType === 'projects') {
                         foreach (['status', 'description'] as $attribute) {
@@ -427,6 +469,17 @@ class V25 extends Migration
                         // createCollection already made the row with connections; nothing to add.
                     }
                     $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'videos':
+                case 'videosTimelines':
+                case 'videosRenditions':
+                case 'videosRenditionsSegments':
+                case 'videosProfiles':
+                case 'videosCaptions':
+                case 'videosCaptionsSegments':
+                    // New in 2.6.0. The document pass visits these collections even when video APIs are disabled.
+                    $this->createCollection($id);
                     break;
 
                 case 'pushLedger':

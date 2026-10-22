@@ -14,6 +14,7 @@ use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Functions\Validator\Headers;
 use Appwrite\Geo\Geo;
 use Appwrite\Locking\Lock;
 use Appwrite\Network\Cors;
@@ -383,7 +384,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
         $executionId = Id::unique();
 
-        $headers = \array_merge([], $requestHeaders);
+        $headers = Headers::stripReserved($requestHeaders);
         $headers['x-appwrite-execution-id'] = $executionId;
         $headers['x-appwrite-user-id'] = '';
         $headers['x-appwrite-country-code'] = '';
@@ -1071,7 +1072,8 @@ Http::init()
     ->inject('response')
     ->inject('cors')
     ->inject('originValidator')
-    ->action(function (Request $request, Response $response, Cors $cors, Validator $originValidator) {
+    ->inject('apiKey')
+    ->action(function (Request $request, Response $response, Cors $cors, Validator $originValidator, ?Key $apiKey) {
         // CORS headers
         foreach ($cors->headers($request->getOrigin()) as $name => $value) {
             $response->addHeader($name, $value);
@@ -1089,7 +1091,10 @@ Http::init()
 
         // Application level CSRF protection
         $origin = $request->getOrigin();
-        if (empty($origin) || !empty($request->getHeaderLine('x-appwrite-key'))) {
+        $authenticatedByKey = $apiKey !== null
+            && $apiKey->getRole() === DBUser::ROLE_KEYS
+            && ! $apiKey->isExpired();
+        if (empty($origin) || $authenticatedByKey) {
             return;
         }
         $route = $request->getRoute();

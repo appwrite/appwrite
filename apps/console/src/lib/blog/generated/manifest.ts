@@ -3,6 +3,34 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-verification-and-recovery-codes",
+    "href": "/blog/post/announcing-verification-and-recovery-codes",
+    "title": "Announcing 6-digit codes for email verification and password recovery",
+    "description": "Appwrite Auth can email a 6-digit code for email verification and password recovery, so mobile and desktop apps can handle both without a redirect page or a deep link.",
+    "date": "2026-10-22",
+    "lastUpdated": "2026-10-22",
+    "timeToRead": 4,
+    "author": "atharva",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-verification-and-recovery-codes/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "default-deployment-retention",
+    "href": "/blog/post/default-deployment-retention",
+    "title": "Old deployments will no longer fill up your Appwrite Cloud storage",
+    "description": "From November 5, 2026, inactive deployments on Appwrite Cloud are cleaned up after 30 days by default, so they stop counting toward your storage. Your active deployment always stays.",
+    "date": "2026-10-22",
+    "lastUpdated": "2026-10-22",
+    "timeToRead": 3,
+    "author": "atharva",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/default-deployment-retention/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "php2shell-appwrite-not-affected",
     "href": "/blog/post/php2shell-appwrite-not-affected",
     "title": "PHP2Shell RCE flaws: Why Appwrite is not affected",

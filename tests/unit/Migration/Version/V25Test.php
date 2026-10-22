@@ -13,7 +13,9 @@ use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Index;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Migration\Resource;
 
@@ -172,6 +174,51 @@ final class V25Test extends TestCase
         }
     }
 
+    public function testCreatesVideoCollectionsForProjectFromPreviousRelease(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        // These collections did not exist on 2.5.0. Seed its schema before running the upgrade.
+        $added = ['videos', 'videosTimelines', 'videosRenditions', 'videosRenditionsSegments', 'videosProfiles', 'videosCaptions', 'videosCaptionsSegments'];
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach ($collections as $id => $collection) {
+            if (\in_array($id, $added, true) || ($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($collection['attributes']),
+                indexes: \array_values($collection['indexes']),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $authorization->skip(fn () => $database->createDocument('videos', new Document([
+            '$id' => 'uploaded-video',
+            'bucketId' => 'bucket',
+            'fileId' => 'file',
+            'name' => 'Preserved upload',
+        ])));
+        $migration->execute();
+
+        $video = $authorization->skip(fn () => $database->getDocument('videos', 'uploaded-video'));
+        $this->assertSame('Preserved upload', $video->getAttribute('name'));
+        $this->assertSame('file', $video->getAttribute('fileId'));
+        foreach ($added as $collection) {
+            $rows = $authorization->skip(fn () => $database->find($collection));
+            $this->assertCount($collection === 'videos' ? 1 : 0, $rows);
+        }
+    }
+
     public function testCreatesPresenceLogsWithConnectionsForLegacyProject(): void
     {
         $authorization = new Authorization();
@@ -246,6 +293,57 @@ final class V25Test extends TestCase
             $database->getCollection('presenceLogs')->getAttribute('attributes', [])
         );
         $this->assertContains('connections', $attributes);
+    }
+
+    public function testBackfillsLegacyTypeOnExistingTransactions(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        $collections = Config::getParam('collections', [])['projects'];
+        foreach ($collections as $id => $collection) {
+            if (($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $attributes = $id === 'transactions'
+                ? \array_filter($collection['attributes'], static fn (Attribute $attribute): bool => $attribute->key !== 'type')
+                : $collection['attributes'];
+            $indexes = $id === 'transactions'
+                ? \array_filter($collection['indexes'], static fn (Index $index): bool => $index->key !== '_key_type')
+                : $collection['indexes'];
+            $database->createCollection(Collection::create(
+                id: $id,
+                attributes: \array_values($attributes),
+                indexes: \array_values($indexes),
+            ));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+
+        $authorization->skip(fn () => $database->createDocument('transactions', new Document([
+            '$id' => 'pre-type-transaction',
+            'status' => 'pending',
+            'operations' => 1,
+            'expiresAt' => DateTime::now(),
+        ])));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $migration->execute();
+
+        $attributes = \array_map(
+            fn (Document $attribute) => $attribute->getId(),
+            $database->getCollection('transactions')->getAttribute('attributes', [])
+        );
+        $this->assertContains('type', $attributes);
+
+        $transaction = $authorization->skip(fn () => $database->getDocument('transactions', 'pre-type-transaction'));
+        $this->assertSame(DATABASE_TYPE_LEGACY, $transaction->getAttribute('type'));
     }
 
     public function testRejectsResourcesCreatedAfterMigration(): void

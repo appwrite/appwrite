@@ -12,6 +12,7 @@ use Appwrite\Platform\Modules\S3\Responses\S3Xml;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Cache\Cache;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -162,7 +163,11 @@ class Get extends Base
                 $etag = '"' . $file->getAttribute('signature', '') . '"';
 
                 if ($ifNoneMatch === $etag) {
-                    $response->setStatusCode(Response::STATUS_CODE_NOT_MODIFIED)->send('');
+                    $this->applyContentHeaders($response, $request, $file);
+                    $response
+                        ->addHeader('ETag', $etag)
+                        ->setStatusCode(Response::STATUS_CODE_NOT_MODIFIED)
+                        ->send('');
                     return;
                 }
                 if ($ifMatch !== '' && $ifMatch !== $etag) {
@@ -176,8 +181,8 @@ class Get extends Base
                     return;
                 }
 
+                $this->applyContentHeaders($response, $request, $file);
                 $response
-                    ->setContentType($file->getAttribute('mimeType', 'application/octet-stream'))
                     ->addHeader('ETag', $etag)
                     ->addHeader('Accept-Ranges', 'bytes');
 
@@ -197,7 +202,6 @@ class Get extends Base
 
                 foreach ([
                     'cacheControl' => 'Cache-Control',
-                    'contentDisposition' => 'Content-Disposition',
                     'contentEncoding' => 'Content-Encoding',
                     'contentLanguage' => 'Content-Language',
                     'expires' => 'Expires',
@@ -210,7 +214,6 @@ class Get extends Base
 
                 foreach ([
                     'response-cache-control' => 'Cache-Control',
-                    'response-content-disposition' => 'Content-Disposition',
                     'response-content-encoding' => 'Content-Encoding',
                     'response-content-language' => 'Content-Language',
                     'response-expires' => 'Expires',
@@ -219,11 +222,6 @@ class Get extends Base
                     if ($value !== '') {
                         $response->setHeader($header, $value);
                     }
-                }
-
-                $responseContentType = $this->query($request, 'response-content-type');
-                if ($responseContentType !== '') {
-                    $response->setContentType($responseContentType);
                 }
 
                 if ($range !== null) {
@@ -329,6 +327,82 @@ class Get extends Base
                 }
             }
         }
+    }
+
+    /**
+     * Same content headers as GET /storage/.../view: block script execution
+     * and never render SVG or types outside storage-mimes as a document.
+     * Stored Content-Disposition and response-* query overrides cannot
+     * change that for those types.
+     */
+    private function applyContentHeaders(Response $response, Request $request, Document $file): void
+    {
+        $storedType = (string) $file->getAttribute('mimeType', 'application/octet-stream');
+        $contentType = $storedType;
+        $overrideType = $this->query($request, 'response-content-type');
+        if ($overrideType !== '') {
+            $contentType = $overrideType;
+        }
+
+        $metadata = $file->getAttribute('metadata', []);
+        $disposition = (string) ($metadata['contentDisposition'] ?? '');
+        $overrideDisposition = $this->query($request, 'response-content-disposition');
+        if ($overrideDisposition !== '') {
+            $disposition = $overrideDisposition;
+        }
+
+        if ($this->requiresAttachment($storedType, $contentType)) {
+            $disposition = $this->attachmentDisposition((string) $file->getAttribute('name', ''));
+        }
+
+        $response
+            ->setContentType($contentType)
+            ->addHeader('Content-Security-Policy', "script-src 'none';")
+            ->setHeader('X-Content-Type-Options', 'nosniff');
+
+        if ($disposition !== '') {
+            $response->setHeader('Content-Disposition', $disposition);
+        }
+    }
+
+    private function requiresAttachment(string ...$contentTypes): bool
+    {
+        $mimes = \array_map(
+            static fn (mixed $mime): string => \strtolower(\trim((string) $mime)),
+            Config::getParam('storage-mimes'),
+        );
+        foreach ($contentTypes as $contentType) {
+            $contentType = \strtolower(\trim(\explode(';', $contentType, 2)[0]));
+            if ($contentType === '' || $contentType === 'image/svg+xml' || !\in_array($contentType, $mimes, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function attachmentDisposition(string $name): string
+    {
+        $fallback = $this->quotedDispositionFilename($name);
+        $encoded = \rawurlencode($name !== '' ? $name : 'download');
+
+        return 'attachment; filename="' . $fallback . '"; filename*=UTF-8\'\'' . $encoded;
+    }
+
+    private function quotedDispositionFilename(string $name): string
+    {
+        $fallback = '';
+        $length = \strlen($name);
+        for ($i = 0; $i < $length; $i++) {
+            $char = $name[$i];
+            $code = \ord($char);
+            if ($code < 32 || $code === 127 || $char === '"' || $char === '\\' || $char === ';') {
+                continue;
+            }
+            $fallback .= $char;
+        }
+
+        return $fallback !== '' ? $fallback : 'download';
     }
 
     /**
