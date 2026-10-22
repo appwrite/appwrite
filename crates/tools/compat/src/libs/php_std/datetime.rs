@@ -35,8 +35,12 @@ const NOW: Timestamp = Timestamp { sec: 1_700_000_000, usec: 0 };
 const DEPENDS_ON_NOW: &str = "depends on now";
 
 /// Whether `date_parse($s)` leaves the year, month or day unset (and has no
-/// error, which would make the constructor throw instead).
+/// error, which would make the constructor throw instead), or `$s` is empty,
+/// which the constructors read as "now" though `date_parse('')` is an error.
 fn depends_on_now(s: &[u8]) -> bool {
+    if s.is_empty() {
+        return true;
+    }
     let p = datetime::date_parse(s).to_php();
     p["error_count"] == 0 && (p["year"] == false || p["month"] == false || p["day"] == false)
 }
@@ -100,6 +104,7 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
                 ])
             }))
         }
+        "datetime.format" if a.bytes("at")?.is_empty() => Outcome::ok(DEPENDS_ON_NOW),
         "datetime.format" => {
             let format = a.bytes("format")?;
             let tz = a.bytes("tz")?;

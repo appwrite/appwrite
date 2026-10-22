@@ -27,6 +27,28 @@ pub struct Messages {
     pub errors: Vec<Message>,
 }
 
+/// `TIMELIB_MAX_ERRORS` (PHP 8.5.12): the most errors, and the most
+/// warnings, a parse keeps; later ones are dropped.
+pub(super) const MAX_ERRORS: usize = 1000;
+
+impl Messages {
+    /// `add_error`/`add_pbf_error`: kept unless there are
+    /// [`MAX_ERRORS`] already.
+    pub(super) fn error(&mut self, message: Message) {
+        if self.errors.len() < MAX_ERRORS {
+            self.errors.push(message);
+        }
+    }
+
+    /// `add_warning`/`add_pbf_warning`: kept unless there are
+    /// [`MAX_ERRORS`] already.
+    pub(super) fn warning(&mut self, message: Message) {
+        if self.warnings.len() < MAX_ERRORS {
+            self.warnings.push(message);
+        }
+    }
+}
+
 // Rule ids, in the order of parse_date.re (earlier wins a tie).
 const YESTERDAY: u16 = 0;
 const NOW: u16 = 1;
@@ -929,12 +951,12 @@ impl Scanner<'_> {
 
     fn error(&mut self, message: &'static str) {
         let m = self.message(message);
-        self.errors.errors.push(m);
+        self.errors.error(m);
     }
 
     fn warning(&mut self, message: &'static str) {
         let m = self.message(message);
-        self.errors.warnings.push(m);
+        self.errors.warning(m);
     }
 
     /// `TIMELIB_HAVE_TIME`: `false` (after an error) on a second time.
@@ -1632,11 +1654,10 @@ pub fn strtotime(input: &[u8]) -> (Time, Messages) {
     let mut s = 0usize;
     let mut e = input.len() as isize - 1;
     if !input.is_empty() {
-        // PHP compiles the generated parse_date.c, which still has `s < e`
-        // here (parse_date.re says `s <= e` since timelib 2022.17): a
-        // whitespace-only string keeps its last character, so it is not
-        // the "Empty string" error.
-        while (s as isize) < e && is_c_space(input[s]) {
+        // `s <= e` (parse_date.c regenerated in PHP 8.5.12): a
+        // whitespace-only string is stripped to nothing, the "Empty string"
+        // error.
+        while (s as isize) <= e && is_c_space(input[s]) {
             s += 1;
         }
         while e > s as isize && is_c_space(input[e as usize]) {
@@ -1668,18 +1689,10 @@ pub fn strtotime(input: &[u8]) -> (Time, Messages) {
     // End of input: one past the NUL after the text.
     sc.tok = text.len() + 1;
     if sc.time.have_time != 0 && !valid_time(sc.time.h, sc.time.i, sc.time.s) {
-        sc.errors.warnings.push(Message {
-            position: sc.tok as i64,
-            character: 0,
-            message: "The parsed time was invalid",
-        });
+        sc.errors.warning(Message { position: sc.tok as i64, character: 0, message: "The parsed time was invalid" });
     }
     if sc.time.have_date != 0 && !valid_date(sc.time.y, sc.time.m, sc.time.d) {
-        sc.errors.warnings.push(Message {
-            position: sc.tok as i64,
-            character: 0,
-            message: "The parsed date was invalid",
-        });
+        sc.errors.warning(Message { position: sc.tok as i64, character: 0, message: "The parsed date was invalid" });
     }
     (sc.time, sc.errors)
 }
@@ -1704,5 +1717,23 @@ mod tests {
         let (_, e) = parse("2024-07-01 12:00:00.5 +05:30 foo bar");
         assert_eq!(e.warnings[0].position, 29);
         assert_eq!(e.errors[0].position, 33);
+    }
+
+    #[test]
+    fn whitespace_only_is_the_empty_string() {
+        for s in [" ", "\t", "  ", "\n", " \t", "\x0b"] {
+            let (_, e) = parse(s);
+            assert_eq!(e.errors.len(), 1, "{s:?}");
+            assert_eq!((e.errors[0].position, e.errors[0].message), (0, "Empty string"));
+        }
+        let (_, e) = parse(" 2020-01-01 ");
+        assert!(e.errors.is_empty());
+    }
+
+    #[test]
+    fn keeps_at_most_max_errors() {
+        let (_, e) = parse(&"!".repeat(MAX_ERRORS + 500));
+        assert_eq!(e.errors.len(), MAX_ERRORS);
+        assert_eq!(e.errors[MAX_ERRORS - 1].position, (MAX_ERRORS - 1) as i64);
     }
 }
