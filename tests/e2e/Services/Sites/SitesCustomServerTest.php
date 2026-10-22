@@ -3807,6 +3807,79 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testCreateSiteScopesBeyondKey(): void
+    {
+        $key = $this->getNewKey(['sites.read', 'sites.write']);
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $key,
+        ];
+
+        /**
+         * Test for FAILURE
+         */
+        // The scopes become the site's ephemeral key, so a key may not grant
+        // what it does not hold itself
+        $site = $this->client->call(Client::METHOD_POST, '/sites', $headers, [
+            'siteId' => Id::unique(),
+            'name' => 'Scoped',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'scopes' => ['sites.read', 'users.write'],
+        ]);
+        $this->assertEquals(401, $site['headers']['status-code']);
+        $this->assertEquals('general_unauthorized_scope', $site['body']['type']);
+        $this->assertStringContainsString('users.write', (string) $site['body']['message']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $site = $this->client->call(Client::METHOD_POST, '/sites', $headers, [
+            'siteId' => Id::unique(),
+            'name' => 'Scoped',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'scopes' => ['sites.read'],
+        ]);
+        $this->assertEquals(201, $site['headers']['status-code']);
+        $this->assertEquals(['sites.read'], $site['body']['scopes']);
+        $siteId = $site['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         */
+        $update = $this->client->call(Client::METHOD_PUT, '/sites/' . $siteId, $headers, [
+            'name' => 'Scoped',
+            'framework' => 'other',
+            'scopes' => ['databases.write'],
+        ]);
+        $this->assertEquals(401, $update['headers']['status-code']);
+        $this->assertEquals('general_unauthorized_scope', $update['body']['type']);
+
+        $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, $headers);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertEquals(['sites.read'], $site['body']['scopes']);
+
+        /**
+         * Test for SUCCESS
+         */
+        // The project key holds every scope
+        $update = $this->client->call(Client::METHOD_PUT, '/sites/' . $siteId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'name' => 'Scoped',
+            'framework' => 'other',
+            'scopes' => ['databases.write'],
+        ]);
+        $this->assertEquals(200, $update['headers']['status-code']);
+        $this->assertEquals(['databases.write'], $update['body']['scopes']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testInvalidSSRSource(): void
     {
         $siteId = $this->setupSite([

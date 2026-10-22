@@ -3,6 +3,7 @@
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
+use Appwrite\Auth\Scopes;
 use Appwrite\Auth\Validator\PasswordPwned\Appwrite as PasswordPwnedAppwrite;
 use Appwrite\Auth\Validator\PasswordPwned\HIBP as PasswordPwnedHIBP;
 use Appwrite\Auth\Validator\PasswordPwned\Mock as PasswordPwnedMock;
@@ -151,6 +152,7 @@ return function (Container $context): void {
     }, ['project', 'usageConnection']);
     $context->set('usagePolicy', fn () => new UsagePolicy(), []);
     $context->set('auditContext', fn () => new AuditContext(), []);
+    $context->set('scopes', fn () => new Scopes(), []);
 
     $context->set('impersonatorUser', function (string $mode, Document $project, Document $user, Request $request, Database $dbForProject, Database $dbForPlatform) {
         if ($user->isEmpty() || !$user->getAttribute('impersonator', false)) {

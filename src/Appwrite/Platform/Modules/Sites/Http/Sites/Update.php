@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
+use Appwrite\Auth\Scopes;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -124,6 +125,7 @@ class Update extends Base
             ->inject('buildTimeout')
             ->inject('bus')
             ->inject('platform')
+            ->inject('scopes')
             ->callback($this->action(...));
     }
 
@@ -167,8 +169,16 @@ class Update extends Base
         Deployments $deployments,
         int $buildTimeout,
         Bus $bus,
-        array $platform
+        array $platform,
+        Scopes $grantedScopes
     ) {
+        // A caller may hand a site only the scopes it holds itself; the site
+        // runs with them through its ephemeral key
+        $missing = $grantedScopes->missing($scopes ?? []);
+        if ($missing !== []) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Cannot grant scopes the caller does not hold: ' . \implode(', ', $missing));
+        }
+
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
             $adapters = \array_keys($configFramework['adapters'] ?? []);

@@ -470,54 +470,14 @@ class Migrations extends Action
     }
 
     /**
+     * Every project scope: migrated functions and sites keep the scopes they
+     * had at the source, and a caller may only grant what it holds itself.
+     *
      * @return array<string>
      */
     protected function getAPIKeyScopes(): array
     {
-        return [
-            'users.read',
-            'users.write',
-            'teams.read',
-            'teams.write',
-            'buckets.read',
-            'buckets.write',
-            'files.read',
-            'files.write',
-            'functions.read',
-            'functions.write',
-            'sites.read',
-            'sites.write',
-            'tokens.read',
-            'tokens.write',
-            'providers.read',
-            'providers.write',
-            'topics.read',
-            'topics.write',
-            'subscribers.read',
-            'subscribers.write',
-            'messages.read',
-            'messages.write',
-            'targets.read',
-            'targets.write',
-            'webhooks.read',
-            'webhooks.write',
-            'rules.read',
-            'rules.write',
-            'project.read',
-            'project.write',
-            'keys.read',
-            'keys.write',
-            'platforms.read',
-            'platforms.write',
-            'mocks.read',
-            'mocks.write',
-            'project.policies.read',
-            'project.policies.write',
-            'project.oauth2.read',
-            'project.oauth2.write',
-            'templates.read',
-            'templates.write',
-        ];
+        return \array_keys(Config::getParam('projectScopes', []));
     }
 
     /**
