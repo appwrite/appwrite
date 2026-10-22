@@ -5855,6 +5855,49 @@ final class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
+    /**
+     * An import file waits in the imports directory until its migration runs,
+     * so a project deleted in that window must take the file with it.
+     */
+    public function testDeleteProjectRemovesPendingImports(): void
+    {
+        $team = $this->createTeamFixture(array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => Id::unique(),
+            'name' => 'Imports Team',
+        ]);
+        $this->assertSame(200, $team['headers']['status-code']);
+
+        $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => Id::unique(),
+            'name' => 'Imports Project',
+            'teamId' => $team['body']['$id'],
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ]);
+        $this->assertSame(201, $project['headers']['status-code']);
+        $projectId = $project['body']['$id'];
+
+        $directory = APP_STORAGE_IMPORTS . '/app-' . $projectId;
+        $this->assertTrue(\mkdir($directory, 0755, true));
+        $this->assertNotFalse(\file_put_contents($directory . '/' . Id::unique() . '_' . Id::unique() . '.csv', "\$id,name\nrow,pending\n"));
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertSame(204, $response['headers']['status-code']);
+
+        $this->assertEventually(function () use ($directory) {
+            \clearstatcache();
+            $this->assertDirectoryDoesNotExist($directory);
+        }, 30_000, 500);
+    }
+
     public function testDeleteSharedProject(): void
     {
         $team = $this->createTeamFixture(array_merge([
