@@ -33,6 +33,8 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
+use Utopia\Storage\DeviceType;
+use Utopia\System\System;
 
 abstract class Base extends Action
 {
@@ -40,6 +42,9 @@ abstract class Base extends Action
 
     protected const PREFIX = '/v1/s3';
     protected const MULTIPART_TTL = 86400;
+    // Cached state outlives MULTIPART_TTL until purged, so expired staging can still be found and aborted.
+    protected const int MULTIPART_RETENTION = 100 * 365 * 86400;
+    protected const int MULTIPART_MAX_PARTS = 10000;
 
     public function __construct(string $method)
     {
@@ -191,6 +196,8 @@ abstract class Base extends Action
 
     protected function createMultipartUpload(Database $dbForProject, Cache $cache, Document $project, Device $deviceForFiles, Document $bucket, string $key, string $uploadId, string $contentType, array $metadata): array
     {
+        // Listing aborts the bucket's expired staging before more is created.
+        $this->getMultipartUploads($cache, $dbForProject, $project, $deviceForFiles, $bucket);
         $existing = $this->findObject($dbForProject, $bucket, $key);
         $object = $existing === null ? $this->objectPath($key) : [
             'folder' => $existing->getAttribute('folder', ''),
@@ -251,8 +258,20 @@ abstract class Base extends Action
         $cache->save($this->multipartStateKey($project, (string) $upload['uploadId']), \json_encode($upload, JSON_THROW_ON_ERROR));
     }
 
-    protected function uploadMultipartPart(Cache $cache, Document $project, Device $deviceForFiles, array $upload, int $partNumber, string $body, string $etag): array
+    protected function uploadMultipartPart(Cache $cache, Document $project, Device $deviceForFiles, Document $bucket, array $upload, int $partNumber, string $body, string $etag): array
     {
+        if ($partNumber < 1 || $partNumber > self::MULTIPART_MAX_PARTS) {
+            throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, 'Part number must be an integer between 1 and ' . self::MULTIPART_MAX_PARTS . '.');
+        }
+
+        $size = \strlen($body);
+        foreach (($upload['parts'] ?? []) as $number => $part) {
+            if ((int) $number !== $partNumber) {
+                $size += (int) ($part['size'] ?? 0);
+            }
+        }
+        $this->validateFileConstraints($bucket, (string) ($upload['name'] ?? $upload['key'] ?? ''), $size);
+
         $metadata = $upload['metadata'] ?? [];
         $deviceMetadata = $metadata['device'] ?? [];
         $chunks = \max(2, (int) ($deviceMetadata['chunks'] ?? 0) + 2, $partNumber + 1);
@@ -400,6 +419,16 @@ abstract class Base extends Action
         }
     }
 
+    /**
+     * The gateway does not scan objects, so it refuses writes the REST upload would scan.
+     */
+    protected function validateAntivirus(Document $bucket, Device $deviceForFiles): void
+    {
+        if (System::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $deviceForFiles->getType() === DeviceType::Local) {
+            throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, 'S3 writes require a bucket with antivirus disabled.');
+        }
+    }
+
     protected function validateCopySize(Document $bucket, Document $sourceFile): void
     {
         $maximumFileSize = (int) $bucket->getAttribute('maximumFileSize', 0);
@@ -537,7 +566,7 @@ abstract class Base extends Action
                 '$collection' => 'buckets',
                 '$permissions' => $permissions,
                 'name' => $bucketId,
-                'maximumFileSize' => (int) \Utopia\System\System::getEnv('_APP_STORAGE_LIMIT', 0),
+                'maximumFileSize' => (int) System::getEnv('_APP_STORAGE_LIMIT', 0),
                 'allowedFileExtensions' => [],
                 'fileSecurity' => false,
                 'enabled' => true,
@@ -832,18 +861,19 @@ abstract class Base extends Action
     }
 
     /**
-     * @param array<Document> $files
+     * Storage allows duplicate names, so listings keep the oldest file per key.
+     *
+     * @param array<Document> $files ordered by sequence
+     * @return array<Document>
      */
-    protected function assertUniqueObjectKeys(array $files): void
+    protected function uniqueObjects(array $files): array
     {
-        $keys = [];
+        $objects = [];
         foreach ($files as $file) {
-            $key = $this->objectKey($file);
-            if (isset($keys[$key])) {
-                throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, "Multiple files match S3 object key '{$key}'.");
-            }
-            $keys[$key] = true;
+            $objects[$this->objectKey($file)] ??= $file;
         }
+
+        return \array_values($objects);
     }
 
     /**
@@ -868,13 +898,13 @@ abstract class Base extends Action
     /**
      * @return array<int, array{key: string, uploadId: string, initiated: string}>
      */
-    protected function getMultipartUploads(Cache $cache, Document $project, Document $bucket): array
+    protected function getMultipartUploads(Cache $cache, Database $dbForProject, Document $project, Device $deviceForFiles, Document $bucket): array
     {
         $uploads = [];
         foreach ($cache->list($this->multipartIndexKey($project, $bucket)) as $uploadId) {
             $state = $cache->load($this->multipartStateKey($project, $uploadId), self::MULTIPART_TTL);
             if (!\is_string($state)) {
-                $cache->purge($this->multipartIndexKey($project, $bucket), $uploadId);
+                $this->expireMultipartUpload($cache, $dbForProject, $project, $deviceForFiles, $bucket, $uploadId);
                 continue;
             }
             $upload = \json_decode($state, true, flags: JSON_THROW_ON_ERROR);
@@ -990,6 +1020,25 @@ abstract class Base extends Action
             $deviceForFiles->abort($path, (string) ($upload['metadata']['device']['uploadId'] ?? ''));
         }
         $this->purgeMultipartUpload($cache, $project, $bucket, $upload);
+    }
+
+    protected function expireMultipartUpload(Cache $cache, Database $dbForProject, Document $project, Device $deviceForFiles, Document $bucket, string $uploadId): void
+    {
+        $state = $cache->load($this->multipartStateKey($project, $uploadId), self::MULTIPART_RETENTION);
+        $upload = \is_string($state) ? \json_decode($state, true) : null;
+        $path = \is_array($upload) ? (string) ($upload['path'] ?? '') : '';
+        if ($path !== '') {
+            try {
+                $committed = $this->findObject($dbForProject, $bucket, (string) ($upload['requestedKey'] ?? $upload['key'] ?? ''));
+                if ($committed?->getAttribute('path', '') !== $path) {
+                    $deviceForFiles->abort($path, (string) ($upload['metadata']['device']['uploadId'] ?? ''));
+                }
+            } catch (\Throwable $error) {
+                Console::warning('Failed to abort expired S3 multipart upload ' . $uploadId . ': ' . $error->getMessage());
+            }
+        }
+
+        $this->purgeMultipartUpload($cache, $project, $bucket, ['uploadId' => $uploadId]);
     }
 
     protected function purgeMultipartUpload(Cache $cache, Document $project, Document $bucket, array $upload): void

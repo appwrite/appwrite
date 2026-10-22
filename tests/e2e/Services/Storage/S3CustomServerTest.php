@@ -219,6 +219,96 @@ final class S3CustomServerTest extends Scope
     }
 
     #[Group('s3')]
+    public function testUploadPartLimits(): void
+    {
+        $bucketId = $this->setupBucket(['maximumFileSize' => 1024]);
+        $key = 'limits/' . Id::unique() . '.txt';
+        $uploadId = $this->createMultipartUpload($bucketId, $key);
+        $part = \str_repeat('a', 600);
+
+        /**
+         * Test for SUCCESS
+         */
+        $this->uploadPart($bucketId, $key, $uploadId, 1, $part);
+        // Replacing a part does not count its earlier size twice.
+        $etag = $this->uploadPart($bucketId, $key, $uploadId, 1, $part);
+
+        /**
+         * Test for FAILURE
+         */
+        $tooLarge = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, ['partNumber' => '1', 'uploadId' => $uploadId], \str_repeat('a', 1025));
+        $this->assertSame(400, $tooLarge['headers']['status-code'], $tooLarge['body']);
+
+        $cumulative = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, ['partNumber' => '2', 'uploadId' => $uploadId], $part);
+        $this->assertSame(400, $cumulative['headers']['status-code'], $cumulative['body']);
+
+        foreach (['0', '10001'] as $partNumber) {
+            $outOfRange = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, ['partNumber' => $partNumber, 'uploadId' => $uploadId], 'a');
+            $this->assertSame(400, $outOfRange['headers']['status-code'], $partNumber);
+        }
+
+        $complete = $this->completeMultipartUpload($bucketId, $key, $uploadId, [1 => $etag]);
+        $this->assertSame(200, $complete['headers']['status-code'], $complete['body']);
+
+        $object = $this->call(Client::METHOD_GET, '/' . $bucketId . '/' . $key);
+        $this->assertSame(200, $object['headers']['status-code']);
+        $this->assertSame($part, $object['body']);
+    }
+
+    public function testListObjectsWithDuplicateNames(): void
+    {
+        $bucketId = $this->setupBucket();
+        $name = Id::unique() . '.png';
+        $other = Id::unique() . '.png';
+        $this->uploadFile($bucketId, 'logo.png', 'image/png', $name);
+        $this->uploadFile($bucketId, 'logo.png', 'image/png', $name);
+        $this->uploadFile($bucketId, 'logo.png', 'image/png', $other);
+
+        foreach ([['list-type' => '2'], []] as $query) {
+            $list = $this->call(Client::METHOD_GET, '/' . $bucketId, $query);
+            $this->assertSame(200, $list['headers']['status-code'], $list['body']);
+
+            $keys = [];
+            foreach (\simplexml_load_string($list['body'])->Contents as $contents) {
+                $keys[] = (string) $contents->Key;
+            }
+            \sort($keys);
+            $expected = [$name, $other];
+            \sort($expected);
+            $this->assertSame($expected, $keys);
+        }
+    }
+
+    public function testWriteAntivirusBucket(): void
+    {
+        $bucketId = $this->setupBucket(['antivirus' => true]);
+        $key = Id::unique() . '.txt';
+        $scanned = System::getEnv('_APP_STORAGE_ANTIVIRUS', 'disabled') === 'enabled'
+            && \strtolower(System::getEnv('_APP_STORAGE_DEVICE', 'local')) === 'local';
+
+        $put = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, body: 'appwrite');
+        $upload = $this->call(Client::METHOD_POST, '/' . $bucketId . '/' . $key, ['uploads' => '']);
+
+        if ($scanned) {
+            /**
+             * Test for FAILURE
+             */
+            $this->assertSame(400, $put['headers']['status-code'], $put['body']);
+            $this->assertSame(400, $upload['headers']['status-code'], $upload['body']);
+
+            $object = $this->call(Client::METHOD_GET, '/' . $bucketId . '/' . $key);
+            $this->assertSame(404, $object['headers']['status-code']);
+            return;
+        }
+
+        /**
+         * Test for SUCCESS
+         */
+        $this->assertSame(200, $put['headers']['status-code'], $put['body']);
+        $this->assertSame(200, $upload['headers']['status-code'], $upload['body']);
+    }
+
+    #[Group('s3')]
     public function testNativeReadDuringOverwrite(): void
     {
         $bucketId = $this->setupBucket();
@@ -343,19 +433,23 @@ final class S3CustomServerTest extends Scope
         }
     }
 
-    private function setupBucket(): string
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function setupBucket(array $attributes = []): string
     {
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        ], $this->getHeaders()), \array_merge([
             'bucketId' => Id::unique(),
             'name' => 'S3 Bucket',
             'fileSecurity' => false,
-            // The S3 gateway serves only buckets that store objects as is.
+            // The S3 gateway writes only to buckets that store objects as is and are not scanned.
             'encryption' => false,
             'compression' => 'none',
-        ]);
+            'antivirus' => false,
+        ], $attributes));
         $this->assertSame(201, $bucket['headers']['status-code'], \json_encode($bucket['body']));
 
         return $bucket['body']['$id'];

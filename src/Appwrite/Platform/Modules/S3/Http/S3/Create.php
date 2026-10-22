@@ -100,6 +100,7 @@ class Create extends Base
                 return;
             }
             $bucket = $this->bucket($dbForProject, $bucketId);
+            $this->validateAntivirus($bucket, $deviceForFiles);
             $uploadId = \bin2hex(\random_bytes(16));
             $this->createMultipartUpload($dbForProject, $cache, $project, $deviceForFiles, $bucket, $key, $uploadId, $request->getHeaderLine('content-type', 'application/octet-stream'), $this->requestObjectMetadata($request));
             $this->sendXml($response, S3Xml::initiateMultipart($bucketId, $key, $uploadId));
@@ -109,6 +110,7 @@ class Create extends Base
         if ($request->getMethod() === Action::HTTP_REQUEST_METHOD_PUT && $key !== '' && $this->query($request, 'uploadId') !== '' && $this->query($request, 'partNumber') !== '') {
             $this->authorize($request, $project, $team, $user, ['files.write']);
             $bucket = $this->bucket($dbForProject, $bucketId);
+            $this->validateAntivirus($bucket, $deviceForFiles);
             $partNumber = (int) $this->query($request, 'partNumber');
             $uploadId = $this->query($request, 'uploadId');
 
@@ -140,9 +142,9 @@ class Create extends Base
             // SDKs upload parts of one upload concurrently; the cached parts map
             // and device chunk bookkeeping are read-modify-write, so load and
             // save must share the upload's critical section.
-            $locks($this->multipartLockKey($project, $uploadId), 600, function () use ($cache, $project, $deviceForFiles, $uploadId, $bucketId, $key, $partNumber, $body, $etag): void {
+            $locks($this->multipartLockKey($project, $uploadId), 600, function () use ($cache, $project, $deviceForFiles, $bucket, $uploadId, $bucketId, $key, $partNumber, $body, $etag): void {
                 $upload = $this->multipartUploadForBucket($cache, $project, $uploadId, $bucketId, $key);
-                $this->uploadMultipartPart($cache, $project, $deviceForFiles, $upload, $partNumber, $body, $etag);
+                $this->uploadMultipartPart($cache, $project, $deviceForFiles, $bucket, $upload, $partNumber, $body, $etag);
             }, timeout: 120.0);
             if ($copySource !== '') {
                 $this->sendXml($response, S3Xml::copyPart($etag));
@@ -158,6 +160,7 @@ class Create extends Base
         if ($request->getMethod() === Action::HTTP_REQUEST_METHOD_POST && $key !== '' && $this->query($request, 'uploadId') !== '') {
             $this->authorize($request, $project, $team, $user, ['files.write']);
             $bucket = $this->bucket($dbForProject, $bucketId);
+            $this->validateAntivirus($bucket, $deviceForFiles);
             // No multipart lock here: clients complete only after every part
             // returned 200, and each part's state save commits inside its lock
             // before that response, so the snapshot below always holds all
@@ -187,6 +190,7 @@ class Create extends Base
 
         $this->authorize($request, $project, $team, $user, ['files.write']);
         $bucket = $this->bucket($dbForProject, $bucketId);
+        $this->validateAntivirus($bucket, $deviceForFiles);
         if ($this->isFolderMarker($key)) {
             if ($request->getHeaderLine('x-amz-copy-source') !== '') {
                 $this->sendXml($response, S3Xml::error('NotImplemented', 'Copying to an S3 folder marker is not supported.', $request->getURI()), Response::STATUS_CODE_NOT_IMPLEMENTED);
