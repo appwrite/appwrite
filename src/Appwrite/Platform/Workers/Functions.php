@@ -567,7 +567,7 @@ class Functions extends Action
         ?string $createdAt = null,
     ): void {
         $user ??= new Document();
-        $headers = Headers::stripReserved($headers);
+        $headers = Headers::stripReserved($headers, ['x-appwrite-client-ip']);
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deploymentId', '');
         $spec = Config::getParam('specifications')[$function->getAttribute('runtimeSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
