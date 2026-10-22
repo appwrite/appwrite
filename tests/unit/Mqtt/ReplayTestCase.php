@@ -124,20 +124,15 @@ abstract class ReplayTestCase extends TestCase
         );
     }
 
-    /** Create a topic $age seconds ago on the test clock; by default it predates every ledger row. */
-    protected function seedTopic(string $name, int $tail, ?int $expiry = null, ?string $id = null, bool $subscribed = true, int $age = APP_PUSH_LEDGER_RETENTION * 2): string
+    protected function seedTopic(string $name, int $tail, ?int $expiry = null, ?string $id = null, bool $subscribed = true): string
     {
-        $createdAt = DateTime::format((new \DateTime())->setTimestamp($this->now - $age));
-
-        $topic = $this->database->withPreserveDates(true, fn (): Document => $this->database->createDocument('topics', new Document([
+        $topic = $this->database->createDocument('topics', new Document([
             '$id' => $id ?? $name,
-            '$createdAt' => $createdAt,
-            '$updatedAt' => $createdAt,
             'name' => $name,
             'sequence' => $tail,
             'qos' => Packet::QOS_1,
             'expiry' => $expiry,
-        ])));
+        ]));
 
         // Ordinary topics are gated by the subscriber list; seed the test user's membership so replay
         // is granted. Reserved users/<id> topics are owner-gated and ignore this.

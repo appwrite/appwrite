@@ -764,8 +764,6 @@ class Handler implements MqttHandler
         $newestFirst = $projectDB->getAuthorization()->skip(fn () => $projectDB->find('pushLedger', [
             Query::equal('topic', [$topic->getId()]),
             Query::greaterThan('sequence', $after),
-            // Rows older than the topic belong to a deleted topic that had the same ID.
-            Query::greaterThanEqual('$createdAt', $topic->getCreatedAt()),
             Query::orderDesc('sequence'),
             Query::orderDesc('$sequence'),
             Query::limit($maxDepth),

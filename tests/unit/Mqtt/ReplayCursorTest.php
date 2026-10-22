@@ -29,18 +29,6 @@ final class ReplayCursorTest extends ReplayTestCase
         $this->assertSame([], $this->payloads($this->drainPublishes(2)), 'a reconnect must not replay messages already acknowledged');
     }
 
-    public function testLedgerOfADeletedTopicWithTheSameIdIsNotReplayed(): void
-    {
-        $this->seedTopic('news', 4, age: 30);
-        $this->appendLedger('news', 1, 2, age: 60);
-        $this->appendLedger('news', 3, 4, age: 10);
-        $this->seedCursor('news', 0);
-
-        $this->subscribe($this->connect(1), 'news');
-
-        $this->assertSame(['message-3', 'message-4'], $this->payloads($this->drainPublishes(1)), 'rows written before the topic was created belong to a deleted topic');
-    }
-
     public function testFullReplayAdvancesCursor(): void
     {
         $this->seedTopic('news', 12);
