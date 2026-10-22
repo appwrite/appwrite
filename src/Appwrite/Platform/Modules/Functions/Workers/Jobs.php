@@ -619,7 +619,7 @@ class Jobs extends Action
         }
 
         $path = (string) $deployment->getAttribute('buildPath', '');
-        if ($path === '' || ! $deviceForBuilds->exists($path)) {
+        if (! Deployments::isArtifact($deviceForBuilds, $path)) {
             return $this->finalize($dbForProject, $dbForPlatform, $project, $deployment, false, 'Build produced no output artifact.', $publisherForScreenshots, $vcsFactory, $platform, $bus);
         }
 

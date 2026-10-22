@@ -667,8 +667,7 @@ class Create extends Action
                 && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false)
                 && $isVerified;
             // Keep the provider domain for delivery (e.g. live.com must
-            // not become outlook.com). Still canonicalize the local part
-            // and include the full provider canonical in collision lookups.
+            // not become outlook.com). Still canonicalize the local part.
             if ($canonicalize) {
                 $canonicalLocal = \explode('@', $canonical, 2)[0];
                 $providerDomain = \explode('@', \mb_strtolower($providerEmail), 2)[1] ?? '';
@@ -676,7 +675,8 @@ class Create extends Action
             } else {
                 $email = $providerEmail;
             }
-            $emails = \array_values(\array_unique(\array_filter([$email, $providerEmail, $canonical])));
+            // Match existing users by the provider's own address only, never by a cross-domain canonical form
+            $emails = \array_values(\array_unique(\array_filter([$email, $providerEmail, \mb_strtolower($providerEmail)])));
             $emailMetadata = [
                 'emailCanonical' => $canonical,
                 'emailIsCanonical' => \mb_strtolower($email) === $canonical,
