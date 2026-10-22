@@ -3466,6 +3466,65 @@ final class AccountCustomClientTest extends Scope
         $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?secret=', $response['headers']['location']);
     }
 
+    public function testCreateOAuth2SessionMatchesExactEmail(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $local = 'oauth.exact.' . \bin2hex(\random_bytes(8));
+
+        $existing = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => Id::unique(),
+            'email' => $local . '@outlook.com',
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $existing['headers']['status-code']);
+
+        // The mock provider returns the address after the canonical- prefix as a verified email
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'provider' => 'mock',
+            'appId' => 'canonical-' . $local . '@hotmail.com',
+            'secret' => '123456',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        try {
+            /**
+             * Test for FAILURE - an address on another domain of the same mail provider is a different account
+             */
+            $response = $this->followMockOAuth2Flow('/account/tokens/oauth2/mock');
+
+            $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?', $response['headers']['location']);
+
+            $params = [];
+            \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $params);
+
+            $this->assertNotEmpty($params['userId']);
+            $this->assertNotEquals($existing['body']['$id'], $params['userId']);
+
+            $user = $this->client->call(Client::METHOD_GET, '/users/' . $params['userId'], [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            $this->assertEquals(200, $user['headers']['status-code']);
+            $this->assertEquals($local . '@hotmail.com', $user['body']['email']);
+        } finally {
+            $this->updateMockProvider(true);
+        }
+    }
+
     public function testCreateOAuth2TokenStartedByServer(): void
     {
         $provider = 'mock';
@@ -7852,6 +7911,84 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals('general_bad_request', $response['body']['type']);
+    }
+
+    public function testCreateIdTokenSessionMatchesExactEmail(): void
+    {
+        $this->updateMockProvider(true);
+
+        $local = 'idtoken.exact.' . \bin2hex(\random_bytes(8));
+        $existing = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'userId' => Id::unique(),
+            'email' => $local . '@outlook.com',
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $existing['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS - the same address in another case adopts the existing account
+         */
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken([
+                'sub' => 'idtoken-' . \uniqid('', true),
+                'email' => \strtoupper($local) . '@Outlook.com',
+                'email_verified' => true,
+            ]),
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($existing['body']['$id'], $response['body']['userId']);
+
+        /**
+         * Test for FAILURE - an address on another domain of the same mail provider is a different account
+         */
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken([
+                'sub' => 'idtoken-' . \uniqid('', true),
+                'email' => $local . '@hotmail.com',
+                'email_verified' => true,
+            ]),
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEquals($existing['body']['$id'], $response['body']['userId']);
+
+        /**
+         * Test for SUCCESS - an account without email takes an address on another domain of the same mail provider
+         */
+        $projectId = $this->getProject()['$id'];
+        $session = $this->createAnonymousSession();
+
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken([
+                'sub' => 'idtoken-' . \uniqid('', true),
+                'email' => $local . '@live.com',
+                'email_verified' => true,
+            ]),
+        ], [
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEquals($existing['body']['$id'], $response['body']['userId']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $response['cookies']['a_session_' . $projectId],
+        ]);
+
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertEquals($local . '@live.com', $account['body']['email']);
     }
 
     public function testCreateIdTokenSessionAnonymousLinking(): void
