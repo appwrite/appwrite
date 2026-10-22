@@ -50,7 +50,16 @@ When an inactive deployment is cleaned up, its preview URL stops working too.
 
 Today, every function and site is set to **Keep deployments forever** unless you've changed it. On November 5, those switch to 30 days, and the first cleanup removes every inactive deployment that's already older than that. If you want more history for rollbacks, choose a longer retention period before then.
 
-Open your function or site in the Console and go to **Settings** > **Build** > **Retention**. Turn off **Keep deployments forever**, choose a **Retention period** up to your plan's maximum, and click **Update**. You can choose up to 90 days on the Free and Education plans, and up to 3 years on the Start and Pro plans. Enterprise plans start with the same options as Pro. For a longer or custom policy, [talk to our sales team](/sales).
+Open your function or site in the Console and go to **Settings** > **Build** > **Retention**. Turn off **Keep deployments forever**, choose a **Retention period** up to your plan's maximum, and click **Update**.
+
+| Plan | Kept by default | Longest you can choose | Inactive deployments kept per function or site |
+| --- | --- | --- | --- |
+| Free | 30 days | 90 days | Newest 100 |
+| Education | 30 days | 90 days | Newest 100 |
+| Start | 30 days | 3 years | No limit |
+| Pro | 30 days | 3 years | No limit |
+
+Enterprise plans start with the same options as Pro. For a longer or custom policy, [talk to our sales team](/sales).
 
 If you've already picked a longer period than your plan allows, it drops to your plan's maximum: a Free function set to 1 year keeps 90 days.
 
