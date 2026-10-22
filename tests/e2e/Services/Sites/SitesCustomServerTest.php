@@ -3618,16 +3618,45 @@ final class SitesCustomServerTest extends Scope
         $this->assertStringContainsString('domain=' . $domain, (string) $response['headers']['set-cookie']);
         $this->assertStringContainsString('path=/', (string) $response['headers']['set-cookie']);
         $this->assertNotEmpty($response['cookies']['a_jwt_console']);
-        $this->assertEquals($jwt['body']['jwt'], $response['cookies']['a_jwt_console']);
+        // The cookie reaches the site's runtime with every request, so it must
+        // not be the console JWT, which authenticates on the console API
+        $this->assertNotEquals($jwt['body']['jwt'], $response['cookies']['a_jwt_console']);
+        $preview = $response['cookies']['a_jwt_console'];
 
-        $this->assertEventually(function () use ($proxyClient, $jwt) {
+        $this->assertEventually(function () use ($proxyClient, $preview) {
             $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
-                'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
+                'cookie' => 'a_jwt_console=' . $preview
             ], followRedirects: false);
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertStringContainsString("Contact page", (string) $response['body']);
             $this->assertStringContainsString("Preview by", (string) $response['body']);
         });
+
+        // Failure: The console JWT itself is not a preview cookie
+        $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
+            'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
+
+        // Failure: Only a console JWT authorizes a preview
+        $projectJwt = $this->client->call(Client::METHOD_POST, '/account/jwts', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $cookie,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-mode' => 'admin',
+        ]), []);
+        $this->assertEquals(201, $projectJwt['headers']['status-code']);
+
+        foreach ([$projectJwt['body']['jwt'], 'not-a-jwt', ''] as $invalid) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
+                'jwt' => $invalid,
+                'path' => '/contact'
+            ], followRedirects: false);
+            $this->assertEquals(401, $response['headers']['status-code'], \var_export($invalid, true));
+            $this->assertArrayNotHasKey('set-cookie', $response['headers']);
+        }
 
         // Success: Path defaults to the site root
         $response = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
@@ -3678,7 +3707,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(204, $session['headers']['status-code']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
-            'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
+            'cookie' => 'a_jwt_console=' . $preview
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
@@ -3694,9 +3723,17 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(201, $jwt['headers']['status-code']);
         $this->assertNotEmpty($jwt['body']['jwt']);
 
-        $this->assertEventually(function () use ($proxyClient, $jwt) {
+        $response = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
+            'jwt' => $jwt['body']['jwt'],
+            'path' => '/contact'
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['cookies']['a_jwt_console']);
+        $preview = $response['cookies']['a_jwt_console'];
+
+        $this->assertEventually(function () use ($proxyClient, $preview) {
             $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
-                'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
+                'cookie' => 'a_jwt_console=' . $preview
             ], followRedirects: false);
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertStringContainsString("Contact page", (string) $response['body']);
@@ -3713,7 +3750,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertFalse($user['body']['status']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
-            'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
+            'cookie' => 'a_jwt_console=' . $preview
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
@@ -3752,8 +3789,17 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(201, $jwt['headers']['status-code']);
         $this->assertNotEmpty($jwt['body']['jwt']);
 
+        // Any console session may exchange its JWT; the preview itself is
+        // what the membership check guards
+        $response = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
+            'jwt' => $jwt['body']['jwt'],
+            'path' => '/contact'
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['cookies']['a_jwt_console']);
+
         $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
-            'cookie' => 'a_jwt_console=' . $jwt['body']['jwt']
+            'cookie' => 'a_jwt_console=' . $response['cookies']['a_jwt_console']
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);

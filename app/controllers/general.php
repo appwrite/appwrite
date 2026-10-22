@@ -3,12 +3,12 @@
 require_once __DIR__ . '/../init.php';
 
 use Ahc\Jwt\JWT;
-use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Bus\Events\RequestCompleted;
 use Appwrite\Bus\Events\RuleCreated;
 use Appwrite\Deployment\Deployments;
+use Appwrite\Deployment\PreviewToken;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Certificate;
@@ -248,39 +248,30 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         if ($isPreview && $requirePreview) {
             $cookie = $request->getCookie(COOKIE_NAME_PREVIEW, '');
             $authorized = false;
-            $user = new Document();
 
-            // Security checks to mark authorized true
-            if (!empty($cookie)) {
-                $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+            // Security checks to mark authorized true. The cookie holds a
+            // token /_appwrite/authorize issued for this host, never the
+            // console JWT itself (see PreviewToken).
+            $preview = PreviewToken::verify($cookie, $host);
+            if ($preview !== null) {
+                /** @var DBUser $user */
+                $user = $authorization->skip(fn () => $dbForPlatform->getDocument('users', $preview['userId']));
+                $userExists = !$user->isEmpty() && $user->getAttribute('status', false);
 
-                $payload = [];
-                try {
-                    $payload = $jwt->decode($cookie);
-                } catch (JWTException $error) {
-                    // Authorized remains false
-                }
-
-                $userExists = false;
-                $userId = $payload['userId'] ?? '';
-                if (!empty($userId)) {
-                    $user = $authorization->skip(fn () => $dbForPlatform->getDocument('users', $userId));
-                    if (!$user->isEmpty() && $user->getAttribute('status', false)) {
-                        $userExists = true;
-                    }
-                }
-
-                $sessionExists = false;
-                $jwtSessionId = $payload['sessionId'] ?? '';
-                if (!empty($jwtSessionId) && \array_any($user->getAttribute('sessions', []), static fn (Document $session): bool => $session->getId() === $jwtSessionId)) {
-                    $sessionExists = true;
-                }
+                // The session the token came from has to be live still; one
+                // that expired but is not purged yet does not count
+                $sessionExists = $userExists && $user->sessionActive($preview['sessionId']);
 
                 $membershipExists = false;
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
-                if (!$project->isEmpty() && !$user->isEmpty()) {
+                if (!$project->isEmpty() && $userExists) {
                     $teamId = $project->getAttribute('teamId', '');
-                    $membershipExists = \array_any($user->getAttribute('memberships', []), static fn (Document $membership): bool => $membership->getAttribute('teamId') === $teamId);
+                    // An invitation not yet accepted is on the user too, and grants nothing
+                    $membershipExists = \array_any(
+                        $user->getAttribute('memberships', []),
+                        static fn (Document $membership): bool => $membership->getAttribute('teamId') === $teamId
+                            && $membership->getAttribute('confirm', false) === true
+                    );
                 }
 
                 if ($userExists && $sessionExists && $membershipExists) {
@@ -385,6 +376,9 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $executionId = Id::unique();
 
         $headers = Headers::stripReserved($requestHeaders);
+        // The preview cookie authorizes the visitor to this host; the site
+        // being previewed has no business reading it
+        $headers = Headers::withoutCookie($headers, COOKIE_NAME_PREVIEW);
         $headers['x-appwrite-execution-id'] = $executionId;
         $headers['x-appwrite-user-id'] = '';
         $headers['x-appwrite-country-code'] = '';
@@ -1666,11 +1660,17 @@ Http::get('/_appwrite/authorize')
             throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, 'Path must be relative to the site root');
         }
 
+        // The console JWT must not be the cookie: it would travel to the
+        // site's runtime with every request and it authenticates its holder
+        // on the whole console API. Exchange it for a token that only
+        // authorizes previews on this host.
+        $token = PreviewToken::issue(\is_string($jwt) ? $jwt : '', $host);
+
         $duration = 60 * 60 * 24; // 1 day in seconds
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $response
-            ->addCookie(COOKIE_NAME_PREVIEW, $jwt, (new \DateTime($expire))->getTimestamp(), '/', $host, ('https' === $protocol), true, null)
+            ->addCookie(COOKIE_NAME_PREVIEW, $token, (new \DateTime($expire))->getTimestamp(), '/', $host, ('https' === $protocol), true, null)
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($protocol . '://' . $host . $path);
