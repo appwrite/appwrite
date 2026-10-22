@@ -459,7 +459,7 @@ export function SignIn({
           {onOAuthLogin && (
             <>
               <style>{OAUTH_ACCORDION_STYLES}</style>
-              <div className="space-y-2">
+              <div className="space-y-4">
                 <div className="oauth-login-row">
                   {VCS_OAUTH_PROVIDERS.map(({ id, Icon }) => {
                     const label = oauthProviderLabel(id, mode, t)
