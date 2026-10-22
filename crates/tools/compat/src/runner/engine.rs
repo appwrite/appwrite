@@ -292,18 +292,19 @@ impl Engine {
         self.restart();
         let spec = spec::load(&self.cfg.root, lib)?;
         self.build_tasks(&spec)?;
-        let files = cases::load_dir(&spec::lib_dir(&self.cfg.root, lib).join("cases"))?;
+        let paths = cases::paths(&spec::lib_dir(&self.cfg.root, lib).join("cases"));
         if let Some(shard) = shard
             && !spec.shards.contains_key(shard)
         {
             return Err(format!("{lib}: no shard `{shard}` (spec.json `shards`)"));
         }
         let mut report = Report::default();
-        for file in &files {
-            let file_name = file.path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default();
+        for path in &paths {
+            let file_name = path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default();
             if shard.is_some_and(|s| spec.shard_of(&file_name) != Some(s)) {
                 continue;
             }
+            let file = &cases::load_file(path)?;
             for case in &file.cases {
                 let name = label(lib, file, case);
                 if filter.is_some_and(|f| !cases::selected(f, &name)) {
@@ -1001,11 +1002,11 @@ pub async fn replay(cfg: &Config, lib: &str) -> Result<Report, String> {
     let services = std::env::var("COMPAT_SERVICES").is_ok_and(|v| v == "1");
     let mut report = Report::default();
     let scrub = Scrubber::new(&spec.scrub);
-    let files = cases::load_dir(&spec::lib_dir(&cfg.root, lib).join("cases"))?;
     // `COMPAT_CASE` keeps only the cases whose label contains it.
     let only = std::env::var("COMPAT_CASE").ok().filter(|f| !f.is_empty());
     let mut counter = 0;
-    for file in &files {
+    for path in cases::paths(&spec::lib_dir(&cfg.root, lib).join("cases")) {
+        let file = &cases::load_file(&path)?;
         for case in &file.cases {
             if only.as_deref().is_some_and(|f| !label(lib, file, case).contains(f)) {
                 continue;

@@ -112,6 +112,13 @@ pub struct Step {
 }
 
 pub fn load_dir(dir: &Path) -> Result<Vec<CaseFile>, String> {
+    paths(dir).iter().map(|p| load_file(p)).collect()
+}
+
+/// The case files of `dir`, sorted, unread: a run loads them one at a time,
+/// since a library's cases can be far larger parsed than on disk (the
+/// database's 836 MB of JSON took 9 GB, more than a CI runner has).
+pub fn paths(dir: &Path) -> Vec<PathBuf> {
     let mut paths: Vec<PathBuf> = std::fs::read_dir(dir)
         .into_iter()
         .flatten()
@@ -120,7 +127,7 @@ pub fn load_dir(dir: &Path) -> Result<Vec<CaseFile>, String> {
         .filter(|p| p.extension().is_some_and(|e| e == "json"))
         .collect();
     paths.sort();
-    paths.iter().map(|p| load_file(p)).collect()
+    paths
 }
 
 pub fn load_file(path: &Path) -> Result<CaseFile, String> {
