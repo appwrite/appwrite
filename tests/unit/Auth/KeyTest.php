@@ -392,6 +392,51 @@ final class KeyTest extends TestCase
         $this->assertTrue($decoded->isProjectCheckDisabled());
     }
 
+    public function testEphemeralBranchRequiresTheEphemeralMarker(): void
+    {
+        $projectId = 'test';
+        $roleScopes = Config::getParam('roles', [])[User::ROLE_KEYS]['scopes'];
+
+        // A JWT shaped like an account token (same signing key, carries projectId) must be refused.
+        $jwt = new JWT(
+            key: System::getEnv('_APP_OPENSSL_KEY_V1'),
+            algo: 'HS256',
+            maxAge: 86400,
+            leeway: 0,
+        );
+        $accountToken = $jwt->encode([
+            'projectId' => $projectId,
+            'userId' => 'user123',
+            'sessionId' => 'session123',
+        ]);
+
+        try {
+            Key::decode(
+                project: new Document(['$id' => $projectId]),
+                team: new Document(),
+                user: new Document(),
+                key: API_KEY_EPHEMERAL . '_' . $accountToken,
+            );
+            $this->fail('A JWT without the ephemeral marker must be refused by the ephemeral branch');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::USER_UNAUTHORIZED, $error->getType());
+        }
+
+        // A token actually minted as an ephemeral key still resolves to the keys role.
+        $scopes = ['documents.read'];
+        $decoded = Key::decode(
+            project: new Document(['$id' => $projectId]),
+            team: new Document(),
+            user: new Document(),
+            key: self::generateKey($projectId, false, $scopes),
+        );
+        $this->assertSame($projectId, $decoded->getProjectId());
+        $this->assertSame('', $decoded->getUserId());
+        $this->assertSame(API_KEY_EPHEMERAL, $decoded->getType());
+        $this->assertSame(User::ROLE_KEYS, $decoded->getRole());
+        $this->assertEquals(\array_merge($scopes, $roleScopes), $decoded->getScopes());
+    }
+
     public function testDecodeExpiredEphemeral(): void
     {
         $expiredKey = self::generateKey('test', false, ['documents.read'], maxAge: 1, timestamp: time() - 60);
@@ -458,6 +503,7 @@ final class KeyTest extends TestCase
         $jwt->setTestTimestamp($timestamp);
 
         $apiKey = $jwt->encode(\array_merge([
+            Key::CLAIM_KIND => Key::KIND_EPHEMERAL,
             'projectId' => $projectId,
             'usage' => $usage,
             'scopes' => $scopes,

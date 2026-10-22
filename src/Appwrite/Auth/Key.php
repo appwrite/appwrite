@@ -13,6 +13,14 @@ use Utopia\System\System;
 
 class Key
 {
+    /**
+     * Claim and value that mark a JWT as one minted specifically as an ephemeral API key.
+     * Other features sign JWTs with the same key for different purposes (for example an
+     * end-user account token), so the ephemeral branch accepts only tokens carrying this marker.
+     */
+    public const string CLAIM_KIND = 'kind';
+    public const string KIND_EPHEMERAL = 'ephemeralKey';
+
     public function __construct(
         protected string $projectId,
         protected string $teamId,
@@ -165,6 +173,11 @@ class Key
                 try {
                     $payload = $jwtObj->decode($secret);
                 } catch (JWTException) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
+                }
+
+                // Only accept tokens minted as ephemeral keys, not every JWT signed with the same key.
+                if (($payload[self::CLAIM_KIND] ?? null) !== self::KIND_EPHEMERAL) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
