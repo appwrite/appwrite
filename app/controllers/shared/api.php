@@ -610,7 +610,7 @@ Http::init()
                     '{userId}' => (string) $user->getId(),
                     '{userAgent}' => (string) $request->getUserAgent(''),
                     '{ip}' => (string) $request->getIP(),
-                    '{url}' => $request->getHostname() . $route->getPath(),
+                    '{url}' => $route->getPath(),
                     '{method}' => (string) $request->getMethod(),
                     '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
                 ];
@@ -994,7 +994,7 @@ Http::shutdown()
                 '{userId}' => (string) $user->getId(),
                 '{userAgent}' => (string) $request->getUserAgent(''),
                 '{ip}' => (string) $request->getIP(),
-                '{url}' => $request->getHostname() . $route->getPath(),
+                '{url}' => $route->getPath(),
                 '{method}' => (string) $request->getMethod(),
                 '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
             ];
