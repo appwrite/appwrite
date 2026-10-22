@@ -110,7 +110,7 @@ function mapFieldDescription(field: CoverFieldDefinition): string {
   if (field.description) parts.push(field.description)
   if (field.type === 'image') {
     parts.push(
-      'Public URL, /icons path, lucide:icon-name, or data URI. Use POST for uploads and data URIs.',
+      'HTTPS URL on appwrite.io or GitHub, /icons path, lucide:icon-name, or data URI. Use POST for uploads and data URIs.',
     )
   }
   if (field.type === 'range' || field.type === 'number') {
