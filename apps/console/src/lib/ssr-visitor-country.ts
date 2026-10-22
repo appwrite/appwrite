@@ -4,6 +4,7 @@ import {
   readSsrVisitorCountryFromWindow,
   resolveVisitorCountryFromRequest,
 } from '@/lib/locale/visitor-country'
+import { serializeInlineScriptJson } from '@/lib/runtime-config-shared'
 import {
   SSR_VISITOR_COUNTRY_WINDOW_KEY,
   injectSsrVisitorCountryIntoHtml,
@@ -26,7 +27,7 @@ export const getSsrVisitorCountry = createIsomorphicFn()
   })
 
 export function getSsrVisitorCountryScript(): string {
-  return `window.${SSR_VISITOR_COUNTRY_WINDOW_KEY}=${JSON.stringify(getSsrVisitorCountry())};`
+  return `window.${SSR_VISITOR_COUNTRY_WINDOW_KEY}=${serializeInlineScriptJson(getSsrVisitorCountry())};`
 }
 
 export { injectSsrVisitorCountryIntoHtml }
