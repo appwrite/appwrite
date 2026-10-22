@@ -541,14 +541,18 @@ class Deletes extends Action
             return;
         }
 
-        // Ledger rows are keyed by the public topic ID; keep rows of a topic recreated with the same ID.
-        $queries = [Query::equal('topic', [$topic->getId()])];
+        // Ledger rows are keyed by the public topic ID; keep rows of a topic recreated with the same ID,
+        // including one recreated after this read, by never deleting rows newer than the read.
+        $cutoff = DateTime::now();
         $recreated = $dbForProject->getDocument('topics', $topic->getId());
         if (!$recreated->isEmpty()) {
-            $queries[] = Query::lessThan('$createdAt', $recreated->getCreatedAt());
+            $cutoff = $recreated->getCreatedAt();
         }
 
-        $dbForProject->deleteDocuments('pushLedger', $queries);
+        $dbForProject->deleteDocuments('pushLedger', [
+            Query::equal('topic', [$topic->getId()]),
+            Query::lessThan('$createdAt', $cutoff),
+        ]);
     }
 
     /**
