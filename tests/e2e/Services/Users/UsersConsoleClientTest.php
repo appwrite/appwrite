@@ -187,6 +187,8 @@ final class UsersConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/users/' . $targetId . '/sessions', $memberHeaders);
         $this->assertEquals(401, $response['headers']['status-code']);
         $this->assertEquals('general_unauthorized_scope', $response['body']['type']);
+        // The refusal is logged with its message, so it names the role, not the person
+        $this->assertStringNotContainsString($email, (string) $response['body']['message']);
 
         $response = $this->client->call(Client::METHOD_GET, '/users/' . $targetId . '/sessions', $memberHeaders);
         $this->assertEquals(401, $response['headers']['status-code']);
