@@ -2131,7 +2131,6 @@ Http::post('/v1/account/tokens/magic-url')
     ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
     ->inject('request')
     ->inject('response')
-    ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('locale')
@@ -2141,7 +2140,7 @@ Http::post('/v1/account/tokens/magic-url')
     ->inject('proofForPassword')
     ->inject('platform')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) {
+    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2154,7 +2153,7 @@ Http::post('/v1/account/tokens/magic-url')
 
         $result = $dbForProject->findOne('users', [Query::equal('email', [$email])]);
         if (!$result->isEmpty()) {
-            $user->setAttributes($result->getArrayCopy());
+            $recipient = $result;
         } else {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
@@ -2214,7 +2213,7 @@ Http::post('/v1/account/tokens/magic-url')
                 throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
-            $user->setAttributes([
+            $recipient = new Document([
                 '$id' => $userId,
                 '$permissions' => [
                     Permission::read(Role::any()),
@@ -2245,8 +2244,7 @@ Http::post('/v1/account/tokens/magic-url')
                 'emailIsFree' => $emailMetadata['emailIsFree'],
             ]);
 
-            $user->removeAttribute('$sequence');
-            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            $recipient = $authorization->skip(fn () => $dbForProject->createDocument('users', $recipient));
         }
 
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
@@ -2257,8 +2255,8 @@ Http::post('/v1/account/tokens/magic-url')
 
         $token = new Document([
             '$id' => ID::unique(),
-            'userId' => $user->getId(),
-            'userInternalId' => $user->getSequence(),
+            'userId' => $recipient->getId(),
+            'userInternalId' => $recipient->getSequence(),
             'type' => TOKEN_TYPE_MAGIC_URL,
             'secret' => $proofForToken->hash($tokenSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,
@@ -2266,16 +2264,14 @@ Http::post('/v1/account/tokens/magic-url')
             'ip' => $request->getIP(),
         ]);
 
-        $authorization->addRole(Role::user($user->getId())->toString());
-
-        $token = $dbForProject->createDocument('tokens', $token
+        $token = $authorization->skip(fn () => $dbForProject->createDocument('tokens', $token
             ->setAttribute('$permissions', [
-                Permission::read(Role::user($user->getId())),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ]));
+                Permission::read(Role::user($recipient->getId())),
+                Permission::update(Role::user($recipient->getId())),
+                Permission::delete(Role::user($recipient->getId())),
+            ])));
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $recipient->getId());
 
         if (empty($url)) {
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
@@ -2291,7 +2287,7 @@ Http::post('/v1/account/tokens/magic-url')
         }
 
         $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $tokenSecret, 'expire' => $expire, 'project' => $project->getId()]);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $recipient->getId(), 'secret' => $tokenSecret, 'expire' => $expire, 'project' => $project->getId()]);
         $url = Template::unParseURL($url);
 
         $subject = $locale->getText("emails.magicSession.subject");
@@ -2390,7 +2386,7 @@ Http::post('/v1/account/tokens/magic-url')
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
             // {{user}}, {{redirect}} and {{project}} are required in default and custom templates
-            'user' => $user->getAttribute('name'),
+            'user' => $recipient->getAttribute('name'),
             'project' => $projectName,
             'redirect' => $url,
             'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
@@ -2457,7 +2453,6 @@ Http::post('/v1/account/tokens/email')
     ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
     ->inject('request')
     ->inject('response')
-    ->inject('user')
     ->inject('project')
     ->inject('platform')
     ->inject('dbForProject')
@@ -2468,7 +2463,7 @@ Http::post('/v1/account/tokens/email')
     ->inject('proofForPassword')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, MailPublisher $publisherForMails, array $plan, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2479,7 +2474,7 @@ Http::post('/v1/account/tokens/email')
 
         $result = $dbForProject->findOne('users', [Query::equal('email', [$email])]);
         if (!$result->isEmpty()) {
-            $user->setAttributes($result->getArrayCopy());
+            $recipient = $result;
         } else {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
@@ -2539,7 +2534,7 @@ Http::post('/v1/account/tokens/email')
                 throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
-            $user->setAttributes([
+            $recipient = new Document([
                 '$id' => $userId,
                 '$permissions' => [
                     Permission::read(Role::any()),
@@ -2568,31 +2563,30 @@ Http::post('/v1/account/tokens/email')
                 'emailIsFree' => $emailMetadata['emailIsFree'],
             ]);
 
-            $user->removeAttribute('$sequence');
-            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            $recipient = $authorization->skip(fn () => $dbForProject->createDocument('users', $recipient));
             try {
                 $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
-                        Permission::read(Role::user($user->getId())),
-                        Permission::update(Role::user($user->getId())),
-                        Permission::delete(Role::user($user->getId())),
+                        Permission::read(Role::user($recipient->getId())),
+                        Permission::update(Role::user($recipient->getId())),
+                        Permission::delete(Role::user($recipient->getId())),
                     ],
-                    'userId' => $user->getId(),
-                    'userInternalId' => $user->getSequence(),
+                    'userId' => $recipient->getId(),
+                    'userInternalId' => $recipient->getSequence(),
                     'providerType' => MESSAGE_TYPE_EMAIL,
                     'identifier' => $email,
                 ])));
-                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+                $recipient->setAttribute('targets', [...$recipient->getAttribute('targets', []), $target]);
             } catch (Duplicate) {
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$email]),
                 ]);
                 if (!$existingTarget->isEmpty()) {
-                    $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
+                    $recipient->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
                 }
             }
 
-            $dbForProject->purgeCachedDocument('users', $user->getId());
+            $dbForProject->purgeCachedDocument('users', $recipient->getId());
         }
 
         $tokenSecret = $proofForCode->generate();
@@ -2600,8 +2594,8 @@ Http::post('/v1/account/tokens/email')
 
         $token = new Document([
             '$id' => ID::unique(),
-            'userId' => $user->getId(),
-            'userInternalId' => $user->getSequence(),
+            'userId' => $recipient->getId(),
+            'userInternalId' => $recipient->getSequence(),
             'type' => TOKEN_TYPE_EMAIL,
             'secret' => $proofForCode->hash($tokenSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,
@@ -2609,16 +2603,14 @@ Http::post('/v1/account/tokens/email')
             'ip' => $request->getIP(),
         ]);
 
-        $authorization->addRole(Role::user($user->getId())->toString());
-
-        $token = $dbForProject->createDocument('tokens', $token
+        $token = $authorization->skip(fn () => $dbForProject->createDocument('tokens', $token
             ->setAttribute('$permissions', [
-                Permission::read(Role::user($user->getId())),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ]));
+                Permission::read(Role::user($recipient->getId())),
+                Permission::update(Role::user($recipient->getId())),
+                Permission::delete(Role::user($recipient->getId())),
+            ])));
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $recipient->getId());
 
         $subject = $locale->getText("emails.otpSession.subject");
         $preview = $locale->getText("emails.otpSession.preview");
@@ -2724,7 +2716,7 @@ Http::post('/v1/account/tokens/email')
             'heading' => $heading,
             'direction' => $locale->getText('settings.direction'),
             // {{user}}, {{project}} and {{otp}} are required in the templates
-            'user' => $user->getAttribute('name'),
+            'user' => $recipient->getAttribute('name'),
             'project' => $projectName,
             'otp' => $tokenSecret,
             'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
@@ -2905,7 +2897,6 @@ Http::post('/v1/account/tokens/phone')
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
     ->inject('request')
     ->inject('response')
-    ->inject('user')
     ->inject('project')
     ->inject('platform')
     ->inject('dbForProject')
@@ -2918,14 +2909,14 @@ Http::post('/v1/account/tokens/phone')
     ->inject('store')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Locale $locale, callable $timelimit, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, MessagingPublisher $publisherForMessaging, Locale $locale, callable $timelimit, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
         $result = $dbForProject->findOne('users', [Query::equal('phone', [$phone])]);
         if (!$result->isEmpty()) {
-            $user->setAttributes($result->getArrayCopy());
+            $recipient = $result;
         } else {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
@@ -2938,7 +2929,7 @@ Http::post('/v1/account/tokens/phone')
             }
 
             $userId = $userId == 'unique()' ? ID::unique() : $userId;
-            $user->setAttributes([
+            $recipient = new Document([
                 '$id' => $userId,
                 '$permissions' => [
                     Permission::read(Role::any()),
@@ -2967,28 +2958,27 @@ Http::post('/v1/account/tokens/phone')
                 'emailIsFree' => null,
             ]);
 
-            $user->removeAttribute('$sequence');
-            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            $recipient = $authorization->skip(fn () => $dbForProject->createDocument('users', $recipient));
             try {
                 $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
-                        Permission::read(Role::user($user->getId())),
-                        Permission::update(Role::user($user->getId())),
-                        Permission::delete(Role::user($user->getId())),
+                        Permission::read(Role::user($recipient->getId())),
+                        Permission::update(Role::user($recipient->getId())),
+                        Permission::delete(Role::user($recipient->getId())),
                     ],
-                    'userId' => $user->getId(),
-                    'userInternalId' => $user->getSequence(),
+                    'userId' => $recipient->getId(),
+                    'userInternalId' => $recipient->getSequence(),
                     'providerType' => MESSAGE_TYPE_SMS,
                     'identifier' => $phone,
                 ])));
-                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+                $recipient->setAttribute('targets', [...$recipient->getAttribute('targets', []), $target]);
             } catch (Duplicate) {
                 $existingTarget = $dbForProject->findOne('targets', [
                     Query::equal('identifier', [$phone]),
                 ]);
-                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget->isEmpty() ? false : $existingTarget]);
+                $recipient->setAttribute('targets', [...$recipient->getAttribute('targets', []), $existingTarget->isEmpty() ? false : $existingTarget]);
             }
-            $dbForProject->purgeCachedDocument('users', $user->getId());
+            $dbForProject->purgeCachedDocument('users', $recipient->getId());
         }
 
         $secret = null;
@@ -3007,8 +2997,8 @@ Http::post('/v1/account/tokens/phone')
 
         $token = new Document([
             '$id' => ID::unique(),
-            'userId' => $user->getId(),
-            'userInternalId' => $user->getSequence(),
+            'userId' => $recipient->getId(),
+            'userInternalId' => $recipient->getSequence(),
             'type' => TOKEN_TYPE_PHONE,
             'secret' => $proofForCode->hash($secret),
             'expire' => $expire,
@@ -3016,16 +3006,14 @@ Http::post('/v1/account/tokens/phone')
             'ip' => $request->getIP(),
         ]);
 
-        $authorization->addRole(Role::user($user->getId())->toString());
-
-        $token = $dbForProject->createDocument('tokens', $token
+        $token = $authorization->skip(fn () => $dbForProject->createDocument('tokens', $token
             ->setAttribute('$permissions', [
-                Permission::read(Role::user($user->getId())),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ]));
+                Permission::read(Role::user($recipient->getId())),
+                Permission::update(Role::user($recipient->getId())),
+                Permission::delete(Role::user($recipient->getId())),
+            ])));
 
-        $dbForProject->purgeCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $recipient->getId());
 
         if ($sendSMS) {
             $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
@@ -3079,7 +3067,7 @@ Http::post('/v1/account/tokens/phone')
 
         // Encode secret for clients
         $encoded = $store
-            ->setProperty('id', $user->getId())
+            ->setProperty('id', $recipient->getId())
             ->setProperty('secret', $secret)
             ->encode();
         $token->setAttribute('secret', $encoded);
@@ -3712,7 +3700,6 @@ Http::post('/v1/account/recovery')
     ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['redirectValidator'])
     ->inject('request')
     ->inject('response')
-    ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('platform')
@@ -3721,7 +3708,7 @@ Http::post('/v1/account/recovery')
     ->inject('queueForEvents')
     ->inject('proofForToken')
     ->inject('authorization')
-    ->action(function (string $email, string $url, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, MailPublisher $publisherForMails, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization) {
+    ->action(function (string $email, string $url, Request $request, Response $response, Database $dbForProject, Document $project, array $platform, Locale $locale, MailPublisher $publisherForMails, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization) {
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -3736,8 +3723,6 @@ Http::post('/v1/account/recovery')
         if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
-
-        $user->setAttributes($profile->getArrayCopy());
 
         if (false === $profile->getAttribute('status')) { // Account is blocked
             throw new Exception(Exception::USER_BLOCKED);
@@ -3757,14 +3742,12 @@ Http::post('/v1/account/recovery')
             'ip' => $request->getIP(),
         ]);
 
-        $authorization->addRole(Role::user($profile->getId())->toString());
-
-        $recovery = $dbForProject->createDocument('tokens', $recovery
+        $recovery = $authorization->skip(fn () => $dbForProject->createDocument('tokens', $recovery
             ->setAttribute('$permissions', [
                 Permission::read(Role::user($profile->getId())),
                 Permission::update(Role::user($profile->getId())),
                 Permission::delete(Role::user($profile->getId())),
-            ]));
+            ])));
 
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 

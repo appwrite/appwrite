@@ -13,6 +13,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
+use Appwrite\GraphQL\ResolverLock;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Cors;
 use Appwrite\Network\Platform;
@@ -60,6 +61,8 @@ use Utopia\Validator\WhiteList;
  */
 return function (Container $context): void {
     $context->set('utopia:graphql', fn ($utopia) => $utopia, ['utopia']);
+
+    $context->set('resolverLock', fn (): ResolverLock => new ResolverLock(), []);
 
     $context->set('log', fn () => new Log(), []);
 
