@@ -176,6 +176,15 @@ final class S3CustomServerTest extends Scope
         $this->assertSame("script-src 'none';", $pngOverride['headers']['content-security-policy']);
         $this->assertSame('nosniff', $pngOverride['headers']['x-content-type-options']);
         $this->assertStringStartsWith('attachment;', $pngOverride['headers']['content-disposition']);
+
+        $quotedName = 'café;"name.svg';
+        $this->uploadFile($bucketId, 'script.svg', 'image/svg+xml', $quotedName);
+        $quoted = $this->call(Client::METHOD_GET, '/' . $bucketId . '/' . \rawurlencode($quotedName));
+        $this->assertSame(200, $quoted['headers']['status-code']);
+        $disposition = $quoted['headers']['content-disposition'];
+        $this->assertStringStartsWith('attachment;', $disposition);
+        $this->assertStringContainsString('filename="caféname.svg"', $disposition);
+        $this->assertStringContainsString("filename*=UTF-8''" . \rawurlencode($quotedName), $disposition);
     }
 
     #[Group('s3')]
