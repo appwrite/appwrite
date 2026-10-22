@@ -5,11 +5,15 @@ namespace Appwrite\Migration\Version;
 use Appwrite\Migration\Migration;
 use Exception;
 use Throwable;
-use Utopia\Console;
+use Utopia\Console\Console;
+use Utopia\Database\Attribute;
+use Utopia\Database\Attribute\Update as AttributeUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Migration\Resource;
+use Utopia\Query\Schema\ColumnType;
 
 class V25 extends Migration
 {
@@ -74,14 +78,14 @@ class V25 extends Migration
                         }
 
                         $attributes = \array_map(
-                            fn (Document $attribute) => $attribute->getId(),
-                            $this->dbForProject->getCollection($id)->getAttribute('attributes', [])
+                            fn (Attribute $attribute): string => $attribute->key,
+                            $this->dbForProject->findCollection($id)?->attributes() ?? []
                         );
                         if (\in_array('devKeys', $attributes, true)) {
                             $this->dbForProject->deleteAttribute($id, 'devKeys');
                         }
 
-                        if (!$this->dbForProject->getCollection('devKeys')->isEmpty()) {
+                        if ($this->dbForProject->findCollection('devKeys') !== null) {
                             $this->dbForProject->deleteCollection('devKeys');
                         }
                     }
@@ -90,10 +94,12 @@ class V25 extends Migration
 
                 case 'schedules':
                     if ($collectionType === 'console') {
-                        try {
-                            $this->createAttributeFromCollection($this->dbForProject, $id, 'projectInternalId');
-                        } catch (Throwable $th) {
-                            Console::warning("Failed to create attribute \"projectInternalId\" in collection {$id}: {$th->getMessage()}");
+                        foreach (['projectInternalId', 'interval'] as $attribute) {
+                            try {
+                                $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                            }
                         }
 
                         $this->dbForProject->purgeCachedCollection($id);
@@ -135,14 +141,43 @@ class V25 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'platforms':
+                    if ($collectionType === 'console') {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'fingerprints');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"fingerprints\" in collection {$id}: {$th->getMessage()}");
+                        }
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
                 case 'installations':
                     if ($collectionType === 'console') {
                         foreach (['personalAccessToken', 'personalRefreshToken'] as $attribute) {
                             try {
-                                $this->dbForProject->updateAttribute($id, $attribute, type: Database::VAR_TEXT, size: Database::MAX_TEXT_BYTES);
+                                $this->dbForProject->updateAttribute($id, $attribute, new AttributeUpdate(type: ColumnType::Text, size: Database::MAX_TEXT_BYTES));
                             } catch (Throwable $th) {
                                 Console::warning("Failed to convert attribute \"{$attribute}\" to text in collection {$id}: {$th->getMessage()}");
                             }
+                        }
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'webhooks':
+                    // The encrypted password is about 1.4x its plaintext plus a 121-char wrapper, so the 255-char column
+                    // only fit passwords of up to about 99 chars, well below the 2048 the API accepts.
+                    if ($collectionType === 'console') {
+                        try {
+                            $this->dbForProject->updateAttribute($id, 'httpPass', new AttributeUpdate(type: ColumnType::Text, size: Database::MAX_TEXT_BYTES));
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to convert attribute \"httpPass\" to text in collection {$id}: {$th->getMessage()}");
+                        }
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'description');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"description\" in collection {$id}: {$th->getMessage()}");
                         }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
@@ -154,17 +189,105 @@ class V25 extends Migration
                     } catch (Throwable $th) {
                         Console::warning("Failed to create index \"_key_expire\" from {$id}: {$th->getMessage()}");
                     }
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'passkey');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"passkey\" in collection {$id}: {$th->getMessage()}");
+                    }
                     $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'authenticators':
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'identifier');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"identifier\" in collection {$id}: {$th->getMessage()}");
+                    }
+                    try {
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_identifier');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create index \"_key_identifier\" from {$id}: {$th->getMessage()}");
+                    }
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'name');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"name\" in collection {$id}: {$th->getMessage()}");
+                    }
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'accessedAt');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"accessedAt\" in collection {$id}: {$th->getMessage()}");
+                    }
+                    try {
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_accessedAt');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create index \"_key_accessedAt\" from {$id}: {$th->getMessage()}");
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'transactions':
+                    if ($collectionType === 'projects') {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'type');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"type\" in collection {$id}: {$th->getMessage()}");
+                        }
+                        try {
+                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_type');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create index \"_key_type\" from {$id}: {$th->getMessage()}");
+                        }
+                        $this->dbForProject->purgeCachedCollection($id);
+
+                        try {
+                            $cursor = null;
+                            do {
+                                $queries = [
+                                    Query::isNull('type'),
+                                    Query::limit($this->limit),
+                                ];
+                                if ($cursor !== null) {
+                                    $queries[] = Query::cursorAfter($cursor);
+                                }
+                                $transactions = $this->dbForProject->find($id, $queries);
+                                foreach ($transactions as $transaction) {
+                                    try {
+                                        $this->dbForProject->updateDocument($id, $transaction->getId(), new Document([
+                                            'type' => DATABASE_TYPE_LEGACY,
+                                        ]));
+                                    } catch (Throwable $th) {
+                                        Console::warning("Failed to backfill \"type\" for transaction {$transaction->getId()}: {$th->getMessage()}");
+                                    }
+                                    $cursor = $transaction;
+                                }
+                            } while (\count($transactions) === $this->limit);
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to backfill \"type\" in collection {$id}: {$th->getMessage()}");
+                        }
+                    }
                     break;
 
                 case 'databases':
                     if ($collectionType === 'projects') {
-                        try {
-                            $this->createAttributeFromCollection($this->dbForProject, $id, 'status');
-                        } catch (Throwable $th) {
-                            Console::warning("Failed to create attribute \"status\" in collection {$id}: {$th->getMessage()}");
+                        foreach (['status', 'description'] as $attribute) {
+                            try {
+                                $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                            }
                         }
                         $this->dbForProject->purgeCachedCollection($id);
+
+                        foreach ($this->documentsIterator($id) as $database) {
+                            $databaseTable = 'database_' . $database->getSequence();
+                            try {
+                                $this->createAttributeFromCollection($this->dbForProject, $databaseTable, 'description', 'collections');
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create attribute \"description\" in collection {$databaseTable}: {$th->getMessage()}");
+                            }
+                            $this->dbForProject->purgeCachedCollection($databaseTable);
+                        }
 
                         // Backfill existing databases so the stored value matches the intended default.
                         // Materialize the matched documents before updating any of them: updating
@@ -186,9 +309,12 @@ class V25 extends Migration
                 case 'functions':
                 case 'sites':
                     if ($collectionType === 'projects') {
-                        $attributes = ['providerBranches', 'providerPaths'];
+                        $attributes = ['providerBranches', 'providerPaths', 'description'];
                         if ($id === 'sites') {
                             $attributes[] = 'scopes';
+                        }
+                        if ($id === 'functions') {
+                            $attributes[] = 'interval';
                         }
                         try {
                             $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
@@ -281,7 +407,7 @@ class V25 extends Migration
                         Console::warning("Failed to create index \"_key_passwordPwned\" from {$id}: {$th->getMessage()}");
                     }
 
-                    // Added in 2.3.0 for custom user photos
+                    // Added in 2.4.0 for custom user photos
                     foreach (['photoId', 'photoSize'] as $attribute) {
                         try {
                             $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
@@ -305,10 +431,75 @@ class V25 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'attributes':
+                case 'indexes':
+                case 'variables':
+                    if ($collectionType === 'projects') {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'description');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"description\" in collection {$id}: {$th->getMessage()}");
+                        }
+                        $this->dbForProject->purgeCachedCollection($id);
+                    }
+                    break;
+
+                case 'keys':
+                    if ($collectionType === 'console') {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'description');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"description\" in collection {$id}: {$th->getMessage()}");
+                        }
+                        $this->dbForProject->purgeCachedCollection($id);
+                    }
+                    break;
+
+                case 'presenceLogs':
+                    // Added in 1.9.5 and created only by V24, which an install that ran the 1.9.6
+                    // migration or upgraded straight from 1.8.x never ran. createCollection() is a
+                    // no-op when it already exists and creates it with connections when it doesn't;
+                    // the attribute-add then covers installs that have it from V24 without the column.
+                    // A Duplicate means createCollection already made the row with connections; any
+                    // other failure propagates so the version is not recorded with a missing attribute.
+                    $this->createCollection($id);
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'connections');
+                    } catch (Duplicate) {
+                        // createCollection already made the row with connections; nothing to add.
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'videos':
+                case 'videosTimelines':
+                case 'videosRenditions':
+                case 'videosRenditionsSegments':
+                case 'videosProfiles':
+                case 'videosCaptions':
+                case 'videosCaptionsSegments':
+                    // New in 2.6.0. The document pass visits these collections even when video APIs are disabled.
+                    $this->createCollection($id);
+                    break;
+
                 case 'pushLedger':
                     // Added in 2.3.0 for every project; an install upgraded from 2.2.0
                     // has no table yet, and migrating its documents fails without one.
                     $this->createCollection($id);
+                    break;
+
+                case 'buckets':
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'description');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"description\" in collection {$id}: {$th->getMessage()}");
+                    }
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'stripMetadata');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create attribute \"stripMetadata\" in collection {$id}: {$th->getMessage()}");
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
                     break;
 
                 case 'topics':
@@ -317,6 +508,7 @@ class V25 extends Migration
                         'sequence',
                         'qos',
                         'expiry',
+                        'description',
                     ];
                     try {
                         $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
@@ -333,9 +525,10 @@ class V25 extends Migration
     protected function migrateDocument(Document $document): Document
     {
         if (\in_array($document->getCollection(), ['keys', 'functions', 'sites'], true)) {
+            $retired = ['devKeys.read', 'devKeys.write', 'assistant.read'];
             $scopes = $document->getAttribute('scopes', []);
-            if (\is_array($scopes) && \array_intersect($scopes, ['devKeys.read', 'devKeys.write']) !== []) {
-                $document->setAttribute('scopes', \array_values(\array_diff($scopes, ['devKeys.read', 'devKeys.write'])));
+            if (\is_array($scopes) && \array_intersect($scopes, $retired) !== []) {
+                $document->setAttribute('scopes', \array_values(\array_diff($scopes, $retired)));
             }
 
             return $document;

@@ -21,7 +21,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
@@ -30,6 +30,7 @@ use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -75,12 +76,12 @@ class Update extends Base
                     )
                 ]
             ))
-            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Function ID.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
             ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.', true, enum: new Enum(name: 'Runtime'))
             ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
             ->param('events', [], new ArrayList(new FunctionEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
-            ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
+            ->param('schedule', '', new Cron(), 'Schedule CRON syntax. Cannot be combined with interval.', true)
             ->param('timeout', 15, new Range(1, (int) System::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
             ->param('enabled', true, new Boolean(), 'Is function enabled? When set to \'disabled\', users cannot access the function but Server SDKs with and API key can still access the function. No data is lost when this is toggled.', true)
             ->param('logging', true, new Boolean(), 'When disabled, executions will exclude logs and errors, and will be slightly faster.', true)
@@ -107,7 +108,9 @@ class Update extends Base
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
             )), 'Runtime specification for the function executions.', true, ['plan'], example: 's-1vcpu-512mb')
-            ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
+            ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 keeps all deployments unless the server applies a default retention.', true)
+            ->param('interval', null, new Nullable(new Range(0, Database::MAX_INT)), 'Minutes between scheduled executions. Appwrite picks when within each interval the function runs. Use 0 to disable. Cannot be combined with schedule. When omitted, the current interval is kept unless schedule is set.', true)
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the function.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -122,6 +125,7 @@ class Update extends Base
             ->inject('executor')
             ->inject('authorization')
             ->inject('platform')
+            ->inject('deviceForBuilds')
             ->callback($this->action(...));
     }
 
@@ -148,6 +152,8 @@ class Update extends Base
         ?string $buildSpecification,
         ?string $runtimeSpecification,
         int $deploymentRetention,
+        ?int $interval,
+        ?string $description,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -161,7 +167,8 @@ class Update extends Base
         RepositoryWebhooks $repositoryWebhooks,
         Executor $executor,
         Authorization $authorization,
-        array $platform
+        array $platform,
+        ?Device $deviceForBuilds = null,
     ) {
         // TODO: If only branch changes, re-deploy
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -180,10 +187,18 @@ class Update extends Base
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
         }
 
+        if ($schedule !== '' && !empty($interval)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Set either "schedule" or "interval", not both.');
+        }
+
+        // Clients that predate interval omit it, so keep the stored one unless a cron replaces it.
+        $interval ??= $schedule === '' ? $function->getAttribute('interval', 0) : 0;
+
         if (empty($runtime)) {
             $runtime = $function->getAttribute('runtime');
         }
 
+        $description ??= $function->getAttribute('description', '');
         $buildSpecification ??= $function->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT);
         $runtimeSpecification ??= $function->getAttribute('runtimeSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT);
 
@@ -238,7 +253,7 @@ class Update extends Base
             $teamId = $project->getAttribute('teamId', '');
 
             $repository = $dbForPlatform->createDocument('repositories', new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 '$permissions' => $this->getPermissions($teamId, $project->getId()),
                 'installationId' => $installation->getId(),
                 'installationInternalId' => $installation->getSequence(),
@@ -264,6 +279,22 @@ class Update extends Base
             } catch (\Throwable $error) {
                 $dbForPlatform->deleteDocument('repositories', $repository->getId());
                 throw $error;
+            }
+        }
+
+        // Reconnecting a connected function only moves the function to the new installation, while
+        // webhook deployments take theirs from the repository link
+        if ($isConnected && !empty($providerRepositoryId) && !empty($repositoryId) && !$installation->isEmpty()) {
+            $repository = $dbForPlatform->getDocument('repositories', $repositoryId);
+            if (
+                !$repository->isEmpty()
+                && $repository->getAttribute('providerRepositoryId') === $providerRepositoryId
+                && $repository->getAttribute('installationInternalId') !== $installation->getSequence()
+            ) {
+                $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document([
+                    'installationId' => $installation->getId(),
+                    'installationInternalId' => $installation->getSequence(),
+                ]));
             }
         }
 
@@ -300,12 +331,15 @@ class Update extends Base
             }
         }
 
+        $previous = $function;
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
             'name' => $name,
+            'description' => $description,
             'runtime' => $runtime,
             'events' => $events,
             'schedule' => $schedule,
+            'interval' => $interval,
             'timeout' => $timeout,
             'enabled' => $enabled,
             'live' => $live,
@@ -326,8 +360,10 @@ class Update extends Base
             'providerPaths' => $providerPaths ?? $function->getAttribute('providerPaths', []),
             'buildSpecification' => $buildSpecification,
             'runtimeSpecification' => $runtimeSpecification,
-            'search' => implode(' ', [$functionId, $name, $runtime]),
+            'search' => implode(' ', [$functionId, $name, $description, $runtime]),
         ])));
+
+        $this->deleteStaleBuildCache($deviceForBuilds, $project->getId(), $previous, $function);
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
@@ -349,6 +385,7 @@ class Update extends Base
                     'projectId' => $project->getId(),
                     'projectInternalId' => $project->getSequence(),
                     'schedule'  => $function->getAttribute('schedule'),
+                    'interval' => $function->getAttribute('interval', 0),
                     'active' => false,
                 ]))
             );
@@ -363,7 +400,8 @@ class Update extends Base
             ->setAttribute('projectInternalId', $project->getSequence())
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
-            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
+            ->setAttribute('interval', $function->getAttribute('interval', 0))
+            ->setAttribute('active', (!empty($function->getAttribute('schedule')) || !empty($function->getAttribute('interval'))) && !empty($function->getAttribute('deploymentId')));
         $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $queueForEvents->setParam('functionId', $function->getId());

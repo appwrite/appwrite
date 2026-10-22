@@ -1,0 +1,23 @@
+---
+layout: article
+title: Authentication
+description: Learn how authentication works with Appwrite Realtime subscriptions and how to handle session-based access.
+---
+
+Realtime authenticates using an existing user session. If you authenticate **after** creating a subscription, the subscription will not receive updates for the newly authenticated user. You will need to re-create the subscription to work with the new user.
+
+More information and examples of authenticating users can be found in the dedicated [authentication docs](/docs/products/auth).
+
+{% info title="Permissions" %}
+All subscriptions are secured by the [permissions system](/docs/advanced/security/permissions) offered by Appwrite, meaning a user will only receive updates to resources they have permission to access.
+
+Using `Role.any()` on read permissions will allow any client to receive updates.
+{% /info %}
+
+# Session lifecycle {% #session-lifecycle %}
+
+When working with Realtime subscriptions and authentication, keep the following in mind:
+
+1. **Create session first** - Always authenticate the user before creating subscriptions that require access to protected resources.
+2. **Re-subscribe on session change** - If a user logs out and a new user logs in, call `realtime.disconnect()` and then create new subscriptions for the new session.
+3. **Handle session expiry** - If a session expires, subscriptions tied to that session will stop receiving updates. Listen for session-related errors and re-authenticate when needed.

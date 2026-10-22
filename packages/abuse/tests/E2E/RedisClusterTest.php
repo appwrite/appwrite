@@ -2,8 +2,8 @@
 
 namespace Utopia\Abuse\Tests\E2E;
 
-use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\Abuse\Adapters\TimeLimit\RedisCluster as AdapterRedisCluster;
+use Utopia\Abuse\Adapter\TimeLimit;
+use Utopia\Abuse\Adapter\TimeLimit\RedisCluster as AdapterRedisCluster;
 
 class RedisClusterTest extends Base
 {
@@ -12,6 +12,7 @@ class RedisClusterTest extends Base
     /**
      * @throws \Exception
      */
+    #[\Override]
     public static function setUpBeforeClass(): void
     {
         if (isset(self::$redis)) {
@@ -26,6 +27,7 @@ class RedisClusterTest extends Base
         return new \RedisCluster(null, Services::CLUSTER_SEEDS);
     }
 
+    #[\Override]
     public function getAdapter(string $key, int $limit, int $seconds): TimeLimit
     {
         return new AdapterRedisCluster($key, $limit, $seconds, self::$redis);
@@ -34,6 +36,7 @@ class RedisClusterTest extends Base
     /**
      * Clean up Redis connection after all tests
      */
+    #[\Override]
     public static function tearDownAfterClass(): void
     {
         if (isset(self::$redis)) {

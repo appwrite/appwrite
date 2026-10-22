@@ -12,9 +12,9 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\UID;
 use Utopia\Emails\Email;
 use Utopia\Emails\Validator\Email as EmailValidator;
@@ -54,7 +54,7 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
+            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
             ->param('email', '', new EmailValidator(allowEmpty: true), 'User email.')
             ->inject('response')
             ->inject('dbForProject')
@@ -92,8 +92,6 @@ class Update extends Action
                 throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
             }
         }
-
-        $oldEmail = $user->getAttribute('email');
 
         $emailMetadata = [
             'emailCanonical' => null,
@@ -143,40 +141,66 @@ class Update extends Action
         ;
 
         try {
-            $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
-                'email' => $user->getAttribute('email'),
-                'emailVerification' => $user->getAttribute('emailVerification'),
-                'emailCanonical' => $user->getAttribute('emailCanonical'),
-                'emailIsCanonical' => $user->getAttribute('emailIsCanonical'),
-                'emailIsCorporate' => $user->getAttribute('emailIsCorporate'),
-                'emailIsDisposable' => $user->getAttribute('emailIsDisposable'),
-                'emailIsFree' => $user->getAttribute('emailIsFree'),
-            ]));
-            $oldTarget = $user->find('identifier', $oldEmail, 'targets');
+            $user = $dbForProject->withTransaction(function () use ($dbForProject, $user, $email) {
+                $current = $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+                if ($current->isEmpty()) {
+                    throw new Exception(Exception::USER_NOT_FOUND);
+                }
 
-            if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                if (\strlen($email) !== 0) {
-                    $dbForProject->updateDocument('targets', $oldTarget->getId(), new Document(['identifier' => $email]));
-                    $oldTarget->setAttribute('identifier', $email);
+                $lockedEmail = $current->getAttribute('email');
+
+                $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
+                    'email' => $user->getAttribute('email'),
+                    'emailVerification' => $user->getAttribute('emailVerification'),
+                    'emailCanonical' => $user->getAttribute('emailCanonical'),
+                    'emailIsCanonical' => $user->getAttribute('emailIsCanonical'),
+                    'emailIsCorporate' => $user->getAttribute('emailIsCorporate'),
+                    'emailIsDisposable' => $user->getAttribute('emailIsDisposable'),
+                    'emailIsFree' => $user->getAttribute('emailIsFree'),
+                ]));
+                $oldTarget = \array_find($user->getAttribute('targets', []), static fn (Document $target): bool => $target->getAttribute('identifier') === $lockedEmail);
+
+                if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
+                    if (\strlen($email) !== 0) {
+                        $dbForProject->updateDocument('targets', $oldTarget->getId(), new Document(['identifier' => $email]));
+                        $oldTarget->setAttribute('identifier', $email);
+                    } else {
+                        $dbForProject->deleteDocument('targets', $oldTarget->getId());
+                    }
                 } else {
-                    $dbForProject->deleteDocument('targets', $oldTarget->getId());
+                    if (\strlen($email) !== 0) {
+                        $target = $dbForProject->createDocument('targets', new Document([
+                            '$permissions' => [
+                                Permission::read(Role::user($user->getId())),
+                                Permission::update(Role::user($user->getId())),
+                                Permission::delete(Role::user($user->getId())),
+                            ],
+                            'userId' => $user->getId(),
+                            'userInternalId' => $user->getSequence(),
+                            'providerType' => 'email',
+                            'identifier' => $email,
+                        ]));
+                        $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+                    }
                 }
-            } else {
-                if (\strlen($email) !== 0) {
-                    $target = $dbForProject->createDocument('targets', new Document([
-                        '$permissions' => [
-                            Permission::read(Role::user($user->getId())),
-                            Permission::update(Role::user($user->getId())),
-                            Permission::delete(Role::user($user->getId())),
-                        ],
-                        'userId' => $user->getId(),
-                        'userInternalId' => $user->getSequence(),
-                        'providerType' => 'email',
-                        'identifier' => $email,
-                    ]));
-                    $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+
+                $sequence = $user->getSequence();
+                if ($lockedEmail !== $email && $sequence !== '' && $sequence !== null) {
+                    $dbForProject->deleteDocuments('tokens', [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('type', [
+                            TOKEN_TYPE_RECOVERY,
+                            TOKEN_TYPE_RECOVERY_OTP,
+                            TOKEN_TYPE_VERIFICATION,
+                            TOKEN_TYPE_VERIFICATION_OTP,
+                            TOKEN_TYPE_MAGIC_URL,
+                            TOKEN_TYPE_EMAIL,
+                        ]),
+                    ]);
                 }
-            }
+
+                return $user;
+            });
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);

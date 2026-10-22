@@ -20,7 +20,7 @@ use Throwable;
 use Utopia\Bus\Bus;
 use Utopia\Cdn\Certificates\Provider;
 use Utopia\Cdn\Certificates\Status;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -28,7 +28,7 @@ use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Structure;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization as ValidatorAuthorization;
 use Utopia\Domains\Domain;
@@ -309,7 +309,7 @@ class Certificates extends Action
         $date = \date('H:i:s');
         $logs = "\033[90m[{$date}] \033[97mProcessing SSL certificate issuance. \033[0m\n";
 
-        // Set once the provider holds the order, so a failure after that can be retried
+        // Set once DNS has passed on a delayed provider, so a failure after that can be retried
         $awaitingProvider = false;
 
         try {
@@ -323,35 +323,32 @@ class Certificates extends Action
             // Validate domain and DNS records. Skip if job is forced, or if DNS
             // already passed for this rule: a second run of the same check can
             // only agree, or fail on a transient and contradict that result.
-            if (!$skipRenewCheck) {
-                if (!$skipDomainValidation) {
-                    $this->validateDomain($rule, $domain, $validationDomain);
+            if (!$skipRenewCheck && !$skipDomainValidation) {
+                $this->validateDomain($rule, $domain, $validationDomain);
+            }
+
+            $awaitingProvider = !$certificates->isInstantGeneration($domain->get(), $domainType);
+
+            // If certificate exists already, double-check expiry date. Skip if job is forced
+            if (!$skipRenewCheck && !$certificates->isRenewRequired($domain->get(), $domainType)) {
+                if ($certificates->isInstantGeneration($domain->get(), $domainType)) {
+                    Console::info("Skipping, renew isn't required");
+                    $rule->setAttribute('status', RULE_STATUS_VERIFIED);
+                    return;
                 }
 
-                // If certificate exists already, double-check expiry date. Skip if job is forced
-                if (!$certificates->isRenewRequired($domain->get(), $domainType)) {
-                    if ($certificates->isInstantGeneration($domain->get(), $domainType)) {
-                        Console::info("Skipping, renew isn't required");
-                        $rule->setAttribute('status', RULE_STATUS_VERIFIED);
-                        return;
-                    }
-
-                    // Wait for the delayed provider's existing order; issuing again below picks up its renew date
-                    $awaitingProvider = true;
-
-                    if (!\in_array($certificates->getCertificateStatus($domain->get(), $domainType), [Status::ISSUED, Status::RENEWING], true)) {
-                        $date = \date('H:i:s');
-                        $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. This usually takes a few minutes — no action needed on your end. We'll periodically check and update the status. \033[0m\n";
-                        Console::info('Certificate for ' . $domain->get() . ' is not issued yet');
-                        return;
-                    }
+                // Wait for the delayed provider's existing order; issuing again below picks up its renew date
+                if (!\in_array($certificates->getCertificateStatus($domain->get(), $domainType), [Status::ISSUED, Status::RENEWING], true)) {
+                    $date = \date('H:i:s');
+                    $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. This usually takes a few minutes — no action needed on your end. We'll periodically check and update the status. \033[0m\n";
+                    Console::info('Certificate for ' . $domain->get() . ' is not issued yet');
+                    return;
                 }
             }
 
             // Prepare unique cert name. Using this helps prevent mismatch in configuration when renewing certificates.
-            $certName = ID::unique();
+            $certName = Id::unique();
             $renewDate = $certificates->issueCertificate($certName, $domain->get(), $domainType);
-            $awaitingProvider = true;
 
             $date = \date('H:i:s');
             // Mark the rule as 'verified' once the certificate is issued, instantly or by a delayed provider.
@@ -384,17 +381,19 @@ class Certificates extends Action
             ]);
 
             if ($awaitingProvider && $attempts < self::MAX_GENERATION_ATTEMPTS) {
-                // Nothing retries 'unverified', so keep the rule generating while attempts remain
+                // Nothing retries 'unverified', so keep the rule generating while attempts remain.
+                // The interval retries it, so this is a wait, not a worker error.
                 $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
+                Console::warning('Certificate for ' . $domain->get() . ' will be retried: ' . $e->getMessage());
             } else {
                 // Mark rule as 'unverified'
                 $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATION_FAILED);
 
                 // Send email to security email
                 $this->notifyError($domain->get(), $e->getMessage(), $attempts, $publisherForMails, $plan, $dbForPlatform->getDocument('projects', 'console'));
-            }
 
-            throw $e;
+                throw $e;
+            }
         } finally {
             // Update certificate document with logs
             $certificate->setAttribute('logs', $logs);
@@ -482,12 +481,11 @@ class Certificates extends Action
             return;
         }
 
-        $ruleModel = new Rule();
         $queueForEvents
             ->setProject($project)
             ->setEvent('rules.[ruleId].update')
             ->setParam('ruleId', $rule->getId())
-            ->setPayload($rule->getArrayCopy(array_keys($ruleModel->getRules())));
+            ->setPayload((new Rule())->payload($rule));
 
         /** Trigger Webhook */
         $queueForWebhooks

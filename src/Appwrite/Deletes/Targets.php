@@ -3,7 +3,7 @@
 namespace Appwrite\Deletes;
 
 use Appwrite\Extend\Exception;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Limit as LimitException;
@@ -19,7 +19,7 @@ class Targets
                 $query,
                 Query::orderAsc()
             ],
-            Database::DELETE_BATCH_SIZE,
+            Database::BATCH_SIZE,
             fn (Document $target) => self::deleteSubscribers($database, $target)
         );
     }
@@ -32,7 +32,7 @@ class Targets
                 Query::equal('targetInternalId', [$target->getSequence()]),
                 Query::orderAsc(),
             ],
-            Database::DELETE_BATCH_SIZE,
+            Database::BATCH_SIZE,
             function (Document $subscriber) use ($database, $target) {
                 $topicId = $subscriber->getAttribute('topicId');
                 $topicInternalId = $subscriber->getAttribute('topicInternalId');

@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Auth\Key;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
@@ -207,7 +208,7 @@ return function (Container $container): void {
     $container->set('user', function (Request $request, Document $project, Document $console, Authorization $authorization, Store $store, Token $proofForToken) use ($getMode, $getDbForPlatform, $getDbForProject) {
         $mode = $getMode($request, $project);
 
-        $authorization->setDefaultStatus(true);
+        $authorization->setStatus(true);
 
         $dbForPlatform = $getDbForPlatform($authorization);
         $dbForProject = $getDbForProject($project, $authorization);
@@ -284,17 +285,21 @@ return function (Container $container): void {
         $accountKeyUserId = $request->getHeaderLine('x-appwrite-user', '');
 
         if (!empty($accountKeyUserId) && !empty($accountKey)) {
+            // Account keys act as the console user on the console project only. On any other
+            // project the credentials are rejected (as the HTTP gate does) rather than silently
+            // ignored, so a key-only client cannot fall through to a guest connection and a
+            // key+session combination cannot skip the mutual-authentication check.
+            if ($project->getId() !== 'console') {
+                throw new Exception(Exception::USER_UNAUTHORIZED, 'Account API keys can only be used with the console project.');
+            }
+
             if (!$user->isEmpty()) {
                 throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
             }
 
             $accountKeyUser = $authorization->skip(fn () => $dbForPlatform->getDocument('users', $accountKeyUserId));
             if (!$accountKeyUser->isEmpty()) {
-                $key = $accountKeyUser->find(
-                    key: 'secret',
-                    find: $accountKey,
-                    subject: 'keys'
-                );
+                $key = Key::find($accountKeyUser->getAttribute('keys', []), $accountKey);
 
                 if (!empty($key)) {
                     $expire = $key->getAttribute('expire');

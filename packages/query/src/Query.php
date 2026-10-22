@@ -19,6 +19,7 @@ class Query
         Method::And,
         Method::Or,
         Method::ElemMatch,
+        Method::Relationship,
     ];
 
     protected Method $method;
@@ -34,16 +35,22 @@ class Query
      */
     protected array $values = [];
 
+    protected string $alias = '';
+
+    protected bool $aliasDefaulted = false;
+
     /**
      * Construct a new query object
      *
      * @param  array<mixed>  $values
      */
-    public function __construct(Method|string $method, string $attribute = '', array $values = [])
+    public function __construct(Method|string $method, string $attribute = '', array $values = [], string $alias = '')
     {
         $this->method = $method instanceof Method ? $method : Method::from($method);
         $this->attribute = $attribute;
         $this->values = $values;
+        $this->alias = $alias;
+        $this->aliasDefaulted = $this->method->isJoin() && $alias !== '' && $alias === $attribute;
     }
 
     public function __clone(): void
@@ -93,23 +100,21 @@ class Query
         return false;
     }
 
-    public function getJoinAlias(): string
+    /**
+     * The name a join or an aggregate is exposed under, or '' when it has none.
+     */
+    public function getAlias(): string
     {
-        if ($this->method === Method::CrossJoin || $this->method === Method::NaturalJoin) {
-            $alias = $this->values[0] ?? '';
+        return $this->alias;
+    }
 
-            return \is_string($alias) ? $alias : '';
-        }
-
-        if ($this->isNestedJoin()) {
-            $first = $this->values[0] ?? null;
-
-            return \is_string($first) ? $first : '';
-        }
-
-        $alias = $this->values[3] ?? '';
-
-        return \is_string($alias) ? $alias : '';
+    /**
+     * Whether a join is read under the name of the collection it joins, as a join given no alias
+     * is. It is decided when the query is built, so it holds after the collection is renamed.
+     */
+    public function isAliasDefaulted(): bool
+    {
+        return $this->aliasDefaulted;
     }
 
     /**
@@ -229,6 +234,7 @@ class Query
         $method = $query['method'] ?? '';
         $attribute = $query['attribute'] ?? '';
         $values = $query['values'] ?? [];
+        $alias = $query['alias'] ?? '';
 
         if (! \is_string($method)) {
             throw new QueryException('Invalid query method. Must be a string, got '.\gettype($method));
@@ -246,10 +252,31 @@ class Query
             throw new QueryException('Invalid query values. Must be an array, got '.\gettype($values));
         }
 
+        if (! \is_string($alias)) {
+            throw new QueryException('Invalid query alias. Must be a string, got '.\gettype($alias));
+        }
+
         $methodEnum = Method::from($method);
 
         if ($methodEnum === Method::Raw && ! $allowRaw) {
             throw new ValidationException('Raw queries cannot be parsed from untrusted input; construct via Query::raw() in code');
+        }
+
+        if ($methodEnum === Method::Distinct && ($attribute !== '' || $values !== [])) {
+            throw new QueryException('Invalid distinct query: distinct takes no attribute or values, it deduplicates the attributes a select names');
+        }
+
+        if ($methodEnum->isJoin()) {
+            return self::parseJoin($methodEnum, $attribute, $values, $alias, $allowRaw);
+        }
+
+        if ($methodEnum->isAggregate()) {
+            $legacyAlias = $values[0] ?? '';
+            if ($alias === '' && \is_string($legacyAlias)) {
+                $alias = $legacyAlias;
+            }
+
+            return new static($methodEnum, $attribute, [], $alias);
         }
 
         if ($methodEnum->isNested()) {
@@ -257,16 +284,50 @@ class Query
                 /** @var array<string, mixed> $value */
                 $values[$index] = static::parseQuery($value, $allowRaw);
             }
-        } elseif ($methodEnum->isJoin()) {
-            foreach ($values as $index => $value) {
-                if (\is_array($value) && isset($value['method']) && \is_string($value['method'])) {
-                    /** @var array<string, mixed> $value */
-                    $values[$index] = static::parseQuery($value, $allowRaw);
-                }
-            }
         }
 
-        return new static($methodEnum, $attribute, $values);
+        return new static($methodEnum, $attribute, $values, $alias);
+    }
+
+    /**
+     * Parse a join, accepting the 0.6 layouts as well: the alias as the first
+     * value (cross, natural and alias-first joins) and the column form
+     * `[left, operator, right, alias]`.
+     *
+     * @param  array<mixed>  $values
+     *
+     * @throws QueryException
+     */
+    private static function parseJoin(Method $method, string $collection, array $values, string $alias, bool $allowRaw): static
+    {
+        $on = [];
+        $names = [];
+        foreach ($values as $value) {
+            if (\is_array($value)) {
+                /** @var array<string, mixed> $value */
+                $on[] = static::parseQuery($value, $allowRaw);
+
+                continue;
+            }
+
+            if (! \is_string($value)) {
+                throw new QueryException('Invalid join value. Must be a query or a string, got '.\gettype($value));
+            }
+
+            $names[] = $value;
+        }
+
+        $isColumnForm = $on === [] && \count($names) >= 3;
+        if ($isColumnForm) {
+            $on[] = static::on($names[0], $names[2], $names[1]);
+        }
+
+        $legacyAlias = $isColumnForm ? ($names[3] ?? '') : ($names[0] ?? '');
+        if (\count($names) > ($isColumnForm ? 4 : 1)) {
+            throw new QueryException('Invalid join values for '.$method->value.' '.$collection);
+        }
+
+        return self::createJoin($method, $collection, $alias !== '' ? $alias : $legacyAlias, $on);
     }
 
     /**
@@ -298,7 +359,7 @@ class Query
      * different parameter values produce the same fingerprint, which is
      * useful for pattern-based counting and slow-query grouping.
      *
-     * Logical queries (`and`, `or`, `elemMatch`) contribute their inner
+     * Logical queries (`and`, `or`, `elemMatch`, `relationship`) contribute their inner
      * structure to the hash via `Query::shape()` — two `and(...)` queries
      * with different child shapes produce different fingerprints.
      *
@@ -334,7 +395,7 @@ class Query
      * Canonical shape string for this Query — values excluded.
      *
      * Non-logical queries produce `method:attribute`. Logical queries
-     * (`and`, `or`, `elemMatch`) produce `method:attribute(child1|child2|…)`
+     * (`and`, `or`, `elemMatch`, `relationship`) produce `method:attribute(child1|child2|…)`
      * with children sorted so child order does not affect the shape.
      *
      * Implemented iteratively: walks the tree into a preorder list via a
@@ -380,7 +441,7 @@ class Query
             }
             \sort($childShapes);
 
-            // Attribute is empty for and/or; meaningful for elemMatch (the field being matched).
+            // Attribute is empty for and/or; meaningful for elemMatch and relationship (the field being matched).
             $shapes[$id] = $node->method->value.':'.$node->attribute.'('.\implode('|', $childShapes).')';
         }
 
@@ -396,6 +457,10 @@ class Query
 
         if (! empty($this->attribute)) {
             $array['attribute'] = $this->attribute;
+        }
+
+        if ($this->alias !== '') {
+            $array['alias'] = $this->alias;
         }
 
         $array['values'] = [];
@@ -645,17 +710,23 @@ class Query
     }
 
     /**
-     * Helper method to create Query with cursorAfter method
+     * Page after a row: an associative array of its columns, or an object
+     * such as a document.
+     *
+     * @param  array<mixed>|object  $value
      */
-    public static function cursorAfter(mixed $value): static
+    public static function cursorAfter(array|object $value): static
     {
         return new static(Method::CursorAfter, values: [$value]);
     }
 
     /**
-     * Helper method to create Query with cursorBefore method
+     * Page before a row: an associative array of its columns, or an object
+     * such as a document.
+     *
+     * @param  array<mixed>|object  $value
      */
-    public static function cursorBefore(mixed $value): static
+    public static function cursorBefore(array|object $value): static
     {
         return new static(Method::CursorBefore, values: [$value]);
     }
@@ -843,15 +914,11 @@ class Query
                     break;
 
                 case $method === Method::Limit:
-                    if ($limit === null && isset($values[0]) && \is_numeric($values[0])) {
-                        $limit = \intval($values[0]);
-                    }
+                    $limit ??= self::toInteger($values[0] ?? null);
                     break;
 
                 case $method === Method::Offset:
-                    if ($offset === null && isset($values[0]) && \is_numeric($values[0])) {
-                        $offset = \intval($values[0]);
-                    }
+                    $offset ??= self::toInteger($values[0] ?? null);
                     break;
 
                 case $method === Method::CursorAfter:
@@ -945,6 +1012,29 @@ class Query
             cursorDirection: $cursorDirection,
             timeBuckets: $timeBuckets,
         );
+    }
+
+    private static function toInteger(mixed $value): ?int
+    {
+        if (\is_int($value)) {
+            return $value;
+        }
+
+        if (! \is_numeric($value)) {
+            return null;
+        }
+
+        $integer = \filter_var($value, FILTER_VALIDATE_INT);
+        if ($integer !== false) {
+            return $integer;
+        }
+
+        $number = (float) $value;
+        if (! \is_finite($number) || $number < PHP_INT_MIN || $number >= PHP_INT_MAX) {
+            return null;
+        }
+
+        return (int) $number;
     }
 
     /**
@@ -1163,81 +1253,92 @@ class Query
         return new static(Method::ElemMatch, $attribute, $queries);
     }
 
+    /**
+     * Queries that shape the documents populated for a relationship attribute,
+     * written against the related collection.
+     *
+     * @param  array<Query>  $queries
+     */
+    public static function relationship(string $attribute, array $queries): static
+    {
+        return new static(Method::Relationship, $attribute, $queries);
+    }
+
     // Aggregation factory methods
 
     public static function count(string $attribute = '*', string $alias = ''): static
     {
-        return new static(Method::Count, $attribute, $alias !== '' ? [$alias] : []);
+        return new static(Method::Count, $attribute, [], $alias);
     }
 
     public static function countDistinct(string $attribute, string $alias = ''): static
     {
-        return new static(Method::CountDistinct, $attribute, $alias !== '' ? [$alias] : []);
+        return new static(Method::CountDistinct, $attribute, [], $alias);
     }
 
     public static function sum(string $attribute, string $alias = ''): static
     {
-        return new static(Method::Sum, $attribute, $alias !== '' ? [$alias] : []);
+        return new static(Method::Sum, $attribute, [], $alias);
     }
 
     public static function avg(string $attribute, string $alias = ''): static
     {
-        return new static(Method::Avg, $attribute, $alias !== '' ? [$alias] : []);
+        return new static(Method::Avg, $attribute, [], $alias);
     }
 
     public static function min(string $attribute, string $alias = ''): static
     {
-        return new static(Method::Min, $attribute, $alias !== '' ? [$alias] : []);
+        return new static(Method::Min, $attribute, [], $alias);
     }
 
     public static function max(string $attribute, string $alias = ''): static
     {
-        return new static(Method::Max, $attribute, $alias !== '' ? [$alias] : []);
+        return new static(Method::Max, $attribute, [], $alias);
     }
 
     public static function stddev(string $attribute, string $alias = ''): static
     {
-        return new static(Method::Stddev, $attribute, $alias !== '' ? [$alias] : []);
+        return new static(Method::Stddev, $attribute, [], $alias);
     }
 
     public static function stddevPop(string $attribute, string $alias = ''): static
     {
-        return new static(Method::StddevPop, $attribute, $alias !== '' ? [$alias] : []);
+        return new static(Method::StddevPop, $attribute, [], $alias);
     }
 
     public static function stddevSamp(string $attribute, string $alias = ''): static
     {
-        return new static(Method::StddevSamp, $attribute, $alias !== '' ? [$alias] : []);
+        return new static(Method::StddevSamp, $attribute, [], $alias);
     }
 
     public static function variance(string $attribute, string $alias = ''): static
     {
-        return new static(Method::Variance, $attribute, $alias !== '' ? [$alias] : []);
+        return new static(Method::Variance, $attribute, [], $alias);
     }
 
     public static function varPop(string $attribute, string $alias = ''): static
     {
-        return new static(Method::VarPop, $attribute, $alias !== '' ? [$alias] : []);
+        return new static(Method::VarPop, $attribute, [], $alias);
     }
 
     public static function varSamp(string $attribute, string $alias = ''): static
     {
-        return new static(Method::VarSamp, $attribute, $alias !== '' ? [$alias] : []);
+        return new static(Method::VarSamp, $attribute, [], $alias);
     }
 
     public static function bitAnd(string $attribute, string $alias = ''): static
     {
-        return new static(Method::BitAnd, $attribute, $alias !== '' ? [$alias] : []);
+        return new static(Method::BitAnd, $attribute, [], $alias);
     }
 
     public static function bitOr(string $attribute, string $alias = ''): static
     {
-        return new static(Method::BitOr, $attribute, $alias !== '' ? [$alias] : []);
+        return new static(Method::BitOr, $attribute, [], $alias);
     }
 
     public static function bitXor(string $attribute, string $alias = ''): static
     {
-        return new static(Method::BitXor, $attribute, $alias !== '' ? [$alias] : []);
+        return new static(Method::BitXor, $attribute, [], $alias);
     }
 
     /**
@@ -1302,98 +1403,111 @@ class Query
     }
 
     /**
-     * @param  string|list<Query|string>  $leftOrAliasOrOn
-     * @param  string|list<Query|string>  $rightOrOn
+     * @param  string  $alias  The name the join is read under; '' reads it under $collection
+     * @param  list<Query>  $on  on() conditions and filters
      */
-    public static function join(string $table, string|array $leftOrAliasOrOn, string|array $rightOrOn = '', string $operator = '=', string $alias = ''): static
+    public static function join(string $collection, string $alias, array $on): static
     {
-        return self::createJoin(Method::Join, $table, $leftOrAliasOrOn, $rightOrOn, $operator, $alias);
+        return self::createJoin(Method::Join, $collection, $alias, $on);
     }
 
     /**
-     * @param  string|list<Query|string>  $leftOrAliasOrOn
-     * @param  string|list<Query|string>  $rightOrOn
+     * @param  string  $alias  The name the join is read under; '' reads it under $collection
+     * @param  list<Query>  $on  on() conditions and filters
      */
-    public static function leftJoin(string $table, string|array $leftOrAliasOrOn, string|array $rightOrOn = '', string $operator = '=', string $alias = ''): static
+    public static function leftJoin(string $collection, string $alias, array $on): static
     {
-        return self::createJoin(Method::LeftJoin, $table, $leftOrAliasOrOn, $rightOrOn, $operator, $alias);
+        return self::createJoin(Method::LeftJoin, $collection, $alias, $on);
     }
 
     /**
-     * @param  string|list<Query|string>  $leftOrAliasOrOn
-     * @param  string|list<Query|string>  $rightOrOn
+     * @param  string  $alias  The name the join is read under; '' reads it under $collection
+     * @param  list<Query>  $on  on() conditions and filters
      */
-    public static function rightJoin(string $table, string|array $leftOrAliasOrOn, string|array $rightOrOn = '', string $operator = '=', string $alias = ''): static
+    public static function rightJoin(string $collection, string $alias, array $on): static
     {
-        return self::createJoin(Method::RightJoin, $table, $leftOrAliasOrOn, $rightOrOn, $operator, $alias);
-    }
-
-    public static function crossJoin(string $table, string $alias = ''): static
-    {
-        return new static(Method::CrossJoin, $table, $alias !== '' ? [$alias] : []);
+        return self::createJoin(Method::RightJoin, $collection, $alias, $on);
     }
 
     /**
-     * @param  string|list<Query|string>  $leftOrAliasOrOn
-     * @param  string|list<Query|string>  $rightOrOn
+     * @param  string  $alias  The name the join is read under; '' reads it under $collection
+     * @param  list<Query>  $on  on() conditions and filters
      */
-    public static function fullOuterJoin(string $table, string|array $leftOrAliasOrOn, string|array $rightOrOn = '', string $operator = '=', string $alias = ''): static
+    public static function fullOuterJoin(string $collection, string $alias, array $on): static
     {
-        return self::createJoin(Method::FullOuterJoin, $table, $leftOrAliasOrOn, $rightOrOn, $operator, $alias);
-    }
-
-    public static function naturalJoin(string $table, string $alias = ''): static
-    {
-        return new static(Method::NaturalJoin, $table, $alias !== '' ? [$alias] : []);
+        return self::createJoin(Method::FullOuterJoin, $collection, $alias, $on);
     }
 
     /**
-     * @param  string|list<Query|string>  $leftOrAliasOrOn
-     * @param  string|list<Query|string>  $rightOrOn
+     * @param  string  $alias  The name the join is read under; '' reads it under $collection
      */
-    private static function createJoin(Method $method, string $table, string|array $leftOrAliasOrOn, string|array $rightOrOn, string $operator, string $alias): static
+    public static function crossJoin(string $collection, string $alias): static
     {
-        if (\is_array($leftOrAliasOrOn)) {
-            return self::createNestedJoin($method, $table, '', $leftOrAliasOrOn);
-        }
+        return self::createJoin(Method::CrossJoin, $collection, $alias, []);
+    }
 
-        if (\is_array($rightOrOn)) {
-            return self::createNestedJoin($method, $table, $leftOrAliasOrOn, $rightOrOn);
-        }
-
-        $values = [$leftOrAliasOrOn, $operator, $rightOrOn];
-        if ($alias !== '') {
-            $values[] = $alias;
-        }
-
-        return new static($method, $table, $values);
+    /**
+     * @param  string  $alias  The name the join is read under; '' reads it under $collection
+     */
+    public static function naturalJoin(string $collection, string $alias): static
+    {
+        return self::createJoin(Method::NaturalJoin, $collection, $alias, []);
     }
 
     /**
      * @param  array<mixed>  $on
+     *
+     * @throws ValidationException
      */
-    private static function createNestedJoin(Method $method, string $table, string $alias, array $on): static
+    private static function createJoin(Method $method, string $collection, string $alias, array $on): static
     {
-        if ($on === []) {
+        $alias = $alias !== '' ? $alias : $collection;
+        if ($alias === '') {
+            throw new ValidationException('Join alias is required: '.$method->value.' '.$collection);
+        }
+
+        $isUnconditioned = $method === Method::CrossJoin || $method === Method::NaturalJoin;
+        if ($isUnconditioned && $on !== []) {
+            throw new ValidationException('Join ON conditions are not allowed in '.$method->value);
+        }
+
+        if (! $isUnconditioned && $on === []) {
             throw new ValidationException('Join ON requires at least one condition');
         }
 
-        $values = [];
-        if ($alias !== '') {
-            $values[] = $alias;
-        }
-
-        foreach ($on as $query) {
-            if (\is_string($query)) {
-                $query = static::parse($query);
-            }
-            if (! $query instanceof self) {
+        $conditions = [];
+        foreach ($on as $condition) {
+            if (! $condition instanceof self) {
                 throw new ValidationException('Join ON conditions must be Query objects');
             }
-            $values[] = $query;
+            self::assertJoinCondition($condition);
+            $conditions[] = $condition;
         }
 
-        return new static($method, $table, $values);
+        return new static($method, $collection, $conditions, $alias);
+    }
+
+    /**
+     * @throws ValidationException
+     */
+    private static function assertJoinCondition(self $condition): void
+    {
+        $method = $condition->method;
+
+        if (! $method->isJoinCondition()) {
+            throw new ValidationException('Unsupported join ON condition: '.$method->value);
+        }
+
+        if ($method !== Method::And && $method !== Method::Or) {
+            return;
+        }
+
+        foreach ($condition->values as $child) {
+            if (! $child instanceof self) {
+                throw new ValidationException('Join ON conditions must be Query objects');
+            }
+            self::assertJoinCondition($child);
+        }
     }
 
     // Union factory methods
@@ -1584,10 +1698,15 @@ class Query
             Method::Select,
             Method::Exists,
             Method::NotExists,
+            Method::Relationship,
         ];
 
         foreach ($queries as $query) {
             $method = $query->getMethod();
+
+            if (\in_array($method, $skipTypes, true)) {
+                continue;
+            }
 
             // Recursively validate nested queries
             if ($method->isNested()) {
@@ -1595,10 +1714,6 @@ class Query
                 $nested = $query->getValues();
                 \array_push($errors, ...static::validate($nested, $allowedAttributes));
 
-                continue;
-            }
-
-            if (\in_array($method, $skipTypes, true)) {
                 continue;
             }
 

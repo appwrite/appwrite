@@ -416,7 +416,7 @@ class QueryTest extends TestCase
 
     public function testJoinNotNested(): void
     {
-        $this->assertFalse(Query::join('t', 'a', 'b')->isNested());
+        $this->assertFalse(Query::join('t', 't', [Query::on('a', 'b')])->isNested());
     }
 
     public function testRawNotNested(): void
@@ -536,7 +536,7 @@ class QueryTest extends TestCase
 
     public function testJoinIsSpatialQueryFalse(): void
     {
-        $this->assertFalse(Query::join('t', 'a', 'b')->isSpatialQuery());
+        $this->assertFalse(Query::join('t', 't', [Query::on('a', 'b')])->isSpatialQuery());
     }
 
     public function testDistinctIsSpatialQueryFalse(): void

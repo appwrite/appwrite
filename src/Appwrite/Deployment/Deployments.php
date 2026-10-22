@@ -3,6 +3,8 @@
 namespace Appwrite\Deployment;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Event\Message\Build as BuildMessage;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Validator\VariableKey;
 use OpenRuntimes\Orchestrator\Enum\ArchiveCompression;
@@ -18,15 +20,17 @@ use OpenRuntimes\Orchestrator\Model\Artifact\UnarchiveArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\UploadArtifact;
 use OpenRuntimes\Orchestrator\Model\Callback;
 use OpenRuntimes\Orchestrator\Model\Volume;
-use Utopia\Command;
 use Utopia\Config\Config;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\DSN\DSN;
+use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\DeviceType;
@@ -67,6 +71,7 @@ readonly class Deployments
         protected Database $dbForProject,
         protected Document $project,
         private array $platform,
+        private BuildPublisher $publisherForBuilds,
     ) {
     }
 
@@ -153,10 +158,72 @@ readonly class Deployments
     }
 
     /**
+     * Same as createFromUpload(), but builds from a tree on this host that a
+     * worker checked out itself: packs it flat, like a manual upload's
+     * tarball, into the deployment's own source and builds from there.
+     */
+    public function createFromDirectory(Document $resource, Document $deployment, int $timeout, string $directory): Document
+    {
+        $projectId = $this->project->getId();
+        $deploymentId = $deployment->getId();
+        $resourceType = $resource->getCollection();
+
+        $archive = \rtrim(\sys_get_temp_dir(), '/') . "/source-{$deploymentId}.tar.gz";
+        $sourcePath = static::sourcePath($projectId, $resourceType, $deploymentId);
+        $device = getDevice(($resourceType === 'sites' ? APP_STORAGE_SITES : APP_STORAGE_FUNCTIONS) . "/app-{$projectId}");
+
+        // The archive holds the customer's source on a shared host, so it is
+        // removed however packing or storing it ends
+        try {
+            $stdout = '';
+            $stderr = '';
+            $exit = Console::execute(
+                (new Command('tar'))->flag('-czf')->argument($archive)->option('-C', $directory)->argument('--exclude=.git')->argument('.'),
+                '',
+                $stdout,
+                $stderr,
+            );
+            if ($exit !== 0) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to pack the source: ' . $stderr);
+            }
+
+            $file = \fopen($archive, 'rb');
+            if ($file === false) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to read the packed source.');
+            }
+
+            try {
+                if (!$device->write($sourcePath, Stream::fromResource($file), 'application/gzip')) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to store the packed source.');
+                }
+            } finally {
+                \fclose($file);
+            }
+        } finally {
+            if (\is_file($archive)) {
+                \unlink($archive);
+            }
+        }
+
+        $size = $device->getFileSize($sourcePath);
+        $deployment->setAttributes([
+            'sourcePath' => $sourcePath,
+            'sourceSize' => $size,
+            'totalSize' => $size,
+            'sourceChunksTotal' => 1,
+            'sourceChunksUploaded' => 1,
+        ]);
+
+        return $this->createFromUpload($resource, $deployment, $timeout);
+    }
+
+    /**
      * Same as createFromUpload(), but builds from a repository on a VCS
-     * provider: a presigned archive URL when the provider hands those out, or
-     * a git clone through the jobs-service's clone artifact when the provider
-     * serves content over the git protocol only (Origin).
+     * provider: a presigned archive URL when the provider hands those out, a
+     * git clone through the jobs-service's clone artifact when the provider
+     * serves content over the git protocol only (Origin), or a clone by the
+     * Builds worker when only the provider's own tooling can fetch it
+     * (Entire), which then builds the tree it checked out.
      *
      * @param string $ref Branch, tag, or commit the deployment builds from
      */
@@ -183,6 +250,42 @@ readonly class Deployments
             );
         }
 
+        if (!$vcs->supportsRepositoryCloneUrl()) {
+            // The worker reads the ref off the deployment, the way the
+            // template push does
+            $deployment = $this->upload($resource, $deployment->setAttribute('status', 'waiting'));
+
+            try {
+                $queued = $this->publisherForBuilds->enqueue(new BuildMessage(
+                    project: $this->project,
+                    resource: $resource,
+                    deployment: $deployment,
+                    type: BUILD_TYPE_DEPLOYMENT,
+                    template: new Document(),
+                    platform: $this->platform,
+                    timeout: $timeout,
+                ));
+                if ($queued === false) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to queue the build.');
+                }
+            } catch (\Throwable $error) {
+                // Failed like a job submit() cannot hand over, rather than left
+                // waiting on a build that never starts
+                $this->dbForProject->updateDocuments('deployments', new Document([
+                    'status' => 'failed',
+                    'buildLogs' => "\nAn internal error occurred while building. Please try again, and contact support if the problem persists.\n",
+                    'buildEndedAt' => DateTime::now(),
+                ]), [
+                    Query::equal('$id', [$deployment->getId()]),
+                    Query::notEqual('status', 'canceled'),
+                ]);
+
+                throw $error;
+            }
+
+            return $deployment;
+        }
+
         return $this->submit($resource, $deployment, $timeout, [
             'clone' => $vcs->getRepositoryCloneUrl($owner, $repository),
             'ref' => $ref,
@@ -199,6 +302,27 @@ readonly class Deployments
         // the queued transition below is guarded instead.
         $deployment->removeAttribute('status');
         $deployment = $this->upload($resource, $deployment);
+
+        // Refused before it is queued: the deployment is left failed with the
+        // reason, the active deployment stays live and no job is submitted.
+        try {
+            $this->admit($resource, $deployment);
+        } catch (\Throwable $error) {
+            $buildLogs = $error instanceof Exception && $error->getCode() < 500
+                ? "\n" . $error->getMessage() . "\n"
+                : "\nAn internal error occurred while building. Please try again, and contact support if the problem persists.\n";
+
+            $this->dbForProject->updateDocuments('deployments', new Document([
+                'status' => 'failed',
+                'buildLogs' => $buildLogs,
+                'buildEndedAt' => DateTime::now(),
+            ]), [
+                Query::equal('$id', [$deployment->getId()]),
+                Query::notEqual('status', 'canceled'),
+            ]);
+
+            throw $error;
+        }
 
         $queued = $this->dbForProject->updateDocuments('deployments', new Document([
             'status' => 'waiting',
@@ -256,6 +380,16 @@ readonly class Deployments
         }
 
         return $deployment;
+    }
+
+    /**
+     * Decides whether a deployment may be built, called once it is persisted
+     * and before it is queued. Throw to refuse it: a refusal with a code under
+     * 500 is shown to the owner in the build logs. Every deployment passes
+     * here, from the API, VCS webhooks and the builds worker alike.
+     */
+    protected function admit(Document $resource, Document $deployment): void
+    {
     }
 
     /**
@@ -598,6 +732,20 @@ readonly class Deployments
     }
 
     /**
+     * The build cache of the image a resource builds with now. The key hashes
+     * the image, so a runtime change leaves the previous cache at another key
+     * and deleting the resource has to remove this one.
+     *
+     * @throws Exception when the resource's runtime is not supported
+     */
+    public static function resourceCachePath(string $projectId, Document $resource): string
+    {
+        $runtime = self::runtime($resource, self::version($resource));
+
+        return static::cachePath($projectId, static::cacheKey($projectId, $resource->getId(), $runtime['image'] ?? ''));
+    }
+
+    /**
      * The builds device for a project, as everything else reads it
      * (deviceForBuilds).
      */
@@ -808,14 +956,15 @@ readonly class Deployments
     }
 
     /**
+     * Deployments are written only by the console, project keys and workers, which all run with authorization
+     * disabled, so no role is granted write access.
+     *
      * @return array<string>
      */
-    private static function permissions(): array
+    public static function permissions(): array
     {
         return [
             Permission::read(Role::any()),
-            Permission::update(Role::any()),
-            Permission::delete(Role::any()),
         ];
     }
 

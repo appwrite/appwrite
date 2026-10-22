@@ -9,9 +9,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
-use Utopia\Command;
-use Utopia\Console;
-use Utopia\Database\Helpers\ID;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
+use Utopia\Database\Id;
 
 final class SitesConsoleClientTest extends Scope
 {
@@ -23,7 +23,7 @@ final class SitesConsoleClientTest extends Scope
     public function testSiteScreenshot(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Themed site',
             'framework' => 'other',
             'adapter' => 'static',
@@ -155,7 +155,7 @@ final class SitesConsoleClientTest extends Scope
     public function testSiteDeploymentRetentionWithMaintenance(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test retention site',
             'framework' => 'other',
             'deploymentRetention' => 180,
@@ -199,12 +199,22 @@ final class SitesConsoleClientTest extends Scope
         $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
         $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
 
-        $this->assertEventually(function () use ($siteId) {
+        $this->assertEventually(function () use ($siteId, $deploymentIdInactive, $deploymentIdActive) {
             $response = $this->listDeployments($siteId);
             $this->assertSame(200, $response['headers']['status-code']);
             $this->assertSame(2, $response['body']['total']);
+            $ids = \array_column($response['body']['deployments'], '$id');
+            \sort($ids);
+            $expected = [$deploymentIdInactive, $deploymentIdActive];
+            \sort($expected);
+            $this->assertSame($expected, $ids, 'only the deployment past the requested retention is retired');
         });
 
         $this->cleanupSite($siteId);
+    }
+
+    public function testTemplateDeploymentIsManagedFromTheConsole(): void
+    {
+        $this->assertTemplateDeploymentIsManageable();
     }
 }

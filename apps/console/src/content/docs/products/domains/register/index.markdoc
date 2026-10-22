@@ -1,0 +1,71 @@
+---
+layout: article
+title: Register a domain
+description: Search for available domain names and register them through Appwrite with transparent pricing and organization billing.
+---
+
+You can register domain names directly from the Appwrite Console. Appwrite is the registrar for these domains: registration, renewal, and billing run through your organization.
+
+This guide walks you through search, checkout, and payment.
+
+# Search {% #search %}
+
+1. In your organization, open **Domains**.
+2. Click **Buy domain**.
+3. Enter a name in the search field.
+
+The wizard shows suggestions across many TLDs (for example `.com`, `.io`, `.dev`, `.app`). Prices load as results appear. Each result indicates whether the name is available, the registration price, the registration period, and whether the name is **premium** (higher registry pricing).
+
+See [Pricing](/docs/products/domains/pricing) for premium names, registration periods, and how quotes work.
+
+{% info title="Registration period" %}
+Most TLDs register for one year by default. Some TLDs require a longer minimum period (for example `.ai` registers for two years). The checkout summary shows the exact period and total before you pay.
+{% /info %}
+
+You can search with or without a TLD:
+
+- `myapp` suggests `myapp.com`, `myapp.io`, and other supported TLDs.
+- `myapp.io` focuses pricing on the `.io` extension.
+
+# Checkout {% #checkout %}
+
+When you select an available domain, continue to checkout and provide:
+
+| Field | Purpose |
+|-------|---------|
+| Registrant first and last name | WHOIS / registry contact |
+| Email and phone | Registry contact and notifications |
+| Company name (optional) | Organization registrant details |
+| Billing address | Invoice and tax details |
+| Payment method | Card on file for registration and renewals |
+
+The order summary shows the registration charge, registration period, and estimated renewal price for the same period where available.
+
+# Complete payment {% #complete-payment %}
+
+Registration is charged immediately. If your card requires additional authentication (3D Secure), complete the verification step in the payment modal.
+
+When payment succeeds:
+
+1. Appwrite submits the registration.
+2. You are redirected to the new domain's detail page.
+3. The domain appears in your organization's domain list with registrar **Appwrite**.
+
+If payment fails or registration cannot be completed, you can retry from the buy flow. No domain is added until registration succeeds.
+
+{% info title="Premium domains" %}
+Premium names are offered at registry premium pricing. The checkout summary marks premium domains before you confirm payment.
+{% /info %}
+
+# After registration {% #after-registration %}
+
+Appwrite-registered domains:
+
+- Use Appwrite nameservers automatically.
+- Show **Verified** once DNS is active.
+- Support [auto-renewal](/docs/products/domains/renewal) from domain settings.
+- Can be [transferred out](/docs/products/domains/transfer#transfer-out) with an authorization code.
+
+Configure [DNS records](/docs/products/domains/dns) on the **Records** tab using [Manage DNS records](/docs/products/domains/manage-dns), then [connect to products](/docs/products/domains/connect).
+
+If your organization reaches its [domain plan limit](/docs/products/domains/registration#plan-limits), registration is disabled until you delete a domain or upgrade your plan.

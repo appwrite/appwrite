@@ -19,7 +19,7 @@ use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
@@ -27,6 +27,7 @@ use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -72,7 +73,7 @@ class Update extends Base
                     )
                 ]
             ))
-            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Site ID.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Site name. Max length: 128 chars.')
             ->param('framework', '', new WhiteList(\array_keys(Config::getParam('frameworks')), true), 'Sites framework.', enum: new Enum(name: 'Framework'))
             ->param('enabled', true, new Boolean(), 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true)
@@ -105,8 +106,9 @@ class Update extends Base
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
             ), 'Runtime specification for the SSR executions.', true, ['plan'], example: 's-1vcpu-512mb')
-            ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
+            ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 keeps all deployments unless the server applies a default retention.', true)
             ->param('scopes', null, new Nullable(new ArrayList(new WhiteList(\array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE)), 'List of scopes allowed for API key auto-generated for every site build and SSR execution. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the site.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -122,6 +124,7 @@ class Update extends Base
             ->inject('buildTimeout')
             ->inject('bus')
             ->inject('platform')
+            ->inject('deviceForBuilds')
             ->callback($this->action(...));
     }
 
@@ -150,6 +153,7 @@ class Update extends Base
         string $runtimeSpecification,
         int $deploymentRetention,
         ?array $scopes,
+        ?string $description,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -164,7 +168,8 @@ class Update extends Base
         Deployments $deployments,
         int $buildTimeout,
         Bus $bus,
-        array $platform
+        array $platform,
+        ?Device $deviceForBuilds = null,
     ) {
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
@@ -206,6 +211,7 @@ class Update extends Base
             $buildRuntime = $site->getAttribute('buildRuntime');
         }
 
+        $description ??= $site->getAttribute('description', '');
         $buildSpecification ??= $site->getAttribute('buildSpecification', APP_SITES_BUILD_SPECIFICATION_DEFAULT);
 
         $repositoryId = $site->getAttribute('repositoryId', '');
@@ -253,7 +259,7 @@ class Update extends Base
         if (!$isConnected && !empty($providerRepositoryId)) {
             $teamId = $project->getAttribute('teamId', '');
             $repository = new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 '$permissions' => $this->getPermissions($teamId, $project->getId()),
                 'installationId' => $installation->getId(),
                 'installationInternalId' => $installation->getSequence(),
@@ -279,6 +285,22 @@ class Update extends Base
             } catch (\Throwable $error) {
                 $dbForPlatform->deleteDocument('repositories', $repository->getId());
                 throw $error;
+            }
+        }
+
+        // Reconnecting a connected site only moves the site to the new installation, while
+        // webhook deployments take theirs from the repository link
+        if ($isConnected && !empty($providerRepositoryId) && !empty($repositoryId) && !$installation->isEmpty()) {
+            $repository = $dbForPlatform->getDocument('repositories', $repositoryId);
+            if (
+                !$repository->isEmpty()
+                && $repository->getAttribute('providerRepositoryId') === $providerRepositoryId
+                && $repository->getAttribute('installationInternalId') !== $installation->getSequence()
+            ) {
+                $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document([
+                    'installationId' => $installation->getId(),
+                    'installationInternalId' => $installation->getSequence(),
+                ]));
             }
         }
 
@@ -316,8 +338,10 @@ class Update extends Base
             }
         }
 
+        $previous = $site;
         $site = $dbForProject->updateDocument('sites', $site->getId(), new Document(array_merge($site->getArrayCopy(), [
             'name' => $name,
+            'description' => $description,
             'framework' => $framework,
             'enabled' => $enabled,
             'logging' => $logging,
@@ -340,12 +364,14 @@ class Update extends Base
             'providerPaths' => $providerPaths ?? $site->getAttribute('providerPaths', []),
             'buildSpecification' => $buildSpecification,
             'runtimeSpecification' => $runtimeSpecification,
-            'search' => implode(' ', [$siteId, $name, $framework]),
+            'search' => implode(' ', [$siteId, $name, $description, $framework]),
             'buildRuntime' => $buildRuntime,
             'adapter' => $adapter,
             'fallbackFile' => $fallbackFile,
             'scopes' => $scopes ?? $site->getAttribute('scopes', []),
         ])));
+
+        $this->deleteStaleBuildCache($deviceForBuilds, $project->getId(), $previous, $site);
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {

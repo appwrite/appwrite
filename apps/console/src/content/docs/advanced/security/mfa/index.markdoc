@@ -1,0 +1,36 @@
+---
+layout: article
+title: Multi-factor Authentication
+description: Appwrite helps you secure your developer accounts with MFA (multi-factor authentication).
+---
+Multi-factor authentication (MFA) adds multiple layers of authentication to your Appwrite account.
+When MFA is enabled, a malicious actor needs to compromise multiple authentication factors to gain unauthorized access.
+Appwrite currently supports MFA using TOTP (Time-based One-Time Password) with an authenticator app.
+More factors of authentication will be added in the future.
+
+{% info title="Looking to add MFA to your app?" %}
+This page covers MFA for your Appwrite Console account.
+If you're looking to add MFA to your app, follow the [Multi-factor authentication guide](/docs/products/auth/mfa).
+{% /info %}
+
+# Enable MFA {% #enable-mfa %}
+To enable MFA on your Appwrite account, navigate to your Appwrite Console > your account menu on the top right > **Your account** > **Multi-factor authentication**.
+
+{% only_dark %}
+![Multi-factor authentication settings](/images/docs/advanced/security/dark/mfa.avif)
+{% /only_dark %}
+{% only_light %}
+![Multi-factor authentication settings](/images/docs/advanced/security/mfa.avif)
+{% /only_light %}
+
+Toggle **Multi-factor authentication** to enable MFA for your account, then click **Add authentication factor**.
+
+{% only_dark %}
+![Multi-factor authentication modal](/images/docs/advanced/security/dark/mfa-modal.avif)
+{% /only_dark %}
+{% only_light %}
+![Multi-factor authentication modal](/images/docs/advanced/security/mfa-modal.avif)
+{% /only_light %}
+
+Scan the QR code with your authenticator app, then enter the code from your authenticator app to verify the setup.
+Make sure to save the recovery codes in a safe place, as they are the only way to access your account if you lose access to your authenticator app.

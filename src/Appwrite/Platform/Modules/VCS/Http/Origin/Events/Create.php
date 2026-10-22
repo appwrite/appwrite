@@ -10,7 +10,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
@@ -118,9 +118,12 @@ class Create extends Action
         // that window, so claim the delivery id before doing the work - a
         // retry of a delivery already being processed must not deploy again.
         // TODO: acknowledge first and process asynchronously instead.
+        // Every region handles the delivery for its own projects and they share
+        // the platform database, so the claim is per region. Document ids are
+        // capped at 36 characters; a digest prefix keeps the claim within it.
         try {
             $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document([
-                '$id' => 'origin-delivery-' . $deliveryId,
+                '$id' => 'origin-' . \substr(\hash('sha256', System::getEnv('_APP_REGION', 'default') . ':' . $deliveryId), 0, 29),
             ])));
         } catch (Duplicate) {
             $response->json(['events' => [], 'duplicate' => true]);

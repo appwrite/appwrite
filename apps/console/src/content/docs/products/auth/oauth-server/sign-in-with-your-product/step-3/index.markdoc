@@ -1,0 +1,74 @@
+---
+layout: tutorial
+title: Create the apps
+description: Scaffold the two TanStack Start apps and wire up their environment.
+step: 3
+---
+
+Both sides are TanStack Start apps. Scaffold them in a single folder.
+
+# Scaffold the projects {% #scaffold %}
+
+Create the consumer (Vantage) and the provider (TaskFlow):
+
+```sh
+npx @tanstack/cli create consumer --framework React --package-manager pnpm --no-examples
+npx @tanstack/cli create provider --framework React --package-manager pnpm --no-examples
+```
+
+This gives you two full TanStack Start apps with server functions, file-based routing, and Tailwind CSS already set up.
+
+Give each a fixed port so the redirect URIs stay stable. In each app's `package.json`, set the dev script:
+
+```json
+// consumer/package.json
+"scripts": { "dev": "vite dev --port 4100" }
+```
+
+```json
+// provider/package.json
+"scripts": { "dev": "vite dev --port 4000" }
+```
+
+# Configure the environment {% #env %}
+
+The apps read the OAuth values from environment variables. Add a `.env` to each.
+
+Vantage needs the client credentials and its redirect URI:
+
+```sh
+# consumer/.env
+OAUTH_ISSUER=https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>
+OAUTH_CLIENT_ID=<CLIENT_ID>
+OAUTH_CLIENT_SECRET=<CLIENT_SECRET>
+OAUTH_REDIRECT_URI=http://localhost:4100/oauth/callback
+SESSION_SECRET=<A_LONG_RANDOM_STRING>
+```
+
+TaskFlow needs its project details and an API key (used only to read a client's display name for the consent card):
+
+```sh
+# provider/.env
+APPWRITE_ENDPOINT=https://<REGION>.cloud.appwrite.io/v1
+APPWRITE_PROJECT=<PROJECT_ID>
+OAUTH_ISSUER=https://<REGION>.cloud.appwrite.io/v1/oauth2/<PROJECT_ID>
+APPWRITE_API_KEY=<API_KEY_WITH_APPS_READ>
+SESSION_SECRET=<A_LONG_RANDOM_STRING>
+```
+
+Vite only exposes variables prefixed with `VITE_` to the browser, and these are secrets, so load them into the server with `dotenv`. Install it in both apps:
+
+```sh
+pnpm add dotenv
+```
+
+Then import it at the top of each `vite.config.ts`, before anything else, so `process.env` is populated when the server runs:
+
+```ts
+// vite.config.ts
+import 'dotenv/config'
+import { defineConfig } from 'vite'
+// ...rest of the config
+```
+
+With both apps scaffolded and configured, build Vantage's sign-in next.

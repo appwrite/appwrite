@@ -48,7 +48,7 @@ class Get extends Action
                     )
                 ]
             ))
-            ->param('webhookId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Webhook ID.', false, ['dbForPlatform'])
+            ->param('webhookId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Webhook ID.', false, ['dbForPlatform'])
             ->inject('project')
             ->inject('response')
             ->inject('dbForPlatform')

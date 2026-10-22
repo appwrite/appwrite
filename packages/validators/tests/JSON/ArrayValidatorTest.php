@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Utopia\Validator\Tests\JSON;
 
 use PHPUnit\Framework\TestCase;
-use Utopia\Validator;
 use Utopia\Validator\JSON\ArrayValidator;
+use Utopia\Validator\Validator;
 
 final class ArrayValidatorTest extends TestCase
 {

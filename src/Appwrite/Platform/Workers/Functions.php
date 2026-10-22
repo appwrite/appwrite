@@ -9,21 +9,24 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
+use Appwrite\Event\Redelivery;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Functions\Validator\Headers;
 use Appwrite\Utopia\Response\Model\Execution;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Executor\Executor;
 use Utopia\Bus\Bus;
+use Utopia\Cache\Cache;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
@@ -59,6 +62,7 @@ class Functions extends Action
             ->inject('executor')
             ->inject('getIsResourceBlocked')
             ->inject('locks')
+            ->inject('cache')
             ->callback($this->action(...));
     }
 
@@ -74,7 +78,8 @@ class Functions extends Action
         Bus $bus,
         Executor $executor,
         callable $getIsResourceBlocked,
-        callable $locks
+        callable $locks,
+        Cache $cache
     ): void {
         $this->locks = $locks;
 
@@ -95,6 +100,18 @@ class Functions extends Action
         Span::add('queue.pid', $message->getPid());
         Span::add('queue.name', $message->getQueue());
         Span::add('message.timestamp', (string) $message->getTimestamp());
+
+        // The message names a project the platform no longer has: it was
+        // deleted after the run was queued, typically a schedule that fired
+        // before the scheduler dropped it. Its database went with it, so no
+        // attempt can run the function and there is nothing to redrive.
+        if ($project->isEmpty()) {
+            $projectId = $functionMessage->project?->getId() ?? '';
+            $functionId = $functionMessage->function?->getId() ?: ($functionMessage->functionId ?? '');
+            Span::add('execution.skipped', 'project_not_found');
+            Console::warning("Project '{$projectId}' not found, skipping {$type} execution of function '{$functionId}'");
+            return;
+        }
 
         // Recorded on consume, not on publish: the schedulers hand over a due
         // second one occurrence at a time, so a write there delays the rest.
@@ -162,18 +179,28 @@ class Functions extends Action
         }
 
         if (!empty($events)) {
+            // A retry re-runs this whole fan-out, so a redelivery skips the subscribers an earlier
+            // delivery handled. When that record cannot be read the subscriber is skipped too:
+            // running user code a second time is worse than missing one run of the event.
+            $redelivery = new Redelivery($cache, 'functions', $message, handledWhenUnknown: true);
+            $handled = [];
             $failure = null;
             $limit = 100;
             $sum = 100;
             $offset = 0;
             while ($sum >= $limit) {
-                $functions = $dbForProject->find('functions', [
-                    Query::select(['$id', 'events']), // Skip variables subqueries
-                    Query::contains('events', $events),
-                    Query::limit($limit),
-                    Query::offset($offset),
-                    Query::orderAsc('$sequence'),
-                ]);
+                try {
+                    $functions = $dbForProject->find('functions', [
+                        Query::select(['$id', 'events']), // Skip variables subqueries
+                        Query::containsAny('events', $events),
+                        Query::limit($limit),
+                        Query::offset($offset),
+                        Query::orderAsc('$sequence'),
+                    ]);
+                } catch (\Throwable $th) {
+                    $failure ??= $th;
+                    break;
+                }
 
                 $sum = \count($functions);
                 $offset = $offset + $limit;
@@ -185,19 +212,24 @@ class Functions extends Action
                         continue;
                     }
 
-                    if ($getIsResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
-                        Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
+                    if ($redelivery->wasHandled($function->getId())) {
+                        Span::add('event.subscriber.skipped_handled', $function->getId());
                         continue;
                     }
 
-                    /**
-                     * get variables subqueries cached
-                     */
-                    $function = $dbForProject->getDocument('functions', $function->getId());
-
-                    Console::success('Iterating function: ' . $function->getAttribute('name'));
-
                     try {
+                        if ($getIsResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
+                            Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
+                            continue;
+                        }
+
+                        /**
+                         * get variables subqueries cached
+                         */
+                        $function = $dbForProject->getDocument('functions', $function->getId());
+
+                        Console::success('Iterating function: ' . $function->getAttribute('name'));
+
                         $this->execute(
                             dbForProject: $dbForProject,
                             queueForWebhooks: $queueForWebhooks,
@@ -223,6 +255,7 @@ class Functions extends Action
                             eventData: \json_encode($eventData) ?: null,
                             executionId: null,
                         );
+                        $handled[] = $function->getId();
                         Console::success('Triggered function: ' . $events[0]);
                     } catch (\Throwable $th) {
                         $failure ??= $th;
@@ -231,12 +264,19 @@ class Functions extends Action
                 }
             }
 
-            // Process every subscriber before preserving the failed job for retries.
-            if ($failure !== null) {
-                throw $failure;
+            if ($failure === null) {
+                return;
             }
 
-            return;
+            // Every subscriber has been tried. Record the ones handled before asking the broker
+            // for the retry the failed ones need. If a record cannot be written, the retry would
+            // run that subscriber again, so the failure is recorded instead of retried.
+            if (!$redelivery->record($handled)) {
+                Span::add('event.subscriber.failure', $failure->getMessage());
+                return;
+            }
+
+            throw $failure;
         }
 
         if ($getIsResourceBlocked($project, RESOURCE_TYPE_FUNCTIONS, $function->getId())) {
@@ -271,7 +311,8 @@ class Functions extends Action
                     jwt: $jwt,
                     event: null,
                     eventData: null,
-                    executionId: $execution->getId()
+                    executionId: $execution->getId(),
+                    createdAt: $execution->getCreatedAt(),
                 );
                 break;
             case 'schedule':
@@ -430,7 +471,7 @@ class Functions extends Action
         ?string $jwt = null,
         ?string $event = null,
     ): void {
-        $executionId = ID::unique();
+        $executionId = Id::unique();
         $headers['x-appwrite-execution-id'] = $executionId;
         $headers['x-appwrite-trigger'] = $trigger;
         $headers['x-appwrite-event'] = $event ?? '';
@@ -498,7 +539,9 @@ class Functions extends Action
      * @param string|null $event
      * @param string|null $eventData
      * @param string|null $executionId
+     * @param string|null $createdAt Creation time of an execution queued by the API, kept on its update
      * @return void
+     * @throws \Throwable Only before the executor is called, where a retry cannot run the function twice.
      */
     private function execute(
         Database $dbForProject,
@@ -521,8 +564,10 @@ class Functions extends Action
         ?string $event = null,
         ?string $eventData = null,
         ?string $executionId = null,
+        ?string $createdAt = null,
     ): void {
         $user ??= new Document();
+        $headers = Headers::stripReserved($headers, ['x-appwrite-client-ip']);
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deploymentId', '');
         $spec = Config::getParam('specifications')[$function->getAttribute('runtimeSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
@@ -586,7 +631,7 @@ class Functions extends Action
 
         /** Create or update execution to processing status */
         if (empty($executionId)) {
-            $executionId = ID::unique();
+            $executionId = Id::unique();
         }
         $headers['x-appwrite-execution-id'] = $executionId;
 
@@ -599,9 +644,12 @@ class Functions extends Action
             }
         }
 
+        $now = DateTime::now();
         $execution = new Document([
             '$id' => $executionId,
             '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
+            '$createdAt' => $createdAt ?: $now,
+            '$updatedAt' => $now,
             'resourceInternalId' => $function->getSequence(),
             'resourceId' => $function->getId(),
             'resourceType' => 'functions',
@@ -766,6 +814,7 @@ class Functions extends Action
             $errorCode = $th->getCode();
         } finally {
             /** Persist final execution status and record usage */
+            $execution->setAttribute('$updatedAt', DateTime::now());
             Span::add('execution.status', $execution->getAttribute('status', ''));
 
             $bus->dispatch(new ExecutionCompleted(
@@ -776,46 +825,53 @@ class Functions extends Action
             ));
         }
 
-        $executionModel = new Execution();
-        $realtimeExecution = $executionModel->filter(new Document($execution->getArrayCopy()));
-        $realtimeExecution = $realtimeExecution->getArrayCopy(\array_keys($executionModel->getRules()));
+        // The executor has been called, so the function may have run. Nothing
+        // from here on may throw: a throw fails the message, and a broker that
+        // redelivers runs the function again, under a new execution when the
+        // message carries no execution ID. The notifications are best-effort.
+        // Webhook and realtime triggers swallow their own publish errors;
+        // the functions publish does not, so it goes last.
+        try {
+            $queueForEvents
+                ->setProject($project)
+                ->setUser($user)
+                ->setEvent('functions.[functionId].executions.[executionId].update')
+                ->setParam('functionId', $function->getId())
+                ->setParam('executionId', $execution->getId())
+                ->setPayload((new Execution())->payload($execution));
 
-        $queueForEvents
-            ->setProject($project)
-            ->setUser($user)
-            ->setEvent('functions.[functionId].executions.[executionId].update')
-            ->setParam('functionId', $function->getId())
-            ->setParam('executionId', $execution->getId())
-            ->setPayload($realtimeExecution);
+            /** Trigger Webhook */
+            $queueForWebhooks
+                ->from($queueForEvents)
+                ->trigger();
 
-        /** Trigger Webhook */
-        $queueForWebhooks
-            ->from($queueForEvents)
-            ->trigger();
+            /** Trigger Realtime Events */
+            $queueForRealtime
+                ->setSubscribers(['console', $project->getId()])
+                ->from($queueForEvents)
+                ->trigger();
 
-        /** Trigger Functions */
-        $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
-            event: $queueForEvents->getEvent(),
-            params: $queueForEvents->getParams(),
-            project: $queueForEvents->getProject(),
-            user: $queueForEvents->getUser(),
-            userId: $queueForEvents->getUserId(),
-            payload: $queueForEvents->getPayload(),
-            platform: $queueForEvents->getPlatform(),
-        ));
+            /** Trigger Functions */
+            $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+                event: $queueForEvents->getEvent(),
+                params: $queueForEvents->getParams(),
+                project: $queueForEvents->getProject(),
+                user: $queueForEvents->getUser(),
+                userId: $queueForEvents->getUserId(),
+                payload: $queueForEvents->getPayload(),
+                platform: $queueForEvents->getPlatform(),
+            ));
+        } catch (\Throwable $th) {
+            Span::add('execution.notify.error', $th->getMessage());
+            Console::error('Failed to publish the update of execution ' . $execution->getId() . ': ' . $th->getMessage());
+        }
 
-        /** Trigger Realtime Events */
-        $queueForRealtime
-            ->setSubscribers(['console', $project->getId()])
-            ->from($queueForEvents)
-            ->trigger();
-
+        // The failure is on the execution record (status failed, errors), and
+        // it is not rethrown: whether the function ran before the executor
+        // failed (a timeout, a response cut off) cannot be told from here.
         if (!empty($error)) {
-            throw new AppwriteException(
-                AppwriteException::GENERAL_SERVER_ERROR,
-                'Function execution failed: ' . $error,
-                $errorCode
-            );
+            Span::add('execution.error', 'Function execution failed: ' . $error);
+            Span::add('execution.error.code', $errorCode);
         }
     }
 }

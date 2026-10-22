@@ -4,7 +4,7 @@ namespace Utopia\Platform;
 
 use Exception;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 abstract class Action
 {

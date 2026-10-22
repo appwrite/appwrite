@@ -28,7 +28,8 @@
         "utopia-php/cli": "^0.24",
         "utopia-php/http": "^2.0@RC",
         "utopia-php/queue": "^6.0.0",
-        "utopia-php/servers": "^0.4"
+        "utopia-php/servers": "^0.4",
+        "utopia-php/validators": "^2.0"
     },
     "scripts": {
         "test": "phpunit --testsuite unit"

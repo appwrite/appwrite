@@ -12,9 +12,9 @@ use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
 use Swoole\Coroutine\WaitGroup;
-use Utopia\Config\Adapters\Dotenv as ConfigDotenv;
 use Utopia\Config\Config;
-use Utopia\Config\Exceptions\Parse;
+use Utopia\Config\Exception\Parse;
+use Utopia\Config\Parser\Dotenv as ConfigDotenv;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -52,6 +52,7 @@ use Utopia\Detector\Detector\Runtime;
 use Utopia\Detector\Detector\Strategy;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -137,9 +138,9 @@ class XList extends Action
         $vcs = $vcsFactory->fromInstallation($installation);
 
         $queries = Query::parseQueries($queries);
-        $limitQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === Query::TYPE_LIMIT));
-        $offsetQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === Query::TYPE_OFFSET));
-        $namespaceQueries = array_filter($queries, fn ($query) => $query->getMethod() === Query::TYPE_EQUAL && $query->getAttribute() === 'namespace');
+        $limitQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === QueryMethod::Limit));
+        $offsetQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === QueryMethod::Offset));
+        $namespaceQueries = array_filter($queries, fn ($query) => $query->getMethod() === QueryMethod::Equal && $query->getAttribute() === 'namespace');
 
         $limit = !empty($limitQuery) ? $limitQuery->getValue() : 4;
         $offset = !empty($offsetQuery) ? $offsetQuery->getValue() : 0;
@@ -296,7 +297,8 @@ class XList extends Action
                             try {
                                 $envObject = $configAdapter->parse($envFile);
                                 foreach ($envObject as $envName => $envValue) {
-                                    $envs[$envName] = $envValue;
+                                    // The parser maps a literal null to null; suggest it as the text the file holds
+                                    $envs[$envName] = $envValue ?? 'null';
                                 }
                             } catch (Parse) {
                                 // Silence error, so rest of endpoint can return

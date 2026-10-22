@@ -13,7 +13,8 @@ use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
@@ -62,8 +63,8 @@ class Create extends Action
             ],
             contentType: ContentType::JSON
         ))
-        ->param('bucketId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).', false, ['dbForProject'])
-        ->param('fileId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'File unique ID.', false, ['dbForProject'])
+        ->param('bucketId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).', false, ['dbForProject'])
+        ->param('fileId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'File unique ID.', false, ['dbForProject'])
         ->param('expire', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Token expiry date', true)
         ->inject('response')
         ->inject('user')
@@ -82,10 +83,10 @@ class Create extends Action
         ['bucket' => $bucket, 'file' => $file] = $this->getFileAndBucket($dbForProject, $authorization, $user, $bucketId, $fileId);
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $bucketPermission =  $authorization->isValid(new Input(Database::PERMISSION_UPDATE, $bucket->getUpdate()));
+        $bucketPermission =  $authorization->isValid(new Input(PermissionType::Update, $bucket->getPermissionsByType(PermissionType::Update)));
 
         if ($fileSecurity) {
-            $filePermission = $authorization->isValid(new Input(Database::PERMISSION_UPDATE, $file->getUpdate()));
+            $filePermission = $authorization->isValid(new Input(PermissionType::Update, $file->getPermissionsByType(PermissionType::Update)));
             if (!$bucketPermission && !$filePermission) {
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
@@ -94,7 +95,7 @@ class Create extends Action
         }
 
         $token = $dbForProject->createDocument('resourceTokens', new Document([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             'secret' => (new Token(128))->generate(),
             'resourceId' => $bucketId . ':' . $fileId,
             'resourceInternalId' => $bucket->getSequence() . ':' . $file->getSequence(),

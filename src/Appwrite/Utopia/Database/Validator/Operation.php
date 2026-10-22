@@ -2,7 +2,7 @@
 
 namespace Appwrite\Utopia\Database\Validator;
 
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 class Operation extends Validator
 {

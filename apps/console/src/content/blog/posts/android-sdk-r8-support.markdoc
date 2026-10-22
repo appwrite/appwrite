@@ -1,0 +1,184 @@
+---
+layout: post
+title: "R8 code shrinking now works with the Appwrite Android SDK"
+description: Appwrite Android SDK 29.0.0 works with R8 full mode, fixing queries, Realtime, and saved sessions in release builds ahead of Google Play's 2027 DEX rule.
+date: 2026-10-07
+cover: /images/blog/android-sdk-r8-support/cover.avif
+timeToRead: 7
+author: chirag-aggarwal
+category: products, announcements
+featured: false
+faqs:
+  - question: "Does the Appwrite Android SDK support R8 full mode?"
+    answer: "Yes, from version 29.0.0. Queries, operators, Realtime, and saved session cookies work in release builds shrunk with R8 full mode, which has been the default since Android Gradle Plugin 8.0. Update your dependency to `io.appwrite:sdk-for-android:29.0.0` to get the fixes."
+  - question: "Do I need to add ProGuard or R8 rules for the Appwrite Android SDK?"
+    answer: "No. The SDK ships its own consumer R8 rules, which merge into your app's configuration automatically. The only change you might need is in your own code: annotate classes you pass as `nestedType` (documents, rows, preferences) or `payloadType` (Realtime subscriptions) with `@Keep`, because the SDK fills them from JSON with Gson."
+  - question: "Why do my Appwrite queries return unfiltered results or Realtime stop working in a release build?"
+    answer: "If you're on an Android SDK version before 29.0.0 with R8 turned on, R8 breaks the SDK's reflection-based serialization. Queries reach the server as `{}`, Realtime messages fail to parse, and saved sessions can't be read after an app update. Upgrade to 29.0.0, which serializes these values through explicit maps instead of reflection."
+  - question: "What is Google Play's DEX code optimization requirement?"
+    answer: "Starting in February 2027, Google Play requires apps to be optimized with a minimum of 25% coverage across optimization, shrinking, and obfuscation. Android vitals only alerts apps whose bundle has at least 10 MB of uncompressed DEX code, or 50 MB for games. See Google's [DEX code optimization](https://developer.android.com/google/play/vitals/code-optimization) page for details."
+  - question: "How do I check my app's R8 obfuscation and optimization scores?"
+    answer: "Run `unzip -p app-release.aab BUNDLE-METADATA/com.android.tools/r8.json` on your release bundle. That file is what Play reads for apps built with AGP 8.10 or later. Play Console also shows the percentages for each bundle you upload in the app bundle explorer."
+  - question: "What is the minimum Android version for Appwrite Android SDK 29.0.0?"
+    answer: "Version 29.0.0 raises the minimum Android SDK from 23 to 24 (Android 7.0). Apps that still support Android 6.0 need to raise their `minSdk` before upgrading."
+---
+
+Turn on R8 in a release build with an older version of the Appwrite Android SDK and nothing fails at compile time. The build succeeds, the app launches, and then the problems start. Database queries reach the server as `{}`. Realtime subscriptions connect but never deliver an event. Users who install your next release find themselves signed out.
+
+Until now, the workaround was to leave R8 off or write your own keep rules for the SDK. That stops being an option in February 2027, when Google Play starts requiring a minimum level of code optimization for apps with more than 10 MB of DEX code.
+
+**Appwrite Android SDK 29.0.0 works with R8 full mode.** Queries, operators, Realtime, and saved sessions behave the same in a shrunk release build as they do in debug. Here's what broke, why, and what to change in your own app.
+
+# What changed in Android SDK 29.0.0
+
+Version 29.0.0 of the [Android SDK](/docs/quick-starts/android) makes these R8 changes:
+
+- **Queries and operators** serialize to correct JSON under R8 instead of `{}`.
+- **Realtime** delivers events in shrunk builds, and Realtime errors keep their message and code.
+- **Session cookies** are saved with fixed key names, so a new build of your app can still read them.
+- **The end-to-end test suite** now also runs against R8-shrunk code.
+
+The SDK ships consumer R8 rules, and the only code you might need to touch is your own model classes, covered later in this post.
+
+# Google Play's DEX optimization requirement
+
+Google [announced in August 2026](https://android-developers.googleblog.com/2026/08/app-quality-memory-optimization-secure-onboarding.html) that, starting in February 2027, apps on Google Play must be "optimized with a minimum of 25% coverage across optimization, shrinking, and obfuscation." Apps and games that miss the threshold "may see reduced app visibility and publishing capabilities on Google Play."
+
+Google's [DEX code optimization](https://developer.android.com/google/play/vitals/code-optimization) page sets the scope. Android vitals calculates these metrics for every app, but only alerts apps whose bundle contains at least 10 MB of uncompressed DEX code, or 50 MB for games. Any shrinker counts. For most Android teams, that means R8.
+
+Two details make this a library problem as well as an app problem:
+
+- **Play reads the scores from your bundle.** For apps built with AGP 8.10 or later, the percentages come from the `r8.json` file R8 embeds in the app bundle. They describe the final build, every dependency included.
+- **Library keep rules become your keep rules.** Consumer rules shipped inside a library's AAR merge into your app's R8 configuration. A broad keep rule in a dependency stops R8 from renaming or optimizing that code, and the cost shows up in your app's scores.
+
+An SDK that breaks under R8 leaves you two workarounds, and both cost you. Turn R8 off and you miss the threshold outright. Keep the whole SDK with a blanket rule and none of its code gets renamed or optimized, which drags your scores down.
+
+# Why R8 full mode broke the Android SDK
+
+[R8 full mode](https://developer.android.com/topic/performance/app-optimization/enable-app-optimization) has been the default since Android Gradle Plugin 8.0. It makes stricter assumptions about reflection than ProGuard compatibility mode. If R8 can't see your code use a class, constructor, or field, it's free to remove, rename, or restructure it.
+
+Earlier versions of the SDK relied on **Gson reflection** in a few internal paths. Gson reads and writes fields by name at runtime, which R8 can't trace. Each of the three bugs below comes from that gap, and each matches a failure mode in [Gson's troubleshooting guide](https://github.com/google/gson/blob/main/Troubleshooting.md).
+
+## Queries and operators serialized to `{}`
+
+The SDK turns `Query` and `Operator` values into JSON before they go to the API. It did this by handing the object to Gson, which reflected over its `method`, `attribute`, and `values` fields. Under R8, Gson found nothing to serialize, and every query reached Appwrite as an empty object.
+
+That affected every list call that took [queries](/docs/products/databases/tablesdb/queries): filters, pagination, ordering, and the nested `Query.and`, `Query.or`, and `Query.elemMatch` helpers. [Operators](/docs/products/databases/tablesdb/operators) for atomic updates had the same problem.
+
+## Realtime connected but delivered nothing
+
+[Realtime](/docs/apis/realtime) parses each WebSocket message into a `RealtimeResponse` before routing it. That class was only ever created by Gson, never by SDK code, so R8 full mode treated it as never instantiated and made it abstract. Every incoming message threw `Abstract classes can't be instantiated`. The socket stayed open and subscription callbacks never fired.
+
+Realtime errors failed more quietly. The SDK cast error payloads into an `AppwriteException` through Gson, and under R8 the exception arrived with a `null` message and code. Your error handler ran, but it had nothing to log.
+
+## Saved sessions broke after an app update
+
+The Android SDK persists session cookies in `SharedPreferences` so users stay signed in across launches. It wrote them by serializing an internal cookie class with Gson. Once R8 renamed that class's fields, cookies were saved with obfuscated keys like `{"c":…,"d":…}` instead of `name`, `value`, and `domain`.
+
+Obfuscated names aren't stable across builds. When you shipped a new version and the mapping changed, the new build couldn't read the cookies the old one had saved, and users lost their session on update. This is the hardest of the three to catch, because it only shows up when one release build reads data written by another.
+
+## How 29.0.0 fixes it
+
+The SDK no longer lets Gson reflect over its own classes. It converts queries, operators, Realtime messages, and session cookies to and from plain maps whose keys are string literals in the code. R8 can rename the fields, and the JSON stays the same.
+
+The cookie keys match what earlier SDK versions wrote in builds without R8, so sessions saved by those builds still load after you upgrade. `Query` and `Operator` also expose the conversion as public `toMap()` and `toJson()` methods, which you can use to log a query.
+
+These bugs went unnoticed because the SDK's end-to-end tests only ran against unshrunk code. The suite now also runs against an R8-shrunk build of the SDK. Pointed at the old code, it fails the same way apps did, so a regression like this one now fails CI before it ships.
+
+# How to use the Appwrite Android SDK with R8
+
+## Update to 29.0.0
+
+Update the dependency in your app-level `build.gradle.kts`:
+
+```kotlin
+implementation("io.appwrite:sdk-for-android:29.0.0")
+```
+
+Version 29.0.0 raises the minimum SDK from 23 to 24 (Android 7.0). If your app still supports Android 6.0, raise `minSdk` before you upgrade. The [29.0.0 release notes](https://github.com/appwrite/sdk-for-android/releases/tag/29.0.0) list every other change, including fixes for Android 7.x.
+
+## Turn on R8 in your release build
+
+On AGP 9.3 and later, use the `optimization` block:
+
+```kotlin
+android {
+    buildTypes {
+        release {
+            optimization {
+                enable = true
+            }
+        }
+    }
+}
+```
+
+On earlier AGP versions, set `isMinifyEnabled` and `isShrinkResources`:
+
+```kotlin
+android {
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+        }
+    }
+}
+```
+
+You don't need to add any Appwrite rules to `proguard-rules.pro`.
+
+## Annotate your own model classes with `@Keep`
+
+The SDK's own classes no longer depend on reflection, but yours might. When you pass a class as the `nestedType` of a document, row, or preferences call, or as the `payloadType` of a Realtime subscription, the SDK hands it to Gson to fill from JSON. R8 can't see that, so annotate those classes with `@Keep`:
+
+```kotlin
+import androidx.annotation.Keep
+
+@Keep
+data class Note(val title: String, val body: String)
+
+val rows = tablesDB.listRows(
+    databaseId = "<DATABASE_ID>",
+    tableId = "<TABLE_ID>",
+    queries = listOf(Query.equal("pinned", true)),
+    nestedType = Note::class.java,
+)
+rows.rows.forEach { Log.d("Notes", it.data.title) }
+
+val subscription = realtime.subscribe(
+    Channel.tablesdb("<DATABASE_ID>").table("<TABLE_ID>").row(),
+    payloadType = Note::class.java,
+) { event ->
+    Log.d("Notes", event.payload.title)
+}
+```
+
+Without `@Keep`, the same R8 behavior that broke the SDK breaks your models: fields come back empty, or Gson throws when it tries to create the class. Limit `@Keep` to the classes the SDK fills from JSON so R8 can still optimize the rest of your app. Calls that omit `nestedType` return `Map<String, Any>` and need no annotation.
+
+## Check your R8 scores
+
+Read the numbers Play reads by extracting `r8.json` from your release bundle:
+
+```bash
+unzip -p app-release.aab BUNDLE-METADATA/com.android.tools/r8.json
+```
+
+Play Console shows the same percentages for each bundle you upload, in the app bundle explorer. If a score is lower than you expect, the [R8 Configuration Analyzer](https://developer.android.com/topic/performance/app-optimization/r8-configuration-analyzer) points to the keep rules responsible. Its scores reflect your keep rules before optimization, so they can differ from `r8.json`.
+
+Then test the release build itself, not only debug. Sign in, install a second release build over the first, and confirm the session survives. Tests against a debug build never cover that path.
+
+# Getting started with R8 and the Appwrite Android SDK
+
+R8 is moving from optional to expected on Google Play. With 29.0.0, the Appwrite Android SDK works in R8 full mode, so you can turn R8 on without writing any rules for it.
+
+Create a project on [Appwrite Cloud](https://appwrite.io), add the SDK, and ship your next release with R8 on. Self-hosted Appwrite works the same way.
+
+- [Start with Android (Kotlin)](/docs/quick-starts/android)
+- [Realtime API](/docs/apis/realtime)
+- [TablesDB queries](/docs/products/databases/tablesdb/queries)
+- [Android SDK 29.0.0 release notes](https://github.com/appwrite/sdk-for-android/releases/tag/29.0.0)

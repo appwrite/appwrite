@@ -1,12 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Method Utopia\\Audit\\Adapter\\SQL\:\:getAttribute\(\) should return array\<string, mixed\>\|null but empty return statement found\.$#'
-			identifier: return.empty
-			count: 1
-			path: src/Adapter/SQL.php
-
-		-
 			message: '#^Method Utopia\\Audit\\Log\:\:getData\(\) should return array\<string, mixed\> but returns array\<mixed\>\.$#'
 			identifier: return.type
 			count: 1
@@ -15,12 +9,6 @@ parameters:
 		-
 			message: '#^Method Utopia\\Audit\\Tests\\E2E\\Adapter\\ClickHouseTest\:\:applyRequiredAttributesToBatch\(\) should return array\<array\{userId\: string\|null, event\: string, resource\: string, userAgent\: string, ip\: string, time\: string, data\?\: array\<string, mixed\>\}\> but returns array\<int, array\<string, mixed\>\>\.$#'
 			identifier: return.type
-			count: 1
-			path: tests/E2E/Adapter/ClickHouseTest.php
-
-		-
-			message: '#^Possibly invalid array key type mixed\.$#'
-			identifier: offsetAccess.invalidOffset
 			count: 1
 			path: tests/E2E/Adapter/ClickHouseTest.php
 
