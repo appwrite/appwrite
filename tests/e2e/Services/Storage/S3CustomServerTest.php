@@ -177,11 +177,29 @@ final class S3CustomServerTest extends Scope
         $this->assertSame('nosniff', $pngOverride['headers']['x-content-type-options']);
         $this->assertStringStartsWith('attachment;', $pngOverride['headers']['content-disposition']);
 
+        $quotedKey = Id::unique() . '.svg';
         $quotedName = 'café;"name.svg';
-        $this->uploadFile($bucketId, 'script.svg', 'image/svg+xml', $quotedName);
-        $quoted = $this->call(Client::METHOD_GET, '/' . $bucketId . '/' . \rawurlencode($quotedName));
+        $uploaded = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', \array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(\realpath(__DIR__ . '/../../../resources/script.svg'), 'image/svg+xml', $quotedKey),
+        ]);
+        $this->assertSame(201, $uploaded['headers']['status-code'], \json_encode($uploaded['body']));
+
+        $renamed = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $uploaded['body']['$id'], \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => $quotedName,
+        ]);
+        $this->assertSame(200, $renamed['headers']['status-code']);
+        $this->assertSame($quotedName, $renamed['body']['name']);
+
+        $quoted = $this->call(Client::METHOD_GET, '/' . $bucketId . '/' . $quotedKey);
         $this->assertSame(200, $quoted['headers']['status-code']);
-        $disposition = $quoted['headers']['content-disposition'];
+        $disposition = (string) $quoted['headers']['content-disposition'];
         $this->assertStringStartsWith('attachment;', $disposition);
         $this->assertStringContainsString('filename="caféname.svg"', $disposition);
         $this->assertStringContainsString("filename*=UTF-8''" . \rawurlencode($quotedName), $disposition);
