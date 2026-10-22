@@ -25,6 +25,149 @@ use function Swoole\Coroutine\run;
 #[RequiresPhpExtension('swoole')]
 final class TransportIntegrationTest extends TestCase
 {
+    private ?string $certificates = null;
+
+    protected function tearDown(): void
+    {
+        if ($this->certificates !== null) {
+            array_map(unlink(...), glob($this->certificates . '/*') ?: []);
+            rmdir($this->certificates);
+            $this->certificates = null;
+        }
+    }
+
+    #[RequiresPhpExtension('openssl')]
+    public function testRefusesCollectorWithUntrustedCertificate(): void
+    {
+        ['certificate' => $certificate, 'key' => $key] = $this->issueCertificate();
+
+        MockOtlpServer::run(function (MockOtlpServer $server): void {
+            $transport = new Swoole(
+                endpoint: 'https://localhost:' . $server->getPort() . '/v1/metrics',
+                headers: ['Authorization' => 'Bearer collector-token'],
+                timeout: 1.0,
+            );
+
+            try {
+                $transport->send('payload')->await();
+                $this->fail('An export must not be sent to a collector whose certificate is not trusted.');
+            } catch (Exception $e) {
+                $this->assertStringContainsString('OTLP connection failed', $e->getMessage());
+            } finally {
+                $transport->shutdown();
+            }
+
+            $this->assertSame(0, $server->getRequestCount());
+        }, $certificate, $key);
+    }
+
+    #[RequiresPhpExtension('openssl')]
+    public function testRefusesCollectorWhoseCertificateNamesAnotherHost(): void
+    {
+        ['certificate' => $certificate, 'key' => $key] = $this->issueCertificate();
+
+        MockOtlpServer::run(function (MockOtlpServer $server) use ($certificate): void {
+            $transport = new Swoole(
+                endpoint: $server->getEndpoint(),
+                headers: ['Authorization' => 'Bearer collector-token'],
+                timeout: 1.0,
+                certificateAuthority: $certificate,
+            );
+
+            try {
+                $transport->send('payload')->await();
+                $this->fail('An export must not be sent to a collector whose certificate names another host.');
+            } catch (Exception $e) {
+                $this->assertStringContainsString('OTLP connection failed', $e->getMessage());
+            } finally {
+                $transport->shutdown();
+            }
+
+            $this->assertSame(0, $server->getRequestCount());
+        }, $certificate, $key);
+    }
+
+    #[RequiresPhpExtension('openssl')]
+    public function testSendsToCollectorWithTrustedCertificate(): void
+    {
+        ['certificate' => $certificate, 'key' => $key] = $this->issueCertificate();
+
+        MockOtlpServer::run(function (MockOtlpServer $server) use ($certificate): void {
+            $server->respondWith(200, 'OK');
+
+            $transport = new Swoole(
+                endpoint: 'https://localhost:' . $server->getPort() . '/v1/metrics',
+                headers: ['Authorization' => 'Bearer collector-token'],
+                timeout: 1.0,
+                certificateAuthority: $certificate,
+            );
+
+            try {
+                $this->assertSame('OK', $transport->send('payload')->await());
+            } finally {
+                $transport->shutdown();
+            }
+
+            $request = $server->getLastRequest();
+            $this->assertNotNull($request);
+            $this->assertSame('payload', $request['payload']);
+            $this->assertSame('Bearer collector-token', $request['headers']['authorization']);
+        }, $certificate, $key);
+    }
+
+    /**
+     * Issue a self-signed certificate for localhost, which also serves as its own authority.
+     *
+     * @return array{certificate: string, key: string}
+     */
+    private function issueCertificate(): array
+    {
+        $this->certificates = sys_get_temp_dir() . '/telemetry-tls-' . bin2hex(random_bytes(8));
+        mkdir($this->certificates);
+
+        $configuration = $this->certificates . '/openssl.cnf';
+        file_put_contents($configuration, <<<'CONFIGURATION'
+            [req]
+            distinguished_name = subject
+
+            [subject]
+
+            [extensions]
+            basicConstraints = critical, CA:TRUE
+            keyUsage = critical, digitalSignature, keyCertSign
+            subjectAltName = DNS:localhost
+            CONFIGURATION);
+
+        $options = [
+            'config' => $configuration,
+            'x509_extensions' => 'extensions',
+            'digest_alg' => 'sha256',
+        ];
+
+        $key = openssl_pkey_new([
+            'config' => $configuration,
+            'private_key_type' => OPENSSL_KEYTYPE_EC,
+            'curve_name' => 'prime256v1',
+        ]);
+        $this->assertNotFalse($key);
+
+        $request = openssl_csr_new(['commonName' => 'localhost'], $key, $options);
+        $this->assertNotFalse($request);
+        $this->assertNotTrue($request);
+
+        $certificate = openssl_csr_sign($request, null, $key, 1, $options);
+        $this->assertNotFalse($certificate);
+
+        $paths = [
+            'certificate' => $this->certificates . '/certificate.pem',
+            'key' => $this->certificates . '/key.pem',
+        ];
+        $this->assertTrue(openssl_x509_export_to_file($certificate, $paths['certificate']));
+        $this->assertTrue(openssl_pkey_export_to_file($key, $paths['key'], null, $options));
+
+        return $paths;
+    }
+
     public function testSendPayloadToServer(): void
     {
         MockOtlpServer::run(function (MockOtlpServer $server): void {

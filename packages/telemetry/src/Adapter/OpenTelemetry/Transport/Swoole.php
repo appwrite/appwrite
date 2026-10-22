@@ -39,6 +39,7 @@ class Swoole implements TransportInterface
     /**
      * @param 'application/json'|'application/x-ndjson'|'application/x-protobuf' $contentType
      * @param array<string, string> $headers
+     * @param string|null $certificateAuthority PEM bundle trusted for HTTPS endpoints; the system store when null
      */
     public function __construct(
         string $endpoint,
@@ -47,6 +48,7 @@ class Swoole implements TransportInterface
         private readonly float  $timeout = 10.0,
         private readonly int $poolSize = 8,
         int $socketBufferSize = 64 * 1024, // 64 KB
+        ?string $certificateAuthority = null,
     ) {
         $parsed = parse_url($endpoint);
         if ($parsed === false) {
@@ -83,7 +85,26 @@ class Swoole implements TransportInterface
             'tcp_keepcount' => 3,
             'socket_buffer_size' => $socketBufferSize,
             'http_compression' => false,
+            ...($this->ssl ? $this->tlsSettings($certificateAuthority) : []),
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function tlsSettings(?string $certificateAuthority): array
+    {
+        $settings = [
+            'ssl_verify_peer' => true,
+            'ssl_allow_self_signed' => false,
+            'ssl_host_name' => $this->host,
+        ];
+
+        if ($certificateAuthority !== null) {
+            $settings['ssl_cafile'] = $certificateAuthority;
+        }
+
+        return $settings;
     }
 
     /**

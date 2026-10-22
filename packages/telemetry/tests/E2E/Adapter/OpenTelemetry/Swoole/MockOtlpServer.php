@@ -36,8 +36,10 @@ class MockOtlpServer
 
     private float $responseDelay = 0;
 
-    public function __construct()
-    {
+    public function __construct(
+        private readonly ?string $certificate = null,
+        private readonly ?string $key = null,
+    ) {
         $this->port = self::HOST === '127.0.0.1' ? 19318 + (self::$portOffset++) : 19318;
     }
 
@@ -46,7 +48,9 @@ class MockOtlpServer
      */
     public function getEndpoint(): string
     {
-        return 'http://' . self::HOST . ':' . $this->port . '/v1/metrics';
+        $scheme = $this->certificate === null ? 'http' : 'https';
+
+        return $scheme . '://' . self::HOST . ':' . $this->port . '/v1/metrics';
     }
 
     /**
@@ -83,8 +87,14 @@ class MockOtlpServer
      */
     public function start(): void
     {
-        $this->server = new Server(self::HOST, $this->port);
-        $this->server->set(['open_http2_protocol' => false]);
+        $this->server = new Server(self::HOST, $this->port, $this->certificate !== null);
+        $this->server->set([
+            'open_http2_protocol' => false,
+            ...($this->certificate === null ? [] : [
+                'ssl_cert_file' => $this->certificate,
+                'ssl_key_file' => $this->key,
+            ]),
+        ]);
 
         $this->server->handle('/v1/metrics', function (Request $request, Response $response): void {
             $this->requests[] = [
@@ -123,7 +133,7 @@ class MockOtlpServer
     {
         $start = microtime(true);
         while (microtime(true) - $start < $timeout) {
-            $client = new Client(self::HOST, $this->port);
+            $client = new Client(self::HOST, $this->port, $this->certificate !== null);
             $client->set(['timeout' => 0.1]);
             $client->get('/');
             if ($client->statusCode !== -1 && $client->statusCode !== -2) {
@@ -186,12 +196,12 @@ class MockOtlpServer
      *
      * @param callable(MockOtlpServer): void $test
      */
-    public static function run(callable $test): void
+    public static function run(callable $test, ?string $certificate = null, ?string $key = null): void
     {
         $exception = null;
 
-        $executor = function () use ($test, &$exception): void {
-            $server = new self();
+        $executor = function () use ($test, $certificate, $key, &$exception): void {
+            $server = new self($certificate, $key);
             $server->start();
 
             try {
