@@ -170,6 +170,44 @@ final class TeamsCustomClientTest extends Scope
         $this->assertFalse($account['body']['emailVerification']);
     }
 
+    public function testUpdateMembershipStatusAfterEmailChange(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $team = $this->createTeamHelper('Moved Invites');
+        $invite = $this->createPendingMembershipHelper($team['teamUid'], $team['teamName']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $invite['userUid'] . '/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'email' => \uniqid() . 'moved@localhost.test',
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - an invite sent to the previous address can no longer be accepted
+         */
+        $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $invite['teamUid'] . '/memberships/' . $invite['membershipUid'] . '/status', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => $invite['userUid'],
+            'secret' => $invite['secret'],
+        ]);
+        $this->assertEquals(401, $confirmation['headers']['status-code']);
+        $this->assertEquals('team_invalid_secret', $confirmation['body']['type']);
+
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $invite['userUid'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(200, $user['headers']['status-code']);
+        $this->assertFalse($user['body']['emailVerification']);
+    }
+
     public function testGetMembershipPrivacy(): void
     {
         $teamData = $this->createTeamHelper();

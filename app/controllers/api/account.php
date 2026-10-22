@@ -3966,6 +3966,11 @@ Http::patch('/v1/account/email')
                             TOKEN_TYPE_EMAIL,
                         ]),
                     ]));
+                    // A pending invite was sent to the old address, so it must not prove the new one
+                    $authorization->skip(fn () => $dbForProject->updateDocuments('memberships', new Document(['secret' => '']), [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('confirm', [false]),
+                    ]));
                 }
 
                 return $user;
@@ -4109,6 +4114,11 @@ Http::patch('/v1/account/phone')
                         $dbForProject->deleteDocuments('challenges', [
                             Query::equal('userInternalId', [$sequence]),
                             Query::equal('type', [Type::PHONE]),
+                        ]);
+                        // A pending invite was sent to the old number, so it must not prove the new one
+                        $dbForProject->updateDocuments('memberships', new Document(['secret' => '']), [
+                            Query::equal('userInternalId', [$sequence]),
+                            Query::equal('confirm', [false]),
                         ]);
                     });
                 }

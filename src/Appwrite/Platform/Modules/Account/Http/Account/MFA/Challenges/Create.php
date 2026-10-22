@@ -160,7 +160,19 @@ class Create extends Action
             ],
         ]);
 
-        $challenge = $dbForProject->createDocument('challenges', $challenge);
+        if ($factor === Type::PHONE) {
+            // Lock the user like the phone update does, so a code is never sent to a number that just changed
+            $challenge = $dbForProject->withTransaction(function () use ($dbForProject, $user, $challenge) {
+                $current = $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+                if ($current->getAttribute('phone') !== $user->getAttribute('phone')) {
+                    throw new Exception(Exception::USER_PHONE_NOT_FOUND);
+                }
+
+                return $dbForProject->createDocument('challenges', $challenge);
+            });
+        } else {
+            $challenge = $dbForProject->createDocument('challenges', $challenge);
+        }
 
         $projectName = $project->getAttribute('name');
         if ($project->getId() === 'console') {

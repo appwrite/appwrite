@@ -197,6 +197,11 @@ class Update extends Action
                             TOKEN_TYPE_EMAIL,
                         ]),
                     ]);
+                    // A pending invite was sent to the old address, so it must not prove the new one
+                    $dbForProject->updateDocuments('memberships', new Document(['secret' => '']), [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('confirm', [false]),
+                    ]);
                 }
 
                 return $user;
