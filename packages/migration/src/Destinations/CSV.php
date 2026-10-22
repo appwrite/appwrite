@@ -229,6 +229,21 @@ class CSV extends Destination
     }
 
     /**
+     * shutdown() uploads the file before the caller learns whether the export failed,
+     * so a failed export removes it along with the local working copy.
+     */
+    #[\Override]
+    public function error(): void
+    {
+        $path = $this->deviceForFiles->getPath($this->directory . '/' . $this->outputFile . '.csv');
+        if ($this->deviceForFiles->exists($path)) {
+            $this->deviceForFiles->delete($path);
+        }
+
+        $this->local->delete($this->local->getRoot(), true);
+    }
+
+    /**
      * Write a CSV line with RFC 4180 compliant escaping (double-quote method)
      *
      * @param resource $handle
