@@ -2,6 +2,14 @@
   "updated": "2026-10-19T21:18:00Z",
   "tasks": [
     {
+      "id": "db8314",
+      "title": "database: follow PHP from 8.3.10 to 8.3.14",
+      "area": "Database 8",
+      "status": "done",
+      "updated": "2026-10-22T21:10:00Z",
+      "note": "Catch-up K, 2-hour box. Batch creates and upserts write filtered column names, a link that is only the key on the written document needs read rather than update, cache invalidation is retried and a failure after a commit is logged instead of failing the stored write, and TypeErrors quote 8.3.14's SQL.php lines. API coverage 100% (1,508 symbols), 568 of 568 PHP test files, 26,814 cases; 261 cases re-recorded (the dotted batch-write and link-rule tests on every profile, 207 unit cases (link permissions, cache epoch), Adapter Documents/Find, testCacheFallbackOnFailure) with 0 differences; fuzz seed 12392 0 differences but a mongo.fuzz_roundtrip field-path message that differs on the 8.3.10 image too."
+    },
+    {
       "id": "php-8512",
       "title": "php-std: PHP 8.5.12",
       "area": "Database 8",
