@@ -536,7 +536,8 @@ class Handler implements MqttHandler
         }
 
         $recheckAt = $connection->identity['recheckAt'] ?? null;
-        if (!\is_int($recheckAt) || $recheckAt > $now) {
+        // Due only once past, so a check falling on the expiry second never sees the session still active.
+        if (!\is_int($recheckAt) || $recheckAt >= $now) {
             return true;
         }
 
