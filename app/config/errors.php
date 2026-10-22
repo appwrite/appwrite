@@ -1196,29 +1196,29 @@ return [
         'description' => 'Project with the requested ID could not be found. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
         'code' => 404,
     ],
-    Exception::PROJECT_TRANSFER_NOT_FOUND => [
-        'name' => Exception::PROJECT_TRANSFER_NOT_FOUND,
-        'description' => 'Project transfer with the requested ID could not be found.',
+    Exception::TRANSFER_NOT_FOUND => [
+        'name' => Exception::TRANSFER_NOT_FOUND,
+        'description' => 'Transfer with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::PROJECT_TRANSFER_INVALID_SECRET => [
-        'name' => Exception::PROJECT_TRANSFER_INVALID_SECRET,
-        'description' => 'The project transfer secret is invalid. Please ask the project owner for a new transfer link.',
+    Exception::TRANSFER_INVALID_SECRET => [
+        'name' => Exception::TRANSFER_INVALID_SECRET,
+        'description' => 'The transfer secret is invalid. Please ask the sender for a new transfer link.',
         'code' => 401,
     ],
-    Exception::PROJECT_TRANSFER_EXPIRED => [
-        'name' => Exception::PROJECT_TRANSFER_EXPIRED,
-        'description' => 'The project transfer has expired. Please ask the project owner for a new transfer link.',
+    Exception::TRANSFER_EXPIRED => [
+        'name' => Exception::TRANSFER_EXPIRED,
+        'description' => 'The transfer has expired. Please ask the sender for a new transfer link.',
         'code' => 410,
     ],
-    Exception::PROJECT_TRANSFER_TEAM_MISMATCH => [
-        'name' => Exception::PROJECT_TRANSFER_TEAM_MISMATCH,
-        'description' => 'The project transfer can only be claimed by a different organization.',
+    Exception::TRANSFER_RECIPIENT_MISMATCH => [
+        'name' => Exception::TRANSFER_RECIPIENT_MISMATCH,
+        'description' => 'The transfer can only be claimed by its recipient.',
         'code' => 403,
     ],
-    Exception::PROJECT_TRANSFER_SAME_TEAM => [
-        'name' => Exception::PROJECT_TRANSFER_SAME_TEAM,
-        'description' => 'The project already belongs to this organization.',
+    Exception::TRANSFER_ALREADY_OWNED => [
+        'name' => Exception::TRANSFER_ALREADY_OWNED,
+        'description' => 'The resource already belongs to this recipient.',
         'code' => 400,
     ],
     Exception::PROJECT_ALREADY_EXISTS => [

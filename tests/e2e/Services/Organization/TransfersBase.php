@@ -125,10 +125,13 @@ trait TransfersBase
 
         $this->assertSame(201, $transfer['headers']['status-code']);
         $this->assertNotEmpty($transfer['body']['$id']);
-        $this->assertSame($projectId, $transfer['body']['projectId']);
-        $this->assertSame('Transfer Project', $transfer['body']['projectName']);
-        $this->assertSame(self::$ownerTeamId, $transfer['body']['teamId']);
-        $this->assertSame('', $transfer['body']['targetTeamId']);
+        $this->assertSame('projects', $transfer['body']['resourceType']);
+        $this->assertSame($projectId, $transfer['body']['resourceId']);
+        $this->assertSame('Transfer Project', $transfer['body']['resourceName']);
+        $this->assertSame('teams', $transfer['body']['senderType']);
+        $this->assertSame(self::$ownerTeamId, $transfer['body']['senderId']);
+        $this->assertSame('teams', $transfer['body']['recipientType']);
+        $this->assertSame('', $transfer['body']['recipientId']);
         $this->assertSame(256, \strlen($transfer['body']['secret']));
 
         // Defaults to 24 hours, so it must end between 23 and 25 hours from now
@@ -137,11 +140,11 @@ trait TransfersBase
         $this->assertLessThan(new \DateTime('+25 hours'), $expire);
 
         $restricted = $this->createTransfer($projectId, [
-            'teamId' => $this->getClaimer()['teamId'],
+            'recipientId' => $this->getClaimer()['teamId'],
             'expire' => DateTime::addSeconds(new \DateTime(), 3600),
         ]);
         $this->assertSame(201, $restricted['headers']['status-code']);
-        $this->assertSame($this->getClaimer()['teamId'], $restricted['body']['targetTeamId']);
+        $this->assertSame($this->getClaimer()['teamId'], $restricted['body']['recipientId']);
 
         /**
          * Test for FAILURE
@@ -158,11 +161,11 @@ trait TransfersBase
         $this->assertSame(404, $response['headers']['status-code']);
         $this->assertSame(Exception::PROJECT_NOT_FOUND, $response['body']['type']);
 
-        $response = $this->createTransfer($projectId, ['teamId' => self::$ownerTeamId]);
+        $response = $this->createTransfer($projectId, ['recipientId' => self::$ownerTeamId]);
         $this->assertSame(400, $response['headers']['status-code']);
-        $this->assertSame(Exception::PROJECT_TRANSFER_SAME_TEAM, $response['body']['type']);
+        $this->assertSame(Exception::TRANSFER_ALREADY_OWNED, $response['body']['type']);
 
-        $response = $this->createTransfer($projectId, ['teamId' => 'missing']);
+        $response = $this->createTransfer($projectId, ['recipientId' => 'missing']);
         $this->assertSame(404, $response['headers']['status-code']);
         $this->assertSame(Exception::TEAM_NOT_FOUND, $response['body']['type']);
 
@@ -191,8 +194,8 @@ trait TransfersBase
         $this->assertSame(2, $response['body']['total']);
         $this->assertCount(2, $response['body']['transfers']);
         foreach ($response['body']['transfers'] as $transfer) {
-            $this->assertSame($projectId, $transfer['projectId']);
-            $this->assertSame('Transfer Project', $transfer['projectName']);
+            $this->assertSame($projectId, $transfer['resourceId']);
+            $this->assertSame('Transfer Project', $transfer['resourceName']);
             $this->assertSame('', $transfer['secret']);
         }
 
@@ -230,13 +233,13 @@ trait TransfersBase
          */
         $response = $this->callTransfers(Client::METHOD_GET, '/' . $transferId, $this->getOwnerHeaders());
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame($projectId, $response['body']['projectId']);
+        $this->assertSame($projectId, $response['body']['resourceId']);
         $this->assertSame('', $response['body']['secret']);
 
         // Another organization can preview the transfer with its secret
         $response = $this->callTransfers(Client::METHOD_GET, '/' . $transferId, $this->getClaimer()['headers'], ['secret' => $secret]);
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame('Transfer Project', $response['body']['projectName']);
+        $this->assertSame('Transfer Project', $response['body']['resourceName']);
         $this->assertSame('', $response['body']['secret']);
 
         /**
@@ -244,15 +247,15 @@ trait TransfersBase
          */
         $response = $this->callTransfers(Client::METHOD_GET, '/' . $transferId, $this->getClaimer()['headers']);
         $this->assertSame(404, $response['headers']['status-code']);
-        $this->assertSame(Exception::PROJECT_TRANSFER_NOT_FOUND, $response['body']['type']);
+        $this->assertSame(Exception::TRANSFER_NOT_FOUND, $response['body']['type']);
 
         $response = $this->callTransfers(Client::METHOD_GET, '/' . $transferId, $this->getClaimer()['headers'], ['secret' => 'wrong']);
         $this->assertSame(401, $response['headers']['status-code']);
-        $this->assertSame(Exception::PROJECT_TRANSFER_INVALID_SECRET, $response['body']['type']);
+        $this->assertSame(Exception::TRANSFER_INVALID_SECRET, $response['body']['type']);
 
         $response = $this->callTransfers(Client::METHOD_GET, '/missing', $this->getOwnerHeaders());
         $this->assertSame(404, $response['headers']['status-code']);
-        $this->assertSame(Exception::PROJECT_TRANSFER_NOT_FOUND, $response['body']['type']);
+        $this->assertSame(Exception::TRANSFER_NOT_FOUND, $response['body']['type']);
     }
 
     public function testDeleteProjectTransfer(): void
@@ -266,7 +269,7 @@ trait TransfersBase
          */
         $response = $this->callTransfers(Client::METHOD_DELETE, '/' . $transferId, $this->getClaimer()['headers']);
         $this->assertSame(404, $response['headers']['status-code']);
-        $this->assertSame(Exception::PROJECT_TRANSFER_NOT_FOUND, $response['body']['type']);
+        $this->assertSame(Exception::TRANSFER_NOT_FOUND, $response['body']['type']);
 
         /**
          * Test for SUCCESS
@@ -282,7 +285,7 @@ trait TransfersBase
             'secret' => $transfer['body']['secret'],
         ]);
         $this->assertSame(404, $response['headers']['status-code']);
-        $this->assertSame(Exception::PROJECT_TRANSFER_NOT_FOUND, $response['body']['type']);
+        $this->assertSame(Exception::TRANSFER_NOT_FOUND, $response['body']['type']);
     }
 
     public function testUpdateProjectTransferStatus(): void
@@ -299,11 +302,11 @@ trait TransfersBase
          */
         $response = $this->callTransfers(Client::METHOD_PATCH, '/' . $transferId . '/status', $claimer['headers'], ['secret' => 'wrong']);
         $this->assertSame(401, $response['headers']['status-code']);
-        $this->assertSame(Exception::PROJECT_TRANSFER_INVALID_SECRET, $response['body']['type']);
+        $this->assertSame(Exception::TRANSFER_INVALID_SECRET, $response['body']['type']);
 
         $response = $this->callTransfers(Client::METHOD_PATCH, '/' . $transferId . '/status', $this->getOwnerHeaders(), ['secret' => $secret]);
         $this->assertSame(400, $response['headers']['status-code']);
-        $this->assertSame(Exception::PROJECT_TRANSFER_SAME_TEAM, $response['body']['type']);
+        $this->assertSame(Exception::TRANSFER_ALREADY_OWNED, $response['body']['type']);
 
         // The claimer's session doesn't belong to the owner's organization
         $response = $this->callTransfers(Client::METHOD_PATCH, '/' . $transferId . '/status', array_merge($claimer['headers'], [
@@ -333,7 +336,7 @@ trait TransfersBase
         // The transfer is single use, and the previous owner's other links stop working
         $response = $this->callTransfers(Client::METHOD_PATCH, '/' . $transferId . '/status', $claimer['headers'], ['secret' => $secret]);
         $this->assertSame(404, $response['headers']['status-code']);
-        $this->assertSame(Exception::PROJECT_TRANSFER_NOT_FOUND, $response['body']['type']);
+        $this->assertSame(Exception::TRANSFER_NOT_FOUND, $response['body']['type']);
 
         $response = $this->callTransfers(Client::METHOD_GET, '/' . $other['body']['$id'], $claimer['headers'], ['secret' => $other['body']['secret']]);
         $this->assertSame(404, $response['headers']['status-code']);
@@ -343,7 +346,7 @@ trait TransfersBase
         $this->assertSame(201, $response['headers']['status-code']);
     }
 
-    public function testProjectTransferTargetTeam(): void
+    public function testProjectTransferRecipient(): void
     {
         $projectId = $this->createOwnerProject();
         $claimer = $this->getClaimer();
@@ -357,7 +360,7 @@ trait TransfersBase
         ]);
         $this->assertSame(200, $third['headers']['status-code']);
 
-        $transfer = $this->createTransfer($projectId, ['teamId' => $third['body']['$id']]);
+        $transfer = $this->createTransfer($projectId, ['recipientId' => $third['body']['$id']]);
         $this->assertSame(201, $transfer['headers']['status-code']);
 
         /**
@@ -365,11 +368,11 @@ trait TransfersBase
          */
         $response = $this->callTransfers(Client::METHOD_GET, '/' . $transfer['body']['$id'], $claimer['headers'], ['secret' => $transfer['body']['secret']]);
         $this->assertSame(403, $response['headers']['status-code']);
-        $this->assertSame(Exception::PROJECT_TRANSFER_TEAM_MISMATCH, $response['body']['type']);
+        $this->assertSame(Exception::TRANSFER_RECIPIENT_MISMATCH, $response['body']['type']);
 
         $response = $this->callTransfers(Client::METHOD_PATCH, '/' . $transfer['body']['$id'] . '/status', $claimer['headers'], ['secret' => $transfer['body']['secret']]);
         $this->assertSame(403, $response['headers']['status-code']);
-        $this->assertSame(Exception::PROJECT_TRANSFER_TEAM_MISMATCH, $response['body']['type']);
+        $this->assertSame(Exception::TRANSFER_RECIPIENT_MISMATCH, $response['body']['type']);
 
         /**
          * Test for SUCCESS
@@ -398,14 +401,14 @@ trait TransfersBase
                 'secret' => $transfer['body']['secret'],
             ]);
             $this->assertSame(410, $response['headers']['status-code']);
-            $this->assertSame(Exception::PROJECT_TRANSFER_EXPIRED, $response['body']['type']);
+            $this->assertSame(Exception::TRANSFER_EXPIRED, $response['body']['type']);
         }, 10_000, 500);
 
         $response = $this->callTransfers(Client::METHOD_PATCH, '/' . $transfer['body']['$id'] . '/status', $this->getClaimer()['headers'], [
             'secret' => $transfer['body']['secret'],
         ]);
         $this->assertSame(410, $response['headers']['status-code']);
-        $this->assertSame(Exception::PROJECT_TRANSFER_EXPIRED, $response['body']['type']);
+        $this->assertSame(Exception::TRANSFER_EXPIRED, $response['body']['type']);
 
         $project = $this->client->call(Client::METHOD_GET, '/organization/projects/' . $projectId, array_merge([
             'x-appwrite-project' => 'console',

@@ -79,31 +79,31 @@ class Update extends Action
         $transfer = $authorization->skip(fn () => $dbForPlatform->getDocument('transfers', $transferId));
 
         if ($transfer->isEmpty() || $transfer->getAttribute('resourceType') !== 'projects') {
-            throw new Exception(Exception::PROJECT_TRANSFER_NOT_FOUND);
+            throw new Exception(Exception::TRANSFER_NOT_FOUND);
         }
 
         if (!$proofForToken->verify($secret, $transfer->getAttribute('secret'))) {
-            throw new Exception(Exception::PROJECT_TRANSFER_INVALID_SECRET);
+            throw new Exception(Exception::TRANSFER_INVALID_SECRET);
         }
 
         if (DateTime::formatTz($transfer->getAttribute('expire')) < DateTime::formatTz(DateTime::now())) {
-            throw new Exception(Exception::PROJECT_TRANSFER_EXPIRED);
+            throw new Exception(Exception::TRANSFER_EXPIRED);
         }
 
-        $targetTeamInternalId = $transfer->getAttribute('targetTeamInternalId', '');
-        if ($targetTeamInternalId !== '' && $targetTeamInternalId !== $team->getSequence()) {
-            throw new Exception(Exception::PROJECT_TRANSFER_TEAM_MISMATCH);
+        $recipientInternalId = $transfer->getAttribute('recipientInternalId', '');
+        if ($recipientInternalId !== '' && $recipientInternalId !== $team->getSequence()) {
+            throw new Exception(Exception::TRANSFER_RECIPIENT_MISMATCH);
         }
 
         $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $transfer->getAttribute('resourceId')));
 
         // The project was deleted or moved some other way after the transfer was created
-        if ($project->isEmpty() || $project->getAttribute('teamInternalId') !== $transfer->getAttribute('teamInternalId')) {
-            throw new Exception(Exception::PROJECT_TRANSFER_NOT_FOUND);
+        if ($project->isEmpty() || $project->getAttribute('teamInternalId') !== $transfer->getAttribute('senderInternalId')) {
+            throw new Exception(Exception::TRANSFER_NOT_FOUND);
         }
 
         if ($project->getAttribute('teamInternalId') === $team->getSequence()) {
-            throw new Exception(Exception::PROJECT_TRANSFER_SAME_TEAM);
+            throw new Exception(Exception::TRANSFER_ALREADY_OWNED);
         }
 
         $auditContext->project = $project;
@@ -115,7 +115,7 @@ class Update extends Action
             // Locked, so a concurrent claim waits here and then finds the transfer gone
             $locked = $dbForPlatform->getDocument('transfers', $transfer->getId(), forUpdate: true);
             if ($locked->isEmpty()) {
-                throw new Exception(Exception::PROJECT_TRANSFER_NOT_FOUND);
+                throw new Exception(Exception::TRANSFER_NOT_FOUND);
             }
             $dbForPlatform->deleteDocument('transfers', $locked->getId());
 

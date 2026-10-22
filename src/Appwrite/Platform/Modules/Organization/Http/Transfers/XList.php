@@ -6,7 +6,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Utopia\Database\Validator\Queries\ProjectTransfers;
+use Appwrite\Utopia\Database\Validator\Queries\Transfers;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -47,12 +47,12 @@ class XList extends Action
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_PROJECT_TRANSFER_LIST,
+                        model: Response::MODEL_TRANSFER_LIST,
                     )
                 ]
             ))
             ->param('projectId', '', new UID(), 'Only list the transfers of this project.', true)
-            ->param('queries', [], new ProjectTransfers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', ProjectTransfers::ALLOWED_ATTRIBUTES), true)
+            ->param('queries', [], new Transfers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Transfers::ALLOWED_ATTRIBUTES), true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForPlatform')
@@ -80,7 +80,8 @@ class XList extends Action
         }
 
         $queries[] = Query::equal('resourceType', ['projects']);
-        $queries[] = Query::equal('teamInternalId', [$team->getSequence()]);
+        $queries[] = Query::equal('senderType', ['teams']);
+        $queries[] = Query::equal('senderInternalId', [$team->getSequence()]);
         if ($projectId !== '') {
             $queries[] = Query::equal('resourceId', [$projectId]);
         }
@@ -98,7 +99,8 @@ class XList extends Action
             $cursorDocument = $authorization->skip(fn () => $dbForPlatform->findOne('transfers', [
                 Query::equal('$id', [$transferId]),
                 Query::equal('resourceType', ['projects']),
-                Query::equal('teamInternalId', [$team->getSequence()]),
+                Query::equal('senderType', ['teams']),
+                Query::equal('senderInternalId', [$team->getSequence()]),
             ]));
 
             if ($cursorDocument->isEmpty()) {
@@ -136,6 +138,6 @@ class XList extends Action
         $response->dynamic(new Document([
             'transfers' => $transfers,
             'total' => $total,
-        ]), Response::MODEL_PROJECT_TRANSFER_LIST);
+        ]), Response::MODEL_TRANSFER_LIST);
     }
 }

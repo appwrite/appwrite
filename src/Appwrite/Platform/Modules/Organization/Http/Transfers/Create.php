@@ -55,12 +55,12 @@ class Create extends Action
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
-                        model: Response::MODEL_PROJECT_TRANSFER,
+                        model: Response::MODEL_TRANSFER,
                     )
                 ],
             ))
             ->param('projectId', '', new UID(), 'ID of the project to transfer.')
-            ->param('teamId', '', new UID(), 'ID of the only organization allowed to claim the project. Leave empty to allow any organization.', true)
+            ->param('recipientId', '', new UID(), 'ID of the only organization allowed to claim the project. Leave empty to allow any organization.', true)
             ->param('expire', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Defaults to 24 hours from now. Maximum of 30 days from now.', true)
             ->inject('response')
             ->inject('dbForPlatform')
@@ -74,7 +74,7 @@ class Create extends Action
 
     public function action(
         string $projectId,
-        string $teamId,
+        string $recipientId,
         ?string $expire,
         Response $response,
         Database $dbForPlatform,
@@ -97,16 +97,16 @@ class Create extends Action
 
         $auditContext->project = $project;
 
-        $targetTeam = new Document();
-        if ($teamId !== '') {
-            $targetTeam = $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
+        $recipient = new Document();
+        if ($recipientId !== '') {
+            $recipient = $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $recipientId));
 
-            if ($targetTeam->isEmpty()) {
+            if ($recipient->isEmpty()) {
                 throw new Exception(Exception::TEAM_NOT_FOUND);
             }
 
-            if ($targetTeam->getSequence() === $team->getSequence()) {
-                throw new Exception(Exception::PROJECT_TRANSFER_SAME_TEAM);
+            if ($recipient->getSequence() === $team->getSequence()) {
+                throw new Exception(Exception::TRANSFER_ALREADY_OWNED);
             }
         }
 
@@ -125,10 +125,12 @@ class Create extends Action
             'resourceType' => 'projects',
             'resourceId' => $project->getId(),
             'resourceInternalId' => $project->getSequence(),
-            'teamId' => $team->getId(),
-            'teamInternalId' => $team->getSequence(),
-            'targetTeamId' => $targetTeam->isEmpty() ? '' : $targetTeam->getId(),
-            'targetTeamInternalId' => $targetTeam->isEmpty() ? '' : $targetTeam->getSequence(),
+            'senderType' => 'teams',
+            'senderId' => $team->getId(),
+            'senderInternalId' => $team->getSequence(),
+            'recipientType' => 'teams',
+            'recipientId' => $recipient->isEmpty() ? '' : $recipient->getId(),
+            'recipientInternalId' => $recipient->isEmpty() ? '' : $recipient->getSequence(),
             'secret' => $proofForToken->hash($secret), // One way hash, so a leaked database can't claim projects
             'expire' => $expire,
         ])));
@@ -137,6 +139,6 @@ class Create extends Action
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($transfer, Response::MODEL_PROJECT_TRANSFER);
+            ->dynamic($transfer, Response::MODEL_TRANSFER);
     }
 }

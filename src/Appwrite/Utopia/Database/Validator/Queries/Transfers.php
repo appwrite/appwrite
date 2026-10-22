@@ -2,10 +2,10 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
-class ProjectTransfers extends Base
+class Transfers extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
-        'targetTeamId',
+        'recipientId',
         'expire',
     ];
 

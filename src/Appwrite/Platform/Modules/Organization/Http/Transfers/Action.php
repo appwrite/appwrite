@@ -25,22 +25,22 @@ class Action extends AppwriteAction
         if (
             $transfer->isEmpty()
             || $transfer->getAttribute('resourceType') !== 'projects'
-            || $transfer->getAttribute('teamInternalId') !== $team->getSequence()
+            || $transfer->getAttribute('senderType') !== 'teams'
+            || $transfer->getAttribute('senderInternalId') !== $team->getSequence()
         ) {
-            throw new Exception(Exception::PROJECT_TRANSFER_NOT_FOUND);
+            throw new Exception(Exception::TRANSFER_NOT_FOUND);
         }
 
         return $transfer;
     }
 
     /**
-     * Add the project's name and hide the hashed secret, so the response describes what is being transferred.
+     * Add the resource name and hide the hashed secret, so the response describes what is being transferred.
      */
     protected function present(Document $transfer, Document $project): Document
     {
         return $transfer
-            ->setAttribute('projectId', $transfer->getAttribute('resourceId'))
-            ->setAttribute('projectName', $project->getAttribute('name', ''))
+            ->setAttribute('resourceName', $project->getAttribute('name', ''))
             ->setAttribute('secret', '');
     }
 }

@@ -2850,7 +2850,7 @@
         ],
         "organization.createProjectTransfer": [
             "projectId",
-            "teamId",
+            "recipientId",
             "expire"
         ],
         "organization.deleteProject": [

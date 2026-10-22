@@ -46,7 +46,7 @@ class Get extends Action
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_PROJECT_TRANSFER,
+                        model: Response::MODEL_TRANSFER,
                     )
                 ]
             ))
@@ -72,35 +72,35 @@ class Get extends Action
         $transfer = $authorization->skip(fn () => $dbForPlatform->getDocument('transfers', $transferId));
 
         if ($transfer->isEmpty() || $transfer->getAttribute('resourceType') !== 'projects') {
-            throw new Exception(Exception::PROJECT_TRANSFER_NOT_FOUND);
+            throw new Exception(Exception::TRANSFER_NOT_FOUND);
         }
 
-        if ($transfer->getAttribute('teamInternalId') !== $team->getSequence()) {
+        if ($transfer->getAttribute('senderInternalId') !== $team->getSequence()) {
             if ($secret === '') {
-                throw new Exception(Exception::PROJECT_TRANSFER_NOT_FOUND);
+                throw new Exception(Exception::TRANSFER_NOT_FOUND);
             }
 
             if (!$proofForToken->verify($secret, $transfer->getAttribute('secret'))) {
-                throw new Exception(Exception::PROJECT_TRANSFER_INVALID_SECRET);
+                throw new Exception(Exception::TRANSFER_INVALID_SECRET);
             }
 
             if (DateTime::formatTz($transfer->getAttribute('expire')) < DateTime::formatTz(DateTime::now())) {
-                throw new Exception(Exception::PROJECT_TRANSFER_EXPIRED);
+                throw new Exception(Exception::TRANSFER_EXPIRED);
             }
 
-            $targetTeamInternalId = $transfer->getAttribute('targetTeamInternalId', '');
-            if ($targetTeamInternalId !== '' && $targetTeamInternalId !== $team->getSequence()) {
-                throw new Exception(Exception::PROJECT_TRANSFER_TEAM_MISMATCH);
+            $recipientInternalId = $transfer->getAttribute('recipientInternalId', '');
+            if ($recipientInternalId !== '' && $recipientInternalId !== $team->getSequence()) {
+                throw new Exception(Exception::TRANSFER_RECIPIENT_MISMATCH);
             }
         }
 
         $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $transfer->getAttribute('resourceId')));
 
         // The project was deleted or moved some other way after the transfer was created
-        if ($project->isEmpty() || $project->getAttribute('teamInternalId') !== $transfer->getAttribute('teamInternalId')) {
-            throw new Exception(Exception::PROJECT_TRANSFER_NOT_FOUND);
+        if ($project->isEmpty() || $project->getAttribute('teamInternalId') !== $transfer->getAttribute('senderInternalId')) {
+            throw new Exception(Exception::TRANSFER_NOT_FOUND);
         }
 
-        $response->dynamic($this->present($transfer, $project), Response::MODEL_PROJECT_TRANSFER);
+        $response->dynamic($this->present($transfer, $project), Response::MODEL_TRANSFER);
     }
 }
