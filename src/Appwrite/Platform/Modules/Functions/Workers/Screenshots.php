@@ -240,6 +240,7 @@ class Screenshots extends Action
             }
 
             // The deployment owns them now, and the Deletes worker removes them with it.
+            $captured = $files;
             $files = [];
 
             $queueForRealtime
@@ -250,6 +251,12 @@ class Screenshots extends Action
                 'deploymentScreenshotDark' => $deployment->getAttribute('screenshotDark', ''),
                 'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
             ]));
+
+            // Unless the site is gone: its Deletes worker may have read this deployment before the update above.
+            if ($site->isEmpty()) {
+                $files = $captured;
+                throw new PermanentFailure('Site deleted during capture');
+            }
         } catch (\Throwable $th) {
             $date = \date('H:i:s');
             $this->appendToLogs($dbForProject, $deployment->getId(), $queueForRealtime, "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed. Deployment will continue. [0m\n");
@@ -288,7 +295,12 @@ class Screenshots extends Action
     {
         foreach ($files as $fileId => $path) {
             try {
-                $deviceForFiles->delete($path);
+                // Keep the row while the object is still there, so it stays findable.
+                if (!$deviceForFiles->delete($path) && $deviceForFiles->exists($path)) {
+                    Console::warning('Failed to delete screenshot ' . $fileId . ': ' . $path);
+                    continue;
+                }
+
                 $dbForPlatform->deleteDocument('bucket_' . $bucket->getSequence(), $fileId);
             } catch (\Throwable $th) {
                 Console::warning('Failed to delete screenshot ' . $fileId . ': ' . $th->getMessage());

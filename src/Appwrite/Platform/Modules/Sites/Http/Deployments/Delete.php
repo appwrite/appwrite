@@ -95,9 +95,17 @@ class Delete extends Action
         }
 
         try {
-            if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
-            }
+            // Read under the row lock the screenshots worker's update also takes: its screenshot IDs are
+            // either in the snapshot the Deletes worker gets, or the worker finds the deployment gone.
+            $deployment = $dbForProject->withTransaction(function () use ($dbForProject, $deployment) {
+                $locked = $dbForProject->getDocument('deployments', $deployment->getId(), forUpdate: true);
+
+                if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
+                }
+
+                return $locked;
+            });
         } catch (TransactionException) {
             $deploymentExists = !$dbForProject->getDocument('deployments', $deployment->getId())->isEmpty();
 

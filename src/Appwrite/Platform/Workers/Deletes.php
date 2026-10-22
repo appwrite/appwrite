@@ -1603,13 +1603,14 @@ class Deletes extends Action
             $path = $file->getAttribute('path', '');
 
             try {
-                if ($deviceForFiles->delete($path)) {
-                    Console::success('Deleted deployment screenshot: ' . $path);
-                } else {
+                // Local devices report false for an object that is already gone; the row goes either way then.
+                if (!$deviceForFiles->delete($path) && $deviceForFiles->exists($path)) {
                     Console::error('Failed to delete deployment screenshot: ' . $path);
+                    continue;
                 }
 
                 $dbForPlatform->deleteDocument('bucket_' . $bucket->getSequence(), $id);
+                Console::success('Deleted deployment screenshot: ' . $path);
             } catch (\Throwable $th) {
                 Console::error('Failed to delete deployment screenshot: ' . $path);
                 Console::error('[Error] Type: ' . get_class($th));
