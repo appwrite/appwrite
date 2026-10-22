@@ -65,6 +65,28 @@ final class HeadersTest extends TestCase
         ];
         $this->assertFalse($this->object->isValid($headers));
 
+        // A line break in a value would start a second header line on the
+        // request to the runtime, one the caller may not send directly.
+        $headers = [
+            'x-custom' => "value\r\nx-appwrite-user-id: impersonated-user",
+        ];
+        $this->assertFalse($this->object->isValid($headers));
+
+        $headers = [
+            'x-custom' => "value\nx-appwrite-user-id: impersonated-user",
+        ];
+        $this->assertFalse($this->object->isValid($headers));
+
+        $headers = [
+            'x-custom' => "value\0",
+        ];
+        $this->assertFalse($this->object->isValid($headers));
+
+        $headers = [
+            'x-custom' => "tab\tseparated value, with ümlauts",
+        ];
+        $this->assertTrue($this->object->isValid($headers));
+
         $headers = [
             'Content-Type' => 'application/json',
             'X-Custom-Header' => 'value'
@@ -157,6 +179,36 @@ final class HeadersTest extends TestCase
 
         $headers['key-101'] = 'value_101';
         $this->assertFalse($this->object->isValid($headers));
+    }
+
+    public function testWithoutCookie(): void
+    {
+        $headers = [
+            'Content-Type' => 'text/html',
+            'Cookie' => 'a_jwt_console=preview-token; theme=dark; a_session_console=abc',
+        ];
+
+        $this->assertSame([
+            'Content-Type' => 'text/html',
+            'Cookie' => 'theme=dark; a_session_console=abc',
+        ], Headers::withoutCookie($headers, 'a_jwt_console'));
+
+        // The header goes when the cookie was all it carried
+        $this->assertSame([
+            'Content-Type' => 'text/html',
+        ], Headers::withoutCookie([
+            'Content-Type' => 'text/html',
+            'cookie' => ' a_jwt_console=preview-token ',
+        ], 'a_jwt_console'));
+
+        // Other cookies, including ones whose name merely starts the same, stay
+        $this->assertSame([
+            'cookie' => 'a_jwt_console_theme=dark; x=1',
+        ], Headers::withoutCookie([
+            'cookie' => 'a_jwt_console_theme=dark; x=1',
+        ], 'a_jwt_console'));
+
+        $this->assertSame([], Headers::withoutCookie([], 'a_jwt_console'));
     }
 
     public function testStripReserved(): void

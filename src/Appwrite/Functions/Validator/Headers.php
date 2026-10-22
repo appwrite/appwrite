@@ -24,7 +24,7 @@ class Headers extends Validator
      */
     public function getDescription(): string
     {
-        return 'Headers must contain at most ' . $this->maxKeys . ' keys and ' . $this->maxSize . ' bytes in total. Valid key chars are a-z, A-Z, 0-9, and hyphen. Keys can\'t start or end with a hyphen, or start with "x-appwrite". Values can\'t be arrays or objects.';
+        return 'Headers must contain at most ' . $this->maxKeys . ' keys and ' . $this->maxSize . ' bytes in total. Valid key chars are a-z, A-Z, 0-9, and hyphen. Keys can\'t start or end with a hyphen, or start with "x-appwrite". Values can\'t be arrays or objects, or contain line breaks or other control characters.';
     }
 
     /**
@@ -57,6 +57,14 @@ class Headers extends Validator
 
             // Reject array and object values
             if (!\is_scalar($val) && !\is_null($val)) {
+                return false;
+            }
+
+            // A value is forwarded to the runtime as one header line, so a
+            // line break or other control byte in it would end that line and
+            // start another: one a caller is not allowed to send, such as
+            // x-appwrite-user-id. Only the horizontal tab is a legal header byte.
+            if (!self::isHeaderValue((string) ($val ?? ''))) {
                 return false;
             }
 
@@ -117,9 +125,60 @@ class Headers extends Validator
         return $sanitized;
     }
 
+    /**
+     * Drop one cookie from the Cookie header, leaving the others as sent.
+     * The header goes with it when it held nothing else.
+     *
+     * @param array<array-key, mixed> $headers
+     * @return array<array-key, mixed>
+     */
+    public static function withoutCookie(array $headers, string $name): array
+    {
+        foreach ($headers as $key => $value) {
+            if (!\is_string($key) || \strtolower($key) !== 'cookie' || !\is_string($value)) {
+                continue;
+            }
+
+            $kept = [];
+            foreach (\explode(';', $value) as $cookie) {
+                $cookie = \trim($cookie);
+                if ($cookie === '' || \trim(\explode('=', $cookie, 2)[0]) === $name) {
+                    continue;
+                }
+
+                $kept[] = $cookie;
+            }
+
+            if ($kept === []) {
+                unset($headers[$key]);
+            } else {
+                $headers[$key] = \implode('; ', $kept);
+            }
+        }
+
+        return $headers;
+    }
+
     private static function isReserved(string $key): bool
     {
         return \str_starts_with(\strtolower($key), 'x-appwrite-');
+    }
+
+    /**
+     * RFC 9110 field-value bytes: visible ASCII, space, horizontal tab and
+     * obs-text; never CR, LF, NUL or another control byte.
+     */
+    private static function isHeaderValue(string $value): bool
+    {
+        $length = \strlen($value);
+        for ($i = 0; $i < $length; $i++) {
+            $byte = \ord($value[$i]);
+            if (($byte < 0x20 && $byte !== 0x09) || $byte === 0x7F) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
