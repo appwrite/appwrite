@@ -177,7 +177,6 @@ trait Deployment
 
                 Span::add("{$logBase}.authorized", $isAuthorized);
 
-                $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
                 $consoleUrl = $platform['consoleUrl'] ?? '';
 
                 $authorizeUrl = $consoleUrl . "/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
@@ -208,7 +207,7 @@ trait Deployment
                             Query::equal('deploymentInternalId', [$existingDeployment->getSequence()]),
                         ]));
 
-                        $commentPreviewUrl = !$previewRule->isEmpty() ? ("{$protocol}://" . $previewRule->getAttribute('domain', '')) : '';
+                        $commentPreviewUrl = GitAction::previewUrl($previewRule);
                     }
                 }
 
@@ -575,8 +574,7 @@ trait Deployment
                         try {
                             $rule = $authorization->skip(fn () => $dbForPlatform->getDocument('rules', $previewRuleId));
 
-                            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-                            $previewUrl = !$rule->isEmpty() ? ("{$protocol}://" . $rule->getAttribute('domain', '')) : '';
+                            $previewUrl = GitAction::previewUrl($rule);
 
                             if (!empty($previewUrl)) {
                                 $comment = new Comment($platform);
@@ -593,21 +591,19 @@ trait Deployment
                 }
 
                 if (!empty($providerCommitHash) && $resource->getAttribute('providerSilentMode', false) === false) {
-                    $resourceName = $resource->getAttribute('name');
-                    $projectName = $project->getAttribute('name');
-                    $name = "{$resourceName} ({$projectName})";
-                    $message = 'Starting...';
-
-                    $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
+                    // The deployment exists by now, so a refused report is logged like
+                    // every later one: failing the push here would make a provider that
+                    // retries deliveries deploy the commit again.
                     try {
+                        $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
                         $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
-                    } catch (RepositoryNotFound $e) {
-                        throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
-                    }
-                    $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
+                        $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
 
-                    $providerTargetUrl = $consoleUrl . "/projects/$projectId/$resourceCollection/$resourceId";
-                    $vcs->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
+                        // The comment above already lists this build; only the check is still owed
+                        $authorization->skip(fn () => GitAction::check('waiting', $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform));
+                    } catch (\Throwable $e) {
+                        Console::warning("Failed to report deployment '{$deploymentId}' as waiting: " . $e->getMessage());
+                    }
                 }
 
                 Span::add("{$logBase}.build.triggered", 'true');

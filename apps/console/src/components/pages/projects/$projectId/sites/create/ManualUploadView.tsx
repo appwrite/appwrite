@@ -310,7 +310,7 @@ export function ManualUploadView() {
         </h3>
         <div className="space-y-2">
           <Link
-            to="/projects/$projectId/sites/create/repositories"
+            to="/projects/$projectId/sites/create"
             params={{ projectId: projectId! }}
             className="flex items-center gap-2 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
           >
@@ -318,7 +318,7 @@ export function ManualUploadView() {
             {t('Import from Git')}
           </Link>
           <Link
-            to="/projects/$projectId/sites/create/templates"
+            to="/projects/$projectId/sites/create"
             params={{ projectId: projectId! }}
             className="flex items-center gap-2 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
           >

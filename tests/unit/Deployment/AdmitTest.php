@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Deployment;
 
 use Appwrite\Deployment\Deployments;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use OpenRuntimes\Orchestrator\Jobs;
 use PHPUnit\Framework\TestCase;
@@ -56,7 +57,7 @@ final class AdmitTest extends TestCase
             return new Response(202, body: new Stream('{"id":"build","status":"accepted"}'));
         });
 
-        $deployments = new RefusingDeployments(new Jobs($client), $database, new Document(['$id' => 'project', 'region' => 'default']), ['apiHostname' => 'localhost']);
+        $deployments = new RefusingDeployments(new Jobs($client), $database, new Document(['$id' => 'project', 'region' => 'default']), ['apiHostname' => 'localhost'], $this->createStub(BuildPublisher::class));
 
         try {
             $deployments->createFromUpload(new Document([
