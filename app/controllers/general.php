@@ -4,6 +4,7 @@ require_once __DIR__ . '/../init.php';
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Key;
+use Appwrite\Auth\Scopes;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Bus\Events\RequestCompleted;
 use Appwrite\Bus\Events\RuleCreated;
@@ -903,7 +904,8 @@ Http::init()
     ->inject('executionsRetentionCount')
     ->inject('lock')
     ->inject('params')
-    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, Geo $geo, Event $queueForEvents, Bus $bus, Executor $executor, array $platform, callable $getIsResourceBlocked, string $previewHostname, ?Key $apiKey, Cors $cors, Authorization $authorization, DeletePublisher $publisherForDeletes, int $executionsRetentionCount, Lock $lock, array $params) {
+    ->inject('scopes')
+    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, Geo $geo, Event $queueForEvents, Bus $bus, Executor $executor, array $platform, callable $getIsResourceBlocked, string $previewHostname, ?Key $apiKey, Cors $cors, Authorization $authorization, DeletePublisher $publisherForDeletes, int $executionsRetentionCount, Lock $lock, array $params, Scopes $grantedScopes) {
         /*
         * Appwrite Router
         */
@@ -1001,7 +1003,8 @@ Http::init()
                 $response->addFilter(new ResponseV27());
             }
             if (version_compare($responseFormat, '1.9.5', '<')) {
-                $response->addFilter(new ResponseV26());
+                // Read at output time, once the api hook has resolved the caller's scopes
+                $response->addFilter(new ResponseV26($grantedScopes));
             }
             if (version_compare($responseFormat, '1.9.4', '<')) {
                 $response->addFilter(new ResponseV25());

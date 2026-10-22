@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Filters;
 
+use Appwrite\Auth\Scopes;
 use Appwrite\Network\Platform;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filter;
@@ -11,6 +12,15 @@ use Utopia\Database\Document;
 // Convert 1.9.5 Data format to 1.9.4 format
 class V26 extends Filter
 {
+    /**
+     * The 1.9.4 project shape embedded keys and webhooks with their secrets.
+     * They go out only to a caller who may manage them; anyone else reads
+     * them blank, as the current key and webhook routes answer.
+     */
+    public function __construct(private readonly Scopes $scopes = new Scopes())
+    {
+    }
+
     public function parse(array $content, string $model): array
     {
         return match ($model) {
@@ -139,8 +149,8 @@ class V26 extends Filter
             'events' => $webhook->getAttribute('events', []),
             'tls' => $webhook->getAttribute('security', true),
             'authUsername' => $webhook->getAttribute('httpUser', ''),
-            'authPassword' => $webhook->getAttribute('httpPass', ''),
-            'secret' => $webhook->getAttribute('signatureKey', ''),
+            'authPassword' => $this->scopes->holds('webhooks.write') ? $webhook->getAttribute('httpPass', '') : '',
+            'secret' => $this->scopes->holds('webhooks.write') ? $webhook->getAttribute('signatureKey', '') : '',
             'enabled' => $webhook->getAttribute('enabled', true),
             'logs' => $webhook->getAttribute('logs', ''),
             'attempts' => $webhook->getAttribute('attempts', 0),
@@ -156,7 +166,7 @@ class V26 extends Filter
             'name' => $key->getAttribute('name', ''),
             'expire' => $key->getAttribute('expire', ''),
             'scopes' => $key->getAttribute('scopes', []),
-            'secret' => $key->getAttribute('secret', ''),
+            'secret' => $this->scopes->holds('keys.write') ? $key->getAttribute('secret', '') : '',
             'accessedAt' => $key->getAttribute('accessedAt', ''),
             'sdks' => $key->getAttribute('sdks', []),
         ];
