@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Deployment;
 
 use Appwrite\Deployment\Deployments;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use OpenRuntimes\Orchestrator\Jobs;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientInterface;
@@ -39,7 +40,7 @@ final class UploadCallbacksTest extends TestCase
                 $requests[] = json_decode((string) $request->getBody(), true, flags: JSON_THROW_ON_ERROR);
                 return new Response(202, body: new Stream('{"id":"build","status":"accepted"}'));
             });
-            $deployments = new Deployments(new Jobs($client), $database, new Document(['$id' => 'project', 'region' => 'default']), ['apiHostname' => 'localhost']);
+            $deployments = new Deployments(new Jobs($client), $database, new Document(['$id' => 'project', 'region' => 'default']), ['apiHostname' => 'localhost'], $this->createStub(BuildPublisher::class));
             $result = $deployments->createFromUpload(new Document([
                 '$id' => 'function', '$collection' => 'functions', 'runtime' => array_key_first(Config::getParam('runtimes-v2')),
             ]), clone $deployment, 137);

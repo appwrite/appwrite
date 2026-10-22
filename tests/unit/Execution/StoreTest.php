@@ -402,6 +402,24 @@ final class StoreTest extends TestCase
         $this->assertSame('2026-09-14T21:27:33.884+00:00', $execution->getAttribute('scheduledAt'));
     }
 
+    public function testWritesBypassAsyncInsertBuffer(): void
+    {
+        $client = new CapturingClient();
+        $store = $this->store($client);
+
+        $store->upsertMany('project', [
+            new Document(['$id' => 'first', 'resourceType' => 'functions', 'status' => 'waiting']),
+            new Document(['$id' => 'second', 'resourceType' => 'functions', 'status' => 'completed']),
+        ]);
+        $store->delete('project', new Document(['$id' => 'first', 'resourceType' => 'functions']));
+
+        $this->assertCount(2, $client->requests);
+        foreach ($client->requests as $request) {
+            \parse_str($request->getUri()->getQuery(), $parameters);
+            $this->assertSame('0', $parameters['async_insert'] ?? null);
+        }
+    }
+
     public function testWriteFailuresPropagate(): void
     {
         $store = $this->store(new FailingClient());

@@ -23,6 +23,9 @@ final class S3CustomServerTest extends Scope
 
     private const PART_SIZE = 5 * 1024 * 1024;
 
+    // Past APP_STORAGE_READ_BUFFER (20MB) so downloads stream, within the 30MB default bucket limit and Cloud's 50MB Free plan limit.
+    private const STREAMED_FILE_SIZE = 25 * 1024 * 1024;
+
     #[Group('s3')]
     public function testCreateMultipartUpload(): void
     {
@@ -98,7 +101,7 @@ final class S3CustomServerTest extends Scope
     {
         $bucketId = $this->setupBucket();
         $key = 'native-stream.bin';
-        $body = \str_repeat('a', 100 * 1024 * 1024);
+        $body = \str_repeat('a', self::STREAMED_FILE_SIZE);
         $replacement = 'replacement';
 
         foreach (['view', 'download'] as $endpoint) {

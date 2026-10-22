@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Platform\Workers;
 
+use Appwrite\Deployment\Retention;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
@@ -39,8 +40,14 @@ final class DeletesTest extends TestCase
 {
     private Database $database;
 
+    private string|false $key;
+
     protected function setUp(): void
     {
+        // Projects default smtp and oAuthProviders through the encrypt filter on every write and read.
+        $this->key = \getenv('_APP_OPENSSL_KEY_V1');
+        \putenv('_APP_OPENSSL_KEY_V1=unit-test-key');
+
         // Workers run with authorization disabled, as app/worker.php sets it up.
         $authorization = new Authorization();
         $authorization->disable();
@@ -60,6 +67,11 @@ final class DeletesTest extends TestCase
                 indexes: $collection['indexes'],
             ));
         }
+    }
+
+    protected function tearDown(): void
+    {
+        \putenv($this->key === false ? '_APP_OPENSSL_KEY_V1' : '_APP_OPENSSL_KEY_V1=' . $this->key);
     }
 
     public function testQueuedFileCleanupOnlyDeletesTheObsoletePath(): void
@@ -91,6 +103,7 @@ final class DeletesTest extends TestCase
                     executor: $this->createStub(Executor::class),
                     executionRetention: '',
                     executionsRetentionCount: 0,
+                    deploymentRetention: new Retention(),
                     publisherForDeletes: $this->createStub(DeletePublisher::class),
                     publisherForUsage: $this->createStub(UsagePublisher::class),
                     bus: new Bus(),
@@ -155,6 +168,7 @@ final class DeletesTest extends TestCase
                 executor: $this->createStub(Executor::class),
                 executionRetention: '',
                 executionsRetentionCount: 0,
+                deploymentRetention: new Retention(),
                 publisherForDeletes: $this->createStub(DeletePublisher::class),
                 publisherForUsage: $this->createStub(UsagePublisher::class),
                 bus: new Bus(),
@@ -169,6 +183,65 @@ final class DeletesTest extends TestCase
 
         $this->assertSame('Missing project ID', $refusal?->getMessage(), 'a project delete without a project ID must not run');
         $this->assertSame(0, $connections, 'no project or databases connection is opened');
+    }
+
+    /**
+     * Maintenance jobs can outlive their project: the worker reloads the project by
+     * the payload's ID as an empty Document, and getProjectDB() maps an empty
+     * project to the platform database, so the project cleanups would run there.
+     */
+    public function testMaintenanceForDeletedProjectLeavesPlatformDatabaseUntouched(): void
+    {
+        $collections = Config::getParam('collections', []);
+        foreach (['targets', 'sessions', 'tokens', 'challenges', 'transactions', 'transactionLogs', 'presenceLogs', 'sites', 'deployments', 'migrations', 'rules'] as $id) {
+            $collection = $collections['console'][$id] ?? $collections['projects'][$id];
+            $this->database->createCollection(Collection::create(
+                id: $id,
+                attributes: $collection['attributes'],
+                indexes: $collection['indexes'],
+            ));
+        }
+
+        $this->database->withPreserveDates(true, fn () => $this->database->skipFilters(fn () => $this->database->createDocument('sessions', new Document([
+            '$id' => 'platform-session',
+            '$createdAt' => DateTime::format(new \DateTime('-2 years')),
+            'userInternalId' => '1',
+            'expire' => DateTime::format(new \DateTime('-1 year')),
+        ]))));
+
+        $payload = [
+            'type' => DELETE_TYPE_MAINTENANCE,
+            'project' => ['$id' => 'deleted', '$sequence' => '42'],
+        ];
+        $message = (new Message())->setPayload($payload);
+        $getProjectDB = fn (Document $project): Database => $project->isEmpty()
+            ? $this->database
+            : throw new \LogicException('No project database for ' . $project->getId());
+
+        (new Deletes())->action(
+            message: $message,
+            project: new Document(),
+            dbForPlatform: $this->database,
+            getProjectDB: $getProjectDB,
+            getDatabasesDB: $getProjectDB,
+            deviceForFiles: $this->createStub(Device::class),
+            deviceForFunctions: $this->createStub(Device::class),
+            deviceForSites: $this->createStub(Device::class),
+            deviceForBuilds: $this->createStub(Device::class),
+            telemetry: new NoTelemetry(),
+            certificates: $this->createStub(Certificates::class),
+            executor: $this->createStub(Executor::class),
+            executionRetention: DateTime::format(new \DateTime('-14 days')),
+            executionsRetentionCount: 0,
+            deploymentRetention: new Retention(),
+            publisherForDeletes: $this->createStub(DeletePublisher::class),
+            publisherForUsage: $this->createStub(UsagePublisher::class),
+            bus: new Bus(),
+            executionStore: $this->createStub(ExecutionStore::class),
+        );
+
+        $session = $this->database->skipFilters(fn () => $this->database->getDocument('sessions', 'platform-session'));
+        $this->assertSame('platform-session', $session->getId(), 'the platform database keeps its expired session');
     }
 
     /**

@@ -994,6 +994,16 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_EXIFTOOL_HOST',
+                'description' => 'The host of the ExifTool service (for example `http://appwrite-exiftool:8080`) used to remove metadata from images uploaded to buckets with `stripMetadata` enabled. Leave empty to disable stripping; those images are then stored as uploaded.',
+                'introduction' => '2.6.0',
+                'default' => '',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_STORAGE_ANTIVIRUS',
                 'description' => 'This variable allows you to disable the internal anti-virus scans. This value is set to \'disabled\' by default, to enable the scans set the value to \'enabled\'. Before enabling, you must add the ClamAV service and depend on it on main Appwrite service.',
                 'introduction' => '',
@@ -1769,6 +1779,42 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_VCS_ENTIRE_PLUGIN',
+                'description' => 'Entire plugin slug, as registered with Entire. It names the plugin in Entire\'s API and is the audience of the webhook tokens Entire signs for it.',
+                'introduction' => '2.6.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_ENTIRE_PRIVATE_KEY',
+                'description' => 'Entire plugin private key: the Ed25519 key whose public half is registered on the plugin, as a PKCS#8 PEM.',
+                'introduction' => '2.6.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_ENTIRE_ISSUER',
+                'description' => 'Issuer registered on the Entire plugin: the iss claim of the JWTs Appwrite signs for it and the audience of the install receipts Entire signs back. Usually this server\'s public URL.',
+                'introduction' => '2.6.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_ENTIRE_ENDPOINT',
+                'description' => 'URL of the Entire core (control plane) Appwrite talks to. Any core serves any installation; defaults to https://us.auth.entire.io when unset, set it to a nearer jurisdiction such as https://eu.auth.entire.io.',
+                'introduction' => '2.6.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_VCS_WEBHOOK_URL',
                 'description' => 'Base URL Appwrite advertises to self-hosted VCS providers when registering repository webhooks, if different from the public domain (e.g. a Docker-internal address). Falls back to the public domain when unset.',
                 'introduction' => '2.0.0',
@@ -1788,6 +1834,24 @@ return [
                 'description' => 'Interval value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 86400 seconds (1 day).',
                 'introduction' => '0.7.0',
                 'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_QUEUE_NAME',
+                'description' => 'Queue used for scheduled maintenance slices. Set the same value on the maintenance scheduler and workers. Defaults to v1-maintenance.',
+                'introduction' => '2.6.0',
+                'default' => 'v1-maintenance',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_INACTIVE_INTERVAL',
+                'description' => 'How often, in seconds, the scheduler runs maintenance for each project not accessed in the last 30 days or never accessed. Projects are spread across five-minute slices, so use a multiple of 300; a value under 600 gives a single slice that reaches every inactive project on each run. The scheduler dispatches each slice to the maintenance worker, which defers a slice while the deletes queue is backed up; a slice still deferred after a full interval gives way to its next run. The default value is 604800 seconds (7 days).',
+                'introduction' => '2.6.0',
+                'default' => '604800',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

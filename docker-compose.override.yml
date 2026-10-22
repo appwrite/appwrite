@@ -49,6 +49,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
     ports:
       - 9502:80
   appwrite-mqtt:
@@ -63,6 +64,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-worker:
     build:
       context: .
@@ -75,6 +77,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
     depends_on:
       - request-catcher-sms
       - request-catcher-webhook
@@ -91,6 +94,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-worker-webhooks:
     build:
       context: .
@@ -103,6 +107,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
     depends_on:
       - request-catcher-sms
       - request-catcher-webhook
@@ -118,6 +123,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-worker-databases:
     build:
       context: .
@@ -130,6 +136,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-worker-builds:
     build:
       context: .
@@ -142,6 +149,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-worker-jobs:
     build:
       context: .
@@ -154,6 +162,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-worker-screenshots:
     build:
       context: .
@@ -166,6 +175,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-worker-certificates:
     build:
       context: .
@@ -178,6 +188,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-worker-executions:
     build:
       context: .
@@ -190,6 +201,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-worker-functions:
     build:
       context: .
@@ -202,6 +214,20 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
+  appwrite-worker-maintenance:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-worker-mails:
     build:
       context: .
@@ -214,6 +240,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
     depends_on:
       - maildev
   appwrite-worker-notifications:
@@ -228,6 +255,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
     depends_on:
       - maildev
   appwrite-worker-messaging:
@@ -242,6 +270,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-worker-migrations:
     build:
       context: .
@@ -254,6 +283,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
       - ./tests:/usr/src/code/tests
   appwrite-task-maintenance:
     build:
@@ -267,6 +297,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-task-interval:
     build:
       context: .
@@ -279,6 +310,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-task-scheduler-functions:
     build:
       context: .
@@ -291,6 +323,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-task-scheduler-executions:
     build:
       context: .
@@ -303,6 +336,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   appwrite-task-scheduler-messages:
     build:
       context: .
@@ -315,6 +349,33 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
+  appwrite-task-scheduler-maintenance:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
+  appwrite-task-stats-resources:
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
+    image: appwrite-dev
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./packages:/usr/src/code/packages
   dns:
     image: alpinelinux/unbound:latest@sha256:8d2611fe8fcbd8e26b6f88e2eb0c3b803368195d50cfa0c30fdfaa5087076709
     container_name: appwrite-dns

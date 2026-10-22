@@ -3707,7 +3707,8 @@
             "encryption",
             "antivirus",
             "transformations",
-            "description"
+            "description",
+            "stripMetadata"
         ],
         "storage.createFile": [
             "bucketId",
@@ -3779,7 +3780,8 @@
             "encryption",
             "antivirus",
             "transformations",
-            "description"
+            "description",
+            "stripMetadata"
         ],
         "storage.updateFile": [
             "bucketId",
@@ -4699,6 +4701,10 @@
             "name"
         ],
         "vcs.createBitbucketInstallation": [
+            "success",
+            "failure"
+        ],
+        "vcs.createEntireInstallation": [
             "success",
             "failure"
         ],
@@ -7614,7 +7620,8 @@
             "encryption",
             "antivirus",
             "transformations",
-            "description"
+            "description",
+            "stripMetadata"
         ],
         "storage.createFile": [
             "bucketId",
@@ -7686,7 +7693,8 @@
             "encryption",
             "antivirus",
             "transformations",
-            "description"
+            "description",
+            "stripMetadata"
         ],
         "storage.updateFile": [
             "bucketId",
