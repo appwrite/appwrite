@@ -18,16 +18,22 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Auto-merge only waits for checks the base branch requires; with none, an approved PR would merge before CI.
+      # Auto-merge only waits for checks the base branch requires, so skip it until every gate below is required.
       - name: Check required status checks on the base branch
         id: protection
         run: |
-          classic=$(gh api "repos/$REPOSITORY/branches/$BASE" --jq '(.protection.required_status_checks.contexts // []) | length')
-          rules=$(gh api "repos/$REPOSITORY/rules/branches/$BASE" --jq '[.[] | select(.type == "required_status_checks")] | length')
-          if [ $((classic + rules)) -gt 0 ]; then
+          required=$( {
+            gh api "repos/$REPOSITORY/branches/$BASE" --jq '.protection.required_status_checks.contexts // [] | .[]'
+            gh api "repos/$REPOSITORY/rules/branches/$BASE" --jq '.[] | select(.type == "required_status_checks") | .parameters.required_status_checks[].context'
+          } )
+          missing=""
+          for check in CI Console CodeQL Hansi; do
+            grep -qxF "$check" <<< "$required" || missing="$missing $check"
+          done
+          if [ -z "$missing" ]; then
             echo "required=true" >> "$GITHUB_OUTPUT"
           else
-            echo "::warning::$BASE has no required status checks, so auto-merge is not enabled."
+            echo "::warning::$BASE does not require:$missing. Auto-merge is not enabled."
           fi
         env:
           REPOSITORY: ${{ github.repository }}
