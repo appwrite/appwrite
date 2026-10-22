@@ -694,16 +694,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-publishedAt",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -715,7 +715,43 @@
               "$ref": "d5"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-publishedAt",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-publishedAt",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "resource.describe",
@@ -727,9 +763,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\DateTime",
             "getAttribute": {
+              "description": "",
               "key": "publishedAt",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -764,6 +803,7 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [
               "datetime"
             ],
@@ -772,16 +812,18 @@
             "getGroup": "databases",
             "getId": "column-publishedAt",
             "getKey": "publishedAt",
-            "getMessage": "",
+            "getMessage": "Table not found",
             "getName": "column",
             "getOptions": [],
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 0,
-            "getStatus": "success",
+            "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -818,7 +860,7 @@
               "signed": true
             }
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "mock.source",
@@ -1087,16 +1129,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "skip",
-                "message": "Already exists on destination"
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-publishedAt",
-                "status": "skip",
-                "message": "Already exists on destination"
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -1108,7 +1150,43 @@
               "$ref": "d11"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-publishedAt",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-publishedAt",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "resource.describe",
@@ -1120,9 +1198,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\DateTime",
             "getAttribute": {
+              "description": "",
               "key": "publishedAt",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -1157,6 +1238,7 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [
               "datetime"
             ],
@@ -1165,16 +1247,18 @@
             "getGroup": "databases",
             "getId": "column-publishedAt",
             "getKey": "publishedAt",
-            "getMessage": "Already exists on destination",
+            "getMessage": "Table not found",
             "getName": "column",
             "getOptions": [],
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 0,
-            "getStatus": "skip",
+            "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -1894,16 +1978,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-publishedAt",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -1915,7 +1999,43 @@
               "$ref": "d5"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-publishedAt",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-publishedAt",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "resource.describe",
@@ -1927,9 +2047,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\DateTime",
             "getAttribute": {
+              "description": "",
               "key": "publishedAt",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -1964,6 +2087,7 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [
               "datetime"
             ],
@@ -1972,16 +2096,18 @@
             "getGroup": "databases",
             "getId": "column-publishedAt",
             "getKey": "publishedAt",
-            "getMessage": "",
+            "getMessage": "Table not found",
             "getName": "column",
             "getOptions": [],
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 0,
-            "getStatus": "success",
+            "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -2018,7 +2144,7 @@
               "filters": []
             }
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "mock.source",
@@ -2287,16 +2413,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "skip",
-                "message": "Already exists on destination"
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-publishedAt",
-                "status": "skip",
-                "message": "Already exists on destination"
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -2308,7 +2434,43 @@
               "$ref": "d11"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-publishedAt",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-publishedAt",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "resource.describe",
@@ -2320,9 +2482,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\DateTime",
             "getAttribute": {
+              "description": "",
               "key": "publishedAt",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -2357,6 +2522,7 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [
               "datetime"
             ],
@@ -2365,16 +2531,18 @@
             "getGroup": "databases",
             "getId": "column-publishedAt",
             "getKey": "publishedAt",
-            "getMessage": "Already exists on destination",
+            "getMessage": "Table not found",
             "getName": "column",
             "getOptions": [],
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 0,
-            "getStatus": "skip",
+            "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -3096,16 +3264,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-stock",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -3117,7 +3285,43 @@
               "$ref": "d5"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-stock",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-stock",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "resource.describe",
@@ -3129,9 +3333,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Integer",
             "getAttribute": {
+              "description": "",
               "key": "stock",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -3167,6 +3374,7 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -3177,7 +3385,7 @@
             "getId": "column-stock",
             "getKey": "stock",
             "getMax": 100,
-            "getMessage": "",
+            "getMessage": "Table not found",
             "getMin": 0,
             "getName": "column",
             "getOptions": [],
@@ -3185,9 +3393,11 @@
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 4,
-            "getStatus": "success",
+            "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -3224,7 +3434,7 @@
               "size": 0
             }
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "mock.source",
@@ -3495,16 +3705,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "skip",
-                "message": "Already exists on destination"
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-stock",
-                "status": "skip",
-                "message": "Already exists on destination"
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -3516,7 +3726,43 @@
               "$ref": "d11"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-stock",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-stock",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "resource.describe",
@@ -3528,9 +3774,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Integer",
             "getAttribute": {
+              "description": "",
               "key": "stock",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -3566,6 +3815,7 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -3576,7 +3826,7 @@
             "getId": "column-stock",
             "getKey": "stock",
             "getMax": 100,
-            "getMessage": "Already exists on destination",
+            "getMessage": "Table not found",
             "getMin": 0,
             "getName": "column",
             "getOptions": [],
@@ -3584,9 +3834,11 @@
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 4,
-            "getStatus": "skip",
+            "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -4306,16 +4558,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-stock",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -4327,7 +4579,43 @@
               "$ref": "d5"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-stock",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-stock",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "resource.describe",
@@ -4339,9 +4627,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Integer",
             "getAttribute": {
+              "description": "",
               "key": "stock",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -4377,6 +4668,7 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -4387,7 +4679,7 @@
             "getId": "column-stock",
             "getKey": "stock",
             "getMax": 9223372036854775807,
-            "getMessage": "",
+            "getMessage": "Table not found",
             "getMin": -9223372036854775808,
             "getName": "column",
             "getOptions": [],
@@ -4395,9 +4687,11 @@
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 8,
-            "getStatus": "success",
+            "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -4434,7 +4728,7 @@
               "size": 16
             }
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "mock.source",
@@ -4703,16 +4997,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "skip",
-                "message": "Already exists on destination"
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-stock",
-                "status": "skip",
-                "message": "Already exists on destination"
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -4724,7 +5018,43 @@
               "$ref": "d11"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-stock",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-stock",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "resource.describe",
@@ -4736,9 +5066,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Integer",
             "getAttribute": {
+              "description": "",
               "key": "stock",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -4774,6 +5107,7 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -4784,7 +5118,7 @@
             "getId": "column-stock",
             "getKey": "stock",
             "getMax": 9223372036854775807,
-            "getMessage": "Already exists on destination",
+            "getMessage": "Table not found",
             "getMin": -9223372036854775808,
             "getName": "column",
             "getOptions": [],
@@ -4792,9 +5126,11 @@
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 8,
-            "getStatus": "skip",
+            "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -5515,16 +5851,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -5536,7 +5872,43 @@
               "$ref": "d5"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-title",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-title",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "resource.describe",
@@ -5548,9 +5920,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "title",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -5583,22 +5958,25 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
             "getGroup": "databases",
             "getId": "column-title",
             "getKey": "title",
-            "getMessage": "",
+            "getMessage": "Table not found",
             "getName": "column",
             "getOptions": [],
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 100,
-            "getStatus": "success",
+            "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -5636,7 +6014,7 @@
               "filters": []
             }
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "mock.source",
@@ -5906,16 +6284,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "skip",
-                "message": "Already exists on destination"
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -5927,7 +6305,43 @@
               "$ref": "d11"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-title",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-title",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "resource.describe",
@@ -5939,9 +6353,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "title",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -5974,22 +6391,25 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
             "getGroup": "databases",
             "getId": "column-title",
             "getKey": "title",
-            "getMessage": "",
+            "getMessage": "Table not found",
             "getName": "column",
             "getOptions": [],
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 120,
-            "getStatus": "success",
+            "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -6710,16 +7130,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -6731,7 +7151,43 @@
               "$ref": "d5"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-title",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-title",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "resource.describe",
@@ -6743,9 +7199,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "title",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -6778,22 +7237,25 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
             "getGroup": "databases",
             "getId": "column-title",
             "getKey": "title",
-            "getMessage": "",
+            "getMessage": "Table not found",
             "getName": "column",
             "getOptions": [],
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 100,
-            "getStatus": "success",
+            "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -6831,7 +7293,7 @@
               "filters": []
             }
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "mock.source",
@@ -7102,16 +7564,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "skip",
-                "message": "Already exists on destination"
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -7123,7 +7585,43 @@
               "$ref": "d11"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-title",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-title",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "resource.describe",
@@ -7135,9 +7633,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "title",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -7170,22 +7671,25 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
             "getGroup": "databases",
             "getId": "column-title",
             "getKey": "title",
-            "getMessage": "",
+            "getMessage": "Table not found",
             "getName": "column",
             "getOptions": [],
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 100,
-            "getStatus": "success",
+            "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -7907,16 +8411,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-stock",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -7928,7 +8432,43 @@
               "$ref": "d5"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-stock",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-stock",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "resource.describe",
@@ -7940,9 +8480,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Integer",
             "getAttribute": {
+              "description": "",
               "key": "stock",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -7978,6 +8521,7 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -7988,7 +8532,7 @@
             "getId": "column-stock",
             "getKey": "stock",
             "getMax": 100,
-            "getMessage": "",
+            "getMessage": "Table not found",
             "getMin": 0,
             "getName": "column",
             "getOptions": [],
@@ -7996,9 +8540,11 @@
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 4,
-            "getStatus": "success",
+            "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -8036,7 +8582,7 @@
               "filters": []
             }
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "mock.source",
@@ -8305,16 +8851,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "skip",
-                "message": "Already exists on destination"
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-stock",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -8326,7 +8872,43 @@
               "$ref": "d11"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-stock",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-stock",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "resource.describe",
@@ -8338,9 +8920,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Integer",
             "getAttribute": {
+              "description": "",
               "key": "stock",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -8376,6 +8961,7 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -8386,7 +8972,7 @@
             "getId": "column-stock",
             "getKey": "stock",
             "getMax": 9223372036854775807,
-            "getMessage": "",
+            "getMessage": "Table not found",
             "getMin": -9223372036854775808,
             "getName": "column",
             "getOptions": [],
@@ -8394,9 +8980,11 @@
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 8,
-            "getStatus": "success",
+            "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -9118,16 +9706,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-stock",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -9139,7 +9727,43 @@
               "$ref": "d5"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-stock",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-stock",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "resource.describe",
@@ -9151,9 +9775,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Integer",
             "getAttribute": {
+              "description": "",
               "key": "stock",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -9189,6 +9816,7 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -9199,7 +9827,7 @@
             "getId": "column-stock",
             "getKey": "stock",
             "getMax": 100,
-            "getMessage": "",
+            "getMessage": "Table not found",
             "getMin": 0,
             "getName": "column",
             "getOptions": [],
@@ -9207,9 +9835,11 @@
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 4,
-            "getStatus": "success",
+            "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -9247,7 +9877,7 @@
               "filters": []
             }
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "mock.source",
@@ -9518,16 +10148,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "skip",
-                "message": "Already exists on destination"
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-stock",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -9539,7 +10169,43 @@
               "$ref": "d11"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-stock",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-stock",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "resource.describe",
@@ -9551,9 +10217,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Integer",
             "getAttribute": {
+              "description": "",
               "key": "stock",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -9589,6 +10258,7 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -9599,7 +10269,7 @@
             "getId": "column-stock",
             "getKey": "stock",
             "getMax": 200,
-            "getMessage": "",
+            "getMessage": "Table not found",
             "getMin": 0,
             "getName": "column",
             "getOptions": [],
@@ -9607,9 +10277,11 @@
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 4,
-            "getStatus": "success",
+            "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",

@@ -51,6 +51,7 @@
             "getDatabase": "",
             "getDatabaseName": "db1",
             "getDatabaseStatus": null,
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "db1",
@@ -330,6 +331,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Table",
             "getCreatedAt": "",
             "getDatabase": {
+              "description": "",
               "id": "db1",
               "name": "db1",
               "createdAt": "",
@@ -339,6 +341,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "table1",
@@ -465,6 +468,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Row",
             "getCreatedAt": "",
             "getData": [],
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "row1",
             "getMessage": "",
@@ -474,7 +478,9 @@
             "getSequence": "",
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "db1",
                 "name": "db1",
                 "createdAt": "",
@@ -1222,6 +1228,7 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Storage\\File",
             "getBucket": {
+              "description": "",
               "id": "b",
               "name": "b",
               "fileSecurity": false,
@@ -1232,11 +1239,13 @@
               "encryption": false,
               "antiVirus": false,
               "updateLimits": false,
-              "transformations": false
+              "transformations": false,
+              "stripMetadata": false
             },
             "getChunkSize": 2,
             "getCreatedAt": "",
             "getData": "",
+            "getDescription": "",
             "getEnd": 2,
             "getFileName": "a.txt",
             "getFolder": "",
@@ -1364,9 +1373,11 @@
             "getActivated": false,
             "getCreatedAt": "",
             "getData": "",
+            "getDescription": "",
             "getEnd": 0,
             "getEntrypoint": "index.js",
             "getFunction": {
+              "description": "",
               "id": "fn",
               "name": "fn",
               "execute": [],
@@ -1472,6 +1483,7 @@
             "getActivated": false,
             "getCreatedAt": "",
             "getData": "",
+            "getDescription": "",
             "getEnd": 0,
             "getGroup": "sites",
             "getId": "sd",
@@ -1481,6 +1493,7 @@
             "getPermissions": [],
             "getSequence": "10",
             "getSite": {
+              "description": "",
               "id": "s",
               "name": "s",
               "framework": "other",

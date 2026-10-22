@@ -225,6 +225,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Row",
             "getCreatedAt": "",
             "getData": [],
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "row",
             "getMessage": "",
@@ -234,7 +235,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "database:with:colon",
                 "name": "",
                 "createdAt": "",
@@ -6001,7 +6004,12 @@
             },
             "hook": "shutdown"
           },
-          "expect": null
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "No data to export for resource: test_db:test_table_id"
+            }
+          }
         },
         {
           "op": "fs.exists",
@@ -6214,7 +6222,12 @@
             },
             "hook": "shutdown"
           },
-          "expect": null
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "No data to export for resource: test_db:test_table_id"
+            }
+          }
         },
         {
           "op": "target.lifecycle",

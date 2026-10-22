@@ -696,16 +696,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -717,7 +717,43 @@
               "$ref": "d5"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-title",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-title",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "resource.describe",
@@ -729,9 +765,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "title",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -764,22 +803,25 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
             "getGroup": "databases",
             "getId": "column-title",
             "getKey": "title",
-            "getMessage": "",
+            "getMessage": "Table not found",
             "getName": "column",
             "getOptions": [],
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 128,
-            "getStatus": "success",
+            "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -819,33 +861,7 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": [
-            {
-              "key": "title",
-              "databaseInternalId": "1",
-              "databaseId": "shop",
-              "collectionInternalId": "1",
-              "collectionId": "products",
-              "type": "string",
-              "status": "available",
-              "size": 128,
-              "required": true,
-              "signed": false,
-              "default": null,
-              "array": false,
-              "format": "",
-              "formatOptions": [],
-              "filters": [],
-              "options": [],
-              "$id": "1_1_title",
-              "$createdAt": "<masked>",
-              "$updatedAt": "<masked>",
-              "$permissions": [],
-              "$sequence": "1",
-              "error": null,
-              "$collection": "attributes"
-            }
-          ]
+          "expect": []
         }
       ]
     }

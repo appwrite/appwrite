@@ -66,9 +66,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\RegularText",
             "getAttribute": {
+              "description": "",
               "key": "modulePath",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -101,6 +104,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -116,7 +120,9 @@
             "getSize": 65535,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -172,9 +178,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\MediumText",
             "getAttribute": {
+              "description": "",
               "key": "summary",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -207,6 +216,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -222,7 +232,9 @@
             "getSize": 16777215,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -278,9 +290,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\LongText",
             "getAttribute": {
+              "description": "",
               "key": "archive",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -313,6 +328,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -328,7 +344,9 @@
             "getSize": 2147483647,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -421,9 +439,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Varchar",
             "getAttribute": {
+              "description": "",
               "key": "slug",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -456,6 +477,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -471,7 +493,9 @@
             "getSize": 64,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -565,9 +589,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "title",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -600,6 +627,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -615,7 +643,9 @@
             "getSize": 128,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -708,9 +738,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Email",
             "getAttribute": {
+              "description": "",
               "key": "email",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -743,6 +776,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "email",
             "getFormatOptions": [],
@@ -758,7 +792,9 @@
             "getSize": 254,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -815,9 +851,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\URL",
             "getAttribute": {
+              "description": "",
               "key": "website",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -850,6 +889,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "url",
             "getFormatOptions": [],
@@ -865,7 +905,9 @@
             "getSize": 2000,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -922,9 +964,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\IP",
             "getAttribute": {
+              "description": "",
               "key": "address",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -957,6 +1002,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "ip",
             "getFormatOptions": [],
@@ -972,7 +1018,9 @@
             "getSize": 39,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -1033,9 +1081,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Enum",
             "getAttribute": {
+              "description": "",
               "key": "status",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -1073,6 +1124,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getElements": [
               "a",
               "b"
@@ -1097,7 +1149,9 @@
             "getSize": 255,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -1189,9 +1243,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Email",
             "getAttribute": {
+              "description": "",
               "key": "email",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -1224,6 +1281,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "email",
             "getFormatOptions": [],
@@ -1239,7 +1297,9 @@
             "getSize": 254,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -1295,9 +1355,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\URL",
             "getAttribute": {
+              "description": "",
               "key": "website",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -1330,6 +1393,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "url",
             "getFormatOptions": [],
@@ -1345,7 +1409,9 @@
             "getSize": 2000,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -1401,9 +1467,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\IP",
             "getAttribute": {
+              "description": "",
               "key": "address",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -1436,6 +1505,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "ip",
             "getFormatOptions": [],
@@ -1451,7 +1521,9 @@
             "getSize": 39,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -1510,9 +1582,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Enum",
             "getAttribute": {
+              "description": "",
               "key": "status",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -1549,6 +1624,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getElements": [
               "a"
             ],
@@ -1571,7 +1647,9 @@
             "getSize": 255,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -1665,9 +1743,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Integer",
             "getAttribute": {
+              "description": "",
               "key": "n",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -1703,6 +1784,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": 3,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -1723,7 +1805,9 @@
             "getSize": 4,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -1780,9 +1864,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\BigInt",
             "getAttribute": {
+              "description": "",
               "key": "b",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -1818,6 +1905,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -1838,7 +1926,9 @@
             "getSize": 8,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -1896,9 +1986,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Decimal",
             "getAttribute": {
+              "description": "",
               "key": "f",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -1934,6 +2027,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -1954,7 +2048,9 @@
             "getSize": 0,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -2010,9 +2106,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Boolean",
             "getAttribute": {
+              "description": "",
               "key": "ok",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -2045,6 +2144,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": true,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -2060,7 +2160,9 @@
             "getSize": 0,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -2116,9 +2218,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\DateTime",
             "getAttribute": {
+              "description": "",
               "key": "at",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -2153,6 +2258,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [
               "datetime"
             ],
@@ -2170,7 +2276,9 @@
             "getSize": 0,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -2226,9 +2334,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Point",
             "getAttribute": {
+              "description": "",
               "key": "p",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -2261,6 +2372,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -2276,7 +2388,9 @@
             "getSize": 0,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -2332,9 +2446,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Line",
             "getAttribute": {
+              "description": "",
               "key": "l",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -2367,6 +2484,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -2382,7 +2500,9 @@
             "getSize": 0,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -2438,9 +2558,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Polygon",
             "getAttribute": {
+              "description": "",
               "key": "g",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -2473,6 +2596,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -2488,7 +2612,9 @@
             "getSize": 0,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -2544,9 +2670,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\ObjectType",
             "getAttribute": {
+              "description": "",
               "key": "o",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -2579,6 +2708,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -2594,7 +2724,9 @@
             "getSize": 0,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -2651,9 +2783,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Vector",
             "getAttribute": {
+              "description": "",
               "key": "v",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -2686,6 +2821,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -2701,7 +2837,9 @@
             "getSize": 3,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -2757,9 +2895,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Varchar",
             "getAttribute": {
+              "description": "",
               "key": "vc",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -2792,6 +2933,7 @@
             },
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -2807,7 +2949,9 @@
             "getSize": 255,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -2864,9 +3008,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Relationship",
             "getAttribute": {
+              "description": "",
               "key": "rel",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -2906,6 +3053,7 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -2932,7 +3080,9 @@
             "getSize": 0,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -2991,9 +3141,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Relationship",
             "getAttribute": {
+              "description": "",
               "key": "rel2",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "main",
                   "name": "Main",
                   "createdAt": "",
@@ -3033,6 +3186,7 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
@@ -3059,7 +3213,9 @@
             "getSize": 0,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -3261,6 +3417,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Attribute",
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "email",
             "getFormatOptions": [],
@@ -3276,7 +3433,9 @@
             "getSize": 254,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -3334,6 +3493,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Attribute",
             "getCreatedAt": "2026-01-01T00:00:00.000+00:00",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": {
@@ -3352,7 +3512,9 @@
             "getSize": 8,
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "main",
                 "name": "Main",
                 "createdAt": "",
@@ -3516,6 +3678,7 @@
             "getDatabase": null,
             "getDatabaseName": "D",
             "getDatabaseStatus": null,
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "d",
@@ -3542,6 +3705,7 @@
             "getDatabase": "",
             "getDatabaseName": "D",
             "getDatabaseStatus": null,
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "d",
@@ -3568,6 +3732,7 @@
             "getDatabase": "",
             "getDatabaseName": "D",
             "getDatabaseStatus": null,
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "d",
@@ -3594,6 +3759,7 @@
             "getDatabase": null,
             "getDatabaseName": "D",
             "getDatabaseStatus": null,
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "d",
@@ -3681,6 +3847,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Table",
             "getCreatedAt": "",
             "getDatabase": {
+              "description": "",
               "id": "d",
               "name": "D",
               "createdAt": "",
@@ -3690,6 +3857,7 @@
               "database": null,
               "status": null
             },
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "t",
@@ -3715,6 +3883,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Collection",
             "getCreatedAt": "",
             "getDatabase": {
+              "description": "",
               "id": "d",
               "name": "D",
               "createdAt": "",
@@ -3724,6 +3893,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getDimension": null,
             "getEnabled": true,
             "getGroup": "databases",
@@ -3750,6 +3920,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Collection",
             "getCreatedAt": "",
             "getDatabase": {
+              "description": "",
               "id": "d",
               "name": "D",
               "createdAt": "",
@@ -3759,6 +3930,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getDimension": null,
             "getEnabled": true,
             "getGroup": "databases",
@@ -3841,6 +4013,7 @@
             "getData": {
               "a": 1
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "r",
             "getMessage": "",
@@ -3850,7 +4023,9 @@
             "getSequence": "",
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "d",
                 "name": "D",
                 "createdAt": "",
@@ -3884,6 +4059,7 @@
             "getData": {
               "a": 1
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "r",
             "getMessage": "",
@@ -3893,7 +4069,9 @@
             "getSequence": "",
             "getStatus": "pending",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "d",
                 "name": "D",
                 "createdAt": "",

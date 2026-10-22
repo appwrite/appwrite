@@ -2678,6 +2678,7 @@
               "back": "b1",
               "extra": "e1"
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "r1",
             "getMessage": "",
@@ -2689,7 +2690,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "test_db",
                 "name": "Test DB",
                 "createdAt": "",
@@ -2754,6 +2757,7 @@
               "back": "",
               "extra": ""
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "r2",
             "getMessage": "",
@@ -2763,7 +2767,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "test_db",
                 "name": "Test DB",
                 "createdAt": "",
@@ -2830,6 +2836,7 @@
               "back": "null",
               "extra": "null"
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": " r3 ",
             "getMessage": "",
@@ -2841,7 +2848,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "test_db",
                 "name": "Test DB",
                 "createdAt": "",
@@ -2918,6 +2927,7 @@
               "back": "",
               "extra": ""
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "r4",
             "getMessage": "",
@@ -2930,7 +2940,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "test_db",
                 "name": "Test DB",
                 "createdAt": "",
@@ -5410,6 +5422,7 @@
               "a": "3",
               "5": 2
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "unique()",
             "getMessage": "",
@@ -5419,7 +5432,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "test_db",
                 "name": "Test DB",
                 "createdAt": "",
@@ -6305,6 +6320,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Row",
             "getCreatedAt": "",
             "getData": [],
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "r1",
             "getMessage": "",
@@ -6314,7 +6330,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "test_db",
                 "name": "Test DB",
                 "createdAt": "",
@@ -6823,6 +6841,7 @@
             "getData": {
               "a": "1"
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "unique()",
             "getMessage": "",
@@ -6832,7 +6851,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "test_db",
                 "name": "test_db",
                 "createdAt": "",

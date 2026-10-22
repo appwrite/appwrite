@@ -714,22 +714,22 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               },
               {
                 "$resource": "table",
                 "id": "categories",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-category",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -741,7 +741,62 @@
               "$ref": "d6"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "categories",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "categories",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-category",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-category",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "mock.source",
@@ -1030,22 +1085,22 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "skip",
-                "message": "Already exists on destination"
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               },
               {
                 "$resource": "table",
                 "id": "categories",
-                "status": "skip",
-                "message": "Already exists on destination"
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-category",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -1057,7 +1112,62 @@
               "$ref": "d13"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "categories",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "categories",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-category",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-category",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "db.find",
@@ -1074,72 +1184,7 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": [
-            {
-              "key": "category",
-              "databaseInternalId": "1",
-              "databaseId": "shop",
-              "collectionInternalId": "1",
-              "collectionId": "products",
-              "type": "relationship",
-              "status": "available",
-              "size": 0,
-              "required": false,
-              "signed": false,
-              "default": null,
-              "array": false,
-              "format": "",
-              "formatOptions": [],
-              "filters": [],
-              "options": {
-                "relatedCollection": "categories",
-                "relationType": "manyToOne",
-                "twoWay": true,
-                "twoWayKey": "products",
-                "onDelete": "cascade",
-                "side": "parent"
-              },
-              "$id": "1_1_category",
-              "$createdAt": "<masked>",
-              "$updatedAt": "<masked>",
-              "$permissions": [],
-              "$sequence": "1",
-              "error": null,
-              "$collection": "attributes"
-            },
-            {
-              "key": "products",
-              "databaseInternalId": "1",
-              "databaseId": "shop",
-              "collectionInternalId": "2",
-              "collectionId": "categories",
-              "type": "relationship",
-              "status": "available",
-              "size": 0,
-              "required": false,
-              "signed": false,
-              "default": null,
-              "array": false,
-              "format": "",
-              "formatOptions": [],
-              "filters": [],
-              "options": {
-                "relatedCollection": "products",
-                "relationType": "manyToOne",
-                "twoWay": true,
-                "twoWayKey": "category",
-                "onDelete": "cascade",
-                "side": "child"
-              },
-              "$id": "1_2_products",
-              "$createdAt": "<masked>",
-              "$updatedAt": "<masked>",
-              "$permissions": [],
-              "$sequence": "2",
-              "error": null,
-              "$collection": "attributes"
-            }
-          ]
+          "expect": []
         },
         {
           "op": "db.get",
@@ -1162,49 +1207,11 @@
             "reason": "Timestamps of documents written during the case (now)"
           },
           "expect": {
-            "name": "database_1_collection_1",
-            "attributes": [
-              {
-                "$id": "category",
-                "key": "category",
-                "type": "relationship",
-                "size": 0,
-                "required": false,
-                "default": null,
-                "signed": true,
-                "array": false,
-                "format": null,
-                "formatOptions": [],
-                "filters": [],
-                "options": {
-                  "relatedCollection": "database_1_collection_2",
-                  "relationType": "manyToOne",
-                  "twoWay": true,
-                  "twoWayKey": "products",
-                  "onDelete": "cascade",
-                  "side": "parent"
-                }
-              }
-            ],
-            "indexes": [
-              {
-                "$id": "_index_category",
-                "key": "_index_category",
-                "type": "key",
-                "attributes": [
-                  "category"
-                ],
-                "lengths": [],
-                "orders": []
-              }
-            ],
-            "documentSecurity": false,
-            "$sequence": "5",
-            "$id": "database_1_collection_1",
-            "$createdAt": "<masked>",
-            "$updatedAt": "<masked>",
-            "$permissions": [],
-            "$collection": "_metadata"
+            "$id": "",
+            "name": "",
+            "documentSecurity": true,
+            "attributes": [],
+            "indexes": []
           }
         },
         {
@@ -1228,38 +1235,11 @@
             "reason": "Timestamps of documents written during the case (now)"
           },
           "expect": {
-            "name": "database_1_collection_2",
-            "attributes": [
-              {
-                "$id": "products",
-                "key": "products",
-                "type": "relationship",
-                "size": 0,
-                "required": false,
-                "default": null,
-                "signed": true,
-                "array": false,
-                "format": null,
-                "formatOptions": [],
-                "filters": [],
-                "options": {
-                  "relatedCollection": "database_1_collection_1",
-                  "relationType": "manyToOne",
-                  "twoWay": true,
-                  "twoWayKey": "category",
-                  "onDelete": "cascade",
-                  "side": "child"
-                }
-              }
-            ],
-            "indexes": [],
-            "documentSecurity": false,
-            "$sequence": "6",
-            "$id": "database_1_collection_2",
-            "$createdAt": "<masked>",
-            "$updatedAt": "<masked>",
-            "$permissions": [],
-            "$collection": "_metadata"
+            "$id": "",
+            "name": "",
+            "documentSecurity": true,
+            "attributes": [],
+            "indexes": []
           }
         }
       ]
@@ -1977,22 +1957,22 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               },
               {
                 "$resource": "table",
                 "id": "categories",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-category",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -2004,7 +1984,62 @@
               "$ref": "d6"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "categories",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "categories",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-category",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-category",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "mock.source",
@@ -2293,22 +2328,22 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "skip",
-                "message": "Already exists on destination"
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               },
               {
                 "$resource": "table",
                 "id": "categories",
-                "status": "skip",
-                "message": "Already exists on destination"
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-category",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -2320,7 +2355,62 @@
               "$ref": "d13"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "categories",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "categories",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-category",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-category",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "db.find",
@@ -2337,72 +2427,7 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": [
-            {
-              "key": "category",
-              "databaseInternalId": "1",
-              "databaseId": "shop",
-              "collectionInternalId": "1",
-              "collectionId": "products",
-              "type": "relationship",
-              "status": "available",
-              "size": 0,
-              "required": false,
-              "signed": false,
-              "default": null,
-              "array": false,
-              "format": "",
-              "formatOptions": [],
-              "filters": [],
-              "options": {
-                "relatedCollection": "categories",
-                "relationType": "manyToOne",
-                "twoWay": true,
-                "twoWayKey": "products",
-                "onDelete": "cascade",
-                "side": "parent"
-              },
-              "$id": "1_1_category",
-              "$createdAt": "<masked>",
-              "$updatedAt": "<masked>",
-              "$permissions": [],
-              "$sequence": "1",
-              "error": null,
-              "$collection": "attributes"
-            },
-            {
-              "key": "products",
-              "databaseInternalId": "1",
-              "databaseId": "shop",
-              "collectionInternalId": "2",
-              "collectionId": "categories",
-              "type": "relationship",
-              "status": "available",
-              "size": 0,
-              "required": false,
-              "signed": false,
-              "default": null,
-              "array": false,
-              "format": "",
-              "formatOptions": [],
-              "filters": [],
-              "options": {
-                "relatedCollection": "products",
-                "relationType": "manyToOne",
-                "twoWay": true,
-                "twoWayKey": "category",
-                "onDelete": "cascade",
-                "side": "child"
-              },
-              "$id": "1_2_products",
-              "$createdAt": "<masked>",
-              "$updatedAt": "<masked>",
-              "$permissions": [],
-              "$sequence": "2",
-              "error": null,
-              "$collection": "attributes"
-            }
-          ]
+          "expect": []
         },
         {
           "op": "db.get",
@@ -2425,49 +2450,11 @@
             "reason": "Timestamps of documents written during the case (now)"
           },
           "expect": {
-            "name": "database_1_collection_1",
-            "attributes": [
-              {
-                "$id": "category",
-                "key": "category",
-                "type": "relationship",
-                "size": 0,
-                "required": false,
-                "default": null,
-                "signed": true,
-                "array": false,
-                "format": null,
-                "formatOptions": [],
-                "filters": [],
-                "options": {
-                  "relatedCollection": "database_1_collection_2",
-                  "relationType": "manyToOne",
-                  "twoWay": true,
-                  "twoWayKey": "products",
-                  "onDelete": "cascade",
-                  "side": "parent"
-                }
-              }
-            ],
-            "indexes": [
-              {
-                "$id": "_index_category",
-                "key": "_index_category",
-                "type": "key",
-                "attributes": [
-                  "category"
-                ],
-                "lengths": [],
-                "orders": []
-              }
-            ],
-            "documentSecurity": false,
-            "$sequence": "5",
-            "$id": "database_1_collection_1",
-            "$createdAt": "<masked>",
-            "$updatedAt": "<masked>",
-            "$permissions": [],
-            "$collection": "_metadata"
+            "$id": "",
+            "name": "",
+            "documentSecurity": true,
+            "attributes": [],
+            "indexes": []
           }
         },
         {
@@ -2491,38 +2478,11 @@
             "reason": "Timestamps of documents written during the case (now)"
           },
           "expect": {
-            "name": "database_1_collection_2",
-            "attributes": [
-              {
-                "$id": "products",
-                "key": "products",
-                "type": "relationship",
-                "size": 0,
-                "required": false,
-                "default": null,
-                "signed": true,
-                "array": false,
-                "format": null,
-                "formatOptions": [],
-                "filters": [],
-                "options": {
-                  "relatedCollection": "database_1_collection_1",
-                  "relationType": "manyToOne",
-                  "twoWay": true,
-                  "twoWayKey": "category",
-                  "onDelete": "cascade",
-                  "side": "child"
-                }
-              }
-            ],
-            "indexes": [],
-            "documentSecurity": false,
-            "$sequence": "6",
-            "$id": "database_1_collection_2",
-            "$createdAt": "<masked>",
-            "$updatedAt": "<masked>",
-            "$permissions": [],
-            "$collection": "_metadata"
+            "$id": "",
+            "name": "",
+            "documentSecurity": true,
+            "attributes": [],
+            "indexes": []
           }
         }
       ]
@@ -3240,22 +3200,22 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               },
               {
                 "$resource": "table",
                 "id": "categories",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-category",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -3267,7 +3227,62 @@
               "$ref": "d6"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "categories",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "categories",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-category",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-category",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "mock.source",
@@ -3556,22 +3571,22 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "skip",
-                "message": "Already exists on destination"
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               },
               {
                 "$resource": "table",
                 "id": "categories",
-                "status": "skip",
-                "message": "Already exists on destination"
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-category",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -3583,7 +3598,62 @@
               "$ref": "d13"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "categories",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "categories",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-category",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-category",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "db.find",
@@ -3600,72 +3670,7 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": [
-            {
-              "key": "category",
-              "databaseInternalId": "1",
-              "databaseId": "shop",
-              "collectionInternalId": "1",
-              "collectionId": "products",
-              "type": "relationship",
-              "status": "available",
-              "size": 0,
-              "required": false,
-              "signed": false,
-              "default": null,
-              "array": false,
-              "format": "",
-              "formatOptions": [],
-              "filters": [],
-              "options": {
-                "relatedCollection": "categories",
-                "relationType": "manyToOne",
-                "twoWay": true,
-                "twoWayKey": "products",
-                "onDelete": "setNull",
-                "side": "parent"
-              },
-              "$id": "1_1_category",
-              "$createdAt": "<masked>",
-              "$updatedAt": "<masked>",
-              "$permissions": [],
-              "$sequence": "1",
-              "error": null,
-              "$collection": "attributes"
-            },
-            {
-              "key": "products",
-              "databaseInternalId": "1",
-              "databaseId": "shop",
-              "collectionInternalId": "2",
-              "collectionId": "categories",
-              "type": "relationship",
-              "status": "available",
-              "size": 0,
-              "required": false,
-              "signed": false,
-              "default": null,
-              "array": false,
-              "format": "",
-              "formatOptions": [],
-              "filters": [],
-              "options": {
-                "relatedCollection": "products",
-                "relationType": "manyToOne",
-                "twoWay": true,
-                "twoWayKey": "category",
-                "onDelete": "setNull",
-                "side": "child"
-              },
-              "$id": "1_2_products",
-              "$createdAt": "<masked>",
-              "$updatedAt": "<masked>",
-              "$permissions": [],
-              "$sequence": "2",
-              "error": null,
-              "$collection": "attributes"
-            }
-          ]
+          "expect": []
         },
         {
           "op": "db.get",
@@ -3688,49 +3693,11 @@
             "reason": "Timestamps of documents written during the case (now)"
           },
           "expect": {
-            "name": "database_1_collection_1",
-            "attributes": [
-              {
-                "$id": "category",
-                "key": "category",
-                "type": "relationship",
-                "size": 0,
-                "required": false,
-                "default": null,
-                "signed": true,
-                "array": false,
-                "format": null,
-                "formatOptions": [],
-                "filters": [],
-                "options": {
-                  "relatedCollection": "database_1_collection_2",
-                  "relationType": "manyToOne",
-                  "twoWay": true,
-                  "twoWayKey": "products",
-                  "onDelete": "setNull",
-                  "side": "parent"
-                }
-              }
-            ],
-            "indexes": [
-              {
-                "$id": "_index_category",
-                "key": "_index_category",
-                "type": "key",
-                "attributes": [
-                  "category"
-                ],
-                "lengths": [],
-                "orders": []
-              }
-            ],
-            "documentSecurity": false,
-            "$sequence": "5",
-            "$id": "database_1_collection_1",
-            "$createdAt": "<masked>",
-            "$updatedAt": "<masked>",
-            "$permissions": [],
-            "$collection": "_metadata"
+            "$id": "",
+            "name": "",
+            "documentSecurity": true,
+            "attributes": [],
+            "indexes": []
           }
         },
         {
@@ -3754,38 +3721,11 @@
             "reason": "Timestamps of documents written during the case (now)"
           },
           "expect": {
-            "name": "database_1_collection_2",
-            "attributes": [
-              {
-                "$id": "products",
-                "key": "products",
-                "type": "relationship",
-                "size": 0,
-                "required": false,
-                "default": null,
-                "signed": true,
-                "array": false,
-                "format": null,
-                "formatOptions": [],
-                "filters": [],
-                "options": {
-                  "relatedCollection": "database_1_collection_1",
-                  "relationType": "manyToOne",
-                  "twoWay": true,
-                  "twoWayKey": "category",
-                  "onDelete": "setNull",
-                  "side": "child"
-                }
-              }
-            ],
-            "indexes": [],
-            "documentSecurity": false,
-            "$sequence": "6",
-            "$id": "database_1_collection_2",
-            "$createdAt": "<masked>",
-            "$updatedAt": "<masked>",
-            "$permissions": [],
-            "$collection": "_metadata"
+            "$id": "",
+            "name": "",
+            "documentSecurity": true,
+            "attributes": [],
+            "indexes": []
           }
         }
       ]
@@ -4503,14 +4443,14 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               },
               {
                 "$resource": "table",
                 "id": "categories",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
@@ -4518,7 +4458,7 @@
                 "$resource": "column",
                 "id": "column-category",
                 "status": "error",
-                "message": "Unsupported relationship onDelete action \"setDefault\"; expected one of: cascade, restrict, setNull"
+                "message": "Table not found"
               }
             ]
           ]
@@ -4533,22 +4473,57 @@
           "expect": [
             {
               "code": 0,
-              "message": "Unsupported relationship onDelete action \"setDefault\"; expected one of: cascade, restrict, setNull",
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "categories",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "categories",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
               "resourceName": "column",
               "resourceGroup": "databases",
               "resourceId": "column-category",
               "json": {
                 "code": 0,
-                "message": "Unsupported relationship onDelete action \"setDefault\"; expected one of: cascade, restrict, setNull",
+                "message": "Table not found",
                 "resourceName": "column",
                 "resourceGroup": "databases",
                 "resourceId": "column-category",
                 "trace": "<masked>"
               },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Relationship",
-                "message": "Unsupported relationship onDelete action \"setDefault\"; expected one of: cascade, restrict, setNull"
-              }
+              "previous": null
             }
           ]
         },
@@ -5284,14 +5259,14 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               },
               {
                 "$resource": "table",
                 "id": "categories",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
@@ -5299,7 +5274,7 @@
                 "$resource": "column",
                 "id": "column-category",
                 "status": "error",
-                "message": "Unsupported relationship onDelete action \"noAction\"; expected one of: cascade, restrict, setNull"
+                "message": "Table not found"
               }
             ]
           ]
@@ -5314,22 +5289,57 @@
           "expect": [
             {
               "code": 0,
-              "message": "Unsupported relationship onDelete action \"noAction\"; expected one of: cascade, restrict, setNull",
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "categories",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "categories",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
               "resourceName": "column",
               "resourceGroup": "databases",
               "resourceId": "column-category",
               "json": {
                 "code": 0,
-                "message": "Unsupported relationship onDelete action \"noAction\"; expected one of: cascade, restrict, setNull",
+                "message": "Table not found",
                 "resourceName": "column",
                 "resourceGroup": "databases",
                 "resourceId": "column-category",
                 "trace": "<masked>"
               },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Relationship",
-                "message": "Unsupported relationship onDelete action \"noAction\"; expected one of: cascade, restrict, setNull"
-              }
+              "previous": null
             }
           ]
         },

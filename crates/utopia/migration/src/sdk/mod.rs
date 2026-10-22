@@ -32,7 +32,7 @@ use spec_types::{Field, Method};
 pub const VERSION: &str = "32.0.0";
 
 /// The response format the requests ask for.
-pub const RESPONSE_FORMAT: &str = "2.0.0";
+pub const RESPONSE_FORMAT: &str = "2.5.0";
 
 /// A client of one project's API.
 ///

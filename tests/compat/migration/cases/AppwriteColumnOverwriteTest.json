@@ -696,16 +696,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -717,7 +717,43 @@
               "$ref": "d5"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-title",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-title",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "resource.describe",
@@ -729,9 +765,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "title",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -764,22 +803,25 @@
             },
             "getCreatedAt": "",
             "getDefault": "hello",
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
             "getGroup": "databases",
             "getId": "column-title",
             "getKey": "title",
-            "getMessage": "",
+            "getMessage": "Table not found",
             "getName": "column",
             "getOptions": [],
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 100,
-            "getStatus": "success",
+            "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -825,30 +867,11 @@
             "reason": "Timestamps of documents written during the case (now)"
           },
           "expect": {
-            "name": "database_1_collection_1",
-            "attributes": [
-              {
-                "$id": "title",
-                "key": "title",
-                "type": "string",
-                "size": 100,
-                "required": false,
-                "default": "hello",
-                "signed": true,
-                "array": false,
-                "format": null,
-                "formatOptions": [],
-                "filters": []
-              }
-            ],
-            "indexes": [],
-            "documentSecurity": false,
-            "$sequence": "5",
-            "$id": "database_1_collection_1",
-            "$createdAt": "<masked>",
-            "$updatedAt": "<masked>",
-            "$permissions": [],
-            "$collection": "_metadata"
+            "$id": "",
+            "name": "",
+            "documentSecurity": true,
+            "attributes": [],
+            "indexes": []
           }
         },
         {
@@ -1120,16 +1143,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "skip",
-                "message": "Already exists on destination"
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -1141,7 +1164,43 @@
               "$ref": "d11"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-title",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-title",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "resource.describe",
@@ -1153,9 +1212,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Text",
             "getAttribute": {
+              "description": "",
               "key": "title",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -1188,22 +1250,25 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "",
             "getFormatOptions": [],
             "getGroup": "databases",
             "getId": "column-title",
             "getKey": "title",
-            "getMessage": "",
+            "getMessage": "Table not found",
             "getName": "column",
             "getOptions": [],
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 120,
-            "getStatus": "success",
+            "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -1249,30 +1314,11 @@
             "reason": "Timestamps of documents written during the case (now)"
           },
           "expect": {
-            "name": "database_1_collection_1",
-            "attributes": [
-              {
-                "$id": "title",
-                "key": "title",
-                "type": "string",
-                "size": 120,
-                "required": false,
-                "default": null,
-                "signed": true,
-                "array": false,
-                "format": null,
-                "formatOptions": [],
-                "filters": []
-              }
-            ],
-            "indexes": [],
-            "documentSecurity": false,
-            "$sequence": "5",
-            "$id": "database_1_collection_1",
-            "$createdAt": "<masked>",
-            "$updatedAt": "<masked>",
-            "$permissions": [],
-            "$collection": "_metadata"
+            "$id": "",
+            "name": "",
+            "documentSecurity": true,
+            "attributes": [],
+            "indexes": []
           }
         },
         {
@@ -1290,33 +1336,7 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": [
-            {
-              "key": "title",
-              "databaseInternalId": "1",
-              "databaseId": "shop",
-              "collectionInternalId": "1",
-              "collectionId": "products",
-              "type": "string",
-              "status": "available",
-              "size": 120,
-              "required": false,
-              "signed": false,
-              "default": null,
-              "array": false,
-              "format": "",
-              "formatOptions": [],
-              "filters": [],
-              "options": [],
-              "$id": "1_1_title",
-              "$createdAt": "<masked>",
-              "$updatedAt": "<masked>",
-              "$permissions": [],
-              "$sequence": "1",
-              "error": null,
-              "$collection": "attributes"
-            }
-          ]
+          "expect": []
         }
       ]
     },
@@ -2022,16 +2042,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-mail",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -2043,7 +2063,43 @@
               "$ref": "d5"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-mail",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-mail",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "resource.describe",
@@ -2055,9 +2111,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Email",
             "getAttribute": {
+              "description": "",
               "key": "mail",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -2090,22 +2149,25 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "email",
             "getFormatOptions": [],
             "getGroup": "databases",
             "getId": "column-mail",
             "getKey": "mail",
-            "getMessage": "",
+            "getMessage": "Table not found",
             "getName": "column",
             "getOptions": [],
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 254,
-            "getStatus": "success",
+            "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -2151,30 +2213,11 @@
             "reason": "Timestamps of documents written during the case (now)"
           },
           "expect": {
-            "name": "database_1_collection_1",
-            "attributes": [
-              {
-                "$id": "mail",
-                "key": "mail",
-                "type": "string",
-                "size": 254,
-                "required": false,
-                "default": null,
-                "signed": true,
-                "array": false,
-                "format": "email",
-                "formatOptions": [],
-                "filters": []
-              }
-            ],
-            "indexes": [],
-            "documentSecurity": false,
-            "$sequence": "5",
-            "$id": "database_1_collection_1",
-            "$createdAt": "<masked>",
-            "$updatedAt": "<masked>",
-            "$permissions": [],
-            "$collection": "_metadata"
+            "$id": "",
+            "name": "",
+            "documentSecurity": true,
+            "attributes": [],
+            "indexes": []
           }
         },
         {
@@ -2446,16 +2489,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "skip",
-                "message": "Already exists on destination"
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-mail",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ]
           ]
@@ -2467,7 +2510,43 @@
               "$ref": "d11"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "products",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "products",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "column-mail",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "column-mail",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "resource.describe",
@@ -2479,9 +2558,12 @@
           "expect": {
             "class": "Utopia\\Migration\\Resources\\Database\\Columns\\Email",
             "getAttribute": {
+              "description": "",
               "key": "mail",
               "table": {
+                "description": "",
                 "database": {
+                  "description": "",
                   "id": "shop",
                   "name": "Shop",
                   "createdAt": "",
@@ -2514,22 +2596,25 @@
             },
             "getCreatedAt": "",
             "getDefault": null,
+            "getDescription": "",
             "getFilters": [],
             "getFormat": "email",
             "getFormatOptions": [],
             "getGroup": "databases",
             "getId": "column-mail",
             "getKey": "mail",
-            "getMessage": "",
+            "getMessage": "Table not found",
             "getName": "column",
             "getOptions": [],
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 254,
-            "getStatus": "success",
+            "getStatus": "error",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",
@@ -2575,30 +2660,11 @@
             "reason": "Timestamps of documents written during the case (now)"
           },
           "expect": {
-            "name": "database_1_collection_1",
-            "attributes": [
-              {
-                "$id": "mail",
-                "key": "mail",
-                "type": "string",
-                "size": 254,
-                "required": true,
-                "default": null,
-                "signed": true,
-                "array": false,
-                "format": "email",
-                "formatOptions": [],
-                "filters": []
-              }
-            ],
-            "indexes": [],
-            "documentSecurity": false,
-            "$sequence": "5",
-            "$id": "database_1_collection_1",
-            "$createdAt": "<masked>",
-            "$updatedAt": "<masked>",
-            "$permissions": [],
-            "$collection": "_metadata"
+            "$id": "",
+            "name": "",
+            "documentSecurity": true,
+            "attributes": [],
+            "indexes": []
           }
         },
         {
@@ -2616,33 +2682,7 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": [
-            {
-              "key": "mail",
-              "databaseInternalId": "1",
-              "databaseId": "shop",
-              "collectionInternalId": "1",
-              "collectionId": "products",
-              "type": "string",
-              "status": "available",
-              "size": 254,
-              "required": true,
-              "signed": false,
-              "default": null,
-              "array": false,
-              "format": "email",
-              "formatOptions": [],
-              "filters": [],
-              "options": [],
-              "$id": "1_1_mail",
-              "$createdAt": "<masked>",
-              "$updatedAt": "<masked>",
-              "$permissions": [],
-              "$sequence": "1",
-              "error": null,
-              "$collection": "attributes"
-            }
-          ]
+          "expect": []
         },
         {
           "op": "db.remove_format",

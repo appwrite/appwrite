@@ -726,24 +726,24 @@
               {
                 "$resource": "table",
                 "id": "items",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "name",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ],
             [
               {
                 "$resource": "row",
                 "id": "row",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Collection not found"
               }
             ]
           ]
@@ -755,7 +755,62 @@
               "$ref": "d6"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "items",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "items",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "name",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "name",
+                "trace": "<masked>"
+              },
+              "previous": null
+            },
+            {
+              "code": 0,
+              "message": "Collection not found",
+              "resourceName": "row",
+              "resourceGroup": "databases",
+              "resourceId": "row",
+              "json": {
+                "code": 0,
+                "message": "Collection not found",
+                "resourceName": "row",
+                "resourceGroup": "databases",
+                "resourceId": "row",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\NotFound",
+                "message": "Collection not found"
+              }
+            }
+          ]
         },
         {
           "op": "db.get",
@@ -774,13 +829,10 @@
             "reason": "Timestamps of documents written during the case (now)"
           },
           "expect": {
-            "name": "kept",
-            "$sequence": "1",
-            "$id": "row",
-            "$createdAt": "<masked>",
-            "$updatedAt": "<masked>",
-            "$permissions": [],
-            "$collection": "database_1_collection_1"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
           }
         }
       ]
@@ -1555,30 +1607,30 @@
               {
                 "$resource": "table",
                 "id": "items",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "name",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               },
               {
                 "$resource": "column",
                 "id": "title",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ],
             [
               {
                 "$resource": "row",
                 "id": "row",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Collection not found"
               }
             ]
           ]
@@ -1590,7 +1642,78 @@
               "$ref": "d7"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "items",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "items",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "name",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "name",
+                "trace": "<masked>"
+              },
+              "previous": null
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "title",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "title",
+                "trace": "<masked>"
+              },
+              "previous": null
+            },
+            {
+              "code": 0,
+              "message": "Collection not found",
+              "resourceName": "row",
+              "resourceGroup": "databases",
+              "resourceId": "row",
+              "json": {
+                "code": 0,
+                "message": "Collection not found",
+                "resourceName": "row",
+                "resourceGroup": "databases",
+                "resourceId": "row",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\NotFound",
+                "message": "Collection not found"
+              }
+            }
+          ]
         },
         {
           "op": "db.get",
@@ -1609,14 +1732,10 @@
             "reason": "Timestamps of documents written during the case (now)"
           },
           "expect": {
-            "name": "kept",
-            "title": "also kept",
-            "$sequence": "1",
-            "$id": "row",
-            "$createdAt": "<masked>",
-            "$updatedAt": "<masked>",
-            "$permissions": [],
-            "$collection": "database_1_collection_1"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
           }
         }
       ]
@@ -2420,22 +2539,22 @@
               {
                 "$resource": "table",
                 "id": "items",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "name",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               },
               {
                 "$resource": "column",
                 "id": "title",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Table not found"
               }
             ],
             [
@@ -2448,8 +2567,8 @@
               {
                 "$resource": "row",
                 "id": "second",
-                "status": "success",
-                "message": ""
+                "status": "error",
+                "message": "Collection not found"
               }
             ]
           ]
@@ -2461,7 +2580,78 @@
               "$ref": "d8"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Invalid document structure: Unknown attribute: \"description\"",
+              "resourceName": "table",
+              "resourceGroup": "databases",
+              "resourceId": "items",
+              "json": {
+                "code": 0,
+                "message": "Invalid document structure: Unknown attribute: \"description\"",
+                "resourceName": "table",
+                "resourceGroup": "databases",
+                "resourceId": "items",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\Structure",
+                "message": "Invalid document structure: Unknown attribute: \"description\""
+              }
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "name",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "name",
+                "trace": "<masked>"
+              },
+              "previous": null
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "title",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "title",
+                "trace": "<masked>"
+              },
+              "previous": null
+            },
+            {
+              "code": 0,
+              "message": "Collection not found",
+              "resourceName": "row",
+              "resourceGroup": "databases",
+              "resourceId": "second",
+              "json": {
+                "code": 0,
+                "message": "Collection not found",
+                "resourceName": "row",
+                "resourceGroup": "databases",
+                "resourceId": "second",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Database\\Exception\\NotFound",
+                "message": "Collection not found"
+              }
+            }
+          ]
         },
         {
           "op": "db.get",
@@ -2480,14 +2670,10 @@
             "reason": "Timestamps of documents written during the case (now)"
           },
           "expect": {
-            "name": "one",
-            "title": "first title",
-            "$sequence": "1",
-            "$id": "first",
-            "$createdAt": "<masked>",
-            "$updatedAt": "<masked>",
-            "$permissions": [],
-            "$collection": "database_1_collection_1"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
           }
         },
         {
@@ -2507,14 +2693,10 @@
             "reason": "Timestamps of documents written during the case (now)"
           },
           "expect": {
-            "name": "two",
-            "title": "second title",
-            "$sequence": "2",
-            "$id": "second",
-            "$createdAt": "<masked>",
-            "$updatedAt": "<masked>",
-            "$permissions": [],
-            "$collection": "database_1_collection_1"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
           }
         }
       ]
