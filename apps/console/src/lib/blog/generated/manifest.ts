@@ -12,7 +12,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "timeToRead": 6,
     "author": "matej-baco",
     "category": "announcements",
-    "featured": false,
+    "featured": true,
     "cover": "/images/blog/announcing-appwrite-entire-partnership/cover.avif",
     "hasCover": true
   },

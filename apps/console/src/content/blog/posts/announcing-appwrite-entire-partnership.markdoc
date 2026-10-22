@@ -7,7 +7,7 @@ cover: /images/blog/announcing-appwrite-entire-partnership/cover.avif
 timeToRead: 6
 author: matej-baco
 category: announcements
-featured: false
+featured: true
 faqs:
   - question: "What is the Appwrite and Entire partnership?"
     answer: "Appwrite and Entire, two companies that build in the open, are joining forces to connect Entire's Git platform for agent-driven development with Appwrite's hosting and backend. With it, Entire becomes a Git provider for Appwrite Sites and Functions on Appwrite Cloud: connect an Entire project, pick a repository, and every push builds and deploys."
