@@ -1,14 +1,6 @@
 {
-  "updated": "2026-10-22T21:59:00Z",
+  "updated": "2026-10-22T23:26:00Z",
   "tasks": [
-    {
-      "id": "core-keys",
-      "title": "Core: main's API key checks and the Users email update",
-      "area": "Database 8",
-      "status": "progress",
-      "updated": "2026-10-22T21:00:00Z",
-      "note": "Catch-up M, 2-hour box. Main changed key handling (Auth/Key.php): account keys can no longer create users, and unknown, other-project and missing-project keys answer differently. Rust still accepts them, which also shifted every later target id in the Users lanes. Users' email update gains the same lock as Account's."
-    },
     {
       "id": "crate-layout",
       "title": "One type per file, modules after PHP namespaces",
@@ -24,6 +16,14 @@
       "status": "progress",
       "updated": "2026-10-17T19:50:00Z",
       "note": "An optional PHP parameter becomes an explicit Rust argument, never a second method or a with_* builder. registry is converted in the working tree (set and get take fresh; set_fresh and get_fresh are gone), and CONVERSION.md gets the rule in §4 and on the checklist. Not committed yet; the other crates follow."
+    },
+    {
+      "id": "forwarded-trust",
+      "title": "http: trust X-Forwarded-Host and -Port only from a trusted proxy",
+      "area": "Database 8",
+      "status": "todo",
+      "updated": "2026-10-22T23:26:00Z",
+      "note": "Main's utopia-php/http and Appwrite\\Utopia\\Request honour X-Forwarded-Host and X-Forwarded-Port only when the request comes from a trusted proxy, and then the leftmost value. Rust still always honours them (core context request_hostname, utopia-http Request::hostname and port, account base). Needs the utopia-http conversion with compat cases; the parity diff does not send these headers."
     },
     {
       "id": "sites-flake",
@@ -112,6 +112,14 @@
       "status": "todo",
       "note": "On a quiet machine; the last container runs were taken under load.",
       "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "core-keys",
+      "title": "Core: main's API key checks and the Users email update",
+      "area": "Database 8",
+      "status": "done",
+      "updated": "2026-10-22T23:26:00Z",
+      "note": "Catch-up M, inside its 2-hour box. A key that does not decode, an unknown prefix and another project's ephemeral key are refused (401) instead of becoming a guest; account keys work only on the console project; project admin roles must name the project exactly; the origin check is skipped only for a real key; admin mode accepts only console origins; impersonators see no password hashes or provider tokens; abuse keys use the route path; PATCH /v1/users/:userId/email locks the user like Account's. Users parity 658 of 660 (two state-dependent), account identities 132 of 132."
     },
     {
       "id": "migration-26",
