@@ -1214,6 +1214,7 @@ Http::shutdown()
 Http::shutdown()
     ->groups(['api'])
     ->inject('route')
+    ->inject('params')
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -1223,7 +1224,7 @@ Http::shutdown()
     ->inject('apiKey')
     ->inject('mode')
     ->inject('lock')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Database $dbForPlatform, Authorization $authorization, ?Key $apiKey, string $mode, Lock $lock) {
+    ->action(function (Route $route, array $params, Request $request, Response $response, Document $project, User $user, Database $dbForPlatform, Authorization $authorization, ?Key $apiKey, string $mode, Lock $lock) {
         /**
          * Persist completed onboarding stage after usage shutdown so a schema/write failure here
          * cannot suppress RequestCompleted or usage metrics on the same request.
@@ -1283,7 +1284,7 @@ Http::shutdown()
 
         // Organization routes act on the project named in the path, not on the console project.
         if ($project->getId() === 'console') {
-            $projectId = (string) ($route->getParamsValues()['projectId'] ?? '');
+            $projectId = (string) ($params['projectId'] ?? '');
             if ($projectId === '') {
                 return;
             }
