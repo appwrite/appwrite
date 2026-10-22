@@ -44,8 +44,8 @@ function firstQueryValue(params: URLSearchParams, key: string): string | null {
 }
 
 /**
- * Drop first-party referrers: appwrite.io itself, and the current origin since
- * this site is both the console and the marketing site.
+ * Drop first-party referrers: appwrite.io and its subdomains (marketing, blog,
+ * regional consoles), and the current origin on any other host.
  */
 export function resolveExternalReferrer(
   documentReferrer: string,
@@ -62,7 +62,9 @@ export function resolveExternalReferrer(
     return referrer
   }
 
-  if (url.hostname === 'appwrite.io') return null
+  if (url.hostname === 'appwrite.io' || url.hostname.endsWith('.appwrite.io')) {
+    return null
+  }
   if (currentOrigin && url.origin === currentOrigin) return null
 
   return referrer

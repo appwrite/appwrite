@@ -2,13 +2,17 @@ import { describe, expect, test } from 'bun:test'
 import { resolveExternalReferrer } from '@/lib/marketing/utm'
 
 describe('resolveExternalReferrer', () => {
-  test('drops appwrite.io and same-origin referrers', () => {
+  test('drops appwrite.io, its subdomains and same-origin referrers', () => {
     expect(resolveExternalReferrer('https://appwrite.io/docs')).toBeNull()
     expect(resolveExternalReferrer('https://APPWRITE.io/')).toBeNull()
+    expect(resolveExternalReferrer('https://www.appwrite.io/')).toBeNull()
+    expect(
+      resolveExternalReferrer('https://fra.cloud.appwrite.io/console'),
+    ).toBeNull()
     expect(
       resolveExternalReferrer(
-        'https://cloud.appwrite.io/console',
-        'https://cloud.appwrite.io',
+        'http://localhost:3000/console',
+        'http://localhost:3000',
       ),
     ).toBeNull()
   })
