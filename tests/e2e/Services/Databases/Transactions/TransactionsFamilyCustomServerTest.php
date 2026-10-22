@@ -9,6 +9,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 final class TransactionsFamilyCustomServerTest extends Scope
 {
@@ -192,5 +195,221 @@ final class TransactionsFamilyCustomServerTest extends Scope
         $getOnLegacy = $this->client->call(Client::METHOD_GET, $families['legacy'] . '/' . $legacyId, $headers);
         $this->assertSame(200, $getOnLegacy['headers']['status-code']);
         $this->assertSame(0, $getOnLegacy['body']['operations']);
+    }
+
+    public function testStagedDocumentAndRowWritesStayOnCreatingFamily(): void
+    {
+        $headers = $this->requestHeaders();
+        $families = $this->families();
+
+        $vectorsdb = $this->client->call(Client::METHOD_POST, $families['vectorsdb'], $headers);
+        $this->assertSame(201, $vectorsdb['headers']['status-code']);
+        $mismatchedId = $vectorsdb['body']['$id'];
+
+        [$databaseId, $collectionId, $documentId] = $this->createLegacyCollection();
+        [$tableDatabaseId, $tableId, $rowId] = $this->createTablesCollection();
+
+        $documentCreate = $this->client->call(
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents',
+            $headers,
+            [
+                'documentId' => Id::unique(),
+                'data' => ['name' => 'mismatch', 'counter' => 1],
+                'transactionId' => $mismatchedId,
+            ]
+        );
+        $this->assertSame(404, $documentCreate['headers']['status-code']);
+        $this->assertSame(Exception::TRANSACTION_NOT_FOUND, $documentCreate['body']['type']);
+
+        $documentUpdate = $this->client->call(
+            Client::METHOD_PATCH,
+            '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId,
+            $headers,
+            [
+                'data' => ['name' => 'mismatch-update'],
+                'transactionId' => $mismatchedId,
+            ]
+        );
+        $this->assertSame(404, $documentUpdate['headers']['status-code']);
+        $this->assertSame(Exception::TRANSACTION_NOT_FOUND, $documentUpdate['body']['type']);
+
+        $documentDelete = $this->client->call(
+            Client::METHOD_DELETE,
+            '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId,
+            $headers,
+            ['transactionId' => $mismatchedId]
+        );
+        $this->assertSame(404, $documentDelete['headers']['status-code']);
+        $this->assertSame(Exception::TRANSACTION_NOT_FOUND, $documentDelete['body']['type']);
+
+        $documentIncrement = $this->client->call(
+            Client::METHOD_PATCH,
+            '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/counter/increment',
+            $headers,
+            [
+                'value' => 1,
+                'transactionId' => $mismatchedId,
+            ]
+        );
+        $this->assertSame(404, $documentIncrement['headers']['status-code']);
+        $this->assertSame(Exception::TRANSACTION_NOT_FOUND, $documentIncrement['body']['type']);
+
+        $rowCreate = $this->client->call(
+            Client::METHOD_POST,
+            '/tablesdb/' . $tableDatabaseId . '/tables/' . $tableId . '/rows',
+            $headers,
+            [
+                'rowId' => Id::unique(),
+                'data' => ['name' => 'mismatch', 'counter' => 1],
+                'transactionId' => $mismatchedId,
+            ]
+        );
+        $this->assertSame(404, $rowCreate['headers']['status-code']);
+        $this->assertSame(Exception::TRANSACTION_NOT_FOUND, $rowCreate['body']['type']);
+
+        $rowUpdate = $this->client->call(
+            Client::METHOD_PATCH,
+            '/tablesdb/' . $tableDatabaseId . '/tables/' . $tableId . '/rows/' . $rowId,
+            $headers,
+            [
+                'data' => ['name' => 'mismatch-update'],
+                'transactionId' => $mismatchedId,
+            ]
+        );
+        $this->assertSame(404, $rowUpdate['headers']['status-code']);
+        $this->assertSame(Exception::TRANSACTION_NOT_FOUND, $rowUpdate['body']['type']);
+
+        $rowDelete = $this->client->call(
+            Client::METHOD_DELETE,
+            '/tablesdb/' . $tableDatabaseId . '/tables/' . $tableId . '/rows/' . $rowId,
+            $headers,
+            ['transactionId' => $mismatchedId]
+        );
+        $this->assertSame(404, $rowDelete['headers']['status-code']);
+        $this->assertSame(Exception::TRANSACTION_NOT_FOUND, $rowDelete['body']['type']);
+
+        $rowIncrement = $this->client->call(
+            Client::METHOD_PATCH,
+            '/tablesdb/' . $tableDatabaseId . '/tables/' . $tableId . '/rows/' . $rowId . '/counter/increment',
+            $headers,
+            [
+                'value' => 1,
+                'transactionId' => $mismatchedId,
+            ]
+        );
+        $this->assertSame(404, $rowIncrement['headers']['status-code']);
+        $this->assertSame(Exception::TRANSACTION_NOT_FOUND, $rowIncrement['body']['type']);
+
+        $stillPending = $this->client->call(Client::METHOD_GET, $families['vectorsdb'] . '/' . $mismatchedId, $headers);
+        $this->assertSame(200, $stillPending['headers']['status-code']);
+        $this->assertSame('pending', $stillPending['body']['status']);
+        $this->assertSame(0, $stillPending['body']['operations']);
+    }
+
+    /**
+     * @return array{0: string, 1: string, 2: string}
+     */
+    private function createLegacyCollection(): array
+    {
+        return $this->createStagedSurface(
+            databasePath: '/databases',
+            containerPath: static fn (string $databaseId): string => '/databases/' . $databaseId . '/collections',
+            schemaPath: static fn (string $databaseId, string $containerId, string $type): string => '/databases/' . $databaseId . '/collections/' . $containerId . '/attributes/' . $type,
+            recordPath: static fn (string $databaseId, string $containerId): string => '/databases/' . $databaseId . '/collections/' . $containerId . '/documents',
+            containerIdKey: 'collectionId',
+            recordIdKey: 'documentId',
+            schemaResource: 'attributes',
+        );
+    }
+
+    /**
+     * @return array{0: string, 1: string, 2: string}
+     */
+    private function createTablesCollection(): array
+    {
+        return $this->createStagedSurface(
+            databasePath: '/tablesdb',
+            containerPath: static fn (string $databaseId): string => '/tablesdb/' . $databaseId . '/tables',
+            schemaPath: static fn (string $databaseId, string $containerId, string $type): string => '/tablesdb/' . $databaseId . '/tables/' . $containerId . '/columns/' . $type,
+            recordPath: static fn (string $databaseId, string $containerId): string => '/tablesdb/' . $databaseId . '/tables/' . $containerId . '/rows',
+            containerIdKey: 'tableId',
+            recordIdKey: 'rowId',
+            schemaResource: 'columns',
+        );
+    }
+
+    /**
+     * @param callable(string): string $containerPath
+     * @param callable(string, string, string): string $schemaPath
+     * @param callable(string, string): string $recordPath
+     * @return array{0: string, 1: string, 2: string}
+     */
+    private function createStagedSurface(
+        string $databasePath,
+        callable $containerPath,
+        callable $schemaPath,
+        callable $recordPath,
+        string $containerIdKey,
+        string $recordIdKey,
+        string $schemaResource,
+    ): array {
+        $headers = $this->requestHeaders();
+
+        $database = $this->client->call(Client::METHOD_POST, $databasePath, $headers, [
+            'databaseId' => Id::unique(),
+            'name' => 'FamilyStageDB',
+        ]);
+        $this->assertSame(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $container = $this->client->call(Client::METHOD_POST, $containerPath($databaseId), $headers, [
+            $containerIdKey => Id::unique(),
+            'name' => 'FamilyStageContainer',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertSame(201, $container['headers']['status-code']);
+        $containerId = $container['body']['$id'];
+
+        $string = $this->client->call(Client::METHOD_POST, $schemaPath($databaseId, $containerId, 'string'), $headers, [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+        $this->assertSame(202, $string['headers']['status-code']);
+
+        $integer = $this->client->call(Client::METHOD_POST, $schemaPath($databaseId, $containerId, 'integer'), $headers, [
+            'key' => 'counter',
+            'required' => false,
+            'min' => 0,
+            'max' => 10000,
+        ]);
+        $this->assertSame(202, $integer['headers']['status-code']);
+
+        $this->assertEventually(function () use ($containerPath, $databaseId, $containerId, $schemaResource, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, $containerPath($databaseId) . '/' . $containerId, $headers);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertNotEmpty($response['body'][$schemaResource] ?? []);
+
+            foreach ($response['body'][$schemaResource] as $attribute) {
+                $this->assertSame('available', $attribute['status'] ?? '');
+            }
+        });
+
+        $record = $this->client->call(Client::METHOD_POST, $recordPath($databaseId, $containerId), $headers, [
+            $recordIdKey => Id::unique(),
+            'data' => [
+                'name' => 'seed',
+                'counter' => 1,
+            ],
+        ]);
+        $this->assertSame(201, $record['headers']['status-code']);
+
+        return [$databaseId, $containerId, $record['body']['$id']];
     }
 }
