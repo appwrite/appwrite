@@ -219,6 +219,39 @@ final class S3CustomServerTest extends Scope
     }
 
     #[Group('s3')]
+    public function testCopyObjectRequiresSignedCopySource(): void
+    {
+        $bucketId = $this->setupBucket();
+        $source = Id::unique() . '.png';
+        $this->uploadFile($bucketId, 'logo.png', 'image/png', $source);
+        $destination = '/' . $bucketId . '/' . Id::unique() . '.png';
+
+        /**
+         * Test for FAILURE
+         */
+        $unsigned = $this->call(Client::METHOD_PUT, $destination, unsignedHeaders: [
+            'x-amz-copy-source' => $bucketId . '/' . $source,
+        ]);
+        $this->assertSame(403, $unsigned['headers']['status-code'], $unsigned['body']);
+        $this->assertStringContainsString('<Code>AccessDenied</Code>', (string) $unsigned['body']);
+
+        $missing = $this->call(Client::METHOD_GET, $destination);
+        $this->assertSame(404, $missing['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $copy = $this->call(Client::METHOD_PUT, $destination, headers: [
+            'x-amz-copy-source' => $bucketId . '/' . $source,
+        ]);
+        $this->assertSame(200, $copy['headers']['status-code'], $copy['body']);
+
+        $copied = $this->call(Client::METHOD_GET, $destination);
+        $this->assertSame(200, $copied['headers']['status-code']);
+        $this->assertSame(\file_get_contents(\realpath(__DIR__ . '/../../../resources/logo.png')), $copied['body']);
+    }
+
+    #[Group('s3')]
     public function testNativeReadDuringOverwrite(): void
     {
         $bucketId = $this->setupBucket();
@@ -410,12 +443,14 @@ final class S3CustomServerTest extends Scope
 
     /**
      * Send an AWS Signature V4 request to the gateway. The access key is the
-     * project ID and the secret is the project's API key secret.
+     * project ID and the secret is the project's API key secret. x-amz-* headers
+     * are signed; $unsignedHeaders are sent without being signed.
      *
      * @param array<string, string> $query
      * @param array<string, string> $headers
+     * @param array<string, string> $unsignedHeaders
      */
-    private function call(string $method, string $path, array $query = [], string $body = '', array $headers = []): array
+    private function call(string $method, string $path, array $query = [], string $body = '', array $headers = [], array $unsignedHeaders = []): array
     {
         $endpoint = \parse_url($this->client->getEndpoint());
         $host = $endpoint['host'] . (isset($endpoint['port']) ? ':' . $endpoint['port'] : '');
@@ -432,14 +467,29 @@ final class S3CustomServerTest extends Scope
         $day = \substr($date, 0, 8);
         $payloadHash = \hash('sha256', $body);
         $scope = $day . '/us-east-1/s3/aws4_request';
-        $signedHeaders = 'host;x-amz-content-sha256;x-amz-date';
+        $signed = [
+            'host' => $host,
+            'x-amz-content-sha256' => $payloadHash,
+            'x-amz-date' => $date,
+        ];
+        foreach ($headers as $name => $value) {
+            $name = \strtolower($name);
+            if (\str_starts_with($name, 'x-amz-')) {
+                $signed[$name] = $value;
+            }
+        }
+        \ksort($signed);
+        $signedHeaders = \implode(';', \array_keys($signed));
+        $canonicalHeaders = \array_map(
+            fn (string $name, string $value): string => $name . ':' . \trim($value),
+            \array_keys($signed),
+            $signed
+        );
         $canonicalRequest = \implode("\n", [
             $method,
             $uri,
             $canonicalQuery,
-            'host:' . $host,
-            'x-amz-content-sha256:' . $payloadHash,
-            'x-amz-date:' . $date,
+            ...$canonicalHeaders,
             '',
             $signedHeaders,
             $payloadHash,
@@ -458,6 +508,6 @@ final class S3CustomServerTest extends Scope
             'x-amz-content-sha256' => $payloadHash,
             'x-amz-date' => $date,
             'authorization' => 'AWS4-HMAC-SHA256 Credential=' . $this->getProject()['$id'] . '/' . $scope . ', SignedHeaders=' . $signedHeaders . ', Signature=' . $signature,
-        ], $headers), $body, decode: false);
+        ], $headers, $unsignedHeaders), $body, decode: false);
     }
 }
