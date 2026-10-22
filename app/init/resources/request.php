@@ -259,7 +259,7 @@ return function (Container $context): void {
     /**
      * List of allowed request hostnames for the request.
      */
-    $context->set('allowedHostnames', function (array $platform, Document $project, Document $rule, Request $request) {
+    $context->set('allowedHostnames', function (array $platform, Document $project, Document $rule, Request $request, string $mode) {
         $allowed = [...($platform['hostnames'] ?? [])];
 
         /* Add the console host, the default OAuth2 redirects land on it even when _APP_CONSOLE_URL points elsewhere */
@@ -268,8 +268,8 @@ return function (Container $context): void {
             $allowed[] = $consoleHostname;
         }
 
-        /* Add platform configured hostnames */
-        if (! $project->isEmpty() && $project->getId() !== 'console') {
+        /* Add platform configured hostnames, admin mode carries the console session so only console hosts may use it */
+        if (! $project->isEmpty() && $project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
             $platforms = $project->getAttribute('platforms', []);
             $hostnames = Platform::getHostnames($platforms);
             $allowed = [...$allowed, ...$hostnames];
@@ -288,21 +288,23 @@ return function (Container $context): void {
             $allowed[] = $hostname;
         }
 
-        /* Allow the request origin of rule */
-        if (! $rule->isEmpty() && ! empty($rule->getAttribute('domain', ''))) {
+        /* Allow the request origin of rule, in admin mode only when it belongs to a trusted console project */
+        $trustedProjects = \array_filter(\explode(',', System::getEnv('_APP_CONSOLE_TRUSTED_PROJECTS', '')));
+        $ruleAllowed = $mode !== APP_MODE_ADMIN || \in_array($rule->getAttribute('projectId', ''), $trustedProjects, true);
+        if (! $rule->isEmpty() && ! empty($rule->getAttribute('domain', '')) && $ruleAllowed) {
             $allowed[] = $rule->getAttribute('domain', '');
         }
 
         return array_unique($allowed);
-    }, ['platform', 'project', 'rule', 'request']);
+    }, ['platform', 'project', 'rule', 'request', 'mode']);
 
     /**
      * List of allowed request schemes for the request.
      */
-    $context->set('allowedSchemes', function (array $platform, Document $project) {
+    $context->set('allowedSchemes', function (array $platform, Document $project, string $mode) {
         $allowed = [...($platform['schemas'] ?? [])];
 
-        if (! $project->isEmpty() && $project->getId() !== 'console') {
+        if (! $project->isEmpty() && $project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
             /* Add hardcoded schemes */
             $allowed[] = 'exp';
             $allowed[] = 'appwrite-callback-' . $project->getId();
@@ -314,7 +316,7 @@ return function (Container $context): void {
         }
 
         return array_unique($allowed);
-    }, ['platform', 'project']);
+    }, ['platform', 'project', 'mode']);
 
     /**
      * Whether the request origin is verified against the request hostname.
