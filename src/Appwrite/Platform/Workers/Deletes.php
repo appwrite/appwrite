@@ -371,7 +371,7 @@ class Deletes extends Action
                 $this->deleteExpiredPresences($project, $getProjectDB, $publisherForUsage);
                 $this->deleteExpiredPushLedger($project, $getProjectDB);
                 $this->deleteOldDeployments($dbForPlatform, $publisherForDeletes, $project, $getProjectDB, $deploymentRetention);
-                $this->updateStuckMigrations($project, $getProjectDB);
+                $this->updateProcessingMigrations($project, $getProjectDB);
                 break;
             case DELETE_TYPE_REPORT:
                 $this->deleteReport($dbForPlatform, $project, $document);
@@ -554,13 +554,13 @@ class Deletes extends Action
         Targets::delete($getProjectDB($project), Query::equal('sessionInternalId', [$session->getSequence()]));
     }
 
-    private function updateStuckMigrations(Document $project, callable $getProjectDB): void
+    private function updateProcessingMigrations(Document $project, callable $getProjectDB): void
     {
         if ($project->getId() === 'console') {
             return;
         }
 
-        Console::info('Update stuck migrations');
+        Console::info('Update processing migrations');
 
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
@@ -569,8 +569,7 @@ class Deletes extends Action
 
         $queries = [
             Query::select($this->selects),
-            // `pending` too: a retry whose queue publish failed ambiguously is never picked up.
-            Query::equal('status', ['pending', 'processing']),
+            Query::equal('status', ['processing']),
             Query::lessThan('$updatedAt', $date),
         ];
 
@@ -584,7 +583,7 @@ class Deletes extends Action
                         'status' => 'failed'
                     ]));
                 } catch (Throwable $th) {
-                    Console::error("Failed to update stuck migration {$migration->getId()} for project {$project->getId()}: " . $th->getMessage());
+                    Console::error("Failed to update processing migration {$migration->getId()} for project {$project->getId()}: " . $th->getMessage());
                 }
             }
         );
