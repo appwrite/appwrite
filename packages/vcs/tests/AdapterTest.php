@@ -21,20 +21,18 @@ use Utopia\VCS\Adapter\Git\Origin;
 final class AdapterTest extends TestCase
 {
     /**
-     * @return array<string, array{class-string<Git>}>
+     * @return \Iterator<string, array{class-string<Git>}>
      */
-    public static function adapters(): array
+    public static function adapters(): \Iterator
     {
-        return [
-            'bitbucket' => [Bitbucket::class],
-            'entire' => [Entire::class],
-            'forgejo' => [Forgejo::class],
-            'gitea' => [Gitea::class],
-            'github' => [GitHub::class],
-            'gitlab' => [GitLab::class],
-            'gogs' => [Gogs::class],
-            'origin' => [Origin::class],
-        ];
+        yield 'bitbucket' => [Bitbucket::class];
+        yield 'entire' => [Entire::class];
+        yield 'forgejo' => [Forgejo::class];
+        yield 'gitea' => [Gitea::class];
+        yield 'github' => [GitHub::class];
+        yield 'gitlab' => [GitLab::class];
+        yield 'gogs' => [Gogs::class];
+        yield 'origin' => [Origin::class];
     }
 
     /**
