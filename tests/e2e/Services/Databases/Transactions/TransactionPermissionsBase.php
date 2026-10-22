@@ -779,6 +779,72 @@ trait TransactionPermissionsBase
     }
 
     /**
+     * Bulk staged creates (API key/admin only) must expand aggregate permissions per document
+     * too: the commit handler passes staged documents straight to createDocuments, so a staged
+     * write() must already be expanded or the committed row keeps the raw aggregate.
+     */
+    public function testStagingExpandsAggregatePermissionsForBulkCreate(): void
+    {
+        $keyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $keyHeaders, [
+            $this->getContainerIdParam() => 'permAggBulk',
+            'name' => 'Permission Aggregate Bulk',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            $this->getSecurityParam() => true,
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collectionId, 'string'), $keyHeaders, [
+                'key' => 'title',
+                'size' => 255,
+                'required' => false,
+            ]);
+            $this->assertEquals(202, $attribute['headers']['status-code']);
+            $this->waitForAllAttributes($this->getPermissionsDatabase(), $collectionId);
+        }
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $keyHeaders);
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        $recordId = 'aggBulk' . uniqid();
+        $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $keyHeaders, [
+            'operations' => [[
+                'action' => 'bulkCreate',
+                'databaseId' => $this->getPermissionsDatabase(),
+                $this->getContainerIdParam() => $collectionId,
+                'data' => [[
+                    '$id' => $recordId,
+                    'title' => 'Aggregate bulk',
+                    '$permissions' => [Permission::write(Role::user('probeBulk'))],
+                ]],
+            ]]
+        ]);
+        $this->assertEquals(201, $staged['headers']['status-code']);
+
+        $commit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $keyHeaders, ['commit' => true]);
+        $this->assertEquals(200, $commit['headers']['status-code']);
+
+        $document = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, $recordId), $keyHeaders);
+        $this->assertEquals(200, $document['headers']['status-code']);
+        $this->assertContains(Permission::update(Role::user('probeBulk')), $document['body']['$permissions']);
+        $this->assertContains(Permission::delete(Role::user('probeBulk')), $document['body']['$permissions']);
+        $this->assertNotContains(Permission::write(Role::user('probeBulk')), $document['body']['$permissions']);
+    }
+
+    /**
      * Test that staging cannot grant roles the user lacks on a related document
      */
     public function testCannotSetUnauthorizedRelatedPermissions(): void

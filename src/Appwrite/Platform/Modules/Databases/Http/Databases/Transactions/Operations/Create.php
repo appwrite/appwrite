@@ -184,21 +184,7 @@ class Create extends Action
                 // The commit handler writes staged data verbatim, so aggregates must be
                 // expanded here rather than relying on a later pass.
                 if (isset($operation['data']['$permissions'])) {
-                    $validator = new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [
-                        PermissionType::Read,
-                        PermissionType::Update,
-                        PermissionType::Delete,
-                        PermissionType::Write,
-                    ]);
-                    if (!$validator->isValid($operation['data']['$permissions'])) {
-                        throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
-                    }
-
-                    $permissions = Permission::aggregate($operation['data']['$permissions'], [
-                        PermissionType::Read,
-                        PermissionType::Update,
-                        PermissionType::Delete,
-                    ]);
+                    $permissions = $this->normalizePermissions($operation['data']['$permissions']);
 
                     // Non-privileged callers may only grant roles they hold.
                     if (!$isAPIKey && !$isPrivilegedUser) {
@@ -261,6 +247,19 @@ class Create extends Action
                         );
                     }
                 }
+            } else {
+                // Bulk operations are API-key/admin only, but their per-document permissions
+                // still need aggregates expanded so the committed rows match what the direct
+                // bulk endpoints persist (the commit handler writes the staged data verbatim).
+                if (\in_array($operation['action'], ['bulkCreate', 'bulkUpsert']) && \is_array($operation['data'] ?? null)) {
+                    foreach ($operation['data'] as $index => $document) {
+                        if (\is_array($document) && isset($document['$permissions'])) {
+                            $operation['data'][$index]['$permissions'] = $this->normalizePermissions($document['$permissions']);
+                        }
+                    }
+                } elseif ($operation['action'] === 'bulkUpdate' && isset($operation['data']['data']['$permissions'])) {
+                    $operation['data']['data']['$permissions'] = $this->normalizePermissions($operation['data']['data']['$permissions']);
+                }
             }
 
             $staged[] = new Document([
@@ -287,5 +286,32 @@ class Create extends Action
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
             ->dynamic($transaction, UtopiaResponse::MODEL_TRANSACTION);
+    }
+
+    /**
+     * Validate a permissions array and expand aggregates (write → update + delete) so the
+     * staged document carries the same permissions the direct document endpoints persist.
+     *
+     * @param array<string> $permissions
+     * @return array<string>
+     * @throws Exception
+     */
+    private function normalizePermissions(array $permissions): array
+    {
+        $validator = new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [
+            PermissionType::Read,
+            PermissionType::Update,
+            PermissionType::Delete,
+            PermissionType::Write,
+        ]);
+        if (!$validator->isValid($permissions)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
+        }
+
+        return Permission::aggregate($permissions, [
+            PermissionType::Read,
+            PermissionType::Update,
+            PermissionType::Delete,
+        ]) ?? [];
     }
 }
