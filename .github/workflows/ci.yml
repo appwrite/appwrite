@@ -776,6 +776,8 @@ jobs:
           _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
           _APP_DOCUMENTSDB: enabled
           _APP_VECTORSDB: enabled
+          # Only the Projects suite waits for the scheduler to reach an inactive project; empty keeps the default.
+          _APP_MAINTENANCE_INACTIVE_INTERVAL: ${{ matrix.service.name == 'Projects' && '30' || '' }}
         run: docker compose up -d --quiet-pull --wait
 
       - name: Wait for Open Runtimes
@@ -817,10 +819,11 @@ jobs:
           fi
 
           docker compose exec -T \
+            -e CI \
             -e _APP_E2E_RESPONSE_FORMAT="$API_RESPONSE_FORMAT" \
             -e _TESTS_OAUTH2_GITHUB_CLIENT_ID \
             -e _TESTS_OAUTH2_GITHUB_CLIENT_SECRET \
-            appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --exclude-group queueRetry --log-junit "tests/e2e/Services/$SERVICE/junit.xml"
+            appwrite vendor/bin/paratest --processes "$PARATEST_PROCESSES" $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --exclude-group queueRetry --exclude-group usageOutage --log-junit "tests/e2e/Services/$SERVICE/junit.xml"
 
       - name: Check for native crashes
         if: ${{ !cancelled() }}

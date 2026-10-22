@@ -178,6 +178,7 @@ const CARD_TITLE_ICON_KEYS: Record<string, string> = {
   opencode: 'opencode',
   grok: 'grok-build',
   'grok build': 'grok-build',
+  pi: 'pi',
   antigravity: 'google-antigravity',
   lovable: 'lovable',
   emergent: 'emergent',

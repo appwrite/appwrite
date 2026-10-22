@@ -21,20 +21,20 @@ use Utopia\Telemetry\Exception;
  */
 class Swoole implements TransportInterface
 {
-    private string $host;
-    private int $port;
+    private readonly string $host;
+    private readonly int $port;
     private string $path;
-    private bool $ssl;
+    private readonly bool $ssl;
 
     /** @var array<string, string> Pre-computed base headers */
-    private array $baseHeaders;
+    private readonly array $baseHeaders;
 
     /** @var array<string, mixed> Pre-computed client settings */
-    private array $settings;
+    private readonly array $settings;
 
-    private Channel $pool;
+    private readonly Channel $pool;
 
-    private Atomic $shutdown;
+    private readonly Atomic $shutdown;
 
     /**
      * @param 'application/json'|'application/x-ndjson'|'application/x-protobuf' $contentType
@@ -42,10 +42,10 @@ class Swoole implements TransportInterface
      */
     public function __construct(
         string $endpoint,
-        private string $contentType = ContentTypes::PROTOBUF,
-        private array  $headers = [],
-        private float  $timeout = 10.0,
-        private int $poolSize = 8,
+        private readonly string $contentType = ContentTypes::PROTOBUF,
+        private readonly array  $headers = [],
+        private readonly float  $timeout = 10.0,
+        private readonly int $poolSize = 8,
         int $socketBufferSize = 64 * 1024, // 64 KB
     ) {
         $parsed = parse_url($endpoint);

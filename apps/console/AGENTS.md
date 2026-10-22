@@ -1172,6 +1172,7 @@ These flags do not grant backend permissions. Curl cannot call this browser API.
 - `VITE_CONSOLE_COOKIE_BANNER` – `true`/`false` to enable/disable the cookie consent banner logic (GDPR prompt)
 - `VITE_CONSOLE_BLOG_DRAFTS` – `true`/`false` to show draft blog posts (off in both profiles by default)
 - `VITE_CONSOLE_EXTRA_VCS_OAUTH` – `true`/`false` to show extra Git connect OAuth providers (Origin). GitHub, GitLab, and Bitbucket stay available. Off in both profiles by default.
+- `VITE_CONSOLE_VCS_ENTIRE` – `true`/`false` to show Entire on Git connect. Off in both profiles by default until Entire makes plugin installs available to every account.
 - `VITE_CONSOLE_PROJECT_ENVIRONMENTS` – `true`/`false` to show the project environments switcher and leave environments out of organization project lists. Off by default; ignored on self-hosted, which has no environments API.
 
 **Pre-launch mode** (not a profile feature; unset = off):

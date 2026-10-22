@@ -2410,7 +2410,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/avatars/favicons",
     "title": "Favicons",
     "description": "Fetch favicons from remote websites for link previews and bookmark displays.",
-    "excerpt": "The favicon endpoint retrieves favicons from remote websites. This is useful for displaying website icons in link previews, bookmarks, and social sharing interfaces. Get favicon Retrieve a favicon from a remote website URL. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | | url | string | The URL of the website to fetch the favicon from. Must be a valid HTTP or HTTPS URL. | | width…",
+    "excerpt": "The favicon endpoint retrieves favicons from remote websites. This is useful for displaying website icons in link previews, bookmarks, and social sharing interfaces. Get favicon Retrieve a favicon from a remote website URL. Parameters The method accepts the following parameters: | Parameter | Type | Description | | --------- | ---- | ----------- | | url | string | The URL of the website to fetch the favicon from. Must be a valid HTTP or HTTPS URL. | Favicon retrieval…",
     "breadcrumbs": [
       "Avatars",
       "Concepts",
@@ -5816,6 +5816,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Tooling",
       "IDEs",
       "OpenCode"
+    ]
+  },
+  {
+    "slug": "tooling/ai/agents/pi",
+    "title": "Pi",
+    "description": "Learn how you can add the Appwrite MCP server to Pi to interact with both the Appwrite API and documentation, and to react to events in your project.",
+    "excerpt": "Get started quickly with these pre-built prompts for common Appwrite integrations: Browse all quick start prompts Connect the Appwrite MCP server to Pi, a terminal coding agent, for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so you don't run a server on your machine. If you don't have Pi yet, install it from your terminal on macOS or Linux. On Windows, or to install with npm, see pi.dev. Pi connects to the server…",
+    "breadcrumbs": [
+      "Tooling",
+      "IDEs",
+      "Pi"
     ]
   },
   {
