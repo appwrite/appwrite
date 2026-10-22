@@ -3446,6 +3446,48 @@ final class FunctionsCustomServerTest extends Scope
         $this->cleanupFunction($functionId);
     }
 
+    public function testFunctionsDomainReservedHeaders(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => Id::unique(),
+            'name' => 'Test domain reserved headers',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+            'execute' => ['any'],
+        ]);
+
+        try {
+            $domain = $this->setupFunctionDomain($functionId);
+            $this->setupDeployment($functionId, [
+                'code' => $this->packageFunction('basic'),
+                'activate' => true,
+            ]);
+
+            $proxyClient = new Client();
+            $proxyClient->setEndpoint('http://' . $domain);
+
+            $response = $proxyClient->call(Client::METHOD_GET, '/', [
+                'content-type' => 'application/json',
+                'X-Appwrite-User-Id' => 'impersonated-user',
+                'X-APPWRITE-TRIGGER' => 'event',
+                'X-Appwrite-Event' => 'users.user.update',
+                'x-appwrite-user-jwt' => 'caller-jwt',
+                'X-Appwrite-Client-Ip' => '203.0.113.10',
+            ]);
+
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertSame('', $response['body']['APPWRITE_FUNCTION_USER_ID']);
+            $this->assertSame('http', $response['body']['APPWRITE_FUNCTION_TRIGGER']);
+            $this->assertSame('', $response['body']['APPWRITE_FUNCTION_EVENT']);
+            $this->assertSame('', $response['body']['APPWRITE_FUNCTION_JWT']);
+            $this->assertNotSame('203.0.113.10', $response['body']['APPWRITE_FUNCTION_CLIENT_IP']);
+            $this->assertNotSame('', $response['body']['APPWRITE_FUNCTION_CLIENT_IP']);
+        } finally {
+            $this->cleanupFunction($functionId);
+        }
+    }
+
     public function testFunctionsDomainBinaryResponse()
     {
         $functionId = $this->setupFunction([
