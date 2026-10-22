@@ -24,6 +24,21 @@ class Targets
         );
     }
 
+    /**
+     * Returns false, deleting nothing, on a database without `targets`: one created before
+     * the collection existed never got it. Any other failure is thrown.
+     */
+    public static function deleteExpired(Database $database): bool
+    {
+        if ($database->findCollection('targets') === null) {
+            return false;
+        }
+
+        self::delete($database, Query::equal('expired', [true]));
+
+        return true;
+    }
+
     public static function deleteSubscribers(Database $database, Document $target): void
     {
         $database->deleteDocuments(
