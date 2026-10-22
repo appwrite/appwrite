@@ -309,12 +309,22 @@ class Messaging extends Action
                 $provider = $this->resolveProvider($dbForProject, $providerId, $providers, $default);
                 $resolvedProviderType = $provider->getAttribute('type');
 
-                $adapter = match ($resolvedProviderType) {
-                    MESSAGE_TYPE_SMS => $this->provider->sms($provider),
-                    MESSAGE_TYPE_PUSH => $this->getPushAdapter($provider, $dbForProject, $project, $message),
-                    MESSAGE_TYPE_EMAIL => $this->provider->email($provider),
-                    default => throw new \Exception('Provider with the requested ID is of the incorrect type')
-                };
+                try {
+                    $adapter = match ($resolvedProviderType) {
+                        MESSAGE_TYPE_SMS => $this->provider->sms($provider),
+                        MESSAGE_TYPE_PUSH => $this->getPushAdapter($provider, $dbForProject, $project, $message),
+                        MESSAGE_TYPE_EMAIL => $this->provider->email($provider),
+                        default => throw new \Exception('Provider with the requested ID is of the incorrect type')
+                    };
+                } catch (\InvalidArgumentException $error) {
+                    // An SMTP host that is refused or does not resolve fails this provider's recipients, not the whole message.
+                    $hasRecipients = true;
+                    $used[$provider->getId()] = $provider;
+                    $failedTotal += \count($identifiers);
+                    $this->recordError($deliveryErrors, 'Failed sending to targets with error: ' . $error->getMessage());
+
+                    continue;
+                }
 
                 $isWakeProvider = $resolvedProviderType === MESSAGE_TYPE_PUSH
                     && \in_array($provider->getAttribute('provider'), self::APPWRITE_PUSH_WAKEUP_SIGNAL_PROVIDERS, true);
