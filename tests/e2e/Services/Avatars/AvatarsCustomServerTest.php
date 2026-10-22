@@ -183,8 +183,9 @@ final class AvatarsCustomServerTest extends Scope
     }
 
     /**
-     * The remote file is served by this Appwrite instance over loopback, which the
-     * test environment allows through _APP_ALLOWED_INTERNAL_ADDRESSES.
+     * The remote file is served by this Appwrite instance through an API rule on a
+     * nip.io name that resolves to loopback, which the test environment allows
+     * through _APP_ALLOWED_INTERNAL_ADDRESSES; router protection refuses bare IPs.
      */
     public function testGetRemoteFileTooLarge(): void
     {
@@ -244,7 +245,17 @@ final class AvatarsCustomServerTest extends Scope
 
         \fclose($handle);
 
-        $view = fn (string $fileId): string => 'http://127.0.0.1/v1/storage/buckets/' . $bucketId . '/files/' . $fileId . '/view?project=' . $projectId;
+        $domain = 'avatars-' . \uniqid() . '.127.0.0.1.nip.io';
+
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', \array_merge([
+            'content-type' => 'application/json',
+        ], $headers), [
+            'domain' => $domain,
+        ]);
+
+        $this->assertEquals(201, $rule['headers']['status-code']);
+
+        $view = fn (string $fileId): string => 'http://' . $domain . '/v1/storage/buckets/' . $bucketId . '/files/' . $fileId . '/view?project=' . $projectId;
 
         /**
          * Test for SUCCESS
