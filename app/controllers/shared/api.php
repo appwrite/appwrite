@@ -510,10 +510,9 @@ Http::init()
 
         foreach ($abuseKeyLabel as $abuseKey) {
             $isRateLimited = false;
+            $checking = false;
 
             try {
-                $start = $request->getContentRangeStart();
-                $end = $request->getContentRangeEnd();
                 $timeLimit = $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600));
                 $timeLimit
                     ->setParam('{projectId}', $project->getId())
@@ -522,7 +521,7 @@ Http::init()
                     ->setParam('{ip}', $request->getIP())
                     ->setParam('{url}', $request->getHostname() . $route->getPath())
                     ->setParam('{method}', $request->getMethod())
-                    ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
+                    ->setParam('{chunkId}', $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE));
 
                 foreach ($request->getParams() as $key => $value) {
                     if (! empty($value)) {
@@ -530,6 +529,7 @@ Http::init()
                     }
                 }
 
+                $checking = true;
                 $abuse = new Abuse($timeLimit);
                 $remaining = $timeLimit->remaining();
                 $limit = $timeLimit->limit();
@@ -547,6 +547,11 @@ Http::init()
                     $isRateLimited = $abuse->check();
                 }
             } catch (\Throwable $th) {
+                // Only a limiter outage fails open; a request that breaks the key is refused.
+                if (! $checking) {
+                    throw $th;
+                }
+
                 \error_log((string) $th);
 
                 continue;
@@ -884,8 +889,6 @@ Http::shutdown()
         $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
 
         foreach ($abuseKeyLabel as $abuseKey) {
-            $start = $request->getContentRangeStart();
-            $end = $request->getContentRangeEnd();
             $timeLimit = $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600));
             $timeLimit
                 ->setParam('{projectId}', $project->getId())
@@ -894,7 +897,7 @@ Http::shutdown()
                 ->setParam('{ip}', $request->getIP())
                 ->setParam('{url}', $request->getHostname() . $route->getPath())
                 ->setParam('{method}', $request->getMethod())
-                ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
+                ->setParam('{chunkId}', $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE));
 
             foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
                 if (! empty($value)) {
