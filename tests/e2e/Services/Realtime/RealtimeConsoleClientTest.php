@@ -1307,13 +1307,17 @@ final class RealtimeConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $frames = $this->receiveUntilClosed($this->getAdminWebsocket($projectId, $stranger['session']));
-        $this->assertSame('error', $frames[0]['type']);
-        $this->assertSame(401, $frames[0]['data']['code']);
+        $client = $this->getAdminWebsocket($projectId, $stranger['session']);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('error', $response['type']);
+        $this->assertSame(401, $response['data']['code']);
+        $this->receiveUntilClosed($client);
 
-        $frames = $this->receiveUntilClosed($this->getAdminWebsocket($projectId, $member['session']));
-        $this->assertSame('error', $frames[0]['type']);
-        $this->assertSame(404, $frames[0]['data']['code']);
+        $client = $this->getAdminWebsocket($projectId, $member['session']);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('error', $response['type']);
+        $this->assertSame(404, $response['data']['code']);
+        $this->receiveUntilClosed($client);
     }
 
     public function testAdminModeRequiresConsoleOrigin(): void
@@ -1350,14 +1354,16 @@ final class RealtimeConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $frames = $this->receiveUntilClosed($this->getWebsocket(['documents'], [
+        $client = $this->getWebsocket(['documents'], [
             'origin' => 'http://' . $hostname,
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-mode' => 'admin',
-        ], $projectId));
-        $this->assertSame('error', $frames[0]['type']);
-        $this->assertSame(1008, $frames[0]['data']['code']);
-        $this->assertStringStartsWith('Invalid Origin', $frames[0]['data']['message']);
+        ], $projectId);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('error', $response['type']);
+        $this->assertSame(1008, $response['data']['code']);
+        $this->assertStringStartsWith('Invalid Origin', $response['data']['message']);
+        $this->receiveUntilClosed($client);
     }
 
     private function getAdminWebsocket(string $projectId, string $session, array $channels = ['documents']): WebSocketClient
