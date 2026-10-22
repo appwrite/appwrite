@@ -1420,6 +1420,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -1524,14 +1534,14 @@
               {
                 "$resource": "table",
                 "id": "orders",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "table",
                 "id": "customers",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "success",
+                "message": ""
               }
             ],
             [
@@ -1539,105 +1549,105 @@
                 "$resource": "index",
                 "id": "by_title",
                 "status": "error",
-                "message": "Table not found"
+                "message": "Column not found in table: title"
               },
               {
                 "$resource": "index",
                 "id": "by_tags",
                 "status": "error",
-                "message": "Table not found"
+                "message": "Column not found in table: tags"
               },
               {
                 "$resource": "index",
                 "id": "uniq",
                 "status": "error",
-                "message": "Table not found"
+                "message": "Column not found in table: code"
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "title@orders",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "qty@orders",
                 "status": "error",
-                "message": "Table not found"
+                "message": "Invalid document structure: Attribute \"default\" has invalid type. Value must be a valid string and no longer than 16384 chars"
               },
               {
                 "$resource": "column",
                 "id": "big@orders",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "price@orders",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "paid@orders",
                 "status": "error",
-                "message": "Table not found"
+                "message": "Invalid document structure: Attribute \"default\" has invalid type. Value must be a valid string and no longer than 16384 chars"
               },
               {
                 "$resource": "column",
                 "id": "when@orders",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "state@orders",
                 "status": "error",
-                "message": "Table not found"
+                "message": "Format enum not available for column type string"
               },
               {
                 "$resource": "column",
                 "id": "tags@orders",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "spot@orders",
                 "status": "error",
-                "message": "Table not found"
+                "message": "Spatial attributes are not supported"
               },
               {
                 "$resource": "column",
                 "id": "meta@orders",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "code@orders",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "notes@orders",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "name@customers",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "customer@orders",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -1669,8 +1679,8 @@
               {
                 "$resource": "row",
                 "id": "c1",
-                "status": "error",
-                "message": "Collection not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -1727,7 +1737,7 @@
                 "$resource": "row",
                 "id": "o2",
                 "status": "error",
-                "message": "Collection not found"
+                "message": "Invalid document structure: Missing required attribute \"title\""
               }
             ]
           ]
@@ -1830,6 +1840,93 @@
                 "status": "success",
                 "message": ""
               }
+            ],
+            [
+              {
+                "$resource": "table",
+                "id": "orders",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "table",
+                "id": "customers",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "column",
+                "id": "",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [],
+            [
+              {
+                "$resource": "row",
+                "id": "c1",
+                "status": "success",
+                "message": ""
+              }
             ]
           ]
         },
@@ -1857,6 +1954,30 @@
               "skip": 0,
               "processing": 0,
               "warning": 0
+            },
+            "table": {
+              "pending": 0,
+              "success": 2,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "column": {
+              "pending": 0,
+              "success": 10,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "row": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
             }
           }
         },
@@ -1873,6 +1994,16 @@
               "databases": {
                 "database": [
                   "shop"
+                ],
+                "table": [
+                  "orders",
+                  "customers"
+                ],
+                "column": [
+                  ""
+                ],
+                "row": [
+                  "c1"
                 ]
               }
             }
@@ -1940,7 +2071,9 @@
             "id": "orders"
           },
           "bind": "g_table_orders",
-          "expect": null
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "resource.describe",
@@ -1962,6 +2095,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Table",
             "getCreatedAt": "<masked>",
             "getDatabase": {
+              "description": "",
               "id": "shop",
               "name": "Shop",
               "createdAt": "",
@@ -1971,6 +2105,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "orders",
@@ -2025,6 +2160,7 @@
             "class": "Utopia\\Migration\\Resources\\Database\\Table",
             "getCreatedAt": "<masked>",
             "getDatabase": {
+              "description": "",
               "id": "shop",
               "name": "Shop",
               "createdAt": "",
@@ -2034,6 +2170,7 @@
               "database": "",
               "status": null
             },
+            "getDescription": "",
             "getEnabled": true,
             "getGroup": "databases",
             "getId": "customers",
@@ -2087,6 +2224,7 @@
               "$createdAt": "<masked>",
               "$updatedAt": "<masked>"
             },
+            "getDescription": "",
             "getGroup": "databases",
             "getId": "c1",
             "getMessage": "",
@@ -2096,7 +2234,9 @@
             "getSequence": "<uniqid>",
             "getStatus": "success",
             "getTable": {
+              "description": "",
               "database": {
+                "description": "",
                 "id": "shop",
                 "name": "Shop",
                 "createdAt": "",

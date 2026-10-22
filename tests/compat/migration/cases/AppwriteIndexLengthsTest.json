@@ -619,6 +619,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -722,22 +732,22 @@
               {
                 "$resource": "table",
                 "id": "orders",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "reference",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "channel",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -801,8 +811,8 @@
               {
                 "$resource": "index",
                 "id": "idx_reference_channel",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -814,75 +824,7 @@
               "$ref": "d"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "orders",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "orders",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "reference",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "reference",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "channel",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "channel",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "idx_reference_channel",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "idx_reference_channel",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "resource.describe",
@@ -906,7 +848,7 @@
               100,
               20
             ],
-            "getMessage": "Table not found",
+            "getMessage": "",
             "getName": "index",
             "getOrders": [
               "ASC",
@@ -915,7 +857,7 @@
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
-            "getStatus": "error",
+            "getStatus": "success",
             "getTable": {
               "description": "",
               "database": {
@@ -956,7 +898,37 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": []
+          "expect": [
+            {
+              "key": "idx_reference_channel",
+              "description": "",
+              "status": "available",
+              "databaseInternalId": "1",
+              "databaseId": "shop",
+              "collectionInternalId": "1",
+              "collectionId": "orders",
+              "type": "key",
+              "attributes": [
+                "reference",
+                "channel"
+              ],
+              "lengths": [
+                100,
+                20
+              ],
+              "orders": [
+                "ASC",
+                "ASC"
+              ],
+              "$id": "1_1_idx_reference_channel",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "error": null,
+              "$collection": "indexes"
+            }
+          ]
         },
         {
           "op": "db.find",
@@ -973,7 +945,60 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": []
+          "expect": [
+            {
+              "key": "reference",
+              "description": "",
+              "databaseInternalId": "1",
+              "databaseId": "shop",
+              "collectionInternalId": "1",
+              "collectionId": "orders",
+              "type": "string",
+              "status": "available",
+              "size": 600,
+              "required": false,
+              "signed": false,
+              "default": null,
+              "array": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "$id": "1_1_reference",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "error": null,
+              "$collection": "attributes"
+            },
+            {
+              "key": "channel",
+              "description": "",
+              "databaseInternalId": "1",
+              "databaseId": "shop",
+              "collectionInternalId": "1",
+              "collectionId": "orders",
+              "type": "string",
+              "status": "available",
+              "size": 600,
+              "required": false,
+              "signed": false,
+              "default": null,
+              "array": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "$id": "1_1_channel",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "2",
+              "error": null,
+              "$collection": "attributes"
+            }
+          ]
         },
         {
           "op": "db.get",
@@ -995,7 +1020,106 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": []
+          "expect": {
+            "databaseInternalId": "1",
+            "databaseId": "shop",
+            "documentSecurity": false,
+            "enabled": true,
+            "name": "Orders",
+            "description": "",
+            "search": "orders Orders ",
+            "$sequence": "1",
+            "$id": "orders",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "database_1",
+            "attributes": [
+              {
+                "key": "reference",
+                "description": "",
+                "databaseInternalId": "1",
+                "databaseId": "shop",
+                "collectionInternalId": "1",
+                "collectionId": "orders",
+                "type": "string",
+                "status": "available",
+                "size": 600,
+                "required": false,
+                "signed": false,
+                "default": null,
+                "array": false,
+                "format": "",
+                "formatOptions": [],
+                "filters": [],
+                "options": [],
+                "$id": "1_1_reference",
+                "$createdAt": "<masked>",
+                "$updatedAt": "<masked>",
+                "$permissions": [],
+                "$sequence": "1",
+                "error": null,
+                "$collection": "attributes"
+              },
+              {
+                "key": "channel",
+                "description": "",
+                "databaseInternalId": "1",
+                "databaseId": "shop",
+                "collectionInternalId": "1",
+                "collectionId": "orders",
+                "type": "string",
+                "status": "available",
+                "size": 600,
+                "required": false,
+                "signed": false,
+                "default": null,
+                "array": false,
+                "format": "",
+                "formatOptions": [],
+                "filters": [],
+                "options": [],
+                "$id": "1_1_channel",
+                "$createdAt": "<masked>",
+                "$updatedAt": "<masked>",
+                "$permissions": [],
+                "$sequence": "2",
+                "error": null,
+                "$collection": "attributes"
+              }
+            ],
+            "indexes": [
+              {
+                "key": "idx_reference_channel",
+                "description": "",
+                "status": "available",
+                "databaseInternalId": "1",
+                "databaseId": "shop",
+                "collectionInternalId": "1",
+                "collectionId": "orders",
+                "type": "key",
+                "attributes": [
+                  "reference",
+                  "channel"
+                ],
+                "lengths": [
+                  100,
+                  20
+                ],
+                "orders": [
+                  "ASC",
+                  "ASC"
+                ],
+                "$id": "1_1_idx_reference_channel",
+                "$createdAt": "<masked>",
+                "$updatedAt": "<masked>",
+                "$permissions": [],
+                "$sequence": "1",
+                "error": null,
+                "$collection": "indexes"
+              }
+            ]
+          }
         }
       ]
     },
@@ -1617,6 +1741,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -1720,22 +1854,22 @@
               {
                 "$resource": "table",
                 "id": "orders",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "reference",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "channel",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -1797,7 +1931,7 @@
                 "$resource": "index",
                 "id": "idx_reference_channel",
                 "status": "error",
-                "message": "Table not found"
+                "message": "Invalid index: Index length is longer than the maximum: 1024"
               }
             ]
           ]
@@ -1812,64 +1946,13 @@
           "expect": [
             {
               "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "orders",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "orders",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "reference",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "reference",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "channel",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "channel",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
+              "message": "Invalid index: Index length is longer than the maximum: 1024",
               "resourceName": "index",
               "resourceGroup": "databases",
               "resourceId": "idx_reference_channel",
               "json": {
                 "code": 0,
-                "message": "Table not found",
+                "message": "Invalid index: Index length is longer than the maximum: 1024",
                 "resourceName": "index",
                 "resourceGroup": "databases",
                 "resourceId": "idx_reference_channel",
@@ -1898,7 +1981,7 @@
             "getId": "idx_reference_channel",
             "getKey": "idx_reference_channel",
             "getLengths": [],
-            "getMessage": "Table not found",
+            "getMessage": "Invalid index: Index length is longer than the maximum: 1024",
             "getName": "index",
             "getOrders": [
               "ASC",
@@ -1965,7 +2048,60 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": []
+          "expect": [
+            {
+              "key": "reference",
+              "description": "",
+              "databaseInternalId": "1",
+              "databaseId": "shop",
+              "collectionInternalId": "1",
+              "collectionId": "orders",
+              "type": "string",
+              "status": "available",
+              "size": 600,
+              "required": false,
+              "signed": false,
+              "default": null,
+              "array": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "$id": "1_1_reference",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "error": null,
+              "$collection": "attributes"
+            },
+            {
+              "key": "channel",
+              "description": "",
+              "databaseInternalId": "1",
+              "databaseId": "shop",
+              "collectionInternalId": "1",
+              "collectionId": "orders",
+              "type": "string",
+              "status": "available",
+              "size": 600,
+              "required": false,
+              "signed": false,
+              "default": null,
+              "array": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "$id": "1_1_channel",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "2",
+              "error": null,
+              "$collection": "attributes"
+            }
+          ]
         },
         {
           "op": "db.get",
@@ -1987,7 +2123,76 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": []
+          "expect": {
+            "databaseInternalId": "1",
+            "databaseId": "shop",
+            "documentSecurity": false,
+            "enabled": true,
+            "name": "Orders",
+            "description": "",
+            "search": "orders Orders ",
+            "$sequence": "1",
+            "$id": "orders",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "database_1",
+            "attributes": [
+              {
+                "key": "reference",
+                "description": "",
+                "databaseInternalId": "1",
+                "databaseId": "shop",
+                "collectionInternalId": "1",
+                "collectionId": "orders",
+                "type": "string",
+                "status": "available",
+                "size": 600,
+                "required": false,
+                "signed": false,
+                "default": null,
+                "array": false,
+                "format": "",
+                "formatOptions": [],
+                "filters": [],
+                "options": [],
+                "$id": "1_1_reference",
+                "$createdAt": "<masked>",
+                "$updatedAt": "<masked>",
+                "$permissions": [],
+                "$sequence": "1",
+                "error": null,
+                "$collection": "attributes"
+              },
+              {
+                "key": "channel",
+                "description": "",
+                "databaseInternalId": "1",
+                "databaseId": "shop",
+                "collectionInternalId": "1",
+                "collectionId": "orders",
+                "type": "string",
+                "status": "available",
+                "size": 600,
+                "required": false,
+                "signed": false,
+                "default": null,
+                "array": false,
+                "format": "",
+                "formatOptions": [],
+                "filters": [],
+                "options": [],
+                "$id": "1_1_channel",
+                "$createdAt": "<masked>",
+                "$updatedAt": "<masked>",
+                "$permissions": [],
+                "$sequence": "2",
+                "error": null,
+                "$collection": "attributes"
+              }
+            ],
+            "indexes": []
+          }
         }
       ]
     },
@@ -2609,6 +2814,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -2712,22 +2927,22 @@
               {
                 "$resource": "table",
                 "id": "orders",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "reference",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "channel",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -2791,8 +3006,8 @@
               {
                 "$resource": "index",
                 "id": "idx_reference_channel",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -2804,75 +3019,7 @@
               "$ref": "d"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "orders",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "orders",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "reference",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "reference",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "channel",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "channel",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "idx_reference_channel",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "idx_reference_channel",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "resource.describe",
@@ -2896,7 +3043,7 @@
               100,
               0
             ],
-            "getMessage": "Table not found",
+            "getMessage": "",
             "getName": "index",
             "getOrders": [
               "ASC",
@@ -2905,7 +3052,7 @@
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
-            "getStatus": "error",
+            "getStatus": "success",
             "getTable": {
               "description": "",
               "database": {
@@ -2946,7 +3093,37 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": []
+          "expect": [
+            {
+              "key": "idx_reference_channel",
+              "description": "",
+              "status": "available",
+              "databaseInternalId": "1",
+              "databaseId": "shop",
+              "collectionInternalId": "1",
+              "collectionId": "orders",
+              "type": "key",
+              "attributes": [
+                "reference",
+                "channel"
+              ],
+              "lengths": [
+                100,
+                0
+              ],
+              "orders": [
+                "ASC",
+                "ASC"
+              ],
+              "$id": "1_1_idx_reference_channel",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "error": null,
+              "$collection": "indexes"
+            }
+          ]
         },
         {
           "op": "db.find",
@@ -2963,7 +3140,60 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": []
+          "expect": [
+            {
+              "key": "reference",
+              "description": "",
+              "databaseInternalId": "1",
+              "databaseId": "shop",
+              "collectionInternalId": "1",
+              "collectionId": "orders",
+              "type": "string",
+              "status": "available",
+              "size": 600,
+              "required": false,
+              "signed": false,
+              "default": null,
+              "array": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "$id": "1_1_reference",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "error": null,
+              "$collection": "attributes"
+            },
+            {
+              "key": "channel",
+              "description": "",
+              "databaseInternalId": "1",
+              "databaseId": "shop",
+              "collectionInternalId": "1",
+              "collectionId": "orders",
+              "type": "string",
+              "status": "available",
+              "size": 30,
+              "required": false,
+              "signed": false,
+              "default": null,
+              "array": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "$id": "1_1_channel",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "2",
+              "error": null,
+              "$collection": "attributes"
+            }
+          ]
         },
         {
           "op": "db.get",
@@ -2985,7 +3215,106 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": []
+          "expect": {
+            "databaseInternalId": "1",
+            "databaseId": "shop",
+            "documentSecurity": false,
+            "enabled": true,
+            "name": "Orders",
+            "description": "",
+            "search": "orders Orders ",
+            "$sequence": "1",
+            "$id": "orders",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "database_1",
+            "attributes": [
+              {
+                "key": "reference",
+                "description": "",
+                "databaseInternalId": "1",
+                "databaseId": "shop",
+                "collectionInternalId": "1",
+                "collectionId": "orders",
+                "type": "string",
+                "status": "available",
+                "size": 600,
+                "required": false,
+                "signed": false,
+                "default": null,
+                "array": false,
+                "format": "",
+                "formatOptions": [],
+                "filters": [],
+                "options": [],
+                "$id": "1_1_reference",
+                "$createdAt": "<masked>",
+                "$updatedAt": "<masked>",
+                "$permissions": [],
+                "$sequence": "1",
+                "error": null,
+                "$collection": "attributes"
+              },
+              {
+                "key": "channel",
+                "description": "",
+                "databaseInternalId": "1",
+                "databaseId": "shop",
+                "collectionInternalId": "1",
+                "collectionId": "orders",
+                "type": "string",
+                "status": "available",
+                "size": 30,
+                "required": false,
+                "signed": false,
+                "default": null,
+                "array": false,
+                "format": "",
+                "formatOptions": [],
+                "filters": [],
+                "options": [],
+                "$id": "1_1_channel",
+                "$createdAt": "<masked>",
+                "$updatedAt": "<masked>",
+                "$permissions": [],
+                "$sequence": "2",
+                "error": null,
+                "$collection": "attributes"
+              }
+            ],
+            "indexes": [
+              {
+                "key": "idx_reference_channel",
+                "description": "",
+                "status": "available",
+                "databaseInternalId": "1",
+                "databaseId": "shop",
+                "collectionInternalId": "1",
+                "collectionId": "orders",
+                "type": "key",
+                "attributes": [
+                  "reference",
+                  "channel"
+                ],
+                "lengths": [
+                  100,
+                  0
+                ],
+                "orders": [
+                  "ASC",
+                  "ASC"
+                ],
+                "$id": "1_1_idx_reference_channel",
+                "$createdAt": "<masked>",
+                "$updatedAt": "<masked>",
+                "$permissions": [],
+                "$sequence": "1",
+                "error": null,
+                "$collection": "indexes"
+              }
+            ]
+          }
         }
       ]
     },
@@ -3607,6 +3936,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -3710,22 +4049,22 @@
               {
                 "$resource": "table",
                 "id": "orders",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "reference",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "channel",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -3789,8 +4128,8 @@
               {
                 "$resource": "index",
                 "id": "idx_reference_channel",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -3855,7 +4194,7 @@
                 "$resource": "index",
                 "id": "idx_reference_channel",
                 "status": "error",
-                "message": "Table not found"
+                "message": "Index not found"
               }
             ]
           ]
@@ -3870,86 +4209,22 @@
           "expect": [
             {
               "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
+              "message": "Index not found",
+              "resourceName": "index",
               "resourceGroup": "databases",
-              "resourceId": "orders",
+              "resourceId": "idx_reference_channel",
               "json": {
                 "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
+                "message": "Index not found",
+                "resourceName": "index",
                 "resourceGroup": "databases",
-                "resourceId": "orders",
+                "resourceId": "idx_reference_channel",
                 "trace": "<masked>"
               },
               "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "class": "Utopia\\Database\\Exception\\NotFound",
+                "message": "Index not found"
               }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "reference",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "reference",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "channel",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "channel",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "idx_reference_channel",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "idx_reference_channel",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "idx_reference_channel",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "idx_reference_channel",
-                "trace": "<masked>"
-              },
-              "previous": null
             }
           ]
         },
@@ -3975,7 +4250,7 @@
               100,
               20
             ],
-            "getMessage": "Table not found",
+            "getMessage": "Index not found",
             "getName": "index",
             "getOrders": [
               "ASC",
@@ -4025,7 +4300,37 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": []
+          "expect": [
+            {
+              "key": "idx_reference_channel",
+              "description": "",
+              "status": "available",
+              "databaseInternalId": "1",
+              "databaseId": "shop",
+              "collectionInternalId": "1",
+              "collectionId": "orders",
+              "type": "key",
+              "attributes": [
+                "reference",
+                "channel"
+              ],
+              "lengths": [
+                50,
+                20
+              ],
+              "orders": [
+                "ASC",
+                "ASC"
+              ],
+              "$id": "1_1_idx_reference_channel",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "error": null,
+              "$collection": "indexes"
+            }
+          ]
         },
         {
           "op": "db.find",
@@ -4064,7 +4369,53 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": []
+          "expect": {
+            "databaseInternalId": "1",
+            "databaseId": "shop",
+            "documentSecurity": false,
+            "enabled": true,
+            "name": "Orders",
+            "description": "",
+            "search": "orders Orders ",
+            "$sequence": "1",
+            "$id": "orders",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "database_1",
+            "attributes": [],
+            "indexes": [
+              {
+                "key": "idx_reference_channel",
+                "description": "",
+                "status": "available",
+                "databaseInternalId": "1",
+                "databaseId": "shop",
+                "collectionInternalId": "1",
+                "collectionId": "orders",
+                "type": "key",
+                "attributes": [
+                  "reference",
+                  "channel"
+                ],
+                "lengths": [
+                  50,
+                  20
+                ],
+                "orders": [
+                  "ASC",
+                  "ASC"
+                ],
+                "$id": "1_1_idx_reference_channel",
+                "$createdAt": "<masked>",
+                "$updatedAt": "<masked>",
+                "$permissions": [],
+                "$sequence": "1",
+                "error": null,
+                "$collection": "indexes"
+              }
+            ]
+          }
         }
       ]
     }

@@ -1157,6 +1157,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -2087,6 +2097,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -2196,40 +2216,40 @@
               {
                 "$resource": "table",
                 "id": "first-items",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "table",
                 "id": "second-items",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "first-name",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "first-legacy",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "second-name",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "second-legacy",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -2241,110 +2261,7 @@
               "$ref": "d10"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "first-items",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "first-items",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "second-items",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "second-items",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "first-name",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "first-name",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "first-legacy",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "first-legacy",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "second-name",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "second-name",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "second-legacy",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "second-legacy",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "mock.source",
@@ -2605,6 +2522,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -2714,28 +2641,28 @@
               {
                 "$resource": "table",
                 "id": "first-items",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "skip",
+                "message": "Already exists on destination"
               },
               {
                 "$resource": "table",
                 "id": "second-items",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "first-name",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               },
               {
                 "$resource": "column",
                 "id": "second-name",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ]
           ]
@@ -2747,78 +2674,7 @@
               "$ref": "d19"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "first-items",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "first-items",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "second-items",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "second-items",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "first-name",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "first-name",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "second-name",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "second-name",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "db.get",
@@ -2901,7 +2757,60 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": []
+          "expect": [
+            {
+              "key": "name",
+              "description": "",
+              "databaseInternalId": "1",
+              "databaseId": "first",
+              "collectionInternalId": "1",
+              "collectionId": "first-items",
+              "type": "string",
+              "status": "available",
+              "size": 64,
+              "required": false,
+              "signed": false,
+              "default": null,
+              "array": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "$id": "1_1_name",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "error": null,
+              "$collection": "attributes"
+            },
+            {
+              "key": "name",
+              "description": "",
+              "databaseInternalId": "2",
+              "databaseId": "second",
+              "collectionInternalId": "1",
+              "collectionId": "second-items",
+              "type": "string",
+              "status": "available",
+              "size": 64,
+              "required": false,
+              "signed": false,
+              "default": null,
+              "array": false,
+              "format": "",
+              "formatOptions": [],
+              "filters": [],
+              "options": [],
+              "$id": "2_1_name",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "3",
+              "error": null,
+              "$collection": "attributes"
+            }
+          ]
         }
       ]
     }

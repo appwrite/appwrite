@@ -717,6 +717,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -821,30 +831,30 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "column-slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "index",
                 "id": "index-idx_title_slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -856,75 +866,7 @@
               "$ref": "d7"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "products",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "products",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-title",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-title",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "index-idx_title_slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "index-idx_title_slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "db.update",
@@ -945,7 +887,7 @@
               ]
             }
           },
-          "expect": false
+          "expect": true
         },
         {
           "op": "mock.source",
@@ -1237,6 +1179,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -1341,30 +1293,30 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               },
               {
                 "$resource": "column",
                 "id": "column-slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ],
             [
               {
                 "$resource": "index",
                 "id": "index-idx_title_slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ]
           ]
@@ -1376,75 +1328,7 @@
               "$ref": "d15"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "products",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "products",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-title",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-title",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "index-idx_title_slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "index-idx_title_slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "resource.describe",
@@ -1465,13 +1349,13 @@
             "getId": "index-idx_title_slug",
             "getKey": "idx_title_slug",
             "getLengths": [],
-            "getMessage": "Table not found",
+            "getMessage": "Already exists on destination",
             "getName": "index",
             "getOrders": [],
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
-            "getStatus": "error",
+            "getStatus": "skip",
             "getTable": {
               "description": "",
               "database": {
@@ -2218,6 +2102,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -2322,30 +2216,30 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "column-slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "index",
                 "id": "index-idx_title_slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -2357,75 +2251,7 @@
               "$ref": "d7"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "products",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "products",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-title",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-title",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "index-idx_title_slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "index-idx_title_slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "db.update",
@@ -2439,7 +2265,7 @@
               "type": "index"
             }
           },
-          "expect": false
+          "expect": true
         },
         {
           "op": "mock.source",
@@ -2734,6 +2560,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -2838,30 +2674,30 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               },
               {
                 "$resource": "column",
                 "id": "column-slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ],
             [
               {
                 "$resource": "index",
                 "id": "index-idx_title_slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ]
           ]
@@ -2873,75 +2709,7 @@
               "$ref": "d15"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "products",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "products",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-title",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-title",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "index-idx_title_slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "index-idx_title_slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "resource.describe",
@@ -2962,7 +2730,7 @@
             "getId": "index-idx_title_slug",
             "getKey": "idx_title_slug",
             "getLengths": [],
-            "getMessage": "Table not found",
+            "getMessage": "Already exists on destination",
             "getName": "index",
             "getOrders": [
               "ASC",
@@ -2971,7 +2739,7 @@
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
-            "getStatus": "error",
+            "getStatus": "skip",
             "getTable": {
               "description": "",
               "database": {
@@ -3718,6 +3486,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -3822,30 +3600,30 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "column-slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "index",
                 "id": "index-idx_title_slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -3857,75 +3635,7 @@
               "$ref": "d7"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "products",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "products",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-title",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-title",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "index-idx_title_slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "index-idx_title_slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "db.update",
@@ -3942,7 +3652,7 @@
               ]
             }
           },
-          "expect": false
+          "expect": true
         },
         {
           "op": "mock.source",
@@ -4237,6 +3947,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -4341,30 +4061,30 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               },
               {
                 "$resource": "column",
                 "id": "column-slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ],
             [
               {
                 "$resource": "index",
                 "id": "index-idx_title_slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ]
           ]
@@ -4376,75 +4096,7 @@
               "$ref": "d15"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "products",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "products",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-title",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-title",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "index-idx_title_slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "index-idx_title_slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "resource.describe",
@@ -4465,7 +4117,7 @@
             "getId": "index-idx_title_slug",
             "getKey": "idx_title_slug",
             "getLengths": [],
-            "getMessage": "Table not found",
+            "getMessage": "Already exists on destination",
             "getName": "index",
             "getOrders": [
               "ASC",
@@ -4474,7 +4126,7 @@
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
-            "getStatus": "error",
+            "getStatus": "skip",
             "getTable": {
               "description": "",
               "database": {
@@ -5224,6 +4876,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -5328,30 +4990,30 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "column-slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "index",
                 "id": "index-idx_title_slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -5363,75 +5025,7 @@
               "$ref": "d7"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "products",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "products",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-title",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-title",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "index-idx_title_slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "index-idx_title_slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "db.update",
@@ -5448,7 +5042,7 @@
               ]
             }
           },
-          "expect": false
+          "expect": true
         },
         {
           "op": "mock.source",
@@ -5746,6 +5340,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -5850,30 +5454,30 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               },
               {
                 "$resource": "column",
                 "id": "column-slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ],
             [
               {
                 "$resource": "index",
                 "id": "index-idx_title_slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ]
           ]
@@ -5885,75 +5489,7 @@
               "$ref": "d15"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "products",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "products",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-title",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-title",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "index-idx_title_slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "index-idx_title_slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "resource.describe",
@@ -5977,7 +5513,7 @@
               20,
               0
             ],
-            "getMessage": "Table not found",
+            "getMessage": "Already exists on destination",
             "getName": "index",
             "getOrders": [
               "ASC",
@@ -5986,7 +5522,7 @@
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
-            "getStatus": "error",
+            "getStatus": "skip",
             "getTable": {
               "description": "",
               "database": {
@@ -6736,6 +6272,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -6840,30 +6386,30 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "column-slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "index",
                 "id": "index-idx_title_slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -6875,75 +6421,7 @@
               "$ref": "d7"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "products",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "products",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-title",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-title",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "index-idx_title_slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "index-idx_title_slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "db.update",
@@ -6957,7 +6435,7 @@
               "lengths": []
             }
           },
-          "expect": false
+          "expect": true
         },
         {
           "op": "mock.source",
@@ -7255,6 +6733,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -7359,30 +6847,30 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               },
               {
                 "$resource": "column",
                 "id": "column-slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ],
             [
               {
                 "$resource": "index",
                 "id": "index-idx_title_slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ]
           ]
@@ -7394,75 +6882,7 @@
               "$ref": "d15"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "products",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "products",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-title",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-title",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "index-idx_title_slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "index-idx_title_slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "resource.describe",
@@ -7486,7 +6906,7 @@
               0,
               0
             ],
-            "getMessage": "Table not found",
+            "getMessage": "Already exists on destination",
             "getName": "index",
             "getOrders": [
               "ASC",
@@ -7495,7 +6915,7 @@
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
-            "getStatus": "error",
+            "getStatus": "skip",
             "getTable": {
               "description": "",
               "database": {
@@ -8242,6 +7662,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -8346,30 +7776,30 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "column-slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "index",
                 "id": "index-idx_title_slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -8381,75 +7811,7 @@
               "$ref": "d7"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "products",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "products",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-title",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-title",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "index-idx_title_slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "index-idx_title_slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "db.update",
@@ -8463,7 +7825,7 @@
               "type": "index"
             }
           },
-          "expect": false
+          "expect": true
         },
         {
           "op": "mock.source",
@@ -8758,6 +8120,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -8862,30 +8234,30 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               },
               {
                 "$resource": "column",
                 "id": "column-slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ],
             [
               {
                 "$resource": "index",
                 "id": "index-idx_title_slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -8897,75 +8269,7 @@
               "$ref": "d15"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "products",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "products",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-title",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-title",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "index-idx_title_slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "index-idx_title_slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "resource.describe",
@@ -8986,7 +8290,7 @@
             "getId": "index-idx_title_slug",
             "getKey": "idx_title_slug",
             "getLengths": [],
-            "getMessage": "Table not found",
+            "getMessage": "",
             "getName": "index",
             "getOrders": [
               "ASC",
@@ -8995,7 +8299,7 @@
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
-            "getStatus": "error",
+            "getStatus": "success",
             "getTable": {
               "description": "",
               "database": {
@@ -9742,6 +9046,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -9846,30 +9160,30 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "column-slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "index",
                 "id": "index-idx_title_slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -9881,75 +9195,7 @@
               "$ref": "d7"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "products",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "products",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-title",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-title",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "index-idx_title_slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "index-idx_title_slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "db.update",
@@ -9963,7 +9209,7 @@
               "type": "index"
             }
           },
-          "expect": false
+          "expect": true
         },
         {
           "op": "mock.source",
@@ -10258,6 +9504,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -10362,30 +9618,30 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               },
               {
                 "$resource": "column",
                 "id": "column-slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ],
             [
               {
                 "$resource": "index",
                 "id": "index-idx_title_slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -10397,75 +9653,7 @@
               "$ref": "d15"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "products",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "products",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-title",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-title",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "index-idx_title_slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "index-idx_title_slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "resource.describe",
@@ -10486,7 +9674,7 @@
             "getId": "index-idx_title_slug",
             "getKey": "idx_title_slug",
             "getLengths": [],
-            "getMessage": "Table not found",
+            "getMessage": "",
             "getName": "index",
             "getOrders": [
               "ASC",
@@ -10495,7 +9683,7 @@
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
-            "getStatus": "error",
+            "getStatus": "success",
             "getTable": {
               "description": "",
               "database": {
@@ -11245,6 +10433,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -11349,30 +10547,30 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "column-slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "index",
                 "id": "index-idx_title_slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -11384,75 +10582,7 @@
               "$ref": "d7"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "products",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "products",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-title",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-title",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "index-idx_title_slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "index-idx_title_slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "db.update",
@@ -11466,7 +10596,7 @@
               "type": "index"
             }
           },
-          "expect": false
+          "expect": true
         },
         {
           "op": "mock.source",
@@ -11764,6 +10894,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -11868,30 +11008,30 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               },
               {
                 "$resource": "column",
                 "id": "column-slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ],
             [
               {
                 "$resource": "index",
                 "id": "index-idx_title_slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -11903,75 +11043,7 @@
               "$ref": "d15"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "products",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "products",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-title",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-title",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "index-idx_title_slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "index-idx_title_slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "resource.describe",
@@ -11995,7 +11067,7 @@
               30,
               0
             ],
-            "getMessage": "Table not found",
+            "getMessage": "",
             "getName": "index",
             "getOrders": [
               "ASC",
@@ -12004,7 +11076,7 @@
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
-            "getStatus": "error",
+            "getStatus": "success",
             "getTable": {
               "description": "",
               "database": {
@@ -12748,6 +11820,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -12852,30 +11934,30 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "column-slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "index",
                 "id": "index-idx_title_slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -12887,75 +11969,7 @@
               "$ref": "d7"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "products",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "products",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-title",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-title",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "index-idx_title_slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "index-idx_title_slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "db.update",
@@ -12976,7 +11990,7 @@
               ]
             }
           },
-          "expect": false
+          "expect": true
         },
         {
           "op": "mock.source",
@@ -13271,6 +12285,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -13375,30 +12399,30 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               },
               {
                 "$resource": "column",
                 "id": "column-slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ],
             [
               {
                 "$resource": "index",
                 "id": "index-idx_title_slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -13410,75 +12434,7 @@
               "$ref": "d15"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "products",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "products",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-title",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-title",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "index-idx_title_slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "index-idx_title_slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "resource.describe",
@@ -13499,7 +12455,7 @@
             "getId": "index-idx_title_slug",
             "getKey": "idx_title_slug",
             "getLengths": [],
-            "getMessage": "Table not found",
+            "getMessage": "",
             "getName": "index",
             "getOrders": [
               "ASC",
@@ -13508,7 +12464,7 @@
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
-            "getStatus": "error",
+            "getStatus": "success",
             "getTable": {
               "description": "",
               "database": {
@@ -14255,6 +13211,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -14359,30 +13325,30 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
                 "id": "column-slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "index",
                 "id": "index-idx_title_slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -14394,75 +13360,7 @@
               "$ref": "d7"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "products",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "products",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-title",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-title",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "index-idx_title_slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "index-idx_title_slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "db.update",
@@ -14476,7 +13374,7 @@
               "type": "index"
             }
           },
-          "expect": false
+          "expect": true
         },
         {
           "op": "mock.source",
@@ -14771,6 +13669,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -14875,30 +13783,30 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-title",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               },
               {
                 "$resource": "column",
                 "id": "column-slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ],
             [
               {
                 "$resource": "index",
                 "id": "index-idx_title_slug",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -14910,75 +13818,7 @@
               "$ref": "d15"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "products",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "products",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-title",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-title",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "index",
-              "resourceGroup": "databases",
-              "resourceId": "index-idx_title_slug",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "index",
-                "resourceGroup": "databases",
-                "resourceId": "index-idx_title_slug",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "resource.describe",
@@ -14999,7 +13839,7 @@
             "getId": "index-idx_title_slug",
             "getKey": "idx_title_slug",
             "getLengths": [],
-            "getMessage": "Table not found",
+            "getMessage": "",
             "getName": "index",
             "getOrders": [
               "ASC",
@@ -15008,7 +13848,7 @@
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
-            "getStatus": "error",
+            "getStatus": "success",
             "getTable": {
               "description": "",
               "database": {

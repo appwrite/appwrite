@@ -592,6 +592,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -695,16 +705,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-total",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -716,43 +726,7 @@
               "$ref": "d5"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "products",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "products",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-total",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-total",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "resource.describe",
@@ -816,7 +790,7 @@
             "getId": "column-total",
             "getKey": "total",
             "getMax": 9223372036854775807,
-            "getMessage": "Table not found",
+            "getMessage": "",
             "getMin": -9223372036854775808,
             "getName": "column",
             "getOptions": [],
@@ -824,7 +798,7 @@
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 8,
-            "getStatus": "error",
+            "getStatus": "success",
             "getTable": {
               "description": "",
               "database": {
@@ -868,7 +842,37 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": []
+          "expect": [
+            {
+              "key": "total",
+              "description": "",
+              "databaseInternalId": "1",
+              "databaseId": "shop",
+              "collectionInternalId": "1",
+              "collectionId": "products",
+              "type": "bigint",
+              "status": "available",
+              "size": 8,
+              "required": true,
+              "signed": true,
+              "default": null,
+              "array": false,
+              "format": "",
+              "formatOptions": {
+                "min": -9223372036854775808,
+                "max": 9223372036854775807
+              },
+              "filters": [],
+              "options": [],
+              "$id": "1_1_total",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "error": null,
+              "$collection": "attributes"
+            }
+          ]
         },
         {
           "op": "db.get",
@@ -891,11 +895,30 @@
             "reason": "Timestamps of documents written during the case (now)"
           },
           "expect": {
-            "$id": "",
-            "name": "",
-            "documentSecurity": true,
-            "attributes": [],
-            "indexes": []
+            "name": "database_1_collection_1",
+            "attributes": [
+              {
+                "$id": "total",
+                "key": "total",
+                "type": "bigint",
+                "size": 0,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              }
+            ],
+            "indexes": [],
+            "documentSecurity": false,
+            "$sequence": "5",
+            "$id": "database_1_collection_1",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "_metadata"
           }
         }
       ]
@@ -1491,6 +1514,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -1594,16 +1627,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "success",
+                "message": ""
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-total",
-                "status": "error",
-                "message": "Table not found"
+                "status": "success",
+                "message": ""
               }
             ]
           ]
@@ -1615,43 +1648,7 @@
               "$ref": "d5"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "products",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "products",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-total",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-total",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "resource.describe",
@@ -1715,7 +1712,7 @@
             "getId": "column-total",
             "getKey": "total",
             "getMax": 9223372036854775807,
-            "getMessage": "Table not found",
+            "getMessage": "",
             "getMin": -9223372036854775808,
             "getName": "column",
             "getOptions": [],
@@ -1723,7 +1720,7 @@
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 8,
-            "getStatus": "error",
+            "getStatus": "success",
             "getTable": {
               "description": "",
               "database": {
@@ -1764,7 +1761,7 @@
               "type": "biginteger"
             }
           },
-          "expect": false
+          "expect": true
         },
         {
           "op": "mock.source",
@@ -1931,6 +1928,16 @@
                   "filters": []
                 },
                 {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
                   "$id": "enabled",
                   "type": "boolean",
                   "size": 0,
@@ -2034,16 +2041,16 @@
               {
                 "$resource": "table",
                 "id": "products",
-                "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ],
             [
               {
                 "$resource": "column",
                 "id": "column-total",
-                "status": "error",
-                "message": "Table not found"
+                "status": "skip",
+                "message": "Already exists on destination"
               }
             ]
           ]
@@ -2055,43 +2062,7 @@
               "$ref": "d11"
             }
           },
-          "expect": [
-            {
-              "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"description\"",
-              "resourceName": "table",
-              "resourceGroup": "databases",
-              "resourceId": "products",
-              "json": {
-                "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"description\"",
-                "resourceName": "table",
-                "resourceGroup": "databases",
-                "resourceId": "products",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"description\""
-              }
-            },
-            {
-              "code": 0,
-              "message": "Table not found",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "column-total",
-              "json": {
-                "code": 0,
-                "message": "Table not found",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "column-total",
-                "trace": "<masked>"
-              },
-              "previous": null
-            }
-          ]
+          "expect": []
         },
         {
           "op": "resource.describe",
@@ -2155,7 +2126,7 @@
             "getId": "column-total",
             "getKey": "total",
             "getMax": 9223372036854775807,
-            "getMessage": "Table not found",
+            "getMessage": "Already exists on destination",
             "getMin": -9223372036854775808,
             "getName": "column",
             "getOptions": [],
@@ -2163,7 +2134,7 @@
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 8,
-            "getStatus": "error",
+            "getStatus": "skip",
             "getTable": {
               "description": "",
               "database": {
@@ -2207,7 +2178,37 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": []
+          "expect": [
+            {
+              "key": "total",
+              "description": "",
+              "databaseInternalId": "1",
+              "databaseId": "shop",
+              "collectionInternalId": "1",
+              "collectionId": "products",
+              "type": "biginteger",
+              "status": "available",
+              "size": 8,
+              "required": true,
+              "signed": true,
+              "default": null,
+              "array": false,
+              "format": "",
+              "formatOptions": {
+                "min": -9223372036854775808,
+                "max": 9223372036854775807
+              },
+              "filters": [],
+              "options": [],
+              "$id": "1_1_total",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "error": null,
+              "$collection": "attributes"
+            }
+          ]
         },
         {
           "op": "db.get",
@@ -2230,11 +2231,30 @@
             "reason": "Timestamps of documents written during the case (now)"
           },
           "expect": {
-            "$id": "",
-            "name": "",
-            "documentSecurity": true,
-            "attributes": [],
-            "indexes": []
+            "name": "database_1_collection_1",
+            "attributes": [
+              {
+                "$id": "total",
+                "key": "total",
+                "type": "bigint",
+                "size": 0,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "formatOptions": [],
+                "filters": []
+              }
+            ],
+            "indexes": [],
+            "documentSecurity": false,
+            "$sequence": "5",
+            "$id": "database_1_collection_1",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "_metadata"
           }
         }
       ]
