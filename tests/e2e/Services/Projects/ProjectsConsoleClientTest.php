@@ -7249,14 +7249,14 @@ final class ProjectsConsoleClientTest extends Scope
         $userEmail = $this->getUser()['email'];
 
         $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) use ($url) {
-            $this->assertStringContainsString($url, (string) ($email['html'] ?? ''));
+            $this->assertStringContainsString(\htmlspecialchars($url, ENT_QUOTES, 'UTF-8'), (string) ($email['html'] ?? ''));
         });
 
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
 
         $expectedUrl = $url . "&userId=" . $userId . "&secret=";
 
-        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
+        $this->assertStringContainsString(\htmlspecialchars($expectedUrl, ENT_QUOTES, 'UTF-8'), (string) $lastEmail['html']);
 
         // With search params, with mobile backlink
         $url = 'appwriteio://signin?id=abcd1234&tenant=efgh5678&domain=example.com&referred=0';
@@ -7281,14 +7281,14 @@ final class ProjectsConsoleClientTest extends Scope
         $userId = $response['body']['userId'];
 
         $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) use ($url) {
-            $this->assertStringContainsString($url, (string) ($email['html'] ?? ''));
+            $this->assertStringContainsString(\htmlspecialchars($url, ENT_QUOTES, 'UTF-8'), (string) ($email['html'] ?? ''));
         });
 
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
 
         $expectedUrl = $url . "&userId=" . $userId . "&secret=";
 
-        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
+        $this->assertStringContainsString(\htmlspecialchars($expectedUrl, ENT_QUOTES, 'UTF-8'), (string) $lastEmail['html']);
 
         // Without search params
         $url = 'http://localhost/auth/signin';
@@ -7320,7 +7320,7 @@ final class ProjectsConsoleClientTest extends Scope
 
         $expectedUrl = $url . "?userId=" . $userId . "&secret=";
 
-        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
+        $this->assertStringContainsString(\htmlspecialchars($expectedUrl, ENT_QUOTES, 'UTF-8'), (string) $lastEmail['html']);
 
         // Without search params, with mobile backlink
         $url = 'appwriteio://signin';
@@ -7352,9 +7352,9 @@ final class ProjectsConsoleClientTest extends Scope
 
         $expectedUrl = $url . "?userId=" . $userId . "&secret=";
 
-        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
+        $this->assertStringContainsString(\htmlspecialchars($expectedUrl, ENT_QUOTES, 'UTF-8'), (string) $lastEmail['html']);
 
-        // With injection (allowed, meant to be protected client-side)
+        // Markup in the URL is escaped in the email
         $url = 'http://localhost/auth/signin\"></a><h1>INJECTED</h1>';
 
         $response = $this->client->call(
@@ -7377,19 +7377,16 @@ final class ProjectsConsoleClientTest extends Scope
         $userId = $response['body']['userId'];
 
         $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) {
-            $this->assertStringContainsString('INJECTED', (string) ($email['html'] ?? ''));
+            $this->assertStringContainsString('INJECTED&lt;/h1&gt;', (string) ($email['html'] ?? ''));
         });
 
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
 
-        $this->assertStringContainsString('INJECTED', (string) $lastEmail['html']);
-        $this->assertStringContainsString('<h1>', (string) $lastEmail['html']);
-        $this->assertStringContainsString('</h1>', (string) $lastEmail['html']);
-        $this->assertStringContainsString('">', (string) $lastEmail['html']);
-        $this->assertStringContainsString('</a>', (string) $lastEmail['html']);
+        $this->assertStringNotContainsString('<h1>INJECTED</h1>', (string) $lastEmail['html']);
+        $this->assertStringNotContainsString('signin\\">', (string) $lastEmail['html']);
 
-        $expectedUrl = $url . "?userId=" . $userId . "&secret=";
-        $this->assertStringContainsString($expectedUrl, (string) $lastEmail['html']);
+        $expectedUrl = $url . '?userId=' . $userId . '&secret=';
+        $this->assertStringContainsString(\htmlspecialchars($expectedUrl, ENT_QUOTES, 'UTF-8'), (string) $lastEmail['html']);
 
     }
 }
