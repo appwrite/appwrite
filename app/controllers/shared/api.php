@@ -528,8 +528,13 @@ Http::init()
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scopes (' . \json_encode($allowed) . ')');
         }
         $request->setScopes($scopes);
-        // What this caller holds, for actions that hand scopes on to a resource
+        // What this caller holds, for actions that hand scopes on to a resource.
+        // Console members manage the whole project and create its keys with any
+        // scope, so their role's own scope list does not bound what they grant.
         $grantedScopes->grant($scopes);
+        if ($rolesSource->isPrivileged($authorization->getRoles())) {
+            $grantedScopes->grant(\array_keys(Config::getParam('projectScopes', [])));
+        }
 
         // Step 10: Check if user is blocked
         if ($rolesSource->getAttribute('status') === false) { // Account is blocked
