@@ -5,8 +5,10 @@ namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Callback;
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\State;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Database\Database;
@@ -47,6 +49,7 @@ class Get extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('platform')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -59,15 +62,12 @@ class Get extends Action
         Document $project,
         Response $response,
         Database $dbForPlatform,
-        array $platform
+        array $platform,
+        User $user
     ) {
         if (empty($state)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This installation was completed on GitHub, so it could not be connected to a project. Open your project\'s settings in the Appwrite Console and connect GitHub from there.');
         }
-
-        $state = \json_decode($state, true) ?? [];
-        $redirectFailure = $state['failure'] ?? '';
-        $projectId = $state['projectId'] ?? '';
 
         // This endpoint is public -- without verifying the signature the
         // Authorize action put in state, anyone could pass an arbitrary
@@ -78,35 +78,33 @@ class Get extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
         }
 
-        $signature = \hash_hmac('sha256', \json_encode([$projectId, $state['success'] ?? '', $redirectFailure]), $signingKey);
-        if (!\hash_equals($signature, \is_string($state['signature'] ?? null) ? $state['signature'] : '')) {
+        $state = State::verify($state, $signingKey);
+
+        if ($state === null) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
+        }
+
+        $projectId = $state->projectId;
+        $settings = ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings";
+        $redirectSuccess = $state->success ?: $settings;
+        $redirectFailure = $state->failure ?: $settings;
+
+        if ($state->isExpired()) {
+            $this->failure($response, $redirectFailure, 'The installation request has expired. Please restart the installation from the Appwrite Console.');
+            return;
+        }
+
+        if ($user->isEmpty() || $user->getId() !== $state->userId) {
+            $this->failure($response, $redirectFailure, 'The installation was started by a different Appwrite account. Please sign in with that account, or restart the installation from the Appwrite Console.');
+            return;
         }
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            $error = 'Project with the ID from state could not be found.';
-
-            if (!empty($redirectFailure)) {
-                $separator = \str_contains($redirectFailure, '?') ? '&' : '?';
-                $response
-                    ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-                    ->addHeader('Pragma', 'no-cache')
-                    ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
-                return;
-            }
-
-            throw new Exception(Exception::PROJECT_NOT_FOUND, $error);
+            $this->failure($response, $state->failure, 'Project with the ID from state could not be found.', Exception::PROJECT_NOT_FOUND);
+            return;
         }
-
-        $defaultState = [
-            'success' => ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings",
-            'failure' => ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings",
-        ];
-
-        $redirectSuccess = empty($state['success']) ? $defaultState['success'] : $state['success'];
-        $redirectFailure = empty($state['failure']) ? $defaultState['failure'] : $state['failure'];
 
         // Create / Update installation
         if (!empty($providerInstallationId)) {
@@ -186,21 +184,29 @@ class Get extends Action
                 default => 'Unexpected setup action "' . $setupAction . '" received from GitHub. Please restart the installation from the Appwrite Console.',
             };
 
-            if (!empty($redirectFailure)) {
-                $separator = \str_contains($redirectFailure, '?') ? '&' : '?';
-                $response
-                    ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-                    ->addHeader('Pragma', 'no-cache')
-                    ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
-                return;
-            }
-
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $error);
+            $this->failure($response, $redirectFailure, $error);
+            return;
         }
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($redirectSuccess);
+    }
+
+    /**
+     * Redirect back to the console with an error, or throw when no redirect is available.
+     */
+    private function failure(Response $response, string $redirect, string $error, string $type = Exception::GENERAL_ARGUMENT_INVALID): void
+    {
+        if (empty($redirect)) {
+            throw new Exception($type, $error);
+        }
+
+        $separator = \str_contains($redirect, '?') ? '&' : '?';
+        $response
+            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->addHeader('Pragma', 'no-cache')
+            ->redirect($redirect . $separator . \http_build_query(['error' => $error]));
     }
 }

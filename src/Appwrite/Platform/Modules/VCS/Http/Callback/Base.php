@@ -6,7 +6,9 @@ use Appwrite\Auth\OAuth2;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Permission as AppwritePermission;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\State;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Database\Database;
@@ -61,6 +63,7 @@ abstract class Base extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('platform')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -69,17 +72,14 @@ abstract class Base extends Action
         string $state,
         Response $response,
         Database $dbForPlatform,
-        array $platform
+        array $platform,
+        User $user
     ) {
         $key = static::getProvider();
 
         if (empty($state)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing state parameter. Please restart the installation from the Appwrite Console.');
         }
-
-        $state = \json_decode($state, true) ?? [];
-        $redirectFailure = $state['failure'] ?? '';
-        $projectId = $state['projectId'] ?? '';
 
         // This endpoint is public -- without verifying the signature the
         // Authorize action put in state, anyone with their own valid
@@ -91,28 +91,36 @@ abstract class Base extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
         }
 
-        $signature = \hash_hmac('sha256', \json_encode([$projectId, $state['success'] ?? '', $redirectFailure]), $signingKey);
-        if (!\hash_equals($signature, \is_string($state['signature'] ?? null) ? $state['signature'] : '')) {
+        $state = State::verify($state, $signingKey);
+
+        if ($state === null) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
+        }
+
+        $projectId = $state->projectId;
+        $settings = ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings";
+        $redirectSuccess = $state->success ?: $settings;
+        $redirectFailure = $state->failure ?: $settings;
+
+        if ($state->isExpired()) {
+            $this->failure($response, $redirectFailure, 'The installation request has expired. Please restart the installation from the Appwrite Console.');
+            return;
+        }
+
+        if ($user->isEmpty() || $user->getId() !== $state->userId) {
+            $this->failure($response, $redirectFailure, 'The installation was started by a different Appwrite account. Please sign in with that account, or restart the installation from the Appwrite Console.');
+            return;
         }
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            $this->failure($response, $redirectFailure, 'Project with the ID from state could not be found.', Exception::PROJECT_NOT_FOUND);
+            $this->failure($response, $state->failure, 'Project with the ID from state could not be found.', Exception::PROJECT_NOT_FOUND);
             return;
         }
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $hostname = $platform['consoleHostname'] ?? '';
-
-        $defaultState = [
-            'success' => ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings",
-            'failure' => ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings",
-        ];
-
-        $redirectSuccess = empty($state['success']) ? $defaultState['success'] : $state['success'];
-        $redirectFailure = empty($state['failure']) ? $defaultState['failure'] : $state['failure'];
 
         if (empty($code)) {
             $this->failure($response, $redirectFailure, 'OAuth2 authorization code is missing.');
