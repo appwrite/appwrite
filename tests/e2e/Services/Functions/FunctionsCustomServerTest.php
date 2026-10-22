@@ -2846,7 +2846,7 @@ final class FunctionsCustomServerTest extends Scope
         // New runtime: builds key a new cache, so nothing would read or delete the old one
         $response = $this->updateFunction($functionId, [
             'name' => 'Test Runtime Build Cache',
-            'runtime' => 'node-20',
+            'runtime' => 'node-24',
             'entrypoint' => 'index.js',
         ]);
         $this->assertSame(200, $response['headers']['status-code']);
