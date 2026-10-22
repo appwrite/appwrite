@@ -143,12 +143,12 @@ final class Mime
 
             // Preview padding is a run of invisible characters and no-break spaces
             // with nothing else in it. Elsewhere those characters shape the text.
-            if (str_replace(["\u{00A0}", "\u{200B}", "\u{200C}", "\u{200D}", "\u{200E}", "\u{200F}", "\u{FEFF}", ' ', "\t", "\n", "\f"], '', $node->data) === '') {
+            if (str_replace(["\u{00A0}", "\u{200B}", "\u{200C}", "\u{200D}", "\u{200E}", "\u{200F}", "\u{FEFF}", ' ', "\t", "\n", "\r", "\f"], '', $node->data) === '') {
                 return ' ';
             }
 
             // Source whitespace means nothing in HTML; collapse it the way a browser would.
-            $data = str_replace(["\t", "\n", "\f"], ' ', $node->data);
+            $data = str_replace(["\t", "\n", "\r", "\f"], ' ', $node->data);
             $words = implode(' ', array_filter(explode(' ', $data), static fn (string $word): bool => $word !== ''));
 
             return (str_starts_with($data, ' ') ? ' ' : '') . $words . (str_ends_with($data, ' ') ? ' ' : '');
