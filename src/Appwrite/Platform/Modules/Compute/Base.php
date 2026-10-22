@@ -378,12 +378,7 @@ class Base extends Action
         $branchDomain = null;
         if (!empty($providerBranch)) {
             try {
-                $branchDomain = (new BranchDomainFilter())->apply([
-                    'branch' => $providerBranch,
-                    'resourceId' => $site->getId(),
-                    'projectId' => $project->getId(),
-                    'sitesDomain' => $sitesDomain,
-                ]);
+                $branchDomain = $authorization->skip(fn () => self::branchDomain($project, $site, $providerBranch, $sitesDomain, $dbForPlatform));
             } catch (\InvalidArgumentException $error) {
                 // Deploy without a branch preview rather than store an unreachable rule
                 Console::warning('Skipping branch preview rule: ' . $error->getMessage());
@@ -452,6 +447,42 @@ class Base extends Action
     }
 
     /**
+     * The site's preview domain for a branch. A branch previewed before the
+     * domain hash was widened keeps the domain its rule already serves.
+     *
+     * @throws \InvalidArgumentException When the result is not a valid hostname
+     */
+    public static function branchDomain(Document $project, Document $site, string $branch, string $sitesDomain, Database $dbForPlatform): string
+    {
+        $input = [
+            'branch' => $branch,
+            'resourceId' => $site->getId(),
+            'projectId' => $project->getId(),
+            'sitesDomain' => $sitesDomain,
+        ];
+        $filter = new BranchDomainFilter();
+
+        $legacy = $filter->apply([...$input, 'legacy' => true]);
+        if (self::ownsBranchRule($dbForPlatform->getDocument('rules', md5($legacy)), $project, $site, $branch)) {
+            return $legacy;
+        }
+
+        return $filter->apply($input);
+    }
+
+    /**
+     * Whether a rule is the preview rule of this site's branch.
+     */
+    public static function ownsBranchRule(Document $rule, Document $project, Document $site, string $branch): bool
+    {
+        return !$rule->isEmpty()
+            && (string) $rule->getAttribute('projectInternalId') === (string) $project->getSequence()
+            && $rule->getAttribute('deploymentResourceType') === 'site'
+            && (string) $rule->getAttribute('deploymentResourceInternalId') === (string) $site->getSequence()
+            && $rule->getAttribute('deploymentVcsProviderBranch') === $branch;
+    }
+
+    /**
      * Create or repoint the site's branch-preview rule — and any manual rules
      * pinned to the branch — at a successfully built deployment.
      */
@@ -465,12 +496,7 @@ class Base extends Action
         }
 
         try {
-            $domain = (new BranchDomainFilter())->apply([
-                'branch' => $branchName,
-                'resourceId' => $site->getId(),
-                'projectId' => $project->getId(),
-                'sitesDomain' => $sitesDomain,
-            ]);
+            $domain = self::branchDomain($project, $site, $branchName, $sitesDomain, $dbForPlatform);
         } catch (\InvalidArgumentException $error) {
             // Skip only the preview rule: manual rules pinned to the branch
             // below still follow the deployment.
@@ -503,11 +529,15 @@ class Base extends Action
                 ]));
                 $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
             } catch (Duplicate) {
-                $rule = $dbForPlatform->updateDocument('rules', $ruleId, new Document([
-                    'deploymentId' => $deployment->getId(),
-                    'deploymentInternalId' => $deployment->getSequence(),
-                ]));
-                $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+                if (self::ownsBranchRule($dbForPlatform->getDocument('rules', $ruleId), $project, $site, $branchName)) {
+                    $rule = $dbForPlatform->updateDocument('rules', $ruleId, new Document([
+                        'deploymentId' => $deployment->getId(),
+                        'deploymentInternalId' => $deployment->getSequence(),
+                    ]));
+                    $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+                } else {
+                    Console::warning("Skipping branch preview rule: {$domain} is held by another resource.");
+                }
             }
         }
 
