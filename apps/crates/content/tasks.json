@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-22T21:00:00Z",
+  "updated": "2026-10-22T21:59:00Z",
   "tasks": [
     {
       "id": "core-keys",
@@ -112,6 +112,14 @@
       "status": "todo",
       "note": "On a quiet machine; the last container runs were taken under load.",
       "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "migration-26",
+      "title": "migration: main's 2.6 upgrades, descriptions, exports and NHost",
+      "area": "Database 8",
+      "status": "done",
+      "updated": "2026-10-22T21:59:00Z",
+      "note": "Catch-up L, 2-hour box. Main's migration writes a description on databases, tables, attributes, indexes, variables, webhooks and keys, and moved to the PHP SDK 32.0.0 (description, stripMetadata, emails, response format 2.5.0); the compat collections gained description, which is what cascaded. Also bucket stripMetadata, failed CSV and JSON exports deleting only files this run owns, and NHost and Supabase connecting on the checked address. 743 symbols, 37 of 37 PHP test files, 293 cases and 10,000 fuzz inputs with 0 differences against main's PHP."
     },
     {
       "id": "db8314",
