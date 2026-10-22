@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\NHost;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -88,6 +89,12 @@ class Create extends Action
         Event $queueForEvents,
         MigrationPublisher $publisherForMigrations
     ): void {
+        try {
+            NHost::assertCoordinates($subdomain, $region, $database, (string) $port);
+        } catch (\InvalidArgumentException $e) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
+        }
+
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => Id::unique(),
             'status' => 'pending',

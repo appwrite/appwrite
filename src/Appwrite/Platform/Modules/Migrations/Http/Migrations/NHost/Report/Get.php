@@ -72,6 +72,12 @@ class Get extends Action
         Response $response
     ): void {
         try {
+            NHost::assertCoordinates($subdomain, $region, $database, (string) $port);
+        } catch (\InvalidArgumentException $e) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
+        }
+
+        try {
             $nhost = new NHost($subdomain, $region, $adminSecret, $database, $username, $password, (string) $port);
             $report = $nhost->report($resources);
         } catch (\Throwable $e) {

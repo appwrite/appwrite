@@ -115,6 +115,8 @@ class NHost extends Source
 
     public function __construct(string $subdomain, string $region, string $adminSecret, string $databaseName, string $username, string $password, string $port = '5432')
     {
+        self::assertCoordinates($subdomain, $region, $databaseName, $port);
+
         $this->subdomain = $subdomain;
         $this->region = $region;
         $this->adminSecret = $adminSecret;
@@ -123,6 +125,41 @@ class NHost extends Source
         $this->password = $password;
         $this->port = $port;
         $this->storageURL = "https://{$this->subdomain}.storage.{$this->region}.nhost.run";
+    }
+
+    /**
+     * The project's coordinates become a host under nhost.run and keywords of
+     * a libpq connection string. A subdomain or region must therefore be a
+     * single DNS label, so the host stays under nhost.run, and none of them
+     * may carry whitespace, quotes or '=', which would add connection keywords
+     * (hostaddr=, host=) pointing anywhere.
+     *
+     * @throws \InvalidArgumentException
+     */
+    public static function assertCoordinates(string $subdomain, string $region, string $databaseName, string $port): void
+    {
+        foreach (['subdomain' => $subdomain, 'region' => $region] as $name => $label) {
+            if (! self::isLabel($label)) {
+                throw new \InvalidArgumentException("Invalid NHost {$name}: a single DNS label of letters, digits and hyphens is expected.");
+            }
+        }
+
+        if ($databaseName === '' || \strlen($databaseName) > 63 || ! \ctype_alnum(\str_replace(['_', '-'], '', $databaseName))) {
+            throw new \InvalidArgumentException('Invalid NHost database name: letters, digits, underscores and hyphens are expected.');
+        }
+
+        if (! \ctype_digit($port) || (int) $port < 1 || (int) $port > 65535) {
+            throw new \InvalidArgumentException('Invalid NHost database port.');
+        }
+    }
+
+    private static function isLabel(string $label): bool
+    {
+        return $label !== ''
+            && \strlen($label) <= 63
+            && \ctype_alnum(\str_replace('-', '', $label))
+            && ! \str_starts_with($label, '-')
+            && ! \str_ends_with($label, '-');
     }
 
     public function getDatabase(): PDO
