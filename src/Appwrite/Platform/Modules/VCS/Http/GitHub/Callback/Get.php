@@ -7,7 +7,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
-use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Psr\Http\Client\ClientExceptionInterface;
 use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -16,6 +16,9 @@ use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Psr7\Header;
+use Utopia\Psr7\Method;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\System\System;
 use Utopia\Validator\Text;
 
@@ -47,6 +50,7 @@ class Get extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('platform')
+            ->inject('clientForOAuth2')
             ->callback($this->action(...));
     }
 
@@ -59,7 +63,8 @@ class Get extends Action
         Document $project,
         Response $response,
         Database $dbForPlatform,
-        array $platform
+        array $platform,
+        Client $clientForOAuth2
     ) {
         if (empty($state)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This installation was completed on GitHub, so it could not be connected to a project. Open your project\'s settings in the Appwrite Console and connect GitHub from there.');
@@ -86,18 +91,8 @@ class Get extends Action
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            $error = 'Project with the ID from state could not be found.';
-
-            if (!empty($redirectFailure)) {
-                $separator = \str_contains($redirectFailure, '?') ? '&' : '?';
-                $response
-                    ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-                    ->addHeader('Pragma', 'no-cache')
-                    ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
-                return;
-            }
-
-            throw new Exception(Exception::PROJECT_NOT_FOUND, $error);
+            $this->failure($response, $redirectFailure, 'Project with the ID from state could not be found.', Exception::PROJECT_NOT_FOUND);
+            return;
         }
 
         $defaultState = [
@@ -108,13 +103,39 @@ class Get extends Action
         $redirectSuccess = empty($state['success']) ? $defaultState['success'] : $state['success'];
         $redirectFailure = empty($state['failure']) ? $defaultState['failure'] : $state['failure'];
 
-        // Create / Update installation
         if (!empty($providerInstallationId)) {
-            $vcs = $vcsFactory->fromInstallation(new Document([
-                'provider' => 'github',
-                'providerInstallationId' => $providerInstallationId,
-            ]));
-            $owner = $vcs->getOwnerName($providerInstallationId);
+            if (empty($code)) {
+                $this->failure($response, $redirectFailure, 'GitHub did not return an authorization code, so the installation could not be verified. Please restart the installation from the Appwrite Console.');
+                return;
+            }
+
+            $oauth2 = new OAuth2Github($clientForOAuth2, System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), '');
+
+            try {
+                $accessToken = $oauth2->getAccessToken($code);
+                $refreshToken = $oauth2->getRefreshToken($code);
+                $accessTokenExpiry = DateTime::addSeconds(new \DateTime(), \intval($oauth2->getAccessTokenExpiry($code)));
+            } catch (Exception) {
+                $this->failure($response, $redirectFailure, 'Failed to exchange the GitHub authorization code. Please restart the installation from the Appwrite Console.');
+                return;
+            }
+
+            if (!$this->canAccess($clientForOAuth2, $accessToken, $providerInstallationId)) {
+                $this->failure($response, $redirectFailure, 'Your GitHub account does not have access to this installation. Please restart the installation from the Appwrite Console.');
+                return;
+            }
+
+            try {
+                $vcs = $vcsFactory->fromInstallation(new Document([
+                    'provider' => 'github',
+                    'providerInstallationId' => $providerInstallationId,
+                ]));
+                $owner = $vcs->getOwnerName($providerInstallationId);
+                $personal = $oauth2->getUserSlug($accessToken) === $owner;
+            } catch (\Throwable) {
+                $this->failure($response, $redirectFailure, 'Failed to read the installation details from GitHub. Please restart the installation from the Appwrite Console.');
+                return;
+            }
 
             $projectInternalId = $project->getSequence();
 
@@ -123,23 +144,6 @@ class Get extends Action
                 Query::equal('projectInternalId', [$projectInternalId]),
                 Query::equal('provider', ['github'])
             ]);
-
-            $personal = false;
-            $refreshToken = null;
-            $accessToken = null;
-            $accessTokenExpiry = null;
-
-            if (!empty($code)) {
-                // github.com is the operator's configured provider, not a user's choice
-                $oauth2 = new OAuth2Github(new Client(new CurlAdapter()), System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
-
-                $accessToken = $oauth2->getAccessToken($code);
-                $refreshToken = $oauth2->getRefreshToken($code);
-                $accessTokenExpiry = DateTime::addSeconds(new \DateTime(), \intval($oauth2->getAccessTokenExpiry($code)));
-
-                $personalSlug = $oauth2->getUserSlug($accessToken);
-                $personal = $personalSlug === $owner;
-            }
 
             if ($installation->isEmpty()) {
                 $teamId = $project->getAttribute('teamId', '');
@@ -160,18 +164,12 @@ class Get extends Action
 
                 $installation = $dbForPlatform->createDocument('installations', $installation);
             } else {
-                $installation = $installation
-                    ->setAttribute('organization', $owner)
-                    ->setAttribute('personal', $personal)
-                    ->setAttribute('personalRefreshToken', $refreshToken)
-                    ->setAttribute('personalAccessToken', $accessToken)
-                    ->setAttribute('personalAccessTokenExpiry', $accessTokenExpiry);
                 $installation = $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
-                    'organization' => $installation->getAttribute('organization'),
-                    'personal' => $installation->getAttribute('personal'),
-                    'personalRefreshToken' => $installation->getAttribute('personalRefreshToken'),
-                    'personalAccessToken' => $installation->getAttribute('personalAccessToken'),
-                    'personalAccessTokenExpiry' => $installation->getAttribute('personalAccessTokenExpiry'),
+                    'organization' => $owner,
+                    'personal' => $personal,
+                    'personalRefreshToken' => $refreshToken,
+                    'personalAccessToken' => $accessToken,
+                    'personalAccessTokenExpiry' => $accessTokenExpiry,
                 ]));
             }
         } else {
@@ -186,21 +184,70 @@ class Get extends Action
                 default => 'Unexpected setup action "' . $setupAction . '" received from GitHub. Please restart the installation from the Appwrite Console.',
             };
 
-            if (!empty($redirectFailure)) {
-                $separator = \str_contains($redirectFailure, '?') ? '&' : '?';
-                $response
-                    ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-                    ->addHeader('Pragma', 'no-cache')
-                    ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
-                return;
-            }
-
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $error);
+            $this->failure($response, $redirectFailure, $error);
+            return;
         }
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($redirectSuccess);
+    }
+
+    /**
+     * Whether the installation is one the authorizing GitHub user can access.
+     */
+    private function canAccess(Client $client, string $accessToken, string $providerInstallationId): bool
+    {
+        $factory = new RequestFactory();
+        $page = 1;
+
+        do {
+            try {
+                $response = $client->sendRequest($factory->query(Method::GET, 'https://api.github.com/user/installations', [
+                    'per_page' => 100,
+                    'page' => $page,
+                ], [
+                    Header::ACCEPT => 'application/vnd.github+json',
+                    Header::AUTHORIZATION => 'Bearer ' . $accessToken,
+                    Header::USER_AGENT => 'Appwrite',
+                ]));
+            } catch (ClientExceptionInterface) {
+                return false;
+            }
+
+            if ($response->getStatusCode() !== 200) {
+                return false;
+            }
+
+            $body = \json_decode((string) $response->getBody(), true);
+            $installations = \is_array($body['installations'] ?? null) ? $body['installations'] : [];
+
+            foreach ($installations as $installation) {
+                if ((string) ($installation['id'] ?? '') === $providerInstallationId) {
+                    return true;
+                }
+            }
+
+            $page++;
+        } while (\count($installations) === 100);
+
+        return false;
+    }
+
+    /**
+     * Redirect back to the console with an error, or throw when no redirect is available.
+     */
+    private function failure(Response $response, string $redirect, string $error, string $type = Exception::GENERAL_ARGUMENT_INVALID): void
+    {
+        if (empty($redirect)) {
+            throw new Exception($type, $error);
+        }
+
+        $separator = \str_contains($redirect, '?') ? '&' : '?';
+        $response
+            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->addHeader('Pragma', 'no-cache')
+            ->redirect($redirect . $separator . \http_build_query(['error' => $error]));
     }
 }
