@@ -946,6 +946,85 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertEquals($organizationUrl, $response['body']['organizationUrl']);
     }
 
+    public function testGitHubPushIgnoresGiteaRepository(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $installationId = $this->createInstallationHelper()['$id'];
+
+        $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
+            'name' => 'provider-' . \uniqid(),
+            'auto_init' => true,
+            'default_branch' => 'main',
+            'private' => false,
+        ]);
+        $this->assertEquals(201, $repository['headers']['status-code'], \json_encode($repository['body']));
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'functionId' => Id::unique(),
+            'name' => 'Gitea provider filter',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'installationId' => $installationId,
+            'providerRepositoryId' => (string) $repository['body']['id'],
+            'providerBranch' => 'main',
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code'], \json_encode($function['body']));
+
+        $before = $this->listDeploymentIdsHelper($function['body']['$id']);
+        $commitHash = \sha1(\uniqid('', true));
+        $payload = [
+            'created' => false,
+            'deleted' => false,
+            'ref' => 'refs/heads/main',
+            'before' => $commitHash,
+            'after' => $commitHash,
+            'repository' => [
+                'id' => (int) $repository['body']['id'],
+                'name' => $repository['body']['name'],
+                'full_name' => self::GITEA_USERNAME . '/' . $repository['body']['name'],
+                'private' => false,
+                'html_url' => 'https://github.com/' . self::GITEA_USERNAME . '/' . $repository['body']['name'],
+                'owner' => ['name' => self::GITEA_USERNAME],
+            ],
+            'installation' => ['id' => 1],
+            'head_commit' => [
+                'author' => [
+                    'name' => 'Provider Filter',
+                    'email' => 'vcs-e2e@appwrite.io',
+                ],
+                'message' => 'Provider filter',
+                'url' => 'https://github.com/' . self::GITEA_USERNAME . '/' . $repository['body']['name'] . '/commit/' . $commitHash,
+            ],
+            'commits' => [[
+                'id' => $commitHash,
+                'added' => [],
+                'removed' => [],
+                'modified' => ['index.js'],
+            ]],
+            'sender' => [
+                'html_url' => 'https://github.com/' . self::GITEA_USERNAME,
+                'avatar_url' => '',
+            ],
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        // A GitHub delivery naming a Gitea repository's id must not act on it
+        $event = $this->client->call(Client::METHOD_POST, '/vcs/github/events', [
+            'content-type' => 'application/json',
+            'x-github-event' => 'push',
+            'x-hub-signature-256' => 'sha256=' . \hash_hmac('sha256', \json_encode($payload, JSON_THROW_ON_ERROR), System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '')),
+        ], $payload);
+
+        $this->assertSame(200, $event['headers']['status-code'], \json_encode($event['body']));
+
+        $this->assertSame($before, $this->listDeploymentIdsHelper($function['body']['$id']));
+    }
+
     public function testCreateInstallationWithoutState(): void
     {
         $response = $this->callGiteaCallbackHelper(['code' => 'unused']);
