@@ -307,6 +307,73 @@ final class TransactionsFamilyCustomServerTest extends Scope
         $this->assertSame(0, $stillPending['body']['operations']);
     }
 
+    public function testDocumentAndRowReadsStayOnCreatingFamily(): void
+    {
+        $headers = $this->requestHeaders();
+        $families = $this->families();
+
+        $vectorsdb = $this->client->call(Client::METHOD_POST, $families['vectorsdb'], $headers);
+        $this->assertSame(201, $vectorsdb['headers']['status-code']);
+        $mismatchedId = $vectorsdb['body']['$id'];
+
+        [$databaseId, $collectionId, $documentId] = $this->createLegacyCollection();
+        [$tableDatabaseId, $tableId, $rowId] = $this->createTablesCollection();
+
+        $documentGet = $this->client->call(
+            Client::METHOD_GET,
+            '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId,
+            $headers,
+            ['transactionId' => $mismatchedId]
+        );
+        $this->assertSame(404, $documentGet['headers']['status-code']);
+        $this->assertSame(Exception::TRANSACTION_NOT_FOUND, $documentGet['body']['type']);
+
+        $documentList = $this->client->call(
+            Client::METHOD_GET,
+            '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents',
+            $headers,
+            ['transactionId' => $mismatchedId]
+        );
+        $this->assertSame(404, $documentList['headers']['status-code']);
+        $this->assertSame(Exception::TRANSACTION_NOT_FOUND, $documentList['body']['type']);
+
+        $documentQuery = $this->client->call(
+            Client::METHOD_POST,
+            '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/query',
+            $headers,
+            ['transactionId' => $mismatchedId]
+        );
+        $this->assertSame(404, $documentQuery['headers']['status-code']);
+        $this->assertSame(Exception::TRANSACTION_NOT_FOUND, $documentQuery['body']['type']);
+
+        $rowGet = $this->client->call(
+            Client::METHOD_GET,
+            '/tablesdb/' . $tableDatabaseId . '/tables/' . $tableId . '/rows/' . $rowId,
+            $headers,
+            ['transactionId' => $mismatchedId]
+        );
+        $this->assertSame(404, $rowGet['headers']['status-code']);
+        $this->assertSame(Exception::TRANSACTION_NOT_FOUND, $rowGet['body']['type']);
+
+        $rowList = $this->client->call(
+            Client::METHOD_GET,
+            '/tablesdb/' . $tableDatabaseId . '/tables/' . $tableId . '/rows',
+            $headers,
+            ['transactionId' => $mismatchedId]
+        );
+        $this->assertSame(404, $rowList['headers']['status-code']);
+        $this->assertSame(Exception::TRANSACTION_NOT_FOUND, $rowList['body']['type']);
+
+        $rowQuery = $this->client->call(
+            Client::METHOD_POST,
+            '/tablesdb/' . $tableDatabaseId . '/tables/' . $tableId . '/rows/query',
+            $headers,
+            ['transactionId' => $mismatchedId]
+        );
+        $this->assertSame(404, $rowQuery['headers']['status-code']);
+        $this->assertSame(Exception::TRANSACTION_NOT_FOUND, $rowQuery['body']['type']);
+    }
+
     /**
      * @return array{0: string, 1: string, 2: string}
      */
