@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Project\Http\Project\SMTP;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -21,6 +22,7 @@ use Utopia\SMTP\Auth\Plain;
 use Utopia\SMTP\Client;
 use Utopia\SMTP\Encryption;
 use Utopia\SMTP\Timeouts;
+use Utopia\SMTP\Tls;
 use Utopia\SMTP\Transport\Native;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -79,6 +81,7 @@ class Update extends Action
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
@@ -97,7 +100,8 @@ class Update extends Action
         Response $response,
         Database $dbForPlatform,
         Document $project,
-        Authorization $authorization
+        Authorization $authorization,
+        PublicHostname $publicHostname
     ): void {
         // Fetch current configuration
         $smtp = $project->getAttribute('smtp', []);
@@ -144,15 +148,27 @@ class Update extends Action
                     new Login($smtp['username'], $smtp['password'] ?? ''),
                 ];
 
-            $client = new Client(
-                new Native($smtp['host'] ?? '', (int) ($smtp['port'] ?? 0)),
-                \gethostname() ?: 'localhost',
-                $credentials,
-                $encryption,
-                new Timeouts(connect: 5.0, read: 5.0, write: 5.0),
-            );
+            $client = null;
 
             try {
+                // Dial the address that was checked, with the name as the one the
+                // certificate must match. A host saved before the check existed is
+                // refused here the same way, as a connection that cannot be made.
+                $host = (string) ($smtp['host'] ?? '');
+                $address = $publicHostname->address($host);
+
+                $client = new Client(
+                    new Native(
+                        \str_contains($address, ':') ? "[{$address}]" : $address,
+                        (int) ($smtp['port'] ?? 0),
+                        new Tls(peerName: \trim($host, " \t\n\r\0\x0B[]")),
+                    ),
+                    \gethostname() ?: 'localhost',
+                    $credentials,
+                    $encryption,
+                    new Timeouts(connect: 5.0, read: 5.0, write: 5.0),
+                );
+
                 // Nothing is dialled until a session is needed, so asking what
                 // the server offers is what greets, upgrades and authenticates.
                 $client->capabilities();
@@ -167,7 +183,7 @@ class Update extends Action
                     throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, $error->getMessage());
                 }
             } finally {
-                $client->close();
+                $client?->close();
             }
         }
 

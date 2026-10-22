@@ -691,6 +691,40 @@ trait SMTPBase
         $this->assertSame(12345, $response['body']['smtpPort']);
     }
 
+    public function testUpdateSMTPPrivateHostCannotBeEnabled(): void
+    {
+        // Link-local, outside the ranges the dev stack allows: it passes the
+        // hostname format check but must never be dialled.
+        foreach (['169.254.169.254', '10.0.0.1'] as $host) {
+            $response = $this->updateSMTP(
+                senderName: 'Test',
+                senderEmail: 'sender@example.com',
+                host: $host,
+                port: 25,
+                enabled: true,
+            );
+
+            $this->assertSame(400, $response['headers']['status-code'], $host);
+            $this->assertSame('project_smtp_config_invalid', $response['body']['type'], $host);
+            $this->assertStringContainsString('private or reserved', $response['body']['message'], $host);
+        }
+    }
+
+    public function testUpdateSMTPPrivateHostIsNotAutoEnabled(): void
+    {
+        // Leaving `enabled` out lets a working connection switch SMTP on.
+        // A refused host must not, and must not turn into an error either.
+        $response = $this->updateSMTP(
+            senderName: 'Test',
+            senderEmail: 'sender@example.com',
+            host: '169.254.169.254',
+            port: 25,
+        );
+
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(false, $response['body']['smtpEnabled']);
+    }
+
     public function testUpdateSMTPLegacyReplyToAndResponseFormat(): void
     {
         $headers = \array_merge([

@@ -36,8 +36,13 @@ use Utopia\Telemetry\Adapter as Telemetry;
  */
 class Provider
 {
-    public function __construct(private readonly Telemetry $telemetry)
-    {
+    /**
+     * @param (\Closure(string): string)|null $resolve Maps an SMTP host to the address it may be dialled on. It throws \InvalidArgumentException to refuse the host for good, or \RuntimeException when it cannot answer now. Provider documents hold hosts a project chose, so a worker passes the check; without one a host is dialled as given.
+     */
+    public function __construct(
+        private readonly Telemetry $telemetry,
+        private readonly ?\Closure $resolve = null,
+    ) {
     }
 
     public function sms(Document $provider): ?SMSAdapter
@@ -105,6 +110,7 @@ class Provider
                 $options['encryption'] ?? '',
                 $options['autoTLS'] ??  false,
                 $options['mailer'] ??  '',
+                resolve: $this->resolve,
             ),
             'mailgun' => new Mailgun(
                 $apiKey,

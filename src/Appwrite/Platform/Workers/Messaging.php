@@ -8,6 +8,7 @@ use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Messaging\Adapter\Push\Appwrite as AppwritePush;
 use Appwrite\Messaging\Provider;
 use Appwrite\Messaging\Status as MessageStatus;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Usage\Context as UsageContext;
@@ -88,6 +89,7 @@ class Messaging extends Action
             ->inject('telemetry')
             ->inject('pools')
             ->inject('adapterForSMS')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
@@ -100,6 +102,7 @@ class Messaging extends Action
      * @param Telemetry $telemetry
      * @param SMSAdapter|null $adapterForSMS
      * @param Group $pools
+     * @param PublicHostname $publicHostname
      * @return void
      * @throws \Exception
      */
@@ -111,11 +114,12 @@ class Messaging extends Action
         UsagePublisher $publisherForUsage,
         Telemetry $telemetry,
         Group $pools,
-        ?SMSAdapter $adapterForSMS
+        ?SMSAdapter $adapterForSMS,
+        PublicHostname $publicHostname
     ): void {
         $this->telemetry = $telemetry;
         $this->pools = $pools;
-        $this->provider = new Provider($telemetry);
+        $this->provider = new Provider($telemetry, $publicHostname->resolver());
         $payload = $message->getPayload();
 
         if (empty($payload)) {

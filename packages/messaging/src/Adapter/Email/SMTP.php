@@ -17,6 +17,7 @@ use Utopia\SMTP\Exception\TransactionException;
 use Utopia\SMTP\Message as SmtpMessage;
 use Utopia\SMTP\Outcome;
 use Utopia\SMTP\Timeouts;
+use Utopia\SMTP\Tls;
 use Utopia\SMTP\Transport\Native;
 
 class SMTP extends EmailAdapter
@@ -38,6 +39,7 @@ class SMTP extends EmailAdapter
      * @param int $timelimit SMTP command timelimit in seconds.
      * @param int $pingThreshold Seconds a kept session may sit idle before it is probed ahead of the next message. Keep it under the server's idle timeout: a session the server closed inside the threshold fails its send without a retry. 0 probes before every reuse.
      * @param int $restartThreshold Messages a kept session carries before it is replaced. 0 disables.
+     * @param (\Closure(string): string)|null $resolve Maps each host to the address to dial. It throws \InvalidArgumentException to refuse a host for good, or \RuntimeException when it cannot answer now, which leaves the send worth repeating. The host stays the name the certificate must match. Without it the host is dialled as given.
      */
     public function __construct(
         private readonly string $host,
@@ -52,6 +54,7 @@ class SMTP extends EmailAdapter
         private readonly int $timelimit = 30,
         private readonly int $pingThreshold = 30,
         private readonly int $restartThreshold = 100,
+        private readonly ?\Closure $resolve = null,
     ) {
         parent::__construct();
         if (!\in_array($this->smtpSecure, ['', 'ssl', 'tls'])) {
@@ -178,8 +181,38 @@ class SMTP extends EmailAdapter
         $code = 0;
 
         foreach ($this->hosts() as [$host, $port, $encryption]) {
+            $address = $host;
+            $tls = new Tls();
+
+            if ($this->resolve !== null) {
+                // Dial the address that was checked, not the name, so DNS cannot
+                // answer differently between the check and the connection.
+                try {
+                    $address = ($this->resolve)($host);
+                } catch (\InvalidArgumentException $exception) {
+                    // Refused for good: nothing here would change the answer, so
+                    // it leaves the failure permanent unless another host differs.
+                    $failures[] = "{$host}:{$port} ({$exception->getMessage()})";
+
+                    continue;
+                } catch (\RuntimeException $exception) {
+                    // No answer to refuse or allow it yet, such as a DNS server that
+                    // failed a moment ago: the next attempt may get one.
+                    $failures[] = "{$host}:{$port} ({$exception->getMessage()})";
+                    $permanent = false;
+
+                    continue;
+                }
+
+                $tls = new Tls(peerName: trim($host, '[]'));
+
+                if (str_contains($address, ':')) {
+                    $address = "[{$address}]";
+                }
+            }
+
             $client = new Client(
-                new Native($host, $port),
+                new Native($address, $port, $tls),
                 gethostname() ?: 'localhost',
                 $this->authenticators(),
                 $encryption,

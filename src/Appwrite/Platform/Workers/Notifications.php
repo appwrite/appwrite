@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Messaging\Adapter\Console as ConsoleAdapter;
 use Appwrite\Utopia\Messaging\Adapter\Webhook as WebhookAdapter;
@@ -57,10 +58,11 @@ class Notifications extends Action
             ->inject('dbForPlatform')
             ->inject('platform')
             ->inject('clientForWebhooks')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
-    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, array $platform, Client $clientForWebhooks): void
+    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, array $platform, Client $clientForWebhooks, PublicHostname $publicHostname): void
     {
         $payload = $message->getPayload();
 
@@ -95,7 +97,7 @@ class Notifications extends Action
             }
 
             try {
-                $alertId = $this->dispatch($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $platform, $clientForWebhooks);
+                $alertId = $this->dispatch($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $platform, $clientForWebhooks, $publicHostname);
                 if ($messageId !== '' && $channel === NOTIFICATION_TYPE_WEBHOOK && $alertId === null) {
                     $this->persistAlert($dbForPlatform, $messageId, $recipient, $payload, $project);
                 }
@@ -187,11 +189,12 @@ class Notifications extends Action
         Database $dbForPlatform,
         array $platform,
         Client $clientForWebhooks,
+        PublicHostname $publicHostname,
     ): ?string {
         $channel = $recipient['channel'];
 
         return match ($channel) {
-            NOTIFICATION_TYPE_EMAIL => $this->dispatchEmail($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $platform),
+            NOTIFICATION_TYPE_EMAIL => $this->dispatchEmail($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $platform, $publicHostname),
             NOTIFICATION_TYPE_CONSOLE => $this->dispatchConsole($recipient, $messageId, $payload, $project, $dbForPlatform),
             NOTIFICATION_TYPE_WEBHOOK => $this->dispatchWebhook($recipient, $payload, $clientForWebhooks),
             default => throw new Exception('Unsupported notification channel: ' . $channel),
@@ -209,6 +212,7 @@ class Notifications extends Action
         Registry $register,
         Database $dbForPlatform,
         array $platform,
+        PublicHostname $publicHostname,
     ): ?string {
         $address = $recipient['address'];
         $smtp = $this->resolveSmtpConfig($project, $payload);
@@ -295,6 +299,7 @@ class Notifications extends Action
             timeout: 10,
             keepAlive: false,
             timelimit: 30,
+            resolve: $publicHostname->resolver(),
         );
 
         $defaultFromEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
