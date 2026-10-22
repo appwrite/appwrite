@@ -973,6 +973,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         ]);
         $this->assertEquals(201, $function['headers']['status-code'], \json_encode($function['body']));
 
+        $before = $this->listDeploymentIdsHelper($function['body']['$id']);
         $commitHash = \sha1(\uniqid('', true));
         $payload = [
             'created' => false,
@@ -1021,16 +1022,7 @@ final class VCSGiteaConsoleClientTest extends Scope
 
         $this->assertSame(200, $event['headers']['status-code'], \json_encode($event['body']));
 
-        $deployments = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/deployments', \array_merge([
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::equal('providerCommitHash', [$commitHash])->toString(),
-            ],
-        ]);
-
-        $this->assertSame(200, $deployments['headers']['status-code']);
-        $this->assertSame(0, $deployments['body']['total']);
+        $this->assertSame($before, $this->listDeploymentIdsHelper($function['body']['$id']));
     }
 
     public function testCreateInstallationWithoutState(): void
