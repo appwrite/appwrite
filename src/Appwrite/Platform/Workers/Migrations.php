@@ -663,12 +663,17 @@ class Migrations extends Action
                 return;
             }
 
-            $destination->success();
+            $destinationType = $migration->getAttribute('destination');
+            $export = $destinationType === DestinationCSV::getName() || $destinationType === DestinationJSON::getName();
+
+            // An export destination succeeds once its file row exists, inside handleDataExportComplete().
+            if (!$export) {
+                $destination->success();
+            }
             $source->success();
 
-            $destinationType = $migration->getAttribute('destination');
-            if ($destinationType === DestinationCSV::getName() || $destinationType === DestinationJSON::getName()) {
-                $this->handleDataExportComplete($project, $migration, $publisherForMails, $queueForRealtime, $platform, $authorization);
+            if ($export) {
+                $this->handleDataExportComplete($project, $migration, $destination, $publisherForMails, $queueForRealtime, $platform, $authorization);
             }
 
             $migration->setAttribute('status', 'completed');
@@ -836,6 +841,7 @@ class Migrations extends Action
      *
      * @param Document $project
      * @param Document $migration
+     * @param Destination $destination
      * @param MailPublisher $publisherForMails
      * @param Realtime $queueForRealtime
      * @param array $platform
@@ -845,6 +851,7 @@ class Migrations extends Action
     protected function handleDataExportComplete(
         Document $project,
         Document $migration,
+        Destination $destination,
         MailPublisher $publisherForMails,
         Realtime $queueForRealtime,
         array $platform,
@@ -930,6 +937,9 @@ class Migrations extends Action
         ]));
 
         Console::info("Created file document in bucket: $fileId");
+
+        // The file row owns the file now: a later failure must not delete it from under the row.
+        $destination->success();
 
         // The link is emailed, so it lives as long as the file itself does.
         $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', DATA_EXPORT_RETENTION, 0);
