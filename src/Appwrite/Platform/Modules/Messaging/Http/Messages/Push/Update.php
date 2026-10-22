@@ -307,19 +307,16 @@ class Update extends Action
                 throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
             }
 
-            $scheduleTime = $currentScheduledAt ?? $scheduledAt;
-            if (!\is_null($scheduleTime)) {
-                $expiry = (new \DateTime($scheduleTime))->add(new \DateInterval('P15D'))->format('U');
-            } else {
-                $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
-            }
+            $scheduleTime = $scheduledAt ?? $currentScheduledAt;
+            $delivery = \is_null($scheduleTime) ? \time() : (new \DateTime($scheduleTime))->getTimestamp();
 
-            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', \intval($expiry), 0);
+            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', APP_PUSH_IMAGE_TOKEN_DURATION, 0);
 
             $jwt = $encoder->encode([
                 'bucketId' => $bucket->getId(),
                 'fileId' => $file->getId(),
                 'projectId' => $project->getId(),
+                'exp' => $delivery + APP_PUSH_IMAGE_TOKEN_DURATION,
             ]);
 
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
