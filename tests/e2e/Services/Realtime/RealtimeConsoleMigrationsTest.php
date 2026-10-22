@@ -43,6 +43,13 @@ final class RealtimeConsoleMigrationsTest extends Scope
 
         $owner = $this->getConsoleWebsocket($this->getRoot()['session']);
         $restricted = $this->getConsoleWebsocket($member['session']);
+        $projectTree = $this->getWebsocket(['console'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-mode' => 'admin',
+        ], $projectId, timeout: 3);
+        $connected = \json_decode($projectTree->receive(), true);
+        $this->assertSame('connected', $connected['type']);
 
         $migration = $this->client->call(Client::METHOD_POST, '/migrations/appwrite', [
             'origin' => 'http://localhost',
@@ -68,16 +75,22 @@ final class RealtimeConsoleMigrationsTest extends Scope
         /**
          * Test for FAILURE
          */
+        $this->assertNoEvent($restricted, $event, 'A member without access to the project received its migration event.');
+        $this->assertNoEvent($projectTree, $event, 'A migration event was published into the project\'s own subscriptions.');
+    }
+
+    private function assertNoEvent(WebSocketClient $client, string $event, string $message): void
+    {
         while (true) {
             try {
-                $frame = \json_decode($restricted->receive(), true);
+                $frame = \json_decode($client->receive(), true);
             } catch (TimeoutException) {
                 break;
             }
 
-            $this->assertNotContains($event, $frame['data']['events'] ?? [], 'A member without access to the project received its migration event.');
+            $this->assertNotContains($event, $frame['data']['events'] ?? [], $message);
         }
-        $restricted->close();
+        $client->close();
     }
 
     private function getConsoleWebsocket(string $session): WebSocketClient
