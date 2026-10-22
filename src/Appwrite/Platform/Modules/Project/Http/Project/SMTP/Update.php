@@ -102,6 +102,14 @@ class Update extends Action
         // Fetch current configuration
         $smtp = $project->getAttribute('smtp', []);
 
+        // The stored password is write-only, so it is only reused for the server it was set for.
+        $serverChanged = (!\is_null($host) && $host !== ($smtp['host'] ?? ''))
+            || (!\is_null($port) && $port !== (int) ($smtp['port'] ?? 0))
+            || (!\is_null($secure) && $secure !== ($smtp['secure'] ?? ''));
+        if ($serverChanged && \is_null($password) && !empty($smtp['password'] ?? '')) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Param "password" is required when changing host, port or secure.');
+        }
+
         // Apply changes — null means "not provided, keep existing".
         // Empty string explicitly clears a previously-set value.
         $keys = ['host', 'port', 'username', 'password', 'senderEmail', 'senderName', 'replyToEmail', 'replyToName', 'secure', 'enabled'];

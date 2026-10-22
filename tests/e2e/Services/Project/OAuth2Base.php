@@ -452,6 +452,50 @@ trait OAuth2Base
         $this->assertSame('general_argument_invalid', $response['body']['type']);
     }
 
+    /**
+     * @return iterable<string, array{string, array<string, string>, array<string, string>}>
+     */
+    public static function endpointChangeProvider(): iterable
+    {
+        yield 'oidc wellKnownURL' => ['oidc', ['wellKnownURL' => 'https://idp.example/.well-known/openid-configuration'], ['wellKnownURL' => 'https://other.example/.well-known/openid-configuration']];
+        yield 'oidc tokenURL' => ['oidc', ['wellKnownURL' => 'https://idp.example/.well-known/openid-configuration'], ['tokenURL' => 'https://other.example/oauth2/token']];
+        yield 'okta domain' => ['okta', ['domain' => 'trial-6400025.okta.com'], ['domain' => 'other-6400025.okta.com']];
+        yield 'auth0 endpoint' => ['auth0', ['endpoint' => 'example.us.auth0.com'], ['endpoint' => 'other.us.auth0.com']];
+    }
+
+    #[DataProvider('endpointChangeProvider')]
+    public function testUpdateOAuth2EndpointChangeRequiresSecret(string $provider, array $seed, array $change): void
+    {
+        $response = $this->updateOAuth2($provider, [
+            'clientId' => $provider . '-client',
+            'clientSecret' => $provider . '-secret',
+            'enabled' => false,
+            ...$seed,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->updateOAuth2($provider, $change);
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->updateOAuth2($provider, $seed);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $response = $this->updateOAuth2($provider, [
+            'clientSecret' => $provider . '-rotated',
+            ...$change,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(\array_values($change)[0], $response['body'][\array_key_first($change)]);
+        $this->assertSame('', $response['body']['clientSecret']);
+    }
+
     public function testUpdateOAuth2OktaRoundTrip(): void
     {
         $update = $this->updateOAuth2('okta', [
