@@ -396,6 +396,66 @@ final class PresenceRealtimeClientTest extends Scope
         }
     }
 
+    public function testOverlappingPresenceWritesCountSocketOnce(): void
+    {
+        [$project, $user, $headers] = $this->bootstrapIsolatedProject();
+        $presenceId = Id::unique();
+        $channels = ['presences', 'presences.' . $presenceId];
+
+        $publisher = $this->connectRealtimeAndSubscribe($project, $headers, $channels, timeout: 2);
+        $listener = $this->connectRealtimeAndSubscribe($project, $headers, $channels, timeout: 2);
+
+        try {
+            // Fire two presence writes back to back on the same socket without reading between them, so
+            // the realtime worker processes them as overlapping coroutines. The socket must be counted
+            // once: both writes converge on a single row, and closing the one socket (a single onClose)
+            // must take the user fully offline -- a double count would leave the row lingering.
+            $metadata = ['testRunId' => Id::unique(), 'case' => 'overlapping-writes'];
+            $this->sendPresenceMessage($publisher, $presenceId, 'online', $metadata, $this->getPresencePermissions(Role::any()));
+            $this->sendPresenceMessage($publisher, $presenceId, 'away', $metadata, $this->getPresencePermissions(Role::any()));
+
+            $this->receivePresenceResponse($publisher, $presenceId, 'away');
+
+            $list = $this->client->call(
+                Client::METHOD_GET,
+                '/presences',
+                $this->getServerHeaders($project),
+                [
+                    'queries' => [
+                        Query::equal('userId', [$user['$id']])->toString(),
+                    ],
+                ]
+            );
+            $this->assertSame(200, $list['headers']['status-code']);
+            $this->assertSame(1, $list['body']['total'], 'Overlapping writes on one socket must collapse to a single presence row');
+
+            $publisher->close();
+
+            // The one socket closing must delete the row. A leaked second count would survive it.
+            $this->receiveUntil(
+                $listener,
+                fn (array $message): bool => ($message['type'] ?? null) === 'event'
+                    && ($message['data']['payload']['$id'] ?? null) === $presenceId
+                    && \in_array('presences.' . $presenceId . '.delete', $message['data']['events'] ?? [], true),
+                5000
+            );
+
+            $read = $this->client->call(
+                Client::METHOD_GET,
+                '/presences/' . $presenceId,
+                $this->getServerHeaders($project)
+            );
+            $this->assertSame(404, $read['headers']['status-code'], 'Closing the only socket must remove the presence; a double count would leave it online');
+        } finally {
+            try {
+                $publisher->close();
+            } catch (\Throwable) {
+                // Already closed.
+            }
+            $listener->close();
+        }
+    }
+
     public function testPresenceValidationErrorsReturnErrorOnly(): void
     {
         [$project, , $headers] = $this->bootstrapIsolatedProject();
