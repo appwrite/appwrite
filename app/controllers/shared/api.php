@@ -318,7 +318,11 @@ Http::init()
             }
 
             $projectId = $project->getId();
-            if ($projectId === 'console' && str_starts_with($route->getPath(), '/v1/projects/:projectId')) {
+            if (str_starts_with($route->getPath(), '/v1/organization/projects')) {
+                // Organization routes act on the project in the path; without one they act on the whole organization.
+                $segments = \explode('/', (string) \parse_url($request->getURI(), PHP_URL_PATH));
+                $projectId = ($segments[4] ?? '') !== '' ? $segments[4] : 'console';
+            } elseif ($projectId === 'console' && str_starts_with($route->getPath(), '/v1/projects/:projectId')) {
                 $uri = $request->getURI();
                 $projectId = explode('/', $uri)[3];
             }
@@ -349,7 +353,9 @@ Http::init()
              * For console projects resource, we use platform DB.
              * Enabling authorization restricts admin user to the projects they have access to.
              */
-            if ($project->getId() === 'console' && ($route->getPath() === '/v1/projects' || $route->getPath() === '/v1/projects/:projectId')) {
+            $isProjectsRead = $project->getId() === 'console' && \in_array($route->getPath(), ['/v1/projects', '/v1/projects/:projectId'], true);
+            $isOrganizationProjectsRead = $request->getMethod() === Request::METHOD_GET && \in_array($route->getPath(), ['/v1/organization/projects', '/v1/organization/projects/:projectId'], true);
+            if ($isProjectsRead || $isOrganizationProjectsRead) {
                 $authorization->setDefaultStatus(true);
             } else {
                 // Otherwise, disable authorization checks.
