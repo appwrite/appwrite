@@ -163,7 +163,7 @@ class Server
             return;
         }
 
-        if ($connection->active) {
+        if ($connection->active && !$connection->closed) {
             $this->refreshKeepAlive($connection);
         }
     }
@@ -174,6 +174,13 @@ class Server
 
         switch ($packet->type) {
             case Packet::CONNECT:
+                // A second CONNECT on the same network connection is a protocol error.
+                if ($connection->connected) {
+                    $connection->disconnect(Disconnect::PROTOCOL_ERROR);
+                    break;
+                }
+                $connection->connected = true;
+
                 $connect = Connect::decode($packet->body);
                 $connection->protocol = $connect->protocolLevel;
                 $connection->cleanStart = $connect->cleanStart;
