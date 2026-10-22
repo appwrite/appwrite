@@ -159,7 +159,7 @@ class TransactionState
                 continue;
             }
             if ($docState['action'] === 'create' || $docState['action'] === 'upsert') {
-                $documents[] = $this->applyProjection($docState['document'], $queries);
+                $documents[] = $this->applyProjection($this->increment($docState['document'], $docState), $queries);
             }
         }
 

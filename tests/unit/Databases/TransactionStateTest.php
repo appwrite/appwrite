@@ -480,6 +480,18 @@ final class TransactionStateTest extends TestCase
         $this->assertSame(10, $this->state->getDocument(new Document(), self::ORDERS, 'new', $transaction->getId())->getAttribute('total'));
     }
 
+    public function testDistinctReadAddsAStagedIncrementToAStagedUpsertOfANewRow(): void
+    {
+        $transaction = $this->shop();
+        $this->stage($transaction, 'upsert', 'new', ['customerId' => 'cy'], self::ORDERS_INTERNAL_ID);
+        $this->stage($transaction, 'increment', 'new', ['column' => 'total', 'value' => 3], self::ORDERS_INTERNAL_ID);
+
+        $rows = $this->state->listDocuments(new Document(), self::ORDERS, $transaction->getId(), [Query::distinct(), Query::select(['customerId', 'total'])]);
+
+        $staged = \array_values(\array_filter($rows, static fn (Document $row): bool => $row->getAttribute('customerId') === 'cy'));
+        $this->assertSame([['customerId' => 'cy', 'total' => 3]], \array_map(static fn (Document $row): array => $row->getArrayCopy(), $staged));
+    }
+
     public function testListAndCountMatchAndOrderAStagedIncrementByItsNewValue(): void
     {
         $transaction = $this->shop();
