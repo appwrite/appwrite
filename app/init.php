@@ -18,6 +18,8 @@ if (\file_exists(__DIR__ . '/../vendor/autoload.php')) {
 \ini_set('display_errors', 1);
 \ini_set('display_startup_errors', 1);
 \ini_set('default_socket_timeout', -1);
+// Traces reach logs, spans and error reports; keep call arguments, such as passwords and keys, out of them
+\ini_set('zend.exception_ignore_args', 1);
 \error_reporting(E_ALL);
 
 require_once __DIR__ . '/init/constants.php';
