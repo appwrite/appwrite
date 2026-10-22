@@ -8861,27 +8861,27 @@
             },
             {
               "transform": "documents_upsert",
-              "query": "INSERT INTO \"${ns}\".\"ns_up\" AS \"target\" (\"$document\", \"_createdAt\", \"_permissions\", \"_uid\", \"_updatedAt\") VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?) ON CONFLICT (\"_uid\") DO UPDATE SET \"$document\" = EXCLUDED.\"$document\", \"_permissions\" = EXCLUDED.\"_permissions\", \"_updatedAt\" = EXCLUDED.\"_updatedAt\""
+              "query": "INSERT INTO \"${ns}\".\"ns_up\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_uid\", \"_updatedAt\", \"document\") VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?) ON CONFLICT (\"_uid\") DO UPDATE SET \"_permissions\" = EXCLUDED.\"_permissions\", \"_updatedAt\" = EXCLUDED.\"_updatedAt\", \"document\" = EXCLUDED.\"document\""
             },
             {
               "transform": "documents_upsert",
-              "query": "INSERT INTO \"${ns}\".\"ns_up\" AS \"target\" (\"$document\", \"_createdAt\", \"_permissions\", \"_uid\", \"_updatedAt\") VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?) ON CONFLICT (\"_uid\") DO UPDATE SET \"$document\" = EXCLUDED.\"$document\", \"_permissions\" = EXCLUDED.\"_permissions\", \"_updatedAt\" = EXCLUDED.\"_updatedAt\""
+              "query": "INSERT INTO \"${ns}\".\"ns_up\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_uid\", \"_updatedAt\", \"document\") VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?) ON CONFLICT (\"_uid\") DO UPDATE SET \"_permissions\" = EXCLUDED.\"_permissions\", \"_updatedAt\" = EXCLUDED.\"_updatedAt\", \"document\" = EXCLUDED.\"document\""
             },
             {
               "transform": "documents_upsert",
-              "query": "INSERT INTO \"${ns}\".\"ns_up\" AS \"target\" (\"$document\", \"_createdAt\", \"_permissions\", \"_uid\", \"_updatedAt\") VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?) ON CONFLICT (\"_uid\") DO UPDATE SET \"$document\" = EXCLUDED.\"$document\", \"_permissions\" = EXCLUDED.\"_permissions\", \"_updatedAt\" = EXCLUDED.\"_updatedAt\""
+              "query": "INSERT INTO \"${ns}\".\"ns_up\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_uid\", \"_updatedAt\", \"document\") VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?) ON CONFLICT (\"_uid\") DO UPDATE SET \"_permissions\" = EXCLUDED.\"_permissions\", \"_updatedAt\" = EXCLUDED.\"_updatedAt\", \"document\" = EXCLUDED.\"document\""
             },
             {
               "transform": "documents_upsert",
-              "query": "INSERT INTO \"${ns}\".\"ns_up\" AS \"target\" (\"$document\", \"_createdAt\", \"_permissions\", \"_uid\", \"_updatedAt\") VALUES (?, ?, ?, ?, ?) ON CONFLICT (\"_uid\") DO UPDATE SET \"$document\" = EXCLUDED.\"$document\", \"_permissions\" = EXCLUDED.\"_permissions\", \"_updatedAt\" = EXCLUDED.\"_updatedAt\""
+              "query": "INSERT INTO \"${ns}\".\"ns_up\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_uid\", \"_updatedAt\", \"document\") VALUES (?, ?, ?, ?, ?) ON CONFLICT (\"_uid\") DO UPDATE SET \"_permissions\" = EXCLUDED.\"_permissions\", \"_updatedAt\" = EXCLUDED.\"_updatedAt\", \"document\" = EXCLUDED.\"document\""
             },
             {
               "transform": "documents_upsert",
-              "query": "INSERT INTO \"${ns}\".\"ns_up\" AS \"target\" (\"$document\", \"_createdAt\", \"_permissions\", \"_uid\", \"_updatedAt\") VALUES (?, ?, ?, ?, ?) ON CONFLICT (\"_uid\") DO UPDATE SET \"$document\" = EXCLUDED.\"$document\", \"_permissions\" = EXCLUDED.\"_permissions\", \"_updatedAt\" = EXCLUDED.\"_updatedAt\""
+              "query": "INSERT INTO \"${ns}\".\"ns_up\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_uid\", \"_updatedAt\", \"document\") VALUES (?, ?, ?, ?, ?) ON CONFLICT (\"_uid\") DO UPDATE SET \"_permissions\" = EXCLUDED.\"_permissions\", \"_updatedAt\" = EXCLUDED.\"_updatedAt\", \"document\" = EXCLUDED.\"document\""
             },
             {
               "transform": "documents_upsert",
-              "query": "INSERT INTO \"${ns}\".\"ns_up\" AS \"target\" (\"$document\", \"_createdAt\", \"_permissions\", \"_uid\", \"_updatedAt\") VALUES (?, ?, ?, ?, ?) ON CONFLICT (\"_uid\") DO UPDATE SET \"$document\" = EXCLUDED.\"$document\", \"_permissions\" = EXCLUDED.\"_permissions\", \"_updatedAt\" = EXCLUDED.\"_updatedAt\""
+              "query": "INSERT INTO \"${ns}\".\"ns_up\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_uid\", \"_updatedAt\", \"document\") VALUES (?, ?, ?, ?, ?) ON CONFLICT (\"_uid\") DO UPDATE SET \"_permissions\" = EXCLUDED.\"_permissions\", \"_updatedAt\" = EXCLUDED.\"_updatedAt\", \"document\" = EXCLUDED.\"document\""
             }
           ]
         },
@@ -10691,7 +10691,7 @@
             },
             {
               "transform": "documents_upsert",
-              "query": "INSERT INTO \"${ns}\".\"ns_sh\" AS \"target\" (\"$document\", \"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\") VALUES (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"$document\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"document\" ELSE target.\"document\" END, \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END"
+              "query": "INSERT INTO \"${ns}\".\"ns_sh\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"document\") VALUES (?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"document\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"document\" ELSE target.\"document\" END"
             },
             {
               "transform": "document_increase",
