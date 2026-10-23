@@ -107,17 +107,16 @@ class Maintenance extends Action
     }
 
     /**
-     * The first run after $now: today's $start if it is still ahead, otherwise tomorrow's.
+     * The first run after $now on the grid of today's $start plus whole intervals, so a restart waits at most one
+     * interval instead of until the next start time.
      */
     public static function next(\DateTime $now, string $start, int $interval): \DateTime
     {
-        $next = new \DateTime($now->format("Y-m-d $start"), $now->getTimezone());
+        $anchor = new \DateTime($now->format("Y-m-d $start"), $now->getTimezone());
+        $elapsed = $now->getTimestamp() - $anchor->getTimestamp();
+        $steps = (int) \floor($elapsed / $interval) + 1;
 
-        if ($next->getTimestamp() <= $now->getTimestamp()) {
-            $next->add(\DateInterval::createFromDateString('1 days'));
-        }
-
-        return $next;
+        return $anchor->setTimestamp($anchor->getTimestamp() + $steps * $interval);
     }
 
     private function notifyDeleteConnections(DeletePublisher $publisherForDeletes): void
