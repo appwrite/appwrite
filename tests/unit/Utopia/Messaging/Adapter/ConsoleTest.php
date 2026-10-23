@@ -11,11 +11,13 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 
 final class ConsoleTest extends TestCase
@@ -35,24 +37,24 @@ final class ConsoleTest extends TestCase
             ->setNamespace('alerts_' . \uniqid());
 
         $this->database->create();
-        $this->database->createCollection('notifications', [], [], [Permission::create(Role::any()), Permission::read(Role::any())], false);
-        $this->database->createAttribute('notifications', 'messageId', Database::VAR_STRING, 255, false);
-        $this->database->createAttribute('notifications', 'recipientHash', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('notifications', 'type', Database::VAR_STRING, 64, false, 'info');
-        $this->database->createAttribute('notifications', 'channel', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('notifications', 'projectId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('notifications', 'projectInternalId', Database::VAR_ID, 0, true);
-        $this->database->createAttribute('notifications', 'resourceType', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('notifications', 'resourceId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('notifications', 'resourceInternalId', Database::VAR_ID, 0, true);
-        $this->database->createAttribute('notifications', 'parentResourceType', Database::VAR_STRING, 64, true);
-        $this->database->createAttribute('notifications', 'parentResourceId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('notifications', 'parentResourceInternalId', Database::VAR_ID, 0, true);
-        $this->database->createAttribute('notifications', 'title', Database::VAR_STRING, 256, true);
-        $this->database->createAttribute('notifications', 'body', Database::VAR_STRING, 16384, true);
-        $this->database->createAttribute('notifications', 'read', Database::VAR_BOOLEAN, 0, false, false);
-        $this->database->createAttribute('notifications', 'firstSeen', Database::VAR_DATETIME, 0, false);
-        $this->database->createAttribute('notifications', 'lastSeen', Database::VAR_DATETIME, 0, false);
+        $this->database->createCollection(Collection::create(id: 'notifications', permissions: [Permission::create(Role::any()), Permission::read(Role::any())], documentSecurity: false));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'messageId'));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'recipientHash', size: 64, required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'type', size: 64, default: 'info'));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'channel', size: 64, required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'projectId', required: true));
+        $this->database->createAttribute('notifications', Attribute::id(key: 'projectInternalId', required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'resourceType', size: 64, required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'resourceId', required: true));
+        $this->database->createAttribute('notifications', Attribute::id(key: 'resourceInternalId', required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'parentResourceType', size: 64, required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'parentResourceId', required: true));
+        $this->database->createAttribute('notifications', Attribute::id(key: 'parentResourceInternalId', required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'title', size: 256, required: true));
+        $this->database->createAttribute('notifications', Attribute::string(key: 'body', size: 16384, required: true));
+        $this->database->createAttribute('notifications', Attribute::boolean(key: 'read', default: false));
+        $this->database->createAttribute('notifications', Attribute::datetime(key: 'firstSeen'));
+        $this->database->createAttribute('notifications', Attribute::datetime(key: 'lastSeen'));
     }
 
     protected function tearDown(): void
@@ -98,7 +100,7 @@ final class ConsoleTest extends TestCase
             title: 'Hello',
             body: 'World',
             type: 'info',
-            messageId: ID::custom('msg-aaa'),
+            messageId: Id::custom('msg-aaa'),
             projectId: 'project-1',
             projectInternalId: 'project-internal-1',
         );
@@ -134,7 +136,7 @@ final class ConsoleTest extends TestCase
             recipients: [$this->recipient('user-2', 'user-2')],
             title: 'Title',
             body: 'Body',
-            messageId: ID::custom('msg-perms-user'),
+            messageId: Id::custom('msg-perms-user'),
             projectId: 'project-1',
             projectInternalId: 'project-internal-1',
         );
@@ -155,7 +157,7 @@ final class ConsoleTest extends TestCase
             recipients: [$this->recipient('team-9', 'team-9', RESOURCE_TYPE_TEAMS)],
             title: 'Heads up',
             body: '...',
-            messageId: ID::custom('msg-team'),
+            messageId: Id::custom('msg-team'),
             projectId: 'project-1',
             projectInternalId: 'project-internal-1',
         );
@@ -182,7 +184,7 @@ final class ConsoleTest extends TestCase
             ],
             title: 'Heads up',
             body: 'multi',
-            messageId: ID::custom('same-msg'),
+            messageId: Id::custom('same-msg'),
             projectId: 'project-1',
             projectInternalId: 'project-internal-1',
         );
@@ -259,7 +261,7 @@ final class ConsoleTest extends TestCase
             recipients: [$this->recipient($userId, $userId)],
             title: 'Same alert resent',
             body: 'b',
-            messageId: ID::custom($messageId),
+            messageId: Id::custom($messageId),
             projectId: 'project-x',
             projectInternalId: 'project-internal-x',
         );

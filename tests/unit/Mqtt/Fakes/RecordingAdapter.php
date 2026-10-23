@@ -8,6 +8,9 @@ use Utopia\Mqtt\Adapter;
 use Utopia\Mqtt\Adapter\Swoole\Timer;
 use Utopia\Mqtt\Adapter\Swoole\Timers\NoTimer;
 use Utopia\Mqtt\Packet;
+use Utopia\Mqtt\Packet\Disconnect;
+use Utopia\Mqtt\Properties;
+use Utopia\Mqtt\Property;
 
 /**
  * An in-process transport for Utopia\Mqtt\Server: the test plays the network by handing it
@@ -18,11 +21,17 @@ final class RecordingAdapter extends Adapter
     /** @var array<int, list<string>> fd => packets written, in order */
     public array $sent = [];
 
+    /** @var list<int> fds closed, in order */
+    public array $closed = [];
+
     /** @var callable|null */
     private $onOpen = null;
 
     /** @var callable|null */
     private $onReceive = null;
+
+    /** @var callable|null */
+    private $onClose = null;
 
     /** Open a connection on $fd and feed it the given packets, as the transport would. */
     public function deliver(int $fd, string ...$packets): void
@@ -52,6 +61,51 @@ final class RecordingAdapter extends Adapter
         return $publishes;
     }
 
+    /**
+     * The reason codes of the CONNACK packets written to $fd.
+     *
+     * @return list<int>
+     */
+    public function connacks(int $fd): array
+    {
+        $reasonCodes = [];
+        foreach ($this->sent[$fd] ?? [] as $packet) {
+            $parsed = Packet::parse($packet);
+            if ($parsed->type === Packet::CONNACK) {
+                $reasonCodes[] = Packet::readByte($parsed->body, 1)[0];
+            }
+        }
+
+        return $reasonCodes;
+    }
+
+    /**
+     * The DISCONNECT packets written to $fd.
+     *
+     * @return list<Disconnect>
+     */
+    public function disconnects(int $fd): array
+    {
+        $disconnects = [];
+        foreach ($this->sent[$fd] ?? [] as $packet) {
+            $parsed = Packet::parse($packet);
+            if ($parsed->type !== Packet::DISCONNECT) {
+                continue;
+            }
+            if ($parsed->body === '') {
+                $disconnects[] = Disconnect::normal();
+                continue;
+            }
+
+            [$reasonCode, $offset] = Packet::readByte($parsed->body, 0);
+            [$properties] = Properties::parse($parsed->body, $offset);
+            $reason = $properties->get(Property::REASON_STRING);
+            $disconnects[] = Disconnect::refuse($reasonCode, \is_string($reason) ? $reason : null);
+        }
+
+        return $disconnects;
+    }
+
     public function onStart(callable $callback): self
     {
         return $this;
@@ -78,6 +132,8 @@ final class RecordingAdapter extends Adapter
 
     public function onClose(callable $callback): self
     {
+        $this->onClose = $callback;
+
         return $this;
     }
 
@@ -88,6 +144,11 @@ final class RecordingAdapter extends Adapter
 
     public function close(int $connection): void
     {
+        $this->closed[] = $connection;
+
+        if ($this->onClose !== null) {
+            ($this->onClose)($connection);
+        }
     }
 
     public function timer(): Timer

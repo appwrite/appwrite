@@ -12,6 +12,8 @@ use Utopia\Cache\Adapter\Redis\Multiplexing as RedisMultiplexing;
 use Utopia\Cache\Adapter\Redis\TimeoutException;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Tests\Services;
+use Utopia\Telemetry\Adapter\Test as TestTelemetry;
+use Utopia\Telemetry\Counter;
 
 use function Swoole\Coroutine\run;
 
@@ -150,6 +152,57 @@ final class MultiplexingDeadlineTest extends TestCase
 
             $this->assertSame('second-value', $cache->load('second', 60, 'second'));
             $this->assertSame('first-value', $cache->load('first', 60, 'first'));
+        });
+    }
+
+    /**
+     * A write reports a missed deadline as false, so the cause must surface as a
+     * counter or every slow write reads as a refusal nobody can explain.
+     */
+    public function testAWriteThatMissesItsDeadlineCountsItsCause(): void
+    {
+        $this->runCo(function (): void {
+            $failures = new class () extends Counter {
+                /** @var list<array<string, mixed>> */
+                public array $attributes = [];
+
+                public function add(float|int $amount, iterable $attributes = []): void
+                {
+                    $this->attributes[] = [...$attributes];
+                }
+            };
+            $telemetry = new class ($failures) extends TestTelemetry {
+                public function __construct(private readonly Counter $failures)
+                {
+                }
+
+                public function createCounter(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): Counter
+                {
+                    return $name === 'cache.redis_multiplexing.write.failures'
+                        ? $this->failures
+                        : parent::createCounter($name, $unit, $description, $advisory);
+                }
+            };
+            $cache = new Cache($this->makeAdapter(readTimeout: 0.05, livenessTimeout: 5.0));
+            $cache->setTelemetry($telemetry);
+
+            $generation = $cache->getGeneration('leased');
+
+            $this->pauseServer();
+
+            try {
+                $this->assertFalse($cache->save('slow', 'value', 'slow'));
+                $this->assertFalse($cache->saveMany('slow', ['field' => 'value']));
+                $this->assertFalse($cache->saveWithLease('leased', 'value', 'leased', $generation));
+            } finally {
+                $this->resumeServer();
+            }
+
+            $this->assertSame([
+                ['operation' => 'save', 'error' => 'TimeoutException'],
+                ['operation' => 'saveMany', 'error' => 'TimeoutException'],
+                ['operation' => 'saveWithLease', 'error' => 'TimeoutException'],
+            ], $failures->attributes);
         });
     }
 

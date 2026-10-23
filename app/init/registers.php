@@ -1,19 +1,23 @@
 <?php
 
+use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\Hooks\Hooks;
 use Appwrite\PubSub\Adapter\Redis as PubSub;
 use Appwrite\URL\URL as AppwriteURL;
+use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Adapter\Sharding;
+use Utopia\Cache\Cache;
 use Utopia\Cache\Codec\Igbinary;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\Postgres;
-use Utopia\Database\Adapter\SQL;
 use Utopia\Database\PDO;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
@@ -185,14 +189,7 @@ $register->set('pools', function () {
             $resource = match ($dsnScheme) {
                 'mysql',
                 'mariadb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                    return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, [
-                        \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-                        \PDO::ATTR_TIMEOUT => 3, // Seconds
-                        \PDO::ATTR_PERSISTENT => false,
-                        \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-                        \PDO::ATTR_EMULATE_PREPARES => true,
-                        \PDO::ATTR_STRINGIFY_FETCHES => true
-                    ]);
+                    return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, APP_DATABASE_PDO_ATTRIBUTES + [\PDO::ATTR_PERSISTENT => false]);
                 },
                 'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                     try {
@@ -205,14 +202,7 @@ $register->set('pools', function () {
                     }
                 },
                 'postgresql' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                    return new PDO("pgsql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};connect_timeout=3", $dsnUser, $dsnPass, array(
-                        \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-                        \PDO::ATTR_TIMEOUT => 3, // Seconds
-                        \PDO::ATTR_PERSISTENT => false,
-                        \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-                        \PDO::ATTR_EMULATE_PREPARES => true,
-                        \PDO::ATTR_STRINGIFY_FETCHES => true
-                    ));
+                    return new PDO("pgsql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};connect_timeout=3", $dsnUser, $dsnPass, APP_DATABASE_PDO_ATTRIBUTES + [\PDO::ATTR_PERSISTENT => false]);
                 },
                 default => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass) {
                     $redis = new \Redis();
@@ -228,8 +218,16 @@ $register->set('pools', function () {
 
             // PubSub workers hold one long-lived subscribed connection and also need
             // spare capacity for publishes from the same process.
+            // A lock lease is held for as long as the work it guards, so every
+            // concurrent request that takes a lock needs its own connection. The
+            // size above is derived from the MySQL connection budget and floored by
+            // a worker-only setting, which leaves the API server with one: the
+            // second concurrent lock taker then fails to get a connection to wait
+            // with and 500s, instead of queueing on the lock it was willing to wait
+            // out. The pool creates connections on demand, so this is a ceiling.
             $connectionPoolSize = match ($type) {
                 'pubsub' => max(2, $poolSize),
+                'lock' => max(32, $poolSize),
                 default => $poolSize,
             };
 
@@ -290,6 +288,26 @@ $register->set('pools', function () {
     return $group;
 });
 
+// The cache the databases share. Code outside a request, such as tests seeding rows, reads it here so it
+// purges the same keys the server reads; Cloud registers its own.
+$register->set('cache', function () use ($register) {
+    // Resolving the pools is what sets pools-cache
+    $pools = $register->get('pools');
+
+    return new Cache(new Sharding(\array_map(
+        fn (string $name) => new CachePool($pools->get($name)),
+        Config::getParam('pools-cache', []),
+    )));
+});
+
+// Builds the database factory every request, worker and test uses, so a host that places its databases
+// differently overrides one entry; Cloud registers its own.
+$register->set('databaseFactory', fn () => fn (Group $pools, Cache $cache, Authorization $authorization): DatabaseFactory => new DatabaseFactory(
+    $pools,
+    $cache,
+    $authorization
+));
+
 $register->set('db', function () {
     // This is usually for our workers or CLI commands scope
     $dbHost = System::getEnv('_APP_DB_HOST', '');
@@ -299,6 +317,7 @@ $register->set('db', function () {
     $dbSchema = System::getEnv('_APP_DB_SCHEMA', '');
     $dbAdapter = System::getEnv('_APP_DB_ADAPTER', 'postgresql');
     $dsn = '';
+    $pdoAttributes = APP_DATABASE_PDO_ATTRIBUTES + [\PDO::ATTR_PERSISTENT => true];
 
     switch ($dbAdapter) {
         case 'mongodb':
@@ -312,10 +331,10 @@ $register->set('db', function () {
         case 'mysql':
         case 'mariadb':
             $dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbSchema};charset=utf8mb4";
-            return new PDO($dsn, $dbUser, $dbPass, SQL::getPDOAttributes());
+            return new PDO($dsn, $dbUser, $dbPass, $pdoAttributes);
         case 'postgresql':
             $dsn = "pgsql:host={$dbHost};port={$dbPort};dbname={$dbSchema};connect_timeout=3";
-            return new PDO($dsn, $dbUser, $dbPass, SQL::getPDOAttributes());
+            return new PDO($dsn, $dbUser, $dbPass, $pdoAttributes);
         default:
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid database adapter');
     }

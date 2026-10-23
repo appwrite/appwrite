@@ -114,7 +114,7 @@ export function EnablePasskeys({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="px-6 pb-4 space-y-4">
+        <div className="min-w-0 px-6 pb-4 space-y-4">
           <div className="space-y-2">
             <p id={`${fieldId}-domain`} className="text-[13px] font-medium">
               {t('Domain')}

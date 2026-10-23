@@ -18,9 +18,9 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -47,6 +47,8 @@ class Update extends Action
             ->label('audits.event', 'membership.update')
             ->label('audits.resource', 'team/{request.teamId}')
             ->label('audits.userId', '{request.userId}')
+            ->label('abuse-limit', 10)
+            ->label('abuse-key', 'ip:{ip},url:{url}')
             ->label('sdk', new Method(
                 namespace: 'teams',
                 group: 'memberships',
@@ -137,7 +139,7 @@ class Update extends Action
             $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
             $secret = $proofForToken->generate();
             $session = new Document(array_merge([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 '$permissions' => [
                     Permission::read(Role::user($targetUser->getId())),
                     Permission::update(Role::user($targetUser->getId())),

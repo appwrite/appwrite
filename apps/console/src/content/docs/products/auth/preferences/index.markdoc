@@ -70,7 +70,7 @@ let user = try await account.updatePrefs(
 import io.appwrite.Client
 import io.appwrite.services.Account
 
-val client = Client()
+val client = Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<PROJECT_ID>")                  // Your project ID
 
@@ -242,7 +242,7 @@ let team = try await teams.updatePrefs(
 import io.appwrite.Client
 import io.appwrite.services.Teams
 
-val client = Client()
+val client = Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<PROJECT_ID>")                  // Your project ID
 
@@ -313,7 +313,7 @@ let prefs = try await teams.getPrefs(
 import io.appwrite.Client
 import io.appwrite.services.Teams
 
-val client = Client()
+val client = Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<PROJECT_ID>")                  // Your project ID
 

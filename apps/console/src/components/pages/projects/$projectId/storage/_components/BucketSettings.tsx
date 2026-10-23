@@ -99,6 +99,7 @@ export function BucketSettings() {
     'none',
   )
   const [transformations, setTransformations] = useState(false)
+  const [stripMetadata, setStripMetadata] = useState(false)
   const [maximumFileSize, setMaximumFileSize] = useState(0)
   const [fileSizeUnit, setFileSizeUnit] = useState<
     'bytes' | 'KB' | 'MB' | 'GB'
@@ -120,6 +121,7 @@ export function BucketSettings() {
         (bucket.compression as 'none' | 'gzip' | 'zstd') || 'none'
       setCompression(bucketCompression)
       setTransformations(bucket.transformations)
+      setStripMetadata(bucket.stripMetadata)
       // Pick the unit whose numeric value is smallest while still a whole integer
       if (toByteCount(bucket.maximumFileSize) > 0) {
         const { value, unit } = pickFormDecimalByteDisplayUnit(
@@ -386,6 +388,39 @@ export function BucketSettings() {
     },
   })
 
+  const updateStripMetadataMutation = useMutation({
+    mutationFn: async (stripMetadata: boolean) => {
+      if (!projectId || !bucketId || !bucket)
+        throw new Error('Project ID, Bucket ID, and Bucket are required')
+      const projectSdk = sdk.forProject(projectId)
+      return await projectSdk.storage.updateBucket({
+        bucketId,
+        name: bucket.name, // Required parameter
+        stripMetadata,
+        enabled: bucket.enabled ?? undefined,
+        encryption: bucket.encryption ?? undefined,
+        antivirus: bucket.antivirus ?? undefined,
+        compression: bucket.compression as Compression,
+        transformations: bucket.transformations ?? undefined,
+        maximumFileSize: bucket.maximumFileSize ?? undefined,
+        allowedFileExtensions: bucket.allowedFileExtensions ?? undefined,
+      })
+    },
+    onSuccess: () => {
+      toast.success(t('Image metadata setting has been updated'))
+      queryClient.invalidateQueries({
+        queryKey: ['bucket', 'project', projectId, bucketId],
+      })
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error))
+      // Revert to original value on error
+      if (bucket) {
+        setStripMetadata(bucket.stripMetadata)
+      }
+    },
+  })
+
   const handleNameUpdate = () => {
     if (bucketName.trim() && bucketName !== bucket?.name) {
       updateNameMutation.mutate(bucketName)
@@ -404,6 +439,10 @@ export function BucketSettings() {
     setTransformations(checked)
   }
 
+  const handleStripMetadataToggle = (checked: boolean) => {
+    setStripMetadata(checked)
+  }
+
   const handleEncryptionUpdate = () => {
     if (encryption !== bucket?.encryption) {
       updateEncryptionMutation.mutate(encryption)
@@ -413,6 +452,12 @@ export function BucketSettings() {
   const handleTransformationsUpdate = () => {
     if (transformations !== bucket?.transformations) {
       updateTransformationsMutation.mutate(transformations)
+    }
+  }
+
+  const handleStripMetadataUpdate = () => {
+    if (stripMetadata !== bucket?.stripMetadata) {
+      updateStripMetadataMutation.mutate(stripMetadata)
     }
   }
 
@@ -799,6 +844,55 @@ export function BucketSettings() {
                 updateTransformationsMutation.isPending
               }
               onClick={handleTransformationsUpdate}
+            >
+              {t('Update')}
+            </Button>
+          </div>
+        </div>
+
+        {/* Image Metadata */}
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {t('Image metadata')}
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-2">
+              {t(
+                "Remove metadata such as location, device, and capture time from images uploaded to this bucket. The color profile and orientation are kept. For file size above 20MB metadata is not removed even if it's enabled. This change will only apply to new files uploaded after the update.",
+              )}
+            </p>
+          </div>
+          <div className="border-t border-border" />
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label
+                  htmlFor="stripMetadata"
+                  className="text-[13px] font-medium text-foreground"
+                >
+                  {t('Enabled')}
+                </Label>
+                <p className="text-[12px] text-muted-foreground mt-0.5">
+                  {t('Remove metadata from uploaded images')}
+                </p>
+              </div>
+              <Switch
+                id="stripMetadata"
+                checked={stripMetadata}
+                onCheckedChange={handleStripMetadataToggle}
+                disabled={updateStripMetadataMutation.isPending}
+              />
+            </div>
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30">
+            <Button
+              size="sm"
+              className="h-9 text-[13px]"
+              disabled={
+                stripMetadata === bucket.stripMetadata ||
+                updateStripMetadataMutation.isPending
+              }
+              onClick={handleStripMetadataUpdate}
             >
               {t('Update')}
             </Button>

@@ -3,7 +3,7 @@
 namespace Tests\E2E\Scopes;
 
 use Tests\E2E\Client;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\System\System;
 
 trait ProjectCustom
@@ -44,7 +44,7 @@ trait ProjectCustom
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Demo Project Team',
         ]);
 
@@ -61,7 +61,7 @@ trait ProjectCustom
                 'cookie' => 'a_session_console=' . $this->getRoot()['session'],
                 'x-appwrite-project' => 'console',
             ], [
-                'projectId' => ID::unique(),
+                'projectId' => Id::unique(),
                 'region' => System::getEnv('_APP_REGION', 'default'),
                 'name' => 'Demo Project',
                 'teamId' => $teamId,
@@ -90,7 +90,7 @@ trait ProjectCustom
                 'cookie' => 'a_session_console=' . $this->getRoot()['session'],
                 'x-appwrite-project' => 'console',
             ], [
-                'keyId' => ID::unique(),
+                'keyId' => Id::unique(),
                 'name' => 'Demo Project Key ' . $project['body']['$id'],
                 'scopes' => [
                     'users.read',
@@ -256,7 +256,7 @@ trait ProjectCustom
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'Demo Project Key',
             'scopes' => $scopes,
         ]);

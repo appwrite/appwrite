@@ -51,7 +51,7 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID.', false, ['dbForProject'])
+            ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Topic ID.', false, ['dbForProject'])
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('publisherForDeletes')

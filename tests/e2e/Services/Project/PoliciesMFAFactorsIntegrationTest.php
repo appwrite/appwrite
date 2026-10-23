@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class PoliciesMFAFactorsIntegrationTest extends Scope
 {
@@ -159,7 +159,7 @@ final class PoliciesMFAFactorsIntegrationTest extends Scope
     private function createUserWithSession(array $serverHeaders, bool $verifiedEmail = false): array
     {
         $user = $this->client->call(Client::METHOD_POST, '/users', $serverHeaders, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'mfa_' . \uniqid() . '@localhost.test',
             'password' => 'password1234',
             'name' => 'Morgan Miller',
