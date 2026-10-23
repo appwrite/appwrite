@@ -282,12 +282,14 @@ class Action extends AppwriteAction
     protected function stage(Database $dbForProject, string $transactionId, array $logs, int $max): Document
     {
         $current = new Document();
+        $expired = false;
 
-        $transaction = $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $logs, $max, &$current) {
+        $transaction = $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $logs, $max, &$current, &$expired) {
             $current = $dbForProject->getDocument('transactions', $transactionId, forUpdate: true);
+            $expired = new \DateTime() > new \DateTime($current->getAttribute('expiresAt', 'now'));
 
             // Returned rather than thrown, withTransaction() retries on exceptions it does not know
-            if ($current->getAttribute('status', '') !== 'pending' || $current->getAttribute('operations', 0) + \count($logs) > $max) {
+            if ($current->getAttribute('status', '') !== 'pending' || $expired || $current->getAttribute('operations', 0) + \count($logs) > $max) {
                 return new Document();
             }
 
@@ -301,6 +303,10 @@ class Action extends AppwriteAction
 
         if ($current->getAttribute('status', '') !== 'pending') {
             throw new Exception(Exception::TRANSACTION_NOT_READY);
+        }
+
+        if ($expired) {
+            throw new Exception(Exception::TRANSACTION_EXPIRED);
         }
 
         if ($transaction->isEmpty()) {
