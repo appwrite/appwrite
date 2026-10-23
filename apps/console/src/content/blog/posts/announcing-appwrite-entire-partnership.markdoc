@@ -25,9 +25,9 @@ faqs:
     answer: "Entire is available as a Git provider on [Appwrite Cloud](/sign-in). The self-hosted Appwrite Console does not offer new Entire connections yet."
 ---
 
-Today, we're announcing a partnership between Appwrite and Entire.
+Software development has become agentic. Developers hand whole tasks to coding agents, review what comes back, and ship it, often in sessions that produce a new commit every few minutes. Today, we're announcing a partnership between Appwrite and Entire to connect where that code lives with where it runs.
 
-Entire is building the Git forge for agents: a home for code that gets written alongside coding agents, in sessions that can produce a commit every few minutes. Appwrite gives those commits somewhere to run. Starting today, the two connect directly. **Entire joins Appwrite's Git providers**, so an Entire repository can deploy Appwrite Sites and Functions on every push.
+Entire is building the Git forge for agents: a home for code that gets written alongside coding agents. Appwrite gives those commits somewhere to run. Starting today, the two connect directly. **Entire joins Appwrite's Git providers**, so an Entire repository can deploy Appwrite Sites and Functions on every push.
 
 It's also a collaboration between two companies that build in the open. Appwrite and Entire both think that as agents write more of the code, developers should still have tools they can read, extend, and run on their own terms.
 
