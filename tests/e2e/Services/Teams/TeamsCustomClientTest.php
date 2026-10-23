@@ -253,10 +253,9 @@ final class TeamsCustomClientTest extends Scope
         $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
 
 
-        // injection allowed, meant to be protected client-side
-        $encoded = 'http://localhost:5000/join-us\"></a><h1>INJECTED</h1>';
+        $encoded = \htmlspecialchars('http://localhost:5000/join-us\"></a><h1>INJECTED</h1>', ENT_QUOTES, 'UTF-8');
 
-        $this->assertStringContainsString('<h1>INJECTED</h1>', (string) $lastEmail['html']);
+        $this->assertStringNotContainsString('<h1>INJECTED</h1>', (string) $lastEmail['html']);
         $this->assertStringContainsString($encoded, (string) $lastEmail['html']);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/'.$response['body']['$id'], array_merge([

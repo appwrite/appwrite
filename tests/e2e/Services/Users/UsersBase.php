@@ -1864,6 +1864,92 @@ trait UsersBase
         self::$userEmailUpdated = true;
     }
 
+    #[Retry(count: 1)]
+    public function testUpdateUserEmailClearsRecovery(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid() . 'users-recovery@localhost.test';
+        $newEmail = uniqid() . 'users-recovery-new@localhost.test';
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => 'password',
+            'name' => 'Users Recovery Email',
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $cookie = $session['cookies']['a_session_' . $projectId];
+
+        $recovery = $this->client->call(Client::METHOD_POST, '/account/recovery', $headers, [
+            'email' => $email,
+            'url' => 'http://localhost/recovery',
+        ]);
+        $this->assertEquals(201, $recovery['headers']['status-code']);
+
+        $lastEmail = $this->getLastEmailByAddress($email, function ($mail) {
+            $this->assertStringContainsString('Password Reset', (string) $mail['subject']);
+        });
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
+        $secret = $tokens['secret'] ?? '';
+        $this->assertNotEmpty($secret);
+
+        $update = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/email', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'email' => $newEmail,
+        ]);
+        $this->assertEquals(200, $update['headers']['status-code']);
+        $this->assertEquals($newEmail, $update['body']['email']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $cookie,
+        ]));
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertEquals($newEmail, $account['body']['email']);
+
+        $stale = $this->client->call(Client::METHOD_PUT, '/account/recovery', $headers, [
+            'userId' => $userId,
+            'secret' => $secret,
+            'password' => 'new-password',
+        ]);
+        $this->assertEquals(401, $stale['headers']['status-code']);
+
+        $newRecovery = $this->client->call(Client::METHOD_POST, '/account/recovery', $headers, [
+            'email' => $newEmail,
+            'url' => 'http://localhost/recovery',
+        ]);
+        $this->assertEquals(201, $newRecovery['headers']['status-code']);
+
+        $newMail = $this->getLastEmailByAddress($newEmail, function ($mail) {
+            $this->assertStringContainsString('Password Reset', (string) $mail['subject']);
+        });
+        $newTokens = $this->extractQueryParamsFromEmailLink($newMail['html']);
+        $this->assertNotEmpty($newTokens['secret'] ?? '');
+
+        $complete = $this->client->call(Client::METHOD_PUT, '/account/recovery', $headers, [
+            'userId' => $userId,
+            'secret' => $newTokens['secret'],
+            'password' => 'new-password',
+        ]);
+        $this->assertEquals(200, $complete['headers']['status-code']);
+    }
+
     public function testUpdateUserEmailSearch(): void
     {
         $data = $this->ensureUserEmailUpdated();
@@ -3659,6 +3745,83 @@ trait UsersBase
         // Discovery, which the grant exists for, still works.
         $get = $this->client->call(Client::METHOD_GET, '/users/' . $otherId, $sessionHeaders);
         $this->assertEquals(200, $get['headers']['status-code']);
+    }
+
+    /**
+     * Test that the impersonator users.read grant never exposes password hashes
+     */
+    public function testImpersonatorUsersReadHidesPasswordHashes(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        $suffix = Id::unique();
+
+        $impersonator = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => Id::unique(),
+            'email' => 'hashes-impersonator-' . $suffix . '@appwrite.io',
+            'password' => 'password',
+            'name' => 'Hashes Impersonator',
+        ]);
+        $this->assertSame(201, $impersonator['headers']['status-code']);
+        $impersonatorId = $impersonator['body']['$id'];
+
+        $other = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => Id::unique(),
+            'email' => 'hashes-other-' . $suffix . '@appwrite.io',
+            'password' => 'password',
+            'name' => 'Hashes Other',
+        ]);
+        $this->assertSame(201, $other['headers']['status-code']);
+        $otherId = $other['body']['$id'];
+
+        $this->client->call(Client::METHOD_PATCH, '/users/' . $impersonatorId . '/impersonator', $headers, ['impersonator' => true]);
+
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $impersonatorId . '/sessions', $headers);
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        $sessionHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-session' => $session['body']['secret'],
+        ];
+        $impersonationHeaders = array_merge($sessionHeaders, [
+            'x-appwrite-impersonate-user-id' => $otherId,
+        ]);
+
+        /**
+         * Test for SUCCESS
+         */
+        $get = $this->client->call(Client::METHOD_GET, '/users/' . $otherId, $headers);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertNotEmpty($get['body']['password']);
+        $this->assertSame('argon2', $get['body']['hash']);
+        $this->assertNotEmpty($get['body']['hashOptions']);
+
+        /**
+         * Test for FAILURE
+         */
+        foreach ([$sessionHeaders, $impersonationHeaders] as $callerHeaders) {
+            $get = $this->client->call(Client::METHOD_GET, '/users/' . $otherId, $callerHeaders);
+            $this->assertSame(200, $get['headers']['status-code']);
+            $this->assertSame('', $get['body']['password']);
+            $this->assertSame('', $get['body']['hash']);
+            $this->assertEmpty($get['body']['hashOptions']);
+
+            $list = $this->client->call(Client::METHOD_GET, '/users', $callerHeaders, [
+                'queries' => [
+                    Query::equal('$id', [$otherId])->toString(),
+                ],
+            ]);
+            $this->assertSame(200, $list['headers']['status-code']);
+            $this->assertSame(1, $list['body']['total']);
+            $this->assertSame('', $list['body']['users'][0]['password']);
+            $this->assertSame('', $list['body']['users'][0]['hash']);
+            $this->assertEmpty($list['body']['users'][0]['hashOptions']);
+        }
     }
 
     public function testUpdateUserImpersonatorNotFound(): void

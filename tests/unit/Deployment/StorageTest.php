@@ -7,6 +7,8 @@ namespace Tests\Unit\Deployment;
 use Appwrite\Deployment\Deployments;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Utopia\Config\Config;
+use Utopia\Database\Document;
 use Utopia\Storage\Device;
 
 final class StorageTest extends TestCase
@@ -82,6 +84,39 @@ final class StorageTest extends TestCase
         yield 'local' => ['local', '', ''];
         yield 'virtual-host S3' => ['s3', '', ''];
         yield 'path-style S3' => ['s3', 'http://storage.invalid', 'compatibility'];
+    }
+
+    /**
+     * Deletes reclaim the cache by this path, so it has to be the one builds
+     * write, and a runtime change has to move it.
+     */
+    public function testResourceCacheIsTheOneItsBuildsWrite(): void
+    {
+        $runtimes = Config::getParam('runtimes', []);
+        Config::setParam('runtimes', [
+            'node-22' => ['image' => 'openruntimes/node:v5-22'],
+            'node-20' => ['image' => 'openruntimes/node:v5-20'],
+        ]);
+
+        try {
+            $this->withEnvironment($this->environment('local', ''), function (): void {
+                $project = new Document(['$id' => 'project']);
+                $function = new Document(['$id' => 'function', '$collection' => 'functions', 'runtime' => 'node-22', 'version' => 'v5']);
+                $site = new Document(['$id' => 'site', '$collection' => 'sites', 'buildRuntime' => 'node-22']);
+
+                $this->assertSame(Storage::cache($project, $function), Deployments::resourceCachePath('project', $function));
+                $this->assertSame(Storage::cache($project, $site), Deployments::resourceCachePath('project', $site));
+
+                $moved = new Document(['runtime' => 'node-20'] + $function->getArrayCopy());
+                $this->assertSame(Storage::cache($project, $moved), Deployments::resourceCachePath('project', $moved));
+                $this->assertNotSame(Deployments::resourceCachePath('project', $function), Deployments::resourceCachePath('project', $moved));
+
+                $sibling = new Document(['$id' => 'sibling'] + $function->getArrayCopy());
+                $this->assertNotSame(Deployments::resourceCachePath('project', $function), Deployments::resourceCachePath('project', $sibling));
+            });
+        } finally {
+            Config::setParam('runtimes', $runtimes);
+        }
     }
 
     public function testPathStyleDeviceKnowsItsBucket(): void
