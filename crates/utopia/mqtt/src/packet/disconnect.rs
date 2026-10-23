@@ -34,6 +34,8 @@ pub struct Disconnect {
 impl Disconnect {
     /// Normal disconnection.
     pub const NORMAL: u8 = 0x00;
+    /// Protocol error.
+    pub const PROTOCOL_ERROR: u8 = 0x82;
     /// Not authorized.
     pub const NOT_AUTHORIZED: u8 = 0x87;
 

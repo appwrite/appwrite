@@ -382,7 +382,11 @@ impl<A: Adapter + Send + Sync, H: Handler> Server<A, H> {
             self.handle_error(&error, "receive");
             return self.inner.adapter.close(fd);
         }
-        if connection.state().active {
+        let refresh = {
+            let state = connection.state();
+            state.active && !state.closed
+        };
+        if refresh {
             let keep_alive = connection.state().keep_alive;
             self.inner.adapter.timer().schedule(fd, i64::from(keep_alive));
         }
@@ -395,6 +399,12 @@ impl<A: Adapter + Send + Sync, H: Handler> Server<A, H> {
         self.metrics().packets_received.add(1, &[("type", Attribute::from(packet.name()))]);
         match packet.kind {
             Kind::Connect => {
+                // A second CONNECT on the same network connection is a protocol error.
+                if connection.state().connected {
+                    connection.disconnect(Disconnect::PROTOCOL_ERROR, None)?;
+                    return Ok(());
+                }
+                connection.state().connected = true;
                 let connect = Connect::decode(packet.body)?;
                 {
                     let mut state = connection.state();

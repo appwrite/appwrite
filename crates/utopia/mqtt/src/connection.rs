@@ -27,6 +27,8 @@ pub struct State {
     /// Whatever identity or metadata the broker resolved; the library stores
     /// it and never reads it.
     pub identity: Option<Arc<dyn Any + Send + Sync>>,
+    /// Set once a CONNECT arrived; a network connection carries exactly one.
+    pub connected: bool,
     /// Whether CONNECT was accepted (the connection counts as active).
     pub active: bool,
     /// Set once the broker dropped the connection, so a callback resuming
@@ -49,6 +51,7 @@ impl Default for State {
             prefix: Vec::new(),
             clean_start: true,
             identity: None,
+            connected: false,
             active: false,
             closed: false,
             keep_alive: 0,

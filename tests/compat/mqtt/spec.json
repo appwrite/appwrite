@@ -1107,7 +1107,7 @@
       ]
     },
     "connection.set": {
-      "doc": "sets the public properties given (protocol, prefix, cleanStart, identity, active, closed, keepAlive, expiresAt, wheelSlot)"
+      "doc": "sets the public properties given (protocol, prefix, cleanStart, identity, connected, active, closed, keepAlive, expiresAt, wheelSlot)"
     },
     "connection.state": {
       "doc": "the public properties and getClientId(); openedAt as whether it is positive"
@@ -2160,11 +2160,6 @@
       "symbol": "Utopia\\Mqtt\\Server::start",
       "description": "A Suback with fewer codes than the SUBSCRIBE has filters sends only those codes (the SUBACK is short), while the store treats the missing ones as denied; a granted QoS above 2 is a failure in the store and on a 3.1.1 SUBACK but is sent as is to a 5.0 client.",
       "case": "Server.json#a v3 session: credentials, return codes for denied filters, QoS 0 delivery to itself"
-    },
-    {
-      "symbol": "Utopia\\Mqtt\\Server::start",
-      "description": "After a DISCONNECT, receive() re-schedules the keep-alive of the connection it has just cleaned up and closed (the Connection object it holds is still active), so the timer later ticks for a closed connection.",
-      "case": "Server.json#DISCONNECT cleans up, closes, and re-arms the keep-alive of the closed connection"
     },
     {
       "symbol": "Utopia\\Mqtt\\Server::start",

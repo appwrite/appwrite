@@ -108,7 +108,7 @@ assert_eq!(*log.lock().unwrap(), ["start", "worker 0 start", "1 connect sensor",
 
 ```flow
 Open | the server keeps a record of the connection and schedules it on the timer, with 30 seconds of keep-alive to send CONNECT
-CONNECT | the protocol version, Clean Start, keep-alive and client id are stored, then `on_connect` decides. Accepted: the CONNACK goes out and the connection is active. Refused: the CONNACK goes out and the connection is closed
+CONNECT | the protocol version, Clean Start, keep-alive and client id are stored, then `on_connect` decides. Accepted: the CONNACK goes out and the connection is active. Refused: the CONNACK goes out and the connection is closed. A second CONNECT on the same connection is a protocol error: a 5.0 client gets a DISCONNECT with reason 0x82, and the connection is closed
 AUTH | 5.0 enhanced authentication. `on_authenticate` answers with an AUTH, a CONNACK, or a DISCONNECT that closes the connection
 > For each packet
 SUBSCRIBE | `on_subscribe` grants or denies each filter. The granted ones go into the store, then the SUBACK goes out
@@ -116,7 +116,7 @@ UNSUBSCRIBE | the filters leave the store, then `on_unsubscribe` answers and the
 PUBLISH | the store finds the open connections subscribed to the topic under the publisher's prefix. `on_publish` gets them and delivers
 PUBACK | `on_puback` gets the client's acknowledgement of a QoS 1 delivery
 PINGREQ | the server answers PINGRESP itself
-Keep alive | after each packet, an active connection is scheduled again for the keep-alive it asked for
+Keep alive | after each packet, an active connection that is still open is scheduled again for the keep-alive it asked for
 <
 Close | a DISCONNECT calls `on_disconnect` with it. A connection that closes without one, by the client, the server or the timer, calls it with `None`. Then its subscriptions and its timer are cleared
 ! Close on error | a packet that does not decode, a handler error or a failed send. The error callbacks get it with the stage `receive`, and the connection is closed

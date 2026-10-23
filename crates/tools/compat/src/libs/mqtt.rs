@@ -1170,6 +1170,9 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             if let Some(v) = a.opt("identity") {
                 state.identity = Some(Arc::new(v.clone()));
             }
+            if let Some(v) = a.opt_bool("connected")? {
+                state.connected = v;
+            }
             if let Some(v) = a.opt_bool("active")? {
                 state.active = v;
             }

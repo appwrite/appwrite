@@ -466,7 +466,7 @@ final class Adapter implements Base, Benchmarks
             'connection.new' => fn (array $a, Session $s) => $s->handle(isset($a['rig']) ? new Connection($a['fd'], self::rig($a, $s)->adapter) : new Connection($a['fd'])),
             'connection.set' => function (array $a, Session $s) {
                 $c = self::connection($a, $s);
-                foreach (['protocol' => 'protocol', 'prefix' => 'prefix', 'clean_start' => 'cleanStart', 'identity' => 'identity', 'active' => 'active', 'closed' => 'closed', 'keep_alive' => 'keepAlive', 'expires_at' => 'expiresAt', 'wheel_slot' => 'wheelSlot'] as $key => $property) {
+                foreach (['protocol' => 'protocol', 'prefix' => 'prefix', 'clean_start' => 'cleanStart', 'identity' => 'identity', 'connected' => 'connected', 'active' => 'active', 'closed' => 'closed', 'keep_alive' => 'keepAlive', 'expires_at' => 'expiresAt', 'wheel_slot' => 'wheelSlot'] as $key => $property) {
                     if (\array_key_exists($key, $a)) {
                         $c->{$property} = $key === 'identity' ? (array) $a[$key] : $a[$key];
                     }
