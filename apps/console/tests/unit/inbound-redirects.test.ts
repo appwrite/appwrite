@@ -158,3 +158,26 @@ describe('inbound 404 redirects', () => {
     expect(target('/account/recovery')).toBe('/recovery')
   })
 })
+
+describe('legacy redirects stay on the console origin', () => {
+  // Each decodes to a path whose prefix rewrite would resolve to //host.
+  test('ignore paths that decode to dot segments or backslashes', () => {
+    for (const path of [
+      '/docs/products/databases/..%2F..%2F..%2F..%2F%2Fother.example',
+      '/docs/products/databases/..%2F..%2F..%2F..%2F%5Cother.example',
+      '/blog/category/..%2F..%2F..%2F%2Fother.example',
+      '/blog/categories/%2E%2E%2F%2E%2E%2F%2Fother.example',
+      '/docs/products/databases/.%2Fpagination',
+      '/docs/products/databases/%5Cpagination',
+    ]) {
+      expect(target(path, '?userId=abc&secret=def')).toBeNull()
+    }
+  })
+
+  test('still redirect the same prefixes without them', () => {
+    expect(target('/docs/products/databases/pagination')).toBe(
+      '/docs/products/databases/tablesdb/pagination',
+    )
+    expect(target('/blog/category/engineering')).toBe('/blog')
+  })
+})

@@ -26,7 +26,7 @@ import {
   rememberAccountSwitchRequest,
   type AccountSwitchRequest,
 } from '@/lib/oauth2/account-switch'
-import { isWebRedirect } from '@/lib/oauth2/redirect'
+import { getNavigableRedirect, isWebRedirect } from '@/lib/oauth2/redirect'
 import { OAuth2ErrorMessage, OAuth2ErrorType } from '@/lib/oauth2/errors'
 import { performConsoleSignOut } from '@/lib/react-query/hooks/auth'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -196,13 +196,14 @@ function OAuth2ConsentPage() {
       fromRequestUri: boolean,
       switchRequest: AccountSwitchRequest | null,
     ) {
-      if (result.redirectUrl) {
+      const redirectUrl = getNavigableRedirect(result.redirectUrl)
+      if (redirectUrl) {
         // Already consented - go straight back to the client.
-        window.location.href = result.redirectUrl
+        window.location.href = redirectUrl
         // A native deep link can't navigate the tab away, so show the
         // success outcome (with an "Open app" retry) instead of a blank page.
-        if (!isWebRedirect(result.redirectUrl)) {
-          setCompletedRedirectUrl(result.redirectUrl)
+        if (!isWebRedirect(redirectUrl)) {
+          setCompletedRedirectUrl(redirectUrl)
           setAccount(loggedInAccount)
           const loadedApp = clientId
             ? await getOAuth2App(clientId).catch(() => null)

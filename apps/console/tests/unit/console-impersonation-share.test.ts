@@ -33,6 +33,26 @@ describe('resolveConsoleImpersonationRedirect', () => {
       resolveConsoleImpersonationRedirect('/impersonate/user123?email=a'),
     ).toBe(ACCOUNT_PATH_AFTER_IMPERSONATION)
   })
+
+  test('rejects paths the URL parser turns into another host', () => {
+    // Backslashes parse as slashes; tab, newline and CR are stripped first,
+    // so each of these resolves to https://evil.example/ in a browser.
+    for (const redirect of [
+      '/\\evil.example',
+      '/\\/evil.example',
+      '/\t/evil.example',
+      '/\n/evil.example',
+      '/\r/evil.example',
+    ]) {
+      expect(new URL(redirect, origin).origin).toBe('https://evil.example')
+      expect(resolveConsoleImpersonationRedirect(redirect)).toBe(
+        ACCOUNT_PATH_AFTER_IMPERSONATION,
+      )
+    }
+    expect(resolveConsoleImpersonationRedirect('/projects/abc\u0000')).toBe(
+      ACCOUNT_PATH_AFTER_IMPERSONATION,
+    )
+  })
 })
 
 describe('buildConsoleImpersonationShareUrl', () => {

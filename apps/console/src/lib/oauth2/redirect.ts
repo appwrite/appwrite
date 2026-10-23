@@ -16,3 +16,32 @@ export function isWebRedirect(uri: string): boolean {
     return false
   }
 }
+
+/**
+ * Schemes the browser runs or renders as a document instead of handing off
+ * to a site or an app. No OAuth2 client redirect needs one.
+ */
+const DOCUMENT_SCHEMES = new Set([
+  'javascript:',
+  'data:',
+  'vbscript:',
+  'blob:',
+  'file:',
+  'filesystem:',
+  'about:',
+])
+
+/**
+ * `uri` when the consent flow may navigate to it (a web URL or a native app
+ * link such as `cursor://`), otherwise undefined.
+ */
+export function getNavigableRedirect(
+  uri: string | undefined,
+): string | undefined {
+  if (!uri) return undefined
+  try {
+    return DOCUMENT_SCHEMES.has(new URL(uri).protocol) ? undefined : uri
+  } catch {
+    return undefined
+  }
+}

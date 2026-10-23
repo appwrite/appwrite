@@ -36,6 +36,8 @@
  * Use `kind: "gauges"` when the source tool was `usage_list_gauges`.
  */
 
+import { isValidRelativeRedirect } from '@/lib/relative-redirect'
+
 /** Wire protocol id — bump only on breaking changes. */
 export type ConsoleProtocolId = 'appwrite.console/v1'
 
@@ -248,7 +250,8 @@ export function resolveConsoleChartHref(
   href: string | undefined,
   projectId?: string | null,
 ): string | undefined {
-  if (href?.trim()) return normalizeConsolePath(href)
+  const explicit = href?.trim() ? normalizeConsolePath(href) : ''
+  if (explicit) return explicit
   const pid = projectId?.trim()
   if (!pid) return undefined
   return `/projects/${pid}/usage`
@@ -260,15 +263,22 @@ export function isSideEffectConsoleAction(
   return !isRenderableConsoleAction(action)
 }
 
-/** Normalize engine paths (`/project/…`) to Console routes (`/projects/…`). */
+/**
+ * Console route for a path the assistant sent: rooted at `/`, with engine
+ * paths (`/project/…`) mapped to Console routes (`/projects/…`). Empty when
+ * the browser would resolve it to another origin (`//host`, `/\host`, control
+ * bytes); the same rules as post-auth redirects decide.
+ */
 export function normalizeConsolePath(path: string): string {
   const trimmed = path.trim()
   if (!trimmed) return trimmed
-  if (trimmed.startsWith('/project/')) {
-    return `/projects/${trimmed.slice('/project/'.length)}`
+  let normalized = trimmed.startsWith('/') ? trimmed : `/${trimmed}`
+  if (normalized.startsWith('/project/')) {
+    normalized = `/projects/${normalized.slice('/project/'.length)}`
+  } else if (normalized === '/project') {
+    normalized = '/projects'
   }
-  if (trimmed === '/project') return '/projects'
-  return trimmed.startsWith('/') ? trimmed : `/${trimmed}`
+  return isValidRelativeRedirect(normalized) ? normalized : ''
 }
 
 function fieldString(
@@ -298,7 +308,8 @@ export function resolveConsoleResourceHref(
   resourceType: string,
   projectId?: string | null,
 ): string | undefined {
-  if (item.href?.trim()) return normalizeConsolePath(item.href)
+  const explicit = item.href?.trim() ? normalizeConsolePath(item.href) : ''
+  if (explicit) return explicit
 
   const pid = projectId?.trim()
   const id = item.resourceId?.trim()
@@ -366,7 +377,8 @@ export function resolveConsoleListHref(
   resourceType: string,
   projectId?: string | null,
 ): string | undefined {
-  if (listHref?.trim()) return normalizeConsolePath(listHref)
+  const explicit = listHref?.trim() ? normalizeConsolePath(listHref) : ''
+  if (explicit) return explicit
 
   const pid = projectId?.trim()
   if (!pid) return undefined

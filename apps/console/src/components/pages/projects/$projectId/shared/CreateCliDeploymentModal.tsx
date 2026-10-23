@@ -54,7 +54,45 @@ const CLI_INSTALL_URL =
 const CLI_LOGIN_URL =
   '/docs/tooling/command-line/installation#login'
 
-function buildCommands(
+/** POSIX shell word: single quotes, nothing inside is expanded. */
+function quoteUnix(value: string): string {
+  return `'${value.replaceAll("'", `'\\''`)}'`
+}
+
+/** Characters PowerShell closes a single-quoted string on. */
+const POWERSHELL_SINGLE_QUOTES = new Set([
+  "'",
+  '\u2018',
+  '\u2019',
+  '\u201a',
+  '\u201b',
+])
+
+/** PowerShell verbatim string: quote characters are doubled. */
+function quotePowerShell(value: string): string {
+  let quoted = ''
+  for (const ch of value) {
+    quoted += POWERSHELL_SINGLE_QUOTES.has(ch) ? ch + ch : ch
+  }
+  return `'${quoted}'`
+}
+
+/**
+ * cmd.exe has no quoting that stops `%VAR%` expansion or an embedded `"`,
+ * so values containing them (or line breaks) are left out of the command.
+ */
+function quoteCmd(value: string): string | null {
+  for (const unsafe of ['"', '%', '\r', '\n']) {
+    if (value.includes(unsafe)) return null
+  }
+  return `"${value}"`
+}
+
+/**
+ * Site build settings are project data any member with `sites.write` can
+ * change, so they are quoted for each shell rather than pasted in as is.
+ */
+export function buildCommands(
   resourceType: CreateCliDeploymentResourceType,
   projectId: string,
   resourceId: string,
@@ -91,10 +129,14 @@ appwrite functions create-deployment ,
     `--code="${codePath}"`,
     '--activate',
   ]
-  if (buildCommand) buildArgs.push(`--build-command="${buildCommand}"`)
-  if (installCommand) buildArgs.push(`--install-command="${installCommand}"`)
-  if (startCommand) buildArgs.push(`--start-command="${startCommand}"`)
-  if (outputDirectory) buildArgs.push(`--output-directory="${outputDirectory}"`)
+  if (buildCommand) buildArgs.push(`--build-command=${quoteUnix(buildCommand)}`)
+  if (installCommand) {
+    buildArgs.push(`--install-command=${quoteUnix(installCommand)}`)
+  }
+  if (startCommand) buildArgs.push(`--start-command=${quoteUnix(startCommand)}`)
+  if (outputDirectory) {
+    buildArgs.push(`--output-directory=${quoteUnix(outputDirectory)}`)
+  }
 
   const unixLines = [
     `appwrite client --project-id="${projectId}" && \\`,
@@ -110,9 +152,14 @@ appwrite functions create-deployment ,
     `--code="${codePath}"`,
     '--activate',
   ]
-  if (buildCommand) cmdArgs.push(`--build-command="${buildCommand}"`)
-  if (installCommand) cmdArgs.push(`--install-command="${installCommand}"`)
-  if (outputDirectory) cmdArgs.push(`--output-directory="${outputDirectory}"`)
+  for (const [flag, value] of [
+    ['--build-command', buildCommand],
+    ['--install-command', installCommand],
+    ['--output-directory', outputDirectory],
+  ] as const) {
+    const quoted = value ? quoteCmd(value) : null
+    if (quoted) cmdArgs.push(`${flag}=${quoted}`)
+  }
   const cmdLines = [
     `appwrite client --project-id="${projectId}" && ^`,
     'appwrite sites create-deployment ^',
@@ -127,9 +174,15 @@ appwrite functions create-deployment ,
     `--code="${codePath}"`,
     '--activate',
   ]
-  if (buildCommand) psArgs.push(`--build-command="${buildCommand}"`)
-  if (installCommand) psArgs.push(`--install-command="${installCommand}"`)
-  if (outputDirectory) psArgs.push(`--output-directory="${outputDirectory}"`)
+  if (buildCommand) {
+    psArgs.push(`--build-command=${quotePowerShell(buildCommand)}`)
+  }
+  if (installCommand) {
+    psArgs.push(`--install-command=${quotePowerShell(installCommand)}`)
+  }
+  if (outputDirectory) {
+    psArgs.push(`--output-directory=${quotePowerShell(outputDirectory)}`)
+  }
   const psLines = [
     `appwrite client --project-id="${projectId}" ;`,
     'appwrite sites create-deployment ,',

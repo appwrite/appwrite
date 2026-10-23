@@ -2,7 +2,6 @@ import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import {
   EXPLORER_PROXY_METHODS,
-  assertAllowedExplorerRequestUrl,
   getExplorerProxyEndpoint,
 } from '@/lib/api-explorer/proxy-validation'
 import { getRuntimeConfig } from '@/lib/runtime-config'
@@ -39,7 +38,10 @@ export const proxyApiExplorerRequestFn = createServerFn({ method: 'POST' })
     if (!endpoint) {
       throw new Error('Explorer proxy is not available on this console')
     }
-    assertAllowedExplorerRequestUrl(data.url, endpoint)
+    const { assertExplorerProxyTarget } = await import(
+      '@/server/api-explorer/proxy-target'
+    )
+    await assertExplorerProxyTarget(data.url, endpoint)
 
     const headers: Record<string, string> = {}
     for (const [name, value] of Object.entries(data.headers)) {

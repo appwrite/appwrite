@@ -1,6 +1,7 @@
 # Only the final stage runs on the target platform, so arm64 cross-builds
 # from an amd64 runner without emulating Bun.
-FROM --platform=$BUILDPLATFORM oven/bun:1.4 AS base
+# Pinned by digest (multi-arch index); Dependabot keeps it current.
+FROM --platform=$BUILDPLATFORM oven/bun:1.4@sha256:1d22548f177f4ff38e0c15baa3c2c46c6c2060ba2d1bc573bb4720b407548f1d AS base
 
 WORKDIR /app
 COPY package.json package.json
@@ -43,7 +44,7 @@ ARG TARGETARCH
 RUN bun install --frozen-lockfile --production --os=linux \
     --cpu="$([ "${TARGETARCH}" = amd64 ] && echo x64 || echo "${TARGETARCH}")"
 
-FROM oven/bun:1.4 AS final
+FROM oven/bun:1.4@sha256:1d22548f177f4ff38e0c15baa3c2c46c6c2060ba2d1bc573bb4720b407548f1d AS final
 
 WORKDIR /app
 
@@ -71,6 +72,10 @@ COPY server.ts server.ts
 # dev/CI stay green. Until server.ts and its runtime deps are bundled into a
 # self-contained dist, copy the whole src/ tree so transitive imports resolve.
 COPY src/ src/
+
+# Everything above is root-owned and read-only to the server, which never
+# writes to disk; port 3000 needs no privileges.
+USER bun
 
 EXPOSE 3000
 

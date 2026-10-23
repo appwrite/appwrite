@@ -1,5 +1,6 @@
 import sharp from 'sharp'
 import { readCoverPublicAssetDataUri } from '@/lib/cover-generator/public-assets'
+import { fetchCoverRemoteImage } from '@/lib/cover-generator/remote-image'
 import { buildCoverExportFontStyleBlock } from '@/lib/cover-generator/cover-export-font-styles'
 export { buildCoverExportFontStyleBlock, buildCoverFontStyleBlock } from '@/lib/cover-generator/cover-export-font-styles'
 import {
@@ -158,13 +159,7 @@ export async function loadCoverImageBuffer(
     if (!match?.[1]) return null
     return Buffer.from(match[1], 'base64')
   }
-  try {
-    const response = await fetch(href)
-    if (!response.ok) return null
-    return Buffer.from(await response.arrayBuffer())
-  } catch {
-    return null
-  }
+  return fetchCoverRemoteImage(href)
 }
 
 /** Breathing room so icon artwork is not flush against the export slot edge. */

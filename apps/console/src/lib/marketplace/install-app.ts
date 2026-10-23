@@ -1,4 +1,5 @@
 import { sdk } from '@/lib/appwrite/sdk'
+import { getNavigableRedirect } from '@/lib/oauth2/redirect'
 import type { MarketplaceApp } from './types'
 
 export async function startMarketplaceAppInstall(app: MarketplaceApp) {
@@ -17,8 +18,9 @@ export async function startMarketplaceAppInstall(app: MarketplaceApp) {
     prompt: 'consent',
   })
 
-  if (result.redirectUrl) {
-    window.location.assign(result.redirectUrl)
+  const redirectUrl = getNavigableRedirect(result.redirectUrl)
+  if (redirectUrl) {
+    window.location.assign(redirectUrl)
     return
   }
 
