@@ -73,6 +73,9 @@ use Utopia\Query\Type;
  *      testCastRejectsSqlInType
  *      testCastAcceptsParameterisedType
  *      testToAstRejectsUnsupportedFilterInsteadOfEmittingRaw
+ *      testFuncRejectsTrailingWhitespaceInName
+ *      testCastRejectsTrailingWhitespaceInType
+ *      testCastAcceptsMultiWordType
  */
 class SecurityRegressionTest extends TestCase
 {
@@ -495,6 +498,70 @@ class SecurityRegressionTest extends TestCase
         $this->expectExceptionMessage('Invalid cast type');
 
         new Cast(new Column('price'), 'TEXT) OR (1=1');
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function trailingWhitespaceFunctionNameProvider(): array
+    {
+        return [
+            'newline' => ["NOW\n"],
+            'carriage return and newline' => ["NOW\r\n"],
+            'space' => ['NOW '],
+            'tab' => ["NOW\t"],
+        ];
+    }
+
+    #[DataProvider('trailingWhitespaceFunctionNameProvider')]
+    public function testFuncRejectsTrailingWhitespaceInName(string $name): void
+    {
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Invalid function name');
+
+        new Func($name);
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function trailingWhitespaceCastTypeProvider(): array
+    {
+        return [
+            'newline after word' => ["INT\n"],
+            'newline after arguments' => ["DECIMAL(10, 2)\n"],
+            'space after word' => ['INT '],
+            'space after arguments' => ['DECIMAL(10, 2) '],
+        ];
+    }
+
+    #[DataProvider('trailingWhitespaceCastTypeProvider')]
+    public function testCastRejectsTrailingWhitespaceInType(string $type): void
+    {
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Invalid cast type');
+
+        new Cast(new Column('price'), $type);
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function multiWordCastTypeProvider(): array
+    {
+        return [
+            'two words' => ['DOUBLE PRECISION'],
+            'tab separated' => ["DOUBLE\tPRECISION"],
+            'four words' => ['TIMESTAMP WITH TIME ZONE'],
+            'words and arguments' => ['CHARACTER VARYING (255)'],
+            'whitespace inside arguments' => ["NUMERIC( 10 ,\n2 )"],
+        ];
+    }
+
+    #[DataProvider('multiWordCastTypeProvider')]
+    public function testCastAcceptsMultiWordType(string $type): void
+    {
+        $this->assertSame($type, new Cast(new Column('price'), $type)->type);
     }
 
     public function testCastAcceptsParameterisedType(): void
