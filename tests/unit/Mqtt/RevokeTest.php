@@ -185,15 +185,27 @@ final class RevokeTest extends TestCase
         $this->assertSame([], $this->network->sent);
     }
 
-    public function testRepeatedConnectMovesConnectionInIndex(): void
+    public function testRepeatedConnectClosesConnectionAndLeavesIndex(): void
     {
         $this->connect(1, 'previous');
-        $this->connect(1, 'current', self::OTHER_PROJECT);
+
+        // Test for FAILURE: a second CONNECT on one network connection is a protocol error.
+        $properties = new Properties();
+        $properties->add(new Property(Property::USER, ['projectId' => self::OTHER_PROJECT]));
+        $properties->add(new Property(Property::AUTHENTICATION_METHOD, self::AUTH_METHOD));
+        $properties->add(new Property(Property::AUTHENTICATION_DATA, 'current'));
+        $this->network->deliver(1, V5::connect('client-1', 60, true, $properties));
+
+        $this->assertSame([], $this->network->connacks(1), 'the second CONNECT was acknowledged');
+        $disconnects = $this->network->disconnects(1);
+        $this->assertCount(1, $disconnects);
+        $this->assertSame(Disconnect::PROTOCOL_ERROR, $disconnects[0]->reasonCode);
+        $this->assertSame([1], $this->network->closed);
+
         $this->accounts->blocked['previous'] = true;
         $this->accounts->blocked['current'] = true;
-
-        $this->assertSame(0, $this->handler->revoke(self::PROJECT, 'previous'));
-        $this->assertSame(1, $this->handler->revoke(self::OTHER_PROJECT, 'current'));
+        $this->assertSame(0, $this->handler->revoke(self::PROJECT, 'previous'), 'the closed connection stayed in the index');
+        $this->assertSame(0, $this->handler->revoke(self::OTHER_PROJECT, 'current'), 'the second CONNECT was indexed');
     }
 
     public function testRevokeDuringConnectRefusesBlockedUser(): void

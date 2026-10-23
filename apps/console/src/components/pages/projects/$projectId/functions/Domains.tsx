@@ -43,9 +43,12 @@ import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { domainUrl } from '@/lib/domains/url'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { SmtpDomainsSection } from './domains/SmtpDomainsSection'
 
 export function View() {
   const t = useT()
+  const { features } = useConsoleProfile()
   const { projectId, functionId } = useParams({ strict: false })
   const navigate = useNavigate()
   const search = useSearch({ strict: false }) as {
@@ -365,6 +368,7 @@ export function View() {
 
   return (
     <>
+      {features.functionEmailDomains ? <SmtpDomainsSection /> : null}
       {domainsContent}
       {selectedRule && (
         <>

@@ -859,6 +859,201 @@ final class RealtimeCustomClientTest extends Scope
         self::$user[$projectId]['sessionId'] = $refreshedSession['body']['$id'];
     }
 
+    public function testConnectionRequiresAllFactors(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid() . 'factors@localhost.test';
+        $password = 'password';
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $client = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        // Minted before any session exists, so it carries no session whose factors could count.
+        $sessionless = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', $server);
+        $this->assertSame(201, $sessionless['headers']['status-code']);
+
+        $verification = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/verification', $server, [
+            'emailVerification' => true,
+        ]);
+        $this->assertSame(200, $verification['headers']['status-code']);
+        $mfa = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/mfa', $server, [
+            'mfa' => true,
+        ]);
+        $this->assertSame(200, $mfa['headers']['status-code']);
+
+        // A password session still owes its second factor.
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $client, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+        $secret = $session['cookies']['a_session_' . $projectId];
+        $cookie = 'a_session_' . $projectId . '=' . $secret;
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', array_merge($client, ['cookie' => $cookie]));
+        $this->assertSame(401, $account['headers']['status-code']);
+        $this->assertSame('user_more_factors_required', $account['body']['type']);
+
+        $bound = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', $server, [
+            'sessionId' => $session['body']['$id'],
+        ]);
+        $this->assertSame(201, $bound['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $authenticated = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'x-appwrite-jwt' => $sessionless['body']['jwt'],
+        ]);
+        $response = json_decode($authenticated->receive(), true);
+        $this->assertSame('connected', $response['type']);
+        $this->assertSame($userId, $response['data']['user']['$id']);
+
+        /**
+         * Test for FAILURE
+         */
+        $pending = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'cookie' => $cookie,
+        ]);
+        $response = json_decode($pending->receive(), true);
+        $this->assertSame('connected', $response['type']);
+        $this->assertNull($response['data']['user']);
+
+        $pendingJwt = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'x-appwrite-jwt' => $bound['body']['jwt'],
+        ]);
+        $response = json_decode($pendingJwt->receive(), true);
+        $this->assertSame('connected', $response['type']);
+        $this->assertNull($response['data']['user']);
+
+        $name = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/name', $server, [
+            'name' => 'Factors ' . $userId,
+        ]);
+        $this->assertSame(200, $name['headers']['status-code']);
+
+        $this->receiveUntilEvent($authenticated, fn (array $message): bool => \in_array("users.{$userId}.update.name", $message['data']['events'] ?? [], true));
+
+        foreach ([$pending, $pendingJwt] as $guest) {
+            try {
+                $guest->receive();
+                $this->fail('A session missing a factor received an account event');
+            } catch (TimeoutException) {
+                // No event reached the connection
+            }
+        }
+
+        $pending->send(\json_encode([
+            'type' => 'authentication',
+            'data' => ['session' => $secret],
+        ]));
+        $response = json_decode($pending->receive(), true);
+        $this->assertSame('error', $response['type']);
+        $this->assertSame(401, $response['data']['code']);
+
+        $authenticated->close();
+        $pending->close();
+        $pendingJwt->close();
+    }
+
+    public function testBlockedUserConnectsAsGuest(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid() . 'blocked@localhost.test';
+        $password = 'password';
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $server, [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+        $secret = $session['cookies']['a_session_' . $projectId];
+        $cookie = 'a_session_' . $projectId . '=' . $secret;
+
+        $jwt = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/jwts', $server);
+        $this->assertSame(201, $jwt['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $client = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'cookie' => $cookie,
+        ]);
+        $response = json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+        $this->assertSame($userId, $response['data']['user']['$id']);
+        $client->close();
+
+        $status = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/status', $server, [
+            'status' => false,
+        ]);
+        $this->assertSame(200, $status['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $client = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'cookie' => $cookie,
+        ]);
+        $response = json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+        $this->assertNull($response['data']['user']);
+
+        $client->send(\json_encode([
+            'type' => 'authentication',
+            'data' => ['session' => $secret],
+        ]));
+        $response = json_decode($client->receive(), true);
+        $this->assertSame('error', $response['type']);
+        $this->assertSame(403, $response['data']['code']);
+        $client->close();
+
+        $client = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost',
+            'x-appwrite-jwt' => $jwt['body']['jwt'],
+        ]);
+        $response = json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+        $this->assertNull($response['data']['user']);
+        $client->close();
+    }
+
     public function testConnectionEndsWithSession(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -4857,6 +5052,311 @@ final class RealtimeCustomClientTest extends Scope
         $this->assertArrayHasKey('payload', $event['data']);
         $this->assertArrayHasKey('$id', $event['data']['payload']);
         $this->assertEquals($doc1Id, $event['data']['payload']['$id']);
+        $this->assertArrayNotHasKey('level2Ref', $event['data']['payload']);
+
+        $client->close();
+    }
+
+    public function testCreateRelationshipPayloadAlignsWithUpdate()
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'db-rel-create',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $level1 = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections", $headers, [
+            'collectionId' => ID::unique(),
+            'name' => 'level1',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $level1Id = $level1['body']['$id'];
+
+        $level2 = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections", $headers, [
+            'collectionId' => ID::unique(),
+            'name' => 'level2',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $level2Id = $level2['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$level1Id}/attributes/string", $headers, [
+            'key' => 'name',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$level2Id}/attributes/string", $headers, [
+            'key' => 'name',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        $this->assertEventually(function () use ($databaseId, $level1Id, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $level1Id . '/attributes/name', $headers);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
+        $this->assertEventually(function () use ($databaseId, $level2Id, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $level2Id . '/attributes/name', $headers);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$level1Id}/attributes/relationship", $headers, [
+            'relatedCollectionId' => $level2Id,
+            'type' => 'oneToOne',
+            'twoWay' => true,
+            'key' => 'level2Ref',
+            'onDelete' => 'cascade',
+        ]);
+
+        $this->assertEventually(function () use ($databaseId, $level1Id, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $level1Id . '/attributes/level2Ref', $headers);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
+        $doc2 = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$level2Id}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => ['name' => 'L2'],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $doc2Id = $doc2['body']['$id'];
+
+        $client = $this->getWebsocket(['documents'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $response = json_decode($client->receive(), true);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertEquals('connected', $response['type']);
+
+        $doc1 = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$level1Id}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'name' => 'L1',
+                'level2Ref' => $doc2Id,
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $doc1['headers']['status-code']);
+        $doc1Id = $doc1['body']['$id'];
+        $this->assertArrayHasKey('level2Ref', $doc1['body']);
+
+        $event = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => ($message['data']['payload']['$id'] ?? null) === $doc1Id
+                && \in_array("databases.{$databaseId}.collections.{$level1Id}.documents.{$doc1Id}.create", $message['data']['events'] ?? [], true),
+            timeoutMs: 10000
+        );
+
+        $this->assertEquals('event', $event['type']);
+        $this->assertArrayHasKey('payload', $event['data']);
+        $this->assertEquals($doc1Id, $event['data']['payload']['$id']);
+        $this->assertEquals('L1', $event['data']['payload']['name']);
+        $this->assertArrayNotHasKey('level2Ref', $event['data']['payload']);
+
+        $client->close();
+    }
+
+    public function testTransactionCommitRelationshipPayloadAlignsWithUpdate()
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'db-rel-txn',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $level1 = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections", $headers, [
+            'collectionId' => ID::unique(),
+            'name' => 'level1',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $level1Id = $level1['body']['$id'];
+
+        $level2 = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections", $headers, [
+            'collectionId' => ID::unique(),
+            'name' => 'level2',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $level2Id = $level2['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$level1Id}/attributes/string", $headers, [
+            'key' => 'name',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$level2Id}/attributes/string", $headers, [
+            'key' => 'name',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        $this->assertEventually(function () use ($databaseId, $level1Id, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $level1Id . '/attributes/name', $headers);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
+        $this->assertEventually(function () use ($databaseId, $level2Id, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $level2Id . '/attributes/name', $headers);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$level1Id}/attributes/relationship", $headers, [
+            'relatedCollectionId' => $level2Id,
+            'type' => 'oneToOne',
+            'twoWay' => true,
+            'key' => 'level2Ref',
+            'onDelete' => 'cascade',
+        ]);
+
+        $this->assertEventually(function () use ($databaseId, $level1Id, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $level1Id . '/attributes/level2Ref', $headers);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
+        $doc2 = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$level2Id}/documents", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => ['name' => 'L2'],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $doc2Id = $doc2['body']['$id'];
+        $doc1Id = ID::unique();
+
+        $client = $this->getWebsocket(['documents'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $response = json_decode($client->receive(), true);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertEquals('connected', $response['type']);
+
+        $transaction = $this->client->call(Client::METHOD_POST, '/databases/transactions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'ttl' => 3600,
+        ]);
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        $operationsResponse = $this->client->call(Client::METHOD_POST, '/databases/transactions/' . $transactionId . '/operations', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    'collectionId' => $level1Id,
+                    'documentId' => $doc1Id,
+                    'action' => 'create',
+                    'data' => [
+                        'name' => 'L1',
+                        'level2Ref' => $doc2Id,
+                        '$permissions' => [
+                            Permission::read(Role::any()),
+                            Permission::update(Role::any()),
+                            Permission::delete(Role::any()),
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertEquals(201, $operationsResponse['headers']['status-code']);
+
+        $commitResponse = $this->client->call(Client::METHOD_PATCH, '/databases/transactions/' . $transactionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'commit' => true,
+        ]);
+        $this->assertEquals(200, $commitResponse['headers']['status-code']);
+
+        $event = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => ($message['data']['payload']['$id'] ?? null) === $doc1Id
+                && \in_array("databases.{$databaseId}.collections.{$level1Id}.documents.{$doc1Id}.create", $message['data']['events'] ?? [], true),
+            timeoutMs: 10000
+        );
+
+        $this->assertEquals('event', $event['type']);
+        $this->assertArrayHasKey('payload', $event['data']);
+        $this->assertEquals($doc1Id, $event['data']['payload']['$id']);
+        $this->assertEquals('L1', $event['data']['payload']['name']);
         $this->assertArrayNotHasKey('level2Ref', $event['data']['payload']);
 
         $client->close();
