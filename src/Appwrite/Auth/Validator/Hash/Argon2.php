@@ -17,6 +17,9 @@ class Argon2 extends Password
 
     private const array ALGORITHMS = ['argon2i', 'argon2id'];
 
+    // Salt and digest are unpadded base64
+    private const string ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
     public function getDescription(): string
     {
         return 'Password must be an Argon2 hash with a memory cost of at most ' . self::MEMORY_MAX . ' KiB, a time cost of at most ' . self::TIME_MAX . ' and a parallelism of at most ' . self::THREADS_MAX . '.';
@@ -33,8 +36,10 @@ class Argon2 extends Password
             return false;
         }
 
-        if ($parts[4] === '' || $parts[5] === '') {
-            return false;
+        foreach ([$parts[4], $parts[5]] as $encoded) {
+            if ($encoded === '' || \strspn($encoded, self::ALPHABET) !== \strlen($encoded) || \strlen($encoded) % 4 === 1) {
+                return false;
+            }
         }
 
         $costs = \explode(',', $parts[3]);

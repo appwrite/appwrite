@@ -38,6 +38,11 @@ class PHPass extends Password
             return false;
         }
 
+        // A salt or digest outside the PHPass alphabet can never match, so the user could never sign in
+        if (\strspn($value, self::ALPHABET, 4) !== self::LENGTH - 4) {
+            return false;
+        }
+
         $iterations = \strpos(self::ALPHABET, $value[3]);
 
         return $iterations !== false && $iterations >= self::ITERATIONS_MIN && $iterations <= self::ITERATIONS_MAX;

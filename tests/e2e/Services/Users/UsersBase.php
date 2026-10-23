@@ -2149,6 +2149,7 @@ trait UsersBase
                 '$2y$10x' . $digest,
                 '$2y$10$' . \substr($digest, 1),
                 '$6$rounds=999999999$saltsalt$' . $digest,
+                '$2y$10$' . \str_repeat('!', 53),
                 '$argon2id$v=19$m=1024,t=2,p=1' . $tail,
             ],
             '/users/argon2' => [
@@ -2163,6 +2164,9 @@ trait UsersBase
                 '$argon2id$m=65536,t=4,p=1' . $tail,
                 '$argon2d$v=19$m=65536,t=4,p=1' . $tail,
                 '$argon2id$v=19$m=65536,t=4,p=1$TmtWSjZ3aE5keWNEdFlhcg$',
+                '$argon2id$v=19$m=65536,t=4,p=1$TmtWSjZ3aE5keWNEdFlhcg$' . \str_repeat('!', 43),
+                '$argon2id$v=19$m=65536,t=4,p=1$!!!!$KjIALjgKcbZxSfJh1RkK6/9wqD+WbGVRjzTJ3BIQaBg',
+                '$argon2id$v=19$m=65536,t=4,p=1$TmtWSjZ3aE5keWNEdFlhcg$KjIALjgKcbZxSfJh1RkK6/9wqD+WbGVRjzTJ3BIQaBgaa',
                 '$2y$10$' . $digest,
             ],
             '/users/phpass' => [
@@ -2172,6 +2176,8 @@ trait UsersBase
                 '$P$-r387rwferoKN7uwHZqNMu98q3U8RO.',
                 '$P$Br387rwferoKN7uwHZqNMu98q3U8RO',
                 '$S$Br387rwferoKN7uwHZqNMu98q3U8RO.',
+                '$P$B' . \str_repeat('!', 30),
+                '$2y$10$' . \str_repeat('!', 53),
                 '_zzzzsaltiAm7ZTrEBv.k',
                 '$2a$31$' . $digest,
             ],

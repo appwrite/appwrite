@@ -13,6 +13,8 @@ class Bcrypt extends Password
 
     public const int COST_MAX = 15;
 
+    private const string ALPHABET = './ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
     private const array PREFIXES = ['$2a$', '$2b$', '$2x$', '$2y$'];
 
     private const int LENGTH = 60;
@@ -34,6 +36,11 @@ class Bcrypt extends Password
 
         $cost = \substr($value, 4, 2);
         if (!\ctype_digit($cost)) {
+            return false;
+        }
+
+        // A salt or digest outside the bcrypt alphabet makes crypt() fail, so the user could never sign in
+        if (\strspn($value, self::ALPHABET, 7) !== self::LENGTH - 7) {
             return false;
         }
 
