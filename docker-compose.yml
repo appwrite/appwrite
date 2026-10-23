@@ -1778,7 +1778,7 @@ services:
 
   appwrite-exiftool:
     container_name: appwrite-exiftool
-    image: ghcr.io/appwrite/exiftool:0.1.0
+    image: ghcr.io/appwrite/exiftool:0.1.1
     restart: unless-stopped
     networks:
       - appwrite
