@@ -170,7 +170,19 @@ class Ceremony
             JsonEncode::OPTIONS => JSON_THROW_ON_ERROR,
         ]);
 
-        return new Challenge($this->toArray($state), $state);
+        $options = $this->toArray($state);
+
+        // The library drops empty transports, but some clients (Flutter passkeys) require the key
+        foreach (['excludeCredentials', 'allowCredentials'] as $key) {
+            if (\is_array($options[$key] ?? null)) {
+                $options[$key] = \array_map(
+                    fn (mixed $descriptor): mixed => \is_array($descriptor) ? $descriptor + ['transports' => []] : $descriptor,
+                    $options[$key],
+                );
+            }
+        }
+
+        return new Challenge($options, $state);
     }
 
     /**

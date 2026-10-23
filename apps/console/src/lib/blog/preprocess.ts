@@ -1,5 +1,5 @@
 const LINK_ONLY_LIST_ITEM_RE =
-  /^(\s*(?:[-*+]|(?:\d+\.)))\s+\[([^\]]+)\]\(([^)\s]+(?:\([^)]*\)[^)\s]*)*)\)\s*$/
+  /^(\s*(?:[-*+]|(?:\d+\.)))\s+\[([^\]]+)\]\(([^()\s]+(?:\([^)]*\)[^()\s]*)*)\)\s*$/
 
 export function preprocessBlogMarkdocContent(content: string): string {
   const lines = content.split('\n')

@@ -11,9 +11,9 @@ use Tests\E2E\Scopes\SideConsole;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 
 final class FunctionsConsoleClientTest extends Scope
 {
@@ -35,7 +35,7 @@ final class FunctionsConsoleClientTest extends Scope
         }
 
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'node-22',
@@ -75,7 +75,7 @@ final class FunctionsConsoleClientTest extends Scope
         $variable = $this->createVariable(
             $functionId,
             [
-                'variableId' => ID::unique(),
+                'variableId' => Id::unique(),
                 'key' => 'APP_TEST',
                 'value' => 'TESTINGVALUE',
                 'secret' => false
@@ -88,7 +88,7 @@ final class FunctionsConsoleClientTest extends Scope
         $secretVariable = $this->createVariable(
             $functionId,
             [
-                'variableId' => ID::unique(),
+                'variableId' => Id::unique(),
                 'key' => 'APP_TEST_1',
                 'value' => 'TESTINGVALUE_1',
                 'secret' => true
@@ -109,7 +109,7 @@ final class FunctionsConsoleClientTest extends Scope
     public function testCreateFunction(): void
     {
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'node-22',
@@ -125,7 +125,7 @@ final class FunctionsConsoleClientTest extends Scope
         $this->assertEquals(201, $function['headers']['status-code']);
 
         $function2 = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Failure',
             'execute' => ['some-random-string'],
             'runtime' => 'node-22',
@@ -139,7 +139,7 @@ final class FunctionsConsoleClientTest extends Scope
     {
         // Create a new function for this test to avoid conflicts with cached data
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Variable Creation',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'node-22',
@@ -156,7 +156,7 @@ final class FunctionsConsoleClientTest extends Scope
         $variable = $this->createVariable(
             $functionId,
             [
-                'variableId' => ID::unique(),
+                'variableId' => Id::unique(),
                 'key' => 'APP_TEST',
                 'value' => 'TESTINGVALUE',
                 'secret' => false
@@ -169,7 +169,7 @@ final class FunctionsConsoleClientTest extends Scope
         $variable = $this->createVariable(
             $functionId,
             [
-                'variableId' => ID::unique(),
+                'variableId' => Id::unique(),
                 'key' => 'APP_TEST_1',
                 'value' => 'TESTINGVALUE_1',
                 'secret' => true
@@ -188,7 +188,7 @@ final class FunctionsConsoleClientTest extends Scope
         $variable = $this->createVariable(
             $functionId,
             [
-                'variableId' => ID::unique(),
+                'variableId' => Id::unique(),
                 'key' => 'APP_TEST',
                 'value' => 'ANOTHERTESTINGVALUE',
                 'secret' => false
@@ -210,7 +210,7 @@ final class FunctionsConsoleClientTest extends Scope
         $this->assertEquals(400, $variable['headers']['status-code']);
 
         // Test for duplicate variableId
-        $duplicateVariableId = ID::unique();
+        $duplicateVariableId = Id::unique();
         $variable = $this->createVariable(
             $functionId,
             [
@@ -237,7 +237,7 @@ final class FunctionsConsoleClientTest extends Scope
         $variable = $this->createVariable(
             $functionId,
             [
-                'variableId' => ID::unique(),
+                'variableId' => Id::unique(),
                 'key' => str_repeat("A", 256),
                 'value' => 'TESTINGVALUE'
             ]
@@ -250,7 +250,7 @@ final class FunctionsConsoleClientTest extends Scope
             $variable = $this->createVariable(
                 $functionId,
                 [
-                    'variableId' => ID::unique(),
+                    'variableId' => Id::unique(),
                     'key' => $invalidKey,
                     'value' => 'TESTINGVALUE'
                 ]
@@ -263,7 +263,7 @@ final class FunctionsConsoleClientTest extends Scope
         $variable = $this->createVariable(
             $functionId,
             [
-                'variableId' => ID::unique(),
+                'variableId' => Id::unique(),
                 'key' => 'LONGKEY',
                 'value' => str_repeat("#", 8193),
             ]
@@ -313,7 +313,7 @@ final class FunctionsConsoleClientTest extends Scope
     {
         // Create a fresh function for this test
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test List Variables With Limit',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'node-22',
@@ -324,14 +324,14 @@ final class FunctionsConsoleClientTest extends Scope
         $functionId = $function['body']['$id'];
 
         $variable1 = $this->createVariable($functionId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'LIMIT_KEY_1',
             'value' => 'limit-value-1',
         ]);
         $this->assertEquals(201, $variable1['headers']['status-code']);
 
         $variable2 = $this->createVariable($functionId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'LIMIT_KEY_2',
             'value' => 'limit-value-2',
         ]);
@@ -359,7 +359,7 @@ final class FunctionsConsoleClientTest extends Scope
     {
         // Create a fresh function for this test
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test List Variables Without Total',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'node-22',
@@ -370,7 +370,7 @@ final class FunctionsConsoleClientTest extends Scope
         $functionId = $function['body']['$id'];
 
         $variable = $this->createVariable($functionId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'NO_TOTAL_KEY',
             'value' => 'no-total-value',
         ]);
@@ -395,7 +395,7 @@ final class FunctionsConsoleClientTest extends Scope
     {
         // Create a fresh function for this test
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test List Variables Cursor Pagination',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'node-22',
@@ -406,14 +406,14 @@ final class FunctionsConsoleClientTest extends Scope
         $functionId = $function['body']['$id'];
 
         $variable1 = $this->createVariable($functionId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'CURSOR_KEY_1',
             'value' => 'cursor-value-1',
         ]);
         $this->assertEquals(201, $variable1['headers']['status-code']);
 
         $variable2 = $this->createVariable($functionId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'CURSOR_KEY_2',
             'value' => 'cursor-value-2',
         ]);
@@ -495,7 +495,7 @@ final class FunctionsConsoleClientTest extends Scope
     {
         // Create a fresh function and variables for this test since it modifies them
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Update Variable',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'node-22',
@@ -507,7 +507,7 @@ final class FunctionsConsoleClientTest extends Scope
         $functionId = $function['body']['$id'];
 
         $variable = $this->createVariable($functionId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'APP_TEST',
             'value' => 'TESTINGVALUE',
             'secret' => false
@@ -516,7 +516,7 @@ final class FunctionsConsoleClientTest extends Scope
         $variableId = $variable['body']['$id'];
 
         $secretVariable = $this->createVariable($functionId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'APP_TEST_1',
             'value' => 'TESTINGVALUE_1',
             'secret' => true
@@ -674,7 +674,7 @@ final class FunctionsConsoleClientTest extends Scope
     {
         // Create a fresh function and variable for this test
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Update Variable Key',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'node-22',
@@ -685,7 +685,7 @@ final class FunctionsConsoleClientTest extends Scope
         $functionId = $function['body']['$id'];
 
         $variable = $this->createVariable($functionId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'KEY_BEFORE',
             'value' => 'unchanged-value',
             'secret' => false
@@ -712,7 +712,7 @@ final class FunctionsConsoleClientTest extends Scope
     {
         // Create a fresh function and variable for this test
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Update Variable Value',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'node-22',
@@ -723,7 +723,7 @@ final class FunctionsConsoleClientTest extends Scope
         $functionId = $function['body']['$id'];
 
         $variable = $this->createVariable($functionId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'UNCHANGED_KEY',
             'value' => 'value-before',
             'secret' => false
@@ -750,7 +750,7 @@ final class FunctionsConsoleClientTest extends Scope
     {
         // Create a fresh function for this test
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Update Variable Not Found',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'node-22',
@@ -778,7 +778,7 @@ final class FunctionsConsoleClientTest extends Scope
     {
         // Create a fresh function and variables for this test since it deletes them
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test Delete Variable',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'node-22',
@@ -790,7 +790,7 @@ final class FunctionsConsoleClientTest extends Scope
         $functionId = $function['body']['$id'];
 
         $variable = $this->createVariable($functionId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'APP_TEST',
             'value' => 'TESTINGVALUE',
             'secret' => false
@@ -799,7 +799,7 @@ final class FunctionsConsoleClientTest extends Scope
         $variableId = $variable['body']['$id'];
 
         $secretVariable = $this->createVariable($functionId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'APP_TEST_1',
             'value' => 'TESTINGVALUE_1',
             'secret' => true
@@ -849,7 +849,7 @@ final class FunctionsConsoleClientTest extends Scope
     public function testVariableE2E(): void
     {
         $function = $this->createFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'runtime' => 'node-22',
             'name' => 'Variable E2E Test',
             'entrypoint' => 'index.js',
@@ -865,7 +865,7 @@ final class FunctionsConsoleClientTest extends Scope
 
         // create variable
         $variable = $this->createVariable($functionId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'CUSTOM_VARIABLE',
             'value' => 'a_secret_value',
             'secret' => true,
@@ -899,7 +899,7 @@ final class FunctionsConsoleClientTest extends Scope
     public function testFunctionDownload(): void
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'runtime' => 'node-22',
             'name' => 'Download Test',
             'entrypoint' => 'index.js',
@@ -965,7 +965,7 @@ final class FunctionsConsoleClientTest extends Scope
     public function testFunctionDeploymentRetentionWithMaintenance(): void
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test retention function',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',

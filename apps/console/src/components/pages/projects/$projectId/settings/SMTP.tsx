@@ -414,7 +414,9 @@ export function SMTP({ projectId }: SMTPProps) {
                             className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                           />
                           <p className="text-[11px] text-muted-foreground">
-                            {t('Leave blank to keep current password unchanged.')}
+                            {t(
+                              'Leave blank to keep the current password. Re-enter it when changing the host, port, or secure protocol.',
+                            )}
                           </p>
                         </div>
                       </div>

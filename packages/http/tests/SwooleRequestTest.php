@@ -128,6 +128,45 @@ final class SwooleRequestTest extends TestCase
         $this->assertSame('https', $request->getProtocol());
     }
 
+    public function testIgnoresTheForwardedHostByDefault(): void
+    {
+        $request = new Request($this->schemeRequest(['X-Forwarded-Host' => 'example.com:8443', 'X-Forwarded-Port' => '8443']));
+
+        $this->assertSame('localhost', $request->getHostname(), 'an untrusted forwarded host must not replace the Host header');
+        $this->assertSame('', $request->getPort(), 'an untrusted forwarded port must not decide the port');
+    }
+
+    public function testTrustsANamedForwardedHost(): void
+    {
+        $request = new Request(
+            $this->schemeRequest(['X-Forwarded-Host' => 'spoofed.example:9000, Example.com:8443']),
+            new TrustedHeaders(host: ['x-forwarded-host']),
+        );
+
+        $this->assertSame('example.com', $request->getHostname());
+        $this->assertSame('8443', $request->getPort());
+    }
+
+    public function testTrustsANamedForwardedPort(): void
+    {
+        $request = new Request(
+            $this->schemeRequest(['X-Forwarded-Port' => '8443']),
+            new TrustedHeaders(port: ['x-forwarded-port']),
+        );
+
+        $this->assertSame('8443', $request->getPort());
+    }
+
+    public function testSkipsATrustedPortHeaderThatIsNotANumber(): void
+    {
+        $request = new Request(
+            $this->schemeRequest(['X-Forwarded-Port' => 'not-a-port']),
+            new TrustedHeaders(port: ['x-forwarded-port']),
+        );
+
+        $this->assertSame('', $request->getPort());
+    }
+
     /**
      * @param  array<string, string>  $headers
      */
@@ -143,6 +182,33 @@ final class SwooleRequestTest extends TestCase
         $request->parse($raw . "\r\n");
 
         return $request;
+    }
+
+    public function testSizeCountsTheJSONBody(): void
+    {
+        $body = \json_encode(['data' => \str_repeat('a', 100_000)], JSON_THROW_ON_ERROR);
+
+        $request = new Request($this->swooleRequest($body));
+
+        $this->assertGreaterThanOrEqual(\strlen($body), $request->getSize(), 'the request size must include the body, not only the headers');
+    }
+
+    public function testSizeCountsTheMultipartBody(): void
+    {
+        $boundary = 'appwrite-boundary';
+        $file = \str_repeat('b', 100_000);
+        $body = "--{$boundary}\r\n"
+            . "Content-Disposition: form-data; name=\"fileId\"\r\n\r\n"
+            . "unique()\r\n"
+            . "--{$boundary}\r\n"
+            . "Content-Disposition: form-data; name=\"file\"; filename=\"file.bin\"\r\n"
+            . "Content-Type: application/octet-stream\r\n\r\n"
+            . $file . "\r\n"
+            . "--{$boundary}--\r\n";
+
+        $request = new Request($this->swooleRequest($body, 'multipart/form-data; boundary=' . $boundary));
+
+        $this->assertGreaterThanOrEqual(\strlen($body), $request->getSize(), 'the request size must include the uploaded file');
     }
 
     private function swooleRequest(string $body, string $contentType = 'application/json'): SwooleRequest

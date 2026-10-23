@@ -75,7 +75,7 @@ import io.appwrite.Client
 import io.appwrite.services.Account
 import io.appwrite.ID
 
-val client = Client()
+val client = Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>");
 
@@ -156,7 +156,7 @@ import io.appwrite.Client
 import io.appwrite.services.Account
 import io.appwrite.ID
 
-val client = Client()
+val client = Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>");
 

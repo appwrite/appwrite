@@ -115,6 +115,37 @@ final class ImageTest extends TestCase
         unlink($target);
     }
 
+    /**
+     * @return array<string, array{int, int, int, int, string, int, int}>
+     */
+    public static function skewedCrops(): array
+    {
+        return [
+            'landscape, 1px wide' => [6, 2, 1, 0, Image::GRAVITY_TOP_LEFT, 1, 1],
+            'landscape, 1px wide, center' => [6, 2, 1, 0, Image::GRAVITY_CENTER, 1, 1],
+            'landscape, 1px high' => [6, 2, 0, 1, Image::GRAVITY_BOTTOM_RIGHT, 3, 1],
+            'portrait, 1px high' => [2, 6, 0, 1, Image::GRAVITY_TOP_LEFT, 1, 1],
+            'portrait, 1px high, center' => [2, 6, 0, 1, Image::GRAVITY_CENTER, 1, 1],
+            'portrait, 1px wide' => [2, 6, 1, 0, Image::GRAVITY_RIGHT, 1, 3],
+        ];
+    }
+
+    #[DataProvider('skewedCrops')]
+    public function testCropKeepsADerivedSideOfAtLeastOnePixel(int $sourceWidth, int $sourceHeight, int $width, int $height, string $gravity, int $expectedWidth, int $expectedHeight): void
+    {
+        $source = new \Imagick();
+        $source->newImage($sourceWidth, $sourceHeight, 'red', 'png');
+
+        $image = new Image($source->getImageBlob());
+        $image->crop($width, $height, $gravity);
+
+        $result = new \Imagick();
+        $result->readImageBlob($image->output('png', 100) ?: '');
+
+        $this->assertSame($expectedWidth, $result->getImageWidth());
+        $this->assertSame($expectedHeight, $result->getImageHeight());
+    }
+
     public function testCropFocalUsesNormalizedCoordinates(): void
     {
         $source = new \Imagick();

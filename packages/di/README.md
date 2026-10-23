@@ -5,7 +5,6 @@
     <img height="45" src="docs/logo.png" alt="Logo">
 </p>
 
-[![CI](https://github.com/utopia-php/di/actions/workflows/ci.yml/badge.svg)](https://github.com/utopia-php/di/actions/workflows/ci.yml)
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/di.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 

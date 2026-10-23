@@ -32,7 +32,7 @@ abstract class Adapter
     public const WEBHOOK_SCOPE_INSTALLATION = 'installation';
     public const WEBHOOK_SCOPE_REPOSITORY = 'repository';
 
-    protected bool $selfSigned = true;
+    protected bool $selfSigned = false;
 
     protected string $endpoint;
 
@@ -42,6 +42,19 @@ abstract class Adapter
      * @var array<string, string>
      */
     protected $headers = [];
+
+    /**
+     * Accept self-signed TLS certificates, for self-hosted providers on a private CA
+     */
+    public function setSelfSigned(bool $selfSigned): void
+    {
+        $this->selfSigned = $selfSigned;
+    }
+
+    public function isSelfSigned(): bool
+    {
+        return $this->selfSigned;
+    }
 
     /**
      * Get Adapter Name
@@ -310,6 +323,19 @@ abstract class Adapter
     abstract public function updateCommitStatus(string $repositoryName, string $SHA, string $owner, string $state, string $description = '', string $target_url = '', string $context = ''): void;
 
     /**
+     * Reports a build check on a commit
+     * state can be one of: queued, pending, success, failure, error, cancelled
+     *
+     * A provider with plain commit statuses carries the title as the status
+     * description and drops the summary; queued is pending there. A provider
+     * with check runs overrides this to carry the summary and a conclusion.
+     */
+    public function updateCheck(string $owner, string $repositoryName, string $SHA, string $state, string $name, string $title, string $summary = '', string $detailsUrl = ''): void
+    {
+        $this->updateCommitStatus($repositoryName, $SHA, $owner, $state === 'queued' ? 'pending' : $state, $title, $detailsUrl, $name);
+    }
+
+    /**
      * Creates a check run for a commit.
      * status can be one of: queued, in_progress
      * Use updateCheckRun() to set conclusion and mark the run as completed.
@@ -503,7 +529,6 @@ abstract class Adapter
             ->withConnectTimeout(0)
             ->withTimeout(15);
 
-        // Allow self signed certificates
         if ($this->selfSigned) {
             $client = $client->withSslVerification(false);
         }
@@ -536,10 +561,6 @@ abstract class Adapter
         }
 
         $responseHeaders['status-code'] = $responseStatus;
-
-        if ($responseStatus === 500) {
-            echo 'Server error(' . $method . ': ' . $path . '. Params: ' . json_encode($params) . '): ' . json_encode($responseBody) . "\n";
-        }
 
         return [
             'headers' => $responseHeaders,
