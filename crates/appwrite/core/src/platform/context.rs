@@ -451,8 +451,8 @@ fn forwarded(request: &Request, trusted_proxies: &[String], header: &str) -> Opt
 /// Request hostname (a trusted proxy's `x-forwarded-host`, else `host`,
 /// lower-cased, no port).
 fn request_hostname(request: &Request, trusted_proxies: &[String]) -> String {
-    let raw = forwarded(request, trusted_proxies, "x-forwarded-host")
-        .unwrap_or_else(|| request.header_line_or("host", ""));
+    let raw =
+        forwarded(request, trusted_proxies, "x-forwarded-host").unwrap_or_else(|| request.header_line_or("host", ""));
     let host = if raw.starts_with('[') {
         raw.split(']').next().map(|h| format!("{h}]")).unwrap_or_default()
     } else {

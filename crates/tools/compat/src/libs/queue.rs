@@ -510,6 +510,12 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
             out.set("terminal".into(), Value::Bool(m.is_terminal()));
             out.set("size".into(), m.size().map_or(Value::Null, Value::Int));
             out.set("array".into(), Value::Array(m.to_array()));
+            // Only when the case sets it, so cases recorded before it existed keep their results.
+            if a.0.get("max_attempts").is_some() {
+                m.set_max_attempts(a.opt_i64("max_attempts")?);
+                out.set("max_attempts".into(), m.max_attempts().map_or(Value::Null, Value::Int));
+                out.set("last_attempt".into(), Value::Bool(m.is_last_attempt()));
+            }
             Outcome::Ok(dump(&Value::Array(out)))
         }
 
@@ -575,10 +581,16 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
                 Some(h) => session.get::<Arc<dyn Connection>>(h)?.clone(),
                 None => Arc::new(Locking::new(redis_connection(session)?)),
             };
-            let broker = Redis::new(receive, commands)
+            let broker = match Redis::new(receive, commands)
                 .with_codec(codec(a.opt_str("codec")?.unwrap_or("json"))?)
-                .with_reap_after(a.opt_i64("reap_after")?.unwrap_or(90_000))
-                .with_clock(clock);
+                .with_reap(
+                    a.opt_i64("reap_after")?.unwrap_or(90_000),
+                    a.opt_i64("reap_max_attempts")?,
+                    a.opt_i64("reap_max_age")?,
+                ) {
+                Ok(broker) => broker.with_clock(clock),
+                Err(e) => return Ok(err(e)),
+            };
             Outcome::Ok(session.handle(Broker::Redis(Arc::new(broker))))
         }
         "broker.round_trip" => {
