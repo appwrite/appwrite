@@ -368,8 +368,8 @@ export function View() {
 
   return (
     <>
-      {features.functionEmailDomains ? <SmtpDomainsSection /> : null}
       {domainsContent}
+      {features.functionEmailDomains ? <SmtpDomainsSection /> : null}
       {selectedRule && (
         <>
           <VerifyDomain

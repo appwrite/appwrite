@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { DomainTargetCard } from '../../shared/DomainTargetCard'
+import { DomainTypeCard } from './DomainTypeCard'
 import {
   VerifyDomainContent,
   dnsPendingVerificationError,
@@ -32,6 +33,11 @@ import {
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import {
+  isFunctionEmailEnabled,
+  type FunctionWithEmail,
+} from '@/lib/function-email'
 
 export function AddDomainWizard() {
   const t = useT()
@@ -40,6 +46,7 @@ export function AddDomainWizard() {
   const queryClient = useQueryClient()
   const { project } = useProject(projectId)
   const { data: func } = useProjectFunction(projectId, functionId)
+  const { features } = useConsoleProfile()
 
   const createMutation = useCreateFunctionDomainRule(projectId)
   const verifyMutation = useVerifyDomain(projectId, project?.region)
@@ -259,6 +266,25 @@ export function AddDomainWizard() {
       }
     >
       <form onSubmit={handleSubmit} className="space-y-6">
+        {features.functionEmailDomains ? (
+          <DomainTypeCard
+            value="http"
+            onChange={(type) => {
+              if (type === 'smtp') {
+                navigate({
+                  to: '/projects/$projectId/functions/$functionId/domains/add',
+                  params: { projectId: projectId!, functionId: functionId! },
+                  search: { protocol: 'smtp' },
+                  replace: true,
+                })
+              }
+            }}
+            emailEnabled={isFunctionEmailEnabled(
+              func as FunctionWithEmail | undefined,
+            )}
+            disabled={createMutation.isPending}
+          />
+        ) : null}
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
