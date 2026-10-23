@@ -117,12 +117,12 @@ export function mapDedicatedDatabaseCredentials(
   return {
     connectionString: database.connectionString,
     host: database.hostname,
-    port: database.connectionPort,
+    port: database.connectionPort ?? undefined,
     username: database.connectionUser,
     password: database.connectionPassword,
     database: catalogName,
     tcpHost: database.hostname,
-    tcpPort: database.connectionPort,
+    tcpPort: database.connectionPort ?? undefined,
     tcpDatabase: catalogName,
     ssl: parsed.ssl,
   }

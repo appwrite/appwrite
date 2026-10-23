@@ -217,7 +217,7 @@ return [
             ],
             [
                 'name' => '_APP_DNS_EXTERNAL',
-                'description' => 'Comma-separated DNS servers used, instead of the container\'s own resolver, to check the host of a migration source or an avatar URL before Appwrite fetches it. Other fetches (OAuth2 and OIDC providers, webhooks) resolve normally and are checked on the address they connect to. By default, the value of _APP_DNS.',
+                'description' => 'Comma-separated DNS servers used, instead of the container\'s own resolver, to check the host of a migration source, an avatar URL or a project\'s SMTP server before Appwrite connects to it. Other fetches (OAuth2 and OIDC providers, webhooks) resolve normally and are checked on the address they connect to. By default, the value of _APP_DNS.',
                 'introduction' => '2.4.0',
                 'default' => '',
                 'required' => false,
@@ -226,7 +226,7 @@ return [
             ],
             [
                 'name' => '_APP_ALLOWED_INTERNAL_ADDRESSES',
-                'description' => 'Comma-separated IP addresses or CIDR ranges that Appwrite may reach even though they are private or reserved, when fetching a user-supplied URL (OAuth2 and OIDC providers, webhooks, messaging webhooks, migration sources, avatars). Every other private or reserved address is refused. Set it per container, for example to reach an internal identity provider. By default, empty.',
+                'description' => 'Comma-separated IP addresses or CIDR ranges that Appwrite may reach even though they are private or reserved, when fetching a user-supplied URL (OAuth2 and OIDC providers, webhooks, messaging webhooks, migration sources, avatars) or connecting to a project\'s SMTP server (project SMTP and messaging SMTP providers). Every other private or reserved address is refused. Set it per container, for example to reach an internal identity provider. By default, empty.',
                 'introduction' => '2.4.0',
                 'default' => '',
                 'required' => false,
@@ -994,6 +994,16 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_EXIFTOOL_HOST',
+                'description' => 'The host of the ExifTool service (for example `http://appwrite-exiftool:8080`) used to remove metadata from images uploaded to buckets with `stripMetadata` enabled. Leave empty to disable stripping; those images are then stored as uploaded.',
+                'introduction' => '2.6.0',
+                'default' => '',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_STORAGE_ANTIVIRUS',
                 'description' => 'This variable allows you to disable the internal anti-virus scans. This value is set to \'disabled\' by default, to enable the scans set the value to \'enabled\'. Before enabling, you must add the ClamAV service and depend on it on main Appwrite service.',
                 'introduction' => '',
@@ -1064,6 +1074,14 @@ return [
                 'name' => '_APP_STORAGE_S3_ENDPOINT',
                 'description' => 'S3 storage endpoint. Required when using S3 storage providers other than AWS.',
                 'introduction' => '0.16.2',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
+                'name' => '_APP_STORAGE_S3_PATH_STYLE',
+                'description' => 'Whether requests to _APP_STORAGE_S3_ENDPOINT name the bucket in the path. Set to \'enabled\' when the endpoint is the bare service, or \'disabled\' when it already addresses the bucket. Leave empty to infer it: the endpoint addresses the bucket when its host is the bucket name (a dotted domain), its host begins with the bucket name followed by a dot, or its path ends with the bucket name. A custom domain or CNAME pointing at the bucket is not detected; set \'disabled\'.',
+                'introduction' => '2.6.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
@@ -1335,7 +1353,7 @@ return [
                 'default' => 'your-secret-key',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => 'token'
             ],
             [
                 'name' => '_APP_EXECUTOR_HOST',
@@ -1377,12 +1395,12 @@ return [
             ],
             [
                 'name' => '_APP_JOBS_SECRET',
-                'description' => 'The secret used to authenticate with the jobs-service and to sign/verify job callback (HMAC) requests. Make sure to change this.',
+                'description' => 'The secret used to authenticate with the jobs-service and to sign/verify job callback (HMAC) requests. The installer generates a unique value. `/v1/jobs/event` rejects signatures when this is empty or the public `your-secret-key` placeholder. **Keep it a secret**.',
                 'introduction' => '1.9.0',
-                'default' => 'your-secret-key',
+                'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => 'token'
             ],
             [
                 'name' => '_APP_JOBS_ENDPOINT',
@@ -1761,6 +1779,42 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_VCS_ENTIRE_PLUGIN',
+                'description' => 'Entire plugin slug, as registered with Entire. It names the plugin in Entire\'s API and is the audience of the webhook tokens Entire signs for it.',
+                'introduction' => '2.6.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_ENTIRE_PRIVATE_KEY',
+                'description' => 'Entire plugin private key: the Ed25519 key whose public half is registered on the plugin, as a PKCS#8 PEM.',
+                'introduction' => '2.6.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_ENTIRE_ISSUER',
+                'description' => 'Issuer registered on the Entire plugin: the iss claim of the JWTs Appwrite signs for it and the audience of the install receipts Entire signs back. Usually this server\'s public URL.',
+                'introduction' => '2.6.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_ENTIRE_ENDPOINT',
+                'description' => 'URL of the Entire core (control plane) Appwrite talks to. Any core serves any installation; defaults to https://us.auth.entire.io when unset, set it to a nearer jurisdiction such as https://eu.auth.entire.io.',
+                'introduction' => '2.6.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_VCS_WEBHOOK_URL',
                 'description' => 'Base URL Appwrite advertises to self-hosted VCS providers when registering repository webhooks, if different from the public domain (e.g. a Docker-internal address). Falls back to the public domain when unset.',
                 'introduction' => '2.0.0',
@@ -1780,6 +1834,24 @@ return [
                 'description' => 'Interval value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 86400 seconds (1 day).',
                 'introduction' => '0.7.0',
                 'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_QUEUE_NAME',
+                'description' => 'Queue used for scheduled maintenance slices. Set the same value on the maintenance scheduler and workers. Defaults to v1-maintenance.',
+                'introduction' => '2.6.0',
+                'default' => 'v1-maintenance',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_INACTIVE_INTERVAL',
+                'description' => 'How often, in seconds, the scheduler runs maintenance for each project not accessed in the last 30 days or never accessed. Projects are spread across five-minute slices, so use a multiple of 300; a value under 600 gives a single slice that reaches every inactive project on each run. The scheduler dispatches each slice to the maintenance worker, which defers a slice while the deletes queue is backed up; a slice still deferred after a full interval gives way to its next run. The default value is 604800 seconds (7 days).',
+                'introduction' => '2.6.0',
+                'default' => '604800',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

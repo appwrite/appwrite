@@ -435,6 +435,32 @@ final class PresenceRealtimeClientTest extends Scope
                 fn (array $frame): bool => ($frame['type'] ?? null) === 'event'
                     && ($frame['data']['payload']['$id'] ?? null) === $presenceId
             );
+
+            $client->send(\json_encode([
+                'type' => 'presence',
+                'data' => [
+                    'presenceId' => 'invalid id!',
+                    'status' => 'online',
+                ],
+            ]));
+            $invalidId = $this->receiveErrorMessage($client);
+            $this->assertStringContainsString('presenceId: ', (string) ($invalidId['data']['message'] ?? ''));
+
+            $client->send(\json_encode([
+                'type' => 'presence',
+                'data' => [
+                    'presenceId' => $presenceId,
+                    'status' => 'online',
+                    'metadata' => ['not', 'an', 'object'],
+                ],
+            ]));
+            $invalidMetadata = $this->receiveErrorMessage($client);
+            $this->assertStringContainsString('metadata: Value must be a valid JSON object', (string) ($invalidMetadata['data']['message'] ?? ''));
+            $this->assertQuietFor(
+                $client,
+                fn (array $frame): bool => ($frame['type'] ?? null) === 'event'
+                    && ($frame['data']['payload']['$id'] ?? null) === $presenceId
+            );
         } finally {
             $client->close();
         }
@@ -657,6 +683,58 @@ final class PresenceRealtimeClientTest extends Scope
         } finally {
             // Publisher is closed mid-body to trigger onClose; guard against a double close
             // and still tear it down if an earlier assertion threw first.
+            try {
+                $publisher->close();
+            } catch (\Throwable) {
+                // Already closed.
+            }
+            $listener->close();
+        }
+    }
+
+    public function testPresenceReauthToDifferentUserRemovesPreviousRow(): void
+    {
+        [$project, $userA, $headers] = $this->bootstrapIsolatedProject();
+        $userB = $this->getUser(true);
+
+        $presenceId = Id::unique();
+        $metadata = ['testRunId' => Id::unique(), 'source' => 'reauth-switch'];
+        $channels = ['presences', 'presences.' . $presenceId];
+
+        $publisher = $this->connectRealtimeAndSubscribe($project, $headers, $channels, timeout: 1);
+        $listener = $this->connectRealtimeAndSubscribe($project, $headers, $channels, timeout: 1);
+
+        try {
+            $this->sendPresenceMessage(
+                $publisher,
+                $presenceId,
+                'online',
+                $metadata,
+                $this->getPresencePermissions(Role::any())
+            );
+            $this->collectPresenceOutcome($publisher, $presenceId, 'online', $metadata, $userA['$id']);
+            $this->receivePresenceEvent($listener, $presenceId, 'upsert', 'online', $metadata, $userA['$id']);
+
+            // Re-authenticate the connection as a different user: its hold on the previous user
+            // must be released and that row deleted with an offline event.
+            $publisher->send(\json_encode([
+                'type' => 'authentication',
+                'data' => ['session' => $userB['session']],
+            ]));
+            $auth = \json_decode($publisher->receive(), true);
+            $this->assertEquals('authentication', $auth['data']['to']);
+            $this->assertTrue($auth['data']['success']);
+            $this->assertEquals($userB['$id'], $auth['data']['user']['$id']);
+
+            $this->receivePresenceEvent($listener, $presenceId, 'delete', 'online', $metadata, $userA['$id'], timeoutMs: 5000);
+
+            $read = $this->client->call(
+                Client::METHOD_GET,
+                '/presences/' . $presenceId,
+                $this->getServerHeaders($project)
+            );
+            $this->assertSame(404, $read['headers']['status-code']);
+        } finally {
             try {
                 $publisher->close();
             } catch (\Throwable) {

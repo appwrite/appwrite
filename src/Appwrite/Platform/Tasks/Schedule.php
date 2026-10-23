@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Event\Publisher\Maintenance as MaintenancePublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Usage\Connection;
@@ -25,7 +26,7 @@ class Schedule extends Action
     public function __construct()
     {
         $this
-            ->desc('Execute functions, executions, and messages scheduled in Appwrite')
+            ->desc('Run the function, execution, message, inactive project maintenance and, when self-hosted, resource stats schedulers in one process')
             ->inject('publisherForFunctions')
             ->inject('publisherForMessaging')
             ->inject('getIsResourceBlocked')
@@ -33,6 +34,7 @@ class Schedule extends Action
             ->inject('getProjectDB')
             ->inject('telemetry')
             ->inject('locks')
+            ->inject('publisherForMaintenance')
             ->inject('pools');
 
         if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
@@ -54,9 +56,10 @@ class Schedule extends Action
         callable $getProjectDB,
         Telemetry $telemetry,
         callable $locks,
+        MaintenancePublisher $publisherForMaintenance,
         Group $pools,
     ): never {
-        $this->start($publisherForFunctions, $publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks, $pools);
+        $this->start($publisherForFunctions, $publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks, $publisherForMaintenance, $pools);
     }
 
     public function actionWithUsage(
@@ -67,6 +70,7 @@ class Schedule extends Action
         callable $getProjectDB,
         Telemetry $telemetry,
         callable $locks,
+        MaintenancePublisher $publisherForMaintenance,
         Group $pools,
         StatsResourcesPublisher $publisherForStatsResources,
         Connection $usageConnection,
@@ -79,6 +83,7 @@ class Schedule extends Action
             $getProjectDB,
             $telemetry,
             $locks,
+            $publisherForMaintenance,
             $pools,
             $publisherForStatsResources,
             $usageConnection,
@@ -93,16 +98,22 @@ class Schedule extends Action
         callable $getProjectDB,
         Telemetry $telemetry,
         callable $locks,
+        MaintenancePublisher $publisherForMaintenance,
         Group $pools,
         ?StatsResourcesPublisher $publisherForStatsResources = null,
         ?Connection $usageConnection = null,
     ): never {
-        $this->loop(fn () => (new ScheduleFunctions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $pools));
-        $this->loop(fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $pools));
-        $this->loop(fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks, $pools));
+        // Parsed before any loop starts: a loop that throws only ends its own coroutine, so an invalid interval
+        // would otherwise leave the process healthy with inactive projects never maintained.
+        $cycle = ScheduleMaintenance::cycle();
+
+        $this->loop(ScheduleFunctions::getName(), fn () => (new ScheduleFunctions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $pools));
+        $this->loop(ScheduleExecutions::getName(), fn () => (new ScheduleExecutions())->action($publisherForFunctions, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $pools));
+        $this->loop(ScheduleMessages::getName(), fn () => (new ScheduleMessages())->action($publisherForMessaging, $getIsResourceBlocked, $dbForPlatform, $getProjectDB, $telemetry, $locks, $pools));
+        $this->loop(ScheduleMaintenance::getName(), fn () => (new ScheduleMaintenance())->run(ScheduleMaintenance::loop($cycle, $publisherForMaintenance, $telemetry), $pools));
 
         if ($publisherForStatsResources !== null && $usageConnection !== null) {
-            $this->loop(fn () => (new StatsResources())->action($dbForPlatform, $publisherForStatsResources, $usageConnection, $telemetry));
+            $this->loop(StatsResources::getName(), fn () => (new StatsResources())->action($dbForPlatform, $publisherForStatsResources, $usageConnection, $telemetry));
         }
 
         while (true) {
@@ -110,14 +121,15 @@ class Schedule extends Action
         }
     }
 
-    private function loop(\Closure $task): void
+    private function loop(string $name, \Closure $task): void
     {
-        Co::create(function () use ($task): void {
+        Co::create(function () use ($name, $task): void {
             // A task that throws (a lost Redis connection ends a scheduler
             // loop) starts again, as its own container would be restarted.
             while (true) {
                 // Held by reference: the task's own spans replace the current one.
                 $span = Span::init('schedule.combined.loop');
+                Span::add('loop', $name);
                 $error = null;
 
                 try {
@@ -132,7 +144,7 @@ class Schedule extends Action
                     return;
                 }
 
-                Console::error('Scheduler loop failed, restarting in 5s: ' . $error->getMessage());
+                Console::error('schedule: ' . $name . ' loop failed, restarting in 5s: ' . $error->getMessage());
                 sleep(5);
             }
         });

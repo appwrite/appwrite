@@ -63,6 +63,9 @@ class Update extends Action
             ->groups(['api', 'database', 'transactions'])
             ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
+            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
+            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
                 namespace: 'databases',
                 group: 'transactions',
@@ -144,7 +147,7 @@ class Update extends Action
         $transaction = ($isAPIKey || $isPrivilegedUser)
             ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
             : $dbForProject->getDocument('transactions', $transactionId);
-        if ($transaction->isEmpty()) {
+        if ($transaction->isEmpty() || $this->isTransactionTypeMismatch($transaction)) {
             throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
         }
         if ($transaction->getAttribute('status', '') !== 'pending') {
@@ -266,7 +269,7 @@ class Update extends Action
                         $collection = $collections[$collectionId];
 
                         if (\in_array($action, ['increment', 'decrement'], true) && \is_array($data)) {
-                            $currentAttribute = $this->getAttributeNameFromData($data);
+                            $currentAttribute = TransactionState::attributeOf($data, $this->getAttributeKey());
                             $currentChange = $data['value'] ?? 1;
                         }
 
@@ -274,12 +277,10 @@ class Update extends Action
                             $data = $this->parseOperators($data, $collection);
                         }
 
-                        if ($action === 'delete' && $documentId && empty($data)) {
+                        if ($action === 'delete' && $documentId) {
                             $doc = $dbForDatabases->getDocument($collectionId, $documentId);
-                            if (!$doc->isEmpty()) {
-                                $operation['data'] = $doc->getArrayCopy();
-                                $data = $operation['data'];
-                            }
+                            $operation['data'] = $doc->isEmpty() ? [] : $doc->getArrayCopy();
+                            $data = $operation['data'];
                         }
 
                         if (!\in_array($action, ['bulkCreate', 'bulkUpdate', 'bulkUpsert', 'bulkDelete'])) {
@@ -339,7 +340,7 @@ class Update extends Action
                     'status' => 'failed',
                 ])));
 
-                throw new Exception(Exception::DOCUMENT_NOT_FOUND, previous: $e, params: [$currentDocumentId ?? 'unknown']);
+                throw new Exception($this->getNotFoundException(), previous: $e, params: [$currentDocumentId ?? 'unknown']);
             } catch (DuplicateException | ConflictException $e) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
@@ -370,7 +371,7 @@ class Update extends Action
                 if ($currentChange <= 0) {
                     throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
                 }
-                throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, $this->getSDKNamespace() . ' "' . $currentAttribute . '" is not a number');
+                throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, \ucfirst($this->getAttributeKey()) . ' "' . $currentAttribute . '" is not a number');
             } catch (TransactionException $e) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
@@ -687,7 +688,7 @@ class Update extends Action
         \DateTime $createdAt,
         array &$state
     ): void {
-        if ($documentId && !isset($data['$id'])) {
+        if ($documentId) {
             $data['$id'] = $documentId;
         }
         $dbForDatabases->withRequestTimestamp($createdAt, function () use ($dbForDatabases, $collectionId, $data, &$state) {
@@ -764,6 +765,10 @@ class Update extends Action
         \DateTime $createdAt,
         array &$state
     ): void {
+        if ($documentId) {
+            $data['$id'] = $documentId;
+        }
+
         $dependent = isset($state[$collectionId][$documentId]);
 
         if ($dependent) {
@@ -838,28 +843,6 @@ class Update extends Action
     }
 
     /**
-     * Get the attribute/column name from data, with fallback for cross-API compatibility
-     *
-     * @param array $data The operation data
-     * @return string The attribute/column name
-     */
-    private function getAttributeNameFromData(array $data): string
-    {
-        $expectedKey = $this->getAttributeKey();
-        if (isset($data[$expectedKey])) {
-            return $data[$expectedKey];
-        }
-
-        // Try the opposite key for cross-API compatibility
-        $fallbackKey = $expectedKey === 'attribute' ? 'column' : 'attribute';
-        if (isset($data[$fallbackKey])) {
-            return $data[$fallbackKey];
-        }
-
-        return '';
-    }
-
-    /**
      * Handle increment operation
      *
      * @param Database $dbForDatabases
@@ -881,7 +864,7 @@ class Update extends Action
         array &$state
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
-        $attribute = $this->getAttributeNameFromData($data);
+        $attribute = TransactionState::attributeOf($data, $this->getAttributeKey());
 
         if ($dependent) {
             $state[$collectionId][$documentId] = $dbForDatabases->increaseDocumentAttribute($collectionId, $documentId, $attribute, $data['value'] ?? 1, $data['max'] ?? null);
@@ -915,7 +898,7 @@ class Update extends Action
         array &$state
     ): void {
         $dependent = isset($state[$collectionId][$documentId]);
-        $attribute = $this->getAttributeNameFromData($data);
+        $attribute = TransactionState::attributeOf($data, $this->getAttributeKey());
 
         if ($dependent) {
             $state[$collectionId][$documentId] = $dbForDatabases->decreaseDocumentAttribute($collectionId, $documentId, $attribute, $data['value'] ?? 1, $data['min'] ?? null);
