@@ -157,6 +157,36 @@ class PublicHostname extends Validator
     }
 
     /**
+     * An address to connect to the host on, for a connection no client can check.
+     * The host must resolve, and to allowed addresses only. Connect to the
+     * returned address, not the host, so DNS cannot answer differently at
+     * connect time.
+     *
+     * @throws \InvalidArgumentException When the host does not resolve or resolves to a private or reserved address
+     */
+    public function address(string $host): string
+    {
+        if (!$this->isValid($host)) {
+            throw new \InvalidArgumentException($this->getDescription());
+        }
+
+        $host = \strtolower(\trim($host, " \t\n\r\0\x0B[]"));
+
+        if (\filter_var($host, FILTER_VALIDATE_IP) !== false) {
+            return $host;
+        }
+
+        // An allowlisted hostname is not resolved during validation
+        $addresses = $this->addresses ?: static::resolve($host);
+
+        if (empty($addresses)) {
+            throw new \InvalidArgumentException("Hostname {$host} does not resolve.");
+        }
+
+        return $addresses[0];
+    }
+
+    /**
      * Resolves a hostname to all A and AAAA records.
      *
      * @return array<string>

@@ -240,10 +240,20 @@ class Create extends Action
         $lockKey = 'storage:file:' . $project->getId() . ':' . $bucket->getId() . ':' . $fileId;
 
         $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
+        // Migration imports of internal files check who uploaded them
+        if (!$user->isEmpty()) {
+            $metadata['uploaderId'] = $user->getId();
+        }
         $completed = false;
 
         $mergeUploadMetadata = function (array $stored, array $current): array {
             $merged = \array_merge($stored, $current);
+            // The user who started a chunked upload stays its uploader
+            if (isset($stored['uploaderId'])) {
+                $merged['uploaderId'] = $stored['uploaderId'];
+            } else {
+                unset($merged['uploaderId']);
+            }
 
             if (isset($stored['parts']) || isset($current['parts'])) {
                 $parts = $stored['parts'] ?? [];

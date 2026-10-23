@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Health\Http\Health\Certificate;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -55,8 +56,19 @@ class Get extends Action
 
     public function action(string $domain, Response $response): void
     {
-        if (filter_var($domain, FILTER_VALIDATE_URL)) {
-            $domain = parse_url($domain, PHP_URL_HOST);
+        if (\filter_var($domain, FILTER_VALIDATE_URL)) {
+            $domain = (string) \parse_url($domain, PHP_URL_HOST);
+        }
+
+        // Connect to the address just checked, so DNS cannot answer differently
+        try {
+            $address = (new PublicHostname())->address($domain);
+        } catch (\InvalidArgumentException $exception) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $exception->getMessage());
+        }
+
+        if (\filter_var($address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== false) {
+            $address = '[' . $address . ']';
         }
 
         $sslContext = stream_context_create([
@@ -67,10 +79,10 @@ class Get extends Action
             ],
         ]);
 
-        $sslSocket = @stream_socket_client('ssl://' . $domain . ':443', $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $sslContext);
+        $sslSocket = @\stream_socket_client('ssl://' . $address . ':443', $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $sslContext);
 
         if (!$sslSocket) {
-            throw new Exception(Exception::HEALTH_INVALID_HOST, 'Failed to connect to host: (' . ($errno ?? 'unknown') . ') ' . ($errstr ?? 'unknown'));
+            throw new Exception(Exception::HEALTH_INVALID_HOST, 'Failed to connect to host ' . $domain . '.');
         }
 
         try {
