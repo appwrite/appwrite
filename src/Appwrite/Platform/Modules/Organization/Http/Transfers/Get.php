@@ -7,7 +7,6 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Utopia\Auth\Proofs\Token;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -40,7 +39,7 @@ class Get extends Action
                 group: 'transfers',
                 name: 'getProjectTransfer',
                 description: <<<EOT
-                Get a project transfer by its unique ID. The organization that owns the project can get it without a secret. Any other organization needs the transfer secret, so it can see which project it is about to claim.
+                Get a project transfer by its unique ID. The organization that owns the project can get it without a secret. Any other organization needs the transfer secret, so it can see which project it is about to claim and which organizations are involved.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::ORGANIZATION],
                 responses: [
@@ -56,7 +55,6 @@ class Get extends Action
             ->inject('dbForPlatform')
             ->inject('team')
             ->inject('authorization')
-            ->inject('proofForToken')
             ->callback($this->action(...));
     }
 
@@ -67,7 +65,6 @@ class Get extends Action
         Database $dbForPlatform,
         Document $team,
         Authorization $authorization,
-        Token $proofForToken,
     ) {
         $transfer = $authorization->skip(fn () => $dbForPlatform->getDocument('transfers', $transferId));
 
@@ -80,7 +77,7 @@ class Get extends Action
                 throw new Exception(Exception::TRANSFER_NOT_FOUND);
             }
 
-            if (!$proofForToken->verify($secret, $transfer->getAttribute('secret'))) {
+            if (!\hash_equals($transfer->getAttribute('secret'), $secret)) {
                 throw new Exception(Exception::TRANSFER_INVALID_SECRET);
             }
 
@@ -88,10 +85,9 @@ class Get extends Action
                 throw new Exception(Exception::TRANSFER_EXPIRED);
             }
 
-            $recipientInternalId = $transfer->getAttribute('recipientInternalId', '');
-            if ($recipientInternalId !== '' && $recipientInternalId !== $team->getSequence()) {
-                throw new Exception(Exception::TRANSFER_RECIPIENT_MISMATCH);
-            }
+            // Any organization with the secret may see who can claim it; only claiming checks the recipient.
+            // Only the sender may read the secret back
+            $transfer->setAttribute('secret', '');
         }
 
         $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $transfer->getAttribute('resourceId')));
@@ -101,6 +97,8 @@ class Get extends Action
             throw new Exception(Exception::TRANSFER_NOT_FOUND);
         }
 
-        $response->dynamic($this->present($transfer, $project), Response::MODEL_TRANSFER);
+        $organizations = $this->getOrganizations([$transfer], $dbForPlatform, $authorization);
+
+        $response->dynamic($this->present($transfer, $project, $organizations), Response::MODEL_TRANSFER);
     }
 }

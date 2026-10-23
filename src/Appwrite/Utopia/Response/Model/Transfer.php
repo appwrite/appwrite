@@ -58,6 +58,12 @@ class Transfer extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('senderName', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Name of the sender that owns the resource.',
+                'default' => '',
+                'example' => 'My Organization',
+            ])
             ->addRule('recipientType', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Type of the recipient that can claim the resource.',
@@ -70,6 +76,12 @@ class Transfer extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('recipientName', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Name of the only recipient that can claim the resource. Empty when any recipient of the recipient type can claim it.',
+                'default' => '',
+                'example' => 'Their Organization',
+            ])
             ->addRule('expire', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Transfer expiration date in ISO 8601 format.',
@@ -78,7 +90,7 @@ class Transfer extends Model
             ])
             ->addRule('secret', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Secret the recipient uses to claim the resource. Only returned when the transfer is created.',
+                'description' => 'Secret the recipient uses to claim the resource. Only returned to the sender.',
                 'default' => '',
                 'example' => '919c2d18fb5d4...a2ae413da83346ad2',
             ])

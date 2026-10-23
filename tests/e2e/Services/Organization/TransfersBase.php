@@ -130,8 +130,10 @@ trait TransfersBase
         $this->assertSame('Transfer Project', $transfer['body']['resourceName']);
         $this->assertSame('teams', $transfer['body']['senderType']);
         $this->assertSame(self::$ownerTeamId, $transfer['body']['senderId']);
+        $this->assertSame('Transfer Owner', $transfer['body']['senderName']);
         $this->assertSame('teams', $transfer['body']['recipientType']);
         $this->assertSame('', $transfer['body']['recipientId']);
+        $this->assertSame('', $transfer['body']['recipientName']);
         $this->assertSame(256, \strlen($transfer['body']['secret']));
 
         // Defaults to 24 hours, so it must end between 23 and 25 hours from now
@@ -186,8 +188,12 @@ trait TransfersBase
         $projectId = $this->createOwnerProject();
         $otherProjectId = $this->createOwnerProject();
         $first = $this->createTransfer($projectId);
-        $this->createTransfer($projectId);
+        $second = $this->createTransfer($projectId);
         $this->createTransfer($otherProjectId);
+        $secrets = [
+            $first['body']['$id'] => $first['body']['secret'],
+            $second['body']['$id'] => $second['body']['secret'],
+        ];
 
         /**
          * Test for SUCCESS
@@ -200,7 +206,8 @@ trait TransfersBase
         foreach ($response['body']['transfers'] as $transfer) {
             $this->assertSame($projectId, $transfer['resourceId']);
             $this->assertSame('Transfer Project', $transfer['resourceName']);
-            $this->assertSame('', $transfer['secret']);
+            // The sender can copy the link again
+            $this->assertSame($secrets[$transfer['$id']], $transfer['secret']);
         }
 
         $response = $this->callTransfers(Client::METHOD_GET, '', $this->getOwnerHeaders(), [
@@ -238,9 +245,9 @@ trait TransfersBase
         $response = $this->callTransfers(Client::METHOD_GET, '/' . $transferId, $this->getOwnerHeaders());
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame($projectId, $response['body']['resourceId']);
-        $this->assertSame('', $response['body']['secret']);
+        $this->assertSame($secret, $response['body']['secret']);
 
-        // Another organization can preview the transfer with its secret
+        // Another organization can preview the transfer with its secret, but never gets it back
         $response = $this->callTransfers(Client::METHOD_GET, '/' . $transferId, $this->getClaimer()['headers'], ['secret' => $secret]);
         $this->assertSame(200, $response['headers']['status-code']);
         $this->assertSame('Transfer Project', $response['body']['resourceName']);
@@ -366,14 +373,19 @@ trait TransfersBase
 
         $transfer = $this->createTransfer($projectId, ['recipientId' => $third['body']['$id']]);
         $this->assertSame(201, $transfer['headers']['status-code']);
+        $this->assertSame('Transfer Third', $transfer['body']['recipientName']);
+
+        // Another organization with the secret can see who may claim it, so the claim page can explain
+        $response = $this->callTransfers(Client::METHOD_GET, '/' . $transfer['body']['$id'], $claimer['headers'], ['secret' => $transfer['body']['secret']]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame($third['body']['$id'], $response['body']['recipientId']);
+        $this->assertSame('Transfer Third', $response['body']['recipientName']);
+        $this->assertSame('Transfer Owner', $response['body']['senderName']);
+        $this->assertSame('', $response['body']['secret']);
 
         /**
          * Test for FAILURE
          */
-        $response = $this->callTransfers(Client::METHOD_GET, '/' . $transfer['body']['$id'], $claimer['headers'], ['secret' => $transfer['body']['secret']]);
-        $this->assertSame(403, $response['headers']['status-code']);
-        $this->assertSame(Exception::TRANSFER_RECIPIENT_MISMATCH, $response['body']['type']);
-
         $response = $this->callTransfers(Client::METHOD_PATCH, '/' . $transfer['body']['$id'] . '/status', $claimer['headers'], ['secret' => $transfer['body']['secret']]);
         $this->assertSame(403, $response['headers']['status-code']);
         $this->assertSame(Exception::TRANSFER_RECIPIENT_MISMATCH, $response['body']['type']);

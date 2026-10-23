@@ -7,6 +7,7 @@ use Appwrite\Platform\Action as AppwriteAction;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
 class Action extends AppwriteAction
@@ -35,12 +36,50 @@ class Action extends AppwriteAction
     }
 
     /**
-     * Add the resource name and hide the hashed secret, so the response describes what is being transferred.
+     * Load the sender and recipient organizations of the transfers in one query.
+     *
+     * @param array<Document> $transfers
+     * @return array<string, Document> organizations by internal ID
      */
-    protected function present(Document $transfer, Document $project): Document
+    protected function getOrganizations(array $transfers, Database $dbForPlatform, Authorization $authorization): array
     {
+        $sequences = [];
+        foreach ($transfers as $transfer) {
+            $sequences[] = $transfer->getAttribute('senderInternalId');
+            $sequences[] = $transfer->getAttribute('recipientInternalId', '');
+        }
+        $sequences = \array_values(\array_unique(\array_filter($sequences, fn ($sequence) => $sequence !== '')));
+
+        if ($sequences === []) {
+            return [];
+        }
+
+        $teams = $authorization->skip(fn () => $dbForPlatform->find('teams', [
+            Query::equal('$sequence', $sequences),
+            Query::limit(\count($sequences)),
+        ]));
+
+        $organizations = [];
+        foreach ($teams as $team) {
+            $organizations[$team->getSequence()] = $team;
+        }
+
+        return $organizations;
+    }
+
+    /**
+     * Add the resource and organization names, so the response describes what is being transferred and between whom.
+     *
+     * @param array<string, Document> $organizations by internal ID
+     */
+    protected function present(Document $transfer, Document $project, array $organizations): Document
+    {
+        $sender = $organizations[$transfer->getAttribute('senderInternalId')] ?? new Document();
+        $recipient = $organizations[$transfer->getAttribute('recipientInternalId', '')] ?? new Document();
+
         return $transfer
             ->setAttribute('resourceName', $project->getAttribute('name', ''))
-            ->setAttribute('secret', '');
+            ->setAttribute('senderName', $sender->getAttribute('name', ''))
+            ->setAttribute('recipientName', $recipient->getAttribute('name', ''));
     }
 }

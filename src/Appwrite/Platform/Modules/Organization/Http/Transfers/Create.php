@@ -51,7 +51,7 @@ class Create extends Action
                 description: <<<EOT
                 Create a transfer for a project in your organization. Share the returned transfer ID and secret with another organization so it can claim the project, even when you are not a member of it.
 
-                The secret is only returned once. A transfer expires after 24 hours unless you set a different expiration date.
+                Your organization can get the secret again by getting or listing the transfer. A transfer expires after 24 hours unless you set a different expiration date.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::ORGANIZATION],
                 responses: [
@@ -133,11 +133,14 @@ class Create extends Action
             'recipientType' => 'teams',
             'recipientId' => $recipient->isEmpty() ? '' : $recipient->getId(),
             'recipientInternalId' => $recipient->isEmpty() ? '' : $recipient->getSequence(),
-            'secret' => $proofForToken->hash($secret), // One way hash, so a leaked database can't claim projects
+            'secret' => $secret,
             'expire' => $expire,
         ])));
 
-        $this->present($transfer, $project)->setAttribute('secret', $secret);
+        $this->present($transfer, $project, \array_filter([
+            $team->getSequence() => $team,
+            $recipient->getSequence() => $recipient,
+        ], fn (Document $organization) => !$organization->isEmpty()));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

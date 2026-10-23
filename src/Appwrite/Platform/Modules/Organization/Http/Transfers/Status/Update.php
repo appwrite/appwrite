@@ -9,7 +9,6 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Utopia\Auth\Proofs\Token;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -61,7 +60,6 @@ class Update extends Action
             ->inject('dbForPlatform')
             ->inject('team')
             ->inject('authorization')
-            ->inject('proofForToken')
             ->inject('auditContext')
             ->callback($this->action(...));
     }
@@ -73,7 +71,6 @@ class Update extends Action
         Database $dbForPlatform,
         Document $team,
         Authorization $authorization,
-        Token $proofForToken,
         AuditContext $auditContext,
     ) {
         $transfer = $authorization->skip(fn () => $dbForPlatform->getDocument('transfers', $transferId));
@@ -82,7 +79,7 @@ class Update extends Action
             throw new Exception(Exception::TRANSFER_NOT_FOUND);
         }
 
-        if (!$proofForToken->verify($secret, $transfer->getAttribute('secret'))) {
+        if (!\hash_equals($transfer->getAttribute('secret'), $secret)) {
             throw new Exception(Exception::TRANSFER_INVALID_SECRET);
         }
 

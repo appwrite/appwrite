@@ -153,7 +153,8 @@ $platformCollections = [
             Attribute::string(key: 'recipientType', required: true),
             Attribute::string(key: 'recipientId', default: ''),
             Attribute::string(key: 'recipientInternalId', default: ''),
-            Attribute::string(key: 'secret', size: 256, required: true),
+            // Encrypted rather than hashed, so the sender can copy the link again
+            Attribute::string(key: 'secret', size: 512, required: true, filters: ['encrypt']),
             Attribute::datetime(key: 'expire', required: true),
         ],
         'indexes' => [

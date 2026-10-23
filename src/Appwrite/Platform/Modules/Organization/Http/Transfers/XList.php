@@ -41,7 +41,7 @@ class XList extends Action
                 group: 'transfers',
                 name: 'listProjectTransfers',
                 description: <<<EOT
-                Get a list of the pending transfers of projects in your organization. Secrets are never included.
+                Get a list of the pending transfers of projects in your organization, with their secrets so their links can be shared again.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::ORGANIZATION],
                 responses: [
@@ -131,8 +131,9 @@ class XList extends Action
             }
         }
 
+        $organizations = $this->getOrganizations($transfers, $dbForPlatform, $authorization);
         foreach ($transfers as $transfer) {
-            $this->present($transfer, $projects[$transfer->getAttribute('resourceInternalId')] ?? new Document());
+            $this->present($transfer, $projects[$transfer->getAttribute('resourceInternalId')] ?? new Document(), $organizations);
         }
 
         $response->dynamic(new Document([
