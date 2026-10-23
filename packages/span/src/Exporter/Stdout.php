@@ -23,10 +23,14 @@ readonly class Stdout implements Exporter
      *
      * @param Closure(Span): bool|null $sampler Filter function. Defaults to exporting every span.
      * @param int $maxTraceFrames Maximum stacktrace frames to include for errors
+     * @param resource|null $stdout Stream for non-error spans. Defaults to STDOUT.
+     * @param resource|null $stderr Stream for error spans. Defaults to STDERR.
      */
     public function __construct(
         ?Closure $sampler = null,
         private int $maxTraceFrames = 3,
+        private mixed $stdout = null,
+        private mixed $stderr = null,
     ) {
         $this->sampler = $sampler ?? static fn (Span $span): bool => true;
     }
@@ -87,7 +91,7 @@ readonly class Stdout implements Exporter
             return;
         }
 
-        $stream = $error instanceof \Throwable ? STDERR : STDOUT;
+        $stream = $error instanceof \Throwable ? ($this->stderr ?? STDERR) : ($this->stdout ?? STDOUT);
 
         fwrite($stream, $output . PHP_EOL);
     }
