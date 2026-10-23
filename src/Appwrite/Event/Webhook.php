@@ -24,15 +24,11 @@ class Webhook extends Event
      * Redis broker requeues a retried message under a fresh pid, while the payload
      * is carried through every retry, requeue and broker migration unchanged.
      *
-     * Keys marked sensitive (session and token secrets) are dropped, since webhook
-     * targets are external services.
-     *
      * @return array
      */
     protected function preparePayload(): array
     {
         return \array_merge(parent::preparePayload(), [
-            'payload' => \array_diff_key($this->payload, $this->sensitive),
             'eventId' => Id::unique(),
         ]);
     }
