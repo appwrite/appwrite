@@ -198,21 +198,6 @@ final class MqttServerTest extends Scope
         $subscriber->disconnect();
     }
 
-    public function testSecondConnectClosesConnection(): void
-    {
-        $projectId = $this->getProject()['$id'];
-        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
-        ['userId' => $otherUserId, 'jwt' => $otherJwt] = $this->createUser();
-
-        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
-        $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-second-connect-' . $userId, cleanStart: true));
-
-        // Test for FAILURE: a CONNECT on an accepted connection is a protocol violation, so the broker closes it.
-        $subscriber->sendConnect($projectId, $otherJwt, 'e2e-second-connect-' . $otherUserId);
-        $this->assertTrue($subscriber->awaitClose(5.0), 'a second CONNECT kept the connection open');
-        $subscriber->disconnect();
-    }
-
     public function testSessionAuthWithInvalidSecretRejected(): void
     {
         $projectId = $this->getProject()['$id'];

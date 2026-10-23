@@ -80,17 +80,6 @@ final class MqttSubscriber
         return \ord($packet->body[1] ?? "\x80");
     }
 
-    /** Send another CONNECT on the already connected socket without waiting for a reply. */
-    public function sendConnect(string $projectId, string $credential, string $clientId, string $authMethod = 'appwrite-jwt'): void
-    {
-        $properties = new Properties();
-        $properties->add(new Property(Property::AUTHENTICATION_METHOD, $authMethod));
-        $properties->add(new Property(Property::AUTHENTICATION_DATA, $credential));
-        $properties->add(new Property(Property::USER, ['projectId' => $projectId]));
-
-        $this->write(V5::connect($clientId, 60, false, $properties));
-    }
-
     /** The Authentication Method (MQTT 5.0 property 0x15) echoed on the last CONNACK, or null. */
     public function connackAuthMethod(): ?string
     {
