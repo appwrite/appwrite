@@ -169,7 +169,8 @@ final class CloudFrontTest extends TestCase
         $name = (string) $this->xml($client->calls[1]['body'])->Name;
         $this->assertSame(128, \strlen($name));
         $this->assertStringEndsWith('-' . hash('sha256', $domain), $name);
-        $this->assertMatchesRegularExpression('/^[a-zA-Z0-9][a-zA-Z0-9.-]{1,126}[a-zA-Z0-9]$/', $name);
+        $this->assertTrue(ctype_alnum($name[0]) && ctype_alnum($name[-1]));
+        $this->assertSame('', trim($name, 'abcdefghijklmnopqrstuvwxyz0123456789.-'));
     }
 
     /** @return array<string, array{string, string}> */
