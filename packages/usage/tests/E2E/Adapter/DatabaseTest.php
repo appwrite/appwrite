@@ -7,16 +7,28 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Attribute;
+use Utopia\Database\Attribute\Update as AttributeUpdate;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Index;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Query\Query;
+use Utopia\Query\Schema\ColumnType;
+use Utopia\Query\Schema\IndexType;
 use Utopia\Usage\Adapter\Database as AdapterDatabase;
+use Utopia\Usage\Adapter\SQL;
+use Utopia\Usage\Metric;
 use Utopia\Usage\Tests\E2E\UsageBase;
 use Utopia\Usage\Usage;
 
 class DatabaseTest extends TestCase
 {
     use UsageBase;
+
+    private const string SCHEMA_NAMESPACE = 'utopia_usage_schema';
 
     protected Database $database;
 
@@ -26,16 +38,7 @@ class DatabaseTest extends TestCase
             $this->markTestSkipped('pdo_mysql extension is not installed in this environment');
         }
 
-        $dbHost = getenv('MARIADB_HOST') ?: 'mariadb';
-        $dbPort = getenv('MARIADB_PORT') ?: '3306';
-        $dbUser = 'root';
-        $dbPass = 'password';
-
-        $pdo = new PDO("mysql:host={$dbHost};port={$dbPort};charset=utf8mb4", $dbUser, $dbPass, MariaDB::getPdoAttributes());
-        $cache = new Cache(new NoCache());
-        $this->database = new Database(new MariaDB($pdo), $cache);
-        $this->database->setDatabase('utopiaTests');
-        $this->database->setNamespace('utopia_usage');
+        $this->database = $this->connect('utopiaTests', 'utopia_usage');
 
         $this->usage = new Usage(new AdapterDatabase($this->database));
 
@@ -231,19 +234,7 @@ class DatabaseTest extends TestCase
             $this->markTestSkipped('pdo_mysql extension is not installed');
         }
 
-        // Create a new database instance pointing to a non-existent database
-        $dbHost = getenv('MARIADB_HOST') ?: 'mariadb';
-        $dbPort = getenv('MARIADB_PORT') ?: '3306';
-        $dbUser = 'root';
-        $dbPass = 'password';
-
-        $pdo = new PDO("mysql:host={$dbHost};port={$dbPort};charset=utf8mb4", $dbUser, $dbPass, MariaDB::getPdoAttributes());
-        $cache = new Cache(new NoCache());
-        $database = new Database(new MariaDB($pdo), $cache);
-        $database->setDatabase('nonexistent_database_xyz');
-        $database->setNamespace('test');
-
-        $adapter = new AdapterDatabase($database);
+        $adapter = new AdapterDatabase($this->connect('nonexistent_database_xyz', 'test'));
 
         $health = $adapter->healthCheck();
 
@@ -295,5 +286,223 @@ class DatabaseTest extends TestCase
             $this->usage->sum('1', [Query::equal('metric', ['db-negative-optin'])], 'value', Usage::TYPE_EVENT),
             'the opted-in negative must be stored, not silently dropped',
         );
+    }
+
+    public function testSetupCreatesTheCollection0165Created(): void
+    {
+        $database = $this->connect('utopiaTests', self::SCHEMA_NAMESPACE);
+        $database->create();
+        self::dropCollection($database);
+
+        try {
+            new AdapterDatabase($database)->setup();
+
+            $collection = $database->getCollection(SQL::COLLECTION);
+
+            $this->assertSame(
+                \array_map(self::describeDeclaredAttribute(...), self::declaredAttributes()),
+                \array_map(self::describeAttribute(...), $collection->attributes()),
+                'every column 0.16.5 declared must come back with the same type, size and flags, in the same order',
+            );
+            $this->assertSame(
+                \array_map(self::describeDeclaredIndex(...), self::declaredIndexes()),
+                \array_map(self::describeIndex(...), $collection->indexes()),
+                'every index 0.16.5 declared must come back with the same type, columns and prefix lengths, in the same order',
+            );
+            $this->assertTrue($collection->documentSecurity());
+            $this->assertSame([Permission::create(Role::any())], $collection->getPermissions());
+        } finally {
+            self::dropCollection($database);
+        }
+    }
+
+    public function testSetupAddsTheColumnsAndIndexesAnExistingCollectionLacks(): void
+    {
+        $database = $this->connect('utopiaTests', self::SCHEMA_NAMESPACE);
+        $database->create();
+        self::dropCollection($database);
+
+        $adapter = new AdapterDatabase($database);
+        $database->createCollection(Collection::create(
+            id: SQL::COLLECTION,
+            attributes: \array_values(\array_filter(
+                $adapter->getAttributeDocuments(Usage::TYPE_EVENT),
+                static fn (Attribute $attribute): bool => $attribute->key !== 'ordinal',
+            )),
+            indexes: \array_values(\array_filter(
+                $adapter->getIndexDocuments(Usage::TYPE_EVENT),
+                static fn (Index $index): bool => !\in_array('ordinal', $index->attributes, true),
+            )),
+        ));
+
+        try {
+            $adapter->setup();
+            $adapter->setup();
+
+            $collection = $database->getCollection(SQL::COLLECTION);
+
+            $this->assertSame(
+                self::byKey(\array_map(self::describeDeclaredAttribute(...), self::declaredAttributes())),
+                self::byKey(\array_map(self::describeAttribute(...), $collection->attributes())),
+                'setup() must add every declared column an existing collection lacks, once',
+            );
+            $this->assertSame(
+                self::byKey(\array_map(self::describeDeclaredIndex(...), self::declaredIndexes())),
+                self::byKey(\array_map(self::describeIndex(...), $collection->indexes())),
+                'setup() must add every declared index an existing collection lacks, once',
+            );
+
+            $usage = new Usage($adapter);
+            $this->assertTrue($usage->addBatch([
+                ['tenant' => '1', 'metric' => 'schema-ordinal', 'value' => 1, 'tags' => ['ordinal' => '2']],
+            ], Usage::TYPE_EVENT));
+
+            $rows = $usage->find('1', [Query::equal('metric', ['schema-ordinal'])], Usage::TYPE_EVENT);
+            $this->assertCount(1, $rows);
+            $this->assertSame('2', $rows[0]->getOrdinal(), 'a row written after setup() must keep the added column');
+        } finally {
+            self::dropCollection($database);
+        }
+    }
+
+    /**
+     * @param array<array<string, mixed>> $described
+     * @return array<string, array<string, mixed>>
+     */
+    private static function byKey(array $described): array
+    {
+        $keyed = [];
+        foreach ($described as $description) {
+            $key = $description['key'];
+            if (!\is_string($key)) {
+                throw new \UnexpectedValueException('A described column or index has no key');
+            }
+            $keyed[$key] = $description;
+        }
+        \ksort($keyed);
+
+        return $keyed;
+    }
+
+    private static function dropCollection(Database $database): void
+    {
+        if ($database->findCollection(SQL::COLLECTION) !== null) {
+            $database->deleteCollection(SQL::COLLECTION);
+        }
+    }
+
+    private function connect(string $database, string $namespace): Database
+    {
+        $host = getenv('MARIADB_HOST') ?: 'mariadb';
+        $port = getenv('MARIADB_PORT') ?: '3306';
+
+        $pdo = new PDO("mysql:host={$host};port={$port};charset=utf8mb4", 'root', 'password', [
+            PDO::ATTR_TIMEOUT => 3,
+            PDO::ATTR_PERSISTENT => true,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_EMULATE_PREPARES => true,
+            PDO::ATTR_STRINGIFY_FETCHES => true,
+        ]);
+
+        $connection = new Database(new MariaDB($pdo), new Cache(new NoCache()));
+        $connection->setDatabase($database);
+        $connection->setNamespace($namespace);
+
+        return $connection;
+    }
+
+    /**
+     * The declarations in the array form 0.16.5 passed to utopia-php/database 7's createCollection(), which stored them as given.
+     *
+     * @return array<array<string, mixed>>
+     */
+    private static function declaredAttributes(): array
+    {
+        return [
+            ...Metric::getEventSchema(),
+            ['$id' => 'type', 'type' => ColumnType::String->value, 'size' => 16, 'required' => false, 'signed' => true, 'array' => false, 'filters' => []],
+        ];
+    }
+
+    /**
+     * @return array<array<string, mixed>>
+     */
+    private static function declaredIndexes(): array
+    {
+        return [
+            ...Metric::getEventIndexes(),
+            ['$id' => 'index-type', 'type' => IndexType::Key->value, 'attributes' => ['type']],
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $declared
+     * @return array<string, mixed>
+     */
+    private static function describeDeclaredAttribute(array $declared): array
+    {
+        /** @var array{'$id': string, type: string, size: int, required: bool, signed: bool, array: bool, filters: array<string>, format?: string} $declared */
+        $canonical = Attribute::fromArray($declared)->apply(new AttributeUpdate());
+
+        return [
+            'key' => $declared['$id'],
+            'type' => ColumnType::from($declared['type']),
+            'size' => $canonical->size,
+            'required' => $declared['required'],
+            'default' => null,
+            'signed' => $canonical->signed,
+            'array' => $declared['array'],
+            'format' => ($declared['format'] ?? '') ?: null,
+            'filters' => $declared['filters'],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function describeAttribute(Attribute $attribute): array
+    {
+        return [
+            'key' => $attribute->key,
+            'type' => $attribute->type,
+            'size' => $attribute->size,
+            'required' => $attribute->required,
+            'default' => $attribute->default,
+            'signed' => $attribute->signed,
+            'array' => $attribute->array,
+            'format' => $attribute->format ?: null,
+            'filters' => $attribute->filters,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $declared
+     * @return array<string, mixed>
+     */
+    private static function describeDeclaredIndex(array $declared): array
+    {
+        /** @var array{'$id': string, type: string, attributes: array<string>, lengths?: array<int>} $declared */
+        return [
+            'key' => $declared['$id'],
+            'type' => IndexType::from($declared['type']),
+            'attributes' => $declared['attributes'],
+            'lengths' => $declared['lengths'] ?? [],
+            'orders' => [],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function describeIndex(Index $index): array
+    {
+        return [
+            'key' => $index->key,
+            'type' => $index->type,
+            'attributes' => $index->attributes,
+            'lengths' => $index->lengths,
+            'orders' => $index->orders,
+        ];
     }
 }

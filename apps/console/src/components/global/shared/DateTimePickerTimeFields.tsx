@@ -4,6 +4,7 @@ import * as React from 'react'
 
 import { Input } from '@/components/ui/input'
 import { useT } from '@/lib/i18n/translate'
+import { cn } from '@/lib/utils'
 import {
   applySegmentDigit,
   extractInsertedText,
@@ -44,6 +45,11 @@ export type DateTimePickerTimeFieldsProps = {
   resolve?: (next: HourMinute) => HourMinute
   'aria-labelledby'?: string
   'aria-describedby'?: string
+  className?: string
+  inputClassName?: string
+  /** Skip the shared Input chrome so a parent can draw one field around both segments. */
+  unstyled?: boolean
+  separatorClassName?: string
 }
 
 /**
@@ -64,6 +70,10 @@ export function DateTimePickerTimeFields({
   resolve,
   'aria-labelledby': labelledBy,
   'aria-describedby': describedBy,
+  className,
+  inputClassName,
+  unstyled = false,
+  separatorClassName,
 }: DateTimePickerTimeFieldsProps) {
   const t = useT()
   const groupRef = React.useRef<HTMLDivElement>(null)
@@ -467,57 +477,76 @@ export function DateTimePickerTimeFields({
       dir="ltr"
       aria-labelledby={labelledBy}
       aria-describedby={describedBy}
-      className="flex items-center gap-1"
+      className={cn('flex items-center gap-1', className)}
       onPaste={handlePaste}
       onBlur={handleGroupBlur}
     >
       {SEGMENTS.map((segment, index) => {
         const segmentValue = valuePair ? valuePair[segment] : null
+        const fieldClassName = unstyled
+          ? cn(
+              'h-5 w-6 appearance-none rounded-none border-0 bg-transparent p-0 text-center text-[13px] font-medium tabular-nums text-foreground caret-transparent outline-none',
+              'placeholder:text-muted-foreground/40 disabled:cursor-not-allowed',
+              inputClassName,
+            )
+          : cn(
+              'h-7 w-11 px-1 text-center text-[12px] tabular-nums caret-transparent',
+              inputClassName,
+            )
+        const fieldProps = {
+          ref: (el: HTMLInputElement | null) => {
+            inputRefs.current[segment] = el
+          },
+          type: 'text' as const,
+          role: 'spinbutton' as const,
+          inputMode: 'numeric' as const,
+          enterKeyHint:
+            segment === 'hour' ? ('next' as const) : ('done' as const),
+          autoComplete: 'off',
+          autoCorrect: 'off' as const,
+          spellCheck: false as const,
+          'aria-label': t(segment === 'hour' ? 'Hours' : 'Minutes'),
+          'aria-valuemin': 0,
+          'aria-valuemax': TIME_SEGMENT_MAX[segment],
+          'aria-valuenow': segmentValue ?? undefined,
+          'aria-valuetext':
+            segmentValue === null ? t('Not set') : pad2(segmentValue),
+          placeholder: segment === 'hour' ? 'HH' : 'mm',
+          disabled,
+          onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) =>
+            handleKeyDown(segment, event),
+          onFocus: (event: React.FocusEvent<HTMLInputElement>) => {
+            writeEntry({ segment, buffer: '' })
+            event.currentTarget.setSelectionRange(
+              0,
+              event.currentTarget.value.length,
+            )
+          },
+          onBlur: () => {
+            if (entryRef.current.segment === segment) {
+              writeEntry({ segment: null, buffer: '' })
+            }
+          },
+          onMouseUp: (event: React.MouseEvent<HTMLInputElement>) =>
+            event.preventDefault(),
+          onPointerDown: (event: React.PointerEvent<HTMLInputElement>) =>
+            event.stopPropagation(),
+          className: fieldClassName,
+        }
         return (
           <React.Fragment key={segment}>
             {index > 0 && (
-              <span aria-hidden className="text-[13px] text-muted-foreground">
+              <span
+                aria-hidden
+                className={cn(
+                  'text-[13px] text-muted-foreground',
+                  separatorClassName,
+                )}
+              >
                 :
               </span>
             )}
-            <Input
-              ref={(el) => {
-                inputRefs.current[segment] = el
-              }}
-              type="text"
-              role="spinbutton"
-              inputMode="numeric"
-              enterKeyHint={segment === 'hour' ? 'next' : 'done'}
-              autoComplete="off"
-              autoCorrect="off"
-              spellCheck={false}
-              aria-label={t(segment === 'hour' ? 'Hours' : 'Minutes')}
-              aria-valuemin={0}
-              aria-valuemax={TIME_SEGMENT_MAX[segment]}
-              aria-valuenow={segmentValue ?? undefined}
-              aria-valuetext={
-                segmentValue === null ? t('Not set') : pad2(segmentValue)
-              }
-              placeholder={segment === 'hour' ? 'HH' : 'mm'}
-              disabled={disabled}
-              onKeyDown={(event) => handleKeyDown(segment, event)}
-              onFocus={(event) => {
-                writeEntry({ segment, buffer: '' })
-                event.currentTarget.setSelectionRange(
-                  0,
-                  event.currentTarget.value.length,
-                )
-              }}
-              onBlur={() => {
-                if (entryRef.current.segment === segment) {
-                  writeEntry({ segment: null, buffer: '' })
-                }
-              }}
-              // WebKit collapses the selection on mouseup.
-              onMouseUp={(event) => event.preventDefault()}
-              onPointerDown={(event) => event.stopPropagation()}
-              className="h-7 w-11 px-1 text-center text-[12px] tabular-nums caret-transparent"
-            />
+            {unstyled ? <input {...fieldProps} /> : <Input {...fieldProps} />}
           </React.Fragment>
         )
       })}

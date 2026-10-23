@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Vcs;
 
 use Appwrite\Deployment\Deployments;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
 use OpenRuntimes\Orchestrator\Jobs;
@@ -86,7 +87,7 @@ final class GitDeploymentsTest extends TestCase
         $git->method('getRepositoryName')->willReturn('repository');
         $git->method('supportsRepositoryArchives')->willReturn(true);
         $git->method('getRepositoryPresignedUrl')->willReturn('https://example.com/archive.tar.gz');
-        $git->method('updateCommitStatus')->willReturnCallback(static function (string $repository, string $sha, string $owner, string $state) use (&$commitStates): void {
+        $git->method('updateCheck')->willReturnCallback(static function (string $owner, string $repository, string $sha, string $state) use (&$commitStates): void {
             $commitStates[] = $state;
         });
         $git->method('getComment')->willReturnCallback(static function () use (&$comment): string {
@@ -99,7 +100,8 @@ final class GitDeploymentsTest extends TestCase
 
         $platform = ['apiHostname' => 'localhost', 'consoleUrl' => 'https://console.localhost', 'consoleHostname' => 'console.localhost'];
         $client = $this->createStub(ClientInterface::class);
-        $deploymentsFactory = static fn (Database $dbForProject, Document $project): Deployments => new readonly class (new Jobs($client), $dbForProject, $project, $platform) extends Deployments {
+        $publisherForBuilds = $this->createStub(BuildPublisher::class);
+        $deploymentsFactory = static fn (Database $dbForProject, Document $project): Deployments => new readonly class (new Jobs($client), $dbForProject, $project, $platform, $publisherForBuilds) extends Deployments {
             protected function admit(Document $resource, Document $deployment): void
             {
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Deployment limit reached');

@@ -4,7 +4,11 @@ import {
   marketingRouteLifetime,
 } from '@/lib/marketing/route-static-data'
 import { View } from '@/components/pages/education/View'
-import { getMarketingRouteHead } from '@/lib/marketing/route-meta'
+import {
+  getMarketingFaqScript,
+  getMarketingRouteHead,
+} from '@/lib/marketing/route-meta'
+import { educationFaqItems } from '@/lib/education/content'
 
 export const Route = createFileRoute('/_marketing/education')({
   ...marketingRouteLifetime,
@@ -17,7 +21,7 @@ export const Route = createFileRoute('/_marketing/education')({
       description:
         'Students can expand their skillset without spending a penny. Sign up for the Appwrite Education program to get six months of Pro resources on Appwrite Cloud.',
     });
-    return seo;
+    return { ...seo, scripts: [getMarketingFaqScript(educationFaqItems)] };
   },
   loader: async ({ context }) => {
   },

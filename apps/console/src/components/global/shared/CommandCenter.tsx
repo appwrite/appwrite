@@ -75,7 +75,6 @@ import {
 import { useNavigate, useLocation } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { usePasskeysAllowed } from '@/hooks/use-passkeys-allowed'
 import {
   DEFAULT_GROUP_LABELS,
   getCommandsForContext,
@@ -364,7 +363,6 @@ export function CommandCenter({
   const scopesOrgId = isOrgContext ? (orgId ?? undefined) : project?.teamId
   const { access: rbacAccess } = useOrganizationScopes(scopesOrgId)
   const access = rbacAccess ?? FULL_ACCESS
-  const passkeys = usePasskeysAllowed()
   const postgresSqlEditorActions = usePostgresSqlEditorActions()
 
   const openSqlTabPickerPage = useCallback(() => {
@@ -453,7 +451,6 @@ export function CommandCenter({
       pathname: location.pathname,
       features,
       access,
-      passkeys,
       isMobile,
       navigate: (href) => navigateToHref(navigate, href),
       navigateExternal: (href) => {
@@ -482,7 +479,6 @@ export function CommandCenter({
       location.pathname,
       features,
       access,
-      passkeys,
       isMobile,
       navigate,
       closeCommandCenter,

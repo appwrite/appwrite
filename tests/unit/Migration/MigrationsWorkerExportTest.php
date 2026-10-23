@@ -52,6 +52,8 @@ final class MigrationsWorkerExportTest extends TestCase
             )
             ->willReturnArgument(1);
 
+        $destination = $this->createStub(Destination::class);
+
         $deviceForFiles = $this->createMock(Device::class);
         $deviceForFiles
             ->expects($this->exactly(\count($cases)))
@@ -75,6 +77,7 @@ final class MigrationsWorkerExportTest extends TestCase
                 Database $dbForPlatform,
                 Device $deviceForFiles,
                 Document $migration,
+                Destination $destination,
                 MailPublisher $publisherForMails,
                 Realtime $queueForRealtime,
                 Authorization $authorization,
@@ -85,6 +88,7 @@ final class MigrationsWorkerExportTest extends TestCase
                 $this->handleDataExportComplete(
                     new Document(['$id' => 'project-id']),
                     $migration,
+                    $destination,
                     $publisherForMails,
                     $queueForRealtime,
                     [],
@@ -118,6 +122,7 @@ final class MigrationsWorkerExportTest extends TestCase
                     $dbForPlatform,
                     $deviceForFiles,
                     $migration,
+                    $destination,
                     $this->createStub(MailPublisher::class),
                     $this->createStub(Realtime::class),
                     $this->createStub(Authorization::class),
@@ -347,6 +352,7 @@ final class MigrationsWorkerExportTest extends TestCase
             protected function handleDataExportComplete(
                 Document $project,
                 Document $migration,
+                Destination $destination,
                 MailPublisher $publisherForMails,
                 Realtime $queueForRealtime,
                 array $platform,

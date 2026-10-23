@@ -1,2 +1,2 @@
 Creates an index on the attributes listed. Your index should include all the attributes you will query in a single request.
-Attributes can be `key`, `fulltext`, and `unique`.
+Attributes can be `key`, `fulltext`, `unique`, `spatial`, and `trigram`. `trigram` is only available on PostgreSQL and lets `contains`, `startsWith`, and `endsWith` queries on string attributes use an index.

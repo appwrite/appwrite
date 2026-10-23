@@ -79,10 +79,10 @@ void main() async {
 
   try {
     await tablesDB.updateRow(
-        '<DATABASE_ID>',
-        '<TABLE_ID>',
-        '<ROW_ID>',
-        {
+        databaseId: '<DATABASE_ID>',
+        tableId: '<TABLE_ID>',
+        rowId: '<ROW_ID>',
+        data: {
             'letters': Operator.arrayAppend(['c'])
         },
     );
@@ -122,7 +122,7 @@ import io.appwrite.services.TablesDB
 import io.appwrite.Operator
 
 suspend fun main() {
-  val client = Client()
+  val client = Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<YOUR_PROJECT_ID>")
 
@@ -143,8 +143,8 @@ package main
 
 import (
   "log"
-  "github.com/appwrite/sdk-for-go/appwrite"
-  operator "github.com/appwrite/sdk-for-go/operator"
+  "github.com/appwrite/sdk-for-go/v7/appwrite"
+  operator "github.com/appwrite/sdk-for-go/v7/operator"
 )
 
 func main() {
@@ -1206,10 +1206,10 @@ void main() async {
 
   try {
     await tablesDB.updateRow(
-        '<DATABASE_ID>',
-        '<TABLE_ID>',
-        '<ROW_ID>',
-        {
+        databaseId: '<DATABASE_ID>',
+        tableId: '<TABLE_ID>',
+        rowId: '<ROW_ID>',
+        data: {
             'upvotes': Operator.increment(1)
         },
     );
@@ -1249,7 +1249,7 @@ import io.appwrite.services.TablesDB
 import io.appwrite.Operator
 
 suspend fun main() {
-  val client = Client()
+  val client = Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<YOUR_PROJECT_ID>")
 
@@ -1270,8 +1270,8 @@ package main
 
 import (
   "log"
-  "github.com/appwrite/sdk-for-go/appwrite"
-  operator "github.com/appwrite/sdk-for-go/operator"
+  "github.com/appwrite/sdk-for-go/v7/appwrite"
+  operator "github.com/appwrite/sdk-for-go/v7/operator"
 )
 
 func main() {
@@ -1493,10 +1493,10 @@ void main() async {
 
   try {
     await tablesDB.updateRow(
-        '<DATABASE_ID>',
-        '<TABLE_ID>',
-        '<ROW_ID>',
-        {
+        databaseId: '<DATABASE_ID>',
+        tableId: '<TABLE_ID>',
+        rowId: '<ROW_ID>',
+        data: {
             'books': Operator.arrayAppend(['The Great Gatsby'])
         },
     );
@@ -1536,7 +1536,7 @@ import io.appwrite.services.TablesDB
 import io.appwrite.Operator
 
 suspend fun main() {
-  val client = Client()
+  val client = Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<YOUR_PROJECT_ID>")
 
@@ -1557,8 +1557,8 @@ package main
 
 import (
   "log"
-  "github.com/appwrite/sdk-for-go/appwrite"
-  operator "github.com/appwrite/sdk-for-go/operator"
+  "github.com/appwrite/sdk-for-go/v7/appwrite"
+  operator "github.com/appwrite/sdk-for-go/v7/operator"
 )
 
 func main() {
@@ -1780,10 +1780,10 @@ void main() async {
 
   try {
     await tablesDB.updateRow(
-        '<DATABASE_ID>',
-        '<TABLE_ID>',
-        '<ROW_ID>',
-        {
+        databaseId: '<DATABASE_ID>',
+        tableId: '<TABLE_ID>',
+        rowId: '<ROW_ID>',
+        data: {
             'scheduledDeletion': Operator.dateAddDays(30)
         },
     );
@@ -1823,7 +1823,7 @@ import io.appwrite.services.TablesDB
 import io.appwrite.Operator
 
 suspend fun main() {
-  val client = Client()
+  val client = Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<YOUR_PROJECT_ID>")
 
@@ -1844,8 +1844,8 @@ package main
 
 import (
   "log"
-  "github.com/appwrite/sdk-for-go/appwrite"
-  operator "github.com/appwrite/sdk-for-go/operator"
+  "github.com/appwrite/sdk-for-go/v7/appwrite"
+  operator "github.com/appwrite/sdk-for-go/v7/operator"
 )
 
 func main() {
@@ -2095,10 +2095,10 @@ void main() async {
 
     // Update row with operators inside the transaction
     await tablesDB.updateRow(
-        '<DATABASE_ID>',
-        '<TABLE_ID>',
-        '<ROW_ID>',
-        {
+        databaseId: '<DATABASE_ID>',
+        tableId: '<TABLE_ID>',
+        rowId: '<ROW_ID>',
+        data: {
             'upvotes': Operator.increment(1),
             'lastModified': Operator.dateSetNow()
         },
@@ -2106,7 +2106,7 @@ void main() async {
     );
 
     // Commit the transaction
-    await tablesDB.updateTransaction(tx.$id, 'commit');
+    await tablesDB.updateTransaction(transactionId: tx.$id, commit: true);
   } on AppwriteException catch (e) {
     print(e);
   }
@@ -2136,13 +2136,13 @@ func main() async throws {
         "upvotes": Operator.increment(1),
         "lastModified": Operator.dateSetNow()
       ],
-      transactionId: tx.$id
+      transactionId: tx.id
     )
 
     // Commit the transaction
     _ = try await tablesDB.updateTransaction(
-      transactionId: tx.$id,
-      status: "commit"
+      transactionId: tx.id,
+      commit: true
     )
   } catch {
     print(error.localizedDescription)
@@ -2155,7 +2155,7 @@ import io.appwrite.services.TablesDB
 import io.appwrite.Operator
 
 suspend fun main() {
-  val client = Client()
+  val client = Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<YOUR_PROJECT_ID>")
 
@@ -2173,11 +2173,11 @@ suspend fun main() {
       "upvotes" to Operator.increment(1),
       "lastModified" to Operator.dateSetNow()
     ),
-    transactionId = tx.$id
+    transactionId = tx.id
   )
 
   // Commit the transaction
-  tablesDB.updateTransaction(tx.$id, "commit")
+  tablesDB.updateTransaction(transactionId = tx.id, commit = true)
 }
 ```
 ```server-go
@@ -2185,8 +2185,8 @@ package main
 
 import (
   "log"
-  "github.com/appwrite/sdk-for-go/appwrite"
-  operator "github.com/appwrite/sdk-for-go/operator"
+  "github.com/appwrite/sdk-for-go/v7/appwrite"
+  operator "github.com/appwrite/sdk-for-go/v7/operator"
 )
 
 func main() {
@@ -2220,7 +2220,7 @@ func main() {
   }
 
   // Commit the transaction
-  _, err = tablesDB.UpdateTransaction(tx.Id, "commit")
+  _, err = tablesDB.UpdateTransaction(tx.Id, tablesDB.WithUpdateTransactionCommit(true))
   if err != nil {
     log.Fatal(err)
   }
@@ -2252,11 +2252,11 @@ $result = $tablesDB->updateRow(
     'upvotes' => Operator::increment(1),
     'lastModified' => Operator::dateSetNow()
   ],
-  transactionId: $tx['$id']
+  transactionId: $tx->id
 );
 
 // Commit the transaction
-$tablesDB->updateTransaction($tx['$id'], 'commit');
+$tablesDB->updateTransaction(transactionId: $tx->id, commit: true);
 ```
 ```server-python
 from appwrite.client import Client
@@ -2317,7 +2317,7 @@ await tablesDB.UpdateRow(
 );
 
 // Commit the transaction
-await tablesDB.UpdateTransaction(tx.Id, "commit");
+await tablesDB.UpdateTransaction(transactionId: tx.Id, commit: true);
 ```
 ```server-ruby
 require 'appwrite'
@@ -2345,11 +2345,11 @@ result = tablesDB.update_row(
         'upvotes' => Operator.increment(1),
         'lastModified' => Operator.dateSetNow()
     },
-    transaction_id: tx['$id']
+    transaction_id: tx.id
 )
 
 # Commit the transaction
-tablesDB.update_transaction(transaction_id: tx['$id'], commit: true)
+tablesDB.update_transaction(transaction_id: tx.id, commit: true)
 ```
 ```server-java
 import io.appwrite.Client;
@@ -2391,7 +2391,7 @@ tablesDB.createTransaction(new CoroutineCallback<>((tx, txError) -> {
       // Commit the transaction
       tablesDB.updateTransaction(
         tx.getId(),
-        "commit",
+        true, // commit
         new CoroutineCallback<>((commitResult, commitError) -> {
           if (commitError != null) {
             commitError.printStackTrace();
@@ -2579,7 +2579,7 @@ void main() async {
     );
 
     // Commit the transaction
-    await tablesDB.updateTransaction(tx.$id, 'commit');
+    await tablesDB.updateTransaction(transactionId: tx.$id, commit: true);
   } on AppwriteException catch (e) {
     print(e);
   }
@@ -2602,7 +2602,7 @@ func main() async throws {
 
     // Stage multiple operations at once using createOperations
     _ = try await tablesDB.createOperations(
-      transactionId: tx.$id,
+      transactionId: tx.id,
       operations: [
         [
           "action": "update",
@@ -2628,8 +2628,8 @@ func main() async throws {
 
     // Commit the transaction
     _ = try await tablesDB.updateTransaction(
-      transactionId: tx.$id,
-      status: "commit"
+      transactionId: tx.id,
+      commit: true
     )
   } catch {
     print(error.localizedDescription)
@@ -2642,7 +2642,7 @@ import io.appwrite.services.TablesDB
 import io.appwrite.Operator
 
 suspend fun main() {
-  val client = Client()
+  val client = Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<YOUR_PROJECT_ID>")
 
@@ -2653,7 +2653,7 @@ suspend fun main() {
 
   // Stage multiple operations at once using createOperations
   tablesDB.createOperations(
-    transactionId = tx.$id,
+    transactionId = tx.id,
     operations = listOf(
       mapOf(
         "action" to "update",
@@ -2678,7 +2678,7 @@ suspend fun main() {
   )
 
   // Commit the transaction
-  tablesDB.updateTransaction(tx.$id, "commit")
+  tablesDB.updateTransaction(transactionId = tx.id, commit = true)
 }
 ```
 ```server-go
@@ -2686,8 +2686,8 @@ package main
 
 import (
   "log"
-  "github.com/appwrite/sdk-for-go/appwrite"
-  operator "github.com/appwrite/sdk-for-go/operator"
+  "github.com/appwrite/sdk-for-go/v7/appwrite"
+  operator "github.com/appwrite/sdk-for-go/v7/operator"
 )
 
 func main() {
@@ -2735,7 +2735,7 @@ func main() {
   }
 
   // Commit the transaction
-  _, err = tablesDB.UpdateTransaction(tx.Id, "commit")
+  _, err = tablesDB.UpdateTransaction(tx.Id, tablesDB.WithUpdateTransactionCommit(true))
   if err != nil {
     log.Fatal(err)
   }
@@ -2760,7 +2760,7 @@ $tx = $tablesDB->createTransaction();
 
 // Stage multiple operations at once using createOperations
 $tablesDB->createOperations(
-  transactionId: $tx['$id'],
+  transactionId: $tx->id,
   operations: [
     [
       'action' => 'update',
@@ -2785,7 +2785,7 @@ $tablesDB->createOperations(
 );
 
 // Commit the transaction
-$tablesDB->updateTransaction($tx['$id'], 'commit');
+$tablesDB->updateTransaction(transactionId: $tx->id, commit: true);
 ```
 ```server-python
 from appwrite.client import Client
@@ -2880,7 +2880,7 @@ await tablesDB.CreateOperations(
 );
 
 // Commit the transaction
-await tablesDB.UpdateTransaction(tx.Id, "commit");
+await tablesDB.UpdateTransaction(transactionId: tx.Id, commit: true);
 ```
 ```server-ruby
 require 'appwrite'
@@ -2901,7 +2901,7 @@ tx = tablesDB.create_transaction
 
 # Stage multiple operations at once using createOperations
 tablesDB.create_operations(
-  transaction_id: tx['$id'],
+  transaction_id: tx.id,
   operations: [
     {
       'action' => 'update',
@@ -2926,7 +2926,7 @@ tablesDB.create_operations(
 )
 
 # Commit the transaction
-tablesDB.update_transaction(transaction_id: tx['$id'], commit: true)
+tablesDB.update_transaction(transaction_id: tx.id, commit: true)
 ```
 ```server-java
 import io.appwrite.Client;
@@ -2984,7 +2984,7 @@ tablesDB.createTransaction(new CoroutineCallback<>((tx, txError) -> {
       // Commit the transaction
       tablesDB.updateTransaction(
         tx.getId(),
-        "commit",
+        true, // commit
         new CoroutineCallback<>((commitResult, commitError) -> {
           if (commitError != null) {
             commitError.printStackTrace();

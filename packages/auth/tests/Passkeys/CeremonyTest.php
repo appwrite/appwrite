@@ -44,6 +44,17 @@ final class CeremonyTest extends TestCase
         $this->assertSame(Authenticator::encode($authenticator->userHandle), Authenticator::string($options, 'user', 'id'));
     }
 
+    public function testExcludedPasskeyWithoutTransportsSendsEmptyTransports(): void
+    {
+        $authenticator = new Authenticator();
+        $record = $this->register($authenticator)->record;
+        $record['transports'] = [];
+
+        $options = $this->ceremony->register('user@example.com', 'User', [$record])->options;
+
+        $this->assertSame([['type' => 'public-key', 'id' => Authenticator::encode($authenticator->credentialId), 'transports' => []]], $options['excludeCredentials']);
+    }
+
     public function testRegisterAndSignIn(): void
     {
         $authenticator = new Authenticator();

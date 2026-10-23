@@ -8,6 +8,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Keys;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -18,6 +19,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\Validator\Boolean;
 
 class XList extends Action
@@ -60,6 +62,7 @@ class XList extends Action
             ->inject('team')
             ->inject('authorization')
             ->inject('apiKey')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
@@ -75,6 +78,7 @@ class XList extends Action
         Document $team,
         Authorization $authorization,
         ?Key $apiKey,
+        Request $request,
     ) {
         $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey);
 
@@ -85,7 +89,7 @@ class XList extends Action
         }
 
         // Backwards compatibility
-        if (\count(Query::getByType($queries, [Query::TYPE_LIMIT])) === 0) {
+        if (\count(Query::getByType($queries, [QueryMethod::Limit])) === 0) {
             $queries[] = Query::limit(5000);
         }
 
@@ -115,13 +119,20 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+        $filterQueries = Query::groupByType($queries)->filters;
 
         try {
             $keys = $authorization->skip(fn () => $dbForPlatform->find('keys', $queries));
             $total = $includeTotal ? $authorization->skip(fn () => $dbForPlatform->count('keys', $filterQueries, APP_LIMIT_COUNT)) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
+
+        // Secrets are only for callers that could replace the keys anyway
+        if (\array_intersect(['organization.projects.keys.write', 'keys.write'], $request->getScopes()) === []) {
+            foreach ($keys as $key) {
+                $key->setAttribute('secret', '');
+            }
         }
 
         $response->dynamic(new Document([

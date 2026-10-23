@@ -175,7 +175,7 @@ function filterDedicatedDatabases(
   return databases
 }
 
-function formatEngineLabel(engine: string | undefined): string {
+function formatEngineLabel(engine: string | null | undefined): string {
   switch (engine?.toLowerCase()) {
     case 'postgres':
     case 'postgresql':

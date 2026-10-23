@@ -6,6 +6,7 @@ use Appwrite\Certificates\Certificates;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Maintenance\Grid;
 use DateInterval;
 use DateTime;
 use Utopia\Console\Console;
@@ -49,17 +50,8 @@ class Maintenance extends Action
 
         $now = new \DateTime();
         $now->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-        $next = new \DateTime($now->format("Y-m-d $jobInitTime"));
-        $next->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        $next = new Grid($jobInitTime, $interval)->next($now);
         $delay = $next->getTimestamp() - $now->getTimestamp();
-
-        /**
-         * If time passed for the target day.
-         */
-        if ($delay <= 0) {
-            $next->add(\DateInterval::createFromDateString('1 days'));
-            $delay = $next->getTimestamp() - $now->getTimestamp();
-        }
 
         $action = function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $dbForPlatform, $console, $publisherForDeletes, $publisherForCertificates, $certificateIssuer) {
             $time = DatabaseDateTime::now();
@@ -71,21 +63,24 @@ class Maintenance extends Action
             $before30days = (new DateTime())->sub($dateInterval);
 
             $dbForPlatform->skipFilters(
-                fn () => $dbForPlatform->foreach(
-                    'projects',
-                    function (Document $project) use ($publisherForDeletes) {
+                function () use ($dbForPlatform, $publisherForDeletes, $before30days): void {
+                    $projects = $dbForPlatform->cursor(
+                        'projects',
+                        [
+                            Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+                            Query::greaterThanEqual('accessedAt', DatabaseDateTime::format($before30days)),
+                            Query::orderAsc('$sequence'), // accessedAt Can be updated during iteration
+                        ],
+                        batchSize: 1000,
+                    );
+
+                    foreach ($projects as $project) {
                         $publisherForDeletes->enqueue(new DeleteMessage(
                             project: $project,
                             type: DELETE_TYPE_MAINTENANCE,
                         ));
-                    },
-                    [
-                        Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
-                        Query::greaterThanEqual('accessedAt', DatabaseDateTime::format($before30days)),
-                        Query::orderAsc('$sequence'), // accessedAt Can be updated during iteration
-                        Query::limit(1000),
-                    ]
-                ),
+                    }
+                },
                 APP_PROJECTS_SUBQUERIES
             );
 
@@ -96,7 +91,7 @@ class Maintenance extends Action
 
             $this->notifyDeleteConnections($publisherForDeletes);
             $this->renewCertificates($dbForPlatform, $publisherForCertificates, $certificateIssuer);
-            $this->notifyDeleteCache($cacheRetention, $publisherForDeletes);
+            $this->notifyDeleteCache($cacheRetention, $console, $publisherForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $publisherForDeletes);
             $this->notifyDeleteCSVExports($publisherForDeletes);
         };
@@ -180,15 +175,16 @@ class Maintenance extends Action
         }
     }
 
-    private function notifyDeleteCache($interval, DeletePublisher $publisherForDeletes): void
+    private function notifyDeleteCache(int $interval, Document $console, DeletePublisher $publisherForDeletes): void
     {
         $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $console,
             type: DELETE_TYPE_CACHE_BY_TIMESTAMP,
             datetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $interval),
         ));
     }
 
-    private function notifyDeleteSchedules($interval, DeletePublisher $publisherForDeletes): void
+    private function notifyDeleteSchedules(int $interval, DeletePublisher $publisherForDeletes): void
     {
         $publisherForDeletes->enqueue(new DeleteMessage(
             type: DELETE_TYPE_SCHEDULES,
