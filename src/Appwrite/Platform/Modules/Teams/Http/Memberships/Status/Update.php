@@ -10,6 +10,7 @@ use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\Membership;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Token;
@@ -91,6 +92,8 @@ class Update extends Action
             throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
         }
 
+        $membership = new Membership($membership->getArrayCopy());
+
         $team = $authorization->skip(fn () => $dbForProject->getDocument('teams', $teamId));
 
         if ($team->isEmpty()) {
@@ -127,8 +130,15 @@ class Update extends Action
             ->setAttribute('confirm', true)
         ;
 
-        $targetUser->setAttribute('emailVerification', true);
-        $authorization->skip(fn () => $dbForProject->updateDocument('users', $targetUser->getId(), new Document(['emailVerification' => true])));
+        $channel = $membership->deliveredChannel($targetUser);
+
+        if ($channel === 'email' && !empty($targetUser->getAttribute('email'))) {
+            $targetUser->setAttribute('emailVerification', true);
+            $authorization->skip(fn () => $dbForProject->updateDocument('users', $targetUser->getId(), new Document(['emailVerification' => true])));
+        } elseif ($channel === 'phone' && !empty($targetUser->getAttribute('phone'))) {
+            $targetUser->setAttribute('phoneVerification', true);
+            $authorization->skip(fn () => $dbForProject->updateDocument('users', $targetUser->getId(), new Document(['phoneVerification' => true])));
+        }
 
         // Create session for the user if not logged in
         if (!$hasSession) {
@@ -138,6 +148,8 @@ class Update extends Action
             $authDuration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
             $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
             $secret = $proofForToken->generate();
+            $provider = $channel === 'phone' ? SESSION_PROVIDER_PHONE : SESSION_PROVIDER_EMAIL;
+            $providerUid = $channel === 'phone' ? $targetUser->getAttribute('phone') : $targetUser->getAttribute('email');
             $session = new Document(array_merge([
                 '$id' => Id::unique(),
                 '$permissions' => [
@@ -147,12 +159,12 @@ class Update extends Action
                 ],
                 'userId' => $targetUser->getId(),
                 'userInternalId' => $targetUser->getSequence(),
-                'provider' => SESSION_PROVIDER_EMAIL,
-                'providerUid' => $targetUser->getAttribute('email'),
+                'provider' => $provider,
+                'providerUid' => $providerUid,
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
-                'factors' => ['email'],
+                'factors' => [$provider],
                 'countryCode' => \strtolower($geo->get($request->getIP())->getCountryCode()),
                 'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));

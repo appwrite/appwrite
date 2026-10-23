@@ -278,6 +278,9 @@ return [
             Attribute::datetime(key: 'joined'),
             Attribute::boolean(key: 'confirm'),
             Attribute::string(key: 'secret', size: 256, filters: ['encrypt']),
+            // email | phone | empty. Empty on owner rows and on memberships
+            // created before this attribute existed.
+            Attribute::string(key: 'channel', size: 16, default: ''),
             Attribute::string(key: 'search', size: 16384),
         ],
         'indexes' => [

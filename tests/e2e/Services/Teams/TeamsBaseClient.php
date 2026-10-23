@@ -599,6 +599,7 @@ trait TeamsBaseClient
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(true, $response['body']['emailVerification']);
+        $this->assertEquals(false, $response['body']['phoneVerification']);
 
 
         /** [START] TESTS TO CHECK PASSWORD UPDATE OF NEW USER CREATED USING TEAM INVITE */
@@ -796,6 +797,17 @@ trait TeamsBaseClient
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertCount(1, $response['body']['roles']);
         $this->assertEmpty($response['cookies']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]);
+
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertTrue($account['body']['emailVerification']);
+        $this->assertFalse($account['body']['phoneVerification']);
     }
 
     public function testUpdateTeamMembershipRoles(): void

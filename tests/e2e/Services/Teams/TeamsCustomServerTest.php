@@ -48,6 +48,11 @@ final class TeamsCustomServerTest extends Scope
             $this->assertEquals($email, $membership['body']['userName']);
             $this->assertTrue($membership['body']['confirm']);
 
+            $created = $this->client->call(Client::METHOD_GET, '/users/' . $userId, $headers);
+            $this->assertEquals(200, $created['headers']['status-code']);
+            $this->assertFalse($created['body']['emailVerification']);
+            $this->assertFalse($created['body']['phoneVerification']);
+
             $membershipId = $membership['body']['$id'];
             $stored = $this->client->call(Client::METHOD_GET, '/teams/' . $teamId . '/memberships/' . $membershipId, $headers);
             $this->assertEquals(200, $stored['headers']['status-code']);
