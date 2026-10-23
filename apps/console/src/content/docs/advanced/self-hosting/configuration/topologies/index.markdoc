@@ -20,7 +20,7 @@ The combined topology runs two containers alongside the rest of the Appwrite sta
 | Container | Role |
 | --------- | ---- |
 | `appwrite-worker` | Consumes every queue in a single process. Each queue gets its own pool of coroutines, so a busy queue doesn't block the others. |
-| `appwrite-task-scheduler` | Runs the function, execution, and message schedulers in one process. |
+| `appwrite-task-scheduler` | Runs the function, execution, message, inactive project maintenance, and resource stats schedulers in one process. |
 
 This is what starts when you install Appwrite or bring up the stack with the default configuration:
 
@@ -43,19 +43,19 @@ The separate topology replaces `appwrite-worker` with one container per queue, a
 | `appwrite-worker-webhooks` | `appwrite-task-scheduler-functions` |
 | `appwrite-worker-deletes` | `appwrite-task-scheduler-executions` |
 | `appwrite-worker-databases` | `appwrite-task-scheduler-messages` |
-| `appwrite-worker-builds` | |
-| `appwrite-worker-jobs` | |
+| `appwrite-worker-builds` | `appwrite-task-scheduler-maintenance` |
+| `appwrite-worker-jobs` | `appwrite-task-stats-resources` |
 | `appwrite-worker-screenshots` | |
 | `appwrite-worker-certificates` | |
 | `appwrite-worker-executions` | |
 | `appwrite-worker-functions` | |
 | `appwrite-worker-mails` | |
+| `appwrite-worker-maintenance` | |
 | `appwrite-worker-notifications` | |
 | `appwrite-worker-messaging` | |
 | `appwrite-worker-migrations` | |
 | `appwrite-worker-stats-usage` | |
 | `appwrite-worker-stats-resources` | |
-| `appwrite-task-stats-resources` | |
 
 In Appwrite's `docker-compose.yml`, these services sit behind the `separate` Compose profile. To run the separate topology from a manual installation, include the override file and enable the profile:
 

@@ -323,7 +323,7 @@ class Create extends Action
             $transaction = ($isAPIKey || $isPrivilegedUser)
                 ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
                 : $dbForProject->getDocument('transactions', $transactionId);
-            if ($transaction->isEmpty()) {
+            if ($transaction->isEmpty() || $this->isTransactionTypeMismatch($transaction)) {
                 throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
             }
             if ($transaction->getAttribute('status', '') !== 'pending') {
@@ -430,7 +430,9 @@ class Create extends Action
         } catch (UniqueException $e) {
             throw new Exception($this->getUniqueConstraintException(), previous: $e);
         } catch (DuplicateException $e) {
-            throw new Exception($this->getDuplicateException(), previous: $e, params: [$documentId]);
+            throw $isBulk
+                ? $this->getBatchDuplicateException($dbForDatabases, $collectionTableId, $documents, $e)
+                : new Exception($this->getDuplicateException(), previous: $e, params: [$documentId]);
         } catch (NotFoundException $e) {
             if ($authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId))->isEmpty()) {
                 throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);

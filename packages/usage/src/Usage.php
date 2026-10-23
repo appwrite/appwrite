@@ -58,8 +58,8 @@ class Usage
     }
 
     /**
-     * Add the tables, columns and indexes the storage lacks, leaving
-     * retention as it is.
+     * Add the tables, columns and indexes the storage lacks. A new table gets
+     * the configured retention; an existing table's retention is left as it is.
      *
      * @throws \Exception
      */

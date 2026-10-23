@@ -148,6 +148,26 @@ abstract class Git extends Adapter
     }
 
     /**
+     * Whether any git client can fetch getRepositoryCloneUrl() with
+     * getRepositoryCloneHeaders(). False when fetching takes the provider's
+     * own tooling (Entire's git-remote-entire), so a consumer that cannot
+     * install it must clone with generateCloneCommand() itself.
+     */
+    public function supportsRepositoryCloneUrl(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Pushes $branch of a clone made by generateCloneCommand() back to its
+     * origin, carrying whatever credential the provider's remote needs.
+     */
+    public function generatePushCommand(string $owner, string $repositoryName, string $directory, string $branch): Command
+    {
+        return $this->git($directory)->argument('push')->argument('origin')->argument($branch);
+    }
+
+    /**
      * Whether images embedded in pull request comments can render on the
      * provider. Providers without an image proxy (the way GitHub rewrites
      * comment images through its camo CDN) cannot display images hosted on

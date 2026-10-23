@@ -5,6 +5,9 @@ namespace Tests\E2E\Services\Databases;
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SchemaPolling;
+use Tests\E2E\Services\Databases\Queries\AggregateShape;
+use Tests\E2E\Services\Databases\Queries\DottedPaths;
+use Tests\E2E\Services\Databases\Queries\JoinAliasDefault;
 use Tests\E2E\Services\Databases\Queries\JoinCombos;
 use Tests\E2E\Services\Databases\Queries\JoinOperators;
 use Tests\E2E\Services\Databases\Queries\JoinPermissions;
@@ -33,6 +36,8 @@ trait DatabasesBase
 {
     use DatabasesUrlHelpers;
     use SchemaPolling;
+    use AggregateShape;
+    use JoinAliasDefault;
     use JoinTypes;
     use JoinOperators;
     use JoinPermissions;
@@ -42,6 +47,8 @@ trait DatabasesBase
     use RejectedMethods;
     use RejectedValues;
     use Totals;
+    use DottedPaths;
+    use ErrorMessages;
 
     /**
      * Static caches for test data - keyed by project ID to support parallel test runs
@@ -1149,6 +1156,99 @@ trait DatabasesBase
         $this->assertEquals('ready', $response['body']['status']);
     }
 
+    public function testUpdateDatabaseDescription(): void
+    {
+        if ($this->getSide() === 'client') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $keyword = Id::unique();
+
+        /**
+         * Test for SUCCESS
+         */
+        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), $headers, [
+            'databaseId' => Id::unique(),
+            'name' => 'Orders',
+            'description' => 'Customer orders tagged ' . $keyword,
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $this->assertSame('Customer orders tagged ' . $keyword, $database['body']['description']);
+
+        $databaseId = $database['body']['$id'];
+
+        $database = $this->client->call(Client::METHOD_GET, $this->getDatabaseUrl($databaseId), $headers);
+
+        $this->assertEquals(200, $database['headers']['status-code']);
+        $this->assertSame('Customer orders tagged ' . $keyword, $database['body']['description']);
+
+        $databases = $this->client->call(Client::METHOD_GET, $this->getDatabaseUrl(), $headers, [
+            'search' => $keyword,
+        ]);
+
+        $this->assertEquals(200, $databases['headers']['status-code']);
+        $this->assertCount(1, $databases['body']['databases']);
+        $this->assertSame($databaseId, $databases['body']['databases'][0]['$id']);
+
+        $database = $this->client->call(Client::METHOD_PUT, $this->getDatabaseUrl($databaseId), $headers, [
+            'name' => 'Orders',
+            'description' => 'Invoices and refunds',
+        ]);
+
+        $this->assertEquals(200, $database['headers']['status-code']);
+        $this->assertSame('Invoices and refunds', $database['body']['description']);
+
+        $database = $this->client->call(Client::METHOD_PUT, $this->getDatabaseUrl($databaseId), $headers, [
+            'name' => 'Orders',
+        ]);
+
+        $this->assertEquals(200, $database['headers']['status-code']);
+        $this->assertSame('Invoices and refunds', $database['body']['description']);
+
+        $database = $this->client->call(Client::METHOD_PUT, $this->getDatabaseUrl($databaseId), $headers, [
+            'name' => 'Orders',
+            'description' => '',
+        ]);
+
+        $this->assertEquals(200, $database['headers']['status-code']);
+        $this->assertSame('', $database['body']['description']);
+
+        $plain = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), $headers, [
+            'databaseId' => Id::unique(),
+            'name' => 'Plain',
+        ]);
+
+        $this->assertEquals(201, $plain['headers']['status-code']);
+        $this->assertSame('', $plain['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), $headers, [
+            'databaseId' => Id::unique(),
+            'name' => 'Too long',
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $database['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $database['body']['type']);
+
+        $database = $this->client->call(Client::METHOD_PUT, $this->getDatabaseUrl($databaseId), $headers, [
+            'name' => 'Orders',
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $database['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $database['body']['type']);
+    }
+
     public function testCreateCollection(): void
     {
         $data = $this->setupDatabase();
@@ -1193,6 +1293,101 @@ trait DatabasesBase
 
         $this->assertEquals(201, $actors['headers']['status-code']);
         $this->assertEquals($actors['body']['name'], 'Actors');
+    }
+
+    public function testUpdateCollectionDescription(): void
+    {
+        if ($this->getSide() === 'client') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $keyword = Id::unique();
+
+        /**
+         * Test for SUCCESS
+         */
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Catalog',
+            'description' => 'Movies tagged ' . $keyword,
+        ]);
+
+        $this->assertEquals(201, $container['headers']['status-code']);
+        $this->assertSame('Movies tagged ' . $keyword, $container['body']['description']);
+
+        $containerId = $container['body']['$id'];
+
+        $container = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $containerId), $headers);
+
+        $this->assertEquals(200, $container['headers']['status-code']);
+        $this->assertSame('Movies tagged ' . $keyword, $container['body']['description']);
+
+        $containers = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId), $headers, [
+            'search' => $keyword,
+        ]);
+
+        $this->assertEquals(200, $containers['headers']['status-code']);
+        $this->assertCount(1, $containers['body'][$this->getContainerResource()]);
+        $this->assertSame($containerId, $containers['body'][$this->getContainerResource()][0]['$id']);
+
+        $container = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $containerId), $headers, [
+            'name' => 'Catalog',
+            'description' => 'Series and movies',
+        ]);
+
+        $this->assertEquals(200, $container['headers']['status-code']);
+        $this->assertSame('Series and movies', $container['body']['description']);
+
+        $container = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $containerId), $headers, [
+            'name' => 'Catalog',
+        ]);
+
+        $this->assertEquals(200, $container['headers']['status-code']);
+        $this->assertSame('Series and movies', $container['body']['description']);
+
+        $container = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $containerId), $headers, [
+            'name' => 'Catalog',
+            'description' => '',
+        ]);
+
+        $this->assertEquals(200, $container['headers']['status-code']);
+        $this->assertSame('', $container['body']['description']);
+
+        $plain = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Plain',
+        ]);
+
+        $this->assertEquals(201, $plain['headers']['status-code']);
+        $this->assertSame('', $plain['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Too long',
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $container['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $container['body']['type']);
+
+        $container = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $containerId), $headers, [
+            'name' => 'Catalog',
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $container['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $container['body']['type']);
     }
 
     public function testConsoleProject(): void
@@ -1303,6 +1498,174 @@ trait DatabasesBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertTrue($response['body']['enabled']);
+    }
+
+    /**
+     * Regression: increment/decrement must honor the collection `enabled` flag like every
+     * other document action. Before the fix these two endpoints skipped the enabled gate,
+     * so a client session kept mutating numeric attributes in a disabled collection.
+     */
+    public function testDisabledCollectionBlocksIncrement(): void
+    {
+        if ($this->getSide() !== 'client') {
+            $this->markTestSkipped('The enabled gate only applies to non-privileged (client) callers');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+
+        // A self-contained collection the acting client user can create and update in.
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Counters',
+            'permissions' => [
+                Permission::create(Role::users()),
+                Permission::read(Role::users()),
+            ],
+            $this->getSecurityParam() => true,
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->createAttribute($databaseId, $collectionId, 'integer', [
+                'key' => 'count',
+                'required' => false,
+            ]);
+            $this->assertEquals(202, $attribute['headers']['status-code']);
+            $this->waitForAllAttributes($databaseId, $collectionId);
+        }
+
+        // Create a document while the collection is enabled, owned by the acting user.
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => [
+                'count' => 1,
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $documentId = $document['body']['$id'];
+
+        // Increment works while the collection is enabled.
+        $response = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId) . '/count/increment', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), ['value' => 1]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(2, $response['body']['count']);
+
+        // Disable the collection (keep its permissions and document security intact).
+        $disable = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $collectionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'Counters',
+            'permissions' => [
+                Permission::create(Role::users()),
+                Permission::read(Role::users()),
+            ],
+            'enabled' => false,
+            $this->getSecurityParam() => true,
+        ]);
+        $this->assertEquals(200, $disable['headers']['status-code']);
+        $this->assertFalse($disable['body']['enabled']);
+
+        // Test for FAILURE: increment and decrement must be refused on the disabled
+        // collection, exactly like create/update/delete/get (404).
+        $increment = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId) . '/count/increment', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), ['value' => 1]);
+        $this->assertEquals(404, $increment['headers']['status-code']);
+
+        $decrement = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId) . '/count/decrement', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), ['value' => 1]);
+        $this->assertEquals(404, $decrement['headers']['status-code']);
+    }
+
+    /**
+     * Regression: upsert must only role-check permissions the caller **supplied**, not
+     * permissions **inherited** from the existing document (parity with update). Before the
+     * fix, a non-privileged user with update permission upserting a shared document whose
+     * stored permissions named roles they do not hold was refused (USER_UNAUTHORIZED), even
+     * when they sent no permissions of their own.
+     */
+    public function testUpsertDoesNotRevalidateInheritedPermissions(): void
+    {
+        if ($this->getSide() !== 'client') {
+            $this->markTestSkipped('The caller-role check only applies to non-privileged (client) callers');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $userId = $this->getUser()['$id'];
+        $otherId = 'other' . \uniqid();
+
+        // Collection with document-level security so the document's own permissions govern.
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Shared',
+            'permissions' => [Permission::create(Role::users())],
+            $this->getSecurityParam() => true,
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->createAttribute($databaseId, $collectionId, 'string', [
+                'key' => 'title',
+                'size' => 64,
+                'required' => false,
+            ]);
+            $this->assertEquals(202, $attribute['headers']['status-code']);
+            $this->waitForAllAttributes($databaseId, $collectionId);
+        }
+
+        // Create the document with the privileged key so it can carry roles the acting user
+        // does not hold: the user may update it, but its read/delete name someone else.
+        $documentId = Id::unique();
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            $this->getRecordIdParam() => $documentId,
+            'data' => ['title' => 'v1'],
+            'permissions' => [
+                Permission::read(Role::user($otherId)),
+                Permission::update(Role::user($userId)),
+                Permission::delete(Role::user($otherId)),
+            ],
+        ]);
+        $this->assertEquals(201, $created['headers']['status-code']);
+
+        // The acting user upserts (PUT) without supplying permissions. The inherited
+        // read/delete(other) must NOT be re-checked against the caller's roles.
+        $upsert = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $collectionId, $documentId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => ['title' => 'v2'],
+        ]);
+        $this->assertEquals(200, $upsert['headers']['status-code']);
+        $this->assertEquals('v2', $upsert['body']['title']);
     }
 
     public function testCreateAttributes(): void
@@ -1829,6 +2192,46 @@ trait DatabasesBase
         }
     }
 
+    public function testCreateCollectionInlineEncryptedStringTooSmall(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $containerId = Id::unique();
+
+        $rejected = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => $containerId,
+            'name' => 'Inline Encrypted Too Small',
+            $this->getSchemaResource() => [
+                ['key' => 'secret', 'type' => ColumnType::String->value, 'size' => APP_DATABASE_ENCRYPT_SIZE_MIN - 1, 'filters' => ['encrypt']],
+            ],
+        ]);
+
+        $this->assertSame(400, $rejected['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_BAD_REQUEST, $rejected['body']['type']);
+
+        $missing = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $containerId), $headers);
+        $this->assertSame(404, $missing['headers']['status-code']);
+
+        $keyed = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Inline Encrypted Keyed',
+            $this->getSchemaResource() => [
+                ['key' => 'secret', 'type' => ColumnType::String->value, 'size' => APP_DATABASE_ENCRYPT_SIZE_MIN - 1, 'filters' => ['encrypt' => true]],
+            ],
+        ]);
+
+        $this->assertSame(400, $keyed['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_BAD_REQUEST, $keyed['body']['type']);
+    }
+
     /**
      * The filters the endpoints set still work inline: an encrypted string reads
      * back in plain text and cannot be queried, like one the string endpoint made.
@@ -1957,6 +2360,83 @@ trait DatabasesBase
         \sort($keys);
 
         $this->assertSame(['dedicated', 'inline'], $keys);
+    }
+
+    public function testCreateCollectionInlineDescription(): void
+    {
+        if ($this->getSide() === 'client') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $schemaResource = $this->getSchemaResource();
+
+        /**
+         * Test for SUCCESS
+         */
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Charts',
+            $schemaResource => [
+                ['key' => 'rank', 'type' => ColumnType::Integer->value, 'description' => 'Position in the chart'],
+            ],
+            'indexes' => [
+                ['key' => 'rankIndex', 'type' => IndexType::Key->value, 'attributes' => ['rank'], 'description' => 'Sorts the chart by rank'],
+            ],
+        ]);
+
+        $this->assertEquals(201, $container['headers']['status-code']);
+
+        $containerId = $container['body']['$id'];
+
+        $schema = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $containerId), $headers);
+
+        $this->assertEquals(200, $schema['headers']['status-code']);
+        $this->assertSame('Position in the chart', \array_column($schema['body'][$schemaResource], 'description', 'key')['rank']);
+
+        $indexes = $this->client->call(Client::METHOD_GET, $this->getIndexUrl($databaseId, $containerId), $headers);
+
+        $this->assertEquals(200, $indexes['headers']['status-code']);
+        $this->assertSame('Sorts the chart by rank', \array_column($indexes['body']['indexes'], 'description', 'key')['rankIndex']);
+
+        /**
+         * Test for FAILURE
+         */
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Too long column',
+            $schemaResource => [
+                ['key' => 'rank', 'type' => ColumnType::Integer->value, 'description' => \str_repeat('a', 1025)],
+            ],
+        ]);
+
+        $this->assertEquals(400, $container['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $container['body']['type']);
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Too long index',
+            $schemaResource => [
+                ['key' => 'rank', 'type' => ColumnType::Integer->value],
+            ],
+            'indexes' => [
+                ['key' => 'rankIndex', 'type' => IndexType::Key->value, 'attributes' => ['rank'], 'description' => \str_repeat('a', 1025)],
+            ],
+        ]);
+
+        $this->assertEquals(400, $container['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $container['body']['type']);
     }
 
     public function testListAttributes(): void
@@ -3423,6 +3903,155 @@ trait DatabasesBase
         $this->assertEquals('Invalid `elements` param: Value must a valid array no longer than 100 items and Value must be a valid string and at least 1 chars and no longer than 255 chars', $badEnum['body']['message']);
     }
 
+    public function testUpdateAttributeDescription(): void
+    {
+        if ($this->getSide() === 'client') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Described columns',
+        ]);
+
+        $this->assertEquals(201, $container['headers']['status-code']);
+
+        $containerId = $container['body']['$id'];
+
+        $columns = [
+            'string' => [['size' => 64], []],
+            'varchar' => [['size' => 64], []],
+            'text' => [[], []],
+            'mediumtext' => [[], []],
+            'longtext' => [[], []],
+            'integer' => [[], []],
+            'bigint' => [[], []],
+            'float' => [[], []],
+            'boolean' => [[], []],
+            'datetime' => [[], []],
+            'email' => [[], []],
+            'ip' => [[], []],
+            'url' => [[], []],
+            'enum' => [['elements' => ['draft', 'published']], ['elements' => ['draft', 'published']]],
+        ];
+
+        if ($this->getSupportForSpatials()) {
+            $columns['point'] = [[], []];
+            $columns['line'] = [[], []];
+            $columns['polygon'] = [[], []];
+        }
+
+        /**
+         * Test for SUCCESS
+         */
+        foreach ($columns as $type => [$create]) {
+            $column = $this->createAttribute($databaseId, $containerId, $type, \array_merge([
+                'key' => $type,
+                'required' => false,
+                'description' => "Created {$type} column",
+            ], $create));
+
+            $this->assertEquals(202, $column['headers']['status-code'], $type);
+            $this->assertSame("Created {$type} column", $column['body']['description'], $type);
+        }
+
+        if ($this->getSupportForRelationships()) {
+            $related = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+                $this->getContainerIdParam() => Id::unique(),
+                'name' => 'Described related',
+            ]);
+
+            $this->assertEquals(201, $related['headers']['status-code']);
+
+            $column = $this->createAttribute($databaseId, $containerId, 'relationship', [
+                $this->getRelatedIdParam() => $related['body']['$id'],
+                'type' => RelationshipType::ManyToOne->value,
+                'key' => 'relationship',
+                'description' => 'Created relationship column',
+            ]);
+
+            $this->assertEquals(202, $column['headers']['status-code']);
+            $this->assertSame('Created relationship column', $column['body']['description']);
+        }
+
+        $this->waitForAllAttributes($databaseId, $containerId);
+
+        foreach ($columns as $type => [, $update]) {
+            $column = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $containerId, $type, $type), $headers, \array_merge([
+                'required' => false,
+                'default' => null,
+                'description' => "Updated {$type} column",
+            ], $update));
+
+            $this->assertEquals(200, $column['headers']['status-code'], $type);
+            $this->assertSame("Updated {$type} column", $column['body']['description'], $type);
+        }
+
+        if ($this->getSupportForRelationships()) {
+            $column = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $containerId, 'relationship', 'relationship'), $headers, [
+                'onDelete' => RelationshipDeleteAction::Cascade->value,
+                'description' => 'Updated relationship column',
+            ]);
+
+            $this->assertEquals(200, $column['headers']['status-code']);
+            $this->assertSame('Updated relationship column', $column['body']['description']);
+
+            $columns['relationship'] = [[], []];
+        }
+
+        $column = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $containerId, 'integer', 'integer'), $headers, [
+            'required' => false,
+            'default' => null,
+        ]);
+
+        $this->assertEquals(200, $column['headers']['status-code']);
+        $this->assertSame('Updated integer column', $column['body']['description']);
+
+        $schema = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $containerId), $headers);
+
+        $this->assertEquals(200, $schema['headers']['status-code']);
+
+        $descriptions = \array_column($schema['body'][$this->getSchemaResource()], 'description', 'key');
+
+        foreach (\array_keys($columns) as $type) {
+            $this->assertSame("Updated {$type} column", $descriptions[$type] ?? null, $type);
+        }
+
+        /**
+         * Test for FAILURE
+         */
+        $column = $this->createAttribute($databaseId, $containerId, 'boolean', [
+            'key' => 'tooLong',
+            'required' => false,
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $column['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $column['body']['type']);
+
+        $column = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $containerId, 'boolean', 'boolean'), $headers, [
+            'required' => false,
+            'default' => null,
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $column['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $column['body']['type']);
+    }
+
     public function testCreateIndexes(): void
     {
         // Use dedicated collection for index testing to avoid conflicts with setupIndexes()
@@ -3972,6 +4601,84 @@ trait DatabasesBase
         ]);
         $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $response['body']['type']);
         $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateIndexDescription(): void
+    {
+        if ($this->getSide() === 'client') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Described indexes',
+        ]);
+
+        $this->assertEquals(201, $container['headers']['status-code']);
+
+        $containerId = $container['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            foreach (['rank', 'score'] as $key) {
+                $column = $this->createAttribute($databaseId, $containerId, 'integer', [
+                    'key' => $key,
+                    'required' => false,
+                ]);
+
+                $this->assertEquals(202, $column['headers']['status-code']);
+            }
+
+            $this->waitForAllAttributes($databaseId, $containerId);
+        }
+
+        /**
+         * Test for SUCCESS
+         */
+        $index = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $containerId), $headers, [
+            'key' => 'rankIndex',
+            'type' => IndexType::Key->value,
+            $this->getIndexAttributesParam() => ['rank'],
+            'description' => 'Sorts the chart by rank',
+        ]);
+
+        $this->assertEquals(202, $index['headers']['status-code']);
+        $this->assertSame('Sorts the chart by rank', $index['body']['description']);
+
+        $index = $this->client->call(Client::METHOD_GET, $this->getIndexUrl($databaseId, $containerId, 'rankIndex'), $headers);
+
+        $this->assertEquals(200, $index['headers']['status-code']);
+        $this->assertSame('Sorts the chart by rank', $index['body']['description']);
+
+        $plain = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $containerId), $headers, [
+            'key' => 'scoreIndex',
+            'type' => IndexType::Key->value,
+            $this->getIndexAttributesParam() => ['score'],
+        ]);
+
+        $this->assertEquals(202, $plain['headers']['status-code']);
+        $this->assertSame('', $plain['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $index = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $containerId), $headers, [
+            'key' => 'tooLong',
+            'type' => IndexType::Key->value,
+            $this->getIndexAttributesParam() => ['score'],
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $index['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $index['body']['type']);
     }
 
     public function testCreateDocumentWithCommasInStringArray(): void
@@ -5306,6 +6013,78 @@ trait DatabasesBase
         $this->assertEquals(200, $documents3['headers']['status-code']);
         $this->assertArrayHasKey('x-appwrite-cache', $documents3['headers']);
         $this->assertEquals('miss', $documents3['headers']['x-appwrite-cache']);
+    }
+
+    public function testListDocumentsCacheBustedByPermissionChange(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Cache Permissions',
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+            $this->getSchemaResource() => [
+                ['key' => 'title', 'type' => ColumnType::String->value, 'size' => 64],
+            ],
+        ]);
+
+        $this->assertSame(201, $container['headers']['status-code']);
+        $containerId = $container['body']['$id'];
+
+        $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), $headers, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['title' => 'Cached'],
+        ]);
+
+        $this->assertSame(201, $record['headers']['status-code']);
+
+        $list = fn (): array => $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'ttl' => 300,
+        ]);
+
+        $this->assertSame('miss', $list()['headers']['x-appwrite-cache']);
+        $this->assertSame('hit', $list()['headers']['x-appwrite-cache']);
+
+        $update = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $containerId), $headers, [
+            'name' => 'Cache Permissions',
+            'permissions' => [
+                Permission::read(Role::users()),
+            ],
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+
+        $changed = $list();
+        $this->assertSame(200, $changed['headers']['status-code']);
+        $this->assertSame('miss', $changed['headers']['x-appwrite-cache']);
+
+        $update = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $containerId), $headers, [
+            'name' => 'Cache Permissions',
+            'permissions' => [
+                Permission::read(Role::users()),
+            ],
+            $this->getSecurityParam() => true,
+        ]);
+
+        $this->assertSame(200, $update['headers']['status-code']);
+
+        $changed = $list();
+        $this->assertSame(200, $changed['headers']['status-code']);
+        $this->assertSame('miss', $changed['headers']['x-appwrite-cache']);
     }
 
     public function testListDocumentsCachedWithoutSelectQuery(): void
@@ -10715,6 +11494,82 @@ trait DatabasesBase
         $this->assertSame(3, $stored['body']['count']);
     }
 
+    public function testIncrementAndDecrementPastTheColumnRangeNameTheColumnBound(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), $headers, [
+            'databaseId' => Id::unique(),
+            'name' => 'ColumnBoundDatabase',
+        ]);
+        $this->assertSame(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'ColumnBoundCollection',
+            'permissions' => [Permission::read(Role::any()), Permission::create(Role::any()), Permission::update(Role::any())],
+        ]);
+        $this->assertSame(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $column = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', $headers, [
+            'key' => 'b',
+            'required' => true,
+            'min' => 0,
+            'max' => 10,
+        ]);
+        $this->assertSame(202, $column['headers']['status-code'], $column['body']['message'] ?? '');
+        $this->waitForAttribute($databaseId, $collectionId, 'b');
+
+        $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['b' => 5],
+        ]);
+        $this->assertSame(201, $record['headers']['status-code']);
+        $url = $this->getRecordUrl($databaseId, $collectionId, $record['body']['$id']);
+        $field = $this->getRecordResource() === 'rows' ? 'Column' : 'Attribute';
+
+        $increased = $this->client->call(Client::METHOD_PATCH, $url . '/b/increment', $headers, ['value' => 6]);
+        $this->assertSame(400, $increased['headers']['status-code'], \json_encode($increased['body']) ?: '');
+        $this->assertSame($field . ' "b" has reached the maximum value of 10', $increased['body']['message']);
+
+        $decreased = $this->client->call(Client::METHOD_PATCH, $url . '/b/decrement', $headers, ['value' => 8]);
+        $this->assertSame(400, $decreased['headers']['status-code'], \json_encode($decreased['body']) ?: '');
+        $this->assertSame($field . ' "b" has reached the minimum value of 0', $decreased['body']['message']);
+
+        $tighter = $this->client->call(Client::METHOD_PATCH, $url . '/b/increment', $headers, ['value' => 4, 'max' => 8]);
+        $this->assertSame(400, $tighter['headers']['status-code']);
+        $this->assertSame($field . ' "b" has reached the maximum value of 8', $tighter['body']['message'], 'a request bound tighter than the column is the one reached');
+
+        $looser = $this->client->call(Client::METHOD_PATCH, $url . '/b/increment', $headers, ['value' => 6, 'max' => 20]);
+        $this->assertSame(400, $looser['headers']['status-code']);
+        $this->assertSame($field . ' "b" has reached the maximum value of 10', $looser['body']['message'], 'a request bound looser than the column leaves the column bound');
+
+        $big = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/bigint', $headers, [
+            'key' => 'big',
+            'required' => false,
+        ]);
+        $this->assertSame(202, $big['headers']['status-code'], $big['body']['message'] ?? '');
+        $this->waitForAttribute($databaseId, $collectionId, 'big');
+        $this->assertSame(200, $this->client->call(Client::METHOD_PATCH, $url, $headers, ['data' => ['big' => 5]])['headers']['status-code']);
+
+        $fractional = $this->client->call(Client::METHOD_PATCH, $url . '/big/increment', $headers, ['value' => 4, 'max' => 8.5]);
+        $this->assertSame(400, $fractional['headers']['status-code'], \json_encode($fractional['body']) ?: '');
+        $this->assertSame($field . ' "big" has reached the maximum value of 8', $fractional['body']['message'], 'a fractional bound on a big integer is reported as the whole bound the database holds it to');
+
+        $stored = $this->client->call(Client::METHOD_GET, $url, $headers);
+        $this->assertSame(5, $stored['body']['b']);
+    }
+
     public function testFractionalIncrementAndDecrementOnAnIntegerRoundHalfAwayFromZero(): void
     {
         if (!$this->getSupportForAttributes()) {
@@ -14849,6 +15704,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $result['headers']['status-code']);
+        $this->assertIsInt($result['body'][$this->getRecordResource()][0]['total']);
         $this->assertGreaterThanOrEqual(3, $result['body'][$this->getRecordResource()][0]['total']);
     }
 
@@ -14872,6 +15728,7 @@ trait DatabasesBase
 
         $this->assertEquals(200, $result['headers']['status-code']);
         $this->assertArrayHasKey('totalYears', $result['body'][$this->getRecordResource()][0]);
+        $this->assertIsInt($result['body'][$this->getRecordResource()][0]['totalYears'], 'A sum over an integer attribute is an integer');
         $this->assertGreaterThan(0, $result['body'][$this->getRecordResource()][0]['totalYears']);
     }
 
@@ -14895,6 +15752,7 @@ trait DatabasesBase
 
         $this->assertEquals(200, $result['headers']['status-code']);
         $this->assertArrayHasKey('avgYear', $result['body'][$this->getRecordResource()][0]);
+        $this->assertIsFloat($result['body'][$this->getRecordResource()][0]['avgYear']);
         $this->assertGreaterThan(1900, $result['body'][$this->getRecordResource()][0]['avgYear']);
     }
 
@@ -14920,8 +15778,8 @@ trait DatabasesBase
 
         $this->assertEquals(200, $result['headers']['status-code']);
         $row = $result['body'][$this->getRecordResource()][0];
-        $this->assertEquals(1944, $row['earliest']);
-        $this->assertEquals(2019, $row['latest']);
+        $this->assertSame(1944, $row['earliest']);
+        $this->assertSame(2019, $row['latest']);
     }
 
     public function testGroupBy(): void
@@ -14950,7 +15808,8 @@ trait DatabasesBase
         foreach ($rows as $row) {
             $this->assertArrayHasKey('title', $row);
             $this->assertArrayHasKey('total', $row);
-            $this->assertGreaterThanOrEqual(1, (int) $row['total']);
+            $this->assertIsInt($row['total']);
+            $this->assertGreaterThanOrEqual(1, $row['total']);
         }
     }
 
@@ -14980,6 +15839,7 @@ trait DatabasesBase
 
         foreach ($rows as $row) {
             $this->assertArrayHasKey('total', $row);
+            $this->assertIsInt($row['total']);
             $this->assertGreaterThanOrEqual(1, $row['total']);
         }
     }
@@ -15117,6 +15977,7 @@ trait DatabasesBase
         $this->assertEquals(200, $result['headers']['status-code']);
         $row = $result['body'][$this->getRecordResource()][0];
         $this->assertArrayHasKey('uniqueYears', $row);
+        $this->assertIsInt($row['uniqueYears']);
         $this->assertGreaterThanOrEqual(2, $row['uniqueYears']);
     }
 
@@ -15142,7 +16003,8 @@ trait DatabasesBase
         $this->assertEquals(200, $result['headers']['status-code']);
         $row = $result['body'][$this->getRecordResource()][0];
         $this->assertArrayHasKey('total', $row);
-        $this->assertGreaterThanOrEqual(2, (int) $row['total']);
+        $this->assertIsInt($row['total']);
+        $this->assertGreaterThanOrEqual(2, $row['total']);
     }
 
     /**
@@ -15355,9 +16217,9 @@ trait DatabasesBase
         $rows = $result['body'][$this->getRecordResource()];
         $this->assertCount(1, $rows);
         if ($this->getSide() === 'client') {
-            $this->assertEquals(100, $rows[0]['totalPaid']);
+            $this->assertSame(100, $rows[0]['totalPaid']);
         } else {
-            $this->assertEquals(10099, $rows[0]['totalPaid']);
+            $this->assertSame(10099, $rows[0]['totalPaid']);
         }
     }
 

@@ -1,4 +1,6 @@
+import { translate } from '@/lib/i18n/translate'
 import { getSeoSiteOrigin } from '@/lib/marketing/site-origin'
+import { stringifyJsonLd } from '@/lib/seo/json-ld'
 import { getPageMetaTags } from '@/lib/seo/page-meta'
 import { buildOgImageUrl, type OgImageParams } from '@/lib/seo/og-image'
 import { asRouteHead } from '@/lib/seo/route-head'
@@ -78,4 +80,25 @@ export function getMarketingRouteHead(
   return asRouteHead(getMarketingPageMetaTags({ ...input, canonical }), {
     canonicalHref: canonical,
   })
+}
+
+/** `FAQPage` JSON-LD for the FAQ section a marketing page renders. */
+export function getMarketingFaqScript(
+  items: ReadonlyArray<{ question: string; answer: string }>,
+) {
+  return {
+    type: 'application/ld+json',
+    children: stringifyJsonLd({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: items.map((item) => ({
+        '@type': 'Question',
+        name: translate(item.question),
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: translate(item.answer),
+        },
+      })),
+    }),
+  }
 }
