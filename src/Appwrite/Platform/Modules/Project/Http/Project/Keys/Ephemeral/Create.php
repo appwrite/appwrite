@@ -4,11 +4,13 @@ namespace Appwrite\Platform\Modules\Project\Http\Project\Keys\Ephemeral;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\DateTime as DatabaseDateTime;
@@ -68,6 +70,7 @@ class Create extends Base
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('project')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
@@ -77,7 +80,13 @@ class Create extends Base
         Response $response,
         QueueEvent $queueForEvents,
         Document $project,
+        Request $request,
     ) {
+        // A JWT stands in for its session for a few minutes; a key it left behind would outlive it
+        if ($request->getHeaderLine('x-appwrite-jwt', '') !== '') {
+            throw new Exception(Exception::KEY_CREATION_DENIED);
+        }
+
         $keyId = Id::unique();
 
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $duration, 0);

@@ -915,6 +915,49 @@ trait KeysBase
         $this->deleteKey($keyId);
     }
 
+    /**
+     * A JWT stands in for its session for minutes. Like it cannot create the next
+     * JWT, it cannot create or change keys, or read their secrets.
+     */
+    public function testKeysRefuseJWTCallers(): void
+    {
+        $key = $this->createKey(Id::unique(), 'JWT Target Key', ['users.read']);
+        $this->assertSame(201, $key['headers']['status-code']);
+        $keyId = $key['body']['$id'];
+
+        $admin = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-mode' => 'admin',
+        ];
+
+        $jwt = $this->client->call(Client::METHOD_POST, '/account/jwts', array_merge($admin, [
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]));
+        $this->assertSame(201, $jwt['headers']['status-code']);
+
+        $asJWT = array_merge($admin, ['x-appwrite-jwt' => $jwt['body']['jwt']]);
+
+        /**
+         * Test for FAILURE
+         */
+        $refused = [
+            'create' => [Client::METHOD_POST, $this->keysPath(), ['keyId' => Id::unique(), 'name' => 'Key From JWT', 'scopes' => ['users.read']]],
+            'ephemeral' => [Client::METHOD_POST, $this->keysPath() . '/ephemeral', ['scopes' => ['users.read'], 'duration' => 60]],
+            'update' => [Client::METHOD_PUT, $this->keysPath() . '/' . $keyId, ['name' => 'Key From JWT', 'scopes' => ['users.read']]],
+        ];
+
+        foreach ($refused as $case => [$method, $path, $params]) {
+            $response = $this->client->call($method, $path, $asJWT, $params);
+            $this->assertSame(403, $response['headers']['status-code'], $case);
+            $this->assertSame('key_creation_denied', $response['body']['type'], $case);
+        }
+
+        // Cleanup
+        $this->deleteKey($keyId);
+    }
+
     // =========================================================================
     // Delete key tests
     // =========================================================================

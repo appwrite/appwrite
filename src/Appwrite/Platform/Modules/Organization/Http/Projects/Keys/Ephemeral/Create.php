@@ -6,10 +6,12 @@ use Ahc\Jwt\JWT;
 use Appwrite\Auth\Key;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Organization\Http\Projects\Keys\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -70,6 +72,7 @@ class Create extends Action
             ->inject('team')
             ->inject('apiKey')
             ->inject('auditContext')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
@@ -83,7 +86,13 @@ class Create extends Action
         Document $team,
         ?Key $apiKey,
         AuditContext $auditContext,
+        Request $request,
     ) {
+        // A JWT stands in for its session for a few minutes; a key it left behind would outlive it
+        if ($request->getHeaderLine('x-appwrite-jwt', '') !== '') {
+            throw new Exception(Exception::KEY_CREATION_DENIED);
+        }
+
         $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey);
 
         // The request may run through the console project; events and audits belong to the resolved project
