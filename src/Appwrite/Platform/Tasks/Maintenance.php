@@ -49,17 +49,8 @@ class Maintenance extends Action
 
         $now = new \DateTime();
         $now->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-        $next = new \DateTime($now->format("Y-m-d $jobInitTime"));
-        $next->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        $next = self::next($now, $jobInitTime, $interval);
         $delay = $next->getTimestamp() - $now->getTimestamp();
-
-        /**
-         * If time passed for the target day.
-         */
-        if ($delay <= 0) {
-            $next->add(\DateInterval::createFromDateString('1 days'));
-            $delay = $next->getTimestamp() - $now->getTimestamp();
-        }
 
         $action = function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $dbForPlatform, $console, $publisherForDeletes, $publisherForCertificates, $certificateIssuer) {
             $time = DatabaseDateTime::now();
@@ -113,6 +104,20 @@ class Maintenance extends Action
         } elseif ($type === 'trigger') {
             $action();
         }
+    }
+
+    /**
+     * The first run after $now: today's $start if it is still ahead, otherwise tomorrow's.
+     */
+    public static function next(\DateTime $now, string $start, int $interval): \DateTime
+    {
+        $next = new \DateTime($now->format("Y-m-d $start"), $now->getTimezone());
+
+        if ($next->getTimestamp() <= $now->getTimestamp()) {
+            $next->add(\DateInterval::createFromDateString('1 days'));
+        }
+
+        return $next;
     }
 
     private function notifyDeleteConnections(DeletePublisher $publisherForDeletes): void
