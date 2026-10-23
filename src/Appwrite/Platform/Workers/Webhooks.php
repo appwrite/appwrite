@@ -7,6 +7,7 @@ use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Redelivery;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context as UsageContext;
 use Exception;
@@ -118,7 +119,8 @@ class Webhooks extends Action
         // reason to hold back the retry the others need.
         $redelivery->record($delivered);
 
-        throw new Exception(\implode(" / \n\n", $errors));
+        // The receiver failed, not the worker: unpublished, so it is logged without alerting
+        throw new AppwriteException(AppwriteException::WEBHOOK_DELIVERY_FAILED, \implode(" / \n\n", $errors));
     }
 
     /**
@@ -174,7 +176,7 @@ class Webhooks extends Action
                     'X-' . APP_NAME . '-Webhook-Id' => $webhook->getId(),
                     'X-' . APP_NAME . '-Webhook-Delivery-Id' => $deliveryId,
                     'X-' . APP_NAME . '-Webhook-Events' => implode(',', $events),
-                    'X-' . APP_NAME . '-Webhook-Name' => $webhook->getAttribute('name', ''),
+                    'X-' . APP_NAME . '-Webhook-Name' => $this->stripControlCharacters((string) $webhook->getAttribute('name', '')),
                     'X-' . APP_NAME . '-Webhook-User-Id' => $user->getId(),
                     'X-' . APP_NAME . '-Webhook-Project-Id' => $project->getId(),
                     'X-' . APP_NAME . '-Webhook-Signature' => $signature,
@@ -403,5 +405,18 @@ class Webhooks extends Action
         }
 
         return false;
+    }
+
+    /**
+     * Header values cannot carry control characters, so a name with line breaks is sent without them.
+     */
+    private function stripControlCharacters(string $value): string
+    {
+        $controls = [\chr(127) => ''];
+        for ($code = 0; $code < 32; $code++) {
+            $controls[\chr($code)] = '';
+        }
+
+        return strtr($value, $controls);
     }
 }

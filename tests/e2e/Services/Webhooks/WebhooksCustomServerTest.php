@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class WebhooksCustomServerTest extends Scope
 {
@@ -19,7 +19,7 @@ final class WebhooksCustomServerTest extends Scope
     public function testReadOnlyKeyCannotRecoverAuthPassword(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Read Scope Password Test',
             ['users.*.create'],
             null,
@@ -52,5 +52,36 @@ final class WebhooksCustomServerTest extends Scope
         }
 
         $this->deleteWebhook($webhookId);
+    }
+
+    public function testWebhookNameWithLineBreaksIsDelivered(): void
+    {
+        // Test for SUCCESS: a name with line breaks is accepted and delivered without them in its header.
+        $userId = Id::unique();
+        $webhook = $this->createWebhook(Id::unique(), "Line\r\nBreak\tName", ["users.{$userId}.create"], true, 'http://request-catcher-webhook:5000/', false, null, null);
+        $this->assertSame(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        try {
+            $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'userId' => $userId,
+                'email' => $userId . '@localhost.test',
+                'password' => 'password',
+            ]);
+            $this->assertSame(201, $user['headers']['status-code']);
+
+            $this->assertEventually(function () use ($webhookId) {
+                $this->assertCount(1, $this->webhookDeliveries($webhookId));
+            }, 15000, 500);
+
+            $delivery = $this->webhookDeliveries($webhookId)[0];
+            $this->assertSame('LineBreakName', $delivery['headers']['X-Appwrite-Webhook-Name'] ?? null);
+            $this->assertSame(0, $this->getWebhook($webhookId)['body']['attempts']);
+        } finally {
+            $this->deleteWebhook($webhookId);
+        }
     }
 }

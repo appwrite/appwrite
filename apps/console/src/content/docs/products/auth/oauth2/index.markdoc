@@ -84,10 +84,10 @@ final client = Client()
 final account = Account(client);
 
 // Go to OAuth provider login page
-await account.createOAuth2Session({
+await account.createOAuth2Session(
     provider: OAuthProvider.github,
     scopes: ['repo', 'user']
-});
+);
 ```
 {% /tabsitem %}
 
@@ -134,7 +134,7 @@ let account = Account(client)
 // Go to OAuth provider login page
 try await account.createOAuth2Session(
     provider: .github,
-    scopes: ['repo', 'user']
+    scopes: ["repo", "user"]
 )
 ```
 {% /tabsitem %}
@@ -167,8 +167,9 @@ val account = Account(client)
 
 // Go to OAuth provider login page
 account.createOAuth2Session(
+    activity = activity,
     provider = OAuthProvider.GITHUB,
-    scopes = listOf('repo', 'user')
+    scopes = listOf("repo", "user")
 )
 ```
 {% /tabsitem %}

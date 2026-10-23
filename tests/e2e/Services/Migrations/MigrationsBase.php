@@ -11,15 +11,18 @@ use Tests\E2E\Services\Functions\FunctionsBase;
 use Tests\E2E\Services\Realtime\RealtimeBase;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\RelationshipDeleteAction;
+use Utopia\Database\RelationshipType;
+use Utopia\Database\Role;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
+use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
+use Utopia\Query\Schema\IndexType;
 use Utopia\System\System;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
@@ -134,7 +137,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Test Database'
         ]);
 
@@ -159,7 +162,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Test Table',
         ]);
 
@@ -205,7 +208,7 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ], $body);
 
-        $this->assertEquals(202, $migration['headers']['status-code']);
+        $this->assertEquals(202, $migration['headers']['status-code'], $migration['body']['message'] ?? '');
         $this->assertNotEmpty($migration['body']);
         $this->assertNotEmpty($migration['body']['$id']);
 
@@ -334,6 +337,160 @@ trait MigrationsBase
     }
 
     /**
+     * rebinding.webapp.com passes the host check with a public address, then the API and the
+     * migrations worker connect to it on the docker host, as a host that rebinds after the check
+     * would. Port 9501 is the API's own port on the docker host, so the source would answer.
+     * Each connection a source makes must be checked on the address it reaches.
+     */
+    public function testMigrationSourceRebindingToPrivateAddressIsRefused(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+        $endpoint = 'http://rebinding.webapp.com:9501/v1';
+
+        $report = $this->client->call(Client::METHOD_GET, '/migrations/appwrite/report', $headers, [
+            'resources' => [Resource::TYPE_USER],
+            'endpoint' => $endpoint,
+            'projectID' => $this->getProject()['$id'],
+            'key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertSame(400, $report['headers']['status-code'], 'The report reached a private address: ' . \json_encode($report['body']));
+        $this->assertSame('migration_provider_error', $report['body']['type']);
+
+        $migration = $this->performMigrationExpectingFailure([
+            'resources' => [Resource::TYPE_USER],
+            'endpoint' => $endpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertCount(1, $migration['errors'], \json_encode($migration['errors']));
+        $error = \json_decode($migration['errors'][0], true);
+        $this->assertSame(\CURLE_ABORTED_BY_CALLBACK, $error['code'], 'The worker did not refuse the connection: ' . $migration['errors'][0]);
+        $this->assertSame('Migration failed due to an unexpected error.', $error['message']);
+    }
+
+    /**
+     * private.appwrite.test is a subdomain of this deployment's domain that resolves to a private
+     * address outside the allowed ranges, while the API and the worker reach the API on its fixed
+     * address in the docker network.
+     * This deployment's own hosts may be internal, so the report and the migration both accept it.
+     */
+    public function testMigrationSourceAtPrivateDeploymentHostIsAccepted(): void
+    {
+        $sourceHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $destinationHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+        $endpoint = 'http://private.appwrite.test/v1';
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $sourceHeaders, [
+            'userId' => Id::unique(),
+            'email' => \uniqid() . '-private-deployment-host@test.com',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $ruleId = null;
+
+        try {
+            // Router protection only serves the API on platform hostnames and connected API domains.
+            // A rule left by an interrupted run serves the same purpose, so a duplicate is fine.
+            $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', $sourceHeaders, [
+                'domain' => 'private.appwrite.test',
+            ]);
+            $this->assertContains($rule['headers']['status-code'], [201, 409], \json_encode($rule['body']));
+            $ruleId = $rule['headers']['status-code'] === 201 ? $rule['body']['$id'] : null;
+
+            $report = $this->client->call(Client::METHOD_GET, '/migrations/appwrite/report', $destinationHeaders, [
+                'resources' => [Resource::TYPE_USER],
+                'endpoint' => $endpoint,
+                'projectID' => $this->getProject()['$id'],
+                'key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertSame(200, $report['headers']['status-code'], \json_encode($report['body']));
+            $this->assertGreaterThanOrEqual(1, $report['body'][Resource::TYPE_USER]);
+
+            $migration = $this->performMigrationSync([
+                'resources' => [Resource::TYPE_USER],
+                'endpoint' => $endpoint,
+                'projectId' => $this->getProject()['$id'],
+                'apiKey' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertSame(0, $migration['statusCounters'][Resource::TYPE_USER]['error']);
+
+            $migrated = $this->client->call(Client::METHOD_GET, '/users/' . $userId, $destinationHeaders);
+            $this->assertSame(200, $migrated['headers']['status-code']);
+        } finally {
+            if ($ruleId !== null) {
+                $this->client->call(Client::METHOD_DELETE, '/proxy/rules/' . $ruleId, $sourceHeaders);
+            }
+            $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, $destinationHeaders);
+            $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, $sourceHeaders);
+        }
+    }
+
+    /**
+     * NHost's subdomain and region become labels of the source hostname, and the database
+     * name part of its connection string, so each must keep that shape.
+     */
+    public function testNHostMigrationWithInvalidHostPartsIsRefused(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+        $countMigrations = fn (): int => $this->client->call(Client::METHOD_GET, '/migrations', $headers)['body']['total'];
+        $before = $countMigrations();
+
+        $valid = [
+            'resources' => NHost::getSupportedResources(),
+            'subdomain' => 'abcdefghijklmnopqrst',
+            'region' => 'eu-central-1',
+            'adminSecret' => 'any',
+            'database' => 'abcdefghijklmnopqrst',
+            'username' => 'postgres',
+            'password' => 'any',
+        ];
+
+        $invalid = [
+            ['subdomain', 'example.com'],
+            ['subdomain', 'abc;port=1'],
+            ['subdomain', 'ABC'],
+            ['region', 'eu central'],
+            ['region', 'eu-central-1.example.com'],
+            ['database', 'postgres;host=example.com'],
+            ['database', 'post gres'],
+        ];
+
+        foreach ($invalid as [$param, $value]) {
+            $params = \array_merge($valid, [$param => $value]);
+
+            $response = $this->client->call(Client::METHOD_POST, '/migrations/nhost', $headers, $params);
+            $this->assertSame(400, $response['headers']['status-code'], "create with {$param} {$value}");
+            $this->assertSame('general_argument_invalid', $response['body']['type']);
+            $this->assertStringContainsString($param, $response['body']['message']);
+
+            $response = $this->client->call(Client::METHOD_GET, '/migrations/nhost/report', $headers, $params);
+            $this->assertSame(400, $response['headers']['status-code'], "report with {$param} {$value}");
+            $this->assertSame('general_argument_invalid', $response['body']['type']);
+            $this->assertStringContainsString($param, $response['body']['message']);
+        }
+
+        $this->assertSame($before, $countMigrations());
+    }
+
+    /**
      * A source that accepts the connection and never answers used to hold the migration
      * in `processing` forever. The request must time out and the migration fail with it.
      */
@@ -401,7 +558,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'test@test.com',
             'password' => 'password',
         ]);
@@ -464,7 +621,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'phone' => '+12065550100',
         ]);
 
@@ -525,7 +682,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'test@test.com',
             'password' => 'password',
         ]);
@@ -540,7 +697,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Test Team',
         ]);
 
@@ -670,8 +827,9 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'databaseId' => ID::unique(),
-            'name' => 'Test Database'
+            'databaseId' => Id::unique(),
+            'name' => 'Test Database',
+            'description' => 'Migrated database context'
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -711,6 +869,7 @@ trait MigrationsBase
 
         $this->assertEquals($databaseId, $response['body']['$id']);
         $this->assertEquals('Test Database', $response['body']['name']);
+        $this->assertSame('Migrated database context', $response['body']['description']);
     }
 
     public function testAppwriteMigrationRejectsForeignSourceApiKey(): void
@@ -751,6 +910,173 @@ trait MigrationsBase
         $this->assertDestinationDatabaseMissing($databaseId);
     }
 
+    public function testAppwriteMigrationRejectsTablesDBKeyForDocumentsDB(): void
+    {
+        ['databaseId' => $databaseId] = $this->createSourceDocumentsDBDocument();
+
+        try {
+            $result = $this->performMigrationExpectingFailure([
+                'resources' => [Resource::TYPE_DATABASE_DOCUMENTSDB, Resource::TYPE_COLLECTION, Resource::TYPE_DOCUMENT],
+                'endpoint' => $this->webEndpoint,
+                'projectId' => $this->getProject()['$id'],
+                'apiKey' => $this->getNewKey(['databases.read', 'tables.read', 'rows.read', 'collections.read', 'documents.read']),
+            ]);
+
+            $this->assertStringContainsString(
+                'The source API key cannot read the requested resources of the source project.',
+                implode("\n", $result['errors']),
+            );
+            $this->assertDestinationMissing('/documentsdb/' . $databaseId);
+        } finally {
+            $this->deleteFromBothProjects('/documentsdb/' . $databaseId);
+        }
+    }
+
+    public function testAppwriteMigrationRejectsTablesDBKeyForVectorsDB(): void
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/vectorsdb', $this->getSourceHeaders(), [
+            'databaseId' => Id::unique(),
+            'name' => 'VectorsDB Scope Regression',
+        ]);
+        $this->assertSame(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        try {
+            $result = $this->performMigrationExpectingFailure([
+                'resources' => [Resource::TYPE_DATABASE_VECTORSDB],
+                'endpoint' => $this->webEndpoint,
+                'projectId' => $this->getProject()['$id'],
+                'apiKey' => $this->getNewKey(['databases.read', 'tables.read', 'rows.read', 'collections.read', 'documents.read']),
+            ]);
+
+            $this->assertStringContainsString(
+                'The source API key cannot read the requested resources of the source project.',
+                implode("\n", $result['errors']),
+            );
+            $this->assertDestinationMissing('/vectorsdb/' . $databaseId);
+        } finally {
+            $this->deleteFromBothProjects('/vectorsdb/' . $databaseId);
+        }
+    }
+
+    public function testAppwriteMigrationAcceptsDocumentsDBScopedKey(): void
+    {
+        ['databaseId' => $databaseId, 'collectionId' => $collectionId, 'documentId' => $documentId] = $this->createSourceDocumentsDBDocument();
+
+        try {
+            $result = $this->performMigrationSync([
+                'resources' => [Resource::TYPE_DATABASE_DOCUMENTSDB, Resource::TYPE_COLLECTION, Resource::TYPE_INDEX, Resource::TYPE_DOCUMENT],
+                'endpoint' => $this->webEndpoint,
+                'projectId' => $this->getProject()['$id'],
+                'apiKey' => $this->getNewKey([
+                    'documentsdb.read',
+                    'documentsdb.collections.read',
+                    'documentsdb.indexes.read',
+                    'documentsdb.documents.read',
+                ]),
+            ]);
+
+            $this->assertSame('completed', $result['status']);
+
+            $document = $this->client->call(Client::METHOD_GET, '/documentsdb/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getDestinationProject()['$id'],
+                'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+            ]);
+            $this->assertSame(200, $document['headers']['status-code']);
+            $this->assertSame('scoped', $document['body']['secret']);
+        } finally {
+            $this->deleteFromBothProjects('/documentsdb/' . $databaseId);
+        }
+    }
+
+    public function testAppwriteMigrationRejectsDocumentsDBKeyWithoutIndexScope(): void
+    {
+        ['databaseId' => $databaseId] = $this->createSourceDocumentsDBDocument();
+
+        try {
+            $result = $this->performMigrationExpectingFailure([
+                'resources' => [Resource::TYPE_DATABASE_DOCUMENTSDB, Resource::TYPE_COLLECTION, Resource::TYPE_INDEX],
+                'endpoint' => $this->webEndpoint,
+                'projectId' => $this->getProject()['$id'],
+                'apiKey' => $this->getNewKey(['documentsdb.read', 'documentsdb.collections.read']),
+            ]);
+
+            $this->assertStringContainsString(
+                'The source API key cannot read the requested resources of the source project.',
+                implode("\n", $result['errors']),
+            );
+            $this->assertDestinationMissing('/documentsdb/' . $databaseId);
+        } finally {
+            $this->deleteFromBothProjects('/documentsdb/' . $databaseId);
+        }
+    }
+
+    /**
+     * @return array{databaseId: string, collectionId: string, documentId: string}
+     */
+    private function createSourceDocumentsDBDocument(): array
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/documentsdb', $this->getSourceHeaders(), [
+            'databaseId' => Id::unique(),
+            'name' => 'DocumentsDB Scope Regression',
+        ]);
+        $this->assertSame(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections', $this->getSourceHeaders(), [
+            'collectionId' => Id::unique(),
+            'name' => 'Secrets',
+        ]);
+        $this->assertSame(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $document = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $collectionId . '/documents', $this->getSourceHeaders(), [
+            'documentId' => Id::unique(),
+            'data' => ['secret' => 'scoped'],
+        ]);
+        $this->assertSame(201, $document['headers']['status-code']);
+
+        return [
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
+            'documentId' => $document['body']['$id'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function getSourceHeaders(): array
+    {
+        return [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+    }
+
+    private function assertDestinationMissing(string $path): void
+    {
+        $response = $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertSame(404, $response['headers']['status-code'], 'The source database was copied without a source API key that can read it.');
+    }
+
+    private function deleteFromBothProjects(string $path): void
+    {
+        $this->client->call(Client::METHOD_DELETE, $path, $this->getSourceHeaders());
+        $this->client->call(Client::METHOD_DELETE, $path, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+    }
+
     private function createSourceDatabase(): string
     {
         $response = $this->client->call(Client::METHOD_POST, '/databases', [
@@ -758,7 +1084,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Foreign Key Regression',
         ]);
 
@@ -788,8 +1114,9 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Test Table',
+            'description' => 'Migrated table context',
         ]);
 
         $this->assertEquals(201, $table['headers']['status-code']);
@@ -802,6 +1129,7 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'key' => 'name',
+            'description' => 'Migrated column context',
             'size' => 100,
             'encrypt' => false,
             'required' => true
@@ -820,11 +1148,30 @@ trait MigrationsBase
             $this->assertEquals('available', $response['body']['status']);
         }, 5000, 500);
 
+        $sourceHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $indexPath = '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/indexes/name_index';
+        $index = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/indexes', $sourceHeaders, [
+            'key' => 'name_index',
+            'type' => 'key',
+            'columns' => ['name'],
+            'description' => 'Migrated index context',
+        ]);
+        $this->assertSame(202, $index['headers']['status-code']);
+        $this->assertEventually(function () use ($indexPath, $sourceHeaders) {
+            $index = $this->client->call(Client::METHOD_GET, $indexPath, $sourceHeaders);
+            $this->assertSame('available', $index['body']['status']);
+        }, 5000, 500);
+
         $result = $this->performMigrationSync([
             'resources' => [
                 Resource::TYPE_DATABASE,
                 Resource::TYPE_TABLE,
                 Resource::TYPE_COLUMN,
+                Resource::TYPE_INDEX,
             ],
             'endpoint' => $this->webEndpoint,
             'projectId' => $this->getProject()['$id'],
@@ -832,9 +1179,9 @@ trait MigrationsBase
         ]);
 
         $this->assertEquals('completed', $result['status']);
-        $this->assertEquals([Resource::TYPE_DATABASE, Resource::TYPE_TABLE, Resource::TYPE_COLUMN], $result['resources']);
+        $this->assertEquals([Resource::TYPE_DATABASE, Resource::TYPE_TABLE, Resource::TYPE_COLUMN, Resource::TYPE_INDEX], $result['resources']);
 
-        foreach ([Resource::TYPE_DATABASE, Resource::TYPE_TABLE, Resource::TYPE_COLUMN] as $resource) {
+        foreach ([Resource::TYPE_DATABASE, Resource::TYPE_TABLE, Resource::TYPE_COLUMN, Resource::TYPE_INDEX] as $resource) {
             $this->assertArrayHasKey($resource, $result['statusCounters']);
             $this->assertEquals(0, $result['statusCounters'][$resource]['error']);
             $this->assertEquals(0, $result['statusCounters'][$resource]['pending']);
@@ -867,6 +1214,19 @@ trait MigrationsBase
         $this->assertEquals('name', $response['body']['key']);
         $this->assertEquals(100, $response['body']['size']);
         $this->assertEquals(true, $response['body']['required']);
+        $this->assertSame('Migrated column context', $response['body']['description']);
+        $tableAfter = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId, [
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+        $this->assertSame(200, $tableAfter['headers']['status-code']);
+        $this->assertSame('Migrated table context', $tableAfter['body']['description']);
+        $indexAfter = $this->client->call(Client::METHOD_GET, $indexPath, [
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+        $this->assertSame(200, $indexAfter['headers']['status-code']);
+        $this->assertSame('Migrated index context', $indexAfter['body']['description']);
     }
 
     public function testAppwriteMigrationDatabasesRow(): void
@@ -880,7 +1240,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => [
                 'name' => 'Test Row',
             ]
@@ -949,7 +1309,7 @@ trait MigrationsBase
         $tableId = $data['tableId'];
 
         $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', $sourceHeaders, [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => ['name' => 'Original'],
         ]);
         $this->assertEquals(201, $row['headers']['status-code']);
@@ -1292,7 +1652,7 @@ trait MigrationsBase
         // Seed a row on source so per-table orphan cleanup fires inside
         // createRecord (before rows land), not just at end of run.
         $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', $sourceHeaders, [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => ['name' => 'seed'],
         ]);
 
@@ -1367,7 +1727,7 @@ trait MigrationsBase
         }, 5000, 500);
 
         $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', $sourceHeaders, [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => ['name' => 'seed'],
         ]);
 
@@ -1571,7 +1931,7 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ];
 
-        $databaseId = ID::unique();
+        $databaseId = Id::unique();
         $this->trackDatabase($databaseId);
         $createDb = $this->client->call(Client::METHOD_POST, '/databases', $sourceHeaders, [
             'databaseId' => $databaseId,
@@ -1590,11 +1950,11 @@ trait MigrationsBase
         // Two-way: parents.kids ↔ children.parent. Required to hit the in-place path.
         $createRel = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/parents/columns/relationship', $sourceHeaders, [
             'relatedTableId' => 'children',
-            'type' => Database::RELATION_ONE_TO_MANY,
+            'type' => RelationshipType::OneToMany->value,
             'twoWay' => true,
             'key' => 'kids',
             'twoWayKey' => 'parent',
-            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+            'onDelete' => RelationshipDeleteAction::Cascade->value,
         ]);
         $this->assertEquals(202, $createRel['headers']['status-code']);
 
@@ -1602,7 +1962,7 @@ trait MigrationsBase
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $sourceHeaders);
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $r['body']['onDelete']);
+            $this->assertSame(RelationshipDeleteAction::Cascade->value, $r['body']['onDelete']);
         }, 10000, 500);
 
         $resources = [
@@ -1624,19 +1984,19 @@ trait MigrationsBase
             $parent = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $destHeaders);
             $this->assertEquals(200, $parent['headers']['status-code']);
             $this->assertEquals('available', $parent['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $parent['body']['onDelete']);
+            $this->assertSame(RelationshipDeleteAction::Cascade->value, $parent['body']['onDelete']);
 
             $child = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/children/columns/parent', $destHeaders);
             $this->assertEquals(200, $child['headers']['status-code']);
             $this->assertEquals('available', $child['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $child['body']['onDelete']);
+            $this->assertSame(RelationshipDeleteAction::Cascade->value, $child['body']['onDelete']);
         }, 10000, 500);
 
         sleep(1);
 
         // Legacy alias of PATCH /columns/relationship/:key, kept for shipped SDKs.
         $patch = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids/relationship', $sourceHeaders, [
-            'onDelete' => Database::RELATION_MUTATE_RESTRICT,
+            'onDelete' => RelationshipDeleteAction::Restrict->value,
         ]);
         $this->assertEquals(200, $patch['headers']['status-code']);
 
@@ -1644,7 +2004,7 @@ trait MigrationsBase
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $sourceHeaders);
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_RESTRICT, $r['body']['onDelete']);
+            $this->assertSame(RelationshipDeleteAction::Restrict->value, $r['body']['onDelete']);
         }, 5000, 500);
 
         $overwriteResult = $this->performMigrationSync([
@@ -1663,14 +2023,14 @@ trait MigrationsBase
             $parent = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $destHeaders);
             $this->assertEquals(200, $parent['headers']['status-code']);
             $this->assertEquals('available', $parent['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_RESTRICT, $parent['body']['onDelete'], 'parent-side onDelete must reflect source');
-            $this->assertEquals(Database::RELATION_ONE_TO_MANY, $parent['body']['relationType'], 'In-place update must not change relationType');
+            $this->assertSame(RelationshipDeleteAction::Restrict->value, $parent['body']['onDelete'], 'parent-side onDelete must reflect source');
+            $this->assertSame(RelationshipType::OneToMany->value, $parent['body']['relationType'], 'In-place update must not change relationType');
             $this->assertTrue($parent['body']['twoWay'], 'In-place update must not change twoWay');
 
             $child = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/children/columns/parent', $destHeaders);
             $this->assertEquals(200, $child['headers']['status-code']);
             $this->assertEquals('available', $child['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_RESTRICT, $child['body']['onDelete'], 'partner-side onDelete must reflect source after in-place update');
+            $this->assertSame(RelationshipDeleteAction::Restrict->value, $child['body']['onDelete'], 'partner-side onDelete must reflect source after in-place update');
         }, 10000, 500);
     }
 
@@ -1688,7 +2048,7 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ];
 
-        $databaseId = ID::unique();
+        $databaseId = Id::unique();
         $this->trackDatabase($databaseId);
         $createDb = $this->client->call(Client::METHOD_POST, '/databases', $sourceHeaders, [
             'databaseId' => $databaseId,
@@ -1728,11 +2088,11 @@ trait MigrationsBase
 
         $createRel = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/parents/columns/relationship', $sourceHeaders, [
             'relatedTableId' => 'children',
-            'type' => Database::RELATION_ONE_TO_MANY,
+            'type' => RelationshipType::OneToMany->value,
             'twoWay' => true,
             'key' => 'kids',
             'twoWayKey' => 'parent',
-            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+            'onDelete' => RelationshipDeleteAction::Cascade->value,
         ]);
         $this->assertEquals(202, $createRel['headers']['status-code']);
 
@@ -1783,11 +2143,11 @@ trait MigrationsBase
         sleep(1);
         $recreate = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/parents/columns/relationship', $sourceHeaders, [
             'relatedTableId' => 'children',
-            'type' => Database::RELATION_ONE_TO_MANY,
+            'type' => RelationshipType::OneToMany->value,
             'twoWay' => true,
             'key' => 'kids',
             'twoWayKey' => 'parent',
-            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+            'onDelete' => RelationshipDeleteAction::Cascade->value,
         ]);
         $this->assertEquals(202, $recreate['headers']['status-code']);
 
@@ -1844,7 +2204,7 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ];
 
-        $databaseId = ID::unique();
+        $databaseId = Id::unique();
         $this->trackDatabase($databaseId);
         $createDb = $this->client->call(Client::METHOD_POST, '/databases', $sourceHeaders, [
             'databaseId' => $databaseId,
@@ -1862,10 +2222,10 @@ trait MigrationsBase
 
         $createRel = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/parents/columns/relationship', $sourceHeaders, [
             'relatedTableId' => 'children',
-            'type' => Database::RELATION_ONE_TO_MANY,
+            'type' => RelationshipType::OneToMany->value,
             'twoWay' => false,
             'key' => 'kids',
-            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+            'onDelete' => RelationshipDeleteAction::Cascade->value,
         ]);
         $this->assertEquals(202, $createRel['headers']['status-code']);
 
@@ -1893,20 +2253,20 @@ trait MigrationsBase
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $destHeaders);
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $r['body']['onDelete']);
+            $this->assertSame(RelationshipDeleteAction::Cascade->value, $r['body']['onDelete']);
         }, 10000, 500);
 
         sleep(1);
 
         $patch = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids/relationship', $sourceHeaders, [
-            'onDelete' => Database::RELATION_MUTATE_RESTRICT,
+            'onDelete' => RelationshipDeleteAction::Restrict->value,
         ]);
         $this->assertEquals(200, $patch['headers']['status-code']);
 
         $this->assertEventually(function () use ($databaseId, $sourceHeaders) {
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $sourceHeaders);
             $this->assertEquals('available', $r['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_RESTRICT, $r['body']['onDelete']);
+            $this->assertSame(RelationshipDeleteAction::Restrict->value, $r['body']['onDelete']);
         }, 5000, 500);
 
         $overwriteResult = $this->performMigrationSync([
@@ -1922,8 +2282,8 @@ trait MigrationsBase
             $r = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/parents/columns/kids', $destHeaders);
             $this->assertEquals(200, $r['headers']['status-code']);
             $this->assertEquals('available', $r['body']['status']);
-            $this->assertEquals(Database::RELATION_MUTATE_RESTRICT, $r['body']['onDelete'], 'one-way DropAndRecreate must propagate source onDelete');
-            $this->assertEquals(Database::RELATION_ONE_TO_MANY, $r['body']['relationType'], 'DropAndRecreate must preserve relationType');
+            $this->assertSame(RelationshipDeleteAction::Restrict->value, $r['body']['onDelete'], 'one-way DropAndRecreate must propagate source onDelete');
+            $this->assertSame(RelationshipType::OneToMany->value, $r['body']['relationType'], 'DropAndRecreate must preserve relationType');
             $this->assertFalse($r['body']['twoWay'], 'DropAndRecreate must preserve twoWay=false');
         }, 10000, 500);
     }
@@ -2134,8 +2494,10 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket',
+            'description' => 'Preserve photo privacy defaults',
+            'stripMetadata' => true,
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -2185,6 +2547,8 @@ trait MigrationsBase
 
         $this->assertEquals($bucket['body']['$id'], $response['body']['$id']);
         $this->assertEquals($bucket['body']['name'], $response['body']['name']);
+        $this->assertSame('Preserve photo privacy defaults', $response['body']['description']);
+        $this->assertTrue($response['body']['stripMetadata']);
         $this->assertEquals($bucket['body']['$permissions'], $response['body']['$permissions']);
         $this->assertEquals($bucket['body']['maximumFileSize'], $response['body']['maximumFileSize']);
         $this->assertEquals($bucket['body']['allowedFileExtensions'], $response['body']['allowedFileExtensions']);
@@ -2213,7 +2577,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'maximumFileSize' => 2000000, //2MB
@@ -2235,7 +2599,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'folder' => 'albums/2026',
             'permissions' => [
@@ -2312,7 +2676,7 @@ trait MigrationsBase
     public function testAppwriteMigrationFunction(): void
     {
         $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Test',
             'runtime' => 'node-22',
             'execute' => [Role::users()->toString()],
@@ -2510,8 +2874,9 @@ trait MigrationsBase
         ];
 
         $function = $this->client->call(Client::METHOD_POST, '/functions', $sourceHeaders, [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Hourly sync',
+            'description' => 'Migrated function context',
             'runtime' => 'node-22',
             'interval' => 60,
             'deploymentRetention' => 7,
@@ -2520,7 +2885,7 @@ trait MigrationsBase
         $functionId = $function['body']['$id'];
 
         $site = $this->client->call(Client::METHOD_POST, '/sites', $sourceHeaders, [
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Storefront',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -2530,8 +2895,9 @@ trait MigrationsBase
 
         foreach ([['API_TOKEN', 'token', true], ['REGION', 'eu', false]] as [$key, $value, $secret]) {
             $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', $sourceHeaders, [
-                'variableId' => ID::unique(),
+                'variableId' => Id::unique(),
                 'key' => $key,
+                'description' => 'Function variable context',
                 'value' => $value,
                 'secret' => $secret,
             ]);
@@ -2539,8 +2905,9 @@ trait MigrationsBase
         }
 
         $variable = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/variables', $sourceHeaders, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'STRIPE_KEY',
+            'description' => 'Site variable context',
             'value' => 'sk_test',
             'secret' => true,
         ]);
@@ -2568,12 +2935,14 @@ trait MigrationsBase
 
         $this->assertSame(200, $function['headers']['status-code']);
         $this->assertSame(60, $function['body']['interval']);
+        $this->assertSame('Migrated function context', $function['body']['description']);
         $this->assertSame('', $function['body']['schedule']);
         $this->assertSame(7, $function['body']['deploymentRetention']);
 
         $functionVariables = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/variables', $destinationHeaders);
 
         $this->assertSame(200, $functionVariables['headers']['status-code']);
+        $this->assertSame(['Function variable context'], \array_values(\array_unique(\array_column($functionVariables['body']['variables'], 'description'))));
         $secrets = \array_column($functionVariables['body']['variables'], 'secret', 'key');
         \ksort($secrets);
         $this->assertSame(['API_TOKEN' => true, 'REGION' => false], $secrets, 'The function must not take the site\'s variable.');
@@ -2581,6 +2950,7 @@ trait MigrationsBase
         $siteVariables = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/variables', $destinationHeaders);
 
         $this->assertSame(200, $siteVariables['headers']['status-code']);
+        $this->assertSame(['Site variable context'], \array_column($siteVariables['body']['variables'], 'description'));
         $this->assertSame(['STRIPE_KEY' => true], \array_column($siteVariables['body']['variables'], 'secret', 'key'));
 
         $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, $destinationHeaders);
@@ -2597,8 +2967,9 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test Site',
+            'description' => 'Migrated site context',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
             'adapter' => 'static',
@@ -2689,6 +3060,7 @@ trait MigrationsBase
         $this->assertNotEmpty($response['body']);
         $this->assertEquals($siteId, $response['body']['$id']);
         $this->assertEquals('Test Site', $response['body']['name']);
+        $this->assertSame('Migrated site context', $response['body']['description']);
         $this->assertEquals('node-22', $response['body']['buildRuntime']);
         $this->assertEquals('other', $response['body']['framework']);
         $this->assertEquals('static', $response['body']['adapter']);
@@ -2774,7 +3146,7 @@ trait MigrationsBase
 
         // Create platform on source project
         $response = $this->client->call(Client::METHOD_POST, '/project/platforms/web', $sourceHeaders, [
-            'platformId' => ID::unique(),
+            'platformId' => Id::unique(),
             'name' => 'Test Platform',
             'hostname' => 'localhost',
         ]);
@@ -2851,8 +3223,9 @@ trait MigrationsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'Test API Key',
+            'description' => 'Migrated key context',
             'scopes' => ['databases.read', 'databases.write'],
             'expire' => null,
         ]);
@@ -2900,6 +3273,7 @@ trait MigrationsBase
 
         $this->assertNotNull($foundKey);
         $this->assertEquals('Test API Key', $foundKey['name']);
+        $this->assertSame('Migrated key context', $foundKey['description']);
         $this->assertEqualsCanonicalizing(['databases.read', 'databases.write'], $foundKey['scopes']);
         $this->assertEmpty($foundKey['expire']);
         $this->assertNotEquals($apiKey['secret'], $foundKey['secret']);
@@ -2934,12 +3308,13 @@ trait MigrationsBase
 
         // Unique name so re-runs and parallel suites can't match the wrong webhook
         // on the destination list.
-        $webhookName = 'Test Webhook ' . ID::unique();
+        $webhookName = 'Test Webhook ' . Id::unique();
 
         $createResp = $this->client->call(Client::METHOD_POST, '/webhooks', $sourceHeaders, [
-            'webhookId' => ID::unique(),
+            'webhookId' => Id::unique(),
             'url' => 'https://appwrite.io/hook',
             'name' => $webhookName,
+            'description' => 'Migrated webhook context',
             'events' => ['users.*.create', 'users.*.delete'],
             'enabled' => true,
             'tls' => true,
@@ -2980,6 +3355,7 @@ trait MigrationsBase
 
         $this->assertNotNull($foundWebhook, 'Migrated webhook not found on destination');
         $this->assertEquals($webhookName, $foundWebhook['name']);
+        $this->assertSame('Migrated webhook context', $foundWebhook['description']);
         $this->assertEquals('https://appwrite.io/hook', $foundWebhook['url']);
         $this->assertEqualsCanonicalizing(['users.*.create', 'users.*.delete'], $foundWebhook['events']);
         $this->assertTrue($foundWebhook['enabled']);
@@ -3045,13 +3421,14 @@ trait MigrationsBase
 
         // Source-side variable IDs and keys are uniquified so re-runs and parallel suites
         // can't trip the source-side findOne('variables', [key=...]) skip path.
-        $plainKey = 'TEST_PLAIN_' . \strtoupper(ID::unique());
-        $secretKey = 'TEST_SECRET_' . \strtoupper(ID::unique());
+        $plainKey = 'TEST_PLAIN_' . \strtoupper(Id::unique());
+        $secretKey = 'TEST_SECRET_' . \strtoupper(Id::unique());
 
         // Non-secret variable: value should round-trip exactly.
         $plainResp = $this->client->call(Client::METHOD_POST, '/project/variables', $sourceHeaders, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => $plainKey,
+            'description' => 'Migrated plain variable context',
             'value' => 'plain-value',
             'secret' => false,
         ]);
@@ -3061,8 +3438,9 @@ trait MigrationsBase
         // Secret variable: SDK strips `value` on subsequent reads, so the migration
         // source sees empty and the destination writes empty. Test asserts that.
         $secretResp = $this->client->call(Client::METHOD_POST, '/project/variables', $sourceHeaders, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => $secretKey,
+            'description' => 'Migrated secret variable context',
             'value' => 'real-secret-value',
             'secret' => true,
         ]);
@@ -3101,11 +3479,13 @@ trait MigrationsBase
 
         $this->assertNotNull($foundPlain, 'Plain variable not found on destination');
         $this->assertEquals($plainKey, $foundPlain['key']);
+        $this->assertSame('Migrated plain variable context', $foundPlain['description']);
         $this->assertEquals('plain-value', $foundPlain['value']);
         $this->assertFalse($foundPlain['secret']);
 
         $this->assertNotNull($foundSecret, 'Secret variable not found on destination');
         $this->assertEquals($secretKey, $foundSecret['key']);
+        $this->assertSame('Migrated secret variable context', $foundSecret['description']);
         // Secret variables: source SDK never returned the real value, so the destination
         // also stores empty. The original 'real-secret-value' must not have leaked.
         $this->assertEmpty($foundSecret['value']);
@@ -3255,7 +3635,7 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ];
 
-        $labels = ['vip' . \substr(ID::unique(), 0, 8), 'beta' . \substr(ID::unique(), 0, 8)];
+        $labels = ['vip' . \substr(Id::unique(), 0, 8), 'beta' . \substr(Id::unique(), 0, 8)];
 
         // Set labels on source. The labels endpoint is PUT /project/labels — the
         // generic project update endpoint doesn't accept a labels param.
@@ -3631,7 +4011,7 @@ trait MigrationsBase
 
         $templateId = 'verification';
         $locale = 'en';
-        $subject = 'Verify your account ' . ID::unique();
+        $subject = 'Verify your account ' . Id::unique();
         $message = '<p>Hello {{user}}, verify your account at {{redirect}}</p>';
 
         $update = $this->client->call(
@@ -3713,7 +4093,7 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ];
 
-        $clientId = 'gh-client-' . ID::unique();
+        $clientId = 'gh-client-' . Id::unique();
         $configure = $this->client->call(Client::METHOD_PATCH, '/project/oauth2/github', $sourceKeyHeaders, [
             'clientId' => $clientId,
             'clientSecret' => 'gh-secret-not-migrated',
@@ -3723,7 +4103,7 @@ trait MigrationsBase
         $this->assertSame($clientId, $configure['body']['clientId']);
 
         $keycloak = $this->client->call(Client::METHOD_PATCH, '/project/oauth2/keycloak', $sourceKeyHeaders, [
-            'clientId' => 'keycloak-client-' . ID::unique(),
+            'clientId' => 'keycloak-client-' . Id::unique(),
             'clientSecret' => 'keycloak-secret-not-migrated',
             'endpoint' => 'keycloak.example.com',
             'realmName' => 'appwrite',
@@ -3732,7 +4112,7 @@ trait MigrationsBase
         $this->assertEquals(200, $keycloak['headers']['status-code']);
 
         $oidc = $this->client->call(Client::METHOD_PATCH, '/project/oauth2/oidc', $sourceKeyHeaders, [
-            'clientId' => 'oidc-client-' . ID::unique(),
+            'clientId' => 'oidc-client-' . Id::unique(),
             'clientSecret' => 'oidc-secret-not-migrated',
             'wellKnownURL' => 'https://idp.example.com/.well-known/openid-configuration',
             'authorizationURL' => 'https://idp.example.com/oauth2/authorize',
@@ -3743,7 +4123,7 @@ trait MigrationsBase
         $this->assertEquals(200, $oidc['headers']['status-code']);
 
         $okta = $this->client->call(Client::METHOD_PATCH, '/project/oauth2/okta', $sourceKeyHeaders, [
-            'clientId' => 'okta-client-' . ID::unique(),
+            'clientId' => 'okta-client-' . Id::unique(),
             'clientSecret' => 'okta-secret-not-migrated',
             'domain' => 'trial-6400025.okta.com',
             'authorizationServerId' => 'aus000000000000000h7z',
@@ -3852,7 +4232,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Test Database'
         ]);
 
@@ -3869,7 +4249,7 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Test table',
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -3930,7 +4310,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket',
             'maximumFileSize' => 2000000, //2MB
             'allowedFileExtensions' => ['csv'],
@@ -3971,7 +4351,7 @@ trait MigrationsBase
                 'content-type' => 'multipart/form-data',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
-                'fileId' => ID::unique(),
+                'fileId' => Id::unique(),
                 'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/csv/'.$csvFileName), $mimeType, $csvFileName),
             ]);
 
@@ -4236,7 +4616,7 @@ trait MigrationsBase
 
         // database
         $response = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Test DB ' . $testLabel,
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -4245,7 +4625,7 @@ trait MigrationsBase
         // table
         $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $headers, [
             'name' => 'Test table ' . $testLabel,
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
         $tableId = $response['body']['$id'];
@@ -4278,7 +4658,7 @@ trait MigrationsBase
 
         // bucket
         $response = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Bucket ' . $testLabel,
             'maximumFileSize' => 2000000,
             'allowedFileExtensions' => ['csv'],
@@ -4291,7 +4671,7 @@ trait MigrationsBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/csv/documents.csv'), 'text/csv', 'documents.csv'),
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -4505,7 +4885,7 @@ trait MigrationsBase
 
         // database
         $response = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Test JSON DB ' . $testLabel,
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -4514,7 +4894,7 @@ trait MigrationsBase
         // table
         $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', $headers, [
             'name' => 'Test JSON table ' . $testLabel,
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
         $tableId = $response['body']['$id'];
@@ -4545,7 +4925,7 @@ trait MigrationsBase
 
         // bucket
         $response = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'JSON Bucket ' . $testLabel,
             'maximumFileSize' => 2000000,
             'allowedFileExtensions' => ['json'],
@@ -4558,7 +4938,7 @@ trait MigrationsBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/json/documents.json'), 'application/json', 'documents.json'),
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -4736,6 +5116,54 @@ trait MigrationsBase
     }
 
     /**
+     * A refused import creates no migration, so a copy it left in the imports
+     * directory would never be read or removed.
+     */
+    public function testRefusedImportLeavesNoCopy(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            'bucketId' => Id::unique(),
+            'name' => 'Refused imports',
+            'allowedFileExtensions' => ['csv', 'json'],
+        ]);
+        $this->assertSame(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $files = [
+            'csv' => new CURLFile(realpath(__DIR__ . '/../../../resources/csv/documents.csv'), 'text/csv', 'documents.csv'),
+            'json' => new CURLFile(realpath(__DIR__ . '/../../../resources/json/documents.json'), 'application/json', 'documents.json'),
+        ];
+
+        foreach ($files as $format => $upload) {
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge($headers, [
+                'content-type' => 'multipart/form-data',
+            ]), [
+                'fileId' => Id::unique(),
+                'file' => $upload,
+            ]);
+            $this->assertSame(201, $file['headers']['status-code']);
+            $fileId = $file['body']['$id'];
+
+            $import = $this->client->call(Client::METHOD_POST, '/migrations/' . $format . '/imports', $headers, [
+                'bucketId' => $bucketId,
+                'fileId' => $fileId,
+                'databaseId' => 'missing',
+                'collectionId' => 'missing',
+            ]);
+            $this->assertSame(404, $import['headers']['status-code'], $format);
+
+            $copies = \glob(APP_STORAGE_IMPORTS . '/app-' . $this->getProject()['$id'] . '/*_' . $fileId . '.' . $format);
+            $this->assertSame([], $copies, $format . ' import refused, but its copy is still on disk');
+        }
+    }
+
+    /**
      * Test CSV export with email notification
      */
     public function testCreateCSVExport(): void
@@ -4746,7 +5174,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Test Export Database'
         ]);
 
@@ -4759,7 +5187,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Test Export Collection',
             'permissions' => []
         ]);
@@ -4871,7 +5299,7 @@ trait MigrationsBase
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ], [
-                'documentId' => ID::unique(),
+                'documentId' => Id::unique(),
                 'data' => [
                     'name' => 'Test User ' . $i,
                     'email' => 'user' . $i . '@appwrite.io',
@@ -4989,7 +5417,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Migration Sendgrid',
             'apiKey' => 'my-apikey',
             'from' => 'migration@test.com',
@@ -5050,7 +5478,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Migration SMTP',
             'host' => 'smtp.test.com',
             'port' => 587,
@@ -5107,7 +5535,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Migration Twilio',
             'from' => '+15551234567',
             'accountSid' => 'test-account-sid',
@@ -5164,7 +5592,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Migration Sendgrid Topic',
             'apiKey' => 'my-apikey',
             'from' => 'migration-topic@test.com',
@@ -5178,8 +5606,9 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'topicId' => ID::unique(),
+            'topicId' => Id::unique(),
             'name' => 'Migration Topic',
+            'description' => 'Migrated topic context',
         ]);
 
         $this->assertEquals(201, $topic['headers']['status-code']);
@@ -5214,6 +5643,7 @@ trait MigrationsBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($topicId, $response['body']['$id']);
         $this->assertEquals('Migration Topic', $response['body']['name']);
+        $this->assertSame('Migrated topic context', $response['body']['description']);
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' . $topicId, [
@@ -5248,7 +5678,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . '-migration-sub@test.com',
             'password' => 'password',
         ]);
@@ -5263,7 +5693,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Migration Sendgrid Subscriber',
             'apiKey' => 'my-apikey',
             'from' => uniqid() . '-migration-sub@test.com',
@@ -5277,7 +5707,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'topicId' => ID::unique(),
+            'topicId' => Id::unique(),
             'name' => 'Migration Subscriber Topic',
         ]);
 
@@ -5289,7 +5719,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'subscriberId' => ID::unique(),
+            'subscriberId' => Id::unique(),
             'targetId' => $targetId,
         ]);
 
@@ -5372,7 +5802,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . '-migration-msg@test.com',
             'password' => 'password',
         ]);
@@ -5387,7 +5817,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Migration Sendgrid Message',
             'apiKey' => 'my-apikey',
             'from' => 'migration-msg@test.com',
@@ -5401,7 +5831,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'topicId' => ID::unique(),
+            'topicId' => Id::unique(),
             'name' => 'Migration Message Topic',
         ]);
 
@@ -5413,7 +5843,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'targets' => [$targetId],
             'topics' => [$topicId],
             'subject' => 'Migration Test Email',
@@ -5519,7 +5949,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . '-migration-sms@test.com',
             'phone' => '+1' . str_pad((string) rand(200000000, 999999999), 10, '0', STR_PAD_LEFT),
             'password' => 'password',
@@ -5544,7 +5974,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Migration Twilio SMS Msg',
             'from' => '+15559876543',
             'accountSid' => 'test-account-sid',
@@ -5559,7 +5989,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'topicId' => ID::unique(),
+            'topicId' => Id::unique(),
             'name' => 'Migration SMS Topic',
         ]);
 
@@ -5571,7 +6001,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'targets' => [$targetId],
             'topics' => [$topicId],
             'content' => 'Migration SMS test content',
@@ -5669,7 +6099,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . '-migration-sched@test.com',
             'password' => 'password',
         ]);
@@ -5683,7 +6113,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Migration Sendgrid Scheduled',
             'apiKey' => 'my-apikey',
             'from' => 'migration-sched@test.com',
@@ -5697,7 +6127,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'topicId' => ID::unique(),
+            'topicId' => Id::unique(),
             'name' => 'Migration Scheduled Topic',
         ]);
 
@@ -5709,7 +6139,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'subscriberId' => ID::unique(),
+            'subscriberId' => Id::unique(),
             'targetId' => $targetId,
         ]);
 
@@ -5723,7 +6153,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'topics' => [$topicId],
             'subject' => 'Migration Scheduled Email',
             'content' => 'This is a scheduled migration test email',
@@ -5832,7 +6262,7 @@ trait MigrationsBase
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ], [
-                'databaseId' => ID::unique(),
+                'databaseId' => Id::unique(),
                 'name' => 'Vector CSV Import DB'
             ]);
 
@@ -5844,7 +6274,7 @@ trait MigrationsBase
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ], [
-                'collectionId' => ID::unique(),
+                'collectionId' => Id::unique(),
                 'name' => 'Vector CSV Import Collection',
                 'dimension' => 3,
                 'documentSecurity' => true,
@@ -5858,7 +6288,7 @@ trait MigrationsBase
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ], [
-                'bucketId' => ID::unique(),
+                'bucketId' => Id::unique(),
                 'name' => 'Vector CSV Bucket',
                 'maximumFileSize' => 2000000,
                 'allowedFileExtensions' => ['csv'],
@@ -5872,7 +6302,7 @@ trait MigrationsBase
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ], [
-                'fileId' => ID::unique(),
+                'fileId' => Id::unique(),
                 'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/csv/vectorsdb-documents.csv'), 'text/csv', 'vectorsdb-documents.csv'),
             ]);
 
@@ -5955,7 +6385,7 @@ trait MigrationsBase
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ], [
-                'databaseId' => ID::unique(),
+                'databaseId' => Id::unique(),
                 'name' => 'Vector CSV Export DB',
             ]);
 
@@ -5969,7 +6399,7 @@ trait MigrationsBase
                     'x-appwrite-project' => $this->getProject()['$id'],
                     'x-appwrite-key' => $this->getProject()['apiKey'],
                 ], [
-                    'collectionId' => ID::unique(),
+                    'collectionId' => Id::unique(),
                     'name' => 'Vector CSV Export Collection',
                     'dimension' => 3,
                     'documentSecurity' => true,
@@ -5981,14 +6411,14 @@ trait MigrationsBase
 
             $documentsPayload = [
                 [
-                    'documentId' => ID::unique(),
+                    'documentId' => Id::unique(),
                     'data' => [
                         'embeddings' => [0.11, 0.22, 0.33],
                         'metadata' => ['title' => 'Vector Sample One', 'category' => 'alpha'],
                     ],
                 ],
                 [
-                    'documentId' => ID::unique(),
+                    'documentId' => Id::unique(),
                     'data' => [
                         'embeddings' => [0.44, 0.55, 0.66],
                         'metadata' => ['title' => 'Vector Sample Two', 'category' => 'beta'],
@@ -6006,7 +6436,7 @@ trait MigrationsBase
                 $this->assertEquals(201, $response['headers']['status-code']);
             }
 
-            $filename = 'vectorsdb-export-' . ID::unique();
+            $filename = 'vectorsdb-export-' . Id::unique();
             $migration = $this->client->call(Client::METHOD_POST, '/migrations/csv/exports', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -6085,7 +6515,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'DocsDB - Migration DB'
         ]);
 
@@ -6147,7 +6577,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'VDB - Migration DB'
         ]);
 
@@ -6205,7 +6635,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'VDB - Movies',
             'dimension' => 3,
         ]);
@@ -6264,7 +6694,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'embeddings' => [1.0, 0.0, 0.0],
                 'metadata' => ['title' => 'Migration Test Movie'],
@@ -6337,7 +6767,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'DocsDB - Movies',
         ]);
 
@@ -6399,7 +6829,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'title' => 'Migration Test Movie',
                 'releaseYear' => 1999,
@@ -6471,7 +6901,7 @@ trait MigrationsBase
             'x-appwrite-project' => $sourceProject['$id'],
             'x-appwrite-key' => $sourceProject['apiKey'],
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Mixed SQL DB',
         ]);
 
@@ -6485,7 +6915,7 @@ trait MigrationsBase
             'x-appwrite-project' => $sourceProject['$id'],
             'x-appwrite-key' => $sourceProject['apiKey'],
         ], [
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Products',
         ]);
 
@@ -6525,7 +6955,7 @@ trait MigrationsBase
             'x-appwrite-key' => $sourceProject['apiKey'],
         ], [
             'key' => $sqlIndexKey,
-            'type' => Database::INDEX_UNIQUE,
+            'type' => IndexType::Unique->value,
             'columns' => ['productName'],
         ]);
 
@@ -6548,7 +6978,7 @@ trait MigrationsBase
             'x-appwrite-project' => $sourceProject['$id'],
             'x-appwrite-key' => $sourceProject['apiKey'],
         ], [
-            'rowId' => ID::unique(),
+            'rowId' => Id::unique(),
             'data' => [
                 'productName' => 'Laptop',
             ],
@@ -6563,7 +6993,7 @@ trait MigrationsBase
             'x-appwrite-project' => $sourceProject['$id'],
             'x-appwrite-key' => $sourceProject['apiKey'],
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Mixed DocsDB',
         ]);
 
@@ -6577,7 +7007,7 @@ trait MigrationsBase
             'x-appwrite-project' => $sourceProject['$id'],
             'x-appwrite-key' => $sourceProject['apiKey'],
         ], [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Users',
         ]);
 
@@ -6592,7 +7022,7 @@ trait MigrationsBase
             'x-appwrite-key' => $sourceProject['apiKey'],
         ], [
             'key' => $documentsIndexKey,
-            'type' => Database::INDEX_UNIQUE,
+            'type' => IndexType::Unique->value,
             'attributes' => ['email'],
         ]);
 
@@ -6615,7 +7045,7 @@ trait MigrationsBase
             'x-appwrite-project' => $sourceProject['$id'],
             'x-appwrite-key' => $sourceProject['apiKey'],
         ], [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'name' => 'John Doe',
                 'email' => 'john@example.com',
@@ -6631,7 +7061,7 @@ trait MigrationsBase
             'x-appwrite-project' => $sourceProject['$id'],
             'x-appwrite-key' => $sourceProject['apiKey'],
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Mixed VectorsDB',
         ]);
 
@@ -6645,7 +7075,7 @@ trait MigrationsBase
             'x-appwrite-project' => $sourceProject['$id'],
             'x-appwrite-key' => $sourceProject['apiKey'],
         ], [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Products',
             'dimension' => 3,
         ]);
@@ -6692,7 +7122,7 @@ trait MigrationsBase
             }
         }
         $this->assertNotNull($metadataIndex, 'Default metadata index should exist on source collection');
-        $this->assertEquals(Database::INDEX_OBJECT, $metadataIndex['type']);
+        $this->assertEquals(IndexType::Object->value, $metadataIndex['type']);
 
         $vectorEmbeddingIndexKey = 'embedding_euclidean';
         $vectorEmbeddingIndex = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/indexes', [
@@ -6701,7 +7131,7 @@ trait MigrationsBase
             'x-appwrite-key' => $sourceProject['apiKey'],
         ], [
             'key' => $vectorEmbeddingIndexKey,
-            'type' => Database::INDEX_HNSW_EUCLIDEAN,
+            'type' => IndexType::HnswEuclidean->value,
             'attributes' => ['embeddings'],
         ]);
         $this->assertEquals(202, $vectorEmbeddingIndex['headers']['status-code']);
@@ -6714,7 +7144,7 @@ trait MigrationsBase
             ]);
 
             $this->assertEquals(200, $index['headers']['status-code']);
-            $this->assertEquals(Database::INDEX_HNSW_EUCLIDEAN, $index['body']['type']);
+            $this->assertEquals(IndexType::HnswEuclidean->value, $index['body']['type']);
             if (isset($index['body']['status'])) {
                 $this->assertEquals('available', $index['body']['status']);
             }
@@ -6726,7 +7156,7 @@ trait MigrationsBase
             'x-appwrite-project' => $sourceProject['$id'],
             'x-appwrite-key' => $sourceProject['apiKey'],
         ], [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'embeddings' => [0.5, 0.3, 0.2],
                 'metadata' => ['name' => 'Product Vector'],
@@ -6946,7 +7376,7 @@ trait MigrationsBase
         ]);
         $this->assertEquals(200, $sqlIndexDestination['headers']['status-code']);
         $this->assertEquals($sqlIndexKey, $sqlIndexDestination['body']['key']);
-        $this->assertEquals(Database::INDEX_UNIQUE, $sqlIndexDestination['body']['type']);
+        $this->assertEquals(IndexType::Unique->value, $sqlIndexDestination['body']['type']);
         if (isset($sqlIndexDestination['body']['columns'])) {
             $this->assertEquals(['productName'], $sqlIndexDestination['body']['columns']);
         }
@@ -6992,7 +7422,7 @@ trait MigrationsBase
         ]);
         $this->assertEquals(200, $documentsIndexDestination['headers']['status-code']);
         $this->assertEquals($documentsIndexKey, $documentsIndexDestination['body']['key']);
-        $this->assertEquals(Database::INDEX_UNIQUE, $documentsIndexDestination['body']['type']);
+        $this->assertEquals(IndexType::Unique->value, $documentsIndexDestination['body']['type']);
         if (isset($documentsIndexDestination['body']['attributes'])) {
             $this->assertEquals(['email'], $documentsIndexDestination['body']['attributes']);
         }
@@ -7035,9 +7465,9 @@ trait MigrationsBase
             }
         }
         $this->assertArrayHasKey($metadataIndexKey, $indexByKey, 'Metadata index should exist on destination');
-        $this->assertEquals(Database::INDEX_OBJECT, $indexByKey[$metadataIndexKey]['type']);
+        $this->assertEquals(IndexType::Object->value, $indexByKey[$metadataIndexKey]['type']);
         $this->assertArrayHasKey($vectorEmbeddingIndexKey, $indexByKey, 'Embeddings HNSW index should exist on destination');
-        $this->assertEquals(Database::INDEX_HNSW_EUCLIDEAN, $indexByKey[$vectorEmbeddingIndexKey]['type']);
+        $this->assertEquals(IndexType::HnswEuclidean->value, $indexByKey[$vectorEmbeddingIndexKey]['type']);
 
         // Validate VectorsDB Document
         $response = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/documents/' . $vectorDocumentId, [
@@ -7097,7 +7527,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Test Database'
         ]);
 
@@ -7114,7 +7544,7 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Test table',
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -7176,7 +7606,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket',
             'maximumFileSize' => 2000000, //2MB
             'allowedFileExtensions' => ['json'],
@@ -7209,7 +7639,7 @@ trait MigrationsBase
                 'content-type' => 'multipart/form-data',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
-                'fileId' => ID::unique(),
+                'fileId' => Id::unique(),
                 'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/json/'.$jsonFileName), 'application/json', $jsonFileName),
             ]);
 
@@ -7378,7 +7808,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Test Export Database'
         ]);
 
@@ -7391,7 +7821,7 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Test Export Collection',
             'permissions' => []
         ]);
@@ -7434,7 +7864,7 @@ trait MigrationsBase
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ], [
-                'documentId' => ID::unique(),
+                'documentId' => Id::unique(),
                 'data' => [
                     'name' => 'Test User ' . $i,
                     'email' => 'user' . $i . '@appwrite.io'
@@ -7541,7 +7971,7 @@ trait MigrationsBase
 
         // Create vectorsdb database
         $database = $this->client->call(Client::METHOD_POST, '/vectorsdb', $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'VectorsDB Export Test'
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -7549,7 +7979,7 @@ trait MigrationsBase
 
         // Create collection with dimension 16
         $collection = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', $headers, [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'VecExportCol',
             'dimension' => 16,
         ]);
@@ -7560,7 +7990,7 @@ trait MigrationsBase
         for ($i = 1; $i <= 5; $i++) {
             $embeddings = array_map(fn () => round((mt_rand() / mt_getrandmax()) * 2 - 1, 6), range(1, 16));
             $doc = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections/' . $collectionId . '/documents', $headers, [
-                'documentId' => ID::unique(),
+                'documentId' => Id::unique(),
                 'data' => [
                     'embeddings' => $embeddings,
                     'metadata' => ['title' => 'Doc ' . $i, 'score' => round($i * 0.2, 1)]
@@ -7606,7 +8036,7 @@ trait MigrationsBase
 
         // Create vectorsdb database
         $database = $this->client->call(Client::METHOD_POST, '/vectorsdb', $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'VectorsDB Import Test'
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -7614,7 +8044,7 @@ trait MigrationsBase
 
         // Create collection with dimension 16
         $collection = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', $headers, [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'VecImportCol',
             'dimension' => 16,
         ]);
@@ -7623,7 +8053,7 @@ trait MigrationsBase
 
         // Create bucket and upload test file
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'VectorsDB Import Bucket',
             'maximumFileSize' => 2000000,
             'allowedFileExtensions' => ['json'],
@@ -7635,7 +8065,7 @@ trait MigrationsBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new \CURLFile(realpath(__DIR__ . '/../../../resources/json/vectorsdb-documents.json'), 'application/json', 'vectorsdb-documents.json'),
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
@@ -7687,7 +8117,7 @@ trait MigrationsBase
 
         // Create documentsdb database
         $database = $this->client->call(Client::METHOD_POST, '/documentsdb', $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'DocumentsDB Export Test'
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -7695,7 +8125,7 @@ trait MigrationsBase
 
         // Create collection (schemaless — no attributes needed)
         $collection = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections', $headers, [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'DocExportCol',
         ]);
         $this->assertEquals(201, $collection['headers']['status-code']);
@@ -7704,7 +8134,7 @@ trait MigrationsBase
         // Seed 5 documents
         for ($i = 1; $i <= 5; $i++) {
             $doc = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $collectionId . '/documents', $headers, [
-                'documentId' => ID::unique(),
+                'documentId' => Id::unique(),
                 'data' => [
                     'name' => 'User ' . $i,
                     'email' => 'user' . $i . '@test.com',
@@ -7752,7 +8182,7 @@ trait MigrationsBase
 
         // Create documentsdb database
         $database = $this->client->call(Client::METHOD_POST, '/documentsdb', $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'DocumentsDB Import Test'
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -7760,7 +8190,7 @@ trait MigrationsBase
 
         // Create collection (schemaless)
         $collection = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections', $headers, [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'DocImportCol',
         ]);
         $this->assertEquals(201, $collection['headers']['status-code']);
@@ -7768,7 +8198,7 @@ trait MigrationsBase
 
         // Create bucket and upload test file
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'DocumentsDB Import Bucket',
             'maximumFileSize' => 2000000,
             'allowedFileExtensions' => ['json'],
@@ -7780,7 +8210,7 @@ trait MigrationsBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new \CURLFile(realpath(__DIR__ . '/../../../resources/json/documentsdb-documents.json'), 'application/json', 'documentsdb-documents.json'),
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);

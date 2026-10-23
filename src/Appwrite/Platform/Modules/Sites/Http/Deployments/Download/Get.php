@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Deployments\Download;
 
+use Appwrite\Deployment\Deployments;
 use Appwrite\Deployment\Token;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -62,8 +63,8 @@ class Get extends Action
                 locationAuth: ['Project', 'ImpersonateUserId'],
                 contentType: ContentType::ANY,
             ))
-            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
-            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Site ID.', false, ['dbForProject'])
+            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Deployment ID.', false, ['dbForProject'])
             ->param('type', 'source', new WhiteList(['source', 'output']), 'Deployment file to download. Can be: "source", "output".', true, enum: new Enum(name: 'DeploymentDownloadType'))
             ->param('token', '', new Text(2048), 'Presigned source-download token for accessing this deployment without a session (jobs-service).', true)
             ->inject('response')
@@ -123,8 +124,8 @@ class Get extends Action
             default => throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid deployment download type.'),
         };
 
-        // Not every storage device reports an empty path as missing.
-        if ($path === '' || !$device->exists($path)) {
+        // Builds can write the builds volume, so links and paths outside the device are refused.
+        if (!Deployments::isArtifact($device, $path)) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 

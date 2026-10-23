@@ -706,6 +706,16 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Your plan supports intervals of {minutes} minutes or longer.':
     'התוכנית שלכם תומכת במרווחים של {minutes} דקות או יותר.',
   'Upgrade to unlock': 'שדרגו כדי לפתוח',
+  'Cron schedules are available on paid plans.':
+    'תזמוני Cron זמינים בתוכניות בתשלום.',
+  'to use cron.': 'כדי להשתמש ב-Cron.',
+  'Cron schedules are not available on your plan':
+    'תזמוני Cron אינם זמינים בתוכנית שלכם',
+  'This function keeps running on its current cron until you switch it to an interval.':
+    'הפונקציה ממשיכה לרוץ לפי ה-Cron הנוכחי שלה עד שתעבירו אותה למרווח.',
+  'to edit cron schedules.': 'כדי לערוך תזמוני Cron.',
+  'Appwrite picks a fixed time within each interval for this function to spread load.':
+    'Appwrite בוחרת זמן קבוע בתוך כל מרווח להרצת הפונקציה הזו כדי לפזר את העומס.',
   'Interval length': 'אורך המרווח',
   'Interval unit': 'יחידת המרווח',
   'Appwrite picks a fixed time within each interval for this function to spread load. Use cron if you need exact times.':
@@ -714,4 +724,48 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Every {count} minutes': 'כל {count} דקות',
   'Every {count} hours': 'כל {count} שעות',
   'Every {count} days': 'כל {count} ימים',
+  // Inbound email (SMTP) trigger
+  'Email trigger enabled': 'טריגר האימייל הופעל',
+  'Email trigger disabled': 'טריגר האימייל הושבת',
+  'Failed to update email trigger': 'עדכון טריגר האימייל נכשל',
+  'Allow inbound email to trigger this function. It is off by default, so no mail is accepted until you enable it.':
+    'אפשרו לאימייל נכנס להפעיל את הפונקציה הזו. האפשרות כבויה כברירת מחדל, כך שדואר לא יתקבל עד שתפעילו אותה.',
+  'Email trigger': 'טריגר אימייל',
+  'Inbound mail for this function is accepted.':
+    'דואר נכנס לפונקציה הזו מתקבל.',
+  'Inbound mail for this function is rejected.': 'דואר נכנס לפונקציה הזו נדחה.',
+  'Default address': 'כתובת ברירת מחדל',
+  'Enable the email trigger to receive mail at this address.':
+    'דואר נכנס לכתובת הזו יתקבל אחרי שתפעילו את טריגר האימייל.',
+  'Mail is delivered when this function has an active deployment.':
+    'הדואר נמסר כאשר לפונקציה יש פריסה פעילה.',
+  // Inbound email (SMTP) custom domains
+  'Enable the email trigger under Settings → Executions before adding an email domain.':
+    'הפעילו את טריגר האימייל תחת הגדרות ← הרצות לפני הוספת דומיין אימייל.',
+  'Email domain verified': 'דומיין האימייל אומת',
+  'Failed to add email domain': 'הוספת דומיין האימייל נכשלה',
+  'Verify email domain': 'אימות דומיין אימייל',
+  'Add email domain': 'הוספת דומיין אימייל',
+  'Email domain': 'דומיין אימייל',
+  'Mail sent to any address on this domain runs this function. This is separate from HTTP domains and from outbound SMTP for the project.':
+    'דואר שנשלח לכל כתובת בדומיין הזה מריץ את הפונקציה. זה נפרד מדומייני HTTP ומ-SMTP היוצא של הפרויקט.',
+  'After adding the domain, publish an MX record and a TXT ownership record, then verify.':
+    'לאחר הוספת הדומיין, פרסמו רשומת MX ורשומת TXT לאימות בעלות, ואז אמתו.',
+  'Email domains': 'דומייני אימייל',
+  'Receive mail for this function on domains you own. The default address is on the Email card under Settings → Executions.':
+    'קבלו דואר לפונקציה הזו בדומיינים בבעלותכם. כתובת ברירת המחדל מופיעה בכרטיס האימייל תחת הגדרות ← הרצות.',
+  'Enable the email trigger under Settings → Executions to add email domains.':
+    'הפעילו את טריגר האימייל תחת הגדרות ← הרצות כדי להוסיף דומייני אימייל.',
+  'No email domains yet': 'אין עדיין דומייני אימייל',
+  'Add a domain you own, publish MX and TXT records, then verify to accept inbound mail.':
+    'הוסיפו דומיין בבעלותכם, פרסמו רשומות MX ו-TXT ואז אמתו אותו כדי לקבל דואר נכנס.',
+  'Email domain has been deleted': 'דומיין האימייל נמחק',
+  'Point MX at Appwrite SMTP and prove ownership with a TXT record. No TLS certificate is issued for email domains.':
+    'הפנו את רשומת ה-MX אל Appwrite SMTP והוכיחו בעלות באמצעות רשומת TXT. לא מונפקת תעודת TLS לדומייני אימייל.',
+  'MX target unavailable': 'יעד ה-MX אינו זמין',
+  'This region does not report its mail server target yet, so the MX record cannot be shown here.':
+    'האזור הזה עדיין לא מדווח על יעד שרת הדואר שלו, ולכן לא ניתן להציג כאן את רשומת ה-MX.',
+  Propagation: 'הפצה',
+  'DNS changes can take up to 48 hours. The MX record must point straight at Appwrite on TCP port 25, not through a proxy.':
+    'שינויי DNS עשויים להימשך עד 48 שעות. רשומת ה-MX חייבת להצביע ישירות אל Appwrite בפורט TCP 25, ולא דרך פרוקסי.',
 }
