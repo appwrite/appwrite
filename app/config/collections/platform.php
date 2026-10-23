@@ -210,6 +210,10 @@ $platformCollections = [
             Attribute::integer(key: 'attempts'),
             Attribute::string(key: 'logs', size: 1000000),
             Attribute::datetime(key: 'updated'),
+            // Issuing provider, e.g. 'letsencrypt' or 'cloudfront'; empty for certificates issued before it was recorded
+            Attribute::string(key: 'provider', size: 32, default: ''),
+            // The provider's own reference, e.g. a CloudFront distribution tenant ID
+            Attribute::string(key: 'providerId', default: ''),
         ],
         'indexes' => [
             Index::key(key: '_key_domain', attributes: ['domain'], lengths: [255], orders: [OrderDirection::Asc]),
