@@ -168,6 +168,22 @@ final class CommentTest extends TestCase
         }
     }
 
+    public function testEveryDetailsBlockClosesOnce(): void
+    {
+        $comment = new Comment(['consoleHostname' => 'localhost']);
+        foreach (['production' => 'Production', 'staging' => 'Staging'] as $projectId => $projectName) {
+            $project = new Document(['$id' => $projectId, 'name' => $projectName, 'region' => 'default']);
+            $comment->addBuild($project, new Document(['$id' => 'landing', 'name' => 'Landing']), 'site', 'ready', 'dep-' . $projectId, ['type' => 'logs'], 'https://landing.appwrite.network');
+            $comment->addBuild($project, new Document(['$id' => 'billing', 'name' => 'Billing']), 'function', 'processing', 'dep-fn-' . $projectId, ['type' => 'logs'], '');
+        }
+
+        $generated = $comment->generateComment();
+
+        // Sites and Functions of both projects, each opened and closed once
+        $this->assertSame(4, \substr_count($generated, '<details'));
+        $this->assertSame(4, \substr_count($generated, '</details>'));
+    }
+
     private function extractTip(string $comment): ?string
     {
         if (\preg_match('/> \[!TIP\]\n> (.+)/', $comment, $matches)) {
