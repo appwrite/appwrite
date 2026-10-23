@@ -365,6 +365,20 @@ trait Deployment
                         Query::equal('providerBranch', [$providerBranch]),
                     ]));
 
+                    // A build that moved on while the comment was written reported before it
+                    // could find the comment, so the comment takes the state it is in now
+                    if (!$existingDeployment->isEmpty() && !empty($latestCommentId)) {
+                        $linkedDeployment = $authorization->skip(fn () => $dbForProject->getDocument('deployments', $existingDeployment->getId()));
+                        $linkedStatus = $linkedDeployment->getAttribute('status', $commentStatus);
+                        if ($linkedStatus !== $commentStatus) {
+                            try {
+                                $authorization->skip(fn () => GitAction::run($linkedStatus, $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $linkedDeployment, $dbForPlatform, $platform));
+                            } catch (\Throwable $e) {
+                                Console::warning("Failed to update PR comment '{$latestCommentId}': " . $e->getMessage());
+                            }
+                        }
+                    }
+
                     // Skip rest - prevent double deployments (previous one was made by push)
                     continue;
                 }
