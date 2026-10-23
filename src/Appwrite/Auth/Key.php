@@ -13,6 +13,10 @@ use Utopia\System\System;
 
 class Key
 {
+    public const string PURPOSE_CLAIM = 'purpose';
+
+    public const string PURPOSE = 'key';
+
     public function __construct(
         protected string $projectId,
         protected string $teamId,
@@ -142,6 +146,10 @@ class Key
                 try {
                     $payload = $jwtObj->decode($secret);
                 } catch (JWTException) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
+                }
+
+                if (($payload[self::PURPOSE_CLAIM] ?? '') !== self::PURPOSE) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 

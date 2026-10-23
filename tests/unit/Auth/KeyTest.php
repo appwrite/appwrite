@@ -309,6 +309,37 @@ final class KeyTest extends TestCase
             new Document(),
             self::generateKey('other-project', false, ['documents.read']),
         ];
+        yield 'ephemeral jwt without purpose' => [
+            new Document(['$id' => $projectId]),
+            new Document(),
+            new Document(),
+            self::generateKey($projectId, false, ['documents.read'], extra: [Key::PURPOSE_CLAIM => null]),
+        ];
+        yield 'ephemeral jwt with another purpose' => [
+            new Document(['$id' => $projectId]),
+            new Document(),
+            new Document(),
+            self::generateKey($projectId, false, ['documents.read'], extra: [Key::PURPOSE_CLAIM => 'session']),
+        ];
+        yield 'account jwt as ephemeral key' => [
+            new Document(['$id' => $projectId]),
+            new Document(),
+            new Document(),
+            API_KEY_EPHEMERAL . '_' . (new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0))->encode([
+                'userId' => 'user123',
+                'sessionId' => 'session123',
+                'projectId' => $projectId,
+            ]),
+        ];
+        yield 'dynamic jwt without purpose' => [
+            new Document(['$id' => $projectId]),
+            new Document(),
+            new Document(),
+            'dynamic_' . (new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0))->encode([
+                'projectId' => $projectId,
+                'scopes' => ['documents.read'],
+            ]),
+        ];
         yield 'mismatched ephemeral project sequence' => [
             new Document(['$id' => $projectId, '$sequence' => '2']),
             new Document(),
@@ -423,6 +454,7 @@ final class KeyTest extends TestCase
         $jwt->setTestTimestamp($timestamp);
 
         $apiKey = $jwt->encode(\array_merge([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectId' => $projectId,
             'usage' => $usage,
             'scopes' => $scopes,

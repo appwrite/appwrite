@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Sites;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\Key;
 use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
@@ -2192,6 +2193,7 @@ final class SitesCustomServerTest extends Scope
 
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
         $apiKey = $jwtObj->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectCheckDisabled' => true,
             'previewAuthDisabled' => true,
         ]);
@@ -2827,6 +2829,7 @@ final class SitesCustomServerTest extends Scope
 
         $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
         $apiKey = $jwtObj->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectCheckDisabled' => true,
             'previewAuthDisabled' => true,
         ]);

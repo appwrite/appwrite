@@ -3,6 +3,9 @@
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\MFA\Type\TOTP;
+use Appwrite\Auth\Validator\Hash\Argon2 as Argon2Validator;
+use Appwrite\Auth\Validator\Hash\Bcrypt as BcryptValidator;
+use Appwrite\Auth\Validator\Hash\PHPass as PHPassValidator;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PasswordHistory;
@@ -72,7 +75,6 @@ use Utopia\Validator\AllOf;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Integer;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
@@ -325,7 +327,7 @@ Http::post('/v1/users/bcrypt')
     ))
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('email', '', new EmailValidator(), 'User email.')
-    ->param('password', '', new Password(), 'User password hashed using Bcrypt.')
+    ->param('password', '', new BcryptValidator(), 'User password hashed using Bcrypt.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
@@ -402,7 +404,7 @@ Http::post('/v1/users/argon2')
     ))
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('email', '', new EmailValidator(), 'User email.')
-    ->param('password', '', new Password(), 'User password hashed using Argon2.')
+    ->param('password', '', new Argon2Validator(), 'User password hashed using Argon2.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
@@ -482,7 +484,7 @@ Http::post('/v1/users/phpass')
     ))
     ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID. Choose a custom ID or pass the string `ID.unique()`to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('email', '', new EmailValidator(), 'User email.')
-    ->param('password', '', new Password(), 'User password hashed using PHPass.')
+    ->param('password', '', new PHPassValidator(), 'User password hashed using PHPass.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
@@ -522,10 +524,10 @@ Http::post('/v1/users/scrypt')
     ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using Scrypt.')
     ->param('passwordSalt', '', new Text(128), 'Optional salt used to hash password.')
-    ->param('passwordCpu', 8, new Integer(), 'Optional CPU cost used to hash password.')
-    ->param('passwordMemory', 14, new Integer(), 'Optional memory cost used to hash password.')
-    ->param('passwordParallel', 1, new Integer(), 'Optional parallelization cost used to hash password.')
-    ->param('passwordLength', 64, new Integer(), 'Optional hash length used to hash password.')
+    ->param('passwordCpu', 8, new Range(2, 65536), 'Optional CPU cost used to hash password. Must be a power of two, at most 65536.')
+    ->param('passwordMemory', 14, new Range(1, 16), 'Optional memory cost used to hash password. Maximum is 16.')
+    ->param('passwordParallel', 1, new Range(1, 4), 'Optional parallelization cost used to hash password. Maximum is 4.')
+    ->param('passwordLength', 64, new Range(16, 128), 'Optional hash length used to hash password. Must be between 16 and 128.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
@@ -534,12 +536,17 @@ Http::post('/v1/users/scrypt')
     ->inject('plan')
     ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan) {
         $scrypt = new Scrypt();
-        $scrypt
-            ->setSalt($passwordSalt)
-            ->setCpuCost($passwordCpu)
-            ->setMemoryCost($passwordMemory)
-            ->setParallelCost($passwordParallel)
-            ->setLength($passwordLength);
+
+        try {
+            $scrypt
+                ->setSalt($passwordSalt)
+                ->setCpuCost($passwordCpu)
+                ->setMemoryCost($passwordMemory)
+                ->setParallelCost($passwordParallel)
+                ->setLength($passwordLength);
+        } catch (\InvalidArgumentException $error) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $error->getMessage());
+        }
 
         $user = createUser($scrypt, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan);
 
@@ -1469,8 +1476,20 @@ Http::patch('/v1/users/:userId/password')
                 'password' => $user->getAttribute('password'),
                 'passwordUpdate' => $user->getAttribute('passwordUpdate'),
             ]));
+
+            if ($project->getAttribute('auths', default: [])['invalidateSessions'] ?? false) {
+                foreach ($user->getAttribute('sessions', []) as $session) {
+                    /** @var Document $session */
+                    $dbForProject->deleteDocument('sessions', $session->getId());
+                }
+            }
+
+            $dbForProject->purgeCachedDocument('users', $user->getId());
+
             $queueForEvents->setParam('userId', $user->getId());
             $response->dynamic($user, Response::MODEL_USER);
+
+            return;
         }
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
