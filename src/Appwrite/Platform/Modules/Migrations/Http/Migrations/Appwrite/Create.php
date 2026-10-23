@@ -50,7 +50,7 @@ class Create extends Action
                 group: null,
                 name: 'createAppwriteMigration',
                 description: '/docs/references/migrations/migration-appwrite.md',
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
