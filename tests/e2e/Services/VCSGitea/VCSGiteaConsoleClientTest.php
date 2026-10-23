@@ -851,13 +851,20 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertEquals($output, $execution['body']['responseBody'] ?? '');
     }
 
-    private function buildGiteaState(string $projectId, string $success, string $failure): string
+    private function buildGiteaState(string $projectId, string $success, string $failure, ?string $userId = null, ?int $expire = null): string
     {
+        $userId ??= $this->getRoot()['$id'];
+        $expire ??= \time() + 600;
+        $nonce = \bin2hex(\random_bytes(16));
+
         return (string) \json_encode([
             'projectId' => $projectId,
+            'userId' => $userId,
             'success' => $success,
             'failure' => $failure,
-            'signature' => \hash_hmac('sha256', \json_encode([$projectId, $success, $failure]), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
+            'expire' => $expire,
+            'nonce' => $nonce,
+            'signature' => \hash_hmac('sha256', (string) \json_encode([$projectId, $userId, $success, $failure, $expire, $nonce]), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
         ]);
     }
 
@@ -1067,6 +1074,73 @@ final class VCSGiteaConsoleClientTest extends Scope
 
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringStartsWith($consoleUrl . '?error=', (string) $response['headers']['location']);
+    }
+
+    public function testCreateInstallationWithStateFromAnotherUser(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $consoleUrl = $this->settingsUrl($projectId);
+        $state = $this->buildGiteaState($projectId, $consoleUrl, $consoleUrl, 'user-' . \uniqid());
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->callGiteaCallbackHelper([
+            'code' => 'unused',
+            'state' => $state,
+        ]);
+
+        $this->assertSame(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith($consoleUrl . '?error=', (string) $response['headers']['location']);
+
+        // Without a console session the initiator cannot be confirmed either
+        $anonymous = $this->client->call(Client::METHOD_GET, '/vcs/gitea/callback', [
+            'x-appwrite-project' => $projectId,
+        ], [
+            'code' => 'unused',
+            'state' => $this->buildGiteaState($projectId, $consoleUrl, $consoleUrl),
+        ], true, false);
+
+        $this->assertSame(301, $anonymous['headers']['status-code']);
+        $this->assertStringStartsWith($consoleUrl . '?error=', (string) $anonymous['headers']['location']);
+    }
+
+    public function testCreateInstallationWithExpiredState(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $consoleUrl = $this->settingsUrl($projectId);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->callGiteaCallbackHelper([
+            'code' => 'unused',
+            'state' => $this->buildGiteaState($projectId, $consoleUrl, $consoleUrl, expire: \time() - 60),
+        ]);
+
+        $this->assertSame(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith($consoleUrl . '?error=', (string) $response['headers']['location']);
+    }
+
+    public function testCreateInstallationWithReplayedState(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $consoleUrl = $this->settingsUrl($projectId);
+        $state = $this->buildGiteaState($projectId, $consoleUrl, $consoleUrl);
+
+        $first = $this->callGiteaCallbackHelper(['state' => $state]);
+
+        $this->assertSame(301, $first['headers']['status-code']);
+        $this->assertStringContainsString('code is missing', \urldecode((string) $first['headers']['location']));
+
+        /**
+         * Test for FAILURE
+         */
+        $replay = $this->callGiteaCallbackHelper(['state' => $state]);
+
+        $this->assertSame(301, $replay['headers']['status-code']);
+        $this->assertStringStartsWith($consoleUrl . '?error=', (string) $replay['headers']['location']);
+        $this->assertStringContainsString('already used', \urldecode((string) $replay['headers']['location']));
     }
 
     public function testCreateInstallationWithEmptyRedirects(): void

@@ -26,6 +26,15 @@ class PublicHostname extends Validator
     ) {
     }
 
+    /**
+     * The policy hosts are checked against, for confining the connection to a checked host
+     * to the same addresses, so DNS cannot answer differently between the check and the connection.
+     */
+    public function getDestinations(): Destinations
+    {
+        return $this->destinations;
+    }
+
     public function getDescription(): string
     {
         return $this->reason !== ''

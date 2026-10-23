@@ -128,6 +128,45 @@ final class SwooleRequestTest extends TestCase
         $this->assertSame('https', $request->getProtocol());
     }
 
+    public function testIgnoresTheForwardedHostByDefault(): void
+    {
+        $request = new Request($this->schemeRequest(['X-Forwarded-Host' => 'example.com:8443', 'X-Forwarded-Port' => '8443']));
+
+        $this->assertSame('localhost', $request->getHostname(), 'an untrusted forwarded host must not replace the Host header');
+        $this->assertSame('', $request->getPort(), 'an untrusted forwarded port must not decide the port');
+    }
+
+    public function testTrustsANamedForwardedHost(): void
+    {
+        $request = new Request(
+            $this->schemeRequest(['X-Forwarded-Host' => 'spoofed.example:9000, Example.com:8443']),
+            new TrustedHeaders(host: ['x-forwarded-host']),
+        );
+
+        $this->assertSame('example.com', $request->getHostname());
+        $this->assertSame('8443', $request->getPort());
+    }
+
+    public function testTrustsANamedForwardedPort(): void
+    {
+        $request = new Request(
+            $this->schemeRequest(['X-Forwarded-Port' => '8443']),
+            new TrustedHeaders(port: ['x-forwarded-port']),
+        );
+
+        $this->assertSame('8443', $request->getPort());
+    }
+
+    public function testSkipsATrustedPortHeaderThatIsNotANumber(): void
+    {
+        $request = new Request(
+            $this->schemeRequest(['X-Forwarded-Port' => 'not-a-port']),
+            new TrustedHeaders(port: ['x-forwarded-port']),
+        );
+
+        $this->assertSame('', $request->getPort());
+    }
+
     /**
      * @param  array<string, string>  $headers
      */

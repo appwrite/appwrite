@@ -6,6 +6,7 @@ use Appwrite\Certificates\Certificates;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Maintenance\Grid;
 use DateInterval;
 use DateTime;
 use Utopia\Console\Console;
@@ -49,17 +50,8 @@ class Maintenance extends Action
 
         $now = new \DateTime();
         $now->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-        $next = new \DateTime($now->format("Y-m-d $jobInitTime"));
-        $next->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        $next = new Grid($jobInitTime, $interval)->next($now);
         $delay = $next->getTimestamp() - $now->getTimestamp();
-
-        /**
-         * If time passed for the target day.
-         */
-        if ($delay <= 0) {
-            $next->add(\DateInterval::createFromDateString('1 days'));
-            $delay = $next->getTimestamp() - $now->getTimestamp();
-        }
 
         $action = function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $dbForPlatform, $console, $publisherForDeletes, $publisherForCertificates, $certificateIssuer) {
             $time = DatabaseDateTime::now();

@@ -675,6 +675,14 @@ readonly class Deployments
     }
 
     /**
+     * The lock serializing a deployment's build callbacks and its cancellation.
+     */
+    public static function lock(string $projectInternalId, string $deploymentId): string
+    {
+        return "jobs-deployment:{$projectInternalId}:{$deploymentId}";
+    }
+
+    /**
      * The build output directory on the builds volume, where build.sh writes
      * under the volume strategy (see storage()).
      */
@@ -965,6 +973,7 @@ readonly class Deployments
 
         $apiKey = (new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $timeout, 0))->encode([
             'projectId' => $project->getId(),
+            'projectSequence' => $project->getSequence(),
             'scopes' => static::scopes($resource),
         ]);
 

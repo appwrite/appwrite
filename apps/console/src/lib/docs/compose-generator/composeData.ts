@@ -2120,7 +2120,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
     name: 'appwrite-browser',
     block: `  appwrite-browser:
     container_name: appwrite-browser
-    image: appwrite/browser:0.3.6
+    image: appwrite/browser:0.3.8
     networks:
       - browser
     environment:
@@ -2146,7 +2146,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
     name: 'appwrite-exiftool',
     block: `  appwrite-exiftool:
     container_name: appwrite-exiftool
-    image: ghcr.io/appwrite/exiftool:0.1.0
+    image: ghcr.io/appwrite/exiftool:0.1.1
     restart: unless-stopped
     networks:
       - appwrite`,
@@ -2369,6 +2369,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
     block: `  postgresql:
     image: appwrite/postgres:0.1.0
     container_name: appwrite-postgresql
+    init: true
     shm_size: 1g
     logging:
       driver: json-file
