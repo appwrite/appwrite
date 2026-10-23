@@ -146,7 +146,7 @@ final class TransportIntegrationTest extends TestCase
 
             $this->assertRefused($transport);
             $this->assertSame([], $server->getRequests(), 'The endpoint path and query must not reach an unverified collector.');
-            $this->assertNotEmpty($server->getStrays(), 'The address check must reach the collector to read its certificate.');
+            $this->assertContains('HEAD /', $server->getStrays(), 'The address check must reach the collector to read its certificate.');
             $this->assertNothingExported($server);
         }, $certificate, $key);
     }
@@ -226,8 +226,8 @@ final class TransportIntegrationTest extends TestCase
 
     private function assertNothingExported(MockOtlpServer $server): void
     {
-        foreach ($server->getStrays() as $uri) {
-            $this->assertSame('/', $uri, 'No endpoint path or query may reach an unverified collector.');
+        foreach ($server->getStrays() as $request) {
+            $this->assertStringEndsWith(' /', $request, 'No endpoint path or query may reach an unverified collector.');
         }
 
         foreach ($server->getRequests() as $request) {

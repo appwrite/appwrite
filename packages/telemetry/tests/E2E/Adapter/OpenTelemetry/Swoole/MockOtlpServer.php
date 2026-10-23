@@ -32,7 +32,7 @@ class MockOtlpServer
     private array $requests = [];
 
     /**
-     * Request URIs, with their query strings, that arrived anywhere other than the metrics path.
+     * Request methods and URIs, with their query strings, that arrived anywhere other than the metrics path.
      *
      * @var array<string>
      */
@@ -106,7 +106,7 @@ class MockOtlpServer
 
         $this->server->handle('/', function (Request $request, Response $response): void {
             $query = $request->server['query_string'] ?? '';
-            $this->strays[] = ($request->server['request_uri'] ?? '') . ($query === '' ? '' : '?' . $query);
+            $this->strays[] = ($request->server['request_method'] ?? '') . ' ' . ($request->server['request_uri'] ?? '') . ($query === '' ? '' : '?' . $query);
             $response->status(404);
             $response->end();
         });
