@@ -45,6 +45,17 @@ final class GitDeploymentsTest extends TestCase
         }
     }
 
+    public function testACommentCatchesUpWithABuildThatFinishedWhileItWasWritten(): void
+    {
+        $previousPools = Config::getParam('pools-database', []);
+        Config::setParam('pools-database', ['db_main']);
+        try {
+            $this->assertCommentCatchesUpWithItsBuild();
+        } finally {
+            Config::setParam('pools-database', $previousPools);
+        }
+    }
+
     /**
      * A pull request, or trail, opens on a branch whose push already built:
      * the comment pass deploys nothing, so its comment must show that
@@ -125,6 +136,107 @@ final class GitDeploymentsTest extends TestCase
         $this->assertStringContainsString('/functions/function/deployments/pushed)', $comment, 'The comment must link the deployment the push made');
         $this->assertStringContainsString('_Ready_', $comment);
         $this->assertStringNotContainsString('<picture>', $comment, 'A provider that displays no images must get none');
+    }
+
+    /**
+     * The push's build finishes while the comment pass writes its comment:
+     * the build reported before the comment was linked to it, so the pass
+     * brings the comment to the state the build ended in.
+     */
+    private function assertCommentCatchesUpWithItsBuild(): void
+    {
+        $project = new Document(['$id' => 'project', '$sequence' => '5', 'name' => 'Project', 'database' => 'db_main', 'region' => 'default']);
+        $function = new Document([
+            '$id' => 'function',
+            '$sequence' => '10',
+            '$collection' => 'functions',
+            'name' => 'Starter',
+            'repositoryId' => 'repository',
+            'providerBranch' => 'main',
+        ]);
+        $repository = new Document([
+            '$id' => 'repository',
+            '$sequence' => '20',
+            'projectId' => 'project',
+            'resourceId' => 'function',
+            'resourceType' => 'function',
+            'providerRepositoryId' => '42',
+            'installationId' => 'installation',
+            'installationInternalId' => '30',
+        ]);
+        // The pass reads the build running; once linked, it has finished
+        $building = new Document(['$id' => 'pushed', '$sequence' => '40', 'status' => 'processing']);
+        $built = new Document(['$id' => 'pushed', '$sequence' => '40', 'status' => 'ready', 'providerCommentId' => '5-discussion']);
+
+        $dbForProject = $this->createStub(Database::class);
+        $dbForProject->method('getDocument')->willReturnCallback(static fn (string $collection): Document => $collection === 'deployments' ? $built : $function);
+        $dbForProject->method('findOne')->willReturn($building);
+
+        // A webhook checks permissions, so the comment lock must be taken and released without them
+        $authorization = new Authorization();
+        $lockChecks = [];
+        $dbForPlatform = $this->createStub(Database::class);
+        $dbForPlatform->method('getDocument')->willReturn($project);
+        $dbForPlatform->method('findOne')->willReturn(new Document());
+        $dbForPlatform->method('createDocument')->willReturnCallback(static function (string $collection, Document $document) use ($authorization, &$lockChecks): Document {
+            if ($collection === 'vcsCommentLocks') {
+                $lockChecks[] = $authorization->getStatus();
+            }
+            return $document;
+        });
+        $dbForPlatform->method('deleteDocument')->willReturnCallback(static function (string $collection) use ($authorization, &$lockChecks): bool {
+            if ($collection === 'vcsCommentLocks') {
+                $lockChecks[] = $authorization->getStatus();
+            }
+            return true;
+        });
+
+        $comment = '';
+        $git = $this->createStub(Git::class);
+        $git->method('getName')->willReturn('entire');
+        $git->method('getOwnerName')->willReturn('owner');
+        $git->method('getRepositoryName')->willReturn('repository');
+        $git->method('supportsCommentImages')->willReturn(false);
+        $git->method('createComment')->willReturnCallback(static function (string $owner, string $repository, int $number, string $body) use (&$comment): string {
+            $comment = $body;
+            return $number . '-discussion';
+        });
+        $git->method('getComment')->willReturnCallback(static function () use (&$comment): string {
+            return $comment;
+        });
+        $git->method('updateComment')->willReturnCallback(static function (string $owner, string $repository, string $id, string $body) use (&$comment): string {
+            $comment = $body;
+            return $id;
+        });
+
+        (new GitDeployments())->push(
+            vcs: $git,
+            providerInstallationId: '7',
+            repositories: [$repository],
+            providerBranch: 'feature',
+            providerBranchUrl: '',
+            providerRepositoryName: 'repository',
+            providerRepositoryUrl: '',
+            providerRepositoryOwner: 'owner',
+            providerCommitHash: 'abc123',
+            providerCommitAuthor: '',
+            providerCommitAuthorUrl: '',
+            providerCommitMessage: 'Add a pricing page',
+            providerCommitUrl: '',
+            providerPullRequestId: '5',
+            providerAffectedFiles: [],
+            external: false,
+            dbForPlatform: $dbForPlatform,
+            authorization: $authorization,
+            bus: $this->createStub(Bus::class),
+            getProjectDB: static fn () => $dbForProject,
+            platform: ['apiHostname' => 'localhost', 'consoleUrl' => 'https://console.localhost', 'consoleHostname' => 'console.localhost'],
+            deploymentsFactory: static fn () => throw new \LogicException('A comment pass must not deploy'),
+        );
+
+        $this->assertStringContainsString('_Ready_', $comment, 'The comment must show the state the build finished in');
+        $this->assertStringNotContainsString('_Building_', $comment);
+        $this->assertSame([false, false], $lockChecks, 'The comment lock must be taken and released with permissions skipped');
     }
 
     private function assertRefusedPush(): void
