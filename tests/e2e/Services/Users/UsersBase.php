@@ -2116,21 +2116,64 @@ trait UsersBase
         $this->assertSame(201, $user['headers']['status-code']);
         $this->assertSame('argon2', $user['body']['hash']);
 
+        $digest = 'xX/myGbFU.ZSKHSi6EHdBOySTdYm8QxBLXmOPHrYMwV0mHRBBSBOq';
+        $tail = '$TmtWSjZ3aE5keWNEdFlhcg$KjIALjgKcbZxSfJh1RkK6/9wqD+WbGVRjzTJ3BIQaBg';
+        $accepted = [
+            '/users/bcrypt' => ['$2y$04$' . $digest, '$2a$15$' . $digest, '$2b$12$' . $digest, '$2x$10$' . $digest],
+            '/users/argon2' => ['$argon2i$v=19$m=20,t=3,p=2' . $tail, '$argon2id$v=19$m=262144,t=10,p=16' . $tail],
+            '/users/phpass' => ['$H$9r387rwferoKN7uwHZqNMu98q3U8RO.', '$P$5r387rwferoKN7uwHZqNMu98q3U8RO.', '$P$Er387rwferoKN7uwHZqNMu98q3U8RO.', '$2a$08$' . $digest],
+        ];
+
+        foreach ($accepted as $path => $hashes) {
+            foreach ($hashes as $hash) {
+                $response = $this->client->call(Client::METHOD_POST, $path, $headers, [
+                    'userId' => Id::unique(),
+                    'email' => 'hash-limit-' . \uniqid() . '@appwrite.io',
+                    'password' => $hash,
+                ]);
+
+                $this->assertSame(201, $response['headers']['status-code'], $path . ' refused ' . $hash);
+            }
+        }
+
         /**
          * Test for FAILURE
          */
         $imports = [
             '/users/bcrypt' => [
-                '$2y$16$xX/myGbFU.ZSKHSi6EHdBOySTdYm8QxBLXmOPHrYMwV0mHRBBSBOq',
-                '$argon2id$v=19$m=1024,t=2,p=1$TmtWSjZ3aE5keWNEdFlhcg$KjIALjgKcbZxSfJh1RkK6/9wqD+WbGVRjzTJ3BIQaBg',
+                '$2y$16$' . $digest,
+                '$2y$31$' . $digest,
+                '$2y$03$' . $digest,
+                '$2y$1a$' . $digest,
+                '$2z$10$' . $digest,
+                '$2y$10x' . $digest,
+                '$2y$10$' . \substr($digest, 1),
+                '$6$rounds=999999999$saltsalt$' . $digest,
+                '$argon2id$v=19$m=1024,t=2,p=1' . $tail,
             ],
             '/users/argon2' => [
-                '$argon2id$v=19$m=4194304,t=2,p=1$TmtWSjZ3aE5keWNEdFlhcg$KjIALjgKcbZxSfJh1RkK6/9wqD+WbGVRjzTJ3BIQaBg',
-                '$argon2id$v=19$m=1024,t=64,p=1$TmtWSjZ3aE5keWNEdFlhcg$KjIALjgKcbZxSfJh1RkK6/9wqD+WbGVRjzTJ3BIQaBg',
+                '$argon2id$v=19$m=4194304,t=2,p=1' . $tail,
+                '$argon2id$v=19$m=1024,t=64,p=1' . $tail,
+                '$argon2id$v=19$m=262145,t=4,p=1' . $tail,
+                '$argon2id$v=19$m=65536,t=4,p=17' . $tail,
+                '$argon2id$v=19$m=65536,t=0,p=1' . $tail,
+                '$argon2id$v=19$t=4,m=65536,p=1' . $tail,
+                '$argon2id$v=19$m=65536,t=4,p=1,x=1' . $tail,
+                '$argon2id$v=19$m=-1,t=4,p=1' . $tail,
+                '$argon2id$m=65536,t=4,p=1' . $tail,
+                '$argon2d$v=19$m=65536,t=4,p=1' . $tail,
+                '$argon2id$v=19$m=65536,t=4,p=1$TmtWSjZ3aE5keWNEdFlhcg$',
+                '$2y$10$' . $digest,
             ],
             '/users/phpass' => [
                 '$P$Sr387rwferoKN7uwHZqNMu98q3U8RO.',
-                '$2a$31$xX/myGbFU.ZSKHSi6EHdBOySTdYm8QxBLXmOPHrYMwV0mHRBBSBOq',
+                '$P$Fr387rwferoKN7uwHZqNMu98q3U8RO.',
+                '$P$4r387rwferoKN7uwHZqNMu98q3U8RO.',
+                '$P$-r387rwferoKN7uwHZqNMu98q3U8RO.',
+                '$P$Br387rwferoKN7uwHZqNMu98q3U8RO',
+                '$S$Br387rwferoKN7uwHZqNMu98q3U8RO.',
+                '_zzzzsaltiAm7ZTrEBv.k',
+                '$2a$31$' . $digest,
             ],
         ];
 
