@@ -29,6 +29,7 @@ services:
       - 172.16.238.100
     extra_hosts:
       - rebinding.webapp.com:host-gateway
+      - private.appwrite.test:host-gateway
     entrypoint:
       - php
       - -e
@@ -82,6 +83,7 @@ services:
       - ./packages:/usr/src/code/packages
     extra_hosts:
       - rebinding.webapp.com:host-gateway
+      - private.appwrite.test:host-gateway
     depends_on:
       - request-catcher-sms
       - request-catcher-webhook
@@ -291,6 +293,7 @@ services:
       - ./tests:/usr/src/code/tests
     extra_hosts:
       - rebinding.webapp.com:host-gateway
+      - private.appwrite.test:host-gateway
   appwrite-task-maintenance:
     build:
       context: .

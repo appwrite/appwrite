@@ -366,7 +366,63 @@ trait MigrationsBase
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
-        $this->assertNotEmpty($migration['errors']);
+        $this->assertCount(1, $migration['errors'], \json_encode($migration['errors']));
+        $error = \json_decode($migration['errors'][0], true);
+        $this->assertSame(\CURLE_ABORTED_BY_CALLBACK, $error['code'], 'The worker did not refuse the connection: ' . $migration['errors'][0]);
+        $this->assertSame('Migration failed due to an unexpected error.', $error['message']);
+    }
+
+    /**
+     * private.appwrite.test is a subdomain of this deployment's domain that resolves to a private
+     * address outside the allowed ranges, and the API reaches itself on it through the docker host.
+     * This deployment's own hosts may be internal, so the report and the migration both accept it.
+     */
+    public function testMigrationSourceAtPrivateDeploymentHostIsAccepted(): void
+    {
+        $sourceHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $destinationHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+        $endpoint = 'http://private.appwrite.test:9501/v1';
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $sourceHeaders, [
+            'userId' => Id::unique(),
+            'email' => 'private-deployment-host@test.com',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        try {
+            $report = $this->client->call(Client::METHOD_GET, '/migrations/appwrite/report', $destinationHeaders, [
+                'resources' => [Resource::TYPE_USER],
+                'endpoint' => $endpoint,
+                'projectID' => $this->getProject()['$id'],
+                'key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertSame(200, $report['headers']['status-code'], \json_encode($report['body']));
+            $this->assertGreaterThanOrEqual(1, $report['body'][Resource::TYPE_USER]);
+
+            $migration = $this->performMigrationSync([
+                'resources' => [Resource::TYPE_USER],
+                'endpoint' => $endpoint,
+                'projectId' => $this->getProject()['$id'],
+                'apiKey' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertSame(0, $migration['statusCounters'][Resource::TYPE_USER]['error']);
+
+            $migrated = $this->client->call(Client::METHOD_GET, '/users/' . $userId, $destinationHeaders);
+            $this->assertSame(200, $migrated['headers']['status-code']);
+        } finally {
+            $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, $destinationHeaders);
+            $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, $sourceHeaders);
+        }
     }
 
     /**

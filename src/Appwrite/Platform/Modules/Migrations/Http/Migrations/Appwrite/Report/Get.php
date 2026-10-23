@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\Appwrite\Report;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\DeploymentHostname;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -13,9 +14,7 @@ use Utopia\Database\Document;
 use Utopia\Migration\Sources\Appwrite as AppwriteSource;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\ArrayList;
-use Utopia\Validator\Hostname;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
@@ -57,6 +56,7 @@ class Get extends Action
             ->inject('response')
             ->inject('getDatabasesDB')
             ->inject('publicHostname')
+            ->inject('deploymentHostname')
             ->callback($this->action(...));
     }
 
@@ -67,18 +67,19 @@ class Get extends Action
         string $key,
         Response $response,
         callable $getDatabasesDB,
-        PublicHostname $publicHostname
+        PublicHostname $publicHostname,
+        DeploymentHostname $deploymentHostname
     ): void {
-        // Block a source endpoint that resolves to a private or reserved
-        // address to prevent SSRF into the internal network.
-        $hostname = $publicHostname;
-        if (!$hostname->isValid(\parse_url($endpoint, PHP_URL_HOST) ?? '')) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $hostname->getDescription());
+        $host = \parse_url($endpoint, PHP_URL_HOST) ?: '';
+        $deployment = $deploymentHostname->isValid($host);
+
+        if (!$deployment && !$publicHostname->isValid($host)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $publicHostname->getDescription());
         }
 
         try {
             $appwrite = new AppwriteSource($projectID, $endpoint, $key, $getDatabasesDB);
-            if (!$this->isDeploymentHost(\parse_url($endpoint, PHP_URL_HOST) ?: '')) {
+            if (!$deployment) {
                 $appwrite->setDestinations($publicHostname->getDestinations());
             }
             $report = $appwrite->report($resources);
@@ -92,22 +93,5 @@ class Get extends Action
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
             ->dynamic(new Document($report), Response::MODEL_MIGRATION_REPORT);
-    }
-
-    /**
-     * Whether the host is one this deployment is configured to serve on, which may be internal.
-     */
-    private function isDeploymentHost(string $host): bool
-    {
-        $domain = \parse_url('http://' . System::getEnv('_APP_DOMAIN', ''), PHP_URL_HOST) ?: '';
-        $internal = \parse_url('http://' . System::getEnv('_APP_MIGRATION_HOST', ''), PHP_URL_HOST) ?: '';
-
-        $hosts = \array_values(\array_filter([
-            $domain,
-            $domain !== '' ? '*.' . $domain : '',
-            $internal,
-        ]));
-
-        return $hosts !== [] && (new Hostname($hosts))->isValid($host);
     }
 }
