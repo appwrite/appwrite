@@ -3644,6 +3644,191 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
     }
 
+    public function testCreateSessionWithPhoneAfterPhoneUpdate(): void
+    {
+        $this->ensurePhoneAuthEnabled();
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+        $numbers = \array_map(fn (int $index): string => '+1' . \substr(\str_replace('.', '', (string) \microtime(true)) . \getmypid() . $index . \random_int(10, 99), -9), [1, 2, 3]);
+
+        $createToken = function (string $userId, string $number) use ($projectId, $headers): string {
+            $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', $headers, [
+                'userId' => $userId,
+                'phone' => $number,
+            ]);
+            $this->assertEquals(201, $response['headers']['status-code']);
+
+            $sms = $this->getLastRequestForProject($projectId, Scope::REQUEST_TYPE_SMS, [
+                'header_X-Username' => 'username',
+                'header_X-Key' => 'password',
+                'method' => 'POST',
+            ], probe: function (array $request) use ($number) {
+                $this->assertEquals($number, $request['data']['to'] ?? null);
+            });
+            $this->assertNotEmpty($sms);
+
+            return \explode(' ', $sms['data']['message'])[0];
+        };
+
+        /**
+         * Test for FAILURE - a token sent before the server changes the number is no longer accepted
+         */
+        $userId = ID::unique();
+        $token = $createToken($userId, $numbers[0]);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/phone', \array_merge($headers, [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'number' => $numbers[1],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', $headers, [
+            'userId' => $userId,
+            'secret' => $token,
+        ]);
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - a token sent before the user changes the number is no longer accepted
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', $headers, [
+            'userId' => $userId,
+            'secret' => $createToken($userId, $numbers[1]),
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $session = $response['cookies']['a_session_' . $projectId];
+
+        $token = $createToken($userId, $numbers[1]);
+
+        $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'factor' => 'phone',
+        ]);
+        $this->assertEquals(201, $challenge['headers']['status-code']);
+
+        $sms = $this->getLastRequestForProject($projectId, Scope::REQUEST_TYPE_SMS, [
+            'header_X-Username' => 'username',
+            'header_X-Key' => 'password',
+            'method' => 'POST',
+        ], probe: function (array $request) use ($numbers, $token) {
+            $this->assertEquals($numbers[1], $request['data']['to'] ?? null);
+            $this->assertStringNotContainsString($token, (string) ($request['data']['message'] ?? ''));
+        });
+        $this->assertNotEmpty($sms);
+        $otp = \explode(' ', $sms['data']['message'])[0];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/phone', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'phone' => $numbers[2],
+            'password' => 'new-password',
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', $headers, [
+            'userId' => $userId,
+            'secret' => $token,
+        ]);
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'challengeId' => $challenge['body']['$id'],
+            'otp' => $otp,
+        ]);
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $response['body']['type']);
+    }
+
+    public function testUpdateMFAChallengeAfterEmailUpdate(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $email = 'mfa_' . \uniqid() . '@localhost.test';
+        $user = $this->client->call(Client::METHOD_POST, '/users', $serverHeaders, [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => 'password1234',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/sessions', $serverHeaders);
+        $this->assertSame(201, $session['headers']['status-code']);
+        $sessionHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-session' => $session['body']['secret'],
+        ];
+
+        $createChallenge = function () use (&$email, $userId, $serverHeaders, $sessionHeaders): array {
+            $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/verification', $serverHeaders, [
+                'emailVerification' => true,
+            ]);
+            $this->assertSame(200, $response['headers']['status-code']);
+
+            $challenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $sessionHeaders, [
+                'factor' => 'email',
+            ]);
+            $this->assertSame(201, $challenge['headers']['status-code']);
+
+            $mail = $this->getLastEmailByAddress($email, function (array $mail): void {
+                $this->assertStringStartsWith('Verification Code for ', (string) $mail['subject']);
+            });
+            $code = $this->extractEmailCode((string) $mail['text']);
+            $this->assertNotEmpty($code);
+
+            return [$challenge['body']['$id'], $code];
+        };
+
+        /**
+         * Test for FAILURE - a challenge mailed before the server changes the email is no longer accepted
+         */
+        [$challengeId, $code] = $createChallenge();
+
+        $email = 'mfa_' . \uniqid() . '@localhost.test';
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/email', $serverHeaders, [
+            'email' => $email,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $sessionHeaders, [
+            'challengeId' => $challengeId,
+            'otp' => $code,
+        ]);
+        $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $response['body']['type']);
+
+        /**
+         * Test for FAILURE - a challenge mailed before the user changes the email is no longer accepted
+         */
+        [$challengeId, $code] = $createChallenge();
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/email', $sessionHeaders, [
+            'email' => 'mfa_' . \uniqid() . '@localhost.test',
+            'password' => 'password1234',
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $sessionHeaders, [
+            'challengeId' => $challengeId,
+            'otp' => $code,
+        ]);
+        $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $response['body']['type']);
+    }
+
     public function testConvertPhoneToPassword(): void
     {
         $data = $this->setupPhoneSession();

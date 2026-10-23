@@ -1684,6 +1684,15 @@ Http::patch('/v1/users/:userId/email')
                             TOKEN_TYPE_EMAIL,
                         ]),
                     ]);
+                    $dbForProject->deleteDocuments('challenges', [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('type', [Type::EMAIL]),
+                    ]);
+                    // A pending invite was sent to the old address, so it must not prove the new one
+                    $dbForProject->updateDocuments('memberships', new Document(['secret' => '']), [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('confirm', [false]),
+                    ]);
                 }
 
                 return $user;
@@ -1731,8 +1740,6 @@ Http::patch('/v1/users/:userId/phone')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $oldPhone = $user->getAttribute('phone');
-
         // Store null instead of empty string so unique constraint allows multiple users without phone
         $phoneValue = $number !== '' ? $number : null;
 
@@ -1752,35 +1759,63 @@ Http::patch('/v1/users/:userId/phone')
         }
 
         try {
-            $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
-                'phone' => $phoneValue,
-                'phoneVerification' => $user->getAttribute('phoneVerification'),
-            ]));
-            $oldTarget = $user->find('identifier', $oldPhone, 'targets');
+            $user = $dbForProject->withTransaction(function () use ($dbForProject, $user, $number, $phoneValue) {
+                $current = $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+                if ($current->isEmpty()) {
+                    throw new Exception(Exception::USER_NOT_FOUND);
+                }
 
-            if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                if ($number !== '') {
-                    $dbForProject->updateDocument('targets', $oldTarget->getId(), new Document(['identifier' => $number]));
-                    $oldTarget->setAttribute('identifier', $number);
+                $lockedPhone = $current->getAttribute('phone');
+
+                $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
+                    'phone' => $phoneValue,
+                    'phoneVerification' => $user->getAttribute('phoneVerification'),
+                ]));
+                $oldTarget = $user->find('identifier', $lockedPhone, 'targets');
+
+                if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
+                    if ($number !== '') {
+                        $dbForProject->updateDocument('targets', $oldTarget->getId(), new Document(['identifier' => $number]));
+                        $oldTarget->setAttribute('identifier', $number);
+                    } else {
+                        $dbForProject->deleteDocument('targets', $oldTarget->getId());
+                    }
                 } else {
-                    $dbForProject->deleteDocument('targets', $oldTarget->getId());
+                    if ($number !== '') {
+                        $target = $dbForProject->createDocument('targets', new Document([
+                            '$permissions' => [
+                                Permission::read(Role::user($user->getId())),
+                                Permission::update(Role::user($user->getId())),
+                                Permission::delete(Role::user($user->getId())),
+                            ],
+                            'userId' => $user->getId(),
+                            'userInternalId' => $user->getSequence(),
+                            'providerType' => 'sms',
+                            'identifier' => $number,
+                        ]));
+                        $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+                    }
                 }
-            } else {
-                if ($number !== '') {
-                    $target = $dbForProject->createDocument('targets', new Document([
-                        '$permissions' => [
-                            Permission::read(Role::user($user->getId())),
-                            Permission::update(Role::user($user->getId())),
-                            Permission::delete(Role::user($user->getId())),
-                        ],
-                        'userId' => $user->getId(),
-                        'userInternalId' => $user->getSequence(),
-                        'providerType' => 'sms',
-                        'identifier' => $number,
-                    ]));
-                    $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+
+                $sequence = $user->getSequence();
+                if ($lockedPhone !== $phoneValue && $sequence !== '' && $sequence !== null) {
+                    $dbForProject->deleteDocuments('tokens', [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('type', [TOKEN_TYPE_PHONE]),
+                    ]);
+                    $dbForProject->deleteDocuments('challenges', [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('type', [Type::PHONE]),
+                    ]);
+                    // A pending invite was sent to the old number, so it must not prove the new one
+                    $dbForProject->updateDocuments('memberships', new Document(['secret' => '']), [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('confirm', [false]),
+                    ]);
                 }
-            }
+
+                return $user;
+            });
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
