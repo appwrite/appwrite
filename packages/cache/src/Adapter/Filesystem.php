@@ -162,16 +162,18 @@ class Filesystem implements Adapter
             $path .= '/';
         }
 
-        $files = glob($path . '*', GLOB_MARK);
+        $entries = scandir($path);
 
-        if ($files === false) {
-            throw new Exception('Error happened during glob');
+        if ($entries === false) {
+            throw new Exception('Error happened during scandir');
         }
 
         $success = true;
 
-        foreach ($files as $file) {
-            if (is_dir($file)) {
+        foreach (array_diff($entries, ['.', '..']) as $entry) {
+            $file = $path . $entry;
+
+            if (is_dir($file) && ! is_link($file)) {
                 $success = $this->deleteDirectory($file) && $success;
             } else {
                 $success = unlink($file) && $success;
