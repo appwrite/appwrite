@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-22T23:26:00Z",
+  "updated": "2026-10-23T01:26:00Z",
   "tasks": [
     {
       "id": "crate-layout",
@@ -112,6 +112,22 @@
       "status": "todo",
       "note": "On a quiet machine; the last container runs were taken under load.",
       "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "vcs-tls",
+      "title": "vcs: TLS verification on by default",
+      "area": "Database 8",
+      "status": "done",
+      "updated": "2026-10-23T01:26:00Z",
+      "note": "Catch-up N. Main's vcs verifies the Git provider's certificate unless setSelfSigned(true); every Rust adapter gains set_self_signed and is_self_signed, provider errors no longer print request params, and utopia-client words a self-signed certificate failure as PHP's curl does. 393 of 393 symbols, 17 of 17 PHP test files, 661 cases and 21,500 fuzz inputs, and the client library's 471 cases, all 0 differences."
+    },
+    {
+      "id": "image-mqtt-cache",
+      "title": "image, mqtt and cache: main's fixes and ImageMagick 7.1.2-34",
+      "area": "Database 8",
+      "status": "done",
+      "updated": "2026-10-23T01:26:00Z",
+      "note": "Catch-up P. image: a derived crop side is at least 1px, and ImageMagick 7.1.2-34 (base 2.2.7) moved the source lines its messages quote. mqtt: a second CONNECT disconnects (0x82 on 5.0) and keep-alive refreshes only while connected and open. cache: a negative bulk length moves PHP's RESP offset below zero, which Rust had clamped; found by fuzzing, not a main change. All three 100% covered, 0 differences on the CI seed and another."
     },
     {
       "id": "core-keys",
