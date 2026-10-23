@@ -40,7 +40,7 @@ Under the hood, Appwrite installs as a plugin on your Entire project. Entire not
 # Prerequisites
 
 - An [Appwrite Cloud](/sign-in) account with a project.
-- An Entire account and an organization you can create projects in.
+- An [Entire account](https://entire.com/login) and an organization you can create projects in.
 - The [Entire CLI](https://docs.entire.com/installation), installed and signed in with `entire login`. Its installer also adds `git-remote-entire`, the helper Git calls for `entire://` remotes, so plain `git push` works.
 - Node.js, if you want to build the example site locally.
 
@@ -234,25 +234,16 @@ Path filters match from the repository root, not from the root directory you set
 
 Appwrite works out which files a push changed by comparing the push's previous and new commits on Entire. In our test, a push that only touched `functions/api` deployed and activated the function and left the site alone. The first push of a new branch has nothing to compare against, so it deploys regardless of path filters. After that, the filters apply to every push on the branch.
 
-# Manage the Entire connection over time
+# Manage and troubleshoot the connection
 
-- **Add repositories.** If a repository is missing from the picker, it isn't covered by the installation. Click **Update Entire permissions** under **Can't find a repository?** in the creation wizard, or open the installation's menu in **Project settings** > **Git configuration** and click **Configure**. Both reopen Appwrite's installation page on entire.io. Choosing **All repositories** there covers new repositories automatically.
-- **Disconnect from Appwrite.** Open the installation's menu in **Project settings** > **Git configuration** and click **Disconnect**. The dialog lists the Sites and Functions that use the installation before you confirm.
-- **Uninstall from Entire.** If you remove Appwrite from your Entire project, Appwrite disconnects every Site and Function that deployed from it and removes the installation. Their current deployments keep serving, but new pushes stop deploying.
-
-# Troubleshooting Entire deployments
-
-- **The repository isn't listed.** Add it to the installation as described above, then click **Refresh repositories** in the wizard.
-- **There is no option to create a repository.** The wizard only offers **Create new repository** for providers that support it. For Entire, create the repository on Entire first, push your code, and connect it.
-- **The framework shows as Other.** Appwrite detects the framework from the `package.json` in the root directory. If your app lives in a subfolder, set the **Root directory** to that folder, and if Appwrite still doesn't recognize the framework, select it yourself.
-- **No check runs appear on Entire.** Silent mode stops Appwrite from reporting builds back to Entire. Turn it off in the site or function's Git settings.
-- **The build fails.** Open the deployment in the Console and read the build logs. Most failures come from a root directory that doesn't contain the app, or a build command that doesn't match the package manager.
+To add repositories to the installation later, disconnect it, or uninstall Appwrite from Entire, see [Manage the Entire connection](/integrations/deployments-entire#manage-the-entire-connection) in the Entire integration guide. If a repository isn't listed, a push doesn't deploy, or a build fails, the guide's [troubleshooting section](/integrations/deployments-entire#troubleshooting-entire-deployments) covers the common causes.
 
 # Getting started with Entire on Appwrite Cloud
 
 Once the installation is in place, deploying from Entire looks like any other Git workflow on Appwrite: push to `main` to ship, push a branch to preview, and use path filters to keep a monorepo's builds independent. The difference is that the repository also keeps the agent sessions that produced each change, so the commit, its history, and its running deployment are all one click apart.
 
-- [Sign up for Appwrite Cloud](/sign-in) to connect your first Entire project.
+- [Sign up for Appwrite Cloud](/sign-up) to connect your first Entire project.
+- The [Entire integration guide](/integrations/deployments-entire) is a short reference for connecting, managing, and troubleshooting Entire on Appwrite.
 - [Deploy Sites from Git](/docs/products/sites/deploy-from-git) covers build triggers, install and build commands, and output directories.
 - [Deploy Functions from Git](/docs/products/functions/deploy-from-git) covers the same ground for serverless functions.
 - [Preview deployments](/docs/products/sites/previews) explains how branch previews are created and who can open them.
