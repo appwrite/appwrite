@@ -3,6 +3,7 @@
 namespace Appwrite\Databases;
 
 use Utopia\Cache\Cache;
+use Utopia\Cache\Exception\Unavailable;
 use Utopia\Console;
 
 /**
@@ -78,14 +79,20 @@ readonly class ListCache
     }
 
     /**
-     * @throws \Throwable when the fence cannot be registered or the cached responses cannot be retired
+     * @throws Unavailable when the fence cannot be registered or the cached responses cannot be retired
      */
     public function fence(): string
     {
         $token = \bin2hex(\random_bytes(16));
 
-        if ($this->cache->save($this->getFenceKey(), (string) \time(), $token, self::FENCE_TTL) === false) {
-            throw new \RuntimeException('Failed to fence the cached list responses of ' . $this->key);
+        try {
+            $registered = $this->cache->save($this->getFenceKey(), (string) \time(), $token, self::FENCE_TTL);
+        } catch (\Throwable $error) {
+            throw new Unavailable('Failed to fence the cached list responses of ' . $this->key, previous: $error);
+        }
+
+        if ($registered === false) {
+            throw new Unavailable('Failed to fence the cached list responses of ' . $this->key);
         }
 
         // Registered before the purge, so a read that leases the purged generation also sees the fence.
@@ -94,7 +101,7 @@ readonly class ListCache
         } catch (\Throwable $error) {
             $this->release($token);
 
-            throw $error;
+            throw new Unavailable('Failed to retire the cached list responses of ' . $this->key, previous: $error);
         }
 
         return $token;

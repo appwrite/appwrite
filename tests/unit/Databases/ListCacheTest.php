@@ -8,6 +8,7 @@ use Appwrite\Databases\ListCache;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\Redis;
 use Utopia\Cache\Cache;
+use Utopia\Cache\Exception\Unavailable;
 use Utopia\System\System;
 
 final class ListCacheTest extends TestCase
@@ -86,7 +87,7 @@ final class ListCacheTest extends TestCase
                 $written = true;
             });
             $this->fail('A write that could not be fenced ran');
-        } catch (\RedisException) {
+        } catch (Unavailable) {
         }
 
         $this->assertFalse($written, 'A write that could not be fenced ran');
