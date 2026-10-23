@@ -29,6 +29,7 @@ class Key
         protected bool $previewAuthDisabled = false,
         protected bool $deploymentStatusIgnored = false,
         protected bool $runtimeEphemeral = false,
+        protected ?string $expire = null,
     ) {
     }
 
@@ -70,6 +71,40 @@ class Key
     public function isExpired(): bool
     {
         return $this->expired;
+    }
+
+    /**
+     * When the key stops working, or null when it never does.
+     */
+    public function getExpire(): ?string
+    {
+        return $this->expire;
+    }
+
+    /**
+     * Whether a request authorized with this key may create, or change a key into,
+     * a key of the given type with these scopes and expiry.
+     *
+     * A key is a fixed grant, so nothing it makes reaches further than itself: no
+     * scope it does not hold, and no expiry later than its own (none at all when
+     * it expires). Organization keys provisioning project keys are the one
+     * exception on scopes: they hold organization scopes, and
+     * organization.projects.keys.write is the grant to give project keys project
+     * scopes. Their lifetime still bounds what they make.
+     *
+     * @param array<string> $scopes
+     */
+    public function mayCreate(string $type, array $scopes, ?string $expire): bool
+    {
+        if ($this->expire !== null && ($expire === null || new \DateTimeImmutable($expire) > new \DateTimeImmutable($this->expire))) {
+            return false;
+        }
+
+        if ($this->type === API_KEY_ORGANIZATION && \in_array($type, [API_KEY_STANDARD, API_KEY_EPHEMERAL], true)) {
+            return true;
+        }
+
+        return \array_diff($scopes, $this->scopes) === [];
     }
 
     public function getDisabledMetrics(): array
@@ -178,6 +213,7 @@ class Key
                 $deploymentStatusIgnored = $payload['deploymentStatusIgnored'] ?? false;
                 $runtimeEphemeral = $payload['runtimeEphemeral'] ?? false;
                 $scopes = \array_merge($payload['scopes'] ?? [], $scopes);
+                $expire = isset($payload['exp']) ? DateTime::format((new \DateTime())->setTimestamp((int) $payload['exp'])) : null;
 
                 if (!$projectCheckDisabled && $projectId !== $project->getId()) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
@@ -204,7 +240,8 @@ class Key
                     $projectCheckDisabled,
                     $previewAuthDisabled,
                     $deploymentStatusIgnored,
-                    $runtimeEphemeral
+                    $runtimeEphemeral,
+                    $expire,
                 );
             case API_KEY_STANDARD:
                 $key = self::find($project->getAttribute('keys', []), $key);
@@ -229,7 +266,8 @@ class Key
                     $role,
                     $scopes,
                     $name,
-                    $expired
+                    $expired,
+                    expire: $expire ?: null,
                 );
             case API_KEY_ACCOUNT:
                 $key = self::find($user->getAttribute('keys', []), $key);
@@ -259,7 +297,8 @@ class Key
                     $role,
                     $scopes,
                     $name,
-                    $expired
+                    $expired,
+                    expire: $expire ?: null,
                 );
 
                 return $key;
@@ -291,7 +330,8 @@ class Key
                     $role,
                     $scopes,
                     $name,
-                    $expired
+                    $expired,
+                    expire: $expire ?: null,
                 );
 
                 return $key;
