@@ -1,0 +1,250 @@
+---
+layout: article
+title: Joins
+description: Combine rows from several tables in one TablesDB query with inner, left, right, full outer, and cross joins, then select, filter, and sort the joined columns.
+---
+
+A **join** reads rows from two or more tables in a single request, matching rows on columns you choose. List orders with their customers' names, or customers with each of their orders, without fetching related rows one request at a time.
+
+Joins are [queries](/docs/products/databases/tablesdb/queries). You pass them to `listRows()` in the `queries` array, next to your filters, ordering, and pagination.
+
+{% info title="Availability" %}
+Joins work in TablesDB on SQL databases. They are not available in DocumentsDB, or on self-hosted installations that use MongoDB. On self-hosted Appwrite, joins need version 2.6.0 or later. The join helpers on the `Query` class need Web SDK 29.0.0, Node.js SDK 30.0.1, or later.
+{% /info %}
+
+# Use cases {% #use-cases %}
+
+- **Show related data in lists**: Orders with the customer's name, posts with the author's avatar
+- **Filter by another table**: Orders from customers in one country, tasks assigned to members of one team
+- **Sort by another table**: Products ordered by their supplier's rating
+- **Report across tables**: Revenue per customer, when combined with [aggregations](/docs/products/databases/tablesdb/aggregations)
+
+# Joins and relationships {% #joins-and-relationships %}
+
+[Relationships](/docs/products/databases/tablesdb/relationships) and joins both connect tables, but they solve different problems:
+
+| | Relationships | Joins |
+|---|---|---|
+| Defined | In the table schema, as a relationship column | In each query |
+| Matches on | The relationship column | Any columns you choose, with `=`, `<`, `>`, and other operators |
+| Result | Related rows nested inside each row | Flat rows, with joined columns named `alias.column` |
+| Writes | Can create, update, and delete related rows together | Read only |
+| Best for | Data that belongs together, such as an album and its songs | Ad hoc reads, filters, sorting, and reports across tables |
+
+You can use both in one project.
+
+# Example tables {% #example-tables %}
+
+The examples on this page use two tables:
+
+| Table ID | Columns |
+|----------|---------|
+| `customers` | `name` (string), `country` (string) |
+| `orders` | `customerId` (string, the `$id` of a customer), `total` (float), `status` (string) |
+
+# Join two tables {% #join-two-tables %}
+
+To list orders with the name of the customer who placed each one, list the `orders` table and join `customers` on the order's `customerId`:
+
+{% multicode %}
+```client-web
+import { Client, Query, TablesDB } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const tablesDB = new TablesDB(client);
+
+const result = await tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: 'orders',
+    queries: [
+        Query.join('customers', 'customer', [
+            Query.on('customerId', '$id')
+        ]),
+        Query.select(['$id', 'total', 'customer.name'])
+    ]
+});
+
+for (const order of result.rows) {
+    console.log(order.$id, order.total, order['customer.name']);
+}
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>');
+
+const tablesDB = new sdk.TablesDB(client);
+
+const result = await tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: 'orders',
+    queries: [
+        sdk.Query.join('customers', 'customer', [
+            sdk.Query.on('customerId', '$id')
+        ]),
+        sdk.Query.select(['$id', 'total', 'customer.name'])
+    ]
+});
+
+for (const order of result.rows) {
+    console.log(order.$id, order.total, order['customer.name']);
+}
+```
+```http
+{"method":"join","attribute":"customers","values":["customer",{"method":"on","values":["customerId","=","$id"]}]}
+{"method":"select","values":["$id","total","customer.name"]}
+```
+{% /multicode %}
+
+`Query.join()` takes three arguments:
+
+| Argument | Description |
+|----------|-------------|
+| Table ID | The table to join. It must be in the same database |
+| Alias | The name joined columns are returned under, such as `customer.name`. Optional; defaults to the table ID |
+| Conditions | One or more `Query.on()` conditions that decide which rows match |
+
+`Query.on(left, right, operator)` compares a column of the table you list, on the left, with a column of the joined table, on the right. The operator defaults to `=`, and can also be `!=`, `<>`, `<`, `>`, `<=`, or `>=`. System columns such as `$id` and `$createdAt` work on either side. Pass several conditions to match on all of them.
+
+{% info title="Index the columns you join on" %}
+Add an [index](/docs/products/databases/tablesdb/tables#indexes) to columns you join on often, such as `customerId`, so the database can find matching rows without scanning the whole table.
+{% /info %}
+
+# Join types {% #join-types %}
+
+The join type decides what happens to rows without a match:
+
+| Method | Returns |
+|--------|---------|
+| `Query.join()` | Only rows that have a match in both tables |
+| `Query.leftJoin()` | Every row of the table you list. Joined columns are `null` when nothing matches |
+| `Query.rightJoin()` | Every row of the joined table. Columns of the table you list are empty when nothing matches |
+| `Query.fullOuterJoin()` | Every row of both tables, matched where possible |
+| `Query.crossJoin()` | Every combination of rows from both tables. Takes no conditions |
+
+For example, to list every customer with their orders, including customers who have not ordered yet:
+
+{% multicode %}
+```client-web
+const result = await tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: 'customers',
+    queries: [
+        Query.leftJoin('orders', 'order', [
+            Query.on('$id', 'customerId')
+        ]),
+        Query.select(['name', 'order.$id', 'order.total'])
+    ]
+});
+```
+```server-nodejs
+const result = await tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: 'customers',
+    queries: [
+        sdk.Query.leftJoin('orders', 'order', [
+            sdk.Query.on('$id', 'customerId')
+        ]),
+        sdk.Query.select(['name', 'order.$id', 'order.total'])
+    ]
+});
+```
+```http
+{"method":"leftJoin","attribute":"orders","values":["order",{"method":"on","values":["$id","=","customerId"]}]}
+{"method":"select","values":["name","order.$id","order.total"]}
+```
+{% /multicode %}
+
+A customer with three orders appears in three rows, one per order. A customer with no orders appears once, with `order.$id` and `order.total` set to `null`. The list's `total` counts the joined rows, not the customers.
+
+# Select, filter, and sort joined columns {% #joined-columns %}
+
+Joined columns are always named `alias.column`, both in queries and in the rows you get back.
+
+- **Select**: Without `Query.select()`, each row has every column of the table you list, plus `alias.$id` and every column of each joined table. Select `alias.column` to pick specific columns, or `alias.*` for the whole joined row including its system columns. Selecting a joined column without its alias returns an error.
+- **Filter**: Use `alias.column` in any filter, including inside `Query.and()` and `Query.or()`.
+- **Sort**: Use `alias.column` in `Query.orderAsc()` and `Query.orderDesc()`.
+
+For example, to list orders from customers in Germany, largest first:
+
+{% multicode %}
+```client-web
+Query.join('customers', 'customer', [Query.on('customerId', '$id')]),
+Query.equal('customer.country', ['DE']),
+Query.orderDesc('total')
+```
+```server-nodejs
+sdk.Query.join('customers', 'customer', [sdk.Query.on('customerId', '$id')]),
+sdk.Query.equal('customer.country', ['DE']),
+sdk.Query.orderDesc('total')
+```
+```http
+{"method":"join","attribute":"customers","values":["customer",{"method":"on","values":["customerId","=","$id"]}]}
+{"method":"equal","attribute":"customer.country","values":["DE"]}
+{"method":"orderDesc","attribute":"total"}
+```
+{% /multicode %}
+
+# Join more than two tables {% #multiple-joins %}
+
+Add one join per table, up to 8 in a query. A later join can match on an earlier one by its alias. For example, with a `payments` table whose `orderId` column holds an order's `$id`:
+
+{% multicode %}
+```client-web
+Query.join('orders', 'order', [Query.on('$id', 'customerId')]),
+Query.join('payments', 'payment', [Query.on('order.$id', 'orderId')])
+```
+```server-nodejs
+sdk.Query.join('orders', 'order', [sdk.Query.on('$id', 'customerId')]),
+sdk.Query.join('payments', 'payment', [sdk.Query.on('order.$id', 'orderId')])
+```
+```http
+{"method":"join","attribute":"orders","values":["order",{"method":"on","values":["$id","=","customerId"]}]}
+{"method":"join","attribute":"payments","values":["payment",{"method":"on","values":["order.$id","=","orderId"]}]}
+```
+{% /multicode %}
+
+You can join the same table more than once under different aliases, and join a table to itself, for example to match each employee with their manager in one `employees` table.
+
+# Pagination {% #pagination %}
+
+[Pagination](/docs/products/databases/tablesdb/pagination) works with joins. Use `Query.limit()` and `Query.offset()`, or cursor pagination with the `$id` of a row from the table you list. Results are limited to 25 rows unless you set a limit.
+
+# Get one row {% #get-one-row %}
+
+`getRow()` also accepts joins, to read one row together with its related data. With an inner or right join, the request returns a `404` error when the row has no match. When several joined rows match, you get the first.
+
+# Permissions {% #permissions %}
+
+Joins follow the same [permissions](/docs/products/databases/tablesdb/permissions) as reading each table directly:
+
+- **Tables**: You can join a table if you have **Read** access to it, or if it has [row security](/docs/products/databases/tablesdb/permissions#row-level) enabled. Otherwise, the request fails with `table_not_found`, the same error as for a table that does not exist.
+- **Rows**: Joined rows you cannot read never match. With `Query.join()`, a row whose only matches are hidden from you is left out. With `Query.leftJoin()`, it is kept, with `null` joined columns. With right, full outer, and cross joins, rows you cannot read are left out.
+
+API keys with the `rows.read` scope can join every table and read every row.
+
+# Transactions {% #transactions %}
+
+You can read with joins inside a [transaction](/docs/products/databases/tablesdb/transactions). The result includes the changes the transaction has staged for the table you list.
+
+# Limits {% #limits %}
+
+| Limit | Value |
+|-------|-------|
+| Joins per query | 8 |
+| Joined tables | Same database as the table you list, referenced by table ID |
+| Alias | Up to 63 letters, digits, `_`, and `-`, unique in the query. Cannot be `main` or the name of a relationship column |
+| Not supported | Natural joins and unions |
+
+Common errors:
+
+| Error | Cause |
+|-------|-------|
+| `general_query_invalid` | A join is malformed: an unsupported operator, a joined column selected without its alias, more than 8 joins, or an invalid alias |
+| `table_not_found` | The joined table does not exist in this database, is disabled, or you cannot read it |
