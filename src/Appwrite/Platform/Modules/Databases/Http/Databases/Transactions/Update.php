@@ -63,6 +63,9 @@ class Update extends Action
             ->groups(['api', 'database', 'transactions'])
             ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
+            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
+            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
             ->label('sdk', new Method(
                 namespace: 'databases',
                 group: 'transactions',
@@ -274,12 +277,10 @@ class Update extends Action
                             $data = $this->parseOperators($data, $collection);
                         }
 
-                        if ($action === 'delete' && $documentId && empty($data)) {
+                        if ($action === 'delete' && $documentId) {
                             $doc = $dbForDatabases->getDocument($collectionId, $documentId);
-                            if (!$doc->isEmpty()) {
-                                $operation['data'] = $doc->getArrayCopy();
-                                $data = $operation['data'];
-                            }
+                            $operation['data'] = $doc->isEmpty() ? [] : $doc->getArrayCopy();
+                            $data = $operation['data'];
                         }
 
                         if (!\in_array($action, ['bulkCreate', 'bulkUpdate', 'bulkUpsert', 'bulkDelete'])) {

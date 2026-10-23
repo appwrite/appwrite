@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Functions;
 
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Specification;
@@ -1107,6 +1108,63 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertGreaterThan(0, $deployment['body']['buildSize']);
         $totalSize = $deployment['body']['sourceSize'] + $deployment['body']['buildSize'];
         $this->assertEquals($totalSize, $deployment['body']['totalSize']);
+
+        $this->cleanupFunction($functionId);
+    }
+
+    public function testRootDirectoryMustStayInsideRepository(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $function = $this->createFunction([
+            'functionId' => Id::unique(),
+            'name' => 'Root directory test',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'providerRootDirectory' => '/functions/starter',
+        ]);
+
+        $this->assertSame(201, $function['headers']['status-code']);
+        $this->assertSame('/functions/starter', $function['body']['providerRootDirectory']);
+
+        $functionId = $function['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         */
+        foreach (['..', '../other', 'functions/../../storage', '/../etc'] as $rootDirectory) {
+            $deployment = $this->createTemplateDeployment($functionId, [
+                'repository' => 'templates',
+                'owner' => 'appwrite',
+                'rootDirectory' => $rootDirectory,
+                'type' => 'branch',
+                'reference' => 'main',
+                'activate' => true,
+            ]);
+            $this->assertSame(400, $deployment['headers']['status-code'], $rootDirectory);
+            $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $deployment['body']['type']);
+
+            $created = $this->createFunction([
+                'functionId' => Id::unique(),
+                'name' => 'Root directory test',
+                'runtime' => 'node-22',
+                'entrypoint' => 'index.js',
+                'providerRootDirectory' => $rootDirectory,
+            ]);
+            $this->assertSame(400, $created['headers']['status-code'], $rootDirectory);
+
+            $updated = $this->updateFunction($functionId, [
+                'name' => 'Root directory test',
+                'runtime' => 'node-22',
+                'entrypoint' => 'index.js',
+                'providerRootDirectory' => $rootDirectory,
+            ]);
+            $this->assertSame(400, $updated['headers']['status-code'], $rootDirectory);
+        }
+
+        $function = $this->getFunction($functionId);
+        $this->assertSame('/functions/starter', $function['body']['providerRootDirectory']);
 
         $this->cleanupFunction($functionId);
     }
@@ -2785,6 +2843,87 @@ final class FunctionsCustomServerTest extends Scope
         $function = $this->getFunction($functionId);
 
         $this->assertEquals(404, $function['headers']['status-code']);
+    }
+
+    public function testDeleteFunctionBuildCache(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => Id::unique(),
+            'name' => 'Test Delete Build Cache',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+        ]);
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('basic'),
+            'activate' => true,
+        ]);
+
+        $builds = getDevice(APP_STORAGE_BUILDS . '/app-' . $this->getProject()['$id']);
+        $cache = $this->buildCache($functionId, 'node-22');
+        $this->assertTrue($builds->exists($cache), 'The build left no cache to clean up');
+
+        $response = $this->deleteFunction($functionId);
+        $this->assertSame(204, $response['headers']['status-code']);
+
+        $this->assertEventually(function () use ($builds, $cache): void {
+            \clearstatcache();
+            $this->assertFalse($builds->exists($cache), 'Deleting the function left its build cache behind');
+        }, 60000, 500);
+    }
+
+    public function testUpdateFunctionRuntimeBuildCache(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => Id::unique(),
+            'name' => 'Test Runtime Build Cache',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+        ]);
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('basic'),
+            'activate' => true,
+        ]);
+
+        $builds = getDevice(APP_STORAGE_BUILDS . '/app-' . $this->getProject()['$id']);
+        $cache = $this->buildCache($functionId, 'node-22');
+        $this->assertTrue($builds->exists($cache), 'The build left no cache to clean up');
+
+        // Same runtime: the next build reuses the cache
+        $response = $this->updateFunction($functionId, [
+            'name' => 'Test Runtime Build Cache',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        \clearstatcache();
+        $this->assertTrue($builds->exists($cache), 'An update that keeps the runtime must keep the build cache');
+
+        // New runtime: builds key a new cache, so nothing would read or delete the old one
+        $response = $this->updateFunction($functionId, [
+            'name' => 'Test Runtime Build Cache',
+            'runtime' => 'node-24',
+            'entrypoint' => 'index.js',
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        \clearstatcache();
+        $this->assertFalse($builds->exists($cache), 'Changing the runtime left the previous build cache behind');
+
+        $this->cleanupFunction($functionId);
+    }
+
+    /**
+     * Where builds of this function on this runtime keep their package-manager cache.
+     */
+    private function buildCache(string $functionId, string $runtime): string
+    {
+        return Deployments::resourceCachePath($this->getProject()['$id'], new Document([
+            '$id' => $functionId,
+            '$collection' => 'functions',
+            'runtime' => $runtime,
+            'version' => 'v5',
+        ]));
     }
 
     public function testDeleteFunctionRulesCleanup(): void

@@ -1,8 +1,7 @@
 import { useState, useMemo } from 'react'
-import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
-import { getApexDomain } from '@/lib/utils/proxy-domains'
+import { getApexDomain, isCloud as isCloudEndpoint } from '@/lib/utils/proxy-domains'
 import type { Models } from '@appwrite.io/console'
 import { Copy, Check, Loader2, ExternalLink, Info, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -191,13 +190,7 @@ export function VerifyDomainContent({
     error,
   } = useConsoleVariables(region)
 
-  const isCloud = useMemo(() => {
-    try {
-      return getBaseEndpoint().includes('cloud.appwrite.io')
-    } catch {
-      return false
-    }
-  }, [])
+  const isCloud = useMemo(() => isCloudEndpoint(), [])
 
   const { features } = useConsoleProfile()
   const edgeNetworkEnabled = features.edgeNetwork
