@@ -240,14 +240,25 @@ class CloudFront implements Adapter
 
     /**
      * CloudFront expects unsafe characters in an invalidation path to be percent-encoded. "*" stays
-     * literal, because a trailing "*" is a wildcard.
+     * literal, because a trailing "*" is a wildcard, and so does a "%" that already starts an
+     * escape; any other "%" is a literal percent sign and is encoded.
      */
     private function encodePath(string $path): string
     {
         $encoded = '';
+        $length = \strlen($path);
 
-        foreach (str_split($path) as $character) {
-            $encoded .= ctype_alnum($character) || str_contains('-._~/%?=&:+*', $character)
+        for ($i = 0; $i < $length; $i++) {
+            $character = $path[$i];
+
+            if ($character === '%') {
+                $escape = substr($path, $i + 1, 2);
+                $encoded .= \strlen($escape) === 2 && ctype_xdigit($escape) ? '%' : '%25';
+
+                continue;
+            }
+
+            $encoded .= ctype_alnum($character) || str_contains('-._~/?=&:+*', $character)
                 ? $character
                 : rawurlencode($character);
         }

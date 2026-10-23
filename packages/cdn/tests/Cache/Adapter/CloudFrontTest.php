@@ -29,6 +29,15 @@ final class CloudFrontTest extends TestCase
         $this->assertSame(['/hello%20world', '/assets/*'], $this->paths($client, 1));
     }
 
+    public function testLiteralPercentSignsAreEncodedButEscapesAreKept(): void
+    {
+        $client = new TestClient([$this->tenant('dt_example'), $this->created()]);
+
+        $this->adapter($client)->purgePaths('example.com', ['/files/100%.png', '/caf%C3%A9', '/%4']);
+
+        $this->assertSame(['/files/100%25.png', '/caf%C3%A9', '/%254'], $this->paths($client, 1));
+    }
+
     public function testPathPurgeRefusesDotSegmentsBeforeSending(): void
     {
         $client = new TestClient([]);
