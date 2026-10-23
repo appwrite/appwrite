@@ -26,6 +26,7 @@ use Appwrite\Exiftool\Client as ExiftoolClient;
 use Appwrite\Geo\Client as GeoClient;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Messaging\Provider as MessagingProvider;
+use Appwrite\Network\Validator\DeploymentHostname;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
@@ -132,6 +133,11 @@ $container->set('publicHostname', function () {
 }, []);
 
 $container->set('publicURL', fn (PublicHostname $publicHostname) => new PublicURL($publicHostname), ['publicHostname']);
+
+$container->set('deploymentHostname', fn () => new DeploymentHostname(
+    System::getEnv('_APP_DOMAIN', ''),
+    System::getEnv('_APP_MIGRATION_HOST', ''),
+), []);
 
 $container->set('jobs', function () {
     $client = (new Client(new CurlAdapter()))

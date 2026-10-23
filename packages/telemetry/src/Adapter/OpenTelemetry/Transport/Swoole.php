@@ -21,10 +21,15 @@ use Utopia\Telemetry\Exception;
  */
 class Swoole implements TransportInterface
 {
+    private const string ADDRESS_NAME = 'IP Address:';
+
     private readonly string $host;
     private readonly int $port;
     private string $path;
     private readonly bool $ssl;
+
+    /** IP literal an https endpoint names, which the collector certificate must name too */
+    private readonly ?string $address;
 
     /** @var array<string, string> Pre-computed base headers */
     private readonly array $baseHeaders;
@@ -39,6 +44,7 @@ class Swoole implements TransportInterface
     /**
      * @param 'application/json'|'application/x-ndjson'|'application/x-protobuf' $contentType
      * @param array<string, string> $headers
+     * @param string|null $certificateAuthority PEM bundle trusted for HTTPS endpoints; the system store when null
      */
     public function __construct(
         string $endpoint,
@@ -47,6 +53,7 @@ class Swoole implements TransportInterface
         private readonly float  $timeout = 10.0,
         private readonly int $poolSize = 8,
         int $socketBufferSize = 64 * 1024, // 64 KB
+        ?string $certificateAuthority = null,
     ) {
         $parsed = parse_url($endpoint);
         if ($parsed === false) {
@@ -56,6 +63,8 @@ class Swoole implements TransportInterface
         $this->ssl = ($parsed['scheme'] ?? 'http') === 'https';
         $this->host = $parsed['host'] ?? 'localhost';
         $this->port = $parsed['port'] ?? ($this->ssl ? 443 : 80);
+        $address = trim($this->host, '[]');
+        $this->address = $this->ssl && filter_var($address, FILTER_VALIDATE_IP) !== false ? $address : null;
         $this->path = $parsed['path'] ?? '/';
         if (isset($parsed['query'])) {
             $this->path .= '?' . $parsed['query'];
@@ -83,7 +92,26 @@ class Swoole implements TransportInterface
             'tcp_keepcount' => 3,
             'socket_buffer_size' => $socketBufferSize,
             'http_compression' => false,
+            ...($this->ssl ? $this->tlsSettings($certificateAuthority) : []),
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function tlsSettings(?string $certificateAuthority): array
+    {
+        $settings = [
+            'ssl_verify_peer' => true,
+            'ssl_allow_self_signed' => false,
+            'ssl_host_name' => $this->address === null ? $this->host : '',
+        ];
+
+        if ($certificateAuthority !== null) {
+            $settings['ssl_cafile'] = $certificateAuthority;
+        }
+
+        return $settings;
     }
 
     /**
@@ -106,12 +134,13 @@ class Swoole implements TransportInterface
         $headers = $this->baseHeaders;
         $headers['Content-Length'] = \strlen($payload);
 
-        $client = $this->pooledClient();
-        $reused = $client instanceof Client;
-        $client ??= $this->connect();
+        $client = null;
         $forceClose = false;
 
         try {
+            $client = $this->pooledClient();
+            $reused = $client instanceof Client;
+            $client ??= $this->connect();
             $statusCode = $this->post($client, $headers, $payload);
 
             if ($reused && $this->isRetryable($statusCode)) {
@@ -146,7 +175,9 @@ class Swoole implements TransportInterface
 
             return new ErrorFuture($e);
         } finally {
-            $this->putClient($client, $forceClose);
+            if ($client instanceof Client) {
+                $this->putClient($client, $forceClose);
+            }
         }
     }
 
@@ -159,12 +190,17 @@ class Swoole implements TransportInterface
      * connection can carry it. A timeout is deliberately not retryable: the
      * collector may have accepted the export and still be working on it, so
      * sending it again would duplicate it and wait out a second timeout.
+     *
+     * A pooled connection to a collector addressed by IP refuses that silent
+     * reconnect (see verifyAddress()), which surfaces as a failed connect before
+     * anything was sent, so a fresh, verified connection can carry the export.
      */
     private function isRetryable(int $statusCode): bool
     {
         return match ($statusCode) {
             SWOOLE_HTTP_CLIENT_ESTATUS_SERVER_RESET,
             SWOOLE_HTTP_CLIENT_ESTATUS_SEND_FAILED => true,
+            SWOOLE_HTTP_CLIENT_ESTATUS_CONNECT_FAILED => $this->address !== null,
             default => false,
         };
     }
@@ -203,7 +239,66 @@ class Swoole implements TransportInterface
         $client = new Client($this->host, $this->port, $this->ssl);
         $client->set($this->settings);
 
+        if ($this->address !== null) {
+            $this->verifyAddress($client, $this->address);
+        }
+
         return $client;
+    }
+
+    /**
+     * Swoole checks a certificate's DNS names but never its IP addresses, so a
+     * collector addressed by IP is checked here instead: on a HEAD request for the
+     * root that carries none of the endpoint's path, query, headers or payload,
+     * before the connection carries an export.
+     *
+     * @throws Exception When the collector cannot be reached or its certificate does not name the address
+     */
+    private function verifyAddress(Client $client, string $address): void
+    {
+        $client->setMethod('HEAD');
+        $client->execute('/');
+
+        if ($client->getStatusCode() < 0) {
+            $errCode = \is_int($client->errCode) ? $client->errCode : 0;
+            $errMsg = \is_string($client->errMsg) ? $client->errMsg : 'Unknown error';
+            $client->close();
+
+            throw new Exception("OTLP connection failed: {$errMsg} (code: {$errCode})");
+        }
+
+        $certificate = $client->getPeerCert();
+        if (!\is_string($certificate) || !\in_array(inet_pton($address), $this->addresses($certificate), true)) {
+            $client->close();
+
+            throw new Exception("OTLP connection failed: the collector certificate does not name {$address}");
+        }
+
+        // Swoole silently reconnects a socket the collector dropped, which would skip the check above.
+        // Naming the address makes that handshake fail instead.
+        $client->set(['ssl_host_name' => $address]);
+    }
+
+    /**
+     * IP addresses a PEM certificate names in its subject alternative names, in packed form.
+     *
+     * @return array<string>
+     */
+    private function addresses(string $certificate): array
+    {
+        $parsed = openssl_x509_parse($certificate);
+        $extensions = \is_array($parsed) && \is_array($parsed['extensions'] ?? null) ? $parsed['extensions'] : [];
+        $names = \is_string($extensions['subjectAltName'] ?? null) ? $extensions['subjectAltName'] : '';
+
+        $addresses = [];
+        foreach (explode(', ', $names) as $name) {
+            $packed = str_starts_with($name, self::ADDRESS_NAME) ? inet_pton(substr($name, \strlen(self::ADDRESS_NAME))) : false;
+            if ($packed !== false) {
+                $addresses[] = $packed;
+            }
+        }
+
+        return $addresses;
     }
 
     /**
