@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-23T01:26:00Z",
+  "updated": "2026-10-23T02:20:00Z",
   "tasks": [
     {
       "id": "crate-layout",
@@ -16,14 +16,6 @@
       "status": "progress",
       "updated": "2026-10-17T19:50:00Z",
       "note": "An optional PHP parameter becomes an explicit Rust argument, never a second method or a with_* builder. registry is converted in the working tree (set and get take fresh; set_fresh and get_fresh are gone), and CONVERSION.md gets the rule in §4 and on the checklist. Not committed yet; the other crates follow."
-    },
-    {
-      "id": "forwarded-trust",
-      "title": "http: trust X-Forwarded-Host and -Port only from a trusted proxy",
-      "area": "Database 8",
-      "status": "done",
-      "updated": "2026-10-23T02:35:00Z",
-      "note": "Main's utopia-php/http and Appwrite\\Utopia\\Request honour X-Forwarded-Host and X-Forwarded-Port only when the request comes from a trusted proxy, and then the value the nearest proxy wrote (the rightmost). Ported: utopia-http TrustedHeaders gains host and port lists (TrustedHeaders::new(ip, proto, host, port)), Request::hostname and port read them through trusted_value (a port must be digits); appwrite-core's context hostname and Context::forwarded, and account's port(), believe them only from _APP_TRUSTED_PROXIES. Compat: SwooleRequestTest and RequestTest cases, trusted host/port in the request.inspect and trusted.new fuzz."
     },
     {
       "id": "sites-flake",
@@ -112,6 +104,22 @@
       "status": "todo",
       "note": "On a quiet machine; the last container runs were taken under load.",
       "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "queue-validators",
+      "title": "queue and validators: main's attempt ceiling, reap limits and Label",
+      "area": "Database 8",
+      "status": "done",
+      "updated": "2026-10-23T02:20:00Z",
+      "note": "Catch-up O. queue: messages carry max attempts (NATS max_deliver), Redis reaping takes an attempt and age ceiling, and NATS acknowledgements retry within the publish budget. validators: the new Label validator (one DNS label). Both 100% covered with every PHP test ported, 332 and 262 cases, 0 differences. Main's new NATS fault-injection tests stay unported, as the earlier ones are."
+    },
+    {
+      "id": "forwarded-trust",
+      "title": "http: trust X-Forwarded-Host and -Port only from a trusted proxy",
+      "area": "Database 8",
+      "status": "done",
+      "updated": "2026-10-23T02:35:00Z",
+      "note": "Main's utopia-php/http and Appwrite\\Utopia\\Request honour X-Forwarded-Host and X-Forwarded-Port only when the request comes from a trusted proxy, and then the value the nearest proxy wrote (the rightmost). Ported: utopia-http TrustedHeaders gains host and port lists (TrustedHeaders::new(ip, proto, host, port)), Request::hostname and port read them through trusted_value (a port must be digits); appwrite-core's context hostname and Context::forwarded, and account's port(), believe them only from _APP_TRUSTED_PROXIES. Compat: SwooleRequestTest and RequestTest cases, trusted host/port in the request.inspect and trusted.new fuzz."
     },
     {
       "id": "vcs-tls",
