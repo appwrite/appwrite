@@ -4681,13 +4681,25 @@ trait MigrationsBase
         return [$databaseId, $tableId, $bucketId, $fileId, 'hxfcwpcas5xokpwe', 'Diamond Mendez', 56];
     }
 
-    /**
-     * The Console imports a local CSV by uploading it to the console bucket, then importing it with internalFile.
-     */
     public function testCreateCSVImportFromConsoleUpload(): void
     {
         [$databaseId, $tableId] = $this->prepareCsvImportFixture('console upload');
 
+        $this->assertImportFromConsoleUpload('csv', $databaseId, $tableId, 'text/csv');
+    }
+
+    public function testCreateJSONImportFromConsoleUpload(): void
+    {
+        [$databaseId, $tableId] = $this->prepareJsonImportFixture('console upload');
+
+        $this->assertImportFromConsoleUpload('json', $databaseId, $tableId, 'application/json');
+    }
+
+    /**
+     * The Console imports a local file by uploading it to the console bucket, then importing it with internalFile.
+     */
+    private function assertImportFromConsoleUpload(string $format, string $databaseId, string $tableId, string $mimeType): void
+    {
         $upload = $this->client->call(Client::METHOD_POST, '/storage/buckets/default/files', [
             'content-type' => 'multipart/form-data',
             'origin' => 'http://localhost',
@@ -4695,7 +4707,7 @@ trait MigrationsBase
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ], [
             'fileId' => Id::unique(),
-            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/csv/documents.csv'), 'text/csv', 'documents.csv'),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/' . $format . '/documents.' . $format), $mimeType, 'documents.' . $format),
         ]);
         $this->assertSame(201, $upload['headers']['status-code']);
         $fileId = $upload['body']['$id'];
@@ -4703,7 +4715,7 @@ trait MigrationsBase
         /**
          * Test for SUCCESS - the console user who uploaded the file can import it
          */
-        $import = $this->client->call(Client::METHOD_POST, '/migrations/csv/imports', array_merge([
+        $import = $this->client->call(Client::METHOD_POST, '/migrations/' . $format . '/imports', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -4728,7 +4740,7 @@ trait MigrationsBase
         /**
          * Test for FAILURE - a caller other than the uploader cannot import it
          */
-        $import = $this->client->call(Client::METHOD_POST, '/migrations/csv/imports', [
+        $import = $this->client->call(Client::METHOD_POST, '/migrations/' . $format . '/imports', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
