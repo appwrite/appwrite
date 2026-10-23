@@ -5,6 +5,7 @@ namespace Utopia\Telemetry\Tests\E2E\Adapter\OpenTelemetry\Swoole;
 use Swoole\Coroutine;
 use Swoole\Coroutine\Http\Client;
 use Swoole\Coroutine\Http\Server;
+use Swoole\Exception as SwooleException;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
 use Utopia\Telemetry\Exception;
@@ -37,8 +38,8 @@ class MockOtlpServer
     private float $responseDelay = 0;
 
     public function __construct(
-        private readonly ?string $certificate = null,
-        private readonly ?string $key = null,
+        private ?string $certificate = null,
+        private ?string $key = null,
     ) {
         $this->port = self::HOST === '127.0.0.1' ? 19318 + (self::$portOffset++) : 19318;
     }
@@ -122,6 +123,34 @@ class MockOtlpServer
     public function stop(): void
     {
         $this->server->shutdown();
+    }
+
+    /**
+     * Restart on the same port presenting another certificate, which drops every open connection.
+     *
+     * The port is released only once the connections the stopped server was
+     * serving have wound down, so binding it again is retried until then.
+     */
+    public function restart(string $certificate, string $key, float $timeout = 2.0): void
+    {
+        $this->stop();
+        unset($this->server);
+        $this->certificate = $certificate;
+        $this->key = $key;
+
+        $deadline = microtime(true) + $timeout;
+        while (true) {
+            try {
+                $this->start();
+
+                return;
+            } catch (SwooleException $e) {
+                if (microtime(true) > $deadline) {
+                    throw $e;
+                }
+                Coroutine::sleep(0.01);
+            }
+        }
     }
 
     /**

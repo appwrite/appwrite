@@ -27,6 +27,9 @@ final class TransportIntegrationTest extends TestCase
 {
     private ?string $certificates = null;
 
+    /** @var array{certificate: \OpenSSLCertificate, key: \OpenSSLAsymmetricKey, path: string}|null */
+    private ?array $authority = null;
+
     protected function tearDown(): void
     {
         if ($this->certificates !== null) {
@@ -34,12 +37,13 @@ final class TransportIntegrationTest extends TestCase
             rmdir($this->certificates);
             $this->certificates = null;
         }
+        $this->authority = null;
     }
 
     #[RequiresPhpExtension('openssl')]
     public function testRefusesCollectorWithUntrustedCertificate(): void
     {
-        ['certificate' => $certificate, 'key' => $key] = $this->issueCertificate();
+        ['certificate' => $certificate, 'key' => $key] = $this->issueCertificate('DNS:localhost');
 
         MockOtlpServer::run(function (MockOtlpServer $server): void {
             $transport = new Swoole(
@@ -48,15 +52,7 @@ final class TransportIntegrationTest extends TestCase
                 timeout: 1.0,
             );
 
-            try {
-                $transport->send('payload')->await();
-                $this->fail('An export must not be sent to a collector whose certificate is not trusted.');
-            } catch (Exception $e) {
-                $this->assertStringContainsString('OTLP connection failed', $e->getMessage());
-            } finally {
-                $transport->shutdown();
-            }
-
+            $this->assertRefused($transport);
             $this->assertSame(0, $server->getRequestCount());
         }, $certificate, $key);
     }
@@ -64,25 +60,17 @@ final class TransportIntegrationTest extends TestCase
     #[RequiresPhpExtension('openssl')]
     public function testRefusesCollectorWhoseCertificateNamesAnotherHost(): void
     {
-        ['certificate' => $certificate, 'key' => $key] = $this->issueCertificate();
+        ['certificate' => $certificate, 'key' => $key] = $this->issueCertificate('DNS:collector.internal');
 
-        MockOtlpServer::run(function (MockOtlpServer $server) use ($certificate): void {
+        MockOtlpServer::run(function (MockOtlpServer $server): void {
             $transport = new Swoole(
-                endpoint: $server->getEndpoint(),
+                endpoint: 'https://localhost:' . $server->getPort() . '/v1/metrics',
                 headers: ['Authorization' => 'Bearer collector-token'],
                 timeout: 1.0,
-                certificateAuthority: $certificate,
+                certificateAuthority: $this->authority()['path'],
             );
 
-            try {
-                $transport->send('payload')->await();
-                $this->fail('An export must not be sent to a collector whose certificate names another host.');
-            } catch (Exception $e) {
-                $this->assertStringContainsString('OTLP connection failed', $e->getMessage());
-            } finally {
-                $transport->shutdown();
-            }
-
+            $this->assertRefused($transport);
             $this->assertSame(0, $server->getRequestCount());
         }, $certificate, $key);
     }
@@ -90,16 +78,16 @@ final class TransportIntegrationTest extends TestCase
     #[RequiresPhpExtension('openssl')]
     public function testSendsToCollectorWithTrustedCertificate(): void
     {
-        ['certificate' => $certificate, 'key' => $key] = $this->issueCertificate();
+        ['certificate' => $certificate, 'key' => $key] = $this->issueCertificate('DNS:localhost');
 
-        MockOtlpServer::run(function (MockOtlpServer $server) use ($certificate): void {
+        MockOtlpServer::run(function (MockOtlpServer $server): void {
             $server->respondWith(200, 'OK');
 
             $transport = new Swoole(
                 endpoint: 'https://localhost:' . $server->getPort() . '/v1/metrics',
                 headers: ['Authorization' => 'Bearer collector-token'],
                 timeout: 1.0,
-                certificateAuthority: $certificate,
+                certificateAuthority: $this->authority()['path'],
             );
 
             try {
@@ -115,57 +103,244 @@ final class TransportIntegrationTest extends TestCase
         }, $certificate, $key);
     }
 
+    #[RequiresPhpExtension('openssl')]
+    public function testSendsToCollectorWhoseCertificateNamesItsAddress(): void
+    {
+        ['certificate' => $certificate, 'key' => $key] = $this->issueCertificate('IP:127.0.0.1');
+
+        MockOtlpServer::run(function (MockOtlpServer $server): void {
+            $server->respondWith(200, 'OK');
+
+            $transport = new Swoole(
+                endpoint: $server->getEndpoint(),
+                headers: ['Authorization' => 'Bearer collector-token'],
+                timeout: 1.0,
+                certificateAuthority: $this->authority()['path'],
+            );
+
+            try {
+                $this->assertSame('OK', $transport->send('payload')->await());
+            } finally {
+                $transport->shutdown();
+            }
+
+            $request = $server->getLastRequest();
+            $this->assertNotNull($request);
+            $this->assertSame('payload', $request['payload']);
+            $this->assertSame('Bearer collector-token', $request['headers']['authorization']);
+        }, $certificate, $key);
+    }
+
+    #[RequiresPhpExtension('openssl')]
+    public function testRefusesCollectorWhoseCertificateNamesAnotherAddress(): void
+    {
+        ['certificate' => $certificate, 'key' => $key] = $this->issueCertificate('IP:127.0.0.2');
+
+        MockOtlpServer::run(function (MockOtlpServer $server): void {
+            $transport = new Swoole(
+                endpoint: $server->getEndpoint(),
+                headers: ['Authorization' => 'Bearer collector-token'],
+                timeout: 1.0,
+                certificateAuthority: $this->authority()['path'],
+            );
+
+            $this->assertRefused($transport);
+            $this->assertNothingExported($server);
+        }, $certificate, $key);
+    }
+
+    #[RequiresPhpExtension('openssl')]
+    public function testRefusesToReconnectToCollectorWhoseCertificateNamesAnotherAddress(): void
+    {
+        ['certificate' => $certificate, 'key' => $key] = $this->issueCertificate('IP:127.0.0.1');
+        $impostor = $this->issueCertificate('IP:127.0.0.2');
+
+        MockOtlpServer::run(function (MockOtlpServer $server) use ($impostor): void {
+            $transport = new Swoole(
+                endpoint: $server->getEndpoint(),
+                headers: ['Authorization' => 'Bearer collector-token'],
+                timeout: 1.0,
+                poolSize: 1,
+                certificateAuthority: $this->authority()['path'],
+            );
+
+            try {
+                $transport->send('first')->await();
+
+                $server->restart($impostor['certificate'], $impostor['key']);
+                $server->reset();
+
+                $this->assertRefused($transport);
+            } finally {
+                $transport->shutdown();
+            }
+
+            $this->assertNothingExported($server);
+        }, $certificate, $key);
+    }
+
+    #[RequiresPhpExtension('openssl')]
+    public function testReconnectsToCollectorAddressedByIpAfterItDropsThePooledConnection(): void
+    {
+        ['certificate' => $certificate, 'key' => $key] = $this->issueCertificate('IP:127.0.0.1');
+
+        MockOtlpServer::run(function (MockOtlpServer $server) use ($certificate, $key): void {
+            $server->respondWith(200, 'OK');
+
+            $transport = new Swoole(
+                endpoint: $server->getEndpoint(),
+                timeout: 1.0,
+                poolSize: 1,
+                certificateAuthority: $this->authority()['path'],
+            );
+
+            try {
+                $this->assertSame('OK', $transport->send('first')->await());
+
+                $server->restart($certificate, $key);
+
+                $this->assertSame('OK', $transport->send('second')->await());
+            } finally {
+                $transport->shutdown();
+            }
+
+            $request = $server->getLastRequest();
+            $this->assertNotNull($request);
+            $this->assertSame('second', $request['payload']);
+        }, $certificate, $key);
+    }
+
+    private function assertRefused(Swoole $transport): void
+    {
+        try {
+            $transport->send('payload')->await();
+            $this->fail('An export must not be sent to a collector whose certificate is not trusted for the endpoint.');
+        } catch (Exception $e) {
+            $this->assertStringContainsString('OTLP connection failed', $e->getMessage());
+        } finally {
+            $transport->shutdown();
+        }
+    }
+
+    private function assertNothingExported(MockOtlpServer $server): void
+    {
+        foreach ($server->getRequests() as $request) {
+            $this->assertSame('', $request['payload'], 'No export payload may reach an unverified collector.');
+            $this->assertArrayNotHasKey('authorization', $request['headers'], 'No credentials may reach an unverified collector.');
+        }
+    }
+
     /**
-     * Issue a self-signed certificate for localhost, which also serves as its own authority.
+     * Issue a certificate for the given subject alternative names, signed by the test authority.
      *
      * @return array{certificate: string, key: string}
      */
-    private function issueCertificate(): array
+    private function issueCertificate(string $names): array
     {
-        $this->certificates = sys_get_temp_dir() . '/telemetry-tls-' . bin2hex(random_bytes(8));
-        mkdir($this->certificates);
+        $authority = $this->authority();
+        $key = $this->generateKey();
+        $certificate = $this->sign($key, 'collector', <<<EXTENSIONS
+            basicConstraints = critical, CA:FALSE
+            keyUsage = critical, digitalSignature
+            extendedKeyUsage = serverAuth
+            subjectAltName = {$names}
+            EXTENSIONS, $authority);
 
-        $configuration = $this->certificates . '/openssl.cnf';
-        file_put_contents($configuration, <<<'CONFIGURATION'
-            [req]
-            distinguished_name = subject
+        $paths = [
+            'certificate' => $this->directory() . '/' . bin2hex(random_bytes(8)) . '.pem',
+            'key' => $this->directory() . '/' . bin2hex(random_bytes(8)) . '.key',
+        ];
+        $this->assertTrue(openssl_x509_export_to_file($certificate, $paths['certificate']));
+        $this->assertTrue(openssl_pkey_export_to_file($key, $paths['key'], null, ['config' => $this->configuration('')]));
 
-            [subject]
+        return $paths;
+    }
 
-            [extensions]
-            basicConstraints = critical, CA:TRUE
-            keyUsage = critical, digitalSignature, keyCertSign
-            subjectAltName = DNS:localhost
-            CONFIGURATION);
+    /**
+     * The authority signing every issued certificate, which a transport trusts through its PEM file at `path`.
+     *
+     * @return array{certificate: \OpenSSLCertificate, key: \OpenSSLAsymmetricKey, path: string}
+     */
+    private function authority(): array
+    {
+        if ($this->authority === null) {
+            $key = $this->generateKey();
+            $certificate = $this->sign($key, 'Telemetry Test Authority', <<<'EXTENSIONS'
+                basicConstraints = critical, CA:TRUE
+                keyUsage = critical, keyCertSign
+                EXTENSIONS);
 
+            $path = $this->directory() . '/authority.pem';
+            $this->assertTrue(openssl_x509_export_to_file($certificate, $path));
+
+            $this->authority = ['certificate' => $certificate, 'key' => $key, 'path' => $path];
+        }
+
+        return $this->authority;
+    }
+
+    /**
+     * Sign a certificate for the key, by the issuer or by the key itself when there is none.
+     *
+     * @param array{certificate: \OpenSSLCertificate, key: \OpenSSLAsymmetricKey, path: string}|null $issuer
+     */
+    private function sign(\OpenSSLAsymmetricKey $key, string $commonName, string $extensions, ?array $issuer = null): \OpenSSLCertificate
+    {
         $options = [
-            'config' => $configuration,
+            'config' => $this->configuration($extensions),
             'x509_extensions' => 'extensions',
             'digest_alg' => 'sha256',
         ];
 
+        $signer = $issuer === null ? $key : $issuer['key'];
+
+        $request = openssl_csr_new(['commonName' => $commonName], $key, $options);
+        $this->assertInstanceOf(\OpenSSLCertificateSigningRequest::class, $request);
+
+        $certificate = openssl_csr_sign(
+            $request,
+            $issuer === null ? null : $issuer['certificate'],
+            $signer,
+            1,
+            $options,
+            random_int(1, PHP_INT_MAX),
+        );
+        $this->assertInstanceOf(\OpenSSLCertificate::class, $certificate);
+
+        return $certificate;
+    }
+
+    private function generateKey(): \OpenSSLAsymmetricKey
+    {
         $key = openssl_pkey_new([
-            'config' => $configuration,
+            'config' => $this->configuration(''),
             'private_key_type' => OPENSSL_KEYTYPE_EC,
             'curve_name' => 'prime256v1',
         ]);
-        $this->assertNotFalse($key);
+        $this->assertInstanceOf(\OpenSSLAsymmetricKey::class, $key);
 
-        $request = openssl_csr_new(['commonName' => 'localhost'], $key, $options);
-        $this->assertNotFalse($request);
-        $this->assertNotTrue($request);
+        return $key;
+    }
 
-        $certificate = openssl_csr_sign($request, null, $key, 1, $options);
-        $this->assertNotFalse($certificate);
+    /**
+     * Write an OpenSSL configuration with the given x509 extensions, so no system configuration is needed.
+     */
+    private function configuration(string $extensions): string
+    {
+        $path = $this->directory() . '/' . bin2hex(random_bytes(8)) . '.cnf';
+        file_put_contents($path, "[req]\ndistinguished_name = subject\n\n[subject]\n\n[extensions]\n{$extensions}\n");
 
-        $paths = [
-            'certificate' => $this->certificates . '/certificate.pem',
-            'key' => $this->certificates . '/key.pem',
-        ];
-        $this->assertTrue(openssl_x509_export_to_file($certificate, $paths['certificate']));
-        $this->assertTrue(openssl_pkey_export_to_file($key, $paths['key'], null, $options));
+        return $path;
+    }
 
-        return $paths;
+    private function directory(): string
+    {
+        if ($this->certificates === null) {
+            $this->certificates = sys_get_temp_dir() . '/telemetry-tls-' . bin2hex(random_bytes(8));
+            mkdir($this->certificates);
+        }
+
+        return $this->certificates;
     }
 
     public function testSendPayloadToServer(): void
