@@ -979,7 +979,8 @@ class Migrations extends Action
             'openSSLTag' => null,
             'openSSLIV' => null,
             'search' => \implode(' ', [$fileId, $filename]),
-            'metadata' => ['content_type' => $mime]
+            // Imports read internal files only from the project that exported them
+            'metadata' => ['content_type' => $mime, 'projectInternalId' => $project->getSequence()],
         ]));
 
         Console::info("Created file document in bucket: $fileId");
