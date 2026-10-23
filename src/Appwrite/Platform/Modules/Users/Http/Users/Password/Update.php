@@ -108,8 +108,17 @@ class Update extends Action
                 'passwordPwned' => null,
                 'passwordUpdate' => $user->getAttribute('passwordUpdate'),
             ]));
+
+            if ($project->getAttribute('auths', default: [])['invalidateSessions'] ?? true) {
+                User::invalidateAuthentication($dbForProject, $user);
+            }
+
+            $dbForProject->purgeCachedDocument('users', $user->getId());
+
             $queueForEvents->setParam('userId', $user->getId());
             $response->dynamic($user, Response::MODEL_USER);
+
+            return;
         }
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
