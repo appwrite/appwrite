@@ -21,6 +21,8 @@ final class ListCacheTest extends TestCase
 
     private Cache $cache;
 
+    private \Redis $redis;
+
     private string $key;
 
     protected function setUp(): void
@@ -33,6 +35,7 @@ final class ListCacheTest extends TestCase
             $redis->auth(\array_filter([System::getEnv('_APP_REDIS_USER', ''), $password]));
         }
 
+        $this->redis = $redis;
         $this->outage = new Outage(new Redis($redis));
         $this->cache = new Cache($this->outage);
         $this->key = 'list-cache-test:' . \bin2hex(\random_bytes(8));
@@ -55,6 +58,13 @@ final class ListCacheTest extends TestCase
 
         $this->assertSame('stored', $result);
         $this->assertFalse($this->cache->load($this->key, self::TTL, self::FIELD));
+    }
+
+    public function testVersionMarkerExpires(): void
+    {
+        ListCache::purged([new ListCache($this->cache, $this->key)], fn (): string => 'stored');
+
+        $this->assertGreaterThan(0, $this->redis->ttl($this->key . ':version'), 'A purge must not leave a version key that never expires.');
     }
 
     public function testSavesReadWhileVersionIsUnchanged(): void

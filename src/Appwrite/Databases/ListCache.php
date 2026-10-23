@@ -31,7 +31,7 @@ readonly class ListCache
      */
     public function purge(): bool
     {
-        if ($this->cache->save($this->getVersionKey(), \bin2hex(\random_bytes(16))) === false) {
+        if ($this->cache->save($this->getVersionKey(), \bin2hex(\random_bytes(16)), ttl: self::VERSION_TTL) === false) {
             throw new Unavailable('Failed to change the version of the cached list responses of ' . $this->key);
         }
 
