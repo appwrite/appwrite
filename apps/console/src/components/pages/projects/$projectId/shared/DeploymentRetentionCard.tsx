@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { WarningAlert } from '@/components/global/shared/WarningAlert'
+import { AlertTriangle } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useProject } from '@/lib/react-query/hooks/projects'
 import { useOrganizationPlan } from '@/lib/react-query/hooks/organizations'
@@ -92,21 +93,24 @@ export function DeploymentRetentionCard({
       <div className="px-6 py-4">
         <div className="space-y-4">
           {isCloud && beforeChange && (
-            <WarningAlert>
-              <p>
-                {t(
-                  'From November 5, 2026, Appwrite Cloud will delete inactive deployments after 30 days by default. To keep more history, choose a longer retention period and click Update before then.',
-                )}{' '}
-                <a
-                  href="https://appwrite.io/blog/post/default-deployment-retention"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline underline-offset-4"
-                >
-                  {t('Learn more')}
-                </a>
-              </p>
-            </WarningAlert>
+            <Alert className="border-amber-500/30 bg-amber-500/5 [&>svg]:text-amber-700 dark:[&>svg]:text-amber-400">
+              <AlertTriangle aria-hidden="true" />
+              <AlertDescription className="text-[13px] text-amber-700 dark:text-amber-400">
+                <p>
+                  {t(
+                    'From November 5, 2026, Appwrite Cloud will delete inactive deployments after 30 days by default. To keep more history, choose a longer retention period and click Update before then.',
+                  )}{' '}
+                  <a
+                    href="https://appwrite.io/blog/post/default-deployment-retention"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline underline-offset-4"
+                  >
+                    {t('Learn more')}
+                  </a>
+                </p>
+              </AlertDescription>
+            </Alert>
           )}
           {!isCloud && (
             <div className="flex items-center gap-3">
