@@ -34,6 +34,12 @@ class Key extends Model
                 'default' => '',
                 'example' => 'My API Key',
             ])
+            ->addRule('description', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Optional description for the key.',
+                'default' => '',
+                'example' => 'Used by the nightly backup job.',
+            ])
             ->addRule('expire', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Key expiration date in ISO 8601 format.',

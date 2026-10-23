@@ -72,6 +72,8 @@ class Update extends Action
             ->param('encryption', true, new Nullable(new Boolean(true)), 'Is encryption enabled? For file size above ' . Bytes::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
             ->param('antivirus', true, new Boolean(true), 'Is virus scanning enabled? For file size above ' . Bytes::human(APP_LIMIT_ANTIVIRUS, 0) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
             ->param('transformations', true, new Boolean(true), 'Are image transformations enabled?', true)
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the bucket.', true)
+            ->param('stripMetadata', null, new Nullable(new Boolean(true)), 'Remove metadata such as location, device and capture time from uploaded images. The color profile and orientation are kept. For file size above ' . Bytes::human(APP_STORAGE_READ_BUFFER, 0) . ' metadata is not removed even if it\'s enabled. By default, the current setting is kept.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
@@ -90,6 +92,8 @@ class Update extends Action
         ?bool $encryption,
         bool $antivirus,
         bool $transformations,
+        ?string $description,
+        ?bool $stripMetadata,
         Response $response,
         Database $dbForProject,
         Event $queueForEvents
@@ -104,12 +108,15 @@ class Update extends Action
         $maximumFileSize ??= $bucket->getAttribute('maximumFileSize', (int) System::getEnv('_APP_STORAGE_LIMIT', 0));
         $encryption ??= $bucket->getAttribute('encryption', true);
         $compression ??= $bucket->getAttribute('compression', Compression::NONE);
+        $description ??= $bucket->getAttribute('description', '');
+        $stripMetadata ??= $bucket->getAttribute('stripMetadata', false);
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions);
 
         $bucket = $dbForProject->updateDocument('buckets', $bucket->getId(), $bucket
             ->setAttribute('name', $name)
+            ->setAttribute('description', $description)
             ->setAttribute('$permissions', $permissions)
             ->setAttribute('maximumFileSize', $maximumFileSize)
             ->setAttribute('allowedFileExtensions', $allowedFileExtensions)
@@ -118,7 +125,9 @@ class Update extends Action
             ->setAttribute('encryption', $encryption)
             ->setAttribute('compression', $compression)
             ->setAttribute('antivirus', $antivirus)
-            ->setAttribute('transformations', $transformations));
+            ->setAttribute('transformations', $transformations)
+            ->setAttribute('stripMetadata', $stripMetadata)
+            ->setAttribute('search', implode(' ', [$bucket->getId(), $name, $description])));
 
         $dbForProject->updateCollection('bucket_' . $bucket->getSequence(), new CollectionUpdate(permissions: $permissions, documentSecurity: $fileSecurity));
 

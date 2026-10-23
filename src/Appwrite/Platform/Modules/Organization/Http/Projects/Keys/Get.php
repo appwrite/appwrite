@@ -7,6 +7,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -53,6 +54,7 @@ class Get extends Action
             ->inject('team')
             ->inject('authorization')
             ->inject('apiKey')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
@@ -64,6 +66,7 @@ class Get extends Action
         Document $team,
         Authorization $authorization,
         ?Key $apiKey,
+        Request $request,
     ) {
         $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey);
 
@@ -71,6 +74,11 @@ class Get extends Action
 
         if ($key->isEmpty() || $key->getAttribute('resourceType', '') !== 'projects' || $key->getAttribute('resourceInternalId', '') !== $project->getSequence()) {
             throw new Exception(Exception::KEY_NOT_FOUND);
+        }
+
+        // Secrets are only for callers that could replace the key anyway
+        if (\array_intersect(['organization.projects.keys.write', 'keys.write'], $request->getScopes()) === []) {
+            $key->setAttribute('secret', '');
         }
 
         $response->dynamic($key, Response::MODEL_KEY);

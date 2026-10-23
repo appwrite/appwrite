@@ -420,6 +420,9 @@ class Create extends Action
                     throw new Exception(Exception::GENERAL_BAD_REQUEST);
                 }
                 $user->setAttributes($userWithEmail->getArrayCopy());
+                if (!$user->getAttribute('emailVerification', false)) {
+                    $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user));
+                }
                 // The provider verified this address, or its canonical form on the same domain
                 if ((new Email($user->getAttribute('email')))->getDomain() === (new Email($providerEmail))->getDomain()) {
                     $user->setAttribute('emailVerification', true);
@@ -658,13 +661,13 @@ class Create extends Action
             $canonical = $parsedEmail->getCanonical();
             $canonicalize = (
                 $project->getId() === 'console'
+                || empty($plan)
                 || ($plan['supportsCanonicalEmailValidation'] ?? false)
             )
                 && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false)
                 && $isVerified;
             // Keep the provider domain for delivery (e.g. live.com must
-            // not become outlook.com). Still canonicalize the local part
-            // and include the full provider canonical in collision lookups.
+            // not become outlook.com). Still canonicalize the local part.
             if ($canonicalize) {
                 $canonicalLocal = \explode('@', $canonical, 2)[0];
                 $providerDomain = \explode('@', \mb_strtolower($providerEmail), 2)[1] ?? '';
@@ -672,7 +675,8 @@ class Create extends Action
             } else {
                 $email = $providerEmail;
             }
-            $emails = \array_values(\array_unique(\array_filter([$email, $providerEmail, $canonical])));
+            // Match existing users by the provider's own address only, never by a cross-domain canonical form
+            $emails = \array_values(\array_unique(\array_filter([$email, $providerEmail, \mb_strtolower($providerEmail)])));
             $emailMetadata = [
                 'emailCanonical' => $canonical,
                 'emailIsCanonical' => \mb_strtolower($email) === $canonical,
@@ -697,21 +701,21 @@ class Create extends Action
             return;
         }
 
-        if ((($project->getId() === 'console') || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
+        if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
             throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
         }
 
         // When $canonicalize is true we already applied delivery-safe
         // local-part normalization while preserving the provider domain.
-        if ((($project->getId() === 'console') || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false && !$canonicalize) {
+        if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && $emailMetadata['emailIsCanonical'] === false && !$canonicalize) {
             throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
         }
 
-        if ((($project->getId() === 'console') || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
+        if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsFreeEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && $emailMetadata['emailIsFree']) {
             throw new Exception(Exception::USER_EMAIL_FREE);
         }
 
-        if ((($project->getId() === 'console') || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
+        if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
             throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
         }
     }
