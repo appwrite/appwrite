@@ -67,6 +67,7 @@
         "Utopia\\Validator\\JSON\\ArrayValidator::isValid",
         "Utopia\\Validator\\JSON\\FCM::isValid",
         "Utopia\\Validator\\JSON\\ObjectValidator::isValid",
+        "Utopia\\Validator\\Label::isValid",
         "Utopia\\Validator\\Multiple::isValid",
         "Utopia\\Validator\\NoneOf::isValid",
         "Utopia\\Validator\\Nullable::isValid",
@@ -102,6 +103,7 @@
         "Utopia\\Validator\\JSON\\ArrayValidator::getDescription",
         "Utopia\\Validator\\JSON\\FCM::getDescription",
         "Utopia\\Validator\\JSON\\ObjectValidator::getDescription",
+        "Utopia\\Validator\\Label::getDescription",
         "Utopia\\Validator\\Multiple::getDescription",
         "Utopia\\Validator\\NoneOf::getDescription",
         "Utopia\\Validator\\Nullable::getDescription",
@@ -136,6 +138,7 @@
         "Utopia\\Validator\\JSON\\ArrayValidator::getType",
         "Utopia\\Validator\\JSON\\FCM::getType",
         "Utopia\\Validator\\JSON\\ObjectValidator::getType",
+        "Utopia\\Validator\\Label::getType",
         "Utopia\\Validator\\Multiple::getType",
         "Utopia\\Validator\\NoneOf::getType",
         "Utopia\\Validator\\Nullable::getType",
@@ -170,6 +173,7 @@
         "Utopia\\Validator\\JSON\\ArrayValidator::isArray",
         "Utopia\\Validator\\JSON\\FCM::isArray",
         "Utopia\\Validator\\JSON\\ObjectValidator::isArray",
+        "Utopia\\Validator\\Label::isArray",
         "Utopia\\Validator\\Multiple::isArray",
         "Utopia\\Validator\\NoneOf::isArray",
         "Utopia\\Validator\\Nullable::isArray",
@@ -1302,6 +1306,47 @@
           "iterations": 400
         },
         {
+          "name": "Label",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "object",
+                "fields": {
+                  "class": {
+                    "gen": "const",
+                    "value": "Label"
+                  },
+                  "args": {
+                    "gen": "object",
+                    "fields": {}
+                  }
+                }
+              },
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "max": 66,
+                    "alphabet": "az09-A.\n_"
+                  },
+                  {
+                    "gen": "string",
+                    "max": 6,
+                    "alphabet": "a0-"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "value"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 400
+        },
+        {
           "name": "Phone",
           "args": {
             "gen": "object",
@@ -1946,6 +1991,10 @@
           "args": {}
         },
         {
+          "class": "Label",
+          "args": {}
+        },
+        {
           "class": "JSON\\FCM",
           "args": {}
         },
@@ -2051,6 +2100,10 @@
         },
         {
           "class": "HexColor",
+          "args": {}
+        },
+        {
+          "class": "Label",
           "args": {}
         },
         {
