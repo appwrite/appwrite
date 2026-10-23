@@ -69,7 +69,19 @@ readonly class Stdout implements Exporter
             }
         }
 
-        $output = json_encode($data, JSON_UNESCAPED_SLASHES);
+        // Substitute invalid UTF-8 and keep partial output so one bad attribute
+        // cannot drop the whole record.
+        $flags = JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR;
+        $output = json_encode($data, $flags);
+
+        if ($output === false) {
+            $output = json_encode([
+                'level' => $data['level'] ?? null,
+                'action' => $span->getAction(),
+                'error.type' => $data['error.type'] ?? null,
+                'export.error' => 'Span could not be encoded as JSON: ' . json_last_error_msg(),
+            ], $flags);
+        }
 
         if ($output === false) {
             return;
