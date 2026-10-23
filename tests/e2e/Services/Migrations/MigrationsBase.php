@@ -4682,6 +4682,68 @@ trait MigrationsBase
     }
 
     /**
+     * The Console imports a local CSV by uploading it to the console bucket, then importing it with internalFile.
+     */
+    public function testCreateCSVImportFromConsoleUpload(): void
+    {
+        [$databaseId, $tableId] = $this->prepareCsvImportFixture('console upload');
+
+        $upload = $this->client->call(Client::METHOD_POST, '/storage/buckets/default/files', [
+            'content-type' => 'multipart/form-data',
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/csv/documents.csv'), 'text/csv', 'documents.csv'),
+        ]);
+        $this->assertSame(201, $upload['headers']['status-code']);
+        $fileId = $upload['body']['$id'];
+
+        /**
+         * Test for SUCCESS - the console user who uploaded the file can import it
+         */
+        $import = $this->client->call(Client::METHOD_POST, '/migrations/csv/imports', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => 'default',
+            'fileId' => $fileId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
+            'internalFile' => true,
+        ]);
+        $this->assertSame(202, $import['headers']['status-code']);
+        $importId = $import['body']['$id'];
+
+        $this->assertEventually(function () use ($importId) {
+            $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $importId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertSame('completed', $migration['body']['status']);
+            $this->assertSame(100, $migration['body']['statusCounters'][Resource::TYPE_ROW]['success']);
+        }, 10_000, 500);
+
+        /**
+         * Test for FAILURE - a caller other than the uploader cannot import it
+         */
+        $import = $this->client->call(Client::METHOD_POST, '/migrations/csv/imports', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => 'default',
+            'fileId' => $fileId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
+            'internalFile' => true,
+        ]);
+        $this->assertSame(404, $import['headers']['status-code']);
+        $this->assertSame('storage_file_not_found', $import['body']['type']);
+    }
+
+    /**
      * onDuplicate=skip on re-import: duplicates are silently no-op'd, existing rows preserved unchanged.
      */
     public function testCreateCSVImportSkipDuplicates(): void

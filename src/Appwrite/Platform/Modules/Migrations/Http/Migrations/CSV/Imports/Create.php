@@ -74,6 +74,7 @@ class Create extends Action
             ->inject('dbForPlatform')
             ->inject('authorization')
             ->inject('project')
+            ->inject('user')
             ->inject('platform')
             ->inject('deviceForFiles')
             ->inject('deviceForMigrations')
@@ -94,6 +95,7 @@ class Create extends Action
         Database $dbForPlatform,
         Authorization $authorization,
         Document $project,
+        Document $user,
         array $platform,
         Device $deviceForFiles,
         Device $deviceForMigrations,
@@ -112,9 +114,11 @@ class Create extends Action
         }
 
         $file = $authorization->skip(fn () => $internalFile ? $dbForPlatform->getDocument('bucket_' . $bucket->getSequence(), $fileId) : $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
-        // An internal file is an export, readable only by the project that created it
-        $owner = $file->getAttribute('metadata', [])['projectInternalId'] ?? null;
-        if ($file->isEmpty() || ($internalFile && $owner !== $project->getSequence())) {
+        // An internal file is readable only by the project that exported it, or the console user who uploaded it
+        $metadata = $file->getAttribute('metadata', []);
+        $owned = ($metadata['projectInternalId'] ?? null) === $project->getSequence()
+            || (!$user->isEmpty() && ($metadata['uploaderId'] ?? null) === $user->getId());
+        if ($file->isEmpty() || ($internalFile && !$owned)) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
