@@ -220,6 +220,62 @@ final class TeamsCustomClientTest extends Scope
         $this->assertFalse($user['body']['emailVerification']);
     }
 
+    public function testUpdateMembershipStatusAfterPhoneChange(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $team = $this->createTeamHelper('Moved SMS Invites');
+        $phone = '+1202' . \random_int(1000000, 9999999);
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['teamUid'] . '/memberships', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'phone' => $phone,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#invitation',
+        ]);
+        $this->assertEquals(201, $membership['headers']['status-code']);
+
+        $sms = $this->getLastRequestForProject($projectId, Scope::REQUEST_TYPE_SMS, [
+            'header_X-Username' => 'username',
+            'header_X-Key' => 'password',
+            'method' => 'POST',
+        ], probe: function (array $request) use ($phone) {
+            $this->assertEquals($phone, $request['data']['to'] ?? null);
+        });
+        $this->assertNotEmpty($sms);
+        \parse_str((string) \parse_url((string) $sms['data']['message'], PHP_URL_QUERY), $params);
+        $this->assertNotEmpty($params['secret']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $params['userId'] . '/phone', $serverHeaders, [
+            'number' => '+1202' . \random_int(1000000, 9999999),
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - an invite sent to the previous number can no longer be accepted
+         */
+        $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'] . '/status', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => $params['userId'],
+            'secret' => $params['secret'],
+        ]);
+        $this->assertEquals(401, $confirmation['headers']['status-code']);
+        $this->assertEquals('team_invalid_secret', $confirmation['body']['type']);
+
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $params['userId'], $serverHeaders);
+        $this->assertEquals(200, $user['headers']['status-code']);
+        $this->assertFalse($user['body']['phoneVerification']);
+    }
+
     public function testGetMembershipPrivacy(): void
     {
         $teamData = $this->createTeamHelper();
