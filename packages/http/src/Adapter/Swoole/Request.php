@@ -122,7 +122,13 @@ class Request extends UtopiaRequest
      */
     public function getPort(): string
     {
-        return $this->getHeaderLine('x-forwarded-port', (string) parse_url($this->getProtocol() . '://' . $this->getHeaderLine('x-forwarded-host', $this->getHeaderLine('host')), PHP_URL_PORT));
+        $port = $this->trustedValue($this->trusted->port);
+
+        if ($port !== null && ctype_digit($port)) {
+            return $port;
+        }
+
+        return (string) parse_url($this->getProtocol() . '://' . $this->getHost(), PHP_URL_PORT);
     }
 
     /**
@@ -132,8 +138,17 @@ class Request extends UtopiaRequest
      */
     public function getHostname(): string
     {
-        $hostname = parse_url($this->getProtocol() . '://' . $this->getHeaderLine('x-forwarded-host', $this->getHeaderLine('host')), PHP_URL_HOST);
+        $hostname = parse_url($this->getProtocol() . '://' . $this->getHost(), PHP_URL_HOST);
+
         return strtolower(\strval($hostname));
+    }
+
+    /**
+     * The host the client asked for: a trusted forwarded header when one is set, the Host header otherwise.
+     */
+    private function getHost(): string
+    {
+        return $this->trustedValue($this->trusted->host) ?? $this->getHeaderLine('host');
     }
 
     /**

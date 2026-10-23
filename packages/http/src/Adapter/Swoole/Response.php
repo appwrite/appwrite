@@ -47,6 +47,20 @@ class Response extends UtopiaResponse
     }
 
     /**
+     * Abort a partial response without sending the terminal HTTP chunk.
+     */
+    public function abort(): void
+    {
+        if ($this->sent) {
+            return;
+        }
+
+        $this->sent = true;
+        $this->disablePayload();
+        $this->swoole->close();
+    }
+
+    /**
      * Send Status Code
      */
     protected function sendStatus(int $statusCode): void

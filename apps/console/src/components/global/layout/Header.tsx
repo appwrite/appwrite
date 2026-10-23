@@ -128,13 +128,19 @@ import {
   MarketingProductsMobileNav,
   MarketingProductsNavPopover,
 } from '@/components/pages/marketing/MarketingProductsNavMenu'
+import {
+  isMarketingSolutionsNavItem,
+  isSolutionsMarketingPath,
+  MarketingSolutionsMobileNav,
+  MarketingSolutionsNavPopover,
+} from '@/components/pages/marketing/MarketingSolutionsNavMenu'
 import { MarketingGitHubStarsLink } from '@/components/pages/marketing/MarketingGitHubStarsLink'
 import { useI18n } from '@/lib/i18n'
 
 type MarketingHeaderNavItem = {
   label: string
   href: string
-  menu?: 'products'
+  menu?: 'products' | 'solutions'
   hasMenuIndicator?: boolean
 }
 
@@ -148,16 +154,17 @@ function getDefaultMarketingHeaderNav(
       menu: 'products',
     },
     {
-      label: copy.docs,
-      href: '/docs',
+      label: copy.solutions,
+      href: '/startups',
+      menu: 'solutions',
     },
     {
       label: copy.pricing,
       href: '/pricing',
     },
     {
-      label: copy.enterprise,
-      href: '/enterprise',
+      label: copy.docs,
+      href: '/docs',
     },
     {
       label: copy.customers,
@@ -194,6 +201,10 @@ function getActiveMarketingNavHref(
 ): string | null {
   if (isProductsMarketingPath(pathname)) {
     return items.find((item) => item.menu === 'products')?.href ?? null
+  }
+
+  if (isSolutionsMarketingPath(pathname)) {
+    return items.find((item) => item.menu === 'solutions')?.href ?? null
   }
 
   const path = normalizeMarketingNavPath(pathname)
@@ -723,6 +734,11 @@ export function ConsoleHeader({
                   {marketingNavItems.map((item) =>
                     isMarketingProductsNavItem(item) ? (
                       <MarketingProductsMobileNav
+                        key={item.label}
+                        isActive={item.href === activeMarketingNavHref}
+                      />
+                    ) : isMarketingSolutionsNavItem(item) ? (
+                      <MarketingSolutionsMobileNav
                         key={item.label}
                         isActive={item.href === activeMarketingNavHref}
                       />
@@ -1314,6 +1330,11 @@ export function ConsoleHeader({
               {marketingNavItems.map((item) =>
                 isMarketingProductsNavItem(item) ? (
                   <MarketingProductsNavPopover
+                    key={item.label}
+                    isActive={item.href === activeMarketingNavHref}
+                  />
+                ) : isMarketingSolutionsNavItem(item) ? (
+                  <MarketingSolutionsNavPopover
                     key={item.label}
                     isActive={item.href === activeMarketingNavHref}
                   />

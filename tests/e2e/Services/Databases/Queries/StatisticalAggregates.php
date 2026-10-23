@@ -28,7 +28,8 @@ trait StatisticalAggregates
         $this->assertSame(200, $result['headers']['status-code']);
         $row = $result['body'][$this->getRecordResource()][0];
         $this->assertArrayHasKey('spread', $row);
-        $this->assertEqualsWithDelta(67.0238, (float) $row['spread'], 0.01);
+        $this->assertIsFloat($row['spread']);
+        $this->assertEqualsWithDelta(67.0238, $row['spread'], 0.01);
     }
 
     public function testStddevPopOrderAmount(): void
@@ -50,7 +51,8 @@ trait StatisticalAggregates
 
         $this->assertSame(200, $result['headers']['status-code']);
         $row = $result['body'][$this->getRecordResource()][0];
-        $this->assertEqualsWithDelta(67.0238, (float) $row['spreadPop'], 0.01);
+        $this->assertIsFloat($row['spreadPop']);
+        $this->assertEqualsWithDelta(67.0238, $row['spreadPop'], 0.01);
     }
 
     public function testStddevSampOrderAmount(): void
@@ -72,7 +74,8 @@ trait StatisticalAggregates
 
         $this->assertSame(200, $result['headers']['status-code']);
         $row = $result['body'][$this->getRecordResource()][0];
-        $this->assertEqualsWithDelta(77.3985, (float) $row['spreadSamp'], 0.01);
+        $this->assertIsFloat($row['spreadSamp']);
+        $this->assertEqualsWithDelta(77.3985, $row['spreadSamp'], 0.01);
     }
 
     public function testVarianceOrderAmount(): void
@@ -94,7 +97,8 @@ trait StatisticalAggregates
 
         $this->assertSame(200, $result['headers']['status-code']);
         $row = $result['body'][$this->getRecordResource()][0];
-        $this->assertEqualsWithDelta(4492.1875, (float) $row['varAmount'], 0.1);
+        $this->assertIsFloat($row['varAmount']);
+        $this->assertEqualsWithDelta(4492.1875, $row['varAmount'], 0.1);
     }
 
     public function testVarPopOrderAmount(): void
@@ -116,7 +120,8 @@ trait StatisticalAggregates
 
         $this->assertSame(200, $result['headers']['status-code']);
         $row = $result['body'][$this->getRecordResource()][0];
-        $this->assertEqualsWithDelta(4492.1875, (float) $row['varPopAmount'], 0.1);
+        $this->assertIsFloat($row['varPopAmount']);
+        $this->assertEqualsWithDelta(4492.1875, $row['varPopAmount'], 0.1);
     }
 
     public function testVarSampOrderAmount(): void
@@ -138,7 +143,8 @@ trait StatisticalAggregates
 
         $this->assertSame(200, $result['headers']['status-code']);
         $row = $result['body'][$this->getRecordResource()][0];
-        $this->assertEqualsWithDelta(5989.583, (float) $row['varSampAmount'], 0.1);
+        $this->assertIsFloat($row['varSampAmount']);
+        $this->assertEqualsWithDelta(5989.583, $row['varSampAmount'], 0.1);
     }
 
     public function testBitAndCustomerFlags(): void
@@ -160,7 +166,7 @@ trait StatisticalAggregates
 
         $this->assertSame(200, $result['headers']['status-code']);
         $row = $result['body'][$this->getRecordResource()][0];
-        $this->assertSame(1, (int) $row['allFlags']);
+        $this->assertSame(1, $row['allFlags']);
     }
 
     public function testBitOrCustomerFlags(): void
@@ -182,7 +188,7 @@ trait StatisticalAggregates
 
         $this->assertSame(200, $result['headers']['status-code']);
         $row = $result['body'][$this->getRecordResource()][0];
-        $this->assertSame(7, (int) $row['anyFlags']);
+        $this->assertSame(7, $row['anyFlags']);
     }
 
     public function testBitXorCustomerFlags(): void
@@ -203,7 +209,38 @@ trait StatisticalAggregates
         ]);
 
         $this->assertSame(200, $result['headers']['status-code']);
-        $this->assertSame(1, (int) $result['body'][$this->getRecordResource()][0]['xorFlags']);
+        $this->assertSame(1, $result['body'][$this->getRecordResource()][0]['xorFlags']);
+    }
+
+    public function testBitwiseAggregatesAreSigned64BitIntegers(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $collectionId = $this->createRejectedValuesCollection($databaseId, 'bitwiseSign');
+        $this->addRejectedValuesAttribute($databaseId, $collectionId, 'integer', ['key' => 'n', 'required' => true]);
+        $this->createRejectedValuesRecord($databaseId, $collectionId, ['n' => 10]);
+        $this->createRejectedValuesRecord($databaseId, $collectionId, ['n' => -5]);
+
+        $result = $this->listRejectedValues($databaseId, $collectionId, [
+            Query::bitAnd('n', 'allBits')->toString(),
+            Query::bitOr('n', 'anyBits')->toString(),
+            Query::bitXor('n', 'oddBits')->toString(),
+        ]);
+
+        if (!$this->getSupportForAggregations()) {
+            $this->assertQueryRejected($result, 'Bitwise aggregates where aggregations are unsupported');
+
+            return;
+        }
+
+        $this->assertSame(200, $result['headers']['status-code'], \json_encode($result['body']) ?: '');
+        $this->assertSame(
+            ['allBits' => 10, 'anyBits' => -5, 'oddBits' => -15],
+            \array_intersect_key($result['body'][$this->getRecordResource()][0], \array_flip(['allBits', 'anyBits', 'oddBits'])),
+        );
     }
 
     public function testStatisticalAggregatesComputeOverReadableRowsOnly(): void

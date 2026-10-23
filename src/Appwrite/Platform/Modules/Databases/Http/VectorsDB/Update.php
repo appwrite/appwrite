@@ -11,6 +11,7 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
 class Update extends DatabaseUpdate
@@ -50,6 +51,7 @@ class Update extends DatabaseUpdate
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('name', null, new Text(128), 'Database name. Max length: 128 chars.')
             ->param('enabled', true, new Boolean(), 'Is database enabled? When set to \'disabled\', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled.', true)
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the database.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')

@@ -58,7 +58,22 @@ class Redis implements Synchronous, Consumer
         // Minimum publish age for recovery without a live heartbeat.
         // Keep conservative until all workers and adapters heartbeat.
         private readonly int $reapAfter = 90_000,
+        // Claims the sweep has requeued this many times are parked on the dead
+        // queue instead; null requeues them unbounded.
+        private readonly ?int $reapMaxAttempts = null,
+        // Claims published longer ago than this many seconds are parked on the
+        // dead queue instead of re-run; null requeues them at any age.
+        private readonly ?int $reapMaxAge = null,
     ) {
+        if ($this->reapMaxAttempts !== null && $this->reapMaxAttempts < 1) {
+            throw new \InvalidArgumentException('reapMaxAttempts must be at least 1, or null to requeue unbounded');
+        }
+
+        // Every claim the sweep reaches is at least reapAfter old, so a ceiling at
+        // or below it would park all of them and recover none.
+        if ($this->reapMaxAge !== null && $this->reapMaxAge <= $this->reapAfter) {
+            throw new \InvalidArgumentException(\sprintf('reapMaxAge (%d) must exceed reapAfter (%d), or be null to requeue at any age', $this->reapMaxAge, $this->reapAfter));
+        }
     }
 
     public function setReconnectCallback(?callable $callback): self
@@ -276,7 +291,7 @@ class Redis implements Synchronous, Consumer
             if ($expired !== []) {
                 $this->script($this->commands, 'recover', [$registry, "{$queue->namespace}.queue.{$queue->name}", ...$expired], [self::REAP_LIMIT]);
             }
-            $this->reap($queue, $this->reapAfter, limit: self::REAP_LIMIT, scan: self::REAP_LIMIT * 2);
+            $this->reap($queue, $this->reapAfter, limit: self::REAP_LIMIT, maxAttempts: $this->reapMaxAttempts, newerThan: $this->reapMaxAge, scan: self::REAP_LIMIT * 2);
         }
     }
 

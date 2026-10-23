@@ -14,11 +14,11 @@ If you're trying to migrate to a newer minor version, you should upgrade to each
 1. `1.6.2`
 1. `1.7.4`
 
-`1.9` is the exception: [`1.9.6`](https://github.com/appwrite/appwrite/releases/tag/1.9.6) added a new migration in a patch release, and each migration only runs its own changes. From `1.8.x` or earlier, upgrade to `1.9.5` and run the migration before moving to `1.9.7`, or the `1.9` migration is skipped. For example, from `1.8.1` to `2.5.0` you should upgrade to:
+`1.9` is the exception: [`1.9.6`](https://github.com/appwrite/appwrite/releases/tag/1.9.6) added a new migration in a patch release, and each migration only runs its own changes. From `1.8.x` or earlier, upgrade to `1.9.5` and run the migration before moving to `1.9.9`, or the `1.9` migration is skipped. For example, from `1.8.1` to `2.6.1` you should upgrade to:
 
 1. `1.9.5`
-1. `1.9.7`
-1. `2.5.0`
+1. `1.9.9`
+1. `2.6.1`
 
 Recent versions share a migration and can skip minor versions. The [latest upgrade section](#upgrading-to-latest) names the oldest version that upgrades to the current release in one step. From an older version, upgrade to that version first.
 
@@ -28,9 +28,9 @@ Before upgrading, be sure to:
 1. review the [changelog](https://github.com/appwrite/appwrite/releases) for any breaking changes
 1. test the migration process on a non-production instance to make sure your application is working well
 
-# Upgrading to 2.5.0 {% #upgrading-to-latest %}
+# Upgrading to 2.6.1 {% #upgrading-to-latest %}
 
-Appwrite 2.5.0 upgrades from `1.9.6` or any later version. Run the upgrade command with the `2.5.0` tag, then run the migration.
+Appwrite 2.6.1 upgrades from `1.9.6` or any later version. Run the upgrade command with the `2.6.1` tag, then run the migration.
 
 ```sh
 docker run -it --rm \
@@ -38,7 +38,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="upgrade" \
-    appwrite/appwrite:2.5.0
+    appwrite/appwrite:2.6.1
 ```
 
 Then run the migration from the `appwrite` directory.
@@ -48,13 +48,40 @@ cd appwrite/
 docker compose exec appwrite migrate
 ```
 
-The migration stays on V25. It adds the function `interval` and Android platform `fingerprints` columns and widens the webhook `httpPass` column, and it takes longer the more projects you have. The new compose file moves `openruntimes/executor` to 1.1.2; existing runtime containers are removed when it starts and cold-start on their next execution.
+**Back up your data first.**
 
-Migrating a project to another install or to Cloud doesn't carry the passkey policy, the password rotation policy or Android signing certificate fingerprints yet, so set them again on the destination. Migrated team memberships get new IDs, so custom membership IDs aren't kept.
+Appwrite 2.6.1 is a precautionary maintenance release that moves the runtime to PHP 8.5.12, which fixes [CVE-2026-109618](https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w) and [CVE-2026-109619](https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp). Appwrite is not affected by either vulnerability, because it serves requests through Swoole rather than PHP's web SAPIs (mod_php, PHP-FPM, CGI). From `2.6.0`, the upgrade only replaces the images and the migration has nothing to change.
 
-If you upgrade with `--use-existing-config`, change the executor image to `openruntimes/executor:1.1.2` yourself. **Back up your data first.**
+From `2.5.x` or earlier, the migration also applies the 2.6.0 schema changes: it adds the resource-description and bucket `stripMetadata` fields and repairs presence-log schema.
 
-If you skip releases, also follow the upgrade notes of each release you skip: [`2.0.0`](https://github.com/appwrite/appwrite/releases/tag/2.0.0), [`2.1.0`](https://github.com/appwrite/appwrite/releases/tag/2.1.0), [`2.2.0`](https://github.com/appwrite/appwrite/releases/tag/2.2.0), [`2.3.0`](https://github.com/appwrite/appwrite/releases/tag/2.3.0), [`2.4.0`](https://github.com/appwrite/appwrite/releases/tag/2.4.0).
+The installer supplies the ExifTool service for image metadata stripping. Custom deployments must set `_APP_EXIFTOOL_HOST` to a reachable ExifTool service before enabling the bucket setting. If the host is empty, the service is unreachable, or stripping returns an error, Appwrite stores the original upload with its metadata intact, even when stripping is enabled. Monitor the ExifTool service before relying on this setting to remove private metadata. Existing files are not rewritten.
+
+For custom S3-compatible endpoints, `_APP_STORAGE_S3_PATH_STYLE` can force path-style requests (`enabled`) or bucket-addressing endpoints (`disabled`); an empty value infers the style. For a custom domain/CNAME pointing directly at a bucket, set it to `disabled`.
+
+Outbound HTTPS endpoints presenting a compromised certificate chain must replace their certificate chain. TLS verification stays enabled.
+
+If you skip releases, also follow the upgrade notes of each release you skip: [`2.0.0`](https://github.com/appwrite/appwrite/releases/tag/2.0.0), [`2.1.0`](https://github.com/appwrite/appwrite/releases/tag/2.1.0), [`2.2.0`](https://github.com/appwrite/appwrite/releases/tag/2.2.0), [`2.3.0`](https://github.com/appwrite/appwrite/releases/tag/2.3.0), [`2.4.0`](https://github.com/appwrite/appwrite/releases/tag/2.4.0), [`2.5.0`](https://github.com/appwrite/appwrite/releases/tag/2.5.0), [`2.6.0`](https://github.com/appwrite/appwrite/releases/tag/2.6.0).
+
+# Upgrading within the 1.9 line {% #upgrading-1-9 %}
+
+If you are staying on Appwrite 1.9, upgrade to `1.9.9`. It is a precautionary maintenance release that moves the runtime to PHP 8.5.12. Appwrite 1.9 is not affected by the PHP vulnerabilities above either. It retains Console 8.7.37 and reuses migration V25, so it introduces no schema changes, and from `1.9.8` the upgrade only replaces the images.
+
+From `1.9.6` or `1.9.7`, `1.9.9` also includes the `1.9.8` security fixes: it refreshes outbound TLS trust after the eMudhra certificate compromise and applies the SVG sanitizer fixes.
+
+Back up your database and persistent storage. From the parent directory of your installation, run:
+
+```sh
+docker run -it --rm \
+    --publish 20080:20080 \
+    --volume /var/run/docker.sock:/var/run/docker.sock \
+    --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
+    --entrypoint="upgrade" \
+    appwrite/appwrite:1.9.9
+cd appwrite/
+docker compose exec appwrite migrate
+```
+
+Outbound HTTPS endpoints that still present a compromised certificate chain must replace their certificate chain. See the [1.9.9](https://github.com/appwrite/appwrite/releases/tag/1.9.9) and [1.9.8](https://github.com/appwrite/appwrite/releases/tag/1.9.8) release notes for details.
 
 # Installing the next version {% #install-next-version %}
 
@@ -73,7 +100,7 @@ Your Appwrite installation's parent directory name is expected to be `appwrite`.
 {% /info %}
 
 {% info title="Choose an image tag" %}
-Replace `<APPWRITE_VERSION>` below with the specific Appwrite image tag you intend to run (for example, `2.5.0`). Avoid using `latest` in production.
+Replace `<APPWRITE_VERSION>` below with the specific Appwrite image tag you intend to run (for example, `2.6.1`). Avoid using `latest` in production.
 {% /info %}
 
 ## Unix

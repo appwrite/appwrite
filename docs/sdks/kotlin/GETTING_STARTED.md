@@ -2,220 +2,151 @@
 
 ### Init your SDK
 
-Initialize your SDK with your Appwrite server API endpoint and project ID which can be found in your project settings page and your new API secret Key project API keys section.
+Initialize the client with your Appwrite endpoint, project ID and an API key. The endpoint and project ID are on your project's settings page; create an [API key](https://appwrite.io/docs/advanced/security/api-keys) with only the scopes your code needs from **API Keys** in the project sidebar of the [Appwrite Console](https://cloud.appwrite.io/console).
 
 ```kotlin
 import io.appwrite.Client
 
-suspend fun main() {
-    val client = Client()
-      .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
-      .setProject("5df5acd0d48c2") // Your project ID
-      .setKey("919c2d18fb5d4...a2ae413da83346ad2") // Your secret API key
-      .setSelfSigned(true) // Use only on dev mode with a self-signed SSL cert
-}
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>")
 ```
 
-### Make Your First Request
+API keys are secrets that bypass user permissions, so use this SDK only in server-side code and never ship a key in a client app. If you self-host Appwrite, use your own endpoint instead, such as `https://appwrite.example.com/v1`, and call `.setSelfSigned(true)` only while developing against a server with a self-signed certificate.
 
-Once your SDK object is set, create any of the Appwrite service objects and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the [API References](https://appwrite.io/docs) section.
+### Make your first request
 
-```kotlin
-val users = Users(client)
-val user = users.create(
-    userId = ID.unique(),
-    email = "email@example.com",
-    phone = "+123456789",
-    password = "password",
-    name = "Walter O'Brien"
-)
-```
-
-### Full Example
+Service methods are `suspend` functions, so call them from a coroutine:
 
 ```kotlin
 import io.appwrite.Client
-import io.appwrite.services.Users
 import io.appwrite.ID
+import io.appwrite.services.Users
 
 suspend fun main() {
     val client = Client()
-      .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
-      .setProject("5df5acd0d48c2") // Your project ID
-      .setKey("919c2d18fb5d4...a2ae413da83346ad2") // Your secret API key
-      .setSelfSigned(true) // Use only on dev mode with a self-signed SSL cert
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+        .setKey("<API_KEY>")
 
     val users = Users(client)
+
     val user = users.create(
         userId = ID.unique(),
         email = "email@example.com",
-        phone = "+123456789",
         password = "password",
-        name = "Walter O'Brien"
+        name = "Walter O'Brien",
     )
+
+    println(user.id)
 }
 ```
 
-### Type Safety with Models
+### Error handling
 
-The Appwrite Kotlin SDK provides type safety when working with table rows through generic methods. Methods like `listRows`, `getRow`, and others accept a `nestedType` parameter that allows you to specify your custom model type for full type safety.
+Failed requests throw an `AppwriteException` with `message`, `code`, `type` and `response` properties:
 
-**Kotlin:**
 ```kotlin
+import io.appwrite.exceptions.AppwriteException
+
+try {
+    val user = users.get(userId = "<USER_ID>")
+    println(user.name)
+} catch (e: AppwriteException) {
+    println("${e.code} ${e.type}: ${e.message}")
+}
+```
+
+### Using the SDK from Java
+
+From Java, pass a `CoroutineCallback` as the last argument instead of calling the method from a coroutine. Request failures arrive as the callback's `error`; methods also declare `AppwriteException`, which Java treats as checked, for invalid arguments.
+
+```java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.exceptions.AppwriteException;
+import io.appwrite.services.Users;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+    .setKey("<API_KEY>");
+
+Users users = new Users(client);
+
+try {
+    users.get("<USER_ID>", new CoroutineCallback<>((user, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(user.getName());
+    }));
+} catch (AppwriteException e) {
+    e.printStackTrace();
+}
+```
+
+### Type safety with models
+
+Methods that return rows, such as `listRows` and `getRow`, accept a `nestedType` so that each row's `data` is your own class:
+
+```kotlin
+import io.appwrite.services.TablesDB
+
 data class Book(
     val name: String,
     val author: String,
     val releaseYear: String? = null,
-    val category: String? = null,
     val genre: List<String>? = null,
-    val isCheckedOut: Boolean
+    val isCheckedOut: Boolean,
 )
 
 val tablesDB = TablesDB(client)
 
-try {
-    val result = tablesDB.listRows(
-        databaseId = "your-database-id",
-        tableId = "your-table-id",
-        nestedType = Book::class.java // Pass in your custom model type
-    )
-    
-    for (row in result.rows) {
-        val book = row.data
-        println("Book: ${book.name} by ${book.author}") // Now you have full type safety
-    }
-} catch (e: AppwriteException) {
-    println(e.message ?: "Unknown error")
-}
-```
-
-**Java:**
-```java
-public class Book {
-    private String name;
-    private String author;
-    private String releaseYear;
-    private String category;
-    private List<String> genre;
-    private boolean isCheckedOut;
-
-    // Constructor
-    public Book(String name, String author, boolean isCheckedOut) {
-        this.name = name;
-        this.author = author;
-        this.isCheckedOut = isCheckedOut;
-    }
-
-    // Getters and setters
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    
-    public String getAuthor() { return author; }
-    public void setAuthor(String author) { this.author = author; }
-    
-    public String getReleaseYear() { return releaseYear; }
-    public void setReleaseYear(String releaseYear) { this.releaseYear = releaseYear; }
-    
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
-    
-    public List<String> getGenre() { return genre; }
-    public void setGenre(List<String> genre) { this.genre = genre; }
-    
-    public boolean isCheckedOut() { return isCheckedOut; }
-    public void setCheckedOut(boolean checkedOut) { isCheckedOut = checkedOut; }
-}
-
-TablesDB tablesDB = new TablesDB(client);
-
-tablesDB.listRows(
-    "your-database-id",
-    "your-table-id",
-    Book.class, // Pass in your custom model type
-    new CoroutineCallback<>((result, error) -> {
-        if (error != null) {
-            System.out.println(error.getMessage());
-            return;
-        }
-
-        for (Row<Book> row : result.getRows()) {
-            Book book = row.getData();
-            System.out.println("Book: " + book.getName() + " by " + book.getAuthor()); // Now you have full type safety
-        }
-    })
-);
-```
-
-**Tip**: You can use the `appwrite types` command to automatically generate model definitions based on your Appwrite database schema. Learn more about [type generation](https://appwrite.io/docs/products/databases/type-generation).
-
-### Working with Model Methods
-
-All Appwrite models come with built-in methods for data conversion and manipulation:
-
-**`toMap()`** - Converts a model instance to a Map format, useful for debugging or manual data manipulation:
-```kotlin
-val account = Account(client)
-val user = account.get()
-val userMap = user.toMap()
-println(userMap) // Prints all user properties as a Map
-```
-
-**`from(map:, nestedType:)`** - Creates a model instance from a Map, useful when working with raw data:
-```kotlin
-val userData: Map<String, Any> = mapOf(
-    "\$id" to "123",
-    "name" to "John",
-    "email" to "john@example.com"
+val result = tablesDB.listRows(
+    databaseId = "<DATABASE_ID>",
+    tableId = "<TABLE_ID>",
+    nestedType = Book::class.java,
 )
-val user = User.from(userData, User::class.java)
-```
 
-**JSON Serialization** - Models can be easily converted to/from JSON using Gson (which the SDK uses internally):
-```kotlin
-import com.google.gson.Gson
-
-val account = Account(client)
-val user = account.get()
-
-// Convert to JSON
-val gson = Gson()
-val jsonString = gson.toJson(user)
-println("User JSON: $jsonString")
-
-// Convert from JSON
-val userFromJson = gson.fromJson(jsonString, User::class.java)
-```
-
-### Error Handling
-
-The Appwrite Kotlin SDK raises `AppwriteException` object with `message`, `code` and `response` properties. You can handle any errors by catching `AppwriteException` and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
-
-```kotlin
-import io.appwrite.Client
-import io.appwrite.ID
-import io.appwrite.services.Users
-
-suspend fun main() {
-    val users = Users(client)
-    try {
-        val user = users.create(
-            userId = ID.unique(),
-            email = "email@example.com",
-            phone = "+123456789",
-            password = "password",
-            name = "Walter O'Brien"
-        )
-    } catch (e: AppwriteException) {
-        e.printStackTrace()
-    }
+for (row in result.rows) {
+    val book = row.data
+    println("${book.name} by ${book.author}")
 }
 ```
 
-### Learn more
+From Java, pass the class before the callback:
 
-You can use the following resources to learn more and get help
+```java
+try {
+    tablesDB.listRows(
+        "<DATABASE_ID>",
+        "<TABLE_ID>",
+        Book.class,
+        new CoroutineCallback<>((result, error) -> {
+            if (error != null) {
+                error.printStackTrace();
+                return;
+            }
 
-- 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-server)
-- 📜 [Appwrite Docs](https://appwrite.io/docs)
-- 💬 [Discord Community](https://appwrite.io/discord)
-- 🚂 [Appwrite Kotlin Playground](https://github.com/appwrite/playground-for-kotlin)
+            for (Row<Book> row : result.getRows()) {
+                System.out.println(row.getData().getName());
+            }
+        })
+    );
+} catch (AppwriteException e) {
+    e.printStackTrace();
+}
+```
+
+Use `appwrite types` from the [Appwrite CLI](https://appwrite.io/docs/tooling/command-line/installation) to generate these model classes from your database schema. Learn more about [type generation](https://appwrite.io/docs/products/databases/tablesdb/type-generation).
+
+Every model also has `toMap()`, which is handy for logging or manual data handling:
+
+```kotlin
+val user = users.get(userId = "<USER_ID>")
+println(user.toMap())
+```
