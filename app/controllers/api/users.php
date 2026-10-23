@@ -2868,7 +2868,12 @@ Http::post('/v1/users/:userId/jwts')
     ->param('duration', 900, new Range(0, 3600), 'Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $userId, string $sessionId, int $duration, Response $response, Database $dbForProject) {
+    ->inject('request')
+    ->action(function (string $userId, string $sessionId, int $duration, Response $response, Database $dbForProject, Request $request) {
+        // A JWT can't mint the next one and outlive itself
+        if ($request->getHeaderLine('x-appwrite-jwt', '') !== '') {
+            throw new Exception(Exception::USER_JWT_CREATION_DENIED);
+        }
 
         $user = $dbForProject->getDocument('users', $userId);
 

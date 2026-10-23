@@ -437,6 +437,88 @@ final class KeyTest extends TestCase
         }
     }
 
+    public function testDecodeCarriesTheExpiry(): void
+    {
+        $decoded = Key::decode(
+            project: new Document(['$id' => 'test']),
+            team: new Document(),
+            user: new Document(),
+            key: self::generateKey('test', false, ['documents.read'], maxAge: 600),
+        );
+        $this->assertNotNull($decoded->getExpire());
+        $this->assertEqualsWithDelta(\time() + 600, (new \DateTimeImmutable($decoded->getExpire()))->getTimestamp(), 5);
+
+        $expire = '2030-01-01T00:00:00.000+00:00';
+        $decoded = Key::decode(
+            project: new Document(['$id' => 'test', 'keys' => [new Document(['$id' => 'k', 'secret' => 'standard_abcd', 'scopes' => [], 'expire' => $expire])]]),
+            team: new Document(),
+            user: new Document(),
+            key: 'standard_abcd',
+        );
+        $this->assertSame($expire, $decoded->getExpire());
+
+        $decoded = Key::decode(
+            project: new Document(['$id' => 'test', 'keys' => [new Document(['$id' => 'k', 'secret' => 'standard_abcd', 'scopes' => [], 'expire' => null])]]),
+            team: new Document(),
+            user: new Document(),
+            key: 'standard_abcd',
+        );
+        $this->assertNull($decoded->getExpire());
+    }
+
+    /**
+     * @return \Iterator<string, array{string, array<string>, ?string, string, array<string>, ?string, bool}>
+     */
+    public static function creations(): \Iterator
+    {
+        $soon = '2030-01-01T00:00:00.000+00:00';
+        $later = '2031-01-01T00:00:00.000+00:00';
+        $earlier = '2029-01-01T00:00:00.000+00:00';
+
+        // A key delegates downwards: never a scope it does not hold
+        yield 'standard key mints an ephemeral key with its scopes' => [API_KEY_STANDARD, ['keys.write', 'users.read'], null, API_KEY_EPHEMERAL, ['users.read'], $earlier, true];
+        yield 'standard key mints an ephemeral key with a scope it lacks' => [API_KEY_STANDARD, ['keys.write', 'users.read'], null, API_KEY_EPHEMERAL, ['users.write'], $earlier, false];
+        yield 'standard key widens a key to scopes it lacks' => [API_KEY_STANDARD, ['keys.write', 'users.read'], null, API_KEY_STANDARD, ['users.read', 'databases.write'], null, false];
+        yield 'standard key without expiry sets no expiry' => [API_KEY_STANDARD, ['keys.write', 'users.read'], null, API_KEY_STANDARD, ['users.read'], null, true];
+
+        // ... and never past its own expiry, so it cannot renew itself
+        yield 'ephemeral key mints one that expires after it' => [API_KEY_EPHEMERAL, ['keys.write'], $soon, API_KEY_EPHEMERAL, [], $later, false];
+        yield 'ephemeral key mints one that expires with it' => [API_KEY_EPHEMERAL, ['keys.write'], $soon, API_KEY_EPHEMERAL, [], $soon, true];
+        yield 'expiring standard key sets no expiry' => [API_KEY_STANDARD, ['keys.write'], $soon, API_KEY_STANDARD, [], null, false];
+        yield 'dynamic key mints one that expires after it' => ['dynamic', ['keys.write'], $soon, API_KEY_EPHEMERAL, [], $later, false];
+        yield 'expiring account key creates one that never expires' => [API_KEY_ACCOUNT, ['account'], $soon, API_KEY_ACCOUNT, ['account'], null, false];
+        yield 'account key creates one with a scope it lacks' => [API_KEY_ACCOUNT, ['account'], null, API_KEY_ACCOUNT, ['account', 'teams.write'], null, false];
+        yield 'organization key widens an organization key' => [API_KEY_ORGANIZATION, ['organization.keys.write'], null, API_KEY_ORGANIZATION, ['organization.keys.write', 'organization.write'], null, false];
+
+        // Organization keys provision project keys, within their own lifetime
+        yield 'organization creates project key with project scopes' => [API_KEY_ORGANIZATION, ['organization.projects.keys.write'], null, API_KEY_STANDARD, ['databases.write'], null, true];
+        yield 'expiring organization key creates a key that never expires' => [API_KEY_ORGANIZATION, ['organization.projects.keys.write'], $soon, API_KEY_STANDARD, ['databases.write'], null, false];
+        yield 'expiring organization key creates a key that expires later' => [API_KEY_ORGANIZATION, ['organization.projects.keys.write'], $soon, API_KEY_STANDARD, [], $later, false];
+        yield 'expiring organization key creates a key that expires with it' => [API_KEY_ORGANIZATION, ['organization.projects.keys.write'], $soon, API_KEY_STANDARD, [], $soon, true];
+        yield 'expiring organization key creates a key that expires sooner' => [API_KEY_ORGANIZATION, ['organization.projects.keys.write'], $soon, API_KEY_EPHEMERAL, ['users.read'], $earlier, true];
+    }
+
+    /**
+     * @param array<string> $callerScopes
+     * @param array<string> $scopes
+     */
+    #[DataProvider('creations')]
+    public function testMayCreateNothingBeyondItsGrant(string $callerType, array $callerScopes, ?string $callerExpire, string $type, array $scopes, ?string $expire, bool $allowed): void
+    {
+        $caller = new Key('test', '', '', $callerType, User::ROLE_KEYS, $callerScopes, 'Caller', expire: $callerExpire);
+
+        $this->assertSame($allowed, $caller->mayCreate($type, $scopes, $expire));
+    }
+
+    public function testMayCreateComparesExpiryAcrossTimezones(): void
+    {
+        $caller = new Key('test', '', '', API_KEY_ORGANIZATION, User::ROLE_KEYS, [], 'Caller', expire: '2030-01-01T12:00:00.000+00:00');
+
+        // 13:00 in Prague is 12:00 UTC: the same instant, not a later one
+        $this->assertTrue($caller->mayCreate(API_KEY_STANDARD, [], '2030-01-01T13:00:00.000+01:00'));
+        $this->assertFalse($caller->mayCreate(API_KEY_STANDARD, [], '2030-01-01T12:00:01.000+00:00'));
+    }
+
     private static function generateKey(
         string $projectId,
         bool $usage,

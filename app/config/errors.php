@@ -387,6 +387,11 @@ return [
         'description' => 'JWT and cookie used in the same request. Use either `setJWT` or `setCookie`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
         'code' => 403,
     ],
+    Exception::USER_JWT_CREATION_DENIED => [
+        'name' => Exception::USER_JWT_CREATION_DENIED,
+        'description' => 'A JWT cannot be created from a request authorized with a JWT. Authenticate with a session cookie or session header instead.',
+        'code' => 403,
+    ],
     Exception::API_KEY_EXPIRED => [
         'name' => Exception::API_KEY_EXPIRED,
         'description' => 'The ephemeral API key has expired. Please don\'t use ephemeral API keys for more than duration of the execution.',
@@ -1200,6 +1205,11 @@ return [
         'name' => Exception::KEY_ALREADY_EXISTS,
         'description' => 'Key with the same ID already exists. Try again with a different ID.',
         'code' => 409,
+    ],
+    Exception::KEY_CREATION_DENIED => [
+        'name' => Exception::KEY_CREATION_DENIED,
+        'description' => 'This request cannot create or change the key. A JWT cannot create or change keys, and a key never gives out scopes it does not hold or an expiry later than its own. Authenticate with a session instead, or use a key whose grant covers the key you are creating.',
+        'code' => 403,
     ],
     Exception::PLATFORM_NOT_FOUND => [
         'name' => Exception::PLATFORM_NOT_FOUND,
