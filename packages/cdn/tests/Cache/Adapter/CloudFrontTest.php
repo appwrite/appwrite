@@ -119,7 +119,7 @@ final class CloudFrontTest extends TestCase
         $this->assertCount(2, $client->calls);
         $this->assertCount(CloudFront::KEYS_PER_PURGE, $this->paths($client, 0));
         $this->assertSame(['#key-151'], $this->paths($client, 1));
-        $this->assertStringContainsString('<Quantity>1</Quantity>', $client->calls[1]['body']);
+        $this->assertStringContainsString('<Quantity>1</Quantity>', $this->body($client, 1));
     }
 
     public function testBatchesAreSpacedOutUnderTheQuota(): void
@@ -209,12 +209,20 @@ final class CloudFrontTest extends TestCase
             . '<RequestId>r</RequestId></ErrorResponse>';
     }
 
+    private function body(TestClient $client, int $call): string
+    {
+        $body = $client->calls[$call]['body'];
+        $this->assertIsString($body);
+
+        return $body;
+    }
+
     /**
      * @return array<int, string>
      */
     private function paths(TestClient $client, int $call): array
     {
-        $batch = simplexml_load_string((string) $client->calls[$call]['body']);
+        $batch = simplexml_load_string($this->body($client, $call));
         $this->assertNotFalse($batch);
         $this->assertSame((string) \count($batch->Paths->Items->Path), (string) $batch->Paths->Quantity);
 
