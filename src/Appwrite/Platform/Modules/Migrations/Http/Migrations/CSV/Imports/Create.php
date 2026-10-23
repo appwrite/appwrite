@@ -55,7 +55,7 @@ class Create extends Action
                 group: null,
                 name: 'createCSVImport',
                 description: '/docs/references/migrations/migration-csv-import.md',
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,

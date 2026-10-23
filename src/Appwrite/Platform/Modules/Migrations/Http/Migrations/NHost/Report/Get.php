@@ -10,7 +10,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Response;
-use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Database\Document;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Platform\Enum;
@@ -45,7 +44,7 @@ class Get extends Action
                 group: null,
                 name: 'getNHostReport',
                 description: '/docs/references/migrations/migration-nhost-report.md',
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -63,7 +62,6 @@ class Get extends Action
             ->param('port', 5432, new Integer(true), 'Source\'s Database Port.', true, example: '5432')
             ->inject('response')
             ->inject('publicHostname')
-            ->inject('publicInternet')
             ->callback($this->action(...));
     }
 
@@ -77,11 +75,10 @@ class Get extends Action
         string $password,
         int $port,
         Response $response,
-        PublicHostname $publicHostname,
-        PublicInternet $publicInternet
+        PublicHostname $publicHostname
     ): void {
         $nhost = (new NHost($subdomain, $region, $adminSecret, $database, $username, $password, (string) $port))
-            ->setDestinations($publicInternet);
+            ->setDestinations($publicHostname->getDestinations());
 
         try {
             $nhost->setDatabaseAddress($publicHostname->address($nhost->getDatabaseHost()));

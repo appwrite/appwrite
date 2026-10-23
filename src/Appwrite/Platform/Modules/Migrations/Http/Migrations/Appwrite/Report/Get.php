@@ -3,13 +3,13 @@
 namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\Appwrite\Report;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\DeploymentHostname;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Database\Document;
 use Utopia\Migration\Sources\Appwrite as AppwriteSource;
 use Utopia\Platform\Enum;
@@ -41,7 +41,7 @@ class Get extends Action
                 group: null,
                 name: 'getAppwriteReport',
                 description: '/docs/references/migrations/migration-appwrite-report.md',
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -56,7 +56,7 @@ class Get extends Action
             ->inject('response')
             ->inject('getDatabasesDB')
             ->inject('publicHostname')
-            ->inject('publicInternet')
+            ->inject('deploymentHostname')
             ->callback($this->action(...));
     }
 
@@ -68,19 +68,20 @@ class Get extends Action
         Response $response,
         callable $getDatabasesDB,
         PublicHostname $publicHostname,
-        PublicInternet $publicInternet
+        DeploymentHostname $deploymentHostname
     ): void {
-        // Block a source endpoint that resolves to a private or reserved
-        // address to prevent SSRF into the internal network.
-        $hostname = $publicHostname;
-        if (!$hostname->isValid(\parse_url($endpoint, PHP_URL_HOST) ?? '')) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $hostname->getDescription());
+        $host = \parse_url($endpoint, PHP_URL_HOST) ?: '';
+        $deployment = $deploymentHostname->isValid($host);
+
+        if (!$deployment && !$publicHostname->isValid($host)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $publicHostname->getDescription());
         }
 
         try {
-            // Check every connection on the address it reaches, so DNS cannot answer differently after the check above
-            $appwrite = (new AppwriteSource($projectID, $endpoint, $key, $getDatabasesDB))
-                ->setDestinations($publicInternet);
+            $appwrite = new AppwriteSource($projectID, $endpoint, $key, $getDatabasesDB);
+            if (!$deployment) {
+                $appwrite->setDestinations($publicHostname->getDestinations());
+            }
             $report = $appwrite->report($resources);
         } catch (\Throwable $e) {
             throw new Exception(
